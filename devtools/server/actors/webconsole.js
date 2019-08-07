@@ -215,11 +215,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       );
     }
 
-    this.traits = {
-      transferredResponseSize: true,
-      selectedObjectActor: true, // 44+
-      fetchCacheDescriptor: true,
-    };
+    this.traits = {};
 
     if (this.dbg.replaying && !isWorker) {
       this.dbg.onConsoleMessage = this.onReplayingMessage.bind(this);

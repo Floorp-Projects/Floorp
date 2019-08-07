@@ -85,17 +85,15 @@ if CONFIG['FUZZING']:
     ]
 pref_groups = tuple(sorted(pref_groups))
 
-UNIFIED_SOURCES += [
-    'Preferences.cpp',
-    'SharedPrefMap.cpp',
-]
+# Note: generate_static_pref_list.py relies on StaticPrefListAll.h being first.
+gen_h = ['init/StaticPrefListAll.h']
+gen_h += ['StaticPrefsAll.h']
+gen_h += ['init/StaticPrefList_{}.h'.format(pg) for pg in pref_groups]
+gen_h += ['StaticPrefs_{}.h'.format(pg) for pg in pref_groups]
 
-# Note: generate_static_pref_list relies on StaticPrefListAll.h being first.
-genfiles = ['init/StaticPrefListAll.h']
-genfiles += ['init/StaticPrefList_{}.h'.format(pg) for pg in pref_groups]
-genfiles += ['StaticPrefsAll.h']
-genfiles += ['StaticPrefs_{}.h'.format(pg) for pg in pref_groups]
-genfiles_tuple = tuple(genfiles)
+gen_cpp = ['init/StaticPrefsCGetters.cpp']
+
+gen_rs = ['static_prefs.rs']
 
 EXPORTS.mozilla += [
     'init/StaticPrefListBegin.h',
@@ -104,12 +102,19 @@ EXPORTS.mozilla += [
     'Preferences.h',
     'StaticPrefsBase.h',
 ]
-EXPORTS.mozilla += sorted(['!' + gf for gf in genfiles])
+EXPORTS.mozilla += sorted(['!' + g for g in gen_h])
 
-GENERATED_FILES += [genfiles_tuple]
+UNIFIED_SOURCES += [
+    'Preferences.cpp',
+    'SharedPrefMap.cpp',
+]
 
-static_pref_list = GENERATED_FILES[genfiles_tuple]
-static_pref_list.script = 'init/generate_static_pref_list.py:emit_header'
+gen_all_tuple = tuple(gen_h + gen_cpp + gen_rs)
+
+GENERATED_FILES += [gen_all_tuple]
+
+static_pref_list = GENERATED_FILES[gen_all_tuple]
+static_pref_list.script = 'init/generate_static_pref_list.py:emit_code'
 static_pref_list.inputs = ['init/StaticPrefList.yaml']
 
 PYTHON_UNITTEST_MANIFESTS += [

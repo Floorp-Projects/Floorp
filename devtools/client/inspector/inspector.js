@@ -160,10 +160,6 @@ function Inspector(toolbox) {
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
-  // Store the URL of the target page prior to navigation in order to ensure
-  // telemetry counts in the Grid Inspector are not double counted on reload.
-  this.previousURL = this.target.url;
-
   this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(
     this
@@ -188,29 +184,31 @@ function Inspector(toolbox) {
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
   this.handleThreadPaused = this.handleThreadPaused.bind(this);
   this.handleThreadResumed = this.handleThreadResumed.bind(this);
-
-  this._target.on("will-navigate", this._onBeforeNavigate);
 }
 
 Inspector.prototype = {
   /**
-   * open is effectively an asynchronous constructor
+   * InspectorPanel.open() is effectively an asynchronous constructor.
+   * Set any attributes or listeners that rely on the document being loaded or fronts
+   * from the InspectorFront and Target here.
    */
   async init() {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
     // When replaying, we need to listen to changes in the target's pause state.
-    if (this._target.isReplayEnabled()) {
+    if (this.target.isReplayEnabled()) {
       let dbg = this._toolbox.getPanel("jsdebugger");
       if (!dbg) {
         dbg = await this._toolbox.loadTool("jsdebugger");
       }
       this._replayResumed = !dbg.isPaused();
 
-      this._target.threadFront.on("paused", this.handleThreadPaused);
-      this._target.threadFront.on("resumed", this.handleThreadResumed);
+      this.target.threadFront.on("paused", this.handleThreadPaused);
+      this.target.threadFront.on("resumed", this.handleThreadResumed);
     }
+
+    this.target.on("will-navigate", this._onBeforeNavigate);
 
     await Promise.all([
       this._getCssProperties(),
@@ -219,6 +217,10 @@ Inspector.prototype = {
       this._getAccessibilityFront(),
       this._getChangesFront(),
     ]);
+
+    // Store the URL of the target page prior to navigation in order to ensure
+    // telemetry counts in the Grid Inspector are not double counted on reload.
+    this.previousURL = this.target.url;
 
     return this._deferredOpen();
   },

@@ -465,14 +465,13 @@ void TestBlocksRingBufferAPI() {
                           lastDestroyed = aReader.ReadObject<uint32_t>();
                         });
 
-#  define VERIFY_START_END_DESTROYED(aStart, aEnd, aLastDestroyed)        \
-    rb.Read([&](const BlocksRingBuffer::Reader aReader) {                 \
-      MOZ_RELEASE_ASSERT(ExtractBlockIndex(aReader.BufferRangeStart()) == \
-                         (aStart));                                       \
-      MOZ_RELEASE_ASSERT(ExtractBlockIndex(aReader.BufferRangeEnd()) ==   \
-                         (aEnd));                                         \
-      MOZ_RELEASE_ASSERT(lastDestroyed == (aLastDestroyed));              \
-    });
+#  define VERIFY_START_END_DESTROYED(aStart, aEnd, aLastDestroyed)          \
+    {                                                                       \
+      BlocksRingBuffer::State state = rb.GetState();                        \
+      MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeStart) == (aStart)); \
+      MOZ_RELEASE_ASSERT(ExtractBlockIndex(state.mRangeEnd) == (aEnd));     \
+      MOZ_RELEASE_ASSERT(lastDestroyed == (aLastDestroyed));                \
+    }
 
     // All entries will contain one 32-bit number. The resulting blocks will
     // have the following structure:
@@ -795,12 +794,20 @@ void TestBlocksRingBufferThreading() {
   std::atomic<bool> stopReader{false};
   std::thread reader([&]() {
     for (;;) {
-      Pair<uint64_t, uint64_t> counts = rb.GetPushedAndClearedCounts();
-      printf("Reader: pushed=%llu cleared=%llu alive=%llu lastDestroyed=%d\n",
-             static_cast<unsigned long long>(counts.first()),
-             static_cast<unsigned long long>(counts.second()),
-             static_cast<unsigned long long>(counts.first() - counts.second()),
-             int(lastDestroyed));
+      BlocksRingBuffer::State state = rb.GetState();
+      printf(
+          "Reader: range=%llu..%llu (%llu bytes) pushed=%llu cleared=%llu "
+          "(alive=%llu) lastDestroyed=%d\n",
+          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeStart)),
+          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)),
+          static_cast<unsigned long long>(ExtractBlockIndex(state.mRangeEnd)) -
+              static_cast<unsigned long long>(
+                  ExtractBlockIndex(state.mRangeStart)),
+          static_cast<unsigned long long>(state.mPushedBlockCount),
+          static_cast<unsigned long long>(state.mClearedBlockCount),
+          static_cast<unsigned long long>(state.mPushedBlockCount -
+                                          state.mClearedBlockCount),
+          int(lastDestroyed));
       if (stopReader) {
         break;
       }

@@ -293,7 +293,9 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         toolDefinition.preventClosingOnKey ||
         toolbox.hostType == Toolbox.HostType.WINDOW
       ) {
-        toolbox.raise();
+        if (!toolDefinition.preventRaisingOnKey) {
+          toolbox.raise();
+        }
       } else {
         toolbox.destroy();
       }
@@ -364,13 +366,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         break;
       case "scratchpad":
         ScratchpadManager.openScratchpad();
-        break;
-      case "inspectorMac":
-        await gDevToolsBrowser.selectToolCommand(
-          window,
-          "inspector",
-          startTime
-        );
         break;
     }
   },

@@ -376,9 +376,11 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
           this._walker.emit("picker-node-canceled");
           return;
         case event.DOM_VK_C:
+          const { altKey, ctrlKey, metaKey, shiftKey } = event;
+
           if (
-            (IS_OSX && event.metaKey && event.altKey) ||
-            (!IS_OSX && event.ctrlKey && event.shiftKey)
+            (IS_OSX && metaKey && altKey | shiftKey) ||
+            (!IS_OSX && ctrlKey && shiftKey)
           ) {
             this.cancelPick();
             this._walker.emit("picker-node-canceled");

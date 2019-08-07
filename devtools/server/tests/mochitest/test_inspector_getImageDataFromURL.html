@@ -41,7 +41,7 @@ let gInspector = null;
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target } = await attachURL(url);
-  gInspector = await target.getInspector();
+  gInspector = await target.getFront("inspector");
   runNextTest();
 });
 

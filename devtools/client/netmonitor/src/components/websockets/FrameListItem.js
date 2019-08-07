@@ -81,7 +81,6 @@ class FrameListItem extends Component {
           key: `ws-frame-list-column-${name}-${index}`,
           connector,
           item,
-          index,
         });
       })
     );
