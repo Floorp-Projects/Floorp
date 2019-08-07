@@ -20,7 +20,8 @@ SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
 SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd, uint8_t *rnd,
                                          size_t rnd_len, uint8_t *msg,
                                          size_t msg_len);
-
+SECStatus SSLInt_GetHandshakeRandoms(PRFileDesc *fd, SSL3Random client_random,
+                                     SSL3Random server_random);
 PRBool SSLInt_ExtensionNegotiated(PRFileDesc *fd, PRUint16 ext);
 void SSLInt_ClearSelfEncryptKey();
 void SSLInt_SetSelfEncryptMacKey(PK11SymKey *key);
