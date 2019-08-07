@@ -44,6 +44,11 @@ class MOZ_STATIC_LOCAL_CLASS StaticLocalAutoPtr final {
     aOther.mRawPtr = nullptr;
   }
 
+  StaticLocalAutoPtr<T>& operator=(T* aRhs) {
+    Assign(aRhs);
+    return *this;
+  }
+
   T* get() const { return mRawPtr; }
 
   operator T*() const { return get(); }
@@ -99,6 +104,11 @@ class MOZ_STATIC_LOCAL_CLASS StaticLocalRefPtr final {
 
   StaticLocalRefPtr(StaticLocalRefPtr<T>&& aPtr) : mRawPtr(aPtr.mRawPtr) {
     aPtr.mRawPtr = nullptr;
+  }
+
+  StaticLocalRefPtr<T>& operator=(T* aRhs) {
+    AssignWithAddref(aRhs);
+    return *this;
   }
 
   already_AddRefed<T> forget() {
@@ -238,5 +248,6 @@ inline already_AddRefed<T> do_AddRef(
     const mozilla::StaticLocalRefPtr<T>& aObj) {
   RefPtr<T> ref(aObj);
   return ref.forget();
+}
 
 #endif  // mozilla_StaticLocalPtr_h
