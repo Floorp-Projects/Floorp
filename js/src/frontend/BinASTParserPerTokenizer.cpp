@@ -395,12 +395,11 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   funbox->setArgCount(nargs);
   funbox->synchronizeArgCount();
 
-  BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                                          pc_->closedOverBindingsForLazy(),
-                                          pc_->innerFunctionBoxesForLazy,
-                                          start, end, start, end,
-                                          /* lineno = */ 0, start,
-                                          ParseGoal::Script));
+  BINJS_TRY_DECL(lazy,
+                 LazyScript::Create(
+                     cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
+                     pc_->innerFunctionBoxesForLazy, start, end, start, end,
+                     /* lineno = */ 0, start, ParseGoal::Script));
 
   if (funbox->strict()) {
     lazy->setStrict();
