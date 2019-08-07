@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.storages
 
-import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
@@ -19,14 +18,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * This singleton handles the in-memory storage logic for timing distributions. It is meant to be
- * used by the Timing Distribution API and the ping assembling objects.
- *
- * This class contains a reference to the Android application Context. While the IDE warns
- * us that this could leak, the application context lives as long as the application and this
- * object. For this reason, we should be safe to suppress the IDE warning.
+ * This singleton handles the in-memory storage logic for custom distributions. It is meant to be
+ * used by the Custom Distribution API and the ping assembling objects.
  */
-@SuppressLint("StaticFieldLeak")
 internal object CustomDistributionsStorageEngine : CustomDistributionsStorageEngineImplementation()
 
 internal open class CustomDistributionsStorageEngineImplementation(
@@ -145,7 +139,7 @@ internal open class CustomDistributionsStorageEngineImplementation(
  * @param rangeMax the maximum value that can be represented
  * @param histogramType the [HistogramType] representing the bucket layout
  * @param values a map containing the bucket index mapped to the accumulated count
- * @param sum the accumulated sum of all the samples in the timing distribution
+ * @param sum the accumulated sum of all the samples in the custom distribution
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 data class CustomDistributionData(
@@ -310,10 +304,9 @@ data class CustomDistributionData(
     @Suppress("MagicNumber")
     private fun getBucketsLinear(): List<Long> {
         // Written to match the bucket generation on legacy desktop telemetry:
-        //   https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/build_scripts/mozparsers/parse_histograms.py#65
+        //   https://searchfox.org/mozilla-central/rev/e0b0c38ee83f99d3cf868bad525ace4a395039f1/toolkit/components/telemetry/build_scripts/mozparsers/parse_histograms.py#65
 
-        val result: MutableList<Long> = mutableListOf()
-        result.add(0)
+        val result: MutableList<Long> = mutableListOf(0L)
 
         val dmin = rangeMin.toDouble()
         val dmax = rangeMax.toDouble()
@@ -334,7 +327,7 @@ data class CustomDistributionData(
      */
     private fun getBucketsExponential(): List<Long> {
         // Written to match the bucket generation on legacy desktop telemetry:
-        //   https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/build_scripts/mozparsers/parse_histograms.py#75
+        //   https://searchfox.org/mozilla-central/rev/e0b0c38ee83f99d3cf868bad525ace4a395039f1/toolkit/components/telemetry/build_scripts/mozparsers/parse_histograms.py#75
 
         // This algorithm calculates the bucket sizes using a natural log approach to get
         // `bucketCount` number of buckets, exponentially spaced between `range[MIN]` and

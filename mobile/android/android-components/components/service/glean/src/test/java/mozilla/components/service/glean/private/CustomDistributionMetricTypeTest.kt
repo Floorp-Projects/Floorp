@@ -34,7 +34,8 @@ class CustomDistributionMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -67,7 +68,8 @@ class CustomDistributionMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -89,7 +91,8 @@ class CustomDistributionMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -105,7 +108,8 @@ class CustomDistributionMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "custom_distribution",
             sendInPings = listOf("store1", "store2", "store3"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -147,7 +151,8 @@ class CustomDistributionMetricTypeTest {
             lifetime = Lifetime.Ping,
             name = "custom_distribution_samples",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )

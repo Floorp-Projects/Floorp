@@ -92,14 +92,16 @@ data class TimingDistributionMetricType(
     }
 
     /**
-    * Accumulates the provided samples in the metric.
-    *
-    * Please note that this assumes that the provided samples are in `timeUnit`
-    * and will be converted to nanoseconds for storage and sending in the ping.
-    *
-    * @param samples the [LongArray] holding the samples to be recorded by the metric, in
-    *   the unit specified by `timeUnit`.
-    */
+     * Accumulates the provided samples in the metric.
+     *
+     * Please note that this assumes that the provided samples are already in the
+     * "unit" declared by the instance of the implementing metric type (e.g. if the
+     * implementing class is a [TimingDistributionMetricType] and the instance this
+     * method was called on is using [TimeUnit.Second], then `samples` are assumed
+     * to be in that unit).
+     *
+     * @param samples the [LongArray] holding the samples to be recorded by the metric.
+     */
     override fun accumulateSamples(samples: LongArray) {
         if (!shouldRecord(logger)) {
             return

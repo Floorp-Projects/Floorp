@@ -42,7 +42,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.Ping,
             name = "test_custom_distribution",
             sendInPings = storeNames,
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -80,7 +81,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.Ping,
             name = "test_custom_distribution",
             sendInPings = listOf("store1", "store2"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -100,14 +102,13 @@ class CustomDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_td_name" to "{\"category\":\"telemetry\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_bucket_count" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":\"not an int!\",\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_range" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_range2" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[\"not\",\"numeric\"],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_histogram_type" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":-1,\"values\":{},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_values" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{\"0\": \"nope\"},\"sum\":0,\"time_unit\":2}",
-            "store1#telemetry.invalid_td_sum" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":\"nope\",\"time_unit\":2}",
-            "store1#telemetry.invalid_td_time_unit" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0,\"time_unit\":-1}",
+            "store1#telemetry.invalid_td_name" to "{\"category\":\"telemetry\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_bucket_count" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":\"not an int!\",\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_range" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_range2" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[\"not\",\"numeric\"],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_histogram_type" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":-1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_values" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_td_sum" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":\"nope\"}",
             "store1#telemetry.test_custom_distribution" to td.toJsonObject().toString()
         )
 
@@ -145,7 +146,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -167,7 +169,8 @@ class CustomDistributionsStorageEngineTest {
                 lifetime = Lifetime.User,
                 name = "test_custom_distribution",
                 sendInPings = listOf("store1", "store2"),
-                range = listOf(0L, 60000L),
+                rangeMin = 0L,
+                rangeMax = 60000L,
                 bucketCount = 100,
                 histogramType = HistogramType.Exponential
             )
@@ -237,7 +240,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -263,7 +267,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -293,7 +298,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, rangeMax),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -313,7 +319,7 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `getBuckets() correctly populates the buckets property`() {
+    fun `getBuckets() correctly populates the buckets properly for exponential distributions`() {
         // Hand calculated values using current default range 0 - 60000 and bucket count of 100.
         // NOTE: The final bucket, regardless of width, represents the overflow bucket to hold any
         // values beyond the maximum (in this case the maximum is 60000)
@@ -332,7 +338,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -355,7 +362,7 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `samples go in the correct bucket`() {
+    fun `samples go in the correct bucket for exponential bucketing`() {
         val td = CustomDistributionData(
             category = "telemetry",
             name = "test_custom_distribution",
@@ -388,7 +395,7 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `linear bucketing`() {
+    fun `validate the generated linear buckets`() {
         val td = CustomDistributionData(
             category = "telemetry",
             name = "test_custom_distribution",
@@ -422,7 +429,7 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `accumulate finds the correct bucket`() {
+    fun `accumulate finds the correct bucket for exponential distributions`() {
         // Define a custom distribution metric, which will be stored in "store1".
         val metric = CustomDistributionMetricType(
             disabled = false,
@@ -430,7 +437,8 @@ class CustomDistributionsStorageEngineTest {
             lifetime = Lifetime.User,
             name = "test_custom_distribution",
             sendInPings = listOf("store1"),
-            range = listOf(0L, 60000L),
+            rangeMin = 0L,
+            rangeMax = 60000L,
             bucketCount = 100,
             histogramType = HistogramType.Exponential
         )
@@ -461,6 +469,45 @@ class CustomDistributionsStorageEngineTest {
             1L, snapshot.values[964])
         assertEquals("Accumulating should increment correct bucket",
             1L, snapshot.values[9262])
+    }
+
+    @Test
+    fun `accumulate finds the correct bucket for linear distributions`() {
+        // Define a custom distribution metric, which will be stored in "store1".
+        val metric = CustomDistributionMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "test_custom_distribution",
+            sendInPings = listOf("store1"),
+            rangeMin = 0L,
+            rangeMax = 60000L,
+            bucketCount = 100,
+            histogramType = HistogramType.Linear
+        )
+
+        // Check that a few values correctly fall into the correct buckets (as calculated by hand)
+        // to validate the linear bucket search algorithm
+
+        // Attempt to accumulate a sample to force metric to be stored
+        metric.accumulateSamples(listOf(1L, 10L, 100L, 1000L, 10000L).toLongArray())
+
+        // Check that custom distribution was recorded.
+        assertTrue("Accumulating values records data", metric.testHasValue())
+
+        // Make sure that the samples are in the correct buckets
+        val snapshot = metric.testGetValue()
+
+        // Check sum and count
+        assertEquals("Accumulating updates the sum", 11111, snapshot.sum)
+        assertEquals("Accumulating updates the count", 5, snapshot.count)
+
+        assertEquals("Accumulating should increment correct bucket",
+            3L, snapshot.values[0])
+        assertEquals("Accumulating should increment correct bucket",
+            1L, snapshot.values[612])
+        assertEquals("Accumulating should increment correct bucket",
+            1L, snapshot.values[9796])
     }
 
     @Test
