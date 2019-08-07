@@ -8392,7 +8392,7 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
         // lead to an empty ::-moz-column-span-wrapper subtree. The
         // column-span siblings were the frame's children, but later become
         // the frame's siblings after CreateColumnSpanSiblings().
-        inFlowFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
+        inFlowFrame->HasColumnSpanSiblings() ||
         // 3. Removing the only child of a ::-moz-column-content, whose
         // ColumnSet grandparent has a previous column-span sibling, requires
         // reframing since we might connect the ColumnSet's next column-span
@@ -10788,7 +10788,7 @@ void nsCSSFrameConstructor::FinishBuildingColumns(
   nsFrameList finalList;
   while (aColumnContentSiblings.NotEmpty()) {
     // Tag every ColumnSet except the last one.
-    prevColumnSet->SetProperty(nsIFrame::HasColumnSpanSiblings(), true);
+    prevColumnSet->SetHasColumnSpanSiblings(true);
 
     nsIFrame* f = aColumnContentSiblings.RemoveFirstChild();
     if (f->IsColumnSpan()) {
@@ -10849,8 +10849,7 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
                "Must have the child starting with column-span!");
 
     // Tag every non-column-span wrapper except the last one.
-    lastNonColumnSpanWrapper->SetProperty(nsIFrame::HasColumnSpanSiblings(),
-                                          true);
+    lastNonColumnSpanWrapper->SetHasColumnSpanSiblings(true);
 
     // Grab the consecutive column-span kids, and reparent them into a
     // block frame.

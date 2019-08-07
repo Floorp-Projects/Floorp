@@ -922,7 +922,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
                "Only our parent ColumnSetWrapper can have border and padding!");
 
     if (computedSize.BSize(wm) != NS_UNCONSTRAINEDSIZE &&
-        !GetProperty(nsIFrame::HasColumnSpanSiblings())) {
+        !HasColumnSpanSiblings()) {
       NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
                    "Available block-size should be constrained because it's "
                    "restricted by the computed block-size when our reflow "
