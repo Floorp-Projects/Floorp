@@ -6,7 +6,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -52,10 +55,7 @@ class ResizableViewport extends PureComponent {
   }
 
   onRemoveDeviceAssociation() {
-    const {
-      viewport,
-      onRemoveDeviceAssociation,
-    } = this.props;
+    const { viewport, onRemoveDeviceAssociation } = this.props;
 
     onRemoveDeviceAssociation(viewport.id);
   }
@@ -98,10 +98,7 @@ class ResizableViewport extends PureComponent {
     }
 
     // Update the viewport store with the new width and height.
-    const {
-      doResizeViewport,
-      viewport,
-    } = this.props;
+    const { doResizeViewport, viewport } = this.props;
     doResizeViewport(viewport.id, width, height);
     // Change the device selector back to an unselected device
     // TODO: Bug 1332754: Logic like this probably belongs in the action creator.
@@ -166,42 +163,42 @@ class ResizableViewport extends PureComponent {
       contentClass += " resizing";
     }
 
-    return (
-      dom.div({ className: "viewport" },
-        dom.div({ className: "resizable-viewport" },
-          dom.div(
-            {
-              className: contentClass,
-              style: {
-                width: viewport.width + "px",
-                height: viewport.height + "px",
-              },
+    return dom.div(
+      { className: "viewport" },
+      dom.div(
+        { className: "resizable-viewport" },
+        dom.div(
+          {
+            className: contentClass,
+            style: {
+              width: viewport.width + "px",
+              height: viewport.height + "px",
             },
-            Browser({
-              swapAfterMount,
-              userContextId: viewport.userContextId,
-              viewport,
-              onBrowserMounted,
-              onChangeViewportOrientation,
-              onContentResize,
-              onResizeViewport,
-            })
-          ),
-          dom.div({
-            className: resizeHandleClass,
-            onMouseDown: this.onResizeStart,
-          }),
-          dom.div({
-            ref: "resizeBarX",
-            className: "viewport-horizontal-resize-handle",
-            onMouseDown: this.onResizeStart,
-          }),
-          dom.div({
-            ref: "resizeBarY",
-            className: "viewport-vertical-resize-handle",
-            onMouseDown: this.onResizeStart,
+          },
+          Browser({
+            swapAfterMount,
+            userContextId: viewport.userContextId,
+            viewport,
+            onBrowserMounted,
+            onChangeViewportOrientation,
+            onContentResize,
+            onResizeViewport,
           })
-        )
+        ),
+        dom.div({
+          className: resizeHandleClass,
+          onMouseDown: this.onResizeStart,
+        }),
+        dom.div({
+          ref: "resizeBarX",
+          className: "viewport-horizontal-resize-handle",
+          onMouseDown: this.onResizeStart,
+        }),
+        dom.div({
+          ref: "resizeBarY",
+          className: "viewport-vertical-resize-handle",
+          onMouseDown: this.onResizeStart,
+        })
       )
     );
   }

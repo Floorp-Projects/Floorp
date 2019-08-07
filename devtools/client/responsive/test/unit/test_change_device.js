@@ -19,16 +19,21 @@ add_task(async function() {
   const { getState, dispatch } = store;
 
   dispatch(addDeviceType("phones"));
-  dispatch(addDevice({
-    "name": "Firefox OS Flame",
-    "width": 320,
-    "height": 570,
-    "pixelRatio": 1.5,
-    "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
-    "touch": true,
-    "firefoxOS": true,
-    "os": "fxos",
-  }, "phones"));
+  dispatch(
+    addDevice(
+      {
+        name: "Firefox OS Flame",
+        width: 320,
+        height: 570,
+        pixelRatio: 1.5,
+        userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+        touch: true,
+        firefoxOS: true,
+        os: "fxos",
+      },
+      "phones"
+    )
+  );
   dispatch(addViewport());
 
   let viewport = getState().viewports[0];
@@ -37,6 +42,9 @@ add_task(async function() {
   dispatch(changeDevice(0, "Firefox OS Flame", "phones"));
 
   viewport = getState().viewports[0];
-  equal(viewport.device, "Firefox OS Flame",
-    "Changed to Firefox OS Flame device");
+  equal(
+    viewport.device,
+    "Firefox OS Flame",
+    "Changed to Firefox OS Flame device"
+  );
 });

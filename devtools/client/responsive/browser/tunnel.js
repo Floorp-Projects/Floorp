@@ -112,7 +112,8 @@ function tunnelToInnerBrowser(outer, inner) {
         inner._imageDocument = outer._imageDocument;
         inner._isSyntheticDocument = outer._isSyntheticDocument;
         inner._innerWindowID = outer._innerWindowID;
-        inner._remoteWebNavigationImpl._currentURI = outer._remoteWebNavigationImpl._currentURI;
+        inner._remoteWebNavigationImpl._currentURI =
+          outer._remoteWebNavigationImpl._currentURI;
       }
     },
 
@@ -123,7 +124,6 @@ function tunnelToInnerBrowser(outer, inner) {
   };
 
   return {
-
     async start() {
       if (outer.isRemoteBrowser) {
         throw new Error("The outer browser must be non-remote.");
@@ -239,8 +239,10 @@ function tunnelToInnerBrowser(outer, inner) {
       // reattach it here.
       const tab = gBrowser.getTabForBrowser(outer);
       const filteredProgressListener = gBrowser._tabFilters.get(tab);
-      outer.webProgress.addProgressListener(filteredProgressListener,
-                                            Ci.nsIWebProgress.NOTIFY_ALL);
+      outer.webProgress.addProgressListener(
+        filteredProgressListener,
+        Ci.nsIWebProgress.NOTIFY_ALL
+      );
       outer.webProgress.addProgressListener(
         mirroringProgressListener,
         Ci.nsIWebProgress.NOTIFY_STATE_ALL | Ci.nsIWebProgress.NOTIFY_LOCATION
@@ -306,9 +308,13 @@ function tunnelToInnerBrowser(outer, inner) {
       // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
       // that support openers, window features, etc. didn't seem callable from JS and / or
       // this event doesn't give enough info to use them.
-      browserWindow.browserDOMWindow
-        .openURI(uri, null, flags, Ci.nsIBrowserDOMWindow.OPEN_NEW,
-                 outer.contentPrincipal);
+      browserWindow.browserDOMWindow.openURI(
+        uri,
+        null,
+        flags,
+        Ci.nsIBrowserDOMWindow.OPEN_NEW,
+        outer.contentPrincipal
+      );
     },
 
     handleModalPromptEvent({ detail }) {
@@ -391,7 +397,6 @@ function tunnelToInnerBrowser(outer, inner) {
       browserWindow = null;
       gBrowser = null;
     },
-
   };
 }
 
@@ -413,7 +418,6 @@ function MessageManagerTunnel(outer, inner) {
 }
 
 MessageManagerTunnel.prototype = {
-
   /**
    * Most message manager methods are left alone and are just passed along to
    * the outer browser's real message manager.
@@ -674,7 +678,11 @@ MessageManagerTunnel.prototype = {
 
     // If the message name is part of a prefix we're tunneling, we also need to add the
     // tunnel as an inner listener.
-    if (this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix => name.startsWith(prefix))) {
+    if (
+      this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix =>
+        name.startsWith(prefix)
+      )
+    ) {
       debug(`Add inner listener for ${name}`);
       this.innerParentMM.addMessageListener(name, this);
       this.tunneledMessageNames.add(name);
@@ -720,17 +728,24 @@ MessageManagerTunnel.prototype = {
   },
 
   _shouldTunnelOuterToInner(name) {
-    return this.OUTER_TO_INNER_MESSAGES.includes(name) ||
-           this.OUTER_TO_INNER_MESSAGE_PREFIXES.some(prefix => name.startsWith(prefix));
+    return (
+      this.OUTER_TO_INNER_MESSAGES.includes(name) ||
+      this.OUTER_TO_INNER_MESSAGE_PREFIXES.some(prefix =>
+        name.startsWith(prefix)
+      )
+    );
   },
 
   _shouldTunnelInnerToOuter(name) {
-    return this.INNER_TO_OUTER_MESSAGES.includes(name) ||
-           this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix => name.startsWith(prefix));
+    return (
+      this.INNER_TO_OUTER_MESSAGES.includes(name) ||
+      this.INNER_TO_OUTER_MESSAGE_PREFIXES.some(prefix =>
+        name.startsWith(prefix)
+      )
+    );
   },
 
   toString() {
     return "[object MessageManagerTunnel]";
   },
-
 };

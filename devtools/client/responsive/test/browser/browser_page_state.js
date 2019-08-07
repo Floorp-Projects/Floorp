@@ -46,21 +46,29 @@ add_task(async function() {
 
   // Check color inside the viewport
   let color = await spawnViewportTask(ui, {}, function() {
-    return content.getComputedStyle(content.document.body)
-                  .getPropertyValue("background-color");
+    return content
+      .getComputedStyle(content.document.body)
+      .getPropertyValue("background-color");
   });
-  is(color, "rgb(0, 128, 0)",
-     "Content is still modified from click in viewport");
+  is(
+    color,
+    "rgb(0, 128, 0)",
+    "Content is still modified from click in viewport"
+  );
 
   await closeRDM(tab);
 
   // Check color back in the browser tab
   color = await ContentTask.spawn(browser, {}, async function() {
-    return content.getComputedStyle(content.document.body)
-                  .getPropertyValue("background-color");
+    return content
+      .getComputedStyle(content.document.body)
+      .getPropertyValue("background-color");
   });
-  is(color, "rgb(0, 128, 0)",
-     "Content is still modified from click in browser tab");
+  is(
+    color,
+    "rgb(0, 128, 0)",
+    "Content is still modified from click in browser tab"
+  );
 
   // Check session history state
   history = await getSessionHistory(browser);

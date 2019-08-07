@@ -5,9 +5,10 @@
 
 // Test viewport resizing, with and without meta viewport support.
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-  "<head><meta name=\"viewport\" content=\"width=device-width, " +
-  "initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0\"></head>" +
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  '<head><meta name="viewport" content="width=device-width, ' +
+  'initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"></head>' +
   "<body>meta viewport scaled locked at 1.0</body>";
 addRDMTask(TEST_URL, async function({ ui, manager }) {
   // Turn on the pref that allows meta viewport support.
@@ -69,18 +70,30 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     await setViewportSize(ui, manager, 300, 600);
     await testViewportZoomWidthAndHeight(
       message + " before resize",
-      ui, b.zoom, b.width, b.height);
+      ui,
+      b.zoom,
+      b.width,
+      b.height
+    );
 
     // Move to the smaller size.
     await setViewportSize(ui, manager, 600, 300);
     await testViewportZoomWidthAndHeight(
       message + " after resize",
-      ui, a.zoom, a.width, a.height);
+      ui,
+      a.zoom,
+      a.width,
+      a.height
+    );
 
     // Go back to the initial size and check again.
     await setViewportSize(ui, manager, 300, 600);
     await testViewportZoomWidthAndHeight(
       message + " return to initial size",
-      ui, b.zoom, b.width, b.height);
+      ui,
+      b.zoom,
+      b.width,
+      b.height
+    );
   }
 });

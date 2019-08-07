@@ -16,7 +16,9 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const DevicePixelRatioMenu = createFactory(require("./DevicePixelRatioMenu"));
 const DeviceSelector = createFactory(require("./DeviceSelector"));
-const NetworkThrottlingMenu = createFactory(require("devtools/client/shared/components/throttling/NetworkThrottlingMenu"));
+const NetworkThrottlingMenu = createFactory(
+  require("devtools/client/shared/components/throttling/NetworkThrottlingMenu")
+);
 const SettingsMenu = createFactory(require("./SettingsMenu"));
 const ViewportDimension = createFactory(require("./ViewportDimension"));
 
@@ -59,20 +61,19 @@ class Toolbar extends PureComponent {
   }
 
   renderUserAgent() {
-    const {
-      onChangeUserAgent,
-      showUserAgentInput,
-    } = this.props;
+    const { onChangeUserAgent, showUserAgentInput } = this.props;
 
     if (!showUserAgentInput) {
       return null;
     }
 
-    return createElement(Fragment, null,
+    return createElement(
+      Fragment,
+      null,
       UserAgentInput({
         onChangeUserAgent,
       }),
-      dom.div({ className: "devtools-separator" }),
+      dom.div({ className: "devtools-separator" })
     );
   }
 
@@ -104,86 +105,87 @@ class Toolbar extends PureComponent {
       viewport,
     } = this.props;
 
-    return (
-      dom.header(
-        {
-          id: "toolbar",
-          className: [
-            leftAlignmentEnabled ? "left-aligned" : "",
-            showUserAgentInput ? "user-agent" : "",
-          ].join(" ").trim(),
-        },
-        dom.div(
-          { id: "toolbar-center-controls" },
-          DeviceSelector({
-            devices,
-            onChangeDevice,
-            doResizeViewport,
-            onUpdateDeviceModal,
-            selectedDevice,
-            viewportId: viewport.id,
-          }),
-          dom.div({ className: "devtools-separator" }),
-          ViewportDimension({
-            onRemoveDeviceAssociation,
-            doResizeViewport,
-            viewport,
-          }),
-          dom.button({
-            id: "rotate-button",
-            className: `devtools-button viewport-orientation-${
-              viewport.width > viewport.height ? "landscape" : "portrait"
-            }`,
-            onClick: () => onRotateViewport(viewport.id),
-            title: getStr("responsive.rotate"),
-          }),
-          dom.div({ className: "devtools-separator" }),
-          DevicePixelRatioMenu({
-            devices,
-            displayPixelRatio,
-            onChangePixelRatio,
-            selectedDevice,
-            selectedPixelRatio,
-          }),
-          dom.div({ className: "devtools-separator" }),
-          NetworkThrottlingMenu({
-            networkThrottling,
-            onChangeNetworkThrottling,
-          }),
-          dom.div({ className: "devtools-separator" }),
-          this.renderUserAgent(),
-          dom.button({
-            id: "touch-simulation-button",
-            className: "devtools-button" +
-                       (touchSimulationEnabled ? " checked" : ""),
-            title: (touchSimulationEnabled ?
-              getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
-            onClick: () => onChangeTouchSimulation(!touchSimulationEnabled),
-          })
-        ),
-        dom.div(
-          { id: "toolbar-end-controls" },
-          dom.button({
-            id: "screenshot-button",
-            className: "devtools-button",
-            title: getStr("responsive.screenshot"),
-            onClick: onScreenshot,
-            disabled: screenshot.isCapturing,
-          }),
-          SettingsMenu({
-            onToggleLeftAlignment,
-            onToggleReloadOnTouchSimulation,
-            onToggleReloadOnUserAgent,
-            onToggleUserAgentInput,
-          }),
-          dom.div({ className: "devtools-separator" }),
-          dom.button({
-            id: "exit-button",
-            className: "devtools-button",
-            title: getStr("responsive.exit"),
-            onClick: onExit,
-          })
-        )
+    return dom.header(
+      {
+        id: "toolbar",
+        className: [
+          leftAlignmentEnabled ? "left-aligned" : "",
+          showUserAgentInput ? "user-agent" : "",
+        ]
+          .join(" ")
+          .trim(),
+      },
+      dom.div(
+        { id: "toolbar-center-controls" },
+        DeviceSelector({
+          devices,
+          onChangeDevice,
+          doResizeViewport,
+          onUpdateDeviceModal,
+          selectedDevice,
+          viewportId: viewport.id,
+        }),
+        dom.div({ className: "devtools-separator" }),
+        ViewportDimension({
+          onRemoveDeviceAssociation,
+          doResizeViewport,
+          viewport,
+        }),
+        dom.button({
+          id: "rotate-button",
+          className: `devtools-button viewport-orientation-${
+            viewport.width > viewport.height ? "landscape" : "portrait"
+          }`,
+          onClick: () => onRotateViewport(viewport.id),
+          title: getStr("responsive.rotate"),
+        }),
+        dom.div({ className: "devtools-separator" }),
+        DevicePixelRatioMenu({
+          devices,
+          displayPixelRatio,
+          onChangePixelRatio,
+          selectedDevice,
+          selectedPixelRatio,
+        }),
+        dom.div({ className: "devtools-separator" }),
+        NetworkThrottlingMenu({
+          networkThrottling,
+          onChangeNetworkThrottling,
+        }),
+        dom.div({ className: "devtools-separator" }),
+        this.renderUserAgent(),
+        dom.button({
+          id: "touch-simulation-button",
+          className:
+            "devtools-button" + (touchSimulationEnabled ? " checked" : ""),
+          title: touchSimulationEnabled
+            ? getStr("responsive.disableTouch")
+            : getStr("responsive.enableTouch"),
+          onClick: () => onChangeTouchSimulation(!touchSimulationEnabled),
+        })
+      ),
+      dom.div(
+        { id: "toolbar-end-controls" },
+        dom.button({
+          id: "screenshot-button",
+          className: "devtools-button",
+          title: getStr("responsive.screenshot"),
+          onClick: onScreenshot,
+          disabled: screenshot.isCapturing,
+        }),
+        SettingsMenu({
+          onToggleLeftAlignment,
+          onToggleReloadOnTouchSimulation,
+          onToggleReloadOnUserAgent,
+          onToggleUserAgentInput,
+        }),
+        dom.div({ className: "devtools-separator" }),
+        dom.button({
+          id: "exit-button",
+          className: "devtools-button",
+          title: getStr("responsive.exit"),
+          onClick: onExit,
+        })
       )
     );
   }

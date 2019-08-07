@@ -15,7 +15,8 @@ const DATA = [
       host: "none",
       width: "1300",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "deactivate",
@@ -25,7 +26,8 @@ const DATA = [
       host: "none",
       width: "1300",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "activate",
@@ -35,7 +37,8 @@ const DATA = [
       host: "bottom",
       width: "1300",
     },
-  }, {
+  },
+  {
     timestamp: null,
     category: "devtools.main",
     method: "deactivate",
@@ -83,13 +86,14 @@ async function openCloseRDM(tab) {
 
 async function checkResults() {
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
-  const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
-                                                 (event[2] === "activate" ||
-                                                 event[2] === "deactivate")
+  const events = snapshot.parent.filter(
+    event =>
+      event[1] === "devtools.main" &&
+      (event[2] === "activate" || event[2] === "deactivate")
   );
 
   for (const i in events) {
-    const [ timestamp, category, method, object, value, extra ] = events[i];
+    const [timestamp, category, method, object, value, extra] = events[i];
 
     const expected = DATA[i];
 

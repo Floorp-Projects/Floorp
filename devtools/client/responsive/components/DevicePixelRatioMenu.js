@@ -13,7 +13,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr, getFormatStr } = require("../utils/l10n");
 const Types = require("../types");
 
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 const PIXEL_RATIO_PRESET = [1, 2, 3];
 
@@ -44,9 +49,10 @@ class DevicePixelRatioMenu extends PureComponent {
       return {
         label: getFormatStr("responsive.devicePixelRatioOption", value),
         type: "checkbox",
-        checked: selectedPixelRatio > 0 ?
-          selectedPixelRatio === value :
-          displayPixelRatio === value,
+        checked:
+          selectedPixelRatio > 0
+            ? selectedPixelRatio === value
+            : displayPixelRatio === value,
         click: () => onChangePixelRatio(+value),
       };
     });
@@ -64,8 +70,8 @@ class DevicePixelRatioMenu extends PureComponent {
       selectedPixelRatio,
     } = this.props;
 
-    const isDisabled = devices.listState !== Types.loadableState.LOADED ||
-      selectedDevice !== "";
+    const isDisabled =
+      devices.listState !== Types.loadableState.LOADED || selectedDevice !== "";
 
     let title;
     if (isDisabled) {
@@ -74,18 +80,19 @@ class DevicePixelRatioMenu extends PureComponent {
       title = getStr("responsive.changeDevicePixelRatio");
     }
 
-    return (
-      dom.button(
-        {
-          id: "device-pixel-ratio-menu",
-          className: "devtools-button devtools-dropdown-button",
-          disabled: isDisabled,
-          title,
-          onClick: this.onShowDevicePixelMenu,
-        },
-        dom.span({ className: "title" },
-          getFormatStr("responsive.devicePixelRatioOption",
-            selectedPixelRatio || displayPixelRatio)
+    return dom.button(
+      {
+        id: "device-pixel-ratio-menu",
+        className: "devtools-button devtools-dropdown-button",
+        disabled: isDisabled,
+        title,
+        onClick: this.onShowDevicePixelMenu,
+      },
+      dom.span(
+        { className: "title" },
+        getFormatStr(
+          "responsive.devicePixelRatioOption",
+          selectedPixelRatio || displayPixelRatio
         )
       )
     );

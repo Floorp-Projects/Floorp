@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-const isMenuCheckedFor = ({document}) => {
+const isMenuCheckedFor = ({ document }) => {
   const menu = document.getElementById("menu_responsiveUI");
   return menu.getAttribute("checked") === "true";
 };
@@ -16,32 +16,38 @@ add_task(async function() {
   const window1 = await BrowserTestUtils.openNewBrowserWindow();
   const { gBrowser } = window1;
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL },
-    async function(browser) {
-      const tab = gBrowser.getTabForBrowser(browser);
+  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL }, async function(
+    browser
+  ) {
+    const tab = gBrowser.getTabForBrowser(browser);
 
-      is(window1, Services.wm.getMostRecentWindow("navigator:browser"),
-        "The new window is the active one");
+    is(
+      window1,
+      Services.wm.getMostRecentWindow("navigator:browser"),
+      "The new window is the active one"
+    );
 
-      ok(!isMenuCheckedFor(window1),
-        "RDM menu item is unchecked by default");
+    ok(!isMenuCheckedFor(window1), "RDM menu item is unchecked by default");
 
-      await openRDM(tab);
+    await openRDM(tab);
 
-      ok(isMenuCheckedFor(window1),
-        "RDM menu item is checked with RDM open");
+    ok(isMenuCheckedFor(window1), "RDM menu item is checked with RDM open");
 
-      await closeRDM(tab);
+    await closeRDM(tab);
 
-      ok(!isMenuCheckedFor(window1),
-        "RDM menu item is unchecked with RDM closed");
-    });
+    ok(
+      !isMenuCheckedFor(window1),
+      "RDM menu item is unchecked with RDM closed"
+    );
+  });
 
   await BrowserTestUtils.closeWindow(window1);
 
-  is(window, Services.wm.getMostRecentWindow("navigator:browser"),
-    "The original window is the active one");
+  is(
+    window,
+    Services.wm.getMostRecentWindow("navigator:browser"),
+    "The original window is the active one"
+  );
 
-  ok(!isMenuCheckedFor(window),
-    "RDM menu item is unchecked");
+  ok(!isMenuCheckedFor(window), "RDM menu item is unchecked");
 });

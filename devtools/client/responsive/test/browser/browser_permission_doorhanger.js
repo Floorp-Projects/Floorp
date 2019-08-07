@@ -10,13 +10,22 @@ const TEST_SURL = TEST_URL.replace("http://example.com", "https://example.com");
 
 function waitForGeolocationPrompt(win, browser) {
   return new Promise(resolve => {
-    win.PopupNotifications.panel.addEventListener("popupshown", function popupShown() {
-      const notification = win.PopupNotifications.getNotification("geolocation", browser);
-      if (notification) {
-        win.PopupNotifications.panel.removeEventListener("popupshown", popupShown);
-        resolve();
+    win.PopupNotifications.panel.addEventListener(
+      "popupshown",
+      function popupShown() {
+        const notification = win.PopupNotifications.getNotification(
+          "geolocation",
+          browser
+        );
+        if (notification) {
+          win.PopupNotifications.panel.removeEventListener(
+            "popupshown",
+            popupShown
+          );
+          resolve();
+        }
       }
-    });
+    );
   });
 }
 

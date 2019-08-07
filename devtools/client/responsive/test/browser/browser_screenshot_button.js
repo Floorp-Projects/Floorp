@@ -27,7 +27,7 @@ function waitUntilScreenshot() {
   });
 }
 
-addRDMTask(TEST_URL, async function({ ui: {toolWindow} }) {
+addRDMTask(TEST_URL, async function({ ui: { toolWindow } }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added
@@ -49,11 +49,17 @@ addRDMTask(TEST_URL, async function({ ui: {toolWindow} }) {
   const viewport = store.getState().viewports[0];
   const ratio = window.devicePixelRatio;
 
-  is(image.width, viewport.width * ratio,
-    "screenshot width has the expected width");
+  is(
+    image.width,
+    viewport.width * ratio,
+    "screenshot width has the expected width"
+  );
 
-  is(image.height, viewport.height * ratio,
-    "screenshot width has the expected height");
+  is(
+    image.height,
+    viewport.height * ratio,
+    "screenshot width has the expected height"
+  );
 
   await OS.File.remove(filePath);
 });

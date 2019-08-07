@@ -6,7 +6,11 @@
 
 "use strict";
 
-const { createFactory, createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -30,10 +34,7 @@ class DeviceForm extends PureComponent {
   constructor(props) {
     super(props);
 
-    const {
-      height,
-      width,
-    } = this.props.viewportTemplate;
+    const { height, width } = this.props.viewportTemplate;
 
     this.state = {
       height,
@@ -46,7 +47,7 @@ class DeviceForm extends PureComponent {
     this.userAgentInputRef = createRef();
 
     this.onChangeSize = this.onChangeSize.bind(this);
-    this.onDeviceFormHide  = this.onDeviceFormHide.bind(this);
+    this.onDeviceFormHide = this.onDeviceFormHide.bind(this);
     this.onDeviceFormSave = this.onDeviceFormSave.bind(this);
     this.validateNameField = this.validateNameField.bind(this);
   }
@@ -63,9 +64,15 @@ class DeviceForm extends PureComponent {
       return;
     }
 
-    if (!this.validateNameField(this.nameInputRef.current.value, this.props.device)) {
-      this.nameInputRef.current
-        .setCustomValidity(getStr("responsive.deviceNameAlreadyInUse"));
+    if (
+      !this.validateNameField(
+        this.nameInputRef.current.value,
+        this.props.device
+      )
+    ) {
+      this.nameInputRef.current.setCustomValidity(
+        getStr("responsive.deviceNameAlreadyInUse")
+      );
       return;
     }
 
@@ -102,8 +109,9 @@ class DeviceForm extends PureComponent {
     // If the formType is "add", then we just need to check if a custom device with that
     // same name exists.
     if (this.props.formType === "add") {
-      isValidDeviceName = !this.props.devices.custom
-        .find(device => device.name == nameFieldValue);
+      isValidDeviceName = !this.props.devices.custom.find(
+        device => device.name == nameFieldValue
+      );
     } else {
       // Otherwise, the formType is "edit". We'd have to find another device that
       // already has the same name, but not itself, so:
@@ -125,66 +133,78 @@ class DeviceForm extends PureComponent {
     const { device, formType } = this.props;
     const { width, height } = this.state;
 
-    return (
-      dom.form({ id: "device-form" },
-        dom.label({ id: "device-form-name" },
-          dom.span({ className: "device-form-label" },
-            getStr("responsive.deviceAdderName")
-          ),
-          dom.input({
-            defaultValue: device.name,
-            ref: this.nameInputRef,
-          })
+    return dom.form(
+      { id: "device-form" },
+      dom.label(
+        { id: "device-form-name" },
+        dom.span(
+          { className: "device-form-label" },
+          getStr("responsive.deviceAdderName")
         ),
-        dom.label({ id: "device-form-size" },
-          dom.span({ className: "device-form-label" },
-            getStr("responsive.deviceAdderSize")
-          ),
-          ViewportDimension({
-            viewport: { width, height },
-            doResizeViewport: this.onChangeSize,
-            onRemoveDeviceAssociation: () => {},
-          })
+        dom.input({
+          defaultValue: device.name,
+          ref: this.nameInputRef,
+        })
+      ),
+      dom.label(
+        { id: "device-form-size" },
+        dom.span(
+          { className: "device-form-label" },
+          getStr("responsive.deviceAdderSize")
         ),
-        dom.label({ id: "device-form-pixel-ratio" },
-          dom.span({ className: "device-form-label" },
-            getStr("responsive.deviceAdderPixelRatio2")
-          ),
-          dom.input({
-            type: "number",
-            step: "any",
-            defaultValue: device.pixelRatio,
-            ref: this.pixelRatioInputRef,
-          })
+        ViewportDimension({
+          viewport: { width, height },
+          doResizeViewport: this.onChangeSize,
+          onRemoveDeviceAssociation: () => {},
+        })
+      ),
+      dom.label(
+        { id: "device-form-pixel-ratio" },
+        dom.span(
+          { className: "device-form-label" },
+          getStr("responsive.deviceAdderPixelRatio2")
         ),
-        dom.label({ id: "device-form-user-agent" },
-          dom.span({ className: "device-form-label" },
-            getStr("responsive.deviceAdderUserAgent2")
-          ),
-          dom.input({
-            defaultValue: device.userAgent,
-            ref: this.userAgentInputRef,
-          })
+        dom.input({
+          type: "number",
+          step: "any",
+          defaultValue: device.pixelRatio,
+          ref: this.pixelRatioInputRef,
+        })
+      ),
+      dom.label(
+        { id: "device-form-user-agent" },
+        dom.span(
+          { className: "device-form-label" },
+          getStr("responsive.deviceAdderUserAgent2")
         ),
-        dom.label({ id: "device-form-touch" },
-          dom.input({
-            defaultChecked: device.touch,
-            type: "checkbox",
-            ref: this.touchInputRef,
-          }),
-          dom.span({ className: "device-form-label" },
-            getStr("responsive.deviceAdderTouch2")
-          )
+        dom.input({
+          defaultValue: device.userAgent,
+          ref: this.userAgentInputRef,
+        })
+      ),
+      dom.label(
+        { id: "device-form-touch" },
+        dom.input({
+          defaultChecked: device.touch,
+          type: "checkbox",
+          ref: this.touchInputRef,
+        }),
+        dom.span(
+          { className: "device-form-label" },
+          getStr("responsive.deviceAdderTouch2")
+        )
+      ),
+      dom.div(
+        { className: "device-form-buttons" },
+        dom.button(
+          { id: "device-form-save", onClick: this.onDeviceFormSave },
+          formType === "add"
+            ? getStr("responsive.deviceAdderSave")
+            : getStr("responsive.deviceFormUpdate")
         ),
-        dom.div({ className: "device-form-buttons" },
-          dom.button({ id: "device-form-save", onClick: this.onDeviceFormSave },
-            formType === "add" ?
-              getStr("responsive.deviceAdderSave") :
-              getStr("responsive.deviceFormUpdate")
-          ),
-          dom.button({ id: "device-form-cancel", onClick: this.onDeviceFormHide },
-            getStr("responsive.deviceAdderCancel")
-          )
+        dom.button(
+          { id: "device-form-cancel", onClick: this.onDeviceFormHide },
+          getStr("responsive.deviceAdderCancel")
         )
       )
     );

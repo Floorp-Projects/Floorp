@@ -15,7 +15,6 @@ const {
 } = require("./index");
 
 module.exports = {
-
   /**
    * The pixel ratio of the display has changed. This may be triggered by the user
    * when changing the monitor resolution, or when the window is dragged to a different
@@ -69,5 +68,4 @@ module.exports = {
       enabled,
     };
   },
-
 };

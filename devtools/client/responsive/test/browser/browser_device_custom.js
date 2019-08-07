@@ -31,8 +31,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   await openDeviceModal(ui);
 
@@ -52,7 +56,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await addDeviceInModal(ui, device);
 
   info("Verify device defaults to enabled in modal");
-  const deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
+  const deviceCb = [
+    ...document.querySelectorAll(".device-input-checkbox"),
+  ].find(cb => {
     return cb.value == device.name;
   });
   ok(deviceCb, "Custom device checkbox added to modal");
@@ -62,7 +68,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(item => item.getAttribute("label") === device.name);
+    const menuItem = items.find(
+      item => item.getAttribute("label") === device.name
+    );
     ok(menuItem, "Custom device menu item added to device selector");
   });
 });
@@ -72,20 +80,29 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   info("Select existing device from the selector");
   await selectDevice(ui, "Test Device");
 
   await openDeviceModal(ui);
 
-  info("Reveal device adder form, check that defaults are based on selected device");
+  info(
+    "Reveal device adder form, check that defaults are based on selected device"
+  );
   const adderShow = document.getElementById("device-add-button");
   adderShow.click();
-  testDeviceAdder(ui, Object.assign({}, device, {
-    name: "Test Device (Custom)",
-  }));
+  testDeviceAdder(
+    ui,
+    Object.assign({}, device, {
+      name: "Test Device (Custom)",
+    })
+  );
 
   info("Remove previously added custom device");
   // Close the form since custom device buttons are only shown when form is not open.
@@ -106,12 +123,18 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Ensure custom device was removed from device selector");
   await waitUntilState(store, state => state.viewports[0].device == "");
   const deviceSelectorTitle = document.querySelector("#device-selector .title");
-  is(deviceSelectorTitle.textContent, "Responsive", "Device selector reset to no device");
+  is(
+    deviceSelectorTitle.textContent,
+    "Responsive",
+    "Device selector reset to no device"
+  );
 
   info("Look for custom device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const menuItem = menuItems.find(item => item.getAttribute("label") === device.name);
+    const menuItem = menuItems.find(
+      item => item.getAttribute("label") === device.name
+    );
     ok(!menuItem, "Custom device option removed from device selector");
   });
 
@@ -124,8 +147,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   await openDeviceModal(ui);
 
@@ -133,11 +160,15 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const adderShow = document.querySelector("#device-add-button");
   adderShow.click();
 
-  info("Fill out device adder form by setting details to unicode device and save");
+  info(
+    "Fill out device adder form by setting details to unicode device and save"
+  );
   await addDeviceInModal(ui, unicodeDevice);
 
   info("Verify unicode device defaults to enabled in modal");
-  const deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
+  const deviceCb = [
+    ...document.querySelectorAll(".device-input-checkbox"),
+  ].find(cb => {
     return cb.value == unicodeDevice.name;
   });
   ok(deviceCb, "Custom unicode device checkbox added to modal");
@@ -147,7 +178,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom unicode device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(i => i.getAttribute("label") === unicodeDevice.name);
+    const menuItem = items.find(
+      i => i.getAttribute("label") === unicodeDevice.name
+    );
     ok(menuItem, "Custom unicode device option added to device selector");
   });
 });
@@ -157,8 +190,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   // Check if the unicode custom device is present in the list of device options since
   // we want to ensure that unicode device names are not forgotten after restarting RDM
@@ -166,7 +203,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for custom unicode device in device selector");
   const deviceSelector = document.getElementById("device-selector");
   await testMenuItems(toolWindow, deviceSelector, items => {
-    const menuItem = items.find(i => i.getAttribute("label") === unicodeDevice.name);
+    const menuItem = items.find(
+      i => i.getAttribute("label") === unicodeDevice.name
+    );
     ok(menuItem, "Custom unicode device option present in device selector");
   });
 });
@@ -175,17 +214,25 @@ function testDeviceAdder(ui, expected) {
   const { document } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-form-name input");
-  const [ widthInput, heightInput ] =
-    document.querySelectorAll("#device-form-size input");
-  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
-  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const [widthInput, heightInput] = document.querySelectorAll(
+    "#device-form-size input"
+  );
+  const pixelRatioInput = document.querySelector(
+    "#device-form-pixel-ratio input"
+  );
+  const userAgentInput = document.querySelector(
+    "#device-form-user-agent input"
+  );
   const touchInput = document.querySelector("#device-form-touch input");
 
   is(nameInput.value, expected.name, "Device name matches");
   is(parseInt(widthInput.value, 10), expected.width, "Width matches");
   is(parseInt(heightInput.value, 10), expected.height, "Height matches");
-  is(parseFloat(pixelRatioInput.value), expected.pixelRatio,
-     "devicePixelRatio matches");
+  is(
+    parseFloat(pixelRatioInput.value),
+    expected.pixelRatio,
+    "devicePixelRatio matches"
+  );
   is(userAgentInput.value, expected.userAgent, "User agent matches");
   is(touchInput.checked, expected.touch, "Touch matches");
 }

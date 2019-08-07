@@ -41,7 +41,8 @@ async function sendMessages(receiver) {
       function(opts) {
         const bc = new content.BroadcastChannel(opts.name);
         bc.postMessage(opts.message);
-      });
+      }
+    );
   }
 
   return {
@@ -54,14 +55,17 @@ async function sendMessages(receiver) {
 async function verifyResults({ sender1, sender2, receiver }) {
   // Since sender1 sends before sender2, if the title is exactly
   // sender2's message, sender1's message must've been blocked
-  await ContentTask.spawn(receiver.browser, sender2.message,
-    async function(message) {
-      await content.testPromise.then(function() {
-        is(content.document.title, message,
-           "should only receive messages from the same user context");
-      });
-    }
-  );
+  await ContentTask.spawn(receiver.browser, sender2.message, async function(
+    message
+  ) {
+    await content.testPromise.then(function() {
+      is(
+        content.document.title,
+        message,
+        "should only receive messages from the same user context"
+      );
+    });
+  });
 
   gBrowser.removeTab(sender1.tab);
   gBrowser.removeTab(sender2.tab);
@@ -70,9 +74,7 @@ async function verifyResults({ sender1, sender2, receiver }) {
 add_task(async function() {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
-    "set": [
-      ["privacy.userContext.enabled", true],
-    ],
+    set: [["privacy.userContext.enabled", true]],
   });
 });
 

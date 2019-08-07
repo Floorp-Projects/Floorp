@@ -34,8 +34,10 @@ add_task(async function() {
   tab = newWindow.gBrowser.tabs[0];
 
   // Detaching a tab closes RDM.
-  ok(!manager.isActiveForTab(tab),
-    "Responsive Design Mode is not active for the tab");
+  ok(
+    !manager.isActiveForTab(tab),
+    "Responsive Design Mode is not active for the tab"
+  );
 
   // Reopen the RDM and test the exit button again.
   await testExitButton(await openRDM(tab));
@@ -54,18 +56,22 @@ async function waitBootstrap(ui) {
   await waitForFrameLoad(ui, url);
 }
 
-async function testExitButton({ui, manager}) {
+async function testExitButton({ ui, manager }) {
   await waitBootstrap(ui);
 
   const exitButton = ui.toolWindow.document.getElementById("exit-button");
 
-  ok(manager.isActiveForTab(ui.tab),
-    "Responsive Design Mode active for the tab");
+  ok(
+    manager.isActiveForTab(ui.tab),
+    "Responsive Design Mode active for the tab"
+  );
 
   exitButton.click();
 
   await once(manager, "off");
 
-  ok(!manager.isActiveForTab(ui.tab),
-    "Responsive Design Mode is not active for the tab");
+  ok(
+    !manager.isActiveForTab(ui.tab),
+    "Responsive Design Mode is not active for the tab"
+  );
 }

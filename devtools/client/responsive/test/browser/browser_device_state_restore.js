@@ -10,15 +10,16 @@ const DEFAULT_DPPX = window.devicePixelRatio;
 
 /* eslint-disable max-len */
 const TEST_DEVICE = {
-  "name": "Apple iPhone 6s",
-  "width": 375,
-  "height": 667,
-  "pixelRatio": 2,
-  "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4",
-  "touch": true,
-  "firefoxOS": false,
-  "os": "ios",
-  "featured": true,
+  name: "Apple iPhone 6s",
+  width: 375,
+  height: 667,
+  pixelRatio: 2,
+  userAgent:
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4",
+  touch: true,
+  firefoxOS: false,
+  os: "ios",
+  featured: true,
 };
 /* eslint-enable max-len */
 
@@ -30,8 +31,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnUAChange(true);
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   info("Checking the default RDM state.");
   testViewportDeviceMenuLabel(ui, "Responsive");
@@ -60,13 +65,18 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   reloadOnUAChange(true);
 
-  info("Reopening RDM and checking that the previous device state is restored.");
+  info(
+    "Reopening RDM and checking that the previous device state is restored."
+  );
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state =>
-    state.viewports.length == 1 &&
-    state.viewports[0].device === TEST_DEVICE.name &&
-    state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.viewports[0].device === TEST_DEVICE.name &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
   await waitForViewportResizeTo(ui, TEST_DEVICE.width, TEST_DEVICE.height);
   await waitForViewportLoad(ui);
 
@@ -88,13 +98,18 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   reloadOnUAChange(true);
 
-  info("Reopening RDM and checking that the previous device state is restored.");
+  info(
+    "Reopening RDM and checking that the previous device state is restored."
+  );
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state =>
-    state.viewports.length == 1 &&
-    state.viewports[0].device === TEST_DEVICE.name &&
-    state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.viewports[0].device === TEST_DEVICE.name &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
   await waitForViewportResizeTo(ui, TEST_DEVICE.height, TEST_DEVICE.width);
   await waitForViewportLoad(ui);
 

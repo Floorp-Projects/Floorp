@@ -14,8 +14,11 @@ add_task(async function() {
     waitForLoad: false,
   });
   const browser = tab.linkedBrowser;
-  is(browser.getAttribute("preloadedState"), "consumed",
-     "Got a preloaded browser for newtab");
+  is(
+    browser.getAttribute("preloadedState"),
+    "consumed",
+    "Got a preloaded browser for newtab"
+  );
 
   // Open RDM and try to navigate
   const { ui } = await openRDM(tab);
