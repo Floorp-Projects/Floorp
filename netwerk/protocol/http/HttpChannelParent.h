@@ -138,7 +138,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   already_AddRefed<ParentChannelListener> GetParentListener();
 
   nsresult TriggerCrossProcessRedirect(nsIChannel* oldChannel,
-                                       nsILoadInfo* aLoadInfo,
                                        uint64_t aIdentifier);
 
  protected:
