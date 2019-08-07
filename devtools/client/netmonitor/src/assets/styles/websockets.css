@@ -68,3 +68,19 @@
   white-space: normal;
   overflow-wrap: break-word;
 }
+
+/* Styles related to truncated data */
+
+.theme-light #messages-panel .truncated-data-message {
+  background: var(--grey-20);
+}
+
+.theme-dark #messages-panel .truncated-data-message {
+  background: var(--grey-70);
+}
+
+.truncated-data-message {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px 8px;
+  font-size: 12px;
+}
