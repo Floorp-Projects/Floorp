@@ -580,29 +580,6 @@ class PresShell final : public nsStubDocumentObserver,
                                ScrollFlags aScrollFlags);
 
   /**
-   * Determine if a rectangle specified in the frame's coordinate system
-   * intersects "enough" with the viewport to be considered visible. This
-   * is not a strict test against the viewport -- it's a test against
-   * the intersection of the viewport and the frame's ancestor scrollable
-   * frames. If it doesn't intersect enough, return a value indicating
-   * which direction the frame's topmost ancestor scrollable frame would
-   * need to be scrolled to bring the frame into view.
-   * @param aFrame frame that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility
-   * @param aMinTwips is the minimum distance in from the edge of the
-   *                  visible area that an object must be to be counted
-   *                  visible
-   * @return RectVisibility::Visible if the rect is visible
-   *         RectVisibility::AboveViewport
-   *         RectVisibility::BelowViewport
-   *         RectVisibility::LeftOfViewport
-   *         RectVisibility::RightOfViewport rectangle is outside the
-   *         topmost ancestor scrollable frame in the specified direction
-   */
-  RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
-                                   nscoord aMinTwips) const;
-
-  /**
    * Suppress notification of the frame manager that frames are
    * being destroyed.
    */
