@@ -175,7 +175,7 @@ class BlocksRingBuffer {
   ~BlocksRingBuffer() {
 #ifdef DEBUG
     // Needed because of lock DEBUG-check in `DestroyAllEntries()`.
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
 #endif  // DEBUG
     DestroyAllEntries();
   }
@@ -187,7 +187,7 @@ class BlocksRingBuffer {
   // Note that these may change right after this thread-safe call, so they
   // should only be used for statistical purposes.
   Pair<uint64_t, uint64_t> GetPushedAndClearedCounts() const {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     return {mPushedBlockCount, mClearedBlockCount};
   }
 
@@ -416,7 +416,7 @@ class BlocksRingBuffer {
   // call.
   template <typename Callback>
   auto Read(Callback&& aCallback) const {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     return std::forward<Callback>(aCallback)(Reader(*this));
   }
 
@@ -436,7 +436,7 @@ class BlocksRingBuffer {
   // this thread-safe call.
   template <typename Callback>
   auto ReadAt(BlockIndex aBlockIndex, Callback&& aCallback) const {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(aBlockIndex <= mNextWriteIndex);
     Maybe<EntryReader> maybeReader;
     if (aBlockIndex >= mFirstReadIndex && aBlockIndex < mNextWriteIndex) {
@@ -659,7 +659,7 @@ class BlocksRingBuffer {
     // fast writers going around the ring cannot trample on this entry until it
     // is fully written.
     // TODO: Investigate this potential improvement as part of bug 1562604.
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     return std::forward<Callback>(aCallback)(EntryReserver(*this));
   }
 
@@ -690,7 +690,7 @@ class BlocksRingBuffer {
   // Clear all entries, calling entry destructor (if any), and move read index
   // to the end so that these entries cannot be read anymore.
   void Clear() {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     ClearAllEntries();
   }
 
@@ -698,7 +698,7 @@ class BlocksRingBuffer {
   // destructor (if any), and move read index to the end so that these entries
   // cannot be read anymore.
   void ClearBefore(BlockIndex aBlockIndex) {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     // Don't accept a not-yet-written index. One-past-the-end is ok.
     MOZ_ASSERT(aBlockIndex <= mNextWriteIndex);
     if (aBlockIndex <= mFirstReadIndex) {
@@ -739,7 +739,7 @@ class BlocksRingBuffer {
 
 #ifdef DEBUG
   void Dump() const {
-    baseprofiler::detail::BPAutoLock lock(mMutex);
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     using ULL = unsigned long long;
     printf("start=%llu (%llu) end=%llu (%llu) - ", ULL(Index(mFirstReadIndex)),
            ULL(Index(mFirstReadIndex) & (BufferLength().Value() - 1)),
