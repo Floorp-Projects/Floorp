@@ -56,7 +56,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   }
 );
 
-AntiTracking.runTestInNormalAndPrivateMode(
+AntiTracking.runTest(
   "Cookies and Storage Access API",
   // Blocking callback
   async _ => {

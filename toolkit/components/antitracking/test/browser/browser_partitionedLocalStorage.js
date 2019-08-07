@@ -1,7 +1,7 @@
 /* import-globals-from antitracking_head.js */
 /* import-globals-from partitionedstorage_head.js */
 
-AntiTracking.runTestInNormalAndPrivateMode(
+AntiTracking.runTest(
   "localStorage and Storage Access API",
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
@@ -93,7 +93,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   false
 );
 
-PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
+PartitionedStorageHelper.runPartitioningTest(
   "Partitioned tabs - localStorage",
 
   // getDataCallback

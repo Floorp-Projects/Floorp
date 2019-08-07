@@ -1,6 +1,6 @@
 /* import-globals-from partitionedstorage_head.js */
 
-PartitionedStorageHelper.runTestInNormalAndPrivateMode(
+PartitionedStorageHelper.runTest(
   "SharedWorkers",
   async (win3rdParty, win1stParty, allowed) => {
     // This test fails if run with an HTTPS 3rd-party URL because the shared worker
@@ -53,7 +53,7 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   }
 );
 
-PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
+PartitionedStorageHelper.runPartitioningTest(
   "Partitioned tabs - SharedWorker",
 
   // getDataCallback

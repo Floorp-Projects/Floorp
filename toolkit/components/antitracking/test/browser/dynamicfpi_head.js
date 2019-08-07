@@ -8,15 +8,9 @@
 "use strict";
 
 this.DynamicFPIHelper = {
-  runTest(name, callback, cleanupFunction, extraPrefs, runInPrivateWindow) {
+  runTest(name, callback, cleanupFunction, extraPrefs) {
     add_task(async _ => {
-      info(
-        "Starting test `" +
-          name +
-          "' with dynamic FPI running in a " +
-          (runInPrivateWindow ? "private" : "normal") +
-          " window..."
-      );
+      info("Starting test `" + name + "' with dynamic FPI...");
 
       await SpecialPowers.flushPrefEnv();
       await SpecialPowers.pushPrefEnv({
@@ -41,17 +35,11 @@ this.DynamicFPIHelper = {
         await SpecialPowers.pushPrefEnv({ set: extraPrefs });
       }
 
-      let win = window;
-      if (runInPrivateWindow) {
-        win = OpenBrowserWindow({ private: true });
-        await TestUtils.topicObserved("browser-delayed-startup-finished");
-      }
-
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
-      win.gBrowser.selectedTab = tab;
+      let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+      gBrowser.selectedTab = tab;
 
-      let browser = win.gBrowser.getBrowserForTab(tab);
+      let browser = gBrowser.getBrowserForTab(tab);
       await BrowserTestUtils.browserLoaded(browser);
 
       info("Creating a 3rd party content");
@@ -109,10 +97,6 @@ this.DynamicFPIHelper = {
 
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
-
-      if (runInPrivateWindow) {
-        win.close();
-      }
     });
 
     add_task(async _ => {
