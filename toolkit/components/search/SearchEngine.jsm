@@ -1207,12 +1207,6 @@ SearchEngine.prototype = {
     );
     // Only accept remote icons from http[s] or ftp
     switch (uri.scheme) {
-      case "resource":
-      case "chrome":
-        // We only allow chrome and resource icon URLs for built-in search engines
-        if (!this._isDefault) {
-          return;
-        }
       // Fall through to the data case
       case "moz-extension":
       case "data":
