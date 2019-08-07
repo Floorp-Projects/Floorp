@@ -185,23 +185,9 @@ bool ElemOpEmitter::emitDelete() {
   return true;
 }
 
-bool ElemOpEmitter::emitAssignment(EmitSetFunctionName emitSetFunName) {
+bool ElemOpEmitter::emitAssignment() {
   MOZ_ASSERT(isSimpleAssignment() || isPropInit() || isCompoundAssignment());
   MOZ_ASSERT(state_ == State::Rhs);
-
-  if (emitSetFunName == EmitSetFunctionName::Yes) {
-    // JSOP_*SETELEM_SUPER has a different stack ordering.
-    MOZ_ASSERT(!isSuper());
-    //              [stack] obj, id, val
-    if (!bce_->emitDupAt(1)) {
-      //            [stack] obj, id, val, id
-      return false;
-    }
-    if (!bce_->emit2(JSOP_SETFUNNAME, uint8_t(FunctionPrefixKind::None))) {
-      //            [stack] obj, id, val
-      return false;
-    }
-  }
 
   MOZ_ASSERT_IF(isPropInit(), !isSuper());
 
