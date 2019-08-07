@@ -153,6 +153,7 @@ add_task(async function test_populated_list() {
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
   is(loginListItems.length, 2, "The two stored logins should be displayed");
+  is(loginListItems[0].getAttribute("role"), "option", "Each login-list-item should have role='option'");
   is(loginListItems[0].dataset.guid, TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
   is(loginListItems[0].querySelector(".title").textContent, TEST_LOGIN_1.title,
      "login-list-item origin should match");
