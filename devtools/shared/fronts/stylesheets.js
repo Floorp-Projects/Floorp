@@ -63,7 +63,7 @@ class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
     return this._form.column || -1;
   }
   get parentStyleSheet() {
-    return this.conn.getActor(this._form.parentStyleSheet);
+    return this.conn.getFrontByID(this._form.parentStyleSheet);
   }
 }
 

@@ -55,11 +55,11 @@ const Actions = require("./index");
 function isCachedActorNeeded(runtime, type, id) {
   // Unique ids for workers were introduced in Firefox 68 (Bug 1539328). When debugging
   // older browsers, the id falls back to the actor ID. Check if the target id is a worker
-  // actorID (which means getActor() should return an actor with id).
+  // actorID (which means getFrontByID() should return an actor with id).
   // Can be removed when Firefox 68 is in Release channel.
   return (
     type === DEBUG_TARGETS.WORKER &&
-    runtime.runtimeDetails.clientWrapper.client.getActor(id)
+    runtime.runtimeDetails.clientWrapper.client.getFrontByID(id)
   );
 }
 
