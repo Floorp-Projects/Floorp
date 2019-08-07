@@ -33,7 +33,7 @@
 #     type: <cpp-type>                     # mandatory
 #     value: <default-value>               # mandatory
 #     mirror: <never | once | always>      # mandatory
-#     do_not_use_directly: <True | False>  # optional
+#     do_not_use_directly: <true | false>  # optional
 #     include: <header-file>               # optional
 #
 # - `name` is the name of the pref, without double-quotes, as it appears
@@ -88,6 +88,10 @@
 #   not present. Cannot be used with a `never` mirror value, because there is
 #   no getter function in that case.
 #
+# - `include` names a header file that must be included for the pref value to
+#   compile correctly, e.g. because it refers to a code constant. System
+#   headers should be surrounded with angle brackets, e.g. `<cmath>`.
+#
 # The getter function's base name is the same as the pref's name, but with
 # '.' or '-' chars converted to '_', to make a valid identifier. For example,
 # the getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear,
@@ -99,10 +103,6 @@
 #
 # - If the `do_not_use_directly` value is true, `_DoNotUseDirectly` is
 #   appended.
-#
-# - `include` names a header file that must be included for the pref value to
-#   compile correctly, e.g. because it refers to a code constant. System
-#   headers should be surrounded with angle brackets, e.g. `<cmath>`.
 #
 # Preprocessor
 # ------------
