@@ -15,6 +15,9 @@ permalink: /changelog/
 * **support-test**
   * Fixed [#3893](https://github.com/mozilla-mobile/android-components/issues/3893) Moving WebserverRule to support-test.
 
+* **browser-engine-gecko-beta**
+  * The component now handles situations where the Android system kills the content process (without killing the main app process) in order to reclaim resources. In those situations the component will automatically recover and restore the last known state of those sessions.
+
 # 7.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.2...v7.0.0)
