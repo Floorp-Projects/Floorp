@@ -1090,4 +1090,15 @@ collections:
       from_screen:
         description: >
           A string representing the screen from which the user pressed the save button.
-          Either `browser` or `home`
+          Currently one of: `browserMenu`, `homeMenu` or `home`
+  rename_button:
+    type: event
+    description: >
+      A user pressed the "rename collection" button in the three dot menu
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4539
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"

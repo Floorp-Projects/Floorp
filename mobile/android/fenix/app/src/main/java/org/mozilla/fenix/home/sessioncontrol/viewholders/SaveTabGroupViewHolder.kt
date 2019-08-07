@@ -23,14 +23,14 @@ class SaveTabGroupViewHolder(
     init {
         view.save_tab_group_button.setOnClickListener {
             view.context.components.analytics.metrics
-                .track(Event.CollectionSaveButtonPressed(TELEMETRY_HOME_IDENITIFIER))
+                .track(Event.CollectionSaveButtonPressed(TELEMETRY_HOME_IDENTIFIER))
 
             actionEmitter.onNext(TabAction.SaveTabGroup(selectedTabSessionId = null))
         }
     }
 
     companion object {
-        const val TELEMETRY_HOME_IDENITIFIER = "home"
+        const val TELEMETRY_HOME_IDENTIFIER = "home"
         const val LAYOUT_ID = R.layout.save_tab_group_button
     }
 }

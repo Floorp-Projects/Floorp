@@ -279,6 +279,9 @@ private val Event.wrapper
         is Event.CollectionAddTabPressed -> EventWrapper<NoExtraKeys>(
             { Collections.addTabButton.record(it) }
         )
+        is Event.CollectionRenamePressed -> EventWrapper<NoExtraKeys>(
+            { Collections.renameButton.record(it) }
+        )
         is Event.CollectionSaved -> EventWrapper(
             { Collections.saved.record(it) },
             { Collections.savedKeys.valueOf(it) }

@@ -891,7 +891,7 @@ tabs_selected: The number of tabs added to the collection
     <tr>  
         <td>add_tab_button</td>  
         <td>event</td>  
-        <td> A user tapped the "add tab" button in the three dot menu of collections</td>  
+        <td>A user tapped the "add tab" button in the three dot menu of collections</td>  
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/4358">link</a></td>  
         <td></td>  
         <td>2020-03-01</td>  
@@ -899,7 +899,7 @@ tabs_selected: The number of tabs added to the collection
     <tr>  
         <td>long_press</td>  
         <td>event</td>  
-        <td> A user long pressed on a tab, triggering the collection creation screen</td>  
+        <td>A user long pressed on a tab, triggering the collection creation screen</td>  
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/4358">link</a></td>  
         <td></td>  
         <td>2020-03-01</td>  
@@ -914,6 +914,14 @@ tabs_selected: The number of tabs added to the collection
         </td> 
         <td>2020-03-01</td>  
     </tr>   
+    <tr>  
+        <td>rename_button</td>  
+        <td>event</td>  
+        <td>A user pressed the "rename collection" button in the three dot menu</td>  
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4539">link</a></td>  
+        <td></td>  
+        <td>2020-03-01</td>  
+    </tr> 
 </table>  
 </pre> 
 

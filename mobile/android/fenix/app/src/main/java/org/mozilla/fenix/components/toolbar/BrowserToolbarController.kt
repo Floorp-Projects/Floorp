@@ -122,7 +122,7 @@ class DefaultBrowserToolbarController(
             }
             ToolbarMenu.Item.SaveToCollection -> {
                 context.components.analytics.metrics
-                    .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENITIFIER))
+                    .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
                 currentSession.let {
                     val tab = it.toTab(context)
                     viewModel.tabs = listOf(tab)
@@ -188,6 +188,6 @@ class DefaultBrowserToolbarController(
     }
 
     companion object {
-        private const val TELEMETRY_BROWSER_IDENITIFIER = "browser"
+        private const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 }

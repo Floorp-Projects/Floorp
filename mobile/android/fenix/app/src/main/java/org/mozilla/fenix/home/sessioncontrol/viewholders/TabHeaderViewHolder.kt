@@ -13,6 +13,8 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
@@ -29,11 +31,11 @@ class TabHeaderViewHolder(
             when (it) {
                 is TabHeaderMenu.Item.Share -> actionEmitter.onNext(TabAction.ShareTabs)
                 is TabHeaderMenu.Item.CloseAll -> actionEmitter.onNext(TabAction.CloseAll(isPrivate))
-                is TabHeaderMenu.Item.SaveToCollection -> actionEmitter.onNext(
-                    TabAction.SaveTabGroup(
-                        null
-                    )
-                )
+                is TabHeaderMenu.Item.SaveToCollection -> {
+                    actionEmitter.onNext(TabAction.SaveTabGroup(null))
+                    view.context.components.analytics.metrics
+                        .track(Event.CollectionSaveButtonPressed(TELEMETRY_HOME_MENU_IDENITIFIER))
+                }
             }
         }
 
@@ -99,6 +101,7 @@ class TabHeaderViewHolder(
     }
 
     companion object {
+        const val TELEMETRY_HOME_MENU_IDENITIFIER = "homeMenu"
         const val LAYOUT_ID = R.layout.tab_header
     }
 }

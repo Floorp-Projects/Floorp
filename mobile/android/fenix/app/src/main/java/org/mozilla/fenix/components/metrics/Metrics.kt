@@ -110,6 +110,7 @@ sealed class Event {
     object CollectionTabSelectOpened : Event()
     object CollectionTabLongPressed : Event()
     object CollectionAddTabPressed : Event()
+    object CollectionRenamePressed : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(

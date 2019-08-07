@@ -472,6 +472,7 @@ class HomeFragment : Fragment(), AccountObserver {
                     selectedTabCollection = action.collection,
                     step = SaveCollectionStep.RenameCollection
                 )
+                requireComponents.analytics.metrics.track(Event.CollectionRenamePressed)
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteJobs()
