@@ -717,11 +717,6 @@
   value: 32
   mirror: always
 
-- name: browser.contentblocking.rejecttrackers.control-center.ui.enabled
-  type: bool
-  value: false
-  mirror: always
-
 - name: browser.display.background_color
   type: String
   value: ""
