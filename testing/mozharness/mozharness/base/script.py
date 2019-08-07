@@ -56,7 +56,7 @@ import mozinfo
 from mozprocess import ProcessHandler
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import MultiFileLogger, SimpleFileLogger, ConsoleLogger, \
-    LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL
+    LogMixin, OutputParser, DEBUG, INFO, ERROR, FATAL, WARNING
 
 
 class ContentLengthMismatch(Exception):
@@ -820,8 +820,10 @@ class ScriptMixin(PlatformMixin):
                      level=error_level, exit_code=exit_code)
             return -1
         except shutil.Error, e:
+            # ERROR level ends up reporting the failure to treeherder &
+            # pollutes the failure summary list.
             self.log("shutil error: %s" % str(e),
-                     level=error_level, exit_code=exit_code)
+                     level=WARNING, exit_code=exit_code)
             return -1
         return 0
 
