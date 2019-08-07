@@ -59,7 +59,8 @@ void AgileReference::AssignInternal(IUnknown* aObject) {
    * If that API is not available, we fall back to using the Global Interface
    * Table.
    */
-  static const DynamicallyLinkedFunctionPtr<decltype(&::RoGetAgileReference)>
+  static const StaticDynamicallyLinkedFunctionPtr<decltype(
+      &::RoGetAgileReference)>
       pRoGetAgileReference(L"ole32.dll", "RoGetAgileReference");
 
   MOZ_ASSERT(aObject);
