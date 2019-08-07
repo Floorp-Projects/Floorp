@@ -496,6 +496,8 @@
     <string name="tracking_protection_off">Off</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Collect the things that matter to you. To start, save open tabs to a new collection.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collections</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
