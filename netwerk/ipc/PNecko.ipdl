@@ -29,6 +29,7 @@ include protocol PClassifierDummyChannel;
 include protocol PWebrtcProxyChannel;
 include protocol PSocketProcessBridge;
 include protocol PProxyConfigLookup;
+include protocol PDocumentChannel;
 
 include IPCStream;
 include URIParams;
@@ -69,6 +70,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PClassifierDummyChannel;
   manages PWebrtcProxyChannel;
   manages PProxyConfigLookup;
+  manages PDocumentChannel;
 
 parent:
   async __delete__();
@@ -87,6 +89,10 @@ parent:
 
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
                     uint32_t flags);
+
+  async PDocumentChannel(PBrowserOrId browser,
+                         SerializedLoadContext loadContext,
+                         DocumentChannelCreationArgs args);
 
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
