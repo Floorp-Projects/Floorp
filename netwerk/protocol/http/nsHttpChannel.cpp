@@ -7324,12 +7324,12 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
 
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
+  nsCOMPtr<nsICrossProcessSwitchChannel> httpParent =
+      do_QueryInterface(parentChannel);
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
-  httpParent->TriggerCrossProcessRedirect(this,
-                                          mCrossProcessRedirectIdentifier);
+  httpParent->TriggerCrossProcessSwitch(this, mCrossProcessRedirectIdentifier);
 
   // This will suspend the channel
   rv = WaitForRedirectCallback();

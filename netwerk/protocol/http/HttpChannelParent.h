@@ -14,6 +14,7 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/MozPromise.h"
+#include "nsICrossProcessSwitchChannel.h"
 #include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
@@ -60,7 +61,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
                                 public HttpChannelSecurityWarningReporter,
                                 public nsIAsyncVerifyRedirectReadyCallback,
                                 public nsIChannelEventSink,
-                                public nsIRedirectResultListener {
+                                public nsIRedirectResultListener,
+                                public nsICrossProcessSwitchChannel {
   virtual ~HttpChannelParent();
 
  public:
@@ -76,6 +78,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIREDIRECTRESULTLISTENER
+  NS_DECL_NSICROSSPROCESSSWITCHCHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
@@ -136,9 +139,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void CancelChildCrossProcessRedirect();
 
   already_AddRefed<ParentChannelListener> GetParentListener();
-
-  nsresult TriggerCrossProcessRedirect(nsIChannel* oldChannel,
-                                       uint64_t aIdentifier);
 
  protected:
   // used to connect redirected-to channel in parent with just created
