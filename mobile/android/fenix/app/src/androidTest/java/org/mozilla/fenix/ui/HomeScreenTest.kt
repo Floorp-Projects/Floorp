@@ -15,6 +15,8 @@ import org.mozilla.fenix.ui.robots.homeScreen
 /**
  *  Tests for verifying the presence of home screen and first-run homescreen elements
  *
+ *  Note: For private browsing, navigation bar and tabs see separate test class
+ *
  */
 
 class HomeScreenTest {
