@@ -191,10 +191,14 @@ void TabGroup::Leave(nsPIDOMWindowOuter* aWindow) {
     mForegroundCount--;
   }
 
+  MaybeDestroy();
+}
+
+void TabGroup::MaybeDestroy() {
   // The Chrome TabGroup doesn't have cyclical references through mEventTargets
   // to itself, meaning that we don't have to worry about nulling mEventTargets
   // out after the last window leaves.
-  if (!mIsChrome && mWindows.IsEmpty()) {
+  if (!mIsChrome && !mLastWindowLeft && mWindows.IsEmpty()) {
     mLastWindowLeft = true;
     Shutdown(false);
   }
