@@ -2,7 +2,7 @@
 
 gFeatures = "noopener";
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "Blocking in the case of noopener windows",
   async _ => {
     is(window.localStorage, null, "LocalStorage is null");
