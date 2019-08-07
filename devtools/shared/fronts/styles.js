@@ -168,15 +168,15 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 
   get parentRule() {
-    return this.conn.getActor(this._form.parentRule);
+    return this.conn.getFrontByID(this._form.parentRule);
   }
 
   get parentStyleSheet() {
-    return this.conn.getActor(this._form.parentStyleSheet);
+    return this.conn.getFrontByID(this._form.parentStyleSheet);
   }
 
   get element() {
-    return this.conn.getActor(this._form.element);
+    return this.conn.getFrontByID(this._form.element);
   }
 
   get href() {

@@ -20,9 +20,9 @@ add_task(async function() {
     serviceWorkers: [],
     sharedWorkers: [],
   });
-  // Override getActor of client and getWorker function of root of client
+  // Override getFrontByID of client and getWorker function of root of client
   // which is used in inspect action for worker.
-  thisFirefoxClient.client.getActor = id => null;
+  thisFirefoxClient.client.getFrontByID = id => null;
   thisFirefoxClient.client.mainRoot = {
     getWorker: id => {
       return id === testWorker.id ? testWorker : null;
