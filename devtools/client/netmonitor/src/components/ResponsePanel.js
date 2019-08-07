@@ -103,7 +103,7 @@ class ResponsePanel extends Component {
 
     // Check if the response has been truncated, in which case no parse should
     // be attempted.
-    if (limit <= request.responseContent.content.size) {
+    if (limit > 0 && limit <= request.responseContent.content.size) {
       const result = {};
       result.error = RESPONSE_TRUNCATED;
       return result;
