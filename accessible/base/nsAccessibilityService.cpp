@@ -346,7 +346,7 @@ Accessible* nsAccessibilityService::GetRootDocumentAccessible(
     nsCOMPtr<nsIDocShellTreeItem> treeItem(documentNode->GetDocShell());
     if (treeItem) {
       nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-      treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+      treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
       if (treeItem != rootTreeItem) {
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
         presShell = docShell->GetPresShell();

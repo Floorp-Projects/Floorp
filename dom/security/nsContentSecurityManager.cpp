@@ -624,7 +624,7 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+  docShellTreeItem->GetInProcessRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
   if (docShell) {
     appType = docShell->GetAppType();

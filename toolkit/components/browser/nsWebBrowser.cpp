@@ -358,7 +358,7 @@ nsWebBrowser::GetInProcessSameTypeParent(nsIDocShellTreeItem** aParent) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem) {
+nsWebBrowser::GetInProcessRootTreeItem(nsIDocShellTreeItem** aRootTreeItem) {
   NS_ENSURE_ARG_POINTER(aRootTreeItem);
   *aRootTreeItem = static_cast<nsIDocShellTreeItem*>(this);
 

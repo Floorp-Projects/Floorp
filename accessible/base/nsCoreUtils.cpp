@@ -365,7 +365,7 @@ bool nsCoreUtils::IsTabDocument(Document* aDocumentNode) {
 
   // Parent of docshell for tab document running in chrome process is root.
   nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+  treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
 
   return parentTreeItem == rootTreeItem;
 }

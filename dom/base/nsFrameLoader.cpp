@@ -2664,7 +2664,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   mChildID = browserParent->Manager()->ChildID();
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  parentDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
+  parentDocShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = rootItem->GetWindow();
   nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
 

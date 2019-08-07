@@ -505,7 +505,7 @@ bool TextEditor::IsSafeToInsertData(Document* aSourceDoc) {
   nsCOMPtr<nsIDocShellTreeItem> dsti = destdoc->GetDocShell();
   nsCOMPtr<nsIDocShellTreeItem> root;
   if (dsti) {
-    dsti->GetRootTreeItem(getter_AddRefs(root));
+    dsti->GetInProcessRootTreeItem(getter_AddRefs(root));
   }
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(root);
 
