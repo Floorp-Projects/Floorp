@@ -70,13 +70,13 @@ VRService::VRService(volatile VRExternalShmem* aShmem)
   // of mAPIShmem from GPU process and pass it to the CTOR.
   // If we don't have the VR process, we will instantiate
   // mAPIShmem in VRService.
-  mShmem = new VRShMem(aShmem, aShmem == nullptr /*aRequiresMutex*/);
+  mShmem = new VRShMem(aShmem, aShmem == nullptr, XRE_IsParentProcess());
 }
 
 VRService::~VRService() {
   // PSA: We must store the value of any staticPrefs preferences as this
   // destructor will be called after staticPrefs has been shut down.
-  StopInternal(true /*aFromDtor*/);
+  Stop();
 }
 
 void VRService::Refresh() {
@@ -121,9 +121,7 @@ void VRService::Start() {
   }
 }
 
-void VRService::Stop() { StopInternal(false /*aFromDtor*/); }
-
-void VRService::StopInternal(bool aFromDtor) {
+void VRService::Stop() {
   if (mServiceThread) {
     mShutdownRequested = true;
     mServiceThread->Stop();
@@ -131,10 +129,7 @@ void VRService::StopInternal(bool aFromDtor) {
     mServiceThread = nullptr;
   }
 
-  if (mShmem != nullptr && (aFromDtor || !mShmem->IsSharedExternalShmem())) {
-    // Only leave the VRShMem and clean up the pointer when the struct
-    // was not passed in. Otherwise, VRService will no longer have a
-    // way to access that struct if VRService starts again.
+  if (mShmem != nullptr) {
     mShmem->LeaveShMem();
     delete mShmem;
     mShmem = nullptr;

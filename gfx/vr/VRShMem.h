@@ -22,10 +22,11 @@ namespace mozilla {
 namespace gfx {
 class VRShMem final {
  public:
-  VRShMem(volatile VRExternalShmem* aShmem, bool aIsMultiThreadOrProc);
+  VRShMem(volatile VRExternalShmem* aShmem, bool aVRProcessEnabled,
+          bool aIsParentProcess);
   ~VRShMem() = default;
 
-  void CreateShMem(bool aCreateOnSharedMemory);
+  void CreateShMem();
   void ClearShMem();
   void CloseShMem();
 
@@ -46,32 +47,15 @@ class VRShMem final {
   void PullWindowState(VRWindowState& aState);
 
   bool HasExternalShmem() const { return mExternalShmem != nullptr; }
-  bool IsSharedExternalShmem() const { return mIsSharedExternalShmem; }
   volatile VRExternalShmem* GetExternalShmem() const;
   bool IsDisplayStateShutdown() const;
 
  private:
-  bool IsCreatedOnSharedMemory() const;
-
-  // mExternalShmem can have one of three sources:
-  // - Allocated outside of this class on the heap and passed in via
-  //   constructor. This is usually for scenarios where there is no VR process
-  //   for cross-proc communication, and VRService is receiving the object.
-  //   --> mIsSharedExternalShmem == true, IsCreatedOnSharedMemory() == false
-  // - Allocated inside this class on the heap. This is usually for scenarios
-  //   where there is no VR process, and VRManager is creating the object.
-  //   --> mIsSharedExternalShmem == false, IsCreatedOnSharedMemory() == false
-  // - Allocated inside this class on shared memory. This is usually for
-  //   scenarios where there is a VR process and cross-process communication
-  //   is necessary
-  //   --> mIsSharedExternalShmem == false, IsCreatedOnSharedMemory() == true
   volatile VRExternalShmem* mExternalShmem = nullptr;
-  // This member is true when mExternalShmem is passed into the constructor,
-  // indicating that it was allocated externally
-  bool mIsSharedExternalShmem;
+  bool mVRProcessEnabled;
 
 #if defined(XP_WIN)
-  bool mRequiresMutex;
+  bool mIsParentProcess = false;
 #endif
 
 #if defined(XP_MACOSX)
