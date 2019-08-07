@@ -20,84 +20,25 @@ Services.scriptloader.loadSubScript(
 );
 
 this.PartitionedStorageHelper = {
-  runTestInNormalAndPrivateMode(name, callback, cleanupFunction, extraPrefs) {
-    // Normal mode
-    this.runTest(name, callback, cleanupFunction, extraPrefs, false);
-
-    // Private mode
-    this.runTest(name, callback, cleanupFunction, extraPrefs, true);
+  runTest(name, callback, cleanupFunction, extraPrefs) {
+    DynamicFPIHelper.runTest(name, callback, cleanupFunction, extraPrefs);
+    StoragePrincipalHelper.runTest(name, callback, cleanupFunction, extraPrefs);
   },
 
-  runTest(
-    name,
-    callback,
-    cleanupFunction,
-    extraPrefs,
-    runInPrivateWindow = false
-  ) {
-    DynamicFPIHelper.runTest(
-      name,
-      callback,
-      cleanupFunction,
-      extraPrefs,
-      runInPrivateWindow
-    );
-    StoragePrincipalHelper.runTest(
-      name,
-      callback,
-      cleanupFunction,
-      extraPrefs,
-      runInPrivateWindow
-    );
-  },
-
-  runPartitioningTestInNormalAndPrivateMode(
-    name,
-    getDataCallback,
-    addDataCallback,
-    cleanupFunction
-  ) {
-    // Normal mode
-    this.runPartitioningTest(
-      name,
-      getDataCallback,
-      addDataCallback,
-      cleanupFunction,
-      false
-    );
-
-    // Private mode
-    this.runPartitioningTest(
-      name,
-      getDataCallback,
-      addDataCallback,
-      cleanupFunction,
-      true
-    );
-  },
-
-  runPartitioningTest(
-    name,
-    getDataCallback,
-    addDataCallback,
-    cleanupFunction,
-    runInPrivateWindow = false
-  ) {
+  runPartitioningTest(name, getDataCallback, addDataCallback, cleanupFunction) {
     this.runPartitioningTestInner(
       name,
       getDataCallback,
       addDataCallback,
       cleanupFunction,
-      "normal",
-      runInPrivateWindow
+      "normal"
     );
     this.runPartitioningTestInner(
       name,
       getDataCallback,
       addDataCallback,
       cleanupFunction,
-      "initial-aboutblank",
-      runInPrivateWindow
+      "initial-aboutblank"
     );
   },
 
@@ -106,8 +47,7 @@ this.PartitionedStorageHelper = {
     getDataCallback,
     addDataCallback,
     cleanupFunction,
-    variant,
-    runInPrivateWindow
+    variant
   ) {
     add_task(async _ => {
       info(
@@ -115,9 +55,7 @@ this.PartitionedStorageHelper = {
           name +
           "' variant `" +
           variant +
-          "' in a " +
-          (runInPrivateWindow ? "private" : "normal") +
-          " window to check that 2 tabs are correctly partititioned"
+          "' to check that 2 tabs are correctly partititioned"
       );
 
       await SpecialPowers.flushPrefEnv();
@@ -139,34 +77,28 @@ this.PartitionedStorageHelper = {
         ],
       });
 
-      let win = window;
-      if (runInPrivateWindow) {
-        win = OpenBrowserWindow({ private: true });
-        await TestUtils.topicObserved("browser-delayed-startup-finished");
-      }
-
       info("Creating the first tab");
-      let tab1 = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
-      win.gBrowser.selectedTab = tab1;
+      let tab1 = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+      gBrowser.selectedTab = tab1;
 
-      let browser1 = win.gBrowser.getBrowserForTab(tab1);
+      let browser1 = gBrowser.getBrowserForTab(tab1);
       await BrowserTestUtils.browserLoaded(browser1);
 
       info("Creating the second tab");
-      let tab2 = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE_6);
-      win.gBrowser.selectedTab = tab2;
+      let tab2 = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE_6);
+      gBrowser.selectedTab = tab2;
 
-      let browser2 = win.gBrowser.getBrowserForTab(tab2);
+      let browser2 = gBrowser.getBrowserForTab(tab2);
       await BrowserTestUtils.browserLoaded(browser2);
 
       info("Creating the third tab");
       let tab3 = BrowserTestUtils.addTab(
-        win.gBrowser,
+        gBrowser,
         TEST_4TH_PARTY_PARTITIONED_PAGE
       );
-      win.gBrowser.selectedTab = tab3;
+      gBrowser.selectedTab = tab3;
 
-      let browser3 = win.gBrowser.getBrowserForTab(tab3);
+      let browser3 = gBrowser.getBrowserForTab(tab3);
       await BrowserTestUtils.browserLoaded(browser3);
 
       async function getDataFromThirdParty(browser, result) {
@@ -324,10 +256,6 @@ this.PartitionedStorageHelper = {
       BrowserTestUtils.removeTab(tab1);
       BrowserTestUtils.removeTab(tab2);
       BrowserTestUtils.removeTab(tab3);
-
-      if (runInPrivateWindow) {
-        win.close();
-      }
     });
 
     add_task(async _ => {

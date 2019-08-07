@@ -26,7 +26,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   }
 );
 
-AntiTracking.runTestInNormalAndPrivateMode(
+AntiTracking.runTest(
   "SharedWorkers and Storage Access API",
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
