@@ -1161,6 +1161,16 @@ panelview .toolbarbutton-1,
   color: inherit;
 }
 
+.subviewbutton[type="open-to-new"]::after {
+  content: url(chrome://browser/skin/open-in-new.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
+  float: right;
+  height: 12px;
+  width: 12px;
+}
+
 #appMenu-popup .toolbaritem-combined-buttons {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
