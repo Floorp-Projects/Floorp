@@ -79,6 +79,7 @@ interface nsIDocShellTreeItem : nsISupports
 	@deprecated: Use `BrowsingContext::Top()` instead.
 	(NOTE: `BrowsingContext::Top()` will not cross isolation boundaries)
 	*/
+	[binaryname(InProcessRootTreeItem)]
 	readonly attribute nsIDocShellTreeItem rootTreeItem;
 
 	/*
