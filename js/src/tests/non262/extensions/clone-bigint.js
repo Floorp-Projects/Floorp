@@ -17,13 +17,4 @@ testBigInt(1n);
 testBigInt(0xffffFFFFffffFFFFffffFFFFffffFFFFn);
 testBigInt(-0xffffFFFFffffFFFFffffFFFFffffFFFFn);
 
-var g = newGlobal({ enableBigInt: false, sameCompartmentAs: this });
-var deserializeNoBigInt = g.evaluate("deserialize");
-
-assertEq(deserializeNoBigInt(serialize(1)), 1);
-assertThrows(() => deserializeNoBigInt(serialize(1n)))
-assertThrows(() => deserializeNoBigInt(serialize(0n)))
-assertThrows(() => deserializeNoBigInt(serialize(0xffffffn)))
-assertThrows(() => deserializeNoBigInt(serialize(-1n)))
-
 reportCompare(0, 0, 'ok');
