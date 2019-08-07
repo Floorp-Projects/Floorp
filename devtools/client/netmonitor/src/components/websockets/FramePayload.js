@@ -11,6 +11,7 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getFramePayload,
@@ -19,6 +20,10 @@ const {
 const {
   getFormattedSize,
 } = require("devtools/client/netmonitor/src/utils/format-utils.js");
+const MESSAGE_DATA_LIMIT = Services.prefs.getIntPref(
+  "devtools.netmonitor.ws.messageDataLimit"
+);
+const MESSAGE_DATA_TRUNCATED = L10N.getStr("messageDataTruncated");
 
 // Components
 const Accordion = createFactory(
@@ -79,10 +84,19 @@ class FramePayload extends Component {
   }
 
   render() {
+    let payload = this.state.payload;
+    let isTruncated = false;
+    if (this.state.payload.length >= MESSAGE_DATA_LIMIT) {
+      payload = payload.substring(0, MESSAGE_DATA_LIMIT);
+      isTruncated = true;
+    }
+
     const items = [
       {
         className: "rawData",
-        component: RawData({ payload: this.state.payload }),
+        component: RawData({
+          payload,
+        }),
         header: L10N.getFormatStrWithNumbers(
           "netmonitor.ws.rawData.header",
           getFormattedSize(this.state.payload.length)
@@ -91,7 +105,7 @@ class FramePayload extends Component {
         opened: true,
       },
     ];
-    if (this.state.isFormattedData) {
+    if (!isTruncated && this.state.isFormattedData) {
       items.push({
         className: "formattedData",
         component: JSONPreview({
@@ -113,6 +127,13 @@ class FramePayload extends Component {
       {
         className: "ws-frame-payload",
       },
+      isTruncated &&
+        div(
+          {
+            className: "truncated-data-message",
+          },
+          MESSAGE_DATA_TRUNCATED
+        ),
       Accordion({
         items,
       })
