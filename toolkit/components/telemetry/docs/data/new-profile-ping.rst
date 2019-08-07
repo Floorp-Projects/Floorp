@@ -21,7 +21,8 @@ Structure:
       clientId: <UUID>,
       environment: { ... },
       payload: {
-        reason: "startup" // or "shutdown"
+        reason: "startup", // or "shutdown"
+        processes: { ... }
       }
     }
 
@@ -31,6 +32,27 @@ If this field contains ``startup``, then the ping was generated at the scheduled
 startup. If it contains ``shutdown``, then the browser was closed before the time the
 ping was scheduled. In the latter case, the ping is generated during shutdown and sent
 using the :doc:`../internals/pingsender`.
+
+processes
+---------
+This section contains per-process data.
+
+Structure:
+
+.. code-block:: js
+
+    "processes" : {
+      "parent": {
+        "scalars": {...}
+      }
+    }
+
+scalars
+~~~~~~~
+This section contains the :doc:`../collection/scalars` that are valid for the ``new-profile`` ping,
+that is the ``record_into_store`` list contains ``new-profile``.
+Scalars are only submitted if data was added to them.
+The recorded scalars are described in the `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_ file.
 
 Duplicate pings
 ---------------
