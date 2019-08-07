@@ -154,10 +154,7 @@ exports.menuitems = [
       const window = event.target.ownerDocument.defaultView;
       const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
       await target.attach();
-      // Temporary fix for bug #1493131 - inspector has a different life cycle
-      // than most other fronts because it is closely related to the toolbox.
-      // TODO: replace with getFront once inspector is separated from the toolbox
-      const inspectorFront = await target.getInspector();
+      const inspectorFront = await target.getFront("inspector");
       inspectorFront.pickColorFromPage({ copyOnSelect: true, fromMenu: true });
     },
     checkbox: true,
