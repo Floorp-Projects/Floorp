@@ -109,6 +109,8 @@ However, there are two exceptions to this.
 
 The narrow exception is that the Servo traversal thread is allowed to get pref
 values. This only occurs when the main thread is paused, which makes it safe.
+(Note: `bug 1474789 <https://bugzilla.mozilla.org/show_bug.cgi?id=1474789>`_
+indicates that this may not be true.)
 
 The broad exception is that static prefs can have a cached copy of a pref value
 that can be accessed from other threads. See below.
@@ -142,12 +144,12 @@ bool/int/float values, not strings or complex values.
 
 Each mirror variable is read-only, accessible via a getter function.
 
-Mirror variables have two benefits. First, they allow C++ code to get the pref
-value directly from the variable instead of requiring a slow hash table
-lookup, which is important for prefs that are consulted frequently. Second,
-they allow C++ code to get the pref value off the main thread. The mirror
-variable must have an atomic type if it is read off the main thread, and
-assertions ensure this.
+Mirror variables have two benefits. First, they allow C++ and Rust code to get
+the pref value directly from the variable instead of requiring a slow hash
+table lookup, which is important for prefs that are consulted frequently.
+Second, they allow C++ and Rust code to get the pref value off the main thread.
+The mirror variable must have an atomic type if it is read off the main thread,
+and assertions ensure this.
 
 Note that mirror variables could be implemented via vanilla callbacks without
 API support, except for one detail: libpref gives their callbacks higher
@@ -227,6 +229,13 @@ prefs that may differ across different devices (such as a desktop machine
 vs. a notebook).
 
 Prefs are not synced on mobile.
+
+Rust
+----
+Static prefs mirror variables can be accessed from Rust code via the
+``static_prefs::pref!`` macro. Other prefs currently cannot be accessed. Parts
+of libpref's C++ API could be made accessible to Rust code fairly
+straightforwardly via C bindings, either hand-made or generated.
 
 Cost of a pref
 --------------

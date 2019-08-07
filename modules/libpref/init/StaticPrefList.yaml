@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 # This file defines static prefs, i.e. those that are defined at startup and
-# used entirely or mostly from C++ code.
+# used entirely or mostly from C++ and/or Rust code.
 #
 # The file is separated into sections, where each section contains a group of
 # prefs that all share the same first segment of their name -- all the "gfx.*"
@@ -35,6 +35,7 @@
 #     mirror: <never | once | always>      # mandatory
 #     do_not_use_directly: <true | false>  # optional
 #     include: <header-file>               # optional
+#     rust: <true | false>                 # optional
 #
 # - `name` is the name of the pref, without double-quotes, as it appears
 #   in about:config. It is used in most libpref API functions (from both C++
@@ -81,7 +82,7 @@
 #   Note that Rust code must access the mirror variable directly, rather than
 #   via the getter function.
 #
-# - `do_not_use_directly` dictates if `_DoNotUseDirectly` should be appended to
+# - `do_not_use_directly` indicates if `_DoNotUseDirectly` should be appended to
 #   the name of the getter function. This is simply a naming convention
 #   indicating that there is some other wrapper getter function that should be
 #   used in preference to the normal static pref getter. Defaults to `false` if
@@ -91,6 +92,10 @@
 # - `include` names a header file that must be included for the pref value to
 #   compile correctly, e.g. because it refers to a code constant. System
 #   headers should be surrounded with angle brackets, e.g. `<cmath>`.
+#
+# - `rust` indicates if the mirror variable is used by Rust code. If so, it
+#   will be usable via the `static_prefs::pref!` macro, e.g.
+#   `static_prefs::pref!("layout.css.font-display.enabled")`.
 #
 # The getter function's base name is the same as the pref's name, but with
 # '.' or '-' chars converted to '_', to make a valid identifier. For example,
@@ -741,6 +746,7 @@
   type: uint32_t
   value: 0
   mirror: always
+  rust: true
 
 - name: browser.display.focus_ring_on_anything
   type: bool
