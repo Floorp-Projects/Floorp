@@ -214,19 +214,21 @@ function convertResultToMatches(context, result, urls) {
     }
     urls.add(url);
     let style = result.getStyleAt(i);
+    let isHeuristic = i == 0 && style.includes("heuristic");
     let match = makeUrlbarResult(context.tokens, {
       url,
       icon: result.getImageAt(i),
       style,
       comment: result.getCommentAt(i),
       firstToken: context.tokens[0],
+      isHeuristic,
     });
     // Should not happen, but better safe than sorry.
     if (!match) {
       continue;
     }
     // Manage autofill and preselected properties for the first match.
-    if (i == 0 && style.includes("heuristic")) {
+    if (isHeuristic) {
       if (style.includes("autofill") && result.defaultIndex == 0) {
         let autofillValue = result.getValueAt(i);
         if (
@@ -262,7 +264,17 @@ function makeUrlbarResult(tokens, info) {
   let action = PlacesUtils.parseActionUrl(info.url);
   if (action) {
     switch (action.type) {
-      case "searchengine":
+      case "searchengine": {
+        let keywordOffer = UrlbarUtils.KEYWORD_OFFER.NONE;
+        if (
+          action.params.alias &&
+          !action.params.searchQuery.trim() &&
+          action.params.alias.startsWith("@")
+        ) {
+          keywordOffer = info.isHeuristic
+            ? UrlbarUtils.KEYWORD_OFFER.HIDE
+            : UrlbarUtils.KEYWORD_OFFER.SHOW;
+        }
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
           UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -272,14 +284,10 @@ function makeUrlbarResult(tokens, info) {
             keyword: [action.params.alias, true],
             query: [action.params.searchQuery.trim(), true],
             icon: [info.icon, false],
-            isKeywordOffer: [
-              action.params.alias &&
-                !action.params.searchQuery.trim() &&
-                action.params.alias.startsWith("@"),
-              false,
-            ],
+            keywordOffer,
           })
         );
+      }
       case "keyword": {
         let title = info.comment;
         if (!title) {

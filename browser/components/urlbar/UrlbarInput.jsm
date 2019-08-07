@@ -503,7 +503,7 @@ class UrlbarInput {
     };
 
     let selIndex = this.view.selectedIndex;
-    if (!result.payload.isKeywordOffer) {
+    if (!result.payload.keywordOffer) {
       this.view.close();
     }
 
@@ -560,7 +560,7 @@ class UrlbarInput {
         return;
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
-        if (result.payload.isKeywordOffer) {
+        if (result.payload.keywordOffer) {
           // The user confirmed a token alias, so just move the caret
           // to the end of it. Because there's a trailing space in the value,
           // the user can directly start typing a query string at that point.
