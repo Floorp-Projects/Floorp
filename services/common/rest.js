@@ -162,9 +162,10 @@ RESTRequest.prototype = {
    * Request timeout (in seconds, though decimal values can be used for
    * up to millisecond granularity.)
    *
-   * 0 for no timeout.
+   * 0 for no timeout. Default is 300 seconds (5 minutes), the same as Sync uses
+   * in resource.js.
    */
-  timeout: null,
+  timeout: 300,
 
   /**
    * The encoding with which the response to this request must be treated.
