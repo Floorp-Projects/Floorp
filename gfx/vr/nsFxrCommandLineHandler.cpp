@@ -50,7 +50,7 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
     MOZ_ASSERT(result == NS_OK);
 
     // Send the window's HWND to vrhost through VRShMem
-    mozilla::gfx::VRShMem shmem(nullptr, true, false);
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
     if (shmem.JoinShMem()) {
       mozilla::gfx::VRWindowState windowState = {0};
       shmem.PullWindowState(windowState);
