@@ -4,7 +4,7 @@
 "use strict";
 
 var HiddenFrame = ChromeUtils.import(
-  "resource://testing-common/HiddenFrame.jsm",
+  "resource://gre/modules/HiddenFrame.jsm",
   {}
 ).HiddenFrame;
 
