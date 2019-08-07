@@ -32,8 +32,14 @@
   background-color: var(--status-code-color-5xx);
 }
 
-.status-code[data-status-code^="blocked"] {
-  background-color: var(--timing-blocked-color);
+.status-code img.blocked {
+  display: inline-block;
+  height: 12px;
+  width: 12px;
+  vertical-align: text-bottom;
+  margin-inline-start: 4px;
+  -moz-context-properties: fill;
+  fill: var(--timing-blocked-color);
 }
 
 .status-code:not([data-code^="3"]) {
