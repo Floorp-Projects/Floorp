@@ -74,9 +74,11 @@ var navigateTo = async function(inspector, url) {
  * @param {Boolean} skipFocus - Allow tests to bypass the focus event.
  */
 var startPicker = async function(toolbox, skipFocus) {
+  const inspectorFront = await toolbox.target.getFront("inspector");
+
   info("Start the element picker");
   toolbox.win.focus();
-  await toolbox.inspectorFront.nodePicker.start();
+  await inspectorFront.nodePicker.start();
   if (!skipFocus) {
     // By default make sure the content window is focused since the picker may not focus
     // the content window by default.
