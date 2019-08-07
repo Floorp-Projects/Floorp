@@ -15,6 +15,14 @@ namespace dom {
 
 class BrowsingContext;
 
+enum class MediaControlActions : uint32_t {
+  ePlay,
+  ePause,
+  eStop,
+  /* do not use this, it's used to indicate the last value of enum */
+  eActionsNum,
+};
+
 /**
  * MediaController is a class which is used to control media in the content
  * process. It's a basic interface class and you should implement you own class
