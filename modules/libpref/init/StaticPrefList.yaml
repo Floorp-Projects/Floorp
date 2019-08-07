@@ -6396,6 +6396,12 @@
 # Prefs starting with "widget."
 #---------------------------------------------------------------------------
 
+# Global user preference for disabling native theme. Used in NativeWindowTheme.
+- name: widget.disable-native-theme
+  type: bool
+  value: false
+  mirror: always
+
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
