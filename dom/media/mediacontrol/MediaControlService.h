@@ -7,6 +7,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 
+#include "AudioFocusManager.h"
 #include "MediaController.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
@@ -35,6 +36,7 @@ class MediaControlService final : public nsIObserver {
 
   RefPtr<MediaController> GetOrCreateControllerById(const uint64_t aId) const;
   RefPtr<MediaController> GetControllerById(const uint64_t aId) const;
+  AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
 
   void AddMediaController(const RefPtr<MediaController>& aController);
   void RemoveMediaController(const RefPtr<MediaController>& aController);
@@ -44,12 +46,15 @@ class MediaControlService final : public nsIObserver {
   MediaControlService();
   ~MediaControlService();
 
+  void Shutdown();
+
   void PlayAllControllers() const;
   void PauseAllControllers() const;
   void StopAllControllers() const;
   void ShutdownAllControllers() const;
 
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
+  AudioFocusManager mAudioFocusManager;
 };
 
 }  // namespace dom
