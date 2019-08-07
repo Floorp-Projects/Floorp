@@ -15,8 +15,7 @@ namespace mozilla {
 namespace StaticPrefs {
 
 // For mirrored prefs we generate an extern variable declaration and three
-// getter declarations/definitions. The extern declaration of the variable is
-// necessary for bindgen to see it and generate Rust bindings.
+// getter declarations/definitions.
 #define NEVER_PREF(name, cpp_type, default_value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)          \
   extern cpp_type sVarCache_##full_id;                                        \
