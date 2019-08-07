@@ -772,4 +772,11 @@
     <string name="etp_panel_off">Protections are OFF for this site</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Enhanced Tracking Protection is off for these websites</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Your rights</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Open source libraries we use</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS Libraries</string>
 </resources>

@@ -67,6 +67,20 @@
                 tools:text="Monday 1/2 @ 5:00 PM"
                 android:textAlignment="center" />
 
+        <TextView
+                android:id="@+id/view_licenses_button"
+                android:layout_margin="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/about_open_source_licenses"
+                android:textSize="16sp"
+                android:textColor="?accent"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:layout_constraintTop_toBottomOf="@id/build_date"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

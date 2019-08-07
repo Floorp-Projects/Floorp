@@ -7,6 +7,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs.kotlin'
+apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
 import com.android.build.gradle.internal.tasks.AppPreBuildTask
 import org.gradle.internal.logging.text.StyledTextOutput.Style
@@ -289,8 +290,8 @@ dependencies {
     implementation Deps.anko_constraintlayout
 
     implementation Deps.sentry
-
     implementation Deps.leanplum
+    implementation Deps.osslicenses_library
 
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_push

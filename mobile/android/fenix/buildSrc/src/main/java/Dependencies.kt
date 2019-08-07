@@ -13,6 +13,8 @@ object Versions {
     const val sentry = "1.7.10"
     const val leakcanary = "1.6.3"
     const val leanplum = "5.2.3"
+    const val osslicenses_plugin = "0.9.5"
+    const val osslicenses_library = "17.0.0"
 
     const val androidx_appcompat = "1.1.0-rc01"
     const val androidx_coordinator_layout = "1.1.0-beta01"
@@ -74,6 +76,8 @@ object Deps {
     const val kotlin_coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
 
     const val allopen = "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
+    const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${Versions.osslicenses_plugin}"
+    const val osslicenses_library = "com.google.android.gms:play-services-oss-licenses:${Versions.osslicenses_library}"
 
     const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"

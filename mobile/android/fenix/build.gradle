@@ -10,6 +10,7 @@ buildscript {
         classpath Deps.tools_kotlingradle
         classpath Deps.androidx_safeargs
         classpath Deps.allopen
+        classpath Deps.osslicenses_plugin
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

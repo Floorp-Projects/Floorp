@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -14,6 +15,7 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import kotlinx.android.synthetic.main.fragment_about.*
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
@@ -57,6 +59,16 @@ class AboutFragment : Fragment() {
         about_text.text = aboutText
         about_content.text = content
         build_date.text = buildDate
+
+        view_licenses_button.setOnClickListener {
+            startActivity(Intent(context, OssLicensesMenuActivity::class.java))
+            OssLicensesMenuActivity.setActivityTitle(
+                getString(
+                    R.string.open_source_licenses_title,
+                    getString(R.string.app_name)
+                )
+            )
+        }
     }
 
     companion object {
