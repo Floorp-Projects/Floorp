@@ -139,7 +139,7 @@ class SearchBox extends PureComponent {
 
   onKeyDown(e) {
     if (this.props.onKeyDown) {
-      this.props.onKeyDown();
+      this.props.onKeyDown(e);
     }
 
     const autocomplete = this.autocompleteRef.current;

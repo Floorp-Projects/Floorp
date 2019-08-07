@@ -31,6 +31,7 @@ const {
   WebSockets,
   getWebSocketsDefaultColumnsState,
 } = require("./reducers/web-sockets");
+const { Search } = require("./reducers/search");
 
 /**
  * Configure state and middleware for the Network monitor tool.
@@ -51,6 +52,7 @@ function configureStore(connector, telemetry) {
     webSockets: WebSockets({
       columns: getWebSocketsColumnState(),
     }),
+    search: new Search(),
   };
 
   // Prepare middleware.

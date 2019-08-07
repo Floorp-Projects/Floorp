@@ -20,6 +20,7 @@ NetMonitorPanel.prototype = {
     await app.bootstrap({
       toolbox: this.toolbox,
       document: this.panelWin.document,
+      win: this.panelWin,
     });
 
     // Ready to go!

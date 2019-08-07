@@ -340,12 +340,29 @@ class RequestListContextMenu {
         this.useAsFetch(id, url, method, requestHeaders, requestPostData),
     });
 
+    if (Services.prefs.getBoolPref("devtools.netmonitor.features.search")) {
+      const { toggleSearchPanel, panelOpen } = this.props;
+
+      menu.push({
+        type: "separator",
+      });
+
+      menu.push({
+        id: "request-list-context-search",
+        label: "Search...", // TODO localization
+        accesskey: "S", // TODO localization
+        type: "checkbox",
+        checked: panelOpen,
+        visible: !!clickedRequest,
+        click: () => toggleSearchPanel(),
+      });
+    }
+
     showMenu(menu, {
       screenX: event.screenX,
       screenY: event.screenY,
     });
   }
-  /* eslint-enable complexity */
 
   /**
    * Opens selected item in the debugger
