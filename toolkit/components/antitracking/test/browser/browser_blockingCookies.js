@@ -1,6 +1,6 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "Set/Get Cookies",
   // Blocking callback
   async _ => {

@@ -20,6 +20,7 @@
 #include "nsIFrame.h"
 #include "nsImageRenderer.h"
 #include "nsCSSRenderingBorders.h"
+#include "gfxTextRun.h"
 
 class gfxContext;
 class nsPresContext;
@@ -602,6 +603,8 @@ struct nsCSSRendering {
     uint8_t style = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     bool vertical = false;
     bool sidewaysLeft = false;
+    gfxTextRun::Range glyphRange;
+    gfxTextRun::PropertyProvider* provider;
   };
 
   struct PaintDecorationLineParams : DecorationRectParams {
@@ -617,11 +620,29 @@ struct nsCSSRendering {
   };
 
   /**
+   * Function for painting the clipped decoration lines for the text.
+   * Takes into account the rect clipping that occurs when
+   * text-decoration-skip-ink is being used for underlines or overlines
+   *
+   *  input:
+   *    @param aFrame            the frame which needs the decoration line
+   *    @param aDrawTarget       the target/backend being drawn to
+   *    @param aParams           the parameters for the decoration line
+   *                             being drawn
+   *    @param aRect             the rect representing the decoration line
+   */
+  static void PaintDecorationLineInternal(
+      nsIFrame* aFrame, DrawTarget& aDrawTarget,
+      const PaintDecorationLineParams& aParams, Rect aRect);
+
+  /**
    * Function for painting the decoration lines for the text.
    *
    *   input:
    *     @param aFrame            the frame which needs the decoration line
-   *     @param aGfxContext
+   *     @param aDrawTarget       the target/backend being drawn to
+   *     @param aParams           the parameters for the decoration line
+   *                              being drawn
    */
   static void PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                                   const PaintDecorationLineParams& aParams);

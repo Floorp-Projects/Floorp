@@ -443,17 +443,28 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
     if (codeBuf) {
       masm.executableCopy(codeBuf, totalCodeSize);
 
-      for (const FuncCompileInput& func : inputs) {
+      const CodeRangeVector& codeRanges = code->codeRanges;
+      MOZ_ASSERT(codeRanges.length() >= inputs.length());
+
+      // Within the current batch, functions' code ranges have been added in the
+      // same order as the inputs.
+      size_t firstCodeRangeIndex = codeRanges.length() - inputs.length();
+
+      for (size_t i = 0; i < inputs.length(); i++) {
+        int funcIndex = inputs[i].index;
+        mozilla::Unused << funcIndex;
+
         JitSpew(JitSpew_Codegen, "# ========================================");
         JitSpew(JitSpew_Codegen, "# Start of wasm cranelift code for index %d",
-                (int)func.index);
+                funcIndex);
 
-        uint32_t codeStart = code->codeRanges[func.index].begin();
-        uint32_t codeEnd = code->codeRanges[func.index].end();
+        size_t codeRangeIndex = firstCodeRangeIndex + i;
+        uint32_t codeStart = codeRanges[codeRangeIndex].begin();
+        uint32_t codeEnd = codeRanges[codeRangeIndex].end();
         DisassembleCode(codeBuf + codeStart, codeEnd - codeStart);
 
         JitSpew(JitSpew_Codegen, "# End of wasm cranelift code for index %d",
-                (int)func.index);
+                funcIndex);
       }
       js_free(codeBuf);
     }

@@ -210,6 +210,14 @@ class FrameInfo {
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfScratchValue());
   }
+  Address addressOfScratchValueLow32() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfScratchValueLow32());
+  }
+  Address addressOfScratchValueHigh32() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfScratchValueHigh32());
+  }
 };
 
 class CompilerFrameInfo : public FrameInfo {

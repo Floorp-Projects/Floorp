@@ -172,17 +172,6 @@ async function interactWithTracker() {
 }
 
 function isOnContentBlockingAllowList() {
-  let prefs = [
-    "browser.contentblocking.allowlist.storage.enabled",
-    "browser.contentblocking.allowlist.annotations.enabled",
-  ];
-  function allEnabled(prev, pref) {
-    return pref && SpecialPowers.Services.prefs.getBoolPref(pref);
-  }
-  if (!prefs.reduce(allEnabled)) {
-    return false;
-  }
-
   let url = new URL(SpecialPowers.wrap(top).location.href);
   let origin = SpecialPowers.Services.io.newURI("https://" + url.host);
   let types = ["trackingprotection", "trackingprotection-pb"];

@@ -314,7 +314,8 @@ types.addActorType = function(name) {
       // existing front on the connection, and create the front
       // if it isn't found.
       const actorID = typeof v === "string" ? v : v.actor;
-      let front = ctx.conn.getActor(actorID);
+      // `ctx.conn` is a DebuggerClient
+      let front = ctx.conn.getFrontByID(actorID);
       if (!front) {
         // If front isn't instantiated yet, create one.
         // Try lazy loading front if not already loaded.

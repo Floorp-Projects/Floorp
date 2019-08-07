@@ -107,10 +107,6 @@ class BaselineFrame {
   void setEnvironmentChain(JSObject* envChain) { envChain_ = envChain; }
   inline JSObject** addressOfEnvironmentChain() { return &envChain_; }
 
-  inline Value* addressOfScratchValue() {
-    return reinterpret_cast<Value*>(&loScratchValue_);
-  }
-
   template <typename SpecificEnvironment>
   inline void pushOnEnvironmentChain(SpecificEnvironment& env);
   template <typename SpecificEnvironment>
@@ -391,9 +387,19 @@ class BaselineFrame {
   static int reverseOffsetOfFrameSize() {
     return -int(Size()) + offsetof(BaselineFrame, frameSize_);
   }
-  static int reverseOffsetOfScratchValue() {
+
+  // The scratch value slot can either be used as a Value slot or as two
+  // separate 32-bit integer slots.
+  static int reverseOffsetOfScratchValueLow32() {
     return -int(Size()) + offsetof(BaselineFrame, loScratchValue_);
   }
+  static int reverseOffsetOfScratchValueHigh32() {
+    return -int(Size()) + offsetof(BaselineFrame, hiScratchValue_);
+  }
+  static int reverseOffsetOfScratchValue() {
+    return reverseOffsetOfScratchValueLow32();
+  }
+
   static int reverseOffsetOfEnvironmentChain() {
     return -int(Size()) + offsetof(BaselineFrame, envChain_);
   }

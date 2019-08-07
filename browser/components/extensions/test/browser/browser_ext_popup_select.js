@@ -7,6 +7,11 @@ add_task(async function testSetup() {
 });
 
 add_task(async function testPopupSelectPopup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: "https://example.com",
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -110,6 +115,7 @@ add_task(async function testPopupSelectPopup() {
     await closePageAction(extension);
   }
 
+  BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });
 

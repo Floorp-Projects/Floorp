@@ -1102,7 +1102,7 @@ public abstract class GeckoApp extends GeckoActivity
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
         // Disable automatic state staving - we require some special handling that we need to do
         // ourselves.
-        mLayerView.setSaveFromParentEnabled(false);
+        mLayerView.setSaveEnabled(false);
 
         final GeckoSession session = new GeckoSession(
                 new GeckoSessionSettings.Builder()

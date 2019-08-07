@@ -11,6 +11,21 @@ const proxy = createHttpServer();
 
 // accept proxy connections for mozilla.org
 proxy.identity.add("http", "mozilla.org", 80);
+proxy.identity.add("https", "407.example.com", 443);
+
+proxy.registerPathHandler("CONNECT", (request, response) => {
+  Assert.equal(request.method, "CONNECT");
+  switch (request.host) {
+    case "407.example.com":
+      response.setStatusLine(request.httpVersion, 407, "Authenticate");
+      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Proxy-Authenticate", 'Basic realm="foobar"', false);
+      response.write("auth required");
+      break;
+    default:
+      response.setStatusLine(request.httpVersion, 500, "I am dumb");
+  }
+});
 
 proxy.registerPathHandler("/", (request, response) => {
   if (request.hasHeader("Proxy-Authorization")) {
@@ -164,6 +179,58 @@ add_task(async function test_webRequest_auth_proxy() {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `http://mozilla.org/`
+  );
+
+  await handlingExt.awaitMessage("done");
+  await contentPage.close();
+  await handlingExt.unload();
+});
+
+add_task(async function test_webRequest_auth_proxy_https() {
+  async function background(port) {
+    let authReceived = false;
+
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      details => {
+        if (authReceived) {
+          browser.test.sendMessage("done");
+          return { cancel: true };
+        }
+      },
+      { urls: ["<all_urls>"] },
+      ["blocking"]
+    );
+
+    browser.webRequest.onAuthRequired.addListener(
+      details => {
+        authReceived = true;
+        return { authCredentials: { username: "puser", password: "ppass" } };
+      },
+      { urls: ["<all_urls>"] },
+      ["blocking"]
+    );
+
+    // Handle the proxy request.
+    browser.proxy.onRequest.addListener(
+      details => {
+        browser.test.log(`onRequest ${JSON.stringify(details)}`);
+        return [{ host: "localhost", port, type: "http" }];
+      },
+      { urls: ["<all_urls>"] },
+      ["requestHeaders"]
+    );
+    browser.test.sendMessage("ready");
+  }
+
+  let handlingExt = getExtension(background);
+
+  await handlingExt.startup();
+  await handlingExt.awaitMessage("ready");
+
+  authManager.clearAll();
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    `https://407.example.com/`
   );
 
   await handlingExt.awaitMessage("done");

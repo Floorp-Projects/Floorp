@@ -121,7 +121,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool sourceIsLazy = false;
   bool allowHTMLComments = true;
   bool hideScriptFromDebugger = false;
-  bool bigIntEnabledOption = false;
   bool fieldsEnabledOption = true;
 
   /**

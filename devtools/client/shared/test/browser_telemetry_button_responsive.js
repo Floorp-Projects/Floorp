@@ -22,7 +22,7 @@ Services.prefs.setBoolPref("devtools.testing", true);
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref(
   "devtools.devices.url",
-  "http://example.com/browser/devtools/client/responsive.html/test/browser/devices.json"
+  "http://example.com/browser/devtools/client/responsive/test/browser/devices.json"
 );
 
 registerCleanupFunction(() => {
@@ -36,7 +36,7 @@ registerCleanupFunction(() => {
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive.html/manager",
+  "devtools/client/responsive/manager",
   true
 );
 

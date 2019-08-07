@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import copy
+import glob
 import os
 import re
 import sys
@@ -680,16 +681,24 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.info(str(dest))
             self._artifact_perf_data(src, dest)
 
-            if self.power_test:
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
-                self._artifact_perf_data(src, dest)
+            # make individual perfherder data json's for each supporting data type
+            for file in glob.glob(os.path.join(self.query_abs_dirs()['abs_work_dir'], '*')):
+                path, filename = os.path.split(file)
 
-            if self.memory_test:
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-memory.json')
-                self._artifact_perf_data(src, dest)
+                if not filename.startswith('raptor-'):
+                    continue
 
-            if self.cpu_test:
-                src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-cpu.json')
+                # filename is expected to contain a unique data name
+                # i.e. raptor-os-baseline-power.json would result in
+                # the data name os-baseline-power
+                data_name = '-'.join(filename.split('-')[1:])
+                data_name = '.'.join(data_name.split('.')[:-1])
+
+                src = file
+                dest = os.path.join(
+                    env['MOZ_UPLOAD_DIR'],
+                    'perfherder-data-%s.json' % data_name
+                )
                 self._artifact_perf_data(src, dest)
 
             src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')

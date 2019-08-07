@@ -212,6 +212,10 @@ html|*#webRTC-previewVideo {
   border-top: 1px solid var(--panel-separator-color);
 }
 
+#webRTC-previewWarning:-moz-locale-dir(rtl) {
+  background-position: calc(100% - .75em) .75em;
+}
+
 #webRTC-previewWarning > .text-link {
   margin-inline-start: 0;
 }
@@ -226,6 +230,8 @@ html|*#webRTC-previewVideo {
   margin-inline-start: 42px;
   width: 16px;
   height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .popup-subitem:-moz-locale-dir(rtl) {

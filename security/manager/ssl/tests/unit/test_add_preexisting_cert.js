@@ -18,14 +18,6 @@ function load_cert(cert, trust) {
   return addCertFromFile(certDB, file, trust);
 }
 
-function getDERString(cert) {
-  let derString = "";
-  for (let rawByte of cert.getRawDER()) {
-    derString += String.fromCharCode(rawByte);
-  }
-  return derString;
-}
-
 add_task(async function() {
   load_cert("ca", "CTu,CTu,CTu");
   let int_cert = load_cert("int-limited-depth", "CTu,CTu,CTu");
@@ -42,7 +34,7 @@ add_task(async function() {
   // Change the already existing intermediate certificate's trust using
   // addCertFromBase64().
   notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
-  let base64_cert = btoa(getDERString(int_cert));
+  let base64_cert = int_cert.getBase64DERString();
   let returnedEE = certDB.addCertFromBase64(base64_cert, "p,p,p");
   notEqual(returnedEE, null, "addCertFromBase64 should return a certificate");
   await checkCertErrorGeneric(
