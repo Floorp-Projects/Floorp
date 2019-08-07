@@ -1462,6 +1462,15 @@
   value: false
   mirror: always
 
+# Process launch delay (im milliseconds).
+- name: dom.ipc.processPrelaunch.delayMs
+  type: uint32_t
+# This number is fairly arbitrary ... the intention is to put off
+# launching another app process until the last one has finished
+# loading its content, to reduce CPU/memory/IO contention.
+  value: 1000
+  mirror: always
+
 - name: dom.ipc.processPriorityManager.enabled
   type: bool
   value: false
