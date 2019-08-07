@@ -3864,7 +3864,7 @@ Nullable<WindowProxyHolder> BrowserChildMessageManager::GetContent(
   if (!docShell) {
     return nullptr;
   }
-  return WindowProxyHolder(nsDocShell::Cast(docShell)->GetBrowsingContext());
+  return WindowProxyHolder(docShell->GetBrowsingContext());
 }
 
 already_AddRefed<nsIDocShell> BrowserChildMessageManager::GetDocShell(

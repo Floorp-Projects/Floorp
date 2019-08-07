@@ -267,7 +267,7 @@ BrowserElementParent::OpenWindowInProcess(BrowsingContext* aOpenerWindow,
   nsCOMPtr<nsIDocShell> docshell = frameLoader->GetDocShell(IgnoreErrors());
   NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
-  docshell->GetBrowsingContext(aReturnBC);
+  docshell->GetBrowsingContextXPCOM(aReturnBC);
 
   return *aReturnBC ? opened : BrowserElementParent::OPEN_WINDOW_CANCELLED;
 }

@@ -206,7 +206,7 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
 void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   // XXX(nika): We should communicate that we are now an active BrowsingContext
   // process to the parent & do other validation here.
-  MOZ_RELEASE_ASSERT(nsDocShell::Cast(aDocShell)->GetBrowsingContext() == this);
+  MOZ_RELEASE_ASSERT(aDocShell->GetBrowsingContext() == this);
   mDocShell = aDocShell;
   mIsInProcess = true;
 }
@@ -232,8 +232,7 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
                             "cannot be in bfcache");
 
       RefPtr<BrowsingContext> kungFuDeathGrip(this);
-      RefPtr<BrowsingContext> newParent;
-      container->GetBrowsingContext(getter_AddRefs(newParent));
+      RefPtr<BrowsingContext> newParent(container->GetBrowsingContext());
       mParent->mChildren.RemoveElement(this);
       if (newParent) {
         newParent->mChildren.AppendElement(this);

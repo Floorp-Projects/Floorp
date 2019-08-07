@@ -207,6 +207,14 @@ interface nsIDocShellTreeItem : nsISupports
 	                                      in nsIDocShellTreeItem aOriginalRequestor);
 
   /**
+   * BrowsingContext associated with the DocShell.
+   */
+  [binaryname(BrowsingContextXPCOM)]
+  readonly attribute BrowsingContext browsingContext;
+
+  [noscript,notxpcom,nostdcall] BrowsingContext getBrowsingContext();
+
+  /**
    * Returns the DOM outer window for the content viewer.
    */
   readonly attribute mozIDOMWindowProxy domWindow;

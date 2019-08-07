@@ -1129,11 +1129,6 @@ interface nsIDocShell : nsIDocShellTreeItem
 %}
 
   /**
-   * BrowsingContext associated with the DocShell.
-   */
-  readonly attribute BrowsingContext browsingContext;
-
-  /**
    * Allowed CSS display modes. This needs to be kept in
    * sync with similar values in ServoStyleConsts.h
    */

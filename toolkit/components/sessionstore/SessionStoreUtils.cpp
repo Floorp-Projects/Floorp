@@ -1189,9 +1189,8 @@ static void CollectedSessionStorageInternal(
     if (NS_SUCCEEDED(rv) && isDynamic) {
       continue;
     }
-    CollectedSessionStorageInternal(
-        aCx, nsDocShell::Cast(childDocShell)->GetBrowsingContext(),
-        aVisitedOrigins, aRetVal);
+    CollectedSessionStorageInternal(aCx, childDocShell->GetBrowsingContext(),
+                                    aVisitedOrigins, aRetVal);
   }
 }
 
