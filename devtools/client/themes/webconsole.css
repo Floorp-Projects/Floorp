@@ -135,15 +135,20 @@ a {
 /*
  * Show a blue border on the left side of rows on hover. Avoid using border
  * properties because the top/bottom borders would not span the full width.
+ * We always place an empty before pseudo element in order to avoid costly reflows on 
+ * hover (See Bug 1571349).
  */
-.message:hover::before {
+.message::before {
   content: "";
   position: absolute;
   inset-inline: 0;
   top: 0;
   bottom: 0;
-  background: var(--theme-highlight-blue);
   width: 3px;
+}
+
+.message:hover::before {
+  background-color: var(--theme-highlight-blue);
 }
 
 /*
