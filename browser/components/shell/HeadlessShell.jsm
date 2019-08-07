@@ -4,38 +4,16 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["HeadlessShell", "ScreenshotParent"];
+var EXPORTED_SYMBOLS = ["HeadlessShell"];
 
-const { E10SUtils } = ChromeUtils.import(
-  "resource://gre/modules/E10SUtils.jsm"
-);
-const { HiddenFrame } = ChromeUtils.import(
-  "resource://gre/modules/HiddenFrame.jsm"
-);
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
-const progressListeners = new Set();
+const progressListeners = new Map();
 
-class ScreenshotParent extends JSWindowActorParent {
-  takeScreenshot(params) {
-    return this.sendQuery("TakeScreenshot", params);
-  }
-}
-
-ChromeUtils.registerWindowActor("Screenshot", {
-  parent: {
-    moduleURI: "resource:///modules/HeadlessShell.jsm",
-  },
-  child: {
-    moduleURI: "resource:///modules/ScreenshotChild.jsm",
-    messages: ["TakeScreenshot"],
-  },
-});
-
-function loadContentWindow(browser, url) {
+function loadContentWindow(webNavigation, url, principal) {
   let uri;
   try {
     uri = Services.io.newURI(url);
@@ -44,20 +22,21 @@ function loadContentWindow(browser, url) {
     Cu.reportError(msg);
     return Promise.reject(new Error(msg));
   }
-
-  const principal = Services.scriptSecurityManager.getSystemPrincipal();
   return new Promise((resolve, reject) => {
     let loadURIOptions = {
       triggeringPrincipal: principal,
-      remoteType: E10SUtils.getRemoteTypeForURI(url, true, false),
     };
-    browser.loadURI(uri.spec, loadURIOptions);
-    let { webProgress } = browser;
-
+    webNavigation.loadURI(uri.spec, loadURIOptions);
+    let docShell = webNavigation
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell);
+    let webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     let progressListener = {
       onLocationChange(progress, request, location, flags) {
         // Ignore inner-frame events
-        if (!progress.isTopLevel) {
+        if (progress != webProgress) {
           return;
         }
         // Ignore events that don't change the document
@@ -68,17 +47,23 @@ function loadContentWindow(browser, url) {
         if (location.spec == "about:blank" && uri.spec != "about:blank") {
           return;
         }
-
+        let contentWindow = docShell.domWindow;
         progressListeners.delete(progressListener);
         webProgress.removeProgressListener(progressListener);
-        resolve();
+        contentWindow.addEventListener(
+          "load",
+          event => {
+            resolve(contentWindow);
+          },
+          { once: true }
+        );
       },
       QueryInterface: ChromeUtils.generateQI([
         "nsIWebProgressListener",
         "nsISupportsWeakReference",
       ]),
     };
-    progressListeners.add(progressListener);
+    progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(
       progressListener,
       Ci.nsIWebProgress.NOTIFY_LOCATION
@@ -94,35 +79,56 @@ async function takeScreenshot(
   path,
   url
 ) {
-  let frame;
   try {
-    frame = new HiddenFrame();
-    let windowlessBrowser = await frame.get();
-
-    let doc = windowlessBrowser.document;
-    let browser = doc.createXULElement("browser");
-    browser.setAttribute("remote", "true");
-    browser.setAttribute("type", "content");
-    doc.documentElement.appendChild(browser);
-
-    await loadContentWindow(browser, url);
-
-    let actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "Screenshot"
+    var windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
+    // nsIWindowlessBrowser inherits from nsIWebNavigation.
+    let contentWindow = await loadContentWindow(
+      windowlessBrowser,
+      url,
+      Services.scriptSecurityManager.getSystemPrincipal()
     );
-    let blob = await actor.takeScreenshot({
-      fullWidth,
-      fullHeight,
-      contentWidth,
-      contentHeight,
-    });
+    contentWindow.resizeTo(contentWidth, contentHeight);
 
-    let reader = await new Promise(resolve => {
-      let fr = new FileReader();
-      fr.onloadend = () => resolve(fr);
-      fr.readAsArrayBuffer(blob);
-    });
+    let canvas = contentWindow.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
+    let context = canvas.getContext("2d");
+    let width = fullWidth
+      ? contentWindow.innerWidth +
+        contentWindow.scrollMaxX -
+        contentWindow.scrollMinX
+      : contentWindow.innerWidth;
+    let height = fullHeight
+      ? contentWindow.innerHeight +
+        contentWindow.scrollMaxY -
+        contentWindow.scrollMinY
+      : contentWindow.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    context.drawWindow(
+      contentWindow,
+      0,
+      0,
+      width,
+      height,
+      "rgb(255, 255, 255)"
+    );
 
+    function getBlob() {
+      return new Promise(resolve => canvas.toBlob(resolve));
+    }
+
+    function readBlob(blob) {
+      return new Promise(resolve => {
+        let reader = new FileReader();
+        reader.onloadend = () => resolve(reader);
+        reader.readAsArrayBuffer(blob);
+      });
+    }
+
+    let blob = await getBlob();
+    let reader = await readBlob(blob);
     await OS.File.writeAtomic(path, new Uint8Array(reader.result), {
       flush: true,
     });
@@ -130,8 +136,8 @@ async function takeScreenshot(
   } catch (e) {
     dump("Failure taking screenshot: " + e + "\n");
   } finally {
-    if (frame) {
-      frame.destroy();
+    if (windowlessBrowser) {
+      windowlessBrowser.close();
     }
   }
 }
