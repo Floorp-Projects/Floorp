@@ -9,8 +9,6 @@ job-defaults:
         max-run-time: 3600
     run:
         script: build-cbindgen.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cbindgen.tar.xz
     fetches:
         fetch:
@@ -25,8 +23,9 @@ linux64-cbindgen:
         max-run-time: 1800
     run:
         arguments: ['x86_64-unknown-linux-gnu']
-    toolchains:
-        - linux64-rust-1.32
+    fetches:
+        toolchain:
+            - linux64-rust-1.32
 
 macosx64-cbindgen:
     treeherder:
@@ -39,12 +38,15 @@ macosx64-cbindgen:
         - try
     run:
         arguments: ['x86_64-apple-darwin']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
         tooltool-downloads: internal
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos-1.32
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos-1.32
 
 win64-cbindgen:
     treeherder:
@@ -52,9 +54,12 @@ win64-cbindgen:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/cbindgen.tar.bz2
-    toolchains:
-        - win64-rust-1.34
+    fetches:
+        toolchain:
+            - win64-rust-1.34

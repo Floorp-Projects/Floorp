@@ -5,8 +5,8 @@ set -e -v
 
 WORKSPACE=$HOME/workspace
 COMPRESS_EXT=xz
-export CC=$GECKO_PATH/gcc/bin/gcc
-export CXX=$GECKO_PATH/gcc/bin/g++
+export CC=$MOZ_FETCHES_DIR/gcc/bin/gcc
+export CXX=$MOZ_FETCHES_DIR/gcc/bin/g++
 export LDFLAGS=-lrt
 
 # Gn build scripts use #!/usr/bin/env python, which will be python 2.6 on
@@ -18,5 +18,4 @@ export PATH=$WORKSPACE/python_bin:$PATH
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
 . taskcluster/scripts/misc/build-gn-common.sh
