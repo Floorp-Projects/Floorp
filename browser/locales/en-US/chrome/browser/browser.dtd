@@ -803,7 +803,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY getUserMedia.audioCapture.label "Audio from the tab will be shared.">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
 
-<!ENTITY contentBlocking.trackingProtection3.label "Trackers">
+<!ENTITY contentBlocking.trackingProtection4.label "Tracking Content">
 
 <!ENTITY contentBlocking.manageSettings.label "Manage Content Blocking">
 <!ENTITY contentBlocking.manageSettings.accesskey "M">
