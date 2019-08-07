@@ -52,16 +52,16 @@
   </commandset>
 
   <keyset id="pageInfoKeySet">
-    <key data-l10n-id="close-window" modifiers="accel" command="cmd_close"/>
-    <key keycode="VK_ESCAPE"                       command="cmd_close"/>
+    <key data-l10n-id="close-dialog" data-l10n-attrs="key" modifiers="accel" command="cmd_close"/>
+    <key keycode="VK_ESCAPE" command="cmd_close"/>
 #ifdef XP_MACOSX
-    <key key="."                 modifiers="meta"  command="cmd_close"/>
+    <key key="." modifiers="meta"  command="cmd_close"/>
 #else
-    <key keycode="VK_F1"                           command="cmd_help"/>
+    <key keycode="VK_F1" command="cmd_help"/>
 #endif
-    <key data-l10n-id="copy"        modifiers="accel" command="cmd_copy"/>
-    <key data-l10n-id="select-all"  modifiers="accel" command="cmd_selectall"/>
-    <key data-l10n-id="select-all"  modifiers="alt"   command="cmd_selectall"/>
+    <key data-l10n-id="copy"       data-l10n-attrs="key" modifiers="accel" command="cmd_copy"/>
+    <key data-l10n-id="select-all" data-l10n-attrs="key" modifiers="accel" command="cmd_selectall"/>
+    <key data-l10n-id="select-all" data-l10n-attrs="key" modifiers="alt"   command="cmd_selectall"/>
   </keyset>
 
   <menupopup id="picontext">
