@@ -16,7 +16,6 @@ class FrameListColumnSize extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      index: PropTypes.number.isRequired,
     };
   }
 
@@ -26,11 +25,9 @@ class FrameListColumnSize extends Component {
 
   render() {
     const { payload } = this.props.item;
-    const { index } = this.props;
 
     return dom.td(
       {
-        key: index,
         className: "ws-frames-list-column ws-frames-list-size",
         title: getFormattedSize(payload.length),
       },

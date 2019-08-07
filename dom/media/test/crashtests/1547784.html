@@ -1,0 +1,33 @@
+<html class="reftest-wait">
+<head>
+    <script>
+      const doc = new Document();
+      const video = document.createElementNS('http://www.w3.org/1999/xhtml', 'video');
+      const source = new MediaSource();
+
+      navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{ '': [{ '': '' }] }])
+        .then(keySystemAccess => {
+          return keySystemAccess.createMediaKeys();
+        }).then(_ => {
+        video.src = URL.createObjectURL(source);
+        source.addEventListener('sourceopen', () => {
+          doc.adoptNode(video);
+        });
+      });
+
+      navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{ '': [{ '': '' }] }])
+        .then(keySystemAccess => {
+          return keySystemAccess.createMediaKeys();
+        }).then(mediaKeys => {
+        return video.setMediaKeys(mediaKeys);
+      }).then(() => {
+        video.src = URL.createObjectURL(source);
+        document.documentElement.removeAttribute("class");
+      }).catch(e => {
+        // Catch JS errors caused by raciness in the test. So long as we're
+        // not crashing we're good.
+        document.documentElement.removeAttribute("class");
+      });
+    </script>
+</head>
+</html>

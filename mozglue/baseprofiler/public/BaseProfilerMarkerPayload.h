@@ -67,16 +67,6 @@ class ProfilerMarkerPayload {
                                   const TimeStamp& aProcessStartTime,
                                   UniqueStacks& aUniqueStacks);
 
-  void SetStack(UniqueProfilerBacktrace aStack) { mStack = std::move(aStack); }
-
-  void SetDocShellHistoryId(const Maybe<uint32_t>& aDocShellHistoryId) {
-    mDocShellHistoryId = aDocShellHistoryId;
-  }
-
-  void SetDocShellId(const Maybe<std::string>& aDocShellId) {
-    mDocShellId = aDocShellId;
-  }
-
  private:
   TimeStamp mStartTime;
   TimeStamp mEndTime;
@@ -99,13 +89,10 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
                        const Maybe<std::string>& aDocShellId = Nothing(),
                        const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
                        UniqueProfilerBacktrace aCause = nullptr)
-      : mCategory(aCategory), mKind(aKind) {
-    if (aCause) {
-      SetStack(std::move(aCause));
-    }
-    SetDocShellId(aDocShellId);
-    SetDocShellHistoryId(aDocShellHistoryId);
-  }
+      : ProfilerMarkerPayload(aDocShellId, aDocShellHistoryId,
+                              std::move(aCause)),
+        mCategory(aCategory),
+        mKind(aKind) {}
 
   DECL_BASE_STREAM_PAYLOAD
 

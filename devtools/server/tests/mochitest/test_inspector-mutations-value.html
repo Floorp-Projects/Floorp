@@ -38,7 +38,7 @@ var shortString2 = "str2";
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
-  const inspector = await target.getInspector();
+  const inspector = await target.getFront("inspector");
   gInspectee = doc;
   gWalker = inspector.walker;
   runNextTest();
