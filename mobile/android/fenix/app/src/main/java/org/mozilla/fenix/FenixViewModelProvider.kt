@@ -7,7 +7,6 @@ package org.mozilla.fenix
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
@@ -28,7 +27,7 @@ object FenixViewModelProvider {
 
         return object : UIComponentViewModelProvider<S, C> {
             override fun fetchViewModel(): T {
-                return ViewModelProviders.of(fragment, factory).get(modelClass)
+                return ViewModelProvider(fragment, factory).get(modelClass)
             }
         }
     }

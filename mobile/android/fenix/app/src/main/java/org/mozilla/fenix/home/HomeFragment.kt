@@ -23,7 +23,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.Observer
 import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -202,7 +202,7 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private fun restoreLayoutState() {
         val homeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+            ViewModelProvider(this).get(HomeScreenViewModel::class.java)
         }
         homeViewModel?.layoutManagerState?.also { parcelable ->
             sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
@@ -541,7 +541,7 @@ class HomeFragment : Fragment(), AccountObserver {
         invokePendingDeleteJobs()
         super.onPause()
         val homeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+            ViewModelProvider(this).get(HomeScreenViewModel::class.java)
         }
         homeViewModel?.layoutManagerState =
             sessionControlComponent.view.layoutManager?.onSaveInstanceState()
@@ -672,7 +672,7 @@ class HomeFragment : Fragment(), AccountObserver {
         val tabs = getListOfSessions().toTabs()
 
         val viewModel = activity?.run {
-            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+            ViewModelProvider(this).get(CreateCollectionViewModel::class.java)
         }
         viewModel?.tabs = tabs
         val selectedTabs =

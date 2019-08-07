@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -132,7 +132,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
 
         getSessionById()?.let { session ->
             val viewModel = activity!!.run {
-                ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+                ViewModelProvider(this).get(CreateCollectionViewModel::class.java)
             }
 
             val browserToolbarController = DefaultBrowserToolbarController(
