@@ -74,17 +74,6 @@ class ProfilerMarkerPayload {
                          const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks);
 
-  void SetStack(UniqueProfilerBacktrace aStack) { mStack = std::move(aStack); }
-
-  void SetDocShellHistoryId(
-      const mozilla::Maybe<uint32_t>& aDocShellHistoryId) {
-    mDocShellHistoryId = aDocShellHistoryId;
-  }
-
-  void SetDocShellId(const mozilla::Maybe<nsID>& aDocShellId) {
-    mDocShellId = aDocShellId;
-  }
-
  private:
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mEndTime;
@@ -107,13 +96,10 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
       const mozilla::Maybe<nsID>& aDocShellId = mozilla::Nothing(),
       const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
       UniqueProfilerBacktrace aCause = nullptr)
-      : mCategory(aCategory), mKind(aKind) {
-    if (aCause) {
-      SetStack(std::move(aCause));
-    }
-    SetDocShellId(aDocShellId);
-    SetDocShellHistoryId(aDocShellHistoryId);
-  }
+      : ProfilerMarkerPayload(aDocShellId, aDocShellHistoryId,
+                              std::move(aCause)),
+        mCategory(aCategory),
+        mKind(aKind) {}
 
   DECL_STREAM_PAYLOAD
 
@@ -344,12 +330,8 @@ class StyleMarkerPayload : public ProfilerMarkerPayload {
                      const mozilla::Maybe<nsID>& aDocShellId,
                      const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
       : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
-                              aDocShellHistoryId),
-        mStats(aStats) {
-    if (aCause) {
-      SetStack(std::move(aCause));
-    }
-  }
+                              aDocShellHistoryId, std::move(aCause)),
+        mStats(aStats) {}
 
   DECL_STREAM_PAYLOAD
 
