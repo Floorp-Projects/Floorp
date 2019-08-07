@@ -27,3 +27,6 @@ powershell.exe 'iex (Get-Content -Raw ci-scripts\set-screenresolution.ps1); Set-
 export CARGOFLAGS='--verbose --frozen'
 export FREETYPE_CMAKE_GENERATOR=Ninja
 cmd.exe /c 'ci-scripts\windows-tests.cmd'
+
+# Diagnostic for bug 1571986.
+tasklist -M
