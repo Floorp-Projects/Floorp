@@ -12,7 +12,8 @@ const TEST_URI =
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function() {
-  const { toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspectorFront } = inspector;
 
   info("Starting element picker.");
   await startPicker(toolbox);
@@ -40,5 +41,5 @@ add_task(async function() {
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");
-  await toolbox.inspectorFront.nodePicker.stop();
+  await inspectorFront.nodePicker.stop();
 });
