@@ -525,6 +525,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       if (!emitter->emitScript(pn)) {
         return nullptr;
       }
+
+      // Success!
       break;
     }
 
