@@ -16,10 +16,16 @@ addRDMTask(TEST_URL, async function({ ui }) {
   // A single viewport of default size appeared
   const viewport = ui.toolWindow.document.querySelector(".viewport-content");
 
-  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
-     "320px", "Viewport has default width");
-  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
-     "480px", "Viewport has default height");
+  is(
+    ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
+    "320px",
+    "Viewport has default width"
+  );
+  is(
+    ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
+    "480px",
+    "Viewport has default height"
+  );
 
   // Browser's location should match original tab
   await waitForFrameLoad(ui, TEST_URL);

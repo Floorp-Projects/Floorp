@@ -18,7 +18,11 @@ addRDMTask(TEST_URL, async function({ ui }) {
   // Alerts coming from inside the viewport are relayed by RDM to the outer browser.
   // So, in order to test that those relayed prompts occur, let's override the usual
   // alert, prompt and confirm methods there to test that they get called.
-  const { alert: oldAlert, prompt: oldPrompt, confirm: oldConfirm } = toolWindow;
+  const {
+    alert: oldAlert,
+    prompt: oldPrompt,
+    confirm: oldConfirm,
+  } = toolWindow;
 
   info("Listen for calls on alert, prompt and confirm");
   const prompts = [];
@@ -57,16 +61,31 @@ addRDMTask(TEST_URL, async function({ ui }) {
   ok(!prompts[0].initialValue, "Prompt 1 has the right initialValue");
 
   is(prompts[1].promptType, "prompt", "Prompt 2 has the right type");
-  is(prompts[1].message, "Some simple prompt", "Prompt 2 has the right message");
+  is(
+    prompts[1].message,
+    "Some simple prompt",
+    "Prompt 2 has the right message"
+  );
   ok(!prompts[1].initialValue, "Prompt 2 has the right initialValue");
 
   is(prompts[2].promptType, "prompt", "Prompt 3 has the right type");
-  is(prompts[2].message, "Some simple prompt with initial value",
-     "Prompt 3 has the right message");
-  is(prompts[2].initialValue, "initial value", "Prompt 3 has the right initialValue");
+  is(
+    prompts[2].message,
+    "Some simple prompt with initial value",
+    "Prompt 3 has the right message"
+  );
+  is(
+    prompts[2].initialValue,
+    "initial value",
+    "Prompt 3 has the right initialValue"
+  );
 
   is(prompts[3].promptType, "confirm", "Prompt 4 has the right type");
-  is(prompts[3].message, "Some simple confirm", "Prompt 4 has the right message");
+  is(
+    prompts[3].message,
+    "Some simple confirm",
+    "Prompt 4 has the right message"
+  );
   ok(!prompts[3].initialValue, "Prompt 4 has the right initialValue");
 
   // Revert the old versions of alert, prompt and confirm.

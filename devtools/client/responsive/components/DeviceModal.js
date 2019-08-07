@@ -6,7 +6,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -106,8 +109,8 @@ class DeviceModal extends PureComponent {
     } = this.props;
 
     const preferredDevices = {
-      "added": new Set(),
-      "removed": new Set(),
+      added: new Set(),
+      removed: new Set(),
     };
 
     for (const type of devices.types) {
@@ -147,9 +150,7 @@ class DeviceModal extends PureComponent {
     }
     // Escape keycode
     if (event.keyCode === 27) {
-      const {
-        onUpdateDeviceModal,
-      } = this.props;
+      const { onUpdateDeviceModal } = this.props;
       onUpdateDeviceModal(false);
     }
   }
@@ -179,33 +180,31 @@ class DeviceModal extends PureComponent {
       });
     }
 
-    return (
-      DeviceForm({
-        formType: "add",
-        device: deviceTemplate,
-        devices: this.props.devices,
-        onDeviceFormHide: this.onDeviceFormHide,
-        onSave: this.onAddCustomDevice,
-        viewportTemplate,
-      })
-    );
+    return DeviceForm({
+      formType: "add",
+      device: deviceTemplate,
+      devices: this.props.devices,
+      onDeviceFormHide: this.onDeviceFormHide,
+      onSave: this.onAddCustomDevice,
+      viewportTemplate,
+    });
   }
 
   renderDevices() {
     const sortedDevices = {};
     for (const type of this.props.devices.types) {
-      sortedDevices[type] = this.props.devices[type]
-        .sort((a, b) => a.name.localeCompare(b.name));
+      sortedDevices[type] = this.props.devices[type].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
 
       sortedDevices[type].forEach(device => {
         device.isChecked = this.state[device.name];
       });
     }
 
-    return (
-      this.props.devices.types.map(type => {
-        return sortedDevices[type].length ?
-          dom.div(
+    return this.props.devices.types.map(type => {
+      return sortedDevices[type].length
+        ? dom.div(
             {
               className: `device-type device-type-${type}`,
               key: type,
@@ -222,26 +221,22 @@ class DeviceModal extends PureComponent {
               onRemoveCustomDevice: this.props.onRemoveCustomDevice,
             })
           )
-          :
-          null;
-      })
-    );
+        : null;
+    });
   }
 
   renderEditForm() {
-    return (
-      DeviceForm({
-        formType: "edit",
-        device: this.state.editingDevice,
-        devices: this.props.devices,
-        onDeviceFormHide: this.onDeviceFormHide,
-        onSave: this.onEditCustomDevice,
-        viewportTemplate: {
-          width: this.state.editingDevice.width,
-          height: this.state.editingDevice.height,
-        },
-      })
-    );
+    return DeviceForm({
+      formType: "edit",
+      device: this.state.editingDevice,
+      devices: this.props.devices,
+      onDeviceFormHide: this.onDeviceFormHide,
+      onSave: this.onEditCustomDevice,
+      viewportTemplate: {
+        width: this.state.editingDevice.width,
+        height: this.state.editingDevice.height,
+      },
+    });
   }
 
   renderForm() {
@@ -260,48 +255,43 @@ class DeviceModal extends PureComponent {
     const { onUpdateDeviceModal } = this.props;
     const isDeviceFormShown = this.state.deviceFormType;
 
-    return (
+    return dom.div(
+      {
+        id: "device-modal-wrapper",
+        className: this.props.devices.isModalOpen ? "opened" : "closed",
+      },
       dom.div(
-        {
-          id: "device-modal-wrapper",
-          className: this.props.devices.isModalOpen ? "opened" : "closed",
-        },
-        dom.div({ className: "device-modal" },
-          dom.div({ className: "device-modal-header" },
-            !isDeviceFormShown ?
-              dom.header({ className: "device-modal-title" },
+        { className: "device-modal" },
+        dom.div(
+          { className: "device-modal-header" },
+          !isDeviceFormShown
+            ? dom.header(
+                { className: "device-modal-title" },
                 getStr("responsive.deviceSettings"),
                 dom.button({
                   id: "device-close-button",
                   className: "devtools-button",
                   onClick: () => onUpdateDeviceModal(false),
-                }),
+                })
               )
-              :
-              null,
-            !isDeviceFormShown ?
-              dom.button(
+            : null,
+          !isDeviceFormShown
+            ? dom.button(
                 {
                   id: "device-add-button",
                   onClick: () => this.onDeviceFormShow("add"),
                 },
                 getStr("responsive.addDevice2")
               )
-              :
-              null,
-            this.renderForm(),
-          ),
-          dom.div({ className: "device-modal-content" },
-            this.renderDevices()
-          ),
+            : null,
+          this.renderForm()
         ),
-        dom.div(
-          {
-            className: "modal-overlay",
-            onClick: () => onUpdateDeviceModal(false),
-          }
-        )
-      )
+        dom.div({ className: "device-modal-content" }, this.renderDevices())
+      ),
+      dom.div({
+        className: "modal-overlay",
+        onClick: () => onUpdateDeviceModal(false),
+      })
     );
   }
 }

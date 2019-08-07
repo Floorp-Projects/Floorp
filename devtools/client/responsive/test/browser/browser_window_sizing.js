@@ -30,36 +30,56 @@ add_task(async function() {
 });
 
 async function checkWindowOuterSize(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(),
+  return ContentTask.spawn(
+    ui.getViewportBrowser(),
     { width: WIDTH, height: HEIGHT },
     async function({ width, height }) {
       // Approximate the outer size value returned on the window content with the expected
       // value. We should expect, at the very most, a 1px difference between the two due
       // to floating point rounding errors that occur when scaling from inner size CSS
       // integer values to outer size CSS integer values. See Part 1 of Bug 1107456.
-      ok(Math.abs(content.outerWidth - width) <= 1,
-        `window.outerWidth should be ${width} and we got ${content.outerWidth}.`);
-      ok(Math.abs(content.outerHeight - height) <= 1,
-        `window.outerHeight should be ${height} and we got ${content.outerHeight}.`);
-    });
+      ok(
+        Math.abs(content.outerWidth - width) <= 1,
+        `window.outerWidth should be ${width} and we got ${content.outerWidth}.`
+      );
+      ok(
+        Math.abs(content.outerHeight - height) <= 1,
+        `window.outerHeight should be ${height} and we got ${
+          content.outerHeight
+        }.`
+      );
+    }
+  );
 }
 
 async function checkWindowScreenSize(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(),
+  return ContentTask.spawn(
+    ui.getViewportBrowser(),
     { width: WIDTH, height: HEIGHT },
     async function({ width, height }) {
       const { screen } = content;
 
-      ok(Math.abs(screen.availWidth - width) <= 1,
-        `screen.availWidth should be ${width} and we got ${screen.availWidth}.`);
+      ok(
+        Math.abs(screen.availWidth - width) <= 1,
+        `screen.availWidth should be ${width} and we got ${screen.availWidth}.`
+      );
 
-      ok(Math.abs(screen.availHeight - height) <= 1,
-        `screen.availHeight should be ${height} and we got ${screen.availHeight}.`);
+      ok(
+        Math.abs(screen.availHeight - height) <= 1,
+        `screen.availHeight should be ${height} and we got ${
+          screen.availHeight
+        }.`
+      );
 
-      ok(Math.abs(screen.width - width) <= 1,
-        `screen.width should be ${width} and we got ${screen.width}.`);
+      ok(
+        Math.abs(screen.width - width) <= 1,
+        `screen.width should be ${width} and we got ${screen.width}.`
+      );
 
-      ok(Math.abs(screen.height - height) <= 1,
-        `screen.height should be ${height} and we got ${screen.height}.`);
-    });
+      ok(
+        Math.abs(screen.height - height) <= 1,
+        `screen.height should be ${height} and we got ${screen.height}.`
+      );
+    }
+  );
 }

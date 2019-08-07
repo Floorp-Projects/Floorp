@@ -51,7 +51,7 @@ exports.off = off;
  */
 function once(mm, message) {
   return new Promise(resolve => {
-    on(mm, message, function onMessage({data}) {
+    on(mm, message, function onMessage({ data }) {
       off(mm, message, onMessage);
       resolve(data);
     });

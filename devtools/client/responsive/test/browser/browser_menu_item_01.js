@@ -9,17 +9,18 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 
 const { startup } = require("devtools/client/responsive/utils/window");
 
-const activateTab = (tab) => new Promise(resolve => {
-  const { gBrowser } = tab.ownerGlobal;
-  const { tabContainer } = gBrowser;
+const activateTab = tab =>
+  new Promise(resolve => {
+    const { gBrowser } = tab.ownerGlobal;
+    const { tabContainer } = gBrowser;
 
-  tabContainer.addEventListener("TabSelect", function listener({type}) {
-    tabContainer.removeEventListener(type, listener);
-    resolve();
+    tabContainer.addEventListener("TabSelect", function listener({ type }) {
+      tabContainer.removeEventListener(type, listener);
+      resolve();
+    });
+
+    gBrowser.selectedTab = tab;
   });
-
-  gBrowser.selectedTab = tab;
-});
 
 const isMenuChecked = () => {
   const menu = document.getElementById("menu_responsiveUI");
@@ -29,33 +30,27 @@ const isMenuChecked = () => {
 add_task(async function() {
   await startup(window);
 
-  ok(!isMenuChecked(),
-    "RDM menu item is unchecked by default");
+  ok(!isMenuChecked(), "RDM menu item is unchecked by default");
 
   const tab = await addTab(TEST_URL);
 
-  ok(!isMenuChecked(),
-    "RDM menu item is unchecked for new tab");
+  ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
 
   await openRDM(tab);
 
-  ok(isMenuChecked(),
-    "RDM menu item is checked with RDM open");
+  ok(isMenuChecked(), "RDM menu item is checked with RDM open");
 
   const tab2 = await addTab(TEST_URL);
 
-  ok(!isMenuChecked(),
-    "RDM menu item is unchecked for new tab");
+  ok(!isMenuChecked(), "RDM menu item is unchecked for new tab");
 
   await activateTab(tab);
 
-  ok(isMenuChecked(),
-    "RDM menu item is checked for the tab where RDM is open");
+  ok(isMenuChecked(), "RDM menu item is checked for the tab where RDM is open");
 
   await closeRDM(tab);
 
-  ok(!isMenuChecked(),
-    "RDM menu item is unchecked after RDM is closed");
+  ok(!isMenuChecked(), "RDM menu item is unchecked after RDM is closed");
 
   await removeTab(tab);
   await removeTab(tab2);

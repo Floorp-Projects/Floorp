@@ -15,21 +15,22 @@ add_task(async function() {
   const { getState, dispatch } = store;
 
   const device = {
-    "name": "Firefox OS Flame",
-    "width": 320,
-    "height": 570,
-    "pixelRatio": 1.5,
-    "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
-    "touch": true,
-    "firefoxOS": true,
-    "os": "fxos",
+    name: "Firefox OS Flame",
+    width: 320,
+    height: 570,
+    pixelRatio: 1.5,
+    userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+    touch: true,
+    firefoxOS: true,
+    os: "fxos",
   };
 
   dispatch(addDeviceType("phones"));
   dispatch(addDevice(device, "phones"));
 
-  equal(getState().devices.phones.length, 1,
-    "Correct number of phones");
-  ok(getState().devices.phones.includes(device),
-    "Device phone list contains Firefox OS Flame");
+  equal(getState().devices.phones.length, 1, "Correct number of phones");
+  ok(
+    getState().devices.phones.includes(device),
+    "Device phone list contains Firefox OS Flame"
+  );
 });

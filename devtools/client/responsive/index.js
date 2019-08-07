@@ -6,16 +6,19 @@
 
 "use strict";
 
-const { BrowserLoader } =
-  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = ChromeUtils.import(
+  "resource://devtools/client/shared/browser-loader.js"
+);
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive/",
   window,
 });
 const Telemetry = require("devtools/client/shared/telemetry");
 
-const { createFactory, createElement } =
-  require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
@@ -30,7 +33,6 @@ const { changeDisplayPixelRatio } = require("./actions/ui");
 window.require = require;
 
 const bootstrap = {
-
   telemetry: new Telemetry(),
 
   store: null,
@@ -40,7 +42,7 @@ const bootstrap = {
     // toolbox session id.
     this.telemetry.toolOpened("responsive", -1, this);
 
-    const store = this.store = Store();
+    const store = (this.store = Store());
     const provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
     message.post(window, "init:done");
@@ -69,7 +71,6 @@ const bootstrap = {
     }
     this.store.dispatch(action);
   },
-
 };
 
 // manager.js sends a message to signal init
@@ -83,9 +84,13 @@ message.wait(window, "post-init").then(() => {
   });
 });
 
-window.addEventListener("unload", function() {
-  bootstrap.destroy();
-}, {once: true});
+window.addEventListener(
+  "unload",
+  function() {
+    bootstrap.destroy();
+  },
+  { once: true }
+);
 
 // Allows quick testing of actions from the console
 window.dispatch = action => bootstrap.dispatch(action);

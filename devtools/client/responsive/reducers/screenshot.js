@@ -14,7 +14,6 @@ const INITIAL_SCREENSHOT = {
 };
 
 const reducers = {
-
   [TAKE_SCREENSHOT_END](screenshot, action) {
     return {
       ...screenshot,

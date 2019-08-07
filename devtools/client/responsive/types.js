@@ -28,7 +28,6 @@ exports.loadableState = createEnum([
  * A single device that can be displayed in the viewport.
  */
 const device = {
-
   // The name of the device
   name: PropTypes.string,
 
@@ -52,14 +51,12 @@ const device = {
 
   // Whether or not the device is displayed in the device selector
   displayed: PropTypes.bool,
-
 };
 
 /**
  * A list of devices and their types that can be displayed in the viewport.
  */
 exports.devices = {
-
   // An array of device types
   types: PropTypes.arrayOf(PropTypes.string),
 
@@ -89,7 +86,6 @@ exports.devices = {
 
   // Device list state, possible values are exported above in an enum
   listState: PropTypes.oneOf(Object.keys(exports.loadableState)),
-
 };
 
 /* VIEWPORT */
@@ -98,20 +94,17 @@ exports.devices = {
  * Network throttling state for a given viewport.
  */
 exports.networkThrottling = {
-
   // Whether or not network throttling is enabled
   enabled: PropTypes.bool,
 
   // Name of the selected throttling profile
   profile: PropTypes.string,
-
 };
 
 /**
  * A single viewport displaying a document.
  */
 exports.viewport = {
-
   // The id of the viewport
   id: PropTypes.number,
 
@@ -133,7 +126,6 @@ exports.viewport = {
   // The user context (container) ID for the viewport
   // Defaults to 0 meaning the default context
   userContextId: PropTypes.number,
-
 };
 
 /* ACTIONS IN PROGRESS */
@@ -142,8 +134,6 @@ exports.viewport = {
  * The progression of the screenshot.
  */
 exports.screenshot = {
-
   // Whether screenshot capturing is in progress
   isCapturing: PropTypes.bool,
-
 };

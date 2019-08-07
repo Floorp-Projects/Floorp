@@ -11,7 +11,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 class DeviceSelector extends PureComponent {
   static get propTypes() {
@@ -77,23 +82,19 @@ class DeviceSelector extends PureComponent {
   }
 
   render() {
-    const {
-      devices,
-      selectedDevice,
-    } = this.props;
+    const { devices, selectedDevice } = this.props;
 
-    return (
-      dom.button(
-        {
-          id: "device-selector",
-          className: "devtools-button devtools-dropdown-button",
-          disabled: devices.listState !== Types.loadableState.LOADED,
-          title: selectedDevice,
-          onClick: this.onShowDeviceMenu,
-        },
-        dom.span({ className: "title" },
-          selectedDevice || getStr("responsive.responsiveMode")
-        )
+    return dom.button(
+      {
+        id: "device-selector",
+        className: "devtools-button devtools-dropdown-button",
+        disabled: devices.listState !== Types.loadableState.LOADED,
+        title: selectedDevice,
+        onClick: this.onShowDeviceMenu,
+      },
+      dom.span(
+        { className: "title" },
+        selectedDevice || getStr("responsive.responsiveMode")
       )
     );
   }

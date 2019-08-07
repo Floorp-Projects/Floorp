@@ -21,7 +21,6 @@ const {
 const { post } = require("../utils/message");
 
 module.exports = {
-
   /**
    * Add an additional viewport to display the document.
    */
@@ -45,8 +44,11 @@ module.exports = {
       });
 
       try {
-        await asyncStorage.setItem("devtools.responsive.deviceState",
-          { id, device, deviceType });
+        await asyncStorage.setItem("devtools.responsive.deviceState", {
+          id,
+          device,
+          deviceType,
+        });
       } catch (e) {
         console.error(e);
       }
@@ -109,5 +111,4 @@ module.exports = {
       id,
     };
   },
-
 };

@@ -5,8 +5,10 @@
 
 // Test rotating the viewport.
 
-const { addViewport, rotateViewport } =
-  require("devtools/client/responsive/actions/viewports");
+const {
+  addViewport,
+  rotateViewport,
+} = require("devtools/client/responsive/actions/viewports");
 
 add_task(async function() {
   const store = Store();

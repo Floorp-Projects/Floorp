@@ -51,7 +51,11 @@ add_task(async function() {
   ok(browser.webNavigation.canGoBack, "Going back is allowed");
   ok(!browser.webNavigation.canGoForward, "Going forward is not allowed");
   is(browser.documentURI.spec, DUMMY_2_URL, "documentURI matches page 2");
-  is(browser.contentTitle, "mochitest index /browser/", "contentTitle matches page 2");
+  is(
+    browser.contentTitle,
+    "mochitest index /browser/",
+    "contentTitle matches page 2"
+  );
 
   await back(browser);
   await back(browser);
@@ -82,8 +86,11 @@ add_task(async function() {
   ok(browser.webNavigation.canGoBack, "Going back is allowed");
   ok(!browser.webNavigation.canGoForward, "Going forward is not allowed");
   is(browser.documentURI.spec, DUMMY_3_URL, "documentURI matches page 3");
-  is(browser.contentTitle, "mochitest index /browser/devtools/",
-     "contentTitle matches page 3");
+  is(
+    browser.contentTitle,
+    "mochitest index /browser/devtools/",
+    "contentTitle matches page 3"
+  );
 
   await closeRDM(tab);
 

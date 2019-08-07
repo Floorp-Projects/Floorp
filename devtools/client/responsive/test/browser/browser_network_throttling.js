@@ -31,14 +31,23 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 function testNetworkThrottlingSelectorLabel(ui, expected) {
-  const title = ui.toolWindow.document.querySelector("#network-throttling-menu .title");
-  is(title.textContent, expected, `Button title should be changed to ${expected}`);
+  const title = ui.toolWindow.document.querySelector(
+    "#network-throttling-menu .title"
+  );
+  is(
+    title.textContent,
+    expected,
+    `Button title should be changed to ${expected}`
+  );
 }
 
 var testNetworkThrottlingState = async function(ui, expected) {
   const state = await ui.emulationFront.getNetworkThrottling();
-  Assert.deepEqual(state, expected, "Network throttling state should be " +
-                                    JSON.stringify(expected, null, 2));
+  Assert.deepEqual(
+    state,
+    expected,
+    "Network throttling state should be " + JSON.stringify(expected, null, 2)
+  );
 };
 
 var testThrottlingProfile = async function(ui, profile) {

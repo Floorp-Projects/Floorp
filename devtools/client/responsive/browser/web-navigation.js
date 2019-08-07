@@ -32,10 +32,7 @@ function BrowserElementWebNavigation(browser) {
 }
 
 BrowserElementWebNavigation.prototype = {
-
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIWebNavigation,
-  ]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebNavigation]),
 
   get _mm() {
     return this._browser.frameLoader.messageManager;
@@ -59,17 +56,32 @@ BrowserElementWebNavigation.prototype = {
 
   loadURI(uri, flags, referrer, postData, headers) {
     // No equivalent in the current BrowserElement API
-    this.loadURIWithOptions(uri, flags, referrer,
-                            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                            postData, headers, null,
-                            Services.scriptSecurityManager.createNullPrincipal({}));
+    this.loadURIWithOptions(
+      uri,
+      flags,
+      referrer,
+      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      postData,
+      headers,
+      null,
+      Services.scriptSecurityManager.createNullPrincipal({})
+    );
   },
 
-  loadURIWithOptions(uri, flags, referrer, referrerPolicy, postData, headers,
-                     baseURI, triggeringPrincipal) {
+  loadURIWithOptions(
+    uri,
+    flags,
+    referrer,
+    referrerPolicy,
+    postData,
+    headers,
+    baseURI,
+    triggeringPrincipal
+  ) {
     // No equivalent in the current BrowserElement API
-    let referrerInfo = Cc["@mozilla.org/referrer-info;1"]
-                         .createInstance(Ci.nsIReferrerInfo);
+    let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+      Ci.nsIReferrerInfo
+    );
     referrerInfo.init(referrerPolicy, true, referrer);
     referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
     this._sendMessage("WebNavigation:LoadURI", {
@@ -80,8 +92,9 @@ BrowserElementWebNavigation.prototype = {
       headers: headers ? readInputStreamToString(headers) : null,
       baseURI: baseURI ? baseURI.spec : null,
       triggeringPrincipal: E10SUtils.serializePrincipal(
-                           triggeringPrincipal ||
-                           Services.scriptSecurityManager.createNullPrincipal({})),
+        triggeringPrincipal ||
+          Services.scriptSecurityManager.createNullPrincipal({})
+      ),
     });
   },
 
@@ -94,8 +107,10 @@ BrowserElementWebNavigation.prototype = {
 
   reload(flags) {
     let hardReload = false;
-    if (flags & this.LOAD_FLAGS_BYPASS_PROXY ||
-        flags & this.LOAD_FLAGS_BYPASS_CACHE) {
+    if (
+      flags & this.LOAD_FLAGS_BYPASS_PROXY ||
+      flags & this.LOAD_FLAGS_BYPASS_CACHE
+    ) {
       hardReload = true;
     }
     this._browser.reload(hardReload);
@@ -145,16 +160,11 @@ BrowserElementWebNavigation.prototype = {
   },
 
   copyStateFrom(otherWebNavigation) {
-    const state = [
-      "canGoBack",
-      "canGoForward",
-      "_currentURI",
-    ];
+    const state = ["canGoBack", "canGoForward", "_currentURI"];
     for (const property of state) {
       this[property] = otherWebNavigation[property];
     }
   },
-
 };
 
 const FLAGS = [

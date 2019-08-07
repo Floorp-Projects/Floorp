@@ -5,7 +5,9 @@
 "use strict";
 
 const Services = require("Services");
-const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const {
+  HTMLTooltip,
+} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
 const { getStr } = require("./utils/l10n");
 

@@ -21,8 +21,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   // Wait until the viewport has been added and the device list state indicates
   // an error
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.ERROR);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.ERROR
+  );
 
   // The device selector should be disabled
   ok(button.disabled, "Device selector is disabled");

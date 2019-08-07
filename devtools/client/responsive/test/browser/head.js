@@ -10,36 +10,55 @@
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
-  this);
+  this
+);
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
-  this);
+  this
+);
 
 // Import helpers registering the test-actor in remote targets
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this);
+  this
+);
 
 // Import helpers for the inspector that are also shared with others
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/shared-head.js",
-  this);
+  this
+);
 
-const { _loadPreferredDevices } = require("devtools/client/responsive/actions/devices");
+const {
+  _loadPreferredDevices,
+} = require("devtools/client/responsive/actions/devices");
 const { getStr } = require("devtools/client/responsive/utils/l10n");
-const { getTopLevelWindow } = require("devtools/client/responsive/utils/window");
-const { addDevice, removeDevice, removeLocalDevices } = require("devtools/client/shared/devices");
+const {
+  getTopLevelWindow,
+} = require("devtools/client/responsive/utils/window");
+const {
+  addDevice,
+  removeDevice,
+  removeLocalDevices,
+} = require("devtools/client/shared/devices");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const asyncStorage = require("devtools/shared/async-storage");
 
-loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive/manager", true);
+loader.lazyRequireGetter(
+  this,
+  "ResponsiveUIManager",
+  "devtools/client/responsive/manager",
+  true
+);
 
-const E10S_MULTI_ENABLED = Services.prefs.getIntPref("dom.ipc.processCount") > 1;
-const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive/test/browser/";
+const E10S_MULTI_ENABLED =
+  Services.prefs.getIntPref("dom.ipc.processCount") > 1;
+const TEST_URI_ROOT =
+  "http://example.com/browser/devtools/client/responsive/test/browser/";
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
-const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
-  .getService(Ci.nsIHttpProtocolHandler)
-  .userAgent;
+const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+  Ci.nsIHttpProtocolHandler
+).userAgent;
 
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
@@ -49,20 +68,32 @@ SimpleTest.waitForExplicitFinish();
 // should be enough.
 requestLongerTimeout(2);
 
-Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json");
+Services.prefs.setCharPref(
+  "devtools.devices.url",
+  TEST_URI_ROOT + "devices.json"
+);
 // The appearance of this notification causes intermittent behavior in some tests that
 // send mouse events, since it causes the content to shift when it appears.
-Services.prefs.setBoolPref("devtools.responsive.reloadNotification.enabled", false);
+Services.prefs.setBoolPref(
+  "devtools.responsive.reloadNotification.enabled",
+  false
+);
 // Don't show the setting onboarding tooltip in the test suites.
 Services.prefs.setBoolPref("devtools.responsive.show-setting-tooltip", false);
 Services.prefs.setBoolPref("devtools.responsive.showUserAgentInput", true);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.devices.url");
-  Services.prefs.clearUserPref("devtools.responsive.reloadNotification.enabled");
+  Services.prefs.clearUserPref(
+    "devtools.responsive.reloadNotification.enabled"
+  );
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
-  Services.prefs.clearUserPref("devtools.responsive.reloadConditions.touchSimulation");
-  Services.prefs.clearUserPref("devtools.responsive.reloadConditions.userAgent");
+  Services.prefs.clearUserPref(
+    "devtools.responsive.reloadConditions.touchSimulation"
+  );
+  Services.prefs.clearUserPref(
+    "devtools.responsive.reloadConditions.userAgent"
+  );
   Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
   Services.prefs.clearUserPref("devtools.responsive.showUserAgentInput");
   Services.prefs.clearUserPref("devtools.responsive.touchSimulation.enabled");
@@ -81,7 +112,9 @@ registerCleanupFunction(async () => {
 var openRDM = async function(tab) {
   info("Opening responsive design mode");
   const manager = ResponsiveUIManager;
-  const ui = await manager.openIfNeeded(tab.ownerGlobal, tab, { trigger: "test" });
+  const ui = await manager.openIfNeeded(tab.ownerGlobal, tab, {
+    trigger: "test",
+  });
   info("Responsive design mode opened");
   return { ui, manager };
 };
@@ -129,9 +162,11 @@ function spawnViewportTask(ui, args, task) {
 
 function waitForFrameLoad(ui, targetURL) {
   return spawnViewportTask(ui, { targetURL }, async function(args) {
-    if ((content.document.readyState == "complete" ||
-         content.document.readyState == "interactive") &&
-        content.location.href == args.targetURL) {
+    if (
+      (content.document.readyState == "complete" ||
+        content.document.readyState == "interactive") &&
+      content.location.href == args.targetURL
+    ) {
       return;
     }
     await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
@@ -177,15 +212,18 @@ function waitForViewportResizeTo(ui, width, height) {
     // size. We wait on the viewport resize event, and check for the
     // desired size.
     ui.on("viewport-resize", onResizeViewport);
-    browser.addEventListener("mozbrowserloadend",
-      onBrowserLoadEnd, { once: true });
+    browser.addEventListener("mozbrowserloadend", onBrowserLoadEnd, {
+      once: true,
+    });
   });
 }
 
 var setViewportSize = async function(ui, manager, width, height) {
   const size = ui.getViewportSize();
-  info(`Current size: ${size.width} x ${size.height}, ` +
-       `set to: ${width} x ${height}`);
+  info(
+    `Current size: ${size.width} x ${size.height}, ` +
+      `set to: ${width} x ${height}`
+  );
   if (size.width != width || size.height != height) {
     const resized = waitForViewportResizeTo(ui, width, height);
     ui.setViewportSize({ width, height });
@@ -197,11 +235,15 @@ var setViewportSize = async function(ui, manager, width, height) {
 // ensures that reflow of the viewport has completed.
 var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
   await setViewportSize(ui, manager, width, height);
-  const reflowed = ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    return new Promise(resolve => {
-      content.requestAnimationFrame(resolve);
-    });
-  });
+  const reflowed = ContentTask.spawn(
+    ui.getViewportBrowser(),
+    {},
+    async function() {
+      return new Promise(resolve => {
+        content.requestAnimationFrame(resolve);
+      });
+    }
+  );
   await reflowed;
 };
 
@@ -221,13 +263,15 @@ function getElRect(selector, win) {
  * the rect of the dragged element as it was before drag.
  */
 function dragElementBy(selector, x, y, win) {
-  const { Simulate } = win.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { Simulate } = win.require(
+    "devtools/client/shared/vendor/react-dom-test-utils"
+  );
   const rect = getElRect(selector, win);
   const startPoint = {
     clientX: Math.floor(rect.left + rect.width / 2),
     clientY: Math.floor(rect.top + rect.height / 2),
   };
-  const endPoint = [ startPoint.clientX + x, startPoint.clientY + y ];
+  const endPoint = [startPoint.clientX + x, startPoint.clientY + y];
 
   const elem = win.document.querySelector(selector);
 
@@ -241,18 +285,29 @@ function dragElementBy(selector, x, y, win) {
   return rect;
 }
 
-async function testViewportResize(ui, selector, moveBy,
-                             expectedViewportSize, expectedHandleMove) {
+async function testViewportResize(
+  ui,
+  selector,
+  moveBy,
+  expectedViewportSize,
+  expectedHandleMove
+) {
   const win = ui.toolWindow;
   const resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
   const startRect = dragElementBy(selector, ...moveBy, win);
   await resized;
 
   const endRect = getElRect(selector, win);
-  is(endRect.left - startRect.left, expectedHandleMove[0],
-    `The x move of ${selector} is as expected`);
-  is(endRect.top - startRect.top, expectedHandleMove[1],
-    `The y move of ${selector} is as expected`);
+  is(
+    endRect.left - startRect.left,
+    expectedHandleMove[0],
+    `The x move of ${selector} is as expected`
+  );
+  is(
+    endRect.top - startRect.top,
+    expectedHandleMove[1],
+    `The y move of ${selector} is as expected`
+  );
 }
 
 async function openDeviceModal(ui) {
@@ -260,25 +315,39 @@ async function openDeviceModal(ui) {
 
   info("Opening device modal through device selector.");
   const onModalOpen = waitUntilState(store, state => state.devices.isModalOpen);
-  await selectMenuItem(ui, "#device-selector", getStr("responsive.editDeviceList2"));
+  await selectMenuItem(
+    ui,
+    "#device-selector",
+    getStr("responsive.editDeviceList2")
+  );
   await onModalOpen;
 
   const modal = document.getElementById("device-modal-wrapper");
-  ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
-    "The device modal is displayed.");
+  ok(
+    modal.classList.contains("opened") && !modal.classList.contains("closed"),
+    "The device modal is displayed."
+  );
 }
 
 async function selectMenuItem({ toolWindow }, selector, value) {
   const { document } = toolWindow;
 
   const button = document.querySelector(selector);
-  isnot(button, null, `Selector "${selector}" should match an existing element.`);
+  isnot(
+    button,
+    null,
+    `Selector "${selector}" should match an existing element.`
+  );
 
   info(`Selecting ${value} in ${selector}.`);
 
   await testMenuItems(toolWindow, button, items => {
     const menuItem = items.find(item => item.getAttribute("label") === value);
-    isnot(menuItem, undefined, `Value "${value}" should match an existing menu item.`);
+    isnot(
+      menuItem,
+      undefined,
+      `Value "${value}" should match an existing menu item.`
+    );
     menuItem.click();
   });
 }
@@ -300,38 +369,45 @@ function testMenuItems(toolWindow, button, testFn) {
   const win = getTopLevelWindow(toolWindow);
 
   return new Promise(resolve => {
-    win.document.addEventListener("popupshown", () => {
-      const popup = win.document.querySelector("menupopup[menu-api=\"true\"]");
-      const menuItems = [...popup.children];
+    win.document.addEventListener(
+      "popupshown",
+      () => {
+        const popup = win.document.querySelector('menupopup[menu-api="true"]');
+        const menuItems = [...popup.children];
 
-      testFn(menuItems);
+        testFn(menuItems);
 
-      popup.hidePopup();
-      resolve();
-    }, { once: true });
+        popup.hidePopup();
+        resolve();
+      },
+      { once: true }
+    );
 
     button.click();
   });
 }
 
-const selectDevice = (ui, value) => Promise.all([
-  once(ui, "device-changed"),
-  selectMenuItem(ui, "#device-selector", value),
-]);
+const selectDevice = (ui, value) =>
+  Promise.all([
+    once(ui, "device-changed"),
+    selectMenuItem(ui, "#device-selector", value),
+  ]);
 
 const selectDevicePixelRatio = (ui, value) =>
   selectMenuItem(ui, "#device-pixel-ratio-menu", `DPR: ${value}`);
 
-const selectNetworkThrottling = (ui, value) => Promise.all([
-  once(ui, "network-throttling-changed"),
-  selectMenuItem(ui, "#network-throttling-menu", value),
-]);
+const selectNetworkThrottling = (ui, value) =>
+  Promise.all([
+    once(ui, "network-throttling-changed"),
+    selectMenuItem(ui, "#network-throttling-menu", value),
+  ]);
 
 function getSessionHistory(browser) {
   return ContentTask.spawn(browser, {}, async function() {
     /* eslint-disable no-undef */
-    const { SessionHistory } =
-      ChromeUtils.import("resource://gre/modules/sessionstore/SessionHistory.jsm");
+    const { SessionHistory } = ChromeUtils.import(
+      "resource://gre/modules/sessionstore/SessionHistory.jsm"
+    );
     return SessionHistory.collect(docShell);
     /* eslint-enable no-undef */
   });
@@ -357,7 +433,9 @@ async function waitForPageShow(browser) {
   if (ui) {
     browser = ui.getViewportBrowser();
   }
-  info("Waiting for pageshow from " + (ui ? "responsive" : "regular") + " browser");
+  info(
+    "Waiting for pageshow from " + (ui ? "responsive" : "regular") + " browser"
+  );
   // Need to wait an extra tick after pageshow to ensure everyone is up-to-date,
   // hence the waitForTick.
   await BrowserTestUtils.waitForContentEvent(browser, "pageshow");
@@ -365,11 +443,19 @@ async function waitForPageShow(browser) {
 }
 
 function waitForViewportLoad(ui) {
-  return BrowserTestUtils.waitForContentEvent(ui.getViewportBrowser(), "load", true);
+  return BrowserTestUtils.waitForContentEvent(
+    ui.getViewportBrowser(),
+    "load",
+    true
+  );
 }
 
 function waitForViewportScroll(ui) {
-  return BrowserTestUtils.waitForContentEvent(ui.getViewportBrowser(), "scroll", true);
+  return BrowserTestUtils.waitForContentEvent(
+    ui.getViewportBrowser(),
+    "scroll",
+    true
+  );
 }
 
 function load(browser, url) {
@@ -396,7 +482,10 @@ function addDeviceForTest(device) {
 
   registerCleanupFunction(() => {
     // Note that assertions in cleanup functions are not displayed unless they failed.
-    ok(removeDevice(device), `Removed Test Device "${device.name}" from the list.`);
+    ok(
+      removeDevice(device),
+      `Removed Test Device "${device.name}" from the list.`
+    );
   });
 }
 
@@ -416,10 +505,16 @@ async function testTouchEventsOverride(ui, expected) {
   const touchButton = document.getElementById("touch-simulation-button");
 
   const flag = await ui.emulationFront.getTouchEventsOverride();
-  is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
-    `Touch events override should be ${expected ? "enabled" : "disabled"}`);
-  is(touchButton.classList.contains("checked"), expected,
-    `Touch simulation button should be ${expected ? "" : "in"}active.`);
+  is(
+    flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED,
+    expected,
+    `Touch events override should be ${expected ? "enabled" : "disabled"}`
+  );
+  is(
+    touchButton.classList.contains("checked"),
+    expected,
+    `Touch simulation button should be ${expected ? "" : "in"}active.`
+  );
 }
 
 function testViewportDeviceMenuLabel(ui, expected) {
@@ -435,7 +530,7 @@ async function toggleTouchSimulation(ui) {
   const changed = once(ui, "touch-simulation-changed");
   const loaded = waitForViewportLoad(ui);
   touchButton.click();
-  await Promise.all([ changed, loaded ]);
+  await Promise.all([changed, loaded]);
 }
 
 async function testUserAgent(ui, expected) {
@@ -461,26 +556,36 @@ async function testUserAgentFromBrowser(browser, expected) {
 function testViewportDimensions(ui, w, h) {
   const viewport = ui.toolWindow.document.querySelector(".viewport-content");
 
-  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
-     `${w}px`, `Viewport should have width of ${w}px`);
-  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
-     `${h}px`, `Viewport should have height of ${h}px`);
+  is(
+    ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
+    `${w}px`,
+    `Viewport should have width of ${w}px`
+  );
+  is(
+    ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
+    `${h}px`,
+    `Viewport should have height of ${h}px`
+  );
 }
 
 async function changeUserAgentInput(ui, value) {
-  const { Simulate } =
-    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { Simulate } = ui.toolWindow.require(
+    "devtools/client/shared/vendor/react-dom-test-utils"
+  );
   const { document, store } = ui.toolWindow;
 
   const userAgentInput = document.getElementById("user-agent-input");
   userAgentInput.value = value;
   Simulate.change(userAgentInput);
 
-  const userAgentChanged = waitUntilState(store, state => state.ui.userAgent === value);
+  const userAgentChanged = waitUntilState(
+    store,
+    state => state.ui.userAgent === value
+  );
   const changed = once(ui, "user-agent-changed");
   const loaded = waitForViewportLoad(ui);
   Simulate.keyUp(userAgentInput, { keyCode: KeyCodes.DOM_VK_RETURN });
-  await Promise.all([ changed, loaded, userAgentChanged ]);
+  await Promise.all([changed, loaded, userAgentChanged]);
 }
 
 /**
@@ -488,15 +593,21 @@ async function changeUserAgentInput(ui, value) {
  * function adds `device` via the form, saves it, and waits for it to appear in the store.
  */
 function addDeviceInModal(ui, device) {
-  const { Simulate } =
-    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { Simulate } = ui.toolWindow.require(
+    "devtools/client/shared/vendor/react-dom-test-utils"
+  );
   const { document, store } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-form-name input");
-  const [ widthInput, heightInput ] =
-    document.querySelectorAll("#device-form-size input");
-  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
-  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const [widthInput, heightInput] = document.querySelectorAll(
+    "#device-form-size input"
+  );
+  const pixelRatioInput = document.querySelector(
+    "#device-form-pixel-ratio input"
+  );
+  const userAgentInput = document.querySelector(
+    "#device-form-user-agent input"
+  );
   const touchInput = document.querySelector("#device-form-touch input");
 
   nameInput.value = device.name;
@@ -516,23 +627,30 @@ function addDeviceInModal(ui, device) {
 
   const existingCustomDevices = store.getState().devices.custom.length;
   const adderSave = document.querySelector("#device-form-save");
-  const saved = waitUntilState(store, state =>
-    state.devices.custom.length == existingCustomDevices + 1
+  const saved = waitUntilState(
+    store,
+    state => state.devices.custom.length == existingCustomDevices + 1
   );
   Simulate.click(adderSave);
   return saved;
 }
 
 function editDeviceInModal(ui, device, newDevice) {
-  const { Simulate } =
-    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { Simulate } = ui.toolWindow.require(
+    "devtools/client/shared/vendor/react-dom-test-utils"
+  );
   const { document, store } = ui.toolWindow;
 
   const nameInput = document.querySelector("#device-form-name input");
-  const [ widthInput, heightInput ] =
-    document.querySelectorAll("#device-form-size input");
-  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
-  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const [widthInput, heightInput] = document.querySelectorAll(
+    "#device-form-size input"
+  );
+  const pixelRatioInput = document.querySelector(
+    "#device-form-pixel-ratio input"
+  );
+  const userAgentInput = document.querySelector(
+    "#device-form-user-agent input"
+  );
   const touchInput = document.querySelector("#device-form-touch input");
 
   nameInput.value = newDevice.name;
@@ -553,10 +671,12 @@ function editDeviceInModal(ui, device, newDevice) {
   const existingCustomDevices = store.getState().devices.custom.length;
   const formSave = document.querySelector("#device-form-save");
 
-  const saved = waitUntilState(store, state =>
-    state.devices.custom.length == existingCustomDevices &&
-    state.devices.custom.find(({ name }) => name == newDevice.name) &&
-    !state.devices.custom.find(({ name }) => name == device.name)
+  const saved = waitUntilState(
+    store,
+    state =>
+      state.devices.custom.length == existingCustomDevices &&
+      state.devices.custom.find(({ name }) => name == newDevice.name) &&
+      !state.devices.custom.find(({ name }) => name == device.name)
   );
   Simulate.click(formSave);
   return saved;
@@ -593,7 +713,13 @@ async function setTouchAndMetaViewportSupport(ui, value) {
 
 // This function checks that zoom, layout viewport width and height
 // are all as expected.
-async function testViewportZoomWidthAndHeight(message, ui, zoom, width, height) {
+async function testViewportZoomWidthAndHeight(
+  message,
+  ui,
+  zoom,
+  width,
+  height
+) {
   if (typeof zoom !== "undefined") {
     const resolution = await spawnViewportTask(ui, {}, function() {
       return content.windowUtils.getResolution();
@@ -609,10 +735,18 @@ async function testViewportZoomWidthAndHeight(message, ui, zoom, width, height) 
       };
     });
     if (typeof width !== "undefined") {
-      is(layoutSize.width, width, message + " should have expected layout width.");
+      is(
+        layoutSize.width,
+        width,
+        message + " should have expected layout width."
+      );
     }
     if (typeof height !== "undefined") {
-      is(layoutSize.height, height, message + " should have expected layout height.");
+      is(
+        layoutSize.height,
+        height,
+        message + " should have expected layout height."
+      );
     }
   }
 }

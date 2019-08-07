@@ -4,8 +4,18 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
 
 /**
  * Displays a notification either at the browser or toolbox level, depending on whether
@@ -22,7 +32,11 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
  *        - `priority`: Priority level for the notification, which affects the icon and
  *                      overall appearance.
  */
-async function showNotification(window, tab, { toolboxButton, msg, priority } = {}) {
+async function showNotification(
+  window,
+  tab,
+  { toolboxButton, msg, priority } = {}
+) {
   // Default to using the browser's per-tab notification box
   let nbox = window.gBrowser.getNotificationBox(tab.linkedBrowser);
 

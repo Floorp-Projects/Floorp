@@ -10,26 +10,79 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { getOrientation } = require("./utils/orientation");
 
-loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerClient",
+  "devtools/shared/client/debugger-client",
+  true
+);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
-loader.lazyRequireGetter(this, "throttlingProfiles", "devtools/client/shared/components/throttling/profiles");
-loader.lazyRequireGetter(this, "SettingOnboardingTooltip", "devtools/client/responsive/setting-onboarding-tooltip");
-loader.lazyRequireGetter(this, "swapToInnerBrowser", "devtools/client/responsive/browser/swap", true);
-loader.lazyRequireGetter(this, "startup", "devtools/client/responsive/utils/window", true);
-loader.lazyRequireGetter(this, "message", "devtools/client/responsive/utils/message");
-loader.lazyRequireGetter(this, "showNotification", "devtools/client/responsive/utils/notification", true);
+loader.lazyRequireGetter(
+  this,
+  "throttlingProfiles",
+  "devtools/client/shared/components/throttling/profiles"
+);
+loader.lazyRequireGetter(
+  this,
+  "SettingOnboardingTooltip",
+  "devtools/client/responsive/setting-onboarding-tooltip"
+);
+loader.lazyRequireGetter(
+  this,
+  "swapToInnerBrowser",
+  "devtools/client/responsive/browser/swap",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "startup",
+  "devtools/client/responsive/utils/window",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "message",
+  "devtools/client/responsive/utils/message"
+);
+loader.lazyRequireGetter(
+  this,
+  "showNotification",
+  "devtools/client/responsive/utils/notification",
+  true
+);
 loader.lazyRequireGetter(this, "l10n", "devtools/client/responsive/utils/l10n");
-loader.lazyRequireGetter(this, "EmulationFront", "devtools/shared/fronts/emulation", true);
-loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/components/NotificationBox", true);
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(
+  this,
+  "EmulationFront",
+  "devtools/shared/fronts/emulation",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "PriorityLevels",
+  "devtools/client/shared/components/NotificationBox",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "TargetFactory",
+  "devtools/client/framework/target",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevTools",
+  "devtools/client/framework/devtools",
+  true
+);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
 const TOOL_URL = "chrome://devtools/content/responsive/index.xhtml";
 
 const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
-const RELOAD_NOTIFICATION_PREF = "devtools.responsive.reloadNotification.enabled";
+const RELOAD_NOTIFICATION_PREF =
+  "devtools.responsive.reloadNotification.enabled";
 const SHOW_SETTING_TOOLTIP_PREF = "devtools.responsive.show-setting-tooltip";
 
 function debug(msg) {
@@ -40,7 +93,7 @@ function debug(msg) {
  * ResponsiveUIManager is the external API for the browser UI, etc. to use when
  * opening and closing the responsive UI.
  */
-const ResponsiveUIManager = exports.ResponsiveUIManager = {
+const ResponsiveUIManager = (exports.ResponsiveUIManager = {
   _telemetry: new Telemetry(),
 
   activeTabs: new Map(),
@@ -128,9 +181,9 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     }
 
     tel.recordEvent("activate", "responsive_design", null, {
-      "host": hostType,
-      "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1,
+      host: hostType,
+      width: Math.ceil(window.outerWidth / 50) * 50,
+      session_id: toolbox ? toolbox.sessionId : -1,
     });
 
     // Track opens keyed by the UI entry point used.
@@ -191,9 +244,9 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     const hostType = toolbox ? toolbox.hostType : "none";
     const t = this._telemetry;
     t.recordEvent("deactivate", "responsive_design", null, {
-      "host": hostType,
-      "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1,
+      host: hostType,
+      width: Math.ceil(window.outerWidth / 50) * 50,
+      session_id: toolbox ? toolbox.sessionId : -1,
     });
   },
 
@@ -231,7 +284,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     return this.activeTabs.get(tab);
   },
 
-  handleMenuCheck({target}) {
+  handleMenuCheck({ target }) {
     ResponsiveUIManager.setMenuCheckFor(target);
   },
 
@@ -263,7 +316,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
     });
   },
-};
+});
 
 EventEmitter.decorate(ResponsiveUIManager);
 
@@ -280,7 +333,6 @@ function ResponsiveUI(window, tab) {
 }
 
 ResponsiveUI.prototype = {
-
   /**
    * The main browser chrome window (that holds many tabs).
    */
@@ -337,7 +389,7 @@ ResponsiveUI.prototype = {
       tab: this.tab,
       containerURL: TOOL_URL,
       async getInnerBrowser(containerBrowser) {
-        const toolWindow = ui.toolWindow = containerBrowser.contentWindow;
+        const toolWindow = (ui.toolWindow = containerBrowser.contentWindow);
         toolWindow.addEventListener("message", ui);
         debug("Wait until init from inner");
         await message.request(toolWindow, "init");
@@ -387,8 +439,9 @@ ResponsiveUI.prototype = {
 
     // Show the settings onboarding tooltip
     if (Services.prefs.getBoolPref(SHOW_SETTING_TOOLTIP_PREF)) {
-      this.settingOnboardingTooltip =
-        new SettingOnboardingTooltip(ui.toolWindow.document);
+      this.settingOnboardingTooltip = new SettingOnboardingTooltip(
+        ui.toolWindow.document
+      );
     }
 
     // Re-apply our cached zoom levels. Other Zoom UI update events have finished
@@ -421,10 +474,13 @@ ResponsiveUI.prototype = {
     // gracefully, but that shouldn't be a problem since the tab will go away.
     // So, skip any waiting when we're about to close the tab.
     const isTabDestroyed = !this.tab.linkedBrowser;
-    const isWindowClosing = (options && options.reason === "unload") || isTabDestroyed;
+    const isWindowClosing =
+      (options && options.reason === "unload") || isTabDestroyed;
     const isTabContentDestroying =
-      isWindowClosing || (options && (options.reason === "TabClose" ||
-                                      options.reason === "BeforeTabRemotenessChange"));
+      isWindowClosing ||
+      (options &&
+        (options.reason === "TabClose" ||
+          options.reason === "BeforeTabRemotenessChange"));
 
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
@@ -447,10 +503,11 @@ ResponsiveUI.prototype = {
       let reloadNeeded = false;
       await this.updateDPPX();
       await this.updateNetworkThrottling();
-      reloadNeeded |= await this.updateUserAgent() &&
-                      this.reloadOnChange("userAgent");
-      reloadNeeded |= await this.updateTouchSimulation() &&
-                      this.reloadOnChange("touchSimulation");
+      reloadNeeded |=
+        (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
+      reloadNeeded |=
+        (await this.updateTouchSimulation()) &&
+        this.reloadOnChange("touchSimulation");
       if (reloadNeeded) {
         this.getViewportBrowser().reload();
       }
@@ -592,10 +649,12 @@ ResponsiveUI.prototype = {
     const { type, angle } = getOrientation(device, viewport);
     await this.updateScreenOrientation(type, angle);
 
-    reloadNeeded |= await this.updateUserAgent(userAgent) &&
-                    this.reloadOnChange("userAgent");
-    reloadNeeded |= await this.updateTouchSimulation(touch) &&
-                    this.reloadOnChange("touchSimulation");
+    reloadNeeded |=
+      (await this.updateUserAgent(userAgent)) &&
+      this.reloadOnChange("userAgent");
+    reloadNeeded |=
+      (await this.updateTouchSimulation(touch)) &&
+      this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -617,8 +676,9 @@ ResponsiveUI.prototype = {
 
   async onChangeTouchSimulation(event) {
     const { enabled } = event.data;
-    const reloadNeeded = await this.updateTouchSimulation(enabled) &&
-                         this.reloadOnChange("touchSimulation");
+    const reloadNeeded =
+      (await this.updateTouchSimulation(enabled)) &&
+      this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -628,8 +688,9 @@ ResponsiveUI.prototype = {
 
   async onChangeUserAgent(event) {
     const { userAgent } = event.data;
-    const reloadNeeded = await this.updateUserAgent(userAgent) &&
-                         this.reloadOnChange("userAgent");
+    const reloadNeeded =
+      (await this.updateUserAgent(userAgent)) &&
+      this.reloadOnChange("userAgent");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -652,10 +713,11 @@ ResponsiveUI.prototype = {
   async onRemoveDeviceAssociation() {
     let reloadNeeded = false;
     await this.updateDPPX();
-    reloadNeeded |= await this.updateUserAgent() &&
-                    this.reloadOnChange("userAgent");
-    reloadNeeded |= await this.updateTouchSimulation() &&
-                    this.reloadOnChange("touchSimulation");
+    reloadNeeded |=
+      (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
+    reloadNeeded |=
+      (await this.updateTouchSimulation()) &&
+      this.reloadOnChange("touchSimulation");
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
@@ -680,36 +742,54 @@ ResponsiveUI.prototype = {
    * Restores the previous state of RDM.
    */
   async restoreState() {
-    const deviceState = await asyncStorage.getItem("devtools.responsive.deviceState");
+    const deviceState = await asyncStorage.getItem(
+      "devtools.responsive.deviceState"
+    );
     if (deviceState) {
       // Return if there is a device state to restore, this will be done when the
       // device list is loaded after the post-init.
       return;
     }
 
-    const height =
-      Services.prefs.getIntPref("devtools.responsive.viewport.height", 0);
-    const pixelRatio =
-      Services.prefs.getIntPref("devtools.responsive.viewport.pixelRatio", 0);
-    const touchSimulationEnabled =
-      Services.prefs.getBoolPref("devtools.responsive.touchSimulation.enabled", false);
-    const userAgent = Services.prefs.getCharPref("devtools.responsive.userAgent", "");
-    const width =
-      Services.prefs.getIntPref("devtools.responsive.viewport.width", 0);
+    const height = Services.prefs.getIntPref(
+      "devtools.responsive.viewport.height",
+      0
+    );
+    const pixelRatio = Services.prefs.getIntPref(
+      "devtools.responsive.viewport.pixelRatio",
+      0
+    );
+    const touchSimulationEnabled = Services.prefs.getBoolPref(
+      "devtools.responsive.touchSimulation.enabled",
+      false
+    );
+    const userAgent = Services.prefs.getCharPref(
+      "devtools.responsive.userAgent",
+      ""
+    );
+    const width = Services.prefs.getIntPref(
+      "devtools.responsive.viewport.width",
+      0
+    );
 
     let reloadNeeded = false;
-    const { type, angle } = this.getInitialViewportOrientation({ width, height });
+    const { type, angle } = this.getInitialViewportOrientation({
+      width,
+      height,
+    });
 
     await this.updateDPPX(pixelRatio);
     await this.updateScreenOrientation(type, angle);
 
     if (touchSimulationEnabled) {
-      reloadNeeded |= await this.updateTouchSimulation(touchSimulationEnabled) &&
-                      this.reloadOnChange("touchSimulation");
+      reloadNeeded |=
+        (await this.updateTouchSimulation(touchSimulationEnabled)) &&
+        this.reloadOnChange("touchSimulation");
     }
     if (userAgent) {
-      reloadNeeded |= await this.updateUserAgent(userAgent) &&
-                      this.reloadOnChange("userAgent");
+      reloadNeeded |=
+        (await this.updateUserAgent(userAgent)) &&
+        this.reloadOnChange("userAgent");
     }
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
@@ -780,15 +860,19 @@ ResponsiveUI.prototype = {
   async updateTouchSimulation(enabled) {
     let reloadNeeded;
     if (enabled) {
-      const metaViewportEnabled =
-        Services.prefs.getBoolPref("devtools.responsive.metaViewport.enabled", false);
+      const metaViewportEnabled = Services.prefs.getBoolPref(
+        "devtools.responsive.metaViewport.enabled",
+        false
+      );
 
       reloadNeeded = await this.emulationFront.setTouchEventsOverride(
-        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED);
+        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+      );
 
       if (metaViewportEnabled) {
         reloadNeeded |= await this.emulationFront.setMetaViewportOverride(
-          Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED);
+          Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
+        );
       }
     } else {
       reloadNeeded = await this.emulationFront.clearTouchEventsOverride();
@@ -813,13 +897,18 @@ ResponsiveUI.prototype = {
    */
   async updateScreenOrientation(type, angle, isViewportRotated = false) {
     const targetFront = await this.client.mainRoot.getTab();
-    const simulateOrientationChangeSupported =
-    await targetFront.actorHasMethod("emulation", "simulateScreenOrientationChange");
+    const simulateOrientationChangeSupported = await targetFront.actorHasMethod(
+      "emulation",
+      "simulateScreenOrientationChange"
+    );
 
     // Ensure that simulateScreenOrientationChange is supported.
     if (simulateOrientationChangeSupported) {
-      await this.emulationFront.simulateScreenOrientationChange(type, angle,
-                                                                isViewportRotated);
+      await this.emulationFront.simulateScreenOrientationChange(
+        type,
+        angle,
+        isViewportRotated
+      );
     }
 
     // Used by tests.
