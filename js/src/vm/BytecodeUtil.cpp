@@ -27,7 +27,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/String.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
 #include "gc/FreeOp.h"

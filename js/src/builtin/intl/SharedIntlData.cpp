@@ -19,7 +19,6 @@
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
-#include "builtin/String.h"
 #include "js/Utility.h"
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"

@@ -33,7 +33,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "builtin/String.h"
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/LocaleSensitive.h"

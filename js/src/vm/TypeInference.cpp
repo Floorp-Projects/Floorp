@@ -17,7 +17,6 @@
 #include <new>
 
 #include "jsapi.h"
-#include "builtin/String.h"
 
 #include "gc/HashUtil.h"
 #include "jit/BaselineIC.h"

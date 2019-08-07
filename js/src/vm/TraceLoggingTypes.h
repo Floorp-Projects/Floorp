@@ -7,9 +7,15 @@
 #ifndef TraceLoggingTypes_h
 #define TraceLoggingTypes_h
 
-#include "builtin/String.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/TimeStamp.h"
+
+#include <cstddef>
+#include <cstdint>
 
 #include "js/AllocPolicy.h"
+#include "js/Utility.h"
 
 class JSLinearString;
 
