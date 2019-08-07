@@ -144,7 +144,7 @@ UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
   UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
 
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eCryptomining, flags,
+      aChannel, flags,
       nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);
   return NS_OK;
 }

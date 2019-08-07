@@ -125,19 +125,10 @@ class AntiTrackingCommon final {
       const nsCString& aParentOrigin, const nsCString& aGrantedOrigin,
       int aAllowMode);
 
-  enum ContentBlockingAllowListPurpose {
-    eStorageChecks,
-    eTrackingProtection,
-    eTrackingAnnotations,
-    eFingerprinting,
-    eCryptomining,
-    eSocialTracking,
-  };
-
   // Check whether a top window URI is on the content blocking allow list.
-  static nsresult IsOnContentBlockingAllowList(
-      nsIURI* aTopWinURI, bool aIsPrivateBrowsing,
-      ContentBlockingAllowListPurpose aPurpose, bool& aIsAllowListed);
+  static nsresult IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+                                               bool aIsPrivateBrowsing,
+                                               bool& aIsAllowListed);
 
   enum class BlockingDecision {
     eBlock,
