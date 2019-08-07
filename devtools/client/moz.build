@@ -21,7 +21,7 @@ DIRS += [
     'performance',
     'performance-new',
     'preferences',
-    'responsive.html',
+    'responsive',
     'scratchpad',
     'shared',
     'storage',

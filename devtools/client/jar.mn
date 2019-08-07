@@ -53,7 +53,7 @@ devtools.jar:
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)
     content/aboutdebugging-new/index.html (aboutdebugging-new/index.html)
     content/aboutdebugging-new/aboutdebugging.css (aboutdebugging-new/aboutdebugging.css)
-    content/responsive.html/index.xhtml (responsive.html/index.xhtml)
+    content/responsive/index.xhtml (responsive/index.xhtml)
     content/dom/index.html (dom/index.html)
     content/dom/main.js (dom/main.js)
     content/accessibility/index.html (accessibility/index.html)
