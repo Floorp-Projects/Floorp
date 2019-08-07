@@ -15,8 +15,9 @@
   --dark-grey: #818191;
   --tab-highlight: var(--social-color); /* start with social selected */
   --column-width: 16px;
+  --graph-empty: #CECECF;
   /* Colors for the loading indicator */
-  --protection-report-loader-color-stop: #aeaeae3d;
+  --protection-report-loader-color-stop: #AEAEAE3D;
   --protection-report-loader-gradient-opacity: .95;
 }
 
@@ -208,18 +209,16 @@ a.hidden,
 /* Graph Bars */
 .graph-bar {
   grid-row: 1 / -2;
-  justify-self: center;
   align-self: flex-end;
   width: var(--column-width);
   position: relative;
 }
 
-.graph-bar div:nth-child(2){
-  border-radius: 2px 2px 0 0;
-}
-
-.graph-bar div:last-child{
-  border-radius: 0 0 2px 2px;
+.graph-wrapper-bar {
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .graph-bar:hover {
@@ -228,7 +227,7 @@ a.hidden,
 
 .graph-bar.empty {
   height: 0;
-  border: 1px rgba(12,12,13,0.2) solid;
+  border: 1px var(--graph-empty) solid;
   border-radius: 4px;
   cursor: default;
 }
@@ -274,7 +273,6 @@ a.hidden,
 }
 
 .column-label {
-  justify-self: center;
   margin-top: 5px;
   font-size: 0.9em;
   width: var(--column-width);
@@ -288,19 +286,57 @@ a.hidden,
 
 /* Legend */
 input {
-  display: none;
+  position: absolute;
+  left: -100px;
+}
+
+#legend input:focus + label {
+  outline: solid 1px;
+  outline-offset: -1px;
+}
+
+#legend {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: auto auto;
+  grid-gap: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#highlight {
+  background: var(--tab-highlight);
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  align-self: end;
+  grid-column: 1 / span 1;
+  grid-row: 1 / 1;
+}
+
+#highlight-hover {
+  position: absolute;
+  height: 4px;
+  width: 100%;
+  bottom: -1px;
+  align-self: end;
 }
 
 #legend label {
   display: inline-block;
   margin-bottom: -1px;
   padding: 15px 23px;
+  padding-inline-end: 5px;
   border: 3px solid transparent;
   -moz-context-properties: fill;
   fill: currentColor;
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 16px;
+}
+
+#legend label:-moz-focusring {
+  outline: none;
 }
 
 label[data-type="social"] {
@@ -334,12 +370,7 @@ label[data-type="cryptominer"] {
 .hover-fingerprinter label[for="tab-fingerprinter"],
 .hover-cryptominer label[for="tab-cryptominer"],
 label:hover {
-  background-color: var(--in-content-box-background-hover);
   cursor: pointer;
-}
-
-#legend input:checked + label {
-  border-bottom: 3px solid var(--tab-highlight);
 }
 
 .tab-content {
@@ -347,10 +378,8 @@ label:hover {
   padding: 22px 20px 20px;
   border-top: 1px solid var(--tab-highlight);
   background-color: var(--in-content-box-background-odd);
-  color: var(--in-content-deemphasized-text);
   font-size: 0.8em;
   line-height: 1.75;
-  min-height: 130px;
 }
 
 .tab-content .content-title {
@@ -367,6 +396,43 @@ label:hover {
 #tab-fingerprinter:checked ~ #fingerprinter,
 #tab-cryptominer:checked ~ #cryptominer {
   display: block;
+  grid-column: 1/ -1;
+  grid-row: 2;
+}
+
+input[data-type="social"]:checked ~ #highlight,
+.hover-social label[for="tab-social"] ~ #highlight-hover,
+label[for="tab-social"]:hover ~ #highlight-hover {
+  background-color: var(--social-color);
+  grid-area: social;
+}
+
+input[data-type="cookie"]:checked  ~ #highlight,
+.hover-cookie label[for="tab-cookie"] ~ #highlight-hover,
+label[for="tab-cookie"]:hover ~ #highlight-hover {
+  background-color: var(--cookie-color);
+  grid-area: cookie;
+}
+
+input[data-type="tracker"]:checked  ~ #highlight,
+.hover-tracker label[for="tab-tracker"] ~ #highlight-hover,
+label[for="tab-tracker"]:hover ~ #highlight-hover {
+  background-color: var(--tracker-color);
+  grid-area: tracker;
+}
+
+input[data-type="fingerprinter"]:checked  ~ #highlight,
+.hover-fingerprinter label[for="tab-fingerprinter"] ~ #highlight-hover,
+label[for="tab-fingerprinter"]:hover ~ #highlight-hover {
+  background-color: var(--orange);
+  grid-area: fingerprinter;
+}
+
+input[data-type="cryptominer"]:checked ~ #highlight,
+.hover-cryptominer label[for="tab-cryptominer"] ~ #highlight-hover,
+label[for="tab-cryptominer"]:hover ~ #highlight-hover {
+  background-color: var(--grey);
+  grid-area: cryptominer;
 }
 
 /* Lockwise Card */
