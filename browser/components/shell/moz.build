@@ -49,6 +49,7 @@ if SOURCES:
 
 EXTRA_JS_MODULES += [
     'HeadlessShell.jsm',
+    'ScreenshotChild.jsm',
     'ShellService.jsm',
 ]
 
