@@ -1605,7 +1605,7 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
   if (!baseWin) return false;
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  dsti->GetRootTreeItem(getter_AddRefs(root));
+  dsti->GetInProcessRootTreeItem(getter_AddRefs(root));
   if (!root) {
     return false;
   }

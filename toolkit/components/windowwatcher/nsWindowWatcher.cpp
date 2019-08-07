@@ -1061,7 +1061,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   if (isNewToplevelWindow) {
     nsCOMPtr<nsIDocShellTreeItem> childRoot;
-    newDocShellItem->GetRootTreeItem(getter_AddRefs(childRoot));
+    newDocShellItem->GetInProcessRootTreeItem(getter_AddRefs(childRoot));
     nsCOMPtr<nsILoadContext> childContext = do_QueryInterface(childRoot);
     if (childContext) {
       childContext->SetPrivateBrowsing(isPrivateBrowsingWindow);
