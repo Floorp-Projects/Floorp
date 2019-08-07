@@ -7,24 +7,18 @@
 #ifndef builtin_String_h
 #define builtin_String_h
 
-#include "mozilla/HashFunctions.h"
-#include "mozilla/PodOperations.h"
+#include "mozilla/Attributes.h"
 
-#include <stdio.h>
-#include <string.h>
-
-#include "jsutil.h"
 #include "NamespaceImports.h"
 
-#include "gc/Rooting.h"
 #include "js/RootingAPI.h"
-#include "js/UniquePtr.h"
-#include "util/Unicode.h"
-#include "vm/Printer.h"
+#include "js/Value.h"
 
 namespace js {
 
+class ArrayObject;
 class GlobalObject;
+class ObjectGroup;
 
 /* Initialize the String class, returning its prototype object. */
 extern JSObject* InitStringClass(JSContext* cx, Handle<GlobalObject*> global);
@@ -86,7 +80,7 @@ extern MOZ_MUST_USE bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
 extern MOZ_MUST_USE bool intl_toLocaleUpperCase(JSContext* cx, unsigned argc,
                                                 Value* vp);
 
-ArrayObject* StringSplitString(JSContext* cx, HandleObjectGroup group,
+ArrayObject* StringSplitString(JSContext* cx, Handle<ObjectGroup*> group,
                                HandleString str, HandleString sep,
                                uint32_t limit);
 
