@@ -253,18 +253,20 @@ impl DocumentCondition {
 
     #[cfg(feature = "gecko")]
     fn allowed_in(&self, context: &ParserContext) -> bool {
+        use crate::gecko_bindings::structs;
         use crate::stylesheets::Origin;
-        use static_prefs::pref;
 
         if context.stylesheet_origin != Origin::Author {
             return true;
         }
 
-        if pref!("layout.css.moz-document.content.enabled") {
+        if unsafe { structs::StaticPrefs::sVarCache_layout_css_moz_document_content_enabled } {
             return true;
         }
 
-        if !pref!("layout.css.moz-document.url-prefix-hack.enabled") {
+        if !unsafe {
+            structs::StaticPrefs::sVarCache_layout_css_moz_document_url_prefix_hack_enabled
+        } {
             return false;
         }
 
