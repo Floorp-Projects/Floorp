@@ -15511,6 +15511,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
 
+  if (nsContentUtils::IsInPrivateBrowsing(this)) {
+    // If the document is in PB mode, it doesn't have access to its persistent
+    // cookie jar, so reject the promise here.
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   if (CookieSettings()->GetRejectThirdPartyTrackers() && inner) {
     // Only do something special for third-party tracking content.
     if (StorageDisabledByAntiTracking(this, nullptr)) {
