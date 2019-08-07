@@ -4,11 +4,11 @@
 
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContentBlockingAllowList",
-  "resource://gre/modules/ContentBlockingAllowList.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentBlockingAllowList:
+    "resource://gre/modules/ContentBlockingAllowList.jsm",
+  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -1501,6 +1501,17 @@ var gProtectionsHandler = {
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
       window.addEventListener("focus", this, true);
+
+      // Add the "open" attribute to the tracking protection icon container
+      // for styling.
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "open",
+        "true"
+      );
+
+      // Insert the info message if needed. This will be shown once and then
+      // remain collapsed.
+      ToolbarPanelHub.insertProtectionPanelMessage(event);
     }
   },
 
