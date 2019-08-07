@@ -69,12 +69,10 @@
   display: none !important;
 }
 
-#identity-popup-mainView {
-  min-width: var(--popup-width);
-  max-width: var(--popup-width);
-}
-
-#protections-popup-mainView {
+#identity-popup-mainView,
+#protections-popup-mainView,
+#identity-popup-mainView-panel-header,
+#protections-popup-mainView-panel-header {
   min-width: var(--popup-width);
   max-width: var(--popup-width);
 }
