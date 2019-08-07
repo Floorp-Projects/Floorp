@@ -1270,6 +1270,7 @@ dependencies = [
  "rsdparsa_capi 0.1.0",
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "shift_or_euc_c 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "static_prefs 0.1.0",
  "storage 0.1.0",
  "webrender_bindings 0.1.0",
  "xpcom 0.1.0",
@@ -2915,6 +2916,10 @@ dependencies = [
 name = "stable_deref_trait"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "static_prefs"
+version = "0.1.0"
 
 [[package]]
 name = "storage"
