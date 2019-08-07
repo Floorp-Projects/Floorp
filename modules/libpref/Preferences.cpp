@@ -5412,17 +5412,21 @@ static void InitAll(bool aIsStartup) {
   //
   // In content processes, we rely on the parent to send us the correct initial
   // values via shared memory, so we do not re-initialize them here.
-#define NEVER_PREF(name, cpp_type, value) \
-  if (isParent) {                         \
-    InitPref_##cpp_type(name, value);     \
+  if (isParent) {
+#define NEVER_PREF(name, cpp_type, value) InitPref_##cpp_type(name, value);
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)
+#define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
+  InitPref_##cpp_type(name, value);
+#include "mozilla/StaticPrefListAll.h"
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
   }
+#define NEVER_PREF(name, cpp_type, value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)            \
   InitAlwaysPref(NS_LITERAL_CSTRING(name), &sVarCache_##full_id, value, \
                  aIsStartup, isParent);
-#define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
-  if (isParent) {                                          \
-    InitPref_##cpp_type(name, value);                      \
-  }
+#define ONCE_PREF(name, base_id, full_id, cpp_type, value)
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
 #undef ALWAYS_PREF
