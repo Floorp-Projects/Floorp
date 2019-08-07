@@ -12,6 +12,7 @@
 
 runTests(SpecialPowers.Ci.nsIHttpChannel.CLASSIFIED_SOCIALTRACKING,
          [
+           ["privacy.socialtracking.block_cookies.enabled", false],
            ["privacy.trackingprotection.enabled", false],
            ["privacy.trackingprotection.annotate_channels", false],
            ["urlclassifier.features.fingerprinting.annotate.blacklistHosts", ""],
