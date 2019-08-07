@@ -53,12 +53,12 @@ linux64-mingw32-nsis:
             - 'build/unix/build-gcc/build-gcc.sh'
             - 'taskcluster/scripts/misc/build-gcc-mingw32.sh'
         toolchain-artifact: public/build/nsis.tar.xz
-    toolchains:
-        - linux64-mingw32-gcc
     fetches:
         fetch:
             - nsis-3.01
             - zlib-1.2.11
+        toolchain:
+            - linux64-mingw32-gcc
 
 linux64-mingw-fxc2-x86:
     description: "fxc2.exe x86 build for MinGW Cross Compile"
@@ -70,8 +70,8 @@ linux64-mingw-fxc2-x86:
         using: toolchain-script
         script: build-mingw-fxc2-x86.sh
         toolchain-artifact: public/build/fxc2.tar.xz
-    toolchains:
-        - linux64-clang-8-mingw-x86
     fetches:
         fetch:
             - fxc2
+        toolchain:
+            - linux64-clang-8-mingw-x86

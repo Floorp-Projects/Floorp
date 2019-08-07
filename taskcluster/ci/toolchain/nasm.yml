@@ -7,8 +7,6 @@ job-defaults:
     worker:
         max-run-time: 1800
     run:
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/nasm.tar.bz2
 
 win64-nasm:
@@ -20,11 +18,11 @@ win64-nasm:
     run:
         script: build-nasm.sh
         arguments: ['win64']
-    toolchains:
-        - linux64-clang-8-mingw-x64
     fetches:
         fetch:
             - nasm-2.14.02
+        toolchain:
+            - linux64-clang-8-mingw-x64
 
 linux64-nasm:
     description: "nasm linux64 build"
