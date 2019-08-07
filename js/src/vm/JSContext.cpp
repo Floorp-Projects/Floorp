@@ -32,7 +32,6 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 
-#include "builtin/String.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/Ion.h"

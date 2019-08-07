@@ -19,7 +19,6 @@
 
 #include "jstypes.h"
 
-#include "builtin/String.h"
 #include "gc/GC.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"

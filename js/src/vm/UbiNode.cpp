@@ -12,8 +12,6 @@
 
 #include <algorithm>
 
-#include "builtin/String.h"
-
 #include "debugger/Debugger.h"
 #include "jit/IonCode.h"
 #include "js/Debug.h"

@@ -9,7 +9,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
-#include "builtin/String.h"
 #include "util/Text.h"
 
 namespace JS {

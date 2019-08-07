@@ -22,6 +22,7 @@
 #include "js/HashTable.h"
 #include "js/TraceLoggerAPI.h"
 #include "js/TypeDecls.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/LockGuard.h"
 #include "vm/MutexIDs.h"
@@ -277,7 +278,7 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread> {
   EventVector graphStack_;
 #  endif
 
-  UniqueChars threadName_ = nullptr;
+  JS::UniqueChars threadName_ = nullptr;
 
  public:
   AutoTraceLog* top_ = nullptr;
@@ -413,7 +414,8 @@ class TraceLoggerThreadState {
 
   // The dictionary vector is used to store all of the custom event strings
   // that are referenced by the payload objects.
-  typedef mozilla::Vector<UniqueChars, 0, SystemAllocPolicy> DictionaryVector;
+  typedef mozilla::Vector<JS::UniqueChars, 0, SystemAllocPolicy>
+      DictionaryVector;
 
   // All payload strings are hashed and saved as a key in the payloadDictionary
   // hash table.  The values are indices to the dictionaryData vector where the
@@ -438,7 +440,7 @@ class TraceLoggerThreadState {
     return delta.ToMicroseconds();
   }
 
-  UniqueChars getFullScriptName(uint32_t textId);
+  JS::UniqueChars getFullScriptName(uint32_t textId);
 
   // Mutex to guard the data structures used to hold the payload data:
   // textIdPayloads, payloadDictionary & dictionaryData.
@@ -457,7 +459,7 @@ class TraceLoggerThreadState {
 
   void clear();
   bool remapDictionaryEntries(
-      mozilla::Vector<UniqueChars, 0, SystemAllocPolicy>* newDictionary,
+      mozilla::Vector<JS::UniqueChars, 0, SystemAllocPolicy>* newDictionary,
       uint32_t* newNextDictionaryId);
 
   TraceLoggerThread* forCurrentThread(JSContext* cx);
