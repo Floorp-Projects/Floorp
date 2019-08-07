@@ -1,21 +1,22 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Common.h"
 
-void TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas,
-                   bool aExpectedComplete) {
-  _PrefixArray array = {GeneratePrefix(_Fragment("bravo.com/"), 32),
-                        GeneratePrefix(_Fragment("browsing.com/"), 8),
-                        GeneratePrefix(_Fragment("gound.com/"), 5),
-                        GeneratePrefix(_Fragment("small.com/"), 4)};
+static void TestHasPrefix(const nsCString& aURL, bool aExpectedHas,
+                          bool aExpectedComplete) {
+  _PrefixArray array = {CreatePrefixFromURL("bravo.com/", 32),
+                        CreatePrefixFromURL("browsing.com/", 8),
+                        CreatePrefixFromURL("gound.com/", 5),
+                        CreatePrefixFromURL("small.com/", 4)};
 
   RunTestInNewThread([&]() -> void {
     RefPtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
 
     Completion lookupHash;
-    lookupHash.FromPlaintext(aFragment);
+    lookupHash.FromPlaintext(aURL);
 
     bool has, confirmed;
     uint32_t matchLength;
@@ -33,13 +34,13 @@ void TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas,
 }
 
 TEST(UrlClassifierLookupCacheV4, HasComplete)
-{ TestHasPrefix(_Fragment("bravo.com/"), true, true); }
+{ TestHasPrefix(NS_LITERAL_CSTRING("bravo.com/"), true, true); }
 
 TEST(UrlClassifierLookupCacheV4, HasPrefix)
-{ TestHasPrefix(_Fragment("browsing.com/"), true, false); }
+{ TestHasPrefix(NS_LITERAL_CSTRING("browsing.com/"), true, false); }
 
 TEST(UrlClassifierLookupCacheV4, Nomatch)
-{ TestHasPrefix(_Fragment("nomatch.com/"), false, false); }
+{ TestHasPrefix(NS_LITERAL_CSTRING("nomatch.com/"), false, false); }
 
 // Test an existing .pset should be removed after .vlpset is written
 TEST(UrlClassifierLookupCacheV4, RemoveOldPset)
@@ -48,13 +49,13 @@ TEST(UrlClassifierLookupCacheV4, RemoveOldPset)
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                          getter_AddRefs(oldPsetFile));
   oldPsetFile->AppendNative(NS_LITERAL_CSTRING("safebrowsing"));
-  oldPsetFile->AppendNative(GTEST_TABLE + NS_LITERAL_CSTRING(".pset"));
+  oldPsetFile->AppendNative(GTEST_TABLE_V4 + NS_LITERAL_CSTRING(".pset"));
 
   nsCOMPtr<nsIFile> newPsetFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                          getter_AddRefs(newPsetFile));
   newPsetFile->AppendNative(NS_LITERAL_CSTRING("safebrowsing"));
-  newPsetFile->AppendNative(GTEST_TABLE + NS_LITERAL_CSTRING(".vlpset"));
+  newPsetFile->AppendNative(GTEST_TABLE_V4 + NS_LITERAL_CSTRING(".vlpset"));
 
   // Create the legacy .pset file
   nsresult rv = oldPsetFile->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
@@ -67,11 +68,11 @@ TEST(UrlClassifierLookupCacheV4, RemoveOldPset)
 
   // Setup the data in lookup cache and write its data to disk
   RefPtr<Classifier> classifier = GetClassifier();
-  _PrefixArray array = {GeneratePrefix(_Fragment("entry.com/"), 4)};
-  rv = SetupLookupCacheV4(classifier, array, GTEST_TABLE);
+  _PrefixArray array = {CreatePrefixFromURL("entry.com/", 4)};
+  rv = BuildLookupCache(classifier, GTEST_TABLE_V4, array);
   EXPECT_EQ(rv, NS_OK);
 
-  RefPtr<LookupCache> cache = classifier->GetLookupCache(GTEST_TABLE, false);
+  RefPtr<LookupCache> cache = classifier->GetLookupCache(GTEST_TABLE_V4, false);
   rv = cache->WriteFile();
   EXPECT_EQ(rv, NS_OK);
 
@@ -92,7 +93,7 @@ TEST(UrlClassifierLookupCacheV4, LoadOldPset)
 {
   nsCOMPtr<nsIFile> oldPsetFile;
 
-  _PrefixArray array = {GeneratePrefix(_Fragment("entry.com/"), 4)};
+  _PrefixArray array = {CreatePrefixFromURL("entry.com/", 4)};
   PrefixStringMap map;
   PrefixArrayToPrefixStringMap(array, map);
 
@@ -101,7 +102,7 @@ TEST(UrlClassifierLookupCacheV4, LoadOldPset)
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                            getter_AddRefs(oldPsetFile));
     oldPsetFile->AppendNative(NS_LITERAL_CSTRING("safebrowsing"));
-    oldPsetFile->AppendNative(GTEST_TABLE + NS_LITERAL_CSTRING(".pset"));
+    oldPsetFile->AppendNative(GTEST_TABLE_V4 + NS_LITERAL_CSTRING(".pset"));
 
     RefPtr<VariableLengthPrefixSet> pset = new VariableLengthPrefixSet;
     pset->SetPrefixes(map);
@@ -117,7 +118,7 @@ TEST(UrlClassifierLookupCacheV4, LoadOldPset)
 
   // Load data from disk
   RefPtr<Classifier> classifier = GetClassifier();
-  RefPtr<LookupCache> cache = classifier->GetLookupCache(GTEST_TABLE, false);
+  RefPtr<LookupCache> cache = classifier->GetLookupCache(GTEST_TABLE_V4, false);
 
   RefPtr<LookupCacheV4> cacheV4 = LookupCache::Cast<LookupCacheV4>(cache);
   CheckContent(cacheV4, array);
@@ -132,7 +133,7 @@ TEST(UrlClassifierLookupCacheV4, BuildAPI)
 
   _PrefixArray update = {_Prefix("beta")};
   PrefixStringMap map;
-  SetupPrefixMap(update, map);
+  PrefixArrayToPrefixStringMap(update, map);
 
   cache->Build(map);
   EXPECT_TRUE(map.IsEmpty());
