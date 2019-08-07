@@ -500,6 +500,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   static void ConfigureReplacementChannel(nsIChannel*,
                                           const ReplacementChannelConfig&);
 
+  // Called before we create the redirect target channel.
+  already_AddRefed<nsILoadInfo> CloneLoadInfoForRedirect(
+      nsIURI* aNewURI, uint32_t aRedirectFlags);
+
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 
@@ -565,10 +569,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Check if mPrivateBrowsingId matches between LoadInfo and LoadContext.
   void AssertPrivateBrowsingId();
 #endif
-
-  // Called before we create the redirect target channel.
-  already_AddRefed<nsILoadInfo> CloneLoadInfoForRedirect(
-      nsIURI* newURI, uint32_t redirectFlags);
 
   static void CallTypeSniffers(void* aClosure, const uint8_t* aData,
                                uint32_t aCount);

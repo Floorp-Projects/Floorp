@@ -7328,11 +7328,7 @@ nsresult nsHttpChannel::StartCrossProcessRedirect() {
   MOZ_ASSERT(httpParent);
   NS_ENSURE_TRUE(httpParent, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
-      CloneLoadInfoForRedirect(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
-  redirectLoadInfo->SetResultPrincipalURI(mURI);
-
-  httpParent->TriggerCrossProcessRedirect(this, redirectLoadInfo,
+  httpParent->TriggerCrossProcessRedirect(this,
                                           mCrossProcessRedirectIdentifier);
 
   // This will suspend the channel

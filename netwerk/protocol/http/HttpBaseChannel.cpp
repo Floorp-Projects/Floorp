@@ -2892,7 +2892,7 @@ void HttpBaseChannel::AssertPrivateBrowsingId() {
 #endif
 
 already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
-    nsIURI* newURI, uint32_t redirectFlags) {
+    nsIURI* aNewURI, uint32_t aRedirectFlags) {
   // make a copy of the loadinfo, append to the redirectchain
   // this will be set on the newly created channel for the redirect target.
   if (!mLoadInfo) {
@@ -2937,7 +2937,7 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
                "geckoViewSessionContextId attribute");
 
     attrs = docShellAttrs;
-    attrs.SetFirstPartyDomain(true, newURI);
+    attrs.SetFirstPartyDomain(true, aNewURI);
     newLoadInfo->SetOriginAttributes(attrs);
   }
 
@@ -2947,8 +2947,8 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
   newLoadInfo->SetResultPrincipalURI(nullptr);
 
   bool isInternalRedirect =
-      (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
-                        nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+      (aRedirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                         nsIChannelEventSink::REDIRECT_STS_UPGRADE));
 
   nsCString remoteAddress;
   Unused << GetRemoteAddress(remoteAddress);

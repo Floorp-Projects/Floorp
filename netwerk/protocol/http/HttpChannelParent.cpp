@@ -2637,7 +2637,6 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
 }
 
 nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
-                                                        nsILoadInfo* aLoadInfo,
                                                         uint64_t aIdentifier) {
   CancelChildCrossProcessRedirect();
 
@@ -2645,7 +2644,21 @@ nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
   RefPtr<nsHttpChannel::ContentProcessIdPromise> p =
       httpChannel->TakeRedirectContentProcessIdPromise();
-  nsCOMPtr<nsILoadInfo> loadInfo = aLoadInfo;
+
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+
+  // We must set rpURI here to the target (the redirect-to) URL because
+  // otherwise NS_GetFinalChannelURI, used to build the channel principal,
+  // will use the OriginalURI of the channel, which is the first URL of the
+  // redirect chain. We can set rpURI here because http handler doesn't set
+  // rpURI on the load info during the channel creation (we set the rpURI after
+  // channel creation here). This is then specific to and possible only for the
+  // http protocol and MUST NOT be done this way when we make this code
+  // universal for any protocol (schema).
+  nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->CloneLoadInfoForRedirect(
+      uri, nsIChannelEventSink::REDIRECT_INTERNAL);
+  loadInfo->SetResultPrincipalURI(uri);
 
   RefPtr<HttpChannelParent> self = this;
   p->Then(
