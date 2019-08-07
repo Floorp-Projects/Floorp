@@ -1574,7 +1574,6 @@ pref("dom.storage_access.max_concurrent_auto_grants", 5);
 
 // Define a set of default features for the Content Blocking UI.
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 
 pref("browser.contentblocking.control-center.ui.showBlockedLabels", true);
 pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
