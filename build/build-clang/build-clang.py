@@ -37,7 +37,7 @@ def symlink(source, link_name):
 
 
 def check_run(args):
-    print(' '.join(args), file=sys.stderr)
+    print(' '.join(args), file=sys.stderr, flush=True)
     if args[0] == 'cmake':
         # CMake `message(STATUS)` messages, as appearing in failed source code
         # compiles, appear on stdout, so we only capture that.
@@ -49,8 +49,8 @@ def check_run(args):
             sys.stdout.flush()
         r = p.wait()
         if r != 0:
-            cmake_output_re = re.compile("See also \"(.*/CMakeOutput.log)\"")
-            cmake_error_re = re.compile("See also \"(.*/CMakeError.log)\"")
+            cmake_output_re = re.compile(b"See also \"(.*/CMakeOutput.log)\"")
+            cmake_error_re = re.compile(b"See also \"(.*/CMakeError.log)\"")
 
             def find_first_match(re):
                 for l in lines:
@@ -212,16 +212,6 @@ def install_asan_symbols(build_dir, clang_dir):
         raise Exception("Destination path pattern did not resolve uniquely")
 
     shutil.copy2(src_path[0], dst_path[0])
-
-
-def git_clone(base_dir, url, directory, revision):
-    run_in(base_dir, ["git", "clone", "-n", url, directory])
-    run_in(os.path.join(base_dir, directory), ["git", "checkout", revision])
-
-
-def git_update(directory, revision):
-    run_in(directory, ["git", "remote", "update"])
-    run_in(directory, ["git", "reset", "--hard", revision])
 
 
 def is_darwin():
@@ -551,8 +541,6 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', required=True,
                         type=argparse.FileType('r'),
                         help="Clang configuration file")
-    parser.add_argument('-b', '--base-dir', required=False,
-                        help="Base directory for code and build artifacts")
     parser.add_argument('--clean', required=False,
                         action='store_true',
                         help="Clean the build directory")
@@ -565,35 +553,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # The directories end up in the debug info, so the easy way of getting
-    # a reproducible build is to run it in a know absolute directory.
-    # We use a directory that is registered as a volume in the Docker image.
-
-    if args.base_dir:
-        base_dir = args.base_dir
-    elif os.environ.get('MOZ_AUTOMATION') and not is_windows():
-        base_dir = "/builds/worker/workspace/moz-toolchain"
-    else:
-        # Handles both the Windows automation case and the local build case
-        # TODO: Because Windows taskcluster builds are run with distinct
-        # user IDs for each job, we can't store things in some globally
-        # accessible directory: one job will run, checkout LLVM to that
-        # directory, and then if another job runs, the new user won't be
-        # able to access the previously-checked out code--or be able to
-        # delete it.  So on Windows, we build in the task-specific home
-        # directory; we will eventually add -fdebug-prefix-map options
-        # to the LLVM build to bring back reproducibility.
-        base_dir = os.path.join(os.getcwd(), 'build-clang')
-
-    source_dir = base_dir + "/src"
-    build_dir = base_dir + "/build"
-
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
-    elif os.listdir(base_dir) and not os.path.exists(os.path.join(base_dir, '.build-clang')):
-        raise ValueError("Base directory %s exists and is not a build-clang directory. "
-                         "Supply a non-existent or empty directory with --base-dir" % base_dir)
-    open(os.path.join(base_dir, '.build-clang'), 'a').close()
+    if not os.path.exists('llvm/LLVMBuild.txt'):
+        raise Exception('The script must be run from the root directory of the '
+                        'llvm-project tree')
+    source_dir = os.getcwd()
+    build_dir = source_dir + "/build"
 
     if args.clean:
         shutil.rmtree(build_dir)
@@ -623,9 +587,6 @@ if __name__ == "__main__":
     config_dir = os.path.dirname(args.config.name)
     config = json.load(args.config)
 
-    llvm_revision = config["llvm_revision"]
-    if not re.match(r'^[0-9a-fA-F]{40}$', llvm_revision):
-        raise ValueError("Incorrect format of the git revision")
     stages = 3
     if "stages" in config:
         stages = int(config["stages"])
@@ -698,13 +659,6 @@ if __name__ == "__main__":
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
-
-    if not args.skip_checkout:
-        if os.path.exists(os.path.join(source_dir, '.git')):
-            git_update(source_dir, llvm_revision)
-        else:
-            delete(source_dir)
-            git_clone(base_dir, URL_REPO, source_dir, llvm_revision)
 
     for p in config.get("patches", []):
         patch(os.path.join(config_dir, p), source_dir)

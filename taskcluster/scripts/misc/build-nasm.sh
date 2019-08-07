@@ -3,14 +3,10 @@ set -x -e -v
 
 COMPRESS_EXT=bz2
 
-cd $GECKO_PATH
-
-. taskcluster/scripts/misc/tooltool-download.sh
-
 cd $MOZ_FETCHES_DIR/nasm-*
 case "$1" in
     win64)
-        export PATH="$GECKO_PATH/clang/bin:$PATH"
+        export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
         ./configure CC=x86_64-w64-mingw32-clang AR=llvm-ar RANLIB=llvm-ranlib --host=x86_64-w64-mingw32
         EXE=.exe
         ;;

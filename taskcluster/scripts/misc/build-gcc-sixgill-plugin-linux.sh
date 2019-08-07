@@ -11,28 +11,21 @@ root_dir=$MOZ_FETCHES_DIR
 build_dir=$GECKO_PATH/build
 data_dir=$GECKO_PATH/build/unix/build-gcc
 
-# Download and unpack upstream toolchain artifacts (ie, the gcc binary).
-. $(dirname $0)/tooltool-download.sh
-
-gcc_version=6.4.0
-gcc_ext=xz
-binutils_version=2.28.1
-binutils_ext=xz
 sixgill_rev=bc0ef9258470
 sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 
 . $data_dir/build-gcc.sh
 
-pushd $root_dir/gcc-$gcc_version
-ln -sf ../binutils-2.31.1 binutils
-ln -sf ../gmp-5.1.3 gmp
-ln -sf ../isl-0.15 isl
-ln -sf ../mpc-0.8.2 mpc
-ln -sf ../mpfr-3.1.5 mpfr
+pushd $root_dir/gcc-source
+ln -sf ../binutils-source binutils
+ln -sf ../gmp-source gmp
+ln -sf ../isl-source isl
+ln -sf ../mpc-source mpc
+ln -sf ../mpfr-source mpfr
 popd
 
 export TMPDIR=${TMPDIR:-/tmp/}
-export gcc_bindir=$root_dir/src/gcc/bin
+export gcc_bindir=$MOZ_FETCHES_DIR/gcc/bin
 export gmp_prefix=/tools/gmp
 export gmp_dir=$root_dir$gmp_prefix
 
@@ -51,12 +44,12 @@ build_gmp() {
     # cc1/cc1plus. So link the plugin statically to libgmp. Except that the
     # default static build does not have -fPIC, and will result in a relocation
     # error, so build our own. This requires the gcc and related source to be
-    # in $root_dir/gcc-$gcc_version.
+    # in $root_dir/gcc-source.
 
     mkdir $root_dir/gmp-objdir || true
     (
         cd $root_dir/gmp-objdir
-        $root_dir/gcc-$gcc_version/gmp/configure --disable-shared --with-pic --prefix=$gmp_prefix
+        $root_dir/gcc-source/gmp/configure --disable-shared --with-pic --prefix=$gmp_prefix
         make -j8
         make install DESTDIR=$root_dir
     )

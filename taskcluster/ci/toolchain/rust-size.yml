@@ -8,8 +8,6 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-rust-size.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
     fetches:
         fetch:
             - rust-size
@@ -20,8 +18,9 @@ linux64-rust-size:
     worker-type: b-linux
     run:
         toolchain-artifact: public/build/rust-size.tar.xz
-    toolchains:
-        - linux64-rust-1.28
+    fetches:
+        toolchain:
+            - linux64-rust-1.28
 
 win64-rust-size:
     treeherder:
@@ -29,8 +28,11 @@ win64-rust-size:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         toolchain-artifact: public/build/rust-size.tar.bz2
-    toolchains:
-        - win64-rust-1.28
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+    fetches:
+        toolchain:
+            - win64-rust-1.28

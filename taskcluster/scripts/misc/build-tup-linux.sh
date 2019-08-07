@@ -4,11 +4,7 @@ set -e -v
 # This script is for building tup on Linux.
 
 COMPRESS_EXT=xz
-export PATH=$GECKO_PATH/gcc/bin:$PATH
-
-cd $GECKO_PATH
-
-. taskcluster/scripts/misc/tooltool-download.sh
+export PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH
 
 cd $MOZ_FETCHES_DIR/tup
 
