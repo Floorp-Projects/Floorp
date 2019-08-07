@@ -417,6 +417,16 @@ nsPIDOMWindowOuter* nsWebBrowser::GetWindow() {
 }
 
 NS_IMETHODIMP
+nsWebBrowser::GetBrowsingContextXPCOM(dom::BrowsingContext** aBrowsingContext) {
+  NS_ENSURE_STATE(mDocShell);
+  return mDocShell->GetBrowsingContextXPCOM(aBrowsingContext);
+}
+
+dom::BrowsingContext* nsWebBrowser::GetBrowsingContext() {
+  return mDocShell->GetBrowsingContext();
+}
+
+NS_IMETHODIMP
 nsWebBrowser::GetDomWindow(mozIDOMWindowProxy** aWindow) {
   if (!mDocShell) return NS_ERROR_NOT_INITIALIZED;
   return mDocShell->GetDomWindow(aWindow);

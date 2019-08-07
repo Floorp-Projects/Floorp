@@ -829,9 +829,9 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-    BuildNestedPrintObjects(nsDocShell::Cast(printData->mPrintObject->mDocShell)
-                                ->GetBrowsingContext(),
-                            printData->mPrintObject, &printData->mPrintDocList);
+    BuildNestedPrintObjects(
+        printData->mPrintObject->mDocShell->GetBrowsingContext(),
+        printData->mPrintObject, &printData->mPrintDocList);
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may
@@ -2656,8 +2656,7 @@ bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
   if (window) {
     nsCOMPtr<nsIDocShell> ourDocShell(do_QueryReferent(mDocShell));
     if (ourDocShell) {
-      BrowsingContext* ourBC =
-          nsDocShell::Cast(ourDocShell)->GetBrowsingContext();
+      BrowsingContext* ourBC = ourDocShell->GetBrowsingContext();
       BrowsingContext* bc = window->GetBrowsingContext();
       while (bc) {
         if (bc == ourBC) {
