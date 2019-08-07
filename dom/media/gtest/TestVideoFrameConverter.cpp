@@ -87,7 +87,7 @@ TEST_F(VideoFrameConverterTest, BasicConversion) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), now);
+  EXPECT_GT(frames[0].second() - now, TimeDuration::FromMilliseconds(0));
 }
 
 TEST_F(VideoFrameConverterTest, BasicPacing) {
@@ -101,7 +101,7 @@ TEST_F(VideoFrameConverterTest, BasicPacing) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), future);
+  EXPECT_GT(frames[0].second() - now, future - now);
 }
 
 TEST_F(VideoFrameConverterTest, MultiPacing) {
@@ -118,11 +118,11 @@ TEST_F(VideoFrameConverterTest, MultiPacing) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), future1);
+  EXPECT_GT(frames[0].second() - now, future1 - now);
   EXPECT_EQ(frames[1].first().width(), 640);
   EXPECT_EQ(frames[1].first().height(), 480);
   EXPECT_GT(frames[1].second(), future2);
-  EXPECT_GT(frames[1].second(), frames[0].second());
+  EXPECT_GT(frames[1].second() - now, frames[0].second() - now);
 }
 
 TEST_F(VideoFrameConverterTest, Duplication) {
@@ -158,7 +158,7 @@ TEST_F(VideoFrameConverterTest, DropsOld) {
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), future2);
+  EXPECT_GT(frames[0].second() - now, future2 - now);
 }
 
 // We check that the disabling code was triggered by sending multiple,
@@ -179,10 +179,11 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), future1);
+  EXPECT_GT(frames[0].second() - now, future1 - now);
   EXPECT_EQ(frames[1].first().width(), 640);
   EXPECT_EQ(frames[1].first().height(), 480);
-  EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
+  EXPECT_GT(frames[1].second() - now,
+            future1 - now + TimeDuration::FromSeconds(1));
   // Check that the second frame comes between 1s and 2s after the first.
   EXPECT_NEAR(frames[1].first().timestamp_us(),
               frames[0].first().timestamp_us() + ((PR_USEC_PER_SEC * 3) / 2),
@@ -222,10 +223,10 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
-  EXPECT_GT(frames[0].second(), future1);
+  EXPECT_GT(frames[0].second() - start, future1 - start);
   EXPECT_EQ(frames[1].first().width(), 320);
   EXPECT_EQ(frames[1].first().height(), 240);
-  EXPECT_GT(frames[1].second(), future3);
+  EXPECT_GT(frames[1].second() - start, future3 - start);
 }
 
 // We check that the no frame is converted while inactive, and that on
