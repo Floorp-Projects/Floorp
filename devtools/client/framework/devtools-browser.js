@@ -365,13 +365,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       case "scratchpad":
         ScratchpadManager.openScratchpad();
         break;
-      case "inspectorMac":
-        await gDevToolsBrowser.selectToolCommand(
-          window,
-          "inspector",
-          startTime
-        );
-        break;
     }
   },
 
