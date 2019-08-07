@@ -73,7 +73,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   }
 );
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "IndexedDB in workers and Storage Access API",
   async _ => {
     function blockCode() {
