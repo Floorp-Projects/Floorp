@@ -6,7 +6,9 @@
 #ifndef include_dom_media_ipc_RemoteDecoderChild_h
 #define include_dom_media_ipc_RemoteDecoderChild_h
 #include "mozilla/PRemoteDecoderChild.h"
+
 #include "IRemoteDecoderChild.h"
+#include "mozilla/ShmemPool.h"
 
 namespace mozilla {
 
@@ -34,6 +36,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   IPCResult RecvInitFailed(const nsresult& aReason);
   IPCResult RecvFlushComplete();
   IPCResult RecvShutdownComplete();
+  IPCResult RecvDoneWithInput(Shmem&& aInputShmem);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -89,6 +92,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   // Keep this instance alive during SendShutdown RecvShutdownComplete
   // handshake.
   RefPtr<RemoteDecoderChild> mShutdownSelfRef;
+  ShmemPool mRawFramePool;
 };
 
 }  // namespace mozilla

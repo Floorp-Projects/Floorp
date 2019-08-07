@@ -707,6 +707,20 @@ nsNSSCertificate::GetRawDER(nsTArray<uint8_t>& aArray) {
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::GetBase64DERString(nsACString& base64DERString) {
+  nsDependentCSubstring derString(
+      reinterpret_cast<const char*>(mCert->derCert.data), mCert->derCert.len);
+
+  nsresult rv = Base64Encode(derString, base64DERString);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 CERTCertificate* nsNSSCertificate::GetCert() {
   return (mCert) ? CERT_DupCertificate(mCert.get()) : nullptr;
 }

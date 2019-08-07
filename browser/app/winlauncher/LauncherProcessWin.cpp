@@ -231,7 +231,8 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   // Make sure that the launcher process itself has image load policies set
   if (IsWin10AnniversaryUpdateOrLater()) {
-    const DynamicallyLinkedFunctionPtr<decltype(&SetProcessMitigationPolicy)>
+    static const StaticDynamicallyLinkedFunctionPtr<decltype(
+        &SetProcessMitigationPolicy)>
         pSetProcessMitigationPolicy(L"kernel32.dll",
                                     "SetProcessMitigationPolicy");
     if (pSetProcessMitigationPolicy) {

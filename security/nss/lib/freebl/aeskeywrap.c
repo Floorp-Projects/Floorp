@@ -225,7 +225,8 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
 #define A B[0]
 
     /* Check args */
-    if (!inputLen || 0 != inputLen % AES_KEY_WRAP_BLOCK_SIZE) {
+    if (inputLen < 2 * AES_KEY_WRAP_BLOCK_SIZE ||
+        0 != inputLen % AES_KEY_WRAP_BLOCK_SIZE) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         return s;
     }

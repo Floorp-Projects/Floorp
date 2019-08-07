@@ -390,16 +390,10 @@ void LowerPriorityHelper(nsIChannel* aChannel) {
 }  // namespace
 
 // static
-void UrlClassifierCommon::AnnotateChannel(
-    nsIChannel* aChannel,
-    AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
-    uint32_t aClassificationFlags, uint32_t aLoadingState) {
+void UrlClassifierCommon::AnnotateChannel(nsIChannel* aChannel,
+                                          uint32_t aClassificationFlags,
+                                          uint32_t aLoadingState) {
   MOZ_ASSERT(aChannel);
-  MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
-             aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
-             aPurpose == AntiTrackingCommon::eFingerprinting ||
-             aPurpose == AntiTrackingCommon::eCryptomining ||
-             aPurpose == AntiTrackingCommon::eSocialTracking);
 
   nsCOMPtr<nsIURI> chanURI;
   nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
@@ -426,7 +420,7 @@ void UrlClassifierCommon::AnnotateChannel(
       IsCryptominingClassificationFlag(aClassificationFlags);
 
   if (validClassificationFlags &&
-      (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel, aPurpose))) {
+      (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel))) {
     UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
         aChannel, aLoadingState);
   }
@@ -438,15 +432,7 @@ void UrlClassifierCommon::AnnotateChannel(
 }
 
 // static
-bool UrlClassifierCommon::IsAllowListed(
-    nsIChannel* aChannel,
-    AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose) {
-  MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
-             aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
-             aPurpose == AntiTrackingCommon::eFingerprinting ||
-             aPurpose == AntiTrackingCommon::eCryptomining ||
-             aPurpose == AntiTrackingCommon::eSocialTracking);
-
+bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
   nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
   if (!channel) {
     UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
@@ -475,7 +461,7 @@ bool UrlClassifierCommon::IsAllowListed(
 
   bool isAllowListed = false;
   rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
-      topWinURI, NS_UsePrivateBrowsing(aChannel), aPurpose, isAllowListed);
+      topWinURI, NS_UsePrivateBrowsing(aChannel), isAllowListed);
   if (NS_FAILED(rv)) {  // normal for some loads, no need to print a warning
     return false;
   }

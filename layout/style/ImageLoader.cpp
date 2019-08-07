@@ -138,46 +138,43 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
       // Get request status to see if we should block onload, and if we can
       // request reflow immediately.
       uint32_t status = 0;
+      // Don't block onload if we've already got a frame complete status
+      // (since in that case the image is already loaded), or if we get an error
+      // status (since then we know the image won't ever load).
       if (NS_SUCCEEDED(aRequest->GetImageStatus(&status)) &&
+          !(status & imgIRequest::STATUS_FRAME_COMPLETE) &&
           !(status & imgIRequest::STATUS_ERROR)) {
-        // No error, so we can block onload.
+        // If there's no error, and the image has not loaded yet, so we can
+        // block onload.
         fwfToModify->mFlags |= REQUEST_HAS_BLOCKED_ONLOAD;
 
         // Block document onload until we either remove the frame in
         // RemoveRequestToFrameMapping or onLoadComplete, or complete a reflow.
         mDocument->BlockOnload();
 
-        // We need to stay blocked until we get a reflow. If the first frame
-        // is not yet decoded, we'll trigger that reflow from onFrameComplete.
-        // But if the first frame is already decoded, we need to trigger that
-        // reflow now, because we'll never get a call to onFrameComplete.
-        if (status & imgIRequest::STATUS_FRAME_COMPLETE) {
-          RequestReflowOnFrame(fwfToModify, aRequest);
-        } else {
-          // If we don't already have a complete frame, kickoff decode. This
-          // will ensure that either onFrameComplete or onLoadComplete will
-          // unblock document onload.
+        // If we don't already have a complete frame, kickoff decode. This
+        // will ensure that either onFrameComplete or onLoadComplete will
+        // unblock document onload.
 
-          // We want to request decode in such a way that avoids triggering
-          // sync decode. First, we attempt to convert the aRequest into
-          // a imgIContainer. If that succeeds, then aRequest has an image
-          // and we can request decoding for size at zero size, the size will
-          // be ignored because we don't pass the FLAG_HIGH_QUALITY_SCALING
-          // flag and an async decode (because we didn't pass any sync decoding
-          // flags) at the intrinsic size will be requested. If the conversion
-          // to imgIContainer is unsuccessful, then that means aRequest doesn't
-          // have an image yet, which means we can safely call StartDecoding()
-          // on it without triggering any synchronous work.
-          nsCOMPtr<imgIContainer> imgContainer;
-          aRequest->GetImage(getter_AddRefs(imgContainer));
-          if (imgContainer) {
-            imgContainer->RequestDecodeForSize(
-                gfx::IntSize(0, 0), imgIContainer::DECODE_FLAGS_DEFAULT);
-          } else {
-            // It's safe to call StartDecoding directly, since it can't
-            // trigger synchronous decode without an image. Flags are ignored.
-            aRequest->StartDecoding(imgIContainer::FLAG_NONE);
-          }
+        // We want to request decode in such a way that avoids triggering
+        // sync decode. First, we attempt to convert the aRequest into
+        // a imgIContainer. If that succeeds, then aRequest has an image
+        // and we can request decoding for size at zero size, the size will
+        // be ignored because we don't pass the FLAG_HIGH_QUALITY_SCALING
+        // flag and an async decode (because we didn't pass any sync decoding
+        // flags) at the intrinsic size will be requested. If the conversion
+        // to imgIContainer is unsuccessful, then that means aRequest doesn't
+        // have an image yet, which means we can safely call StartDecoding()
+        // on it without triggering any synchronous work.
+        nsCOMPtr<imgIContainer> imgContainer;
+        aRequest->GetImage(getter_AddRefs(imgContainer));
+        if (imgContainer) {
+          imgContainer->RequestDecodeForSize(
+              gfx::IntSize(0, 0), imgIContainer::DECODE_FLAGS_DEFAULT);
+        } else {
+          // It's safe to call StartDecoding directly, since it can't
+          // trigger synchronous decode without an image. Flags are ignored.
+          aRequest->StartDecoding(imgIContainer::FLAG_NONE);
         }
       }
     }

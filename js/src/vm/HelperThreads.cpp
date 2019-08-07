@@ -1372,9 +1372,15 @@ void GlobalHelperThreadState::triggerFreeUnusedMemory() {
 
   AutoLockHelperThreadState lock;
   for (auto& context : helperContexts_) {
-    context->setFreeUnusedMemory(true);
+    if (context->shouldFreeUnusedMemory() && context->contextAvailable(lock)) {
+      // This context hasn't been used since the last time freeUnusedMemory
+      // was set. Free the temp LifoAlloc from the main thread.
+      context->tempLifoAllocNoCheck().freeAll();
+      context->setFreeUnusedMemory(false);
+    } else {
+      context->setFreeUnusedMemory(true);
+    }
   }
-  notifyAll(PRODUCER, lock);
 }
 
 static inline bool IsHelperThreadSimulatingOOM(js::ThreadType threadType) {

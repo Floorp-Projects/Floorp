@@ -676,7 +676,12 @@ class MediaPipelineTransmit::PipelineListener
     }
   }
 
-  void SetActive(bool aActive) { mActive = aActive; }
+  void SetActive(bool aActive) {
+    mActive = aActive;
+    if (mConverter) {
+      mConverter->SetActive(aActive);
+    }
+  }
   void SetEnabled(bool aEnabled) { mEnabled = aEnabled; }
 
   // These are needed since nested classes don't have access to any particular
@@ -1112,12 +1117,6 @@ void MediaPipelineTransmit::PipelineListener::
 
 void MediaPipelineTransmit::PipelineListener::NewData(
     const MediaSegment& aMedia, TrackRate aRate /* = 0 */) {
-  if (!mActive) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-            ("Discarding packets because transport not ready"));
-    return;
-  }
-
   if (mConduit->type() != (aMedia.GetType() == MediaSegment::AUDIO
                                ? MediaSessionConduit::AUDIO
                                : MediaSessionConduit::VIDEO)) {
@@ -1132,6 +1131,12 @@ void MediaPipelineTransmit::PipelineListener::NewData(
   // See bug 784517
   if (aMedia.GetType() == MediaSegment::AUDIO) {
     MOZ_RELEASE_ASSERT(aRate > 0);
+
+    if (!mActive) {
+      MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
+              ("Discarding audio packets because transport not ready"));
+      return;
+    }
 
     const AudioSegment* audio = static_cast<const AudioSegment*>(&aMedia);
     for (AudioSegment::ConstChunkIterator iter(*audio); !iter.IsEnded();

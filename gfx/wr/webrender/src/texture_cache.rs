@@ -19,6 +19,7 @@ use crate::internal_types::{
 use crate::profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::resource_cache::{CacheItem, CachedImageData};
+use smallvec::SmallVec;
 use std::cell::Cell;
 use std::cmp;
 use std::mem;
@@ -1130,7 +1131,11 @@ impl TextureCache {
             EntryDetails::Cache { origin, layer_index } => {
                 // Free the block in the given region.
                 let (texture_array, _swizzle) = self.shared_textures.select(entry.input_format, entry.filter);
-                let region = &mut texture_array.regions[layer_index];
+                let unit = texture_array.units
+                    .iter_mut()
+                    .find(|unit| unit.texture_id == entry.texture_id)
+                    .expect("Unable to find the associated texture array unit");
+                let region = &mut unit.regions[layer_index];
 
                 if self.debug_flags.contains(
                     DebugFlags::TEXTURE_CACHE_DBG |
@@ -1144,46 +1149,79 @@ impl TextureCache {
                         layer_index,
                     );
                 }
-                region.free(origin, &mut texture_array.empty_regions);
+                region.free(origin, &mut unit.empty_regions);
             }
         }
     }
 
-    // Attempt to allocate a block from the shared cache.
+    /// Check if we can allocate this entry without growing any of the texture cache arrays.
+    fn has_space_in_shared_cache(
+        &mut self,
+        params: &CacheAllocParams,
+    ) -> bool {
+        let (texture_array, _swizzle) = self.shared_textures.select(
+            params.descriptor.format,
+            params.filter,
+        );
+        let slab_size = SlabSize::new(params.descriptor.size);
+        texture_array.units
+            .iter()
+            .any(|unit| unit.can_alloc(slab_size))
+    }
+
+    /// Allocate a block from the shared cache.
     fn allocate_from_shared_cache(
         &mut self,
         params: &CacheAllocParams,
-    ) -> Option<CacheEntry> {
+    ) -> CacheEntry {
         // Mutably borrow the correct texture.
         let (texture_array, swizzle) = self.shared_textures.select(
             params.descriptor.format,
             params.filter,
         );
 
-        // Lazy initialize this texture array if required.
-        if texture_array.texture_id.is_none() {
-            assert!(texture_array.regions.is_empty());
-            let texture_id = self.next_id;
+        let max_texture_layers = self.max_texture_layers;
+        let slab_size = SlabSize::new(params.descriptor.size);
+
+        let mut info = TextureCacheAllocInfo {
+            width: TEXTURE_REGION_DIMENSIONS,
+            height: TEXTURE_REGION_DIMENSIONS,
+            format: texture_array.formats.internal,
+            filter: texture_array.filter,
+            layer_count: 1,
+            is_shared_cache: true,
+            has_depth: false,
+        };
+
+        let unit_index = if let Some(index) = texture_array.units
+            .iter()
+            .position(|unit| unit.can_alloc(slab_size))
+        {
+            index
+        } else if let Some(index) = texture_array.units
+            .iter()
+            .position(|unit| unit.regions.len() < max_texture_layers)
+        {
+            let unit = &mut texture_array.units[index];
+            info.layer_count += unit.regions.len() as i32;
+            self.pending_updates.push_realloc(unit.texture_id, info);
+            unit.push_region();
+            index
+        } else {
+            let index = texture_array.units.len();
+            texture_array.units.push(TextureArrayUnit {
+                texture_id: self.next_id,
+                regions: vec![TextureRegion::new(0)],
+                empty_regions: 1,
+            });
+            self.pending_updates.push_alloc(self.next_id, info);
             self.next_id.0 += 1;
-
-            let info = TextureCacheAllocInfo {
-                width: TEXTURE_REGION_DIMENSIONS,
-                height: TEXTURE_REGION_DIMENSIONS,
-                format: texture_array.formats.internal,
-                filter: texture_array.filter,
-                layer_count: 1,
-                is_shared_cache: true,
-                has_depth: false,
-            };
-            self.pending_updates.push_alloc(texture_id, info);
-
-            texture_array.texture_id = Some(texture_id);
-            texture_array.push_region();
-        }
+            index
+        };
 
         // Do the allocation. This can fail and return None
         // if there are no free slots or regions available.
-        texture_array.alloc(params, self.now, swizzle)
+        texture_array.alloc(params, unit_index, self.now, swizzle)
     }
 
     // Returns true if the given image descriptor *may* be
@@ -1261,71 +1299,17 @@ impl TextureCache {
         &mut self,
         params: &CacheAllocParams,
     ) -> CacheEntry {
-        assert!(params.descriptor.size.width > 0 && params.descriptor.size.height > 0);
+        assert!(!params.descriptor.size.is_empty_or_negative());
 
         // If this image doesn't qualify to go in the shared (batching) cache,
         // allocate a standalone entry.
-        if !self.is_allowed_in_shared_cache(params.filter, &params.descriptor) {
-            return self.allocate_standalone_entry(params);
-        }
-
-
-        // Try allocating from the shared cache.
-        if let Some(entry) = self.allocate_from_shared_cache(params) {
-            return entry;
-        }
-
-        // If we failed to allocate and haven't GCed this frame, do so.
-        //
-        // If we hit our limit on layers in the shared cache, failing to
-        // allocate will trigger standalone textures for every entry, including
-        // tiny entries like glyphs. We really want to avoid this, so use a
-        // maximally aggressive eviction threshold in that case (which
-        // realistically should only happen on mac, where we have a tighter
-        // layer limit).
-        let num_regions = self.shared_textures
-            .select(params.descriptor.format, params.filter)
-            .0
-            .regions
-            .len();
-        let threshold = if num_regions == self.max_texture_layers {
-            EvictionThresholdBuilder::new(self.now).max_frames(1).build()
-        } else {
-            self.default_eviction()
-        };
-
-        if self.maybe_expire_old_shared_entries(threshold) {
-            if let Some(entry) = self.allocate_from_shared_cache(params) {
-                return entry;
+        if self.is_allowed_in_shared_cache(params.filter, &params.descriptor) {
+            if !self.has_space_in_shared_cache(params) {
+                // If we don't have extra space and haven't GCed this frame, do so.
+                let threshold = self.default_eviction();
+                self.maybe_expire_old_shared_entries(threshold);
             }
-        }
-
-        let added_layer = {
-            // If we've hit our layer limit, allocate standalone.
-            let (texture_array, _swizzle) =
-                self.shared_textures.select(params.descriptor.format, params.filter);
-            // Add a layer, unless we've hit our limit.
-            if num_regions < self.max_texture_layers as usize {
-                let info = TextureCacheAllocInfo {
-                    width: TEXTURE_REGION_DIMENSIONS,
-                    height: TEXTURE_REGION_DIMENSIONS,
-                    format: texture_array.formats.internal,
-                    filter: texture_array.filter,
-                    layer_count: (num_regions + 1) as i32,
-                    is_shared_cache: true,
-                    has_depth: false,
-                };
-                self.pending_updates.push_realloc(texture_array.texture_id.unwrap(), info);
-                texture_array.push_region();
-                true
-            } else {
-                false
-            }
-        };
-
-        if added_layer {
             self.allocate_from_shared_cache(params)
-                .expect("Allocation should succeed after adding a fresh layer")
         } else {
             self.allocate_standalone_entry(params)
         }
@@ -1570,16 +1554,39 @@ impl TextureRegion {
     }
 }
 
-/// A texture array contains a number of texture layers, where each layer
-/// contains a region that can act as a slab allocator.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+struct TextureArrayUnit {
+    texture_id: CacheTextureId,
+    regions: Vec<TextureRegion>,
+    empty_regions: usize,
+}
+
+impl TextureArrayUnit {
+    /// Adds a new empty region to the array.
+    fn push_region(&mut self) {
+        let index = self.regions.len();
+        self.regions.push(TextureRegion::new(index));
+        self.empty_regions += 1;
+        assert!(self.empty_regions <= self.regions.len());
+    }
+
+    /// Returns true if we can allocate the given entry.
+    fn can_alloc(&self, slab_size: SlabSize) -> bool {
+        self.empty_regions != 0 || self.regions.iter().any(|region| {
+            region.slab_size == slab_size && !region.free_slots.is_empty()
+        })
+    }
+}
+
+/// A texture array contains a number of textures, each with a number of
+/// layers, where each layer contains a region that can act as a slab allocator.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureArray {
     filter: TextureFilter,
     formats: TextureFormatPair<ImageFormat>,
-    regions: Vec<TextureRegion>,
-    empty_regions: usize,
-    texture_id: Option<CacheTextureId>,
+    units: SmallVec<[TextureArrayUnit; 1]>,
 }
 
 impl TextureArray {
@@ -1590,54 +1597,47 @@ impl TextureArray {
         TextureArray {
             formats,
             filter,
-            regions: Vec::new(),
-            empty_regions: 0,
-            texture_id: None,
+            units: SmallVec::new(),
         }
     }
 
     /// Returns the number of GPU bytes consumed by this texture array.
     fn size_in_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
-        self.regions.len() * TEXTURE_REGION_PIXELS * bpp
+        let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
+        num_regions * TEXTURE_REGION_PIXELS * bpp
     }
 
     /// Returns the number of GPU bytes consumed by empty regions.
     fn empty_region_bytes(&self) -> usize {
         let bpp = self.formats.internal.bytes_per_pixel() as usize;
-        self.empty_regions * TEXTURE_REGION_PIXELS * bpp
+        let empty_regions: usize = self.units.iter().map(|u| u.empty_regions).sum();
+        empty_regions * TEXTURE_REGION_PIXELS * bpp
     }
 
     fn clear(&mut self, updates: &mut TextureUpdateList) {
-        self.regions.clear();
-        self.empty_regions = 0;
-        if let Some(id) = self.texture_id.take() {
-            updates.push_free(id);
+        for unit in self.units.drain() {
+            updates.push_free(unit.texture_id);
         }
     }
 
     fn update_profile(&self, counter: &mut ResourceProfileCounter) {
-        counter.set(self.regions.len(), self.size_in_bytes());
-    }
-
-    /// Adds a new empty region to the array.
-    fn push_region(&mut self) {
-        let index = self.regions.len();
-        self.regions.push(TextureRegion::new(index));
-        self.empty_regions += 1;
-        assert!(self.empty_regions <= self.regions.len());
+        let num_regions: usize = self.units.iter().map(|u| u.regions.len()).sum();
+        counter.set(num_regions, self.size_in_bytes());
     }
 
     /// Allocate space in this texture array.
     fn alloc(
         &mut self,
         params: &CacheAllocParams,
+        unit_index: usize,
         now: FrameStamp,
         swizzle: Swizzle,
-    ) -> Option<CacheEntry> {
+    ) -> CacheEntry {
         // Quantize the size of the allocation to select a region to
         // allocate from.
         let slab_size = SlabSize::new(params.descriptor.size);
+        let unit = &mut self.units[unit_index];
 
         // TODO(gw): For simplicity, the initial implementation just
         //           has a single vec<> of regions. We could easily
@@ -1652,7 +1652,7 @@ impl TextureArray {
 
         // Run through the existing regions of this size, and see if
         // we can find a free block in any of them.
-        for (i, region) in self.regions.iter_mut().enumerate() {
+        for (i, region) in unit.regions.iter_mut().enumerate() {
             if region.is_empty() {
                 empty_region_index = Some(i);
             } else if region.slab_size == slab_size {
@@ -1667,35 +1667,32 @@ impl TextureArray {
         }
 
         // Find a region of the right size and try to allocate from it.
-        if entry_details.is_none() {
-            if let Some(empty_region_index) = empty_region_index {
-                let region = &mut self.regions[empty_region_index];
-                region.init(slab_size, &mut self.empty_regions);
-                entry_details = region.alloc().map(|location| {
-                    EntryDetails::Cache {
-                        layer_index: region.layer_index,
-                        origin: location,
-                    }
-                });
+        let details = match entry_details {
+            Some(details) => details,
+            None => {
+                let region = &mut unit.regions[empty_region_index.unwrap()];
+                region.init(slab_size, &mut unit.empty_regions);
+                EntryDetails::Cache {
+                    layer_index: region.layer_index,
+                    origin: region.alloc().unwrap(),
+                }
             }
-        }
+        };
 
-        entry_details.map(|details| {
-            CacheEntry {
-                size: params.descriptor.size,
-                user_data: params.user_data,
-                last_access: now,
-                details,
-                uv_rect_handle: GpuCacheHandle::new(),
-                input_format: params.descriptor.format,
-                filter: self.filter,
-                swizzle,
-                texture_id: self.texture_id.unwrap(),
-                eviction_notice: None,
-                uv_rect_kind: params.uv_rect_kind,
-                eviction: Eviction::Auto,
-            }
-        })
+        CacheEntry {
+            size: params.descriptor.size,
+            user_data: params.user_data,
+            last_access: now,
+            details,
+            uv_rect_handle: GpuCacheHandle::new(),
+            input_format: params.descriptor.format,
+            filter: self.filter,
+            swizzle,
+            texture_id: unit.texture_id,
+            eviction_notice: None,
+            uv_rect_kind: params.uv_rect_kind,
+            eviction: Eviction::Auto,
+        }
     }
 }
 

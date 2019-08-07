@@ -1,5 +1,4 @@
 let cookieBehavior = BEHAVIOR_REJECT_TRACKER;
-let blockingByContentBlockingRTUI = true;
 let blockingByAllowList = true;
 let expectedBlockingNotifications =
   Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER;

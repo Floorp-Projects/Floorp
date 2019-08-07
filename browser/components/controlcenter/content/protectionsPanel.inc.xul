@@ -7,6 +7,7 @@
        type="arrow"
        hidden="true"
        role="alertdialog"
+       aria-labelledby="protections-popup-main-header-label"
        onpopupshown="gProtectionsHandler.onPopupShown(event);"
        onpopuphidden="gProtectionsHandler.onPopupHidden(event);"
        orient="vertical">

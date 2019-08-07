@@ -376,22 +376,13 @@ function setText(id, value) {
   }
 }
 
-function getDERString(cert) {
-  var derArray = cert.getRawDER();
-  var derString = "";
-  for (var i = 0; i < derArray.length; i++) {
-    derString += String.fromCharCode(derArray[i]);
-  }
-  return derString;
-}
-
 function viewCertHelper(parent, cert) {
   if (!cert) {
     return;
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let derb64 = encodeURIComponent(btoa(getDERString(cert)));
+    let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
     openTrustedLinkIn(url, "tab", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),

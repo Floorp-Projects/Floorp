@@ -163,6 +163,9 @@ pref("devtools.serviceWorkers.testing.enabled", false);
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);
 
+// Enable Network Search
+pref("devtools.netmonitor.features.search", false);
+
 // Enable the Application panel
 pref("devtools.application.enabled", false);
 

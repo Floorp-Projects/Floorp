@@ -371,17 +371,18 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
   return rv;
 }
 
-bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
-  nsAutoCString host;
-  nsresult rv = aURL->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, false);
+bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
+    const nsACString& aAsciiHost) {
+  return aAsciiHost.EqualsLiteral("127.0.0.1") ||
+         aAsciiHost.EqualsLiteral("::1") ||
+         aAsciiHost.EqualsLiteral("localhost");
+}
 
-  // We could also allow 'localhost' (if we can guarantee that it resolves
-  // to a loopback address), but Chrome doesn't support it as of writing. For
-  // web compat, lets only allow what Chrome allows.
-  // see also https://bugzilla.mozilla.org/show_bug.cgi?id=1220810
-  return host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("::1") ||
-         host.EqualsLiteral("localhost");
+bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
+  nsAutoCString asciiHost;
+  nsresult rv = aURL->GetAsciiHost(asciiHost);
+  NS_ENSURE_SUCCESS(rv, false);
+  return IsPotentiallyTrustworthyLoopbackHost(asciiHost);
 }
 
 /* Maybe we have a .onion URL. Treat it as whitelisted as well if

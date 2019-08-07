@@ -27,6 +27,14 @@ MediaTransportHandlerIPC::MediaTransportHandlerIPC(
           const RefPtr<net::SocketProcessBridgeChild>& aBridge) {
         ipc::PBackgroundChild* actor =
             ipc::BackgroundChild::GetOrCreateSocketActorForCurrentThread();
+        if (!actor) {
+          NS_WARNING(
+              "MediaTransportHandlerIPC async init failed! Webrtc networking "
+              "will not work!");
+          return InitPromise::CreateAndReject(
+              nsCString("GetOrCreateSocketActorForCurrentThread failed!"),
+              __func__);
+        }
         MediaTransportChild* child = new MediaTransportChild(this);
         actor->SetEventTargetForActor(child, mCallbackThread);
         // PBackgroungChild owns mChild! When it is done with it,

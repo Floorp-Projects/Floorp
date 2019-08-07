@@ -12,6 +12,7 @@ DIRS += [
     'selectors',
     'utils',
     'widgets',
+    'workers',
 ]
 
 DevToolsModules(

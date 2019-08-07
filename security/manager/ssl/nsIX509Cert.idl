@@ -199,6 +199,15 @@ interface nsIX509Cert : nsISupports {
   Array<octet> getRawDER();
 
   /**
+   *  Obtain a base 64 string representation of this certificate
+   *  in DER format.
+   *
+   *  @return The DER encoded certificate as a string.
+   */
+  [must_use]
+  ACString getBase64DERString();
+
+  /**
    *  Test whether two certificate instances represent the
    *  same certificate.
    *

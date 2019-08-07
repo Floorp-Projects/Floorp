@@ -189,6 +189,8 @@
 
 @RESPATH@/components/Push.manifest
 
+@RESPATH@/components/antitracking.manifest
+
 @RESPATH@/components/l10n-registry.manifest
 @RESPATH@/browser/components/l10n-registry.manifest
 

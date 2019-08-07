@@ -265,10 +265,8 @@ function scrollToBottom(node) {
   }
 }
 
-function isScrolledToBottom(outputNode, scrollNode) {
-  const lastNodeHeight = outputNode.lastChild
-    ? outputNode.lastChild.clientHeight
-    : 0;
+function isScrolledToBottom(lastNode, scrollNode) {
+  const lastNodeHeight = lastNode ? lastNode.clientHeight : 0;
   return (
     scrollNode.scrollTop + scrollNode.clientHeight >=
     scrollNode.scrollHeight - lastNodeHeight / 2

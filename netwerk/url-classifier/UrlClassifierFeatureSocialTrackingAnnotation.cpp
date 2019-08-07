@@ -150,7 +150,7 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
       nsIHttpChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING);
 
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eSocialTracking, flags,
+      aChannel, flags,
       nsIWebProgressListener::STATE_LOADED_SOCIALTRACKING_CONTENT);
 
   return NS_OK;
