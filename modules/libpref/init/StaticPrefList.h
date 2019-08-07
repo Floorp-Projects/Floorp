@@ -760,7 +760,7 @@ VARCACHE_PREF(
   Live,
   "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
   browser_contentblocking_rejecttrackers_control_center_ui_enabled,
-  bool, false
+  bool, true
 )
 
 PREF("browser.display.background_color", String, "")
