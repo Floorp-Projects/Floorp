@@ -2992,6 +2992,7 @@ dependencies = [
  "servo_arc 0.1.1",
  "smallbitvec 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "static_prefs 0.1.0",
  "style_derive 0.0.1",
  "style_traits 0.0.1",
  "thin-slice 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
