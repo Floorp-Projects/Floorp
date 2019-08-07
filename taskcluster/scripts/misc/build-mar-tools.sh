@@ -7,8 +7,6 @@ COMPRESS_EXT=xz
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
-
 export MOZ_OBJDIR=obj-mar
 
 echo ac_add_options --enable-project=tools/update-packaging > .mozconfig
@@ -16,7 +14,7 @@ echo ac_add_options --enable-project=tools/update-packaging > .mozconfig
 TOOLCHAINS="binutils clang"
 
 for t in $TOOLCHAINS; do
-    PATH="$GECKO_PATH/$t/bin:$PATH"
+    PATH="$MOZ_FETCHES_DIR/$t/bin:$PATH"
 done
 
 ./mach build -v

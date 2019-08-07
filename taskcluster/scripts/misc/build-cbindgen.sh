@@ -19,26 +19,28 @@ esac
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 # OSX cross builds are a bit harder
 if [ "$TARGET" == "x86_64-apple-darwin" ]; then
-  export PATH="$GECKO_PATH/llvm-dsymutil/bin:$PATH"
-  export PATH="$GECKO_PATH/cctools/bin:$PATH"
+  export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
+  export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   cat >cross-linker <<EOF
-exec $GECKO_PATH/clang/bin/clang -v \
-  -fuse-ld=$GECKO_PATH/cctools/bin/x86_64-apple-darwin-ld \
+exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
+  -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin-ld \
   -mmacosx-version-min=10.11 \
   -target $TARGET \
-  -B $GECKO_PATH/cctools/bin \
-  -isysroot $GECKO_PATH/MacOSX10.11.sdk \
+  -B $MOZ_FETCHES_DIR/cctools/bin \
+  -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk \
   "\$@"
 EOF
   chmod +x cross-linker
   export RUSTFLAGS="-C linker=$PWD/cross-linker"
 fi
 
-export PATH="$(cd $GECKO_PATH && pwd)/rustc/bin:$PATH"
+export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR/cbindgen
 

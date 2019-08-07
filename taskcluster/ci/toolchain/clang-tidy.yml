@@ -22,6 +22,9 @@ job-defaults:
     run-on-projects:
         - trunk
         - try
+    fetches:
+        fetch:
+            - clang-8
 
 linux64-clang-tidy:
     index:
@@ -34,9 +37,9 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - linux64-gcc-6
+    fetches:
+        toolchain:
+            - linux64-gcc-6
 
 macosx64-clang-tidy:
     index:
@@ -56,11 +59,12 @@ macosx64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-gcc-6
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-gcc-6
+            - linux64-node
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
@@ -73,7 +77,7 @@ win64-clang-tidy:
     worker:
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         script: build-clang.sh
         arguments:
@@ -81,3 +85,7 @@ win64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+    fetches:
+        fetch:
+            - cmake
+            - ninja

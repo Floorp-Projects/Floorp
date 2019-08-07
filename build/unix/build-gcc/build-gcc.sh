@@ -24,7 +24,7 @@ apply_patch() {
     pushd $root_dir/$1
     shift
   else
-    pushd $root_dir/gcc-$gcc_version
+    pushd $root_dir/gcc-source
   fi
   patch -p1 < $1
   popd
@@ -47,7 +47,7 @@ build_binutils() {
 
   mkdir $root_dir/binutils-objdir
   pushd $root_dir/binutils-objdir
-  ../binutils-$binutils_version/configure --prefix=${prefix-/tools/gcc}/ $binutils_configure_flags
+  ../binutils-source/configure --prefix=${prefix-/tools/gcc}/ $binutils_configure_flags
   make $make_flags
   make install $make_flags DESTDIR=$root_dir
   export PATH=$root_dir/${prefix-/tools/gcc}/bin:$PATH
@@ -61,7 +61,7 @@ build_gcc() {
 
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
+  ../gcc-source/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
@@ -75,7 +75,7 @@ build_gcc() {
 build_gcc_and_mingw() {
   mkdir gcc-objdir
   pushd gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=$install_dir --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --disable-multilib --enable-threads=posix
+  ../gcc-source/configure --prefix=$install_dir --target=i686-w64-mingw32 --with-gnu-ld --with-gnu-as --disable-multilib --enable-threads=posix
   make $make_flags all-gcc
   make $make_flags install-gcc
   popd
