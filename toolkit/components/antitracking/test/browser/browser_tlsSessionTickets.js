@@ -20,8 +20,6 @@ add_task(async function() {
     set: [
       ["browser.cache.disk.enable", false],
       ["browser.cache.memory.enable", false],
-      ["browser.contentblocking.allowlist.annotations.enabled", true],
-      ["browser.contentblocking.allowlist.storage.enabled", true],
       [
         "network.cookie.cookieBehavior",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,

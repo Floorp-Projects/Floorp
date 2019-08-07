@@ -705,18 +705,6 @@
   value: 2
   mirror: always
 
-# Whether Content Blocking allow list is respected for ETP interventions.
-- name: browser.contentblocking.allowlist.storage.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether Content Blocking allow list is respected for tracking annotations.
-- name: browser.contentblocking.allowlist.annotations.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
