@@ -564,7 +564,8 @@ void nsThread::InitCommon() {
 
     pthread_attr_destroy(&attr);
 #elif defined(XP_WIN)
-    static const DynamicallyLinkedFunctionPtr<GetCurrentThreadStackLimitsFn>
+    static const StaticDynamicallyLinkedFunctionPtr<
+        GetCurrentThreadStackLimitsFn>
         sGetStackLimits(L"kernel32.dll", "GetCurrentThreadStackLimits");
 
     if (sGetStackLimits) {
