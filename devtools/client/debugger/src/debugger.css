@@ -26,6 +26,7 @@
 @import url("./components/Editor/Editor.css");
 @import url("./components/Editor/Footer.css");
 @import url("./components/Editor/Highlight.css");
+@import url("./components/Editor/InlinePreview.css");
 @import url("./components/Editor/Preview.css");
 @import url("./components/Editor/Preview/Popup.css");
 @import url("./components/Editor/SearchBar.css");
