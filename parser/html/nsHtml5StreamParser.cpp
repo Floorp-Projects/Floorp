@@ -364,13 +364,17 @@ void nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL) {
 
   if (aURL) {
     nsCOMPtr<nsIURI> temp;
-    if (aURL->SchemeIs("view-source")) {
+    bool isViewSource;
+    aURL->SchemeIs("view-source", &isViewSource);
+    if (isViewSource) {
       nsCOMPtr<nsINestedURI> nested = do_QueryInterface(aURL);
       nested->GetInnerURI(getter_AddRefs(temp));
     } else {
       temp = aURL;
     }
-    if (temp->SchemeIs("data")) {
+    bool isData;
+    temp->SchemeIs("data", &isData);
+    if (isData) {
       // Avoid showing potentially huge data: URLs. The three last bytes are
       // UTF-8 for an ellipsis.
       mViewSourceTitle.AssignLiteral("data:\xE2\x80\xA6");
@@ -1041,7 +1045,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
       nsCOMPtr<nsIURI> originalURI;
       rv = channel->GetOriginalURI(getter_AddRefs(originalURI));
       if (NS_SUCCEEDED(rv)) {
-        if (originalURI->SchemeIs("resource")) {
+        bool originalIsResource;
+        originalURI->SchemeIs("resource", &originalIsResource);
+        if (originalIsResource) {
           mCharsetSource = kCharsetFromBuiltIn;
           mEncoding = UTF_8_ENCODING;
         } else {
@@ -1049,7 +1055,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
           rv = channel->GetURI(getter_AddRefs(currentURI));
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIURI> innermost = NS_GetInnermostURI(currentURI);
-            mDecodingLocalFileAsUTF8 = innermost->SchemeIs("file");
+            bool innermostIsFile;
+            innermost->SchemeIs("file", &innermostIsFile);
+            mDecodingLocalFileAsUTF8 = innermostIsFile;
           }
         }
       }
