@@ -443,7 +443,7 @@ SRGBOverrideObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 static const char* kObservedPrefs[] = {"gfx.downloadable_fonts.",
                                        "gfx.font_rendering.", BIDI_NUMERAL_PREF,
-                                       "gfx.font_ahem_antialias_none", nullptr};
+                                       nullptr};
 
 static void FontPrefChanged(const char* aPref, void* aData) {
   MOZ_ASSERT(aPref);
@@ -2281,7 +2281,7 @@ void gfxPlatform::FontsPrefsChanged(const char* aPref) {
 #if defined(XP_MACOSX)
       !strcmp(GFX_PREF_CORETEXT_SHAPING, aPref) ||
 #endif
-      !strcmp("gfx.font_ahem_antialias_none", aPref)) {
+      !strcmp("gfx.font_rendering.ahem_antialias_none", aPref)) {
     FlushFontAndWordCaches();
   } else if (!strcmp(BIDI_NUMERAL_PREF, aPref)) {
     mBidiNumeralOption = UNINITIALIZED_VALUE;
