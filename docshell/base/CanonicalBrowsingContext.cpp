@@ -209,16 +209,6 @@ void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
   });
 }
 
-void CanonicalBrowsingContext::UpdateMediaAction(MediaControlActions aAction) {
-  nsPIDOMWindowOuter* window = GetDOMWindow();
-  if (window) {
-    window->UpdateMediaAction(aAction);
-  }
-  Group()->EachParent([&](ContentParent* aParent) {
-    Unused << aParent->SendUpdateMediaAction(this, aAction);
-  });
-}
-
 void CanonicalBrowsingContext::SetFieldEpochsForChild(
     ContentParent* aChild, const BrowsingContext::FieldEpochs& aEpochs) {
   mChildFieldEpochs.Put(aChild->ChildID(), aEpochs);

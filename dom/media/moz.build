@@ -42,7 +42,6 @@ DIRS += [
     'imagecapture',
     'ipc',
     'mediacapabilities',
-    'mediacontrol',
     'mediasink',
     'mediasource',
     'mp3',
@@ -82,8 +81,6 @@ MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'tests/mochitest/identity/mochitest.ini',
 ]
-
-BROWSER_CHROME_MANIFESTS += ['mediacontrol/tests/browser.ini']
 
 if CONFIG['MOZ_WEBRTC']:
     MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
