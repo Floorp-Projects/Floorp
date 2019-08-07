@@ -292,6 +292,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectReadyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
+  NS_INTERFACE_MAP_ENTRY(nsICrossProcessSwitchChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParentRedirectingChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelParent)
 NS_INTERFACE_MAP_END
@@ -1256,19 +1257,26 @@ void HttpChannelParent::MaybeFlushPendingDiversion() {
   }
 }
 
-static void FinishCrossProcessRedirect(nsHttpChannel* channel,
-                                       nsresult status) {
-  if (NS_SUCCEEDED(status)) {
-    nsCOMPtr<nsIRedirectResultListener> redirectListener;
-    NS_QueryNotificationCallbacks(channel, redirectListener);
-    MOZ_ASSERT(redirectListener);
+static void FinishCrossProcessSwitchHelper(nsHttpChannel* aChannel,
+                                           nsresult aStatus) {
+  nsCOMPtr<nsICrossProcessSwitchChannel> switchListener;
+  NS_QueryNotificationCallbacks(aChannel, switchListener);
+  MOZ_ASSERT(switchListener);
 
+  switchListener->FinishCrossProcessSwitch(aChannel, aStatus);
+}
+
+NS_IMETHODIMP
+HttpChannelParent::FinishCrossProcessSwitch(
+    nsIAsyncVerifyRedirectCallback* aCallback, nsresult aStatus) {
+  if (NS_SUCCEEDED(aStatus)) {
     // This updates ParentChannelListener to point to this parent and at
     // the same time cancels the old channel.
-    redirectListener->OnRedirectResult(true);
+    OnRedirectResult(true);
   }
 
-  channel->OnRedirectVerifyCallback(status);
+  aCallback->OnRedirectVerifyCallback(aStatus);
+  return NS_OK;
 }
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
@@ -1277,7 +1285,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
   RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
   nsresult rv = aResult;
   auto sendReply =
-      MakeScopeExit([&]() { FinishCrossProcessRedirect(chan, rv); });
+      MakeScopeExit([&]() { FinishCrossProcessSwitchHelper(chan, rv); });
 
   if (NS_FAILED(rv)) {
     return IPC_OK();
@@ -1298,10 +1306,12 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
     RefPtr<HttpChannelParent> self = this;
     WaitForBgParent()->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [self, chan, aResult]() { FinishCrossProcessRedirect(chan, aResult); },
+        [self, chan, aResult]() {
+          FinishCrossProcessSwitchHelper(chan, aResult);
+        },
         [self, chan](const nsresult& aRejectionRv) {
           MOZ_ASSERT(NS_FAILED(aRejectionRv), "This should be an error code");
-          FinishCrossProcessRedirect(chan, aRejectionRv);
+          FinishCrossProcessSwitchHelper(chan, aRejectionRv);
         });
   }
 
@@ -2636,12 +2646,15 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
   return NS_OK;
 }
 
-nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
-                                                        uint64_t aIdentifier) {
+nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
+                                                      uint64_t aIdentifier) {
   CancelChildCrossProcessRedirect();
 
   nsCOMPtr<nsIChannel> channel = aChannel;
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
+  MOZ_DIAGNOSTIC_ASSERT(httpChannel,
+                        "Must be called with nsHttpChannel object");
+
   RefPtr<nsHttpChannel::ContentProcessIdPromise> p =
       httpChannel->TakeRedirectContentProcessIdPromise();
 
