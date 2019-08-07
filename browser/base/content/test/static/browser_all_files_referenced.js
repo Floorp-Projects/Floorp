@@ -103,9 +103,6 @@ var whitelist = [
   { file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties" },
   { file: "resource://gre/res/fonts/mathfontUnicode.properties" },
 
-  // Needed by HiddenFrame.jsm, but can't be packaged test-only
-  { file: "chrome://global/content/win.xul" },
-
   // The l10n build system can't package string files only for some platforms.
   {
     file:
