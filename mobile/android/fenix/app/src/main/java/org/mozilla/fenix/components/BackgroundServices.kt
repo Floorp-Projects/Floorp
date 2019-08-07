@@ -38,6 +38,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
@@ -76,7 +77,7 @@ class BackgroundServices(
         }
     )
     // If sync has been turned off on the server then disable syncing.
-    val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
+    private val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
         SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 240L) // four hours
@@ -137,6 +138,8 @@ class BackgroundServices(
             pushService.stop()
 
             push.unsubscribeForType(PushType.Services)
+
+            Settings.instance?.setFxaSignedIn(false)
         }
 
         override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
@@ -145,6 +148,7 @@ class BackgroundServices(
             if (newAccount) {
                 push.subscribeForType(PushType.Services)
             }
+            Settings.instance?.setFxaSignedIn(true)
         }
     }
 
@@ -166,6 +170,8 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
+        Settings.instance?.setFxaHasSyncedItems(syncConfig?.syncableStores?.isNotEmpty() ?: false)
+
         if (FeatureFlags.sendTabEnabled) {
             it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 

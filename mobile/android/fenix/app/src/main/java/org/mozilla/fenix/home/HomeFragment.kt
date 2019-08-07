@@ -204,6 +204,7 @@ class HomeFragment : Fragment(), AccountObserver {
         val homeViewModel = activity?.run {
             ViewModelProvider(this).get(HomeScreenViewModel::class.java)
         }
+
         homeViewModel?.layoutManagerState?.also { parcelable ->
             sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
         }

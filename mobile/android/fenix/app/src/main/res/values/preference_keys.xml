@@ -47,6 +47,8 @@
     <string name="pref_key_sync_create_account" translatable="false">pref_key_sync_create_account</string>
     <string name="pref_key_sync_problem" translatable="false">pref_key_sync_problem</string>
     <string name="pref_key_push_project_id" translatable="false">project_id</string>
+    <string name="pref_key_fxa_signed_in" translatable="false">pref_key_fxa_signed_in</string>
+    <string name="pref_key_fxa_has_synced_items" translatable="false">pref_key_fxa_has_synced_items</string>
 
     <!-- Search Settings -->
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>

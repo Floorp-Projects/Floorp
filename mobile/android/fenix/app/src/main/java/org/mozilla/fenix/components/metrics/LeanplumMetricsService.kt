@@ -66,17 +66,14 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         LeanplumActivityHelper.enableLifecycleCallbacks(application)
 
         val installedApps = MozillaProductDetector.getInstalledMozillaProducts(application)
-        val backgroundServices = application.applicationContext.components.backgroundServices
-        val fxaLoggedIn = backgroundServices.accountManager.accountProfile() != null
-        val syncedItems = backgroundServices.syncConfig?.syncableStores?.isNotEmpty() ?: false
 
         Leanplum.start(application, hashMapOf(
             "default_browser" to (MozillaProductDetector.getMozillaBrowserDefault(application) ?: ""),
             "fennec_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FIREFOX.productName),
             "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
-            "fxa_logged_in" to fxaLoggedIn,
-            "fxa_synced_items" to syncedItems
+            "fxa_signed_in" to (Settings.instance?.fxaSignedIn ?: false),
+            "fxa_has_synced_items" to (Settings.instance?.fxaHasSyncedItems ?: false)
         ))
     }
 

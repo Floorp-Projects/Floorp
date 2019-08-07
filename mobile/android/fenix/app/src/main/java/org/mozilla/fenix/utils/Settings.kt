@@ -235,6 +235,28 @@ class Settings private constructor(
         )
     }
 
+    fun setFxaSignedIn(isSignedIn: Boolean) {
+        preferences.edit()
+            .putBoolean(appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in), isSignedIn)
+            .apply()
+    }
+
+    val fxaSignedIn: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in), true
+        )
+
+    fun setFxaHasSyncedItems(hasSyncedItems: Boolean) {
+        preferences.edit()
+            .putBoolean(appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items), hasSyncedItems)
+            .apply()
+    }
+
+    val fxaHasSyncedItems: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items), true
+        )
+
     private val SitePermissionsRules.Action.id: Int
         get() {
             return when (this) {

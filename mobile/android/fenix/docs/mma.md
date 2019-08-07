@@ -116,19 +116,29 @@ User Attributes
   </tr>
   <tr>
     <td>`focus_installed`</td>
-    <td>A boolean indicated that Firefox Focus is installed</td>
+    <td>A boolean indicating that Firefox Focus is installed</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
   </tr>
   <tr>
     <td>`klar_installed`</td>
-    <td>A boolean indicated that Firefox Klar is installed</td>
+    <td>A boolean indicating that Firefox Klar is installed</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
   </tr>
   <tr>
     <td>`fennec_installed`</td>
-    <td>A boolean indicated that Fennec is installed</td>
+    <td>A boolean indicating that Fennec is installed</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502252010">#3459</a></td>
   </tr> 
+  <tr>
+    <td>`fxa_signed_in`</td>
+    <td>A boolean indicating that the user is signed in to FxA</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4568#issuecomment-519159545">#4568</a></td>
+  </tr>
+  <tr>
+    <td>`fxa_has_synced_items`</td>
+    <td>A boolean indicating that the user has opted to sync at least one category of items with FxA</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4568#issuecomment-519159545">#4568</a></td>
+  </tr>
 </table>
 
 Events
