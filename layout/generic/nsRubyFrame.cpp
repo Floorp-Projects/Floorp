@@ -342,7 +342,7 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // reflowed.
     FinishReflowChild(textContainer, aPresContext, textMetrics,
                       &textReflowInput, lineWM, position, dummyContainerSize,
-                      0);
+                      ReflowChildFlags::Default);
   }
   MOZ_ASSERT(baseRect.ISize(lineWM) == offsetRect.ISize(lineWM),
              "Annotations should only be placed on the block directions");

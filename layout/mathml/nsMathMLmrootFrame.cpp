@@ -317,7 +317,7 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
       (indexRaisedAscent + indexSize.BlockStartAscent() - bmIndex.ascent);
   FinishReflowChild(indexFrame, aPresContext, indexSize, nullptr,
                     MirrorIfRTL(aDesiredSize.Width(), indexSize.Width(), dx),
-                    dy, 0);
+                    dy, ReflowChildFlags::Default);
 
   // place the radical symbol and the radical bar
   dx = dxSqr;
@@ -332,7 +332,7 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
   dy = aDesiredSize.BlockStartAscent() - baseSize.BlockStartAscent();
   FinishReflowChild(baseFrame, aPresContext, baseSize, nullptr,
                     MirrorIfRTL(aDesiredSize.Width(), baseSize.Width(), dx), dy,
-                    0);
+                    ReflowChildFlags::Default);
 
   mReference.x = 0;
   mReference.y = aDesiredSize.BlockStartAscent();

@@ -133,12 +133,12 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
     nscoord yc = mPageContentMargin.top;
 
     // Get the child's desired size
-    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowInput, xc, yc, 0,
-                aStatus);
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowInput, xc, yc,
+                ReflowChildFlags::Default, aStatus);
 
     // Place and size the child
     FinishReflowChild(frame, aPresContext, aDesiredSize, &kidReflowInput, xc,
-                      yc, 0);
+                      yc, ReflowChildFlags::Default);
 
     NS_ASSERTION(!aStatus.IsFullyComplete() || !frame->GetNextInFlow(),
                  "bad child flow list");

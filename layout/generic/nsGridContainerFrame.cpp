@@ -4555,8 +4555,10 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
 
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
-  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW |
-                         NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD;
+  const nsIFrame::ReflowChildFlags flags =
+      nsIFrame::ReflowChildFlags::NoMoveFrame |
+      nsIFrame::ReflowChildFlags::NoSizeView |
+      nsIFrame::ReflowChildFlags::NoDeleteNextInFlowChild;
   parent->ReflowChild(aChild, pc, childSize, childRI, wm, LogicalPoint(wm),
                       nsSize(), flags, childStatus);
   nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
@@ -6335,7 +6337,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   ReflowOutput childSize(childRI);
   const nsSize dummyContainerSize;
   ReflowChild(aChild, pc, childSize, childRI, childWM, LogicalPoint(childWM),
-              dummyContainerSize, 0, aStatus);
+              dummyContainerSize, ReflowChildFlags::Default, aStatus);
   LogicalPoint childPos = cb.Origin(wm).ConvertTo(
       childWM, wm, aContainerSize - childSize.PhysicalSize());
   // Apply align/justify-self and reflow again if that affects the size.
@@ -6364,7 +6366,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
 
   childRI.ApplyRelativePositioning(&childPos, aContainerSize);
   FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
-                    aContainerSize, 0);
+                    aContainerSize, ReflowChildFlags::Default);
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
 }
 
@@ -6895,8 +6897,8 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
   nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(PresContext(), *aState.mReflowInput,
-                                    ocBounds, 0, ocStatus,
-                                    MergeSortedFrameListsFor);
+                                    ocBounds, ReflowChildFlags::Default,
+                                    ocStatus, MergeSortedFrameListsFor);
   }
 
   WritingMode wm = aState.mReflowInput->GetWritingMode();

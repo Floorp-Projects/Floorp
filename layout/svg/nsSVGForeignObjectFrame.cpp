@@ -524,12 +524,12 @@ void nsSVGForeignObjectFrame::DoReflow() {
   reflowInput.SetComputedBSize(BSize(wm));
 
   ReflowChild(kid, presContext, desiredSize, reflowInput, 0, 0,
-              NS_FRAME_NO_MOVE_FRAME, status);
+              ReflowChildFlags::NoMoveFrame, status);
   NS_ASSERTION(mRect.width == desiredSize.Width() &&
                    mRect.height == desiredSize.Height(),
                "unexpected size");
   FinishReflowChild(kid, presContext, desiredSize, &reflowInput, 0, 0,
-                    NS_FRAME_NO_MOVE_FRAME);
+                    ReflowChildFlags::NoMoveFrame);
 
   mInReflow = false;
 }

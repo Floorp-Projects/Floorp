@@ -102,16 +102,14 @@ void nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect,
                          bool aRemoveOverflowAreas) {
   nsRect rect(mRect);
 
-  uint32_t flags = GetXULLayoutFlags();
+  ReflowChildFlags flags = GetXULLayoutFlags() | aState.LayoutFlags();
 
-  uint32_t stateFlags = aState.LayoutFlags();
-
-  flags |= stateFlags;
-
-  if ((flags & NS_FRAME_NO_MOVE_FRAME) == NS_FRAME_NO_MOVE_FRAME)
+  if ((flags & ReflowChildFlags::NoMoveFrame) ==
+      ReflowChildFlags::NoMoveFrame) {
     SetSize(aRect.Size());
-  else
+  } else {
     SetRect(aRect);
+  }
 
   // Nuke the overflow area. The caller is responsible for restoring
   // it if necessary.
@@ -120,7 +118,7 @@ void nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect,
     ClearOverflowRects();
   }
 
-  if (!(flags & NS_FRAME_NO_MOVE_VIEW)) {
+  if (!(flags & ReflowChildFlags::NoMoveView)) {
     nsContainerFrame::PositionFrameView(this);
     if ((rect.x != aRect.x) || (rect.y != aRect.y))
       nsContainerFrame::PositionChildViews(this);
@@ -329,11 +327,7 @@ nsresult nsBox::SyncLayout(nsBoxLayoutState& aState) {
 
   nsPresContext* presContext = aState.PresContext();
 
-  uint32_t flags = GetXULLayoutFlags();
-
-  uint32_t stateFlags = aState.LayoutFlags();
-
-  flags |= stateFlags;
+  ReflowChildFlags flags = GetXULLayoutFlags() | aState.LayoutFlags();
 
   nsRect visualOverflow;
 

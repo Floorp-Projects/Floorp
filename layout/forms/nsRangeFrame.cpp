@@ -379,12 +379,13 @@ void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
     nsReflowStatus frameStatus;
     ReflowOutput trackDesiredSize(aReflowInput);
     ReflowChild(trackFrame, aPresContext, trackDesiredSize, trackReflowInput,
-                trackX, trackY, 0, frameStatus);
+                trackX, trackY, ReflowChildFlags::Default, frameStatus);
     MOZ_ASSERT(
         frameStatus.IsFullyComplete(),
         "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
-                      &trackReflowInput, trackX, trackY, 0);
+                      &trackReflowInput, trackX, trackY,
+                      ReflowChildFlags::Default);
   }
 
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
@@ -402,12 +403,12 @@ void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
     nsReflowStatus frameStatus;
     ReflowOutput thumbDesiredSize(aReflowInput);
     ReflowChild(thumbFrame, aPresContext, thumbDesiredSize, thumbReflowInput, 0,
-                0, 0, frameStatus);
+                0, ReflowChildFlags::Default, frameStatus);
     MOZ_ASSERT(
         frameStatus.IsFullyComplete(),
         "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
-                      &thumbReflowInput, 0, 0, 0);
+                      &thumbReflowInput, 0, 0, ReflowChildFlags::Default);
     DoUpdateThumbPosition(thumbFrame,
                           nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
   }
@@ -428,12 +429,13 @@ void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
     nsReflowStatus frameStatus;
     ReflowOutput progressDesiredSize(aReflowInput);
     ReflowChild(rangeProgressFrame, aPresContext, progressDesiredSize,
-                progressReflowInput, 0, 0, 0, frameStatus);
+                progressReflowInput, 0, 0, ReflowChildFlags::Default,
+                frameStatus);
     MOZ_ASSERT(
         frameStatus.IsFullyComplete(),
         "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(rangeProgressFrame, aPresContext, progressDesiredSize,
-                      &progressReflowInput, 0, 0, 0);
+                      &progressReflowInput, 0, 0, ReflowChildFlags::Default);
     DoUpdateRangeProgressFrame(
         rangeProgressFrame,
         nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
