@@ -1098,7 +1098,7 @@ bool Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
   // from GetDebugEnvironmentFor(Frame|Function).
   MOZ_ASSERT(!IsSyntacticEnvironment(env));
 
-  DependentAddPtr<ObjectWeakMap> p(cx, environments, env);
+  DependentAddPtr<EnvironmentWeakMap> p(cx, environments, env);
   if (p) {
     result.set(&p->value()->as<DebuggerEnvironment>());
   } else {
@@ -3763,9 +3763,9 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
   return true;
 }
 
-template <class UnbarrieredKey, bool InvisibleKeysOk>
-bool DebuggerWeakMap<UnbarrieredKey, InvisibleKeysOk>::findSweepGroupEdges(
-    JS::Zone* debuggerZone) {
+template <class UnbarrieredKey, class Wrapper, bool InvisibleKeysOk>
+bool DebuggerWeakMap<UnbarrieredKey, Wrapper, InvisibleKeysOk>::
+    findSweepGroupEdges(JS::Zone* debuggerZone) {
   MOZ_ASSERT(debuggerZone->isGCMarking());
   for (Enum e(*this); !e.empty(); e.popFront()) {
     MOZ_ASSERT(e.front().value()->zone() == debuggerZone);
@@ -6105,9 +6105,10 @@ DebuggerScript* Debugger::wrapVariantReferent(
                             LazyScriptWeakMap>(cx, lazyScripts, referent);
   } else {
         referent.template as<WasmInstanceObject*>();
-        obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
-                                  WasmInstanceObject*, WasmInstanceWeakMap>(
-            cx, wasmInstanceScripts, referent);
+        obj =
+            wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
+                                WasmInstanceObject*, WasmInstanceScriptWeakMap>(
+                cx, wasmInstanceScripts, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6150,7 +6151,7 @@ DebuggerSource* Debugger::wrapVariantReferent(
                                                                   referent);
   } else {
     obj = wrapVariantReferent<DebuggerSource, DebuggerSourceReferent,
-                              WasmInstanceObject*, WasmInstanceWeakMap>(
+                              WasmInstanceObject*, WasmInstanceSourceWeakMap>(
         cx, wasmInstanceSources, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
