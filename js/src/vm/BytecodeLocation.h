@@ -67,6 +67,8 @@ class BytecodeLocation {
   // bytecode for a given script.
   bool isInBounds(const JSScript* script) const;
 
+  uint32_t bytecodeToOffset(JSScript* script);
+
   bool operator==(const BytecodeLocation& other) const {
     MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
     return rawBytecode_ == other.rawBytecode_;
@@ -115,6 +117,8 @@ class BytecodeLocation {
   bool isJump() const { return IsJumpOpcode(getOp()); }
 
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
+
+  uint32_t icIndex() const { return GET_ICINDEX(rawBytecode_); }
 
   // Accessors:
   JSOp getOp() const { return JSOp(*rawBytecode_); }

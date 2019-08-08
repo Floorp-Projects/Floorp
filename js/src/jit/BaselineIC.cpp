@@ -34,8 +34,11 @@
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
 #include "js/GCVector.h"
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
+#include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"
@@ -48,6 +51,8 @@
 #include "jit/shared/Lowering-shared-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
@@ -157,6 +162,31 @@ class MOZ_RAII FallbackStubAllocator {
   }
 };
 
+// Helper method called by lambda expressions `addIC` and `addPrologueIC` in
+// `JitScript::initICEntriesAndBytecodeTypeMap`.
+static bool AddICImpl(JSContext* cx, JitScript* jitScript, uint32_t offset,
+                      ICStub* stub, uint32_t& icEntryIndex) {
+  if (!stub) {
+    MOZ_ASSERT(cx->isExceptionPending());
+    mozilla::Unused << cx;  // Silence -Wunused-lambda-capture in opt builds.
+    return false;
+  }
+
+  // Initialize the ICEntry.
+  ICEntry& entryRef = jitScript->icEntry(icEntryIndex);
+  icEntryIndex++;
+  new (&entryRef) ICEntry(stub, offset);
+
+  // Fix up pointers from fallback stubs to the ICEntry.
+  if (stub->isFallback()) {
+    stub->toFallbackStub()->fixupICEntry(&entryRef);
+  } else {
+    stub->toTypeMonitor_Fallback()->fixupICEntry(&entryRef);
+  }
+
+  return true;
+}
+
 bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
                                                 JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
@@ -171,27 +201,15 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
 
   using Kind = BaselineICFallbackKind;
 
-  auto addIC = [cx, this, &icEntryIndex, script](jsbytecode* pc, ICStub* stub) {
-    if (!stub) {
-      MOZ_ASSERT(cx->isExceptionPending());
-      mozilla::Unused << cx;  // Silence -Wunused-lambda-capture in opt builds.
-      return false;
-    }
+  auto addIC = [cx, this, script, &icEntryIndex](BytecodeLocation loc,
+                                                 ICStub* stub) {
+    uint32_t offset = loc.bytecodeToOffset(script);
+    return AddICImpl(cx, this, offset, stub, icEntryIndex);
+  };
 
-    // Initialize the ICEntry.
-    uint32_t offset = pc ? script->pcToOffset(pc) : ICEntry::ProloguePCOffset;
-    ICEntry& entryRef = icEntry(icEntryIndex);
-    icEntryIndex++;
-    new (&entryRef) ICEntry(stub, offset);
-
-    // Fix up pointers from fallback stubs to the ICEntry.
-    if (stub->isFallback()) {
-      stub->toFallbackStub()->fixupICEntry(&entryRef);
-    } else {
-      stub->toTypeMonitor_Fallback()->fixupICEntry(&entryRef);
-    }
-
-    return true;
+  // Lambda expression for adding ICs for non-op ICs
+  auto addPrologueIC = [cx, this, &icEntryIndex](ICStub* stub) {
+    return AddICImpl(cx, this, ICEntry::ProloguePCOffset, stub, icEntryIndex);
   };
 
   // Add ICEntries and fallback stubs for this/argument type checks.
@@ -200,14 +218,14 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
   if (JSFunction* fun = script->functionNonDelazifying()) {
     ICStub* stub =
         alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr, 0);
-    if (!addIC(nullptr, stub)) {
+    if (!addPrologueIC(stub)) {
       return false;
     }
 
     for (size_t i = 0; i < fun->nargs(); i++) {
       ICStub* stub = alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor,
                                                            nullptr, i + 1);
-      if (!addIC(nullptr, stub)) {
+      if (!addPrologueIC(stub)) {
         return false;
       }
     }
@@ -219,20 +237,18 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
 
   // For JOF_IC ops: initialize ICEntries and fallback stubs.
   // For JOF_TYPESET ops: initialize bytecode type map entries.
-  jsbytecode const* pcEnd = script->codeEnd();
-  for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
-    JSOp op = JSOp(*pc);
-
+  for (BytecodeLocation loc : js::AllBytecodesIterable(script)) {
+    JSOp op = loc.getOp();
     // Note: if the script is very large there will be more JOF_TYPESET ops
     // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
     if (BytecodeOpHasTypeSet(op) &&
         typeMapIndex < JSScript::MaxBytecodeTypeSets) {
-      typeMap[typeMapIndex] = script->pcToOffset(pc);
+      typeMap[typeMapIndex] = loc.bytecodeToOffset(script);
       typeMapIndex++;
     }
 
     // Assert the frontend stored the correct IC index in jump target ops.
-    MOZ_ASSERT_IF(BytecodeIsJumpTarget(op), GET_ICINDEX(pc) == icEntryIndex);
+    MOZ_ASSERT_IF(BytecodeIsJumpTarget(op), loc.icIndex() == icEntryIndex);
 
     if (!BytecodeOpHasIC(op)) {
       continue;
@@ -245,7 +261,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_IFEQ:
       case JSOP_IFNE: {
         ICStub* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -255,7 +271,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_INC:
       case JSOP_DEC: {
         ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -273,7 +289,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_MOD:
       case JSOP_POW: {
         ICStub* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -287,7 +303,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_STRICTEQ:
       case JSOP_STRICTNE: {
         ICStub* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -295,20 +311,20 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_LOOPENTRY: {
         ICStub* stub =
             alloc.newStub<ICWarmUpCounter_Fallback>(Kind::WarmUpCounter);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_NEWARRAY: {
-        ObjectGroup* group =
-            ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
+        ObjectGroup* group = ObjectGroup::allocationSiteGroup(
+            cx, script, loc.toRawBytecode(), JSProto_Array);
         if (!group) {
           return false;
         }
         ICStub* stub =
             alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -316,7 +332,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_NEWOBJECT:
       case JSOP_NEWINIT: {
         ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -328,7 +344,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_SETELEM:
       case JSOP_STRICTSETELEM: {
         ICStub* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -344,7 +360,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_SETGNAME:
       case JSOP_STRICTSETGNAME: {
         ICStub* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -354,14 +370,14 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_LENGTH:
       case JSOP_GETBOUNDNAME: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_GETPROP_SUPER: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -369,28 +385,28 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_GETELEM:
       case JSOP_CALLELEM: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_GETELEM_SUPER: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_IN: {
         ICStub* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_HASOWN: {
         ICStub* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -398,7 +414,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_GETNAME:
       case JSOP_GETGNAME: {
         ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -406,7 +422,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME: {
         ICStub* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -415,7 +431,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_GETIMPORT: {
         ICStub* stub =
             alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -423,7 +439,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_GETINTRINSIC: {
         ICStub* stub =
             alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -436,7 +452,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_EVAL:
       case JSOP_STRICTEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -444,7 +460,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_SUPERCALL:
       case JSOP_NEW: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -453,7 +469,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_SPREADEVAL:
       case JSOP_STRICTSPREADEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -462,14 +478,14 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_SPREADNEW: {
         ICStub* stub =
             alloc.newStub<ICCall_Fallback>(Kind::SpreadCallConstructing);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_INSTANCEOF: {
         ICStub* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -477,14 +493,14 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR: {
         ICStub* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
       case JSOP_ITER: {
         ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
@@ -498,7 +514,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         ICStub* stub =
             alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
-        if (!addIC(pc, stub)) {
+        if (!addIC(loc, stub)) {
           return false;
         }
         break;
