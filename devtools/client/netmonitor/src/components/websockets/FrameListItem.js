@@ -50,7 +50,7 @@ class FrameListItem extends Component {
       isSelected: PropTypes.bool.isRequired,
       onMouseDown: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
-      visibleColumns: PropTypes.object.isRequired,
+      visibleColumns: PropTypes.array.isRequired,
     };
   }
 
