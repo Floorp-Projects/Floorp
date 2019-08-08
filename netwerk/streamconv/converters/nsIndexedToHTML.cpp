@@ -126,13 +126,9 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   rv = channel->GetOriginalURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
 
-  bool isResource = false;
-  rv = uri->SchemeIs("resource", &isResource);
-  if (NS_FAILED(rv)) return rv;
-
   // We use the original URI for the title and parent link when it's a
   // resource:// url, instead of the jar:file:// url it resolves to.
-  if (!isResource) {
+  if (!uri->SchemeIs("resource")) {
     rv = channel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
   }
@@ -174,9 +170,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   // would muck up the XUL display
   // - bbaetz
 
-  bool isScheme = false;
-  bool isSchemeFile = false;
-  if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
+  if (uri->SchemeIs("ftp")) {
     // strip out the password here, so it doesn't show in the page title
     // This is done by the 300: line generation in ftp, but we don't use
     // that - see above
@@ -199,8 +193,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
       rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
       if (NS_FAILED(rv)) return rv;
     }
-  } else if (NS_SUCCEEDED(uri->SchemeIs("file", &isSchemeFile)) &&
-             isSchemeFile) {
+  } else if (uri->SchemeIs("file")) {
     nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(uri);
     nsCOMPtr<nsIFile> file;
     rv = fileUrl->GetFile(getter_AddRefs(file));
@@ -224,7 +217,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     // Directory index will be always encoded in UTF-8 if this is file url
     buffer.AppendLiteral("<meta charset=\"UTF-8\">\n");
 
-  } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &isScheme)) && isScheme) {
+  } else if (uri->SchemeIs("jar")) {
     nsAutoCString path;
     rv = uri->GetPathQueryRef(path);
     if (NS_FAILED(rv)) return rv;
@@ -515,7 +508,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
   // 1. file URL may be encoded in platform charset for backward compatibility
   // 2. query part may not be encoded in UTF-8 (see bug 261929)
   // so try the platform's default if this is file url
-  if (NS_FAILED(rv) && isSchemeFile && !NS_IsNativeUTF8()) {
+  if (NS_FAILED(rv) && uri->SchemeIs("file") && !NS_IsNativeUTF8()) {
     auto encoding = mozilla::dom::FallbackEncoding::FromLocale();
     nsAutoCString charset;
     encoding->Name(charset);
@@ -552,7 +545,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     // will prematurely close the string.  Go ahead an
     // add a base href, but only do so if we're not
     // dealing with a resource URI.
-    if (!isResource) {
+    if (!uri->SchemeIs("resource")) {
       buffer.AppendLiteral("<base href=\"");
       nsAppendEscapedHTML(baseUri, buffer);
       buffer.AppendLiteral("\" />\n");
@@ -584,7 +577,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
     buffer.AppendLiteral("</a></p>\n");
   }
 
-  if (isSchemeFile) {
+  if (uri->SchemeIs("file")) {
     nsAutoString showHiddenText;
     rv = mBundle->GetStringFromName("ShowHidden", showHiddenText);
     if (NS_FAILED(rv)) return rv;

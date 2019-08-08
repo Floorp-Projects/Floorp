@@ -1992,8 +1992,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
     if (NS_SUCCEEDED(rv) && pushedPort == -1) {
       // Need to get the right default port, so TestJoinConnection below can
       // check things correctly. See bug 1397621.
-      bool isHttp = false;
-      if (NS_SUCCEEDED(pushedOrigin->SchemeIs("http", &isHttp)) && isHttp) {
+      if (pushedOrigin->SchemeIs("http")) {
         pushedPort = NS_HTTP_DEFAULT_PORT;
       } else {
         pushedPort = NS_HTTPS_DEFAULT_PORT;
@@ -2788,8 +2787,7 @@ nsresult Http2Session::RecvOrigin(Http2Session* self) {
 
     LOG3(("Http2Session::RecvOrigin %p origin frame string %s parsed OK\n",
           self, originString.get()));
-    bool isHttps = false;
-    if (NS_FAILED(originURL->SchemeIs("https", &isHttps)) || !isHttps) {
+    if (!originURL->SchemeIs("https")) {
       LOG3(("Http2Session::RecvOrigin %p origin frame not https\n", self));
       continue;
     }

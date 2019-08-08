@@ -365,12 +365,7 @@ bool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest) {
     return false;
   }
 
-  bool isLocalFile = false;
-  if (NS_FAILED(uri->SchemeIs("file", &isLocalFile)) || isLocalFile) {
-    return false;
-  }
-
-  return true;
+  return !uri->SchemeIs("file");
 }
 
 /**

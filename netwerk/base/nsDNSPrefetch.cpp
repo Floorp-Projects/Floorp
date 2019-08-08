@@ -38,8 +38,7 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
       mStoreTiming(storeTiming),
       mListener(do_GetWeakReference(aListener)) {
   aURI->GetAsciiHost(mHostname);
-  mIsHttps = false;
-  aURI->SchemeIs("https", &mIsHttps);
+  mIsHttps = aURI->SchemeIs("https");
 }
 
 nsresult nsDNSPrefetch::Prefetch(uint16_t flags) {
