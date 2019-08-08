@@ -509,6 +509,7 @@ this.AntiTracking = {
 
                   ifr.src = obj.nextPage;
                 });
+                break;
               case "navigate-topframe":
                 // pass-through
                 break;

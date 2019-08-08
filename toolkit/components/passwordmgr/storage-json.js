@@ -435,8 +435,8 @@ this.LoginManagerStorage_json.prototype = {
               }
               break;
             }
-          // fall through
           // Normal cases.
+          // fall through
           case "httpRealm":
           case "id":
           case "usernameField":

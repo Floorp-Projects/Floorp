@@ -1410,7 +1410,7 @@ MockInstall.prototype = {
 
         this.state = AddonManager.STATE_DOWNLOADED;
         this.callListeners("onDownloadEnded");
-
+      // fall through
       case AddonManager.STATE_DOWNLOADED:
         this.state = AddonManager.STATE_INSTALLING;
         if (!this.callListeners("onInstallStarted")) {
