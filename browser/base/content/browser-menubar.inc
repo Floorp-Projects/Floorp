@@ -235,6 +235,7 @@
               <menupopup id="goPopup"
 #ifndef XP_MACOSX
                          placespopup="true"
+                         is="places-popup"
 #endif
                          oncommand="this.parentNode._placesView._onCommand(event);"
                          onclick="checkForMiddleClick(this, event);"
@@ -264,6 +265,7 @@
                   <menupopup id="historyUndoPopup"
 #ifndef XP_MACOSX
                              placespopup="true"
+                             is="places-popup"
 #endif
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
                 </menu>
@@ -272,6 +274,7 @@
                   <menupopup id="historyUndoWindowPopup"
 #ifndef XP_MACOSX
                              placespopup="true"
+                             is="places-popup"
 #endif
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();"/>
                 </menu>
@@ -287,6 +290,7 @@
     <menupopup id="bookmarksMenuPopup"
 #ifndef XP_MACOSX
                placespopup="true"
+               is="places-popup"
 #endif
                context="placesContext"
                openInTabs="children"
@@ -315,6 +319,7 @@
         <menupopup id="bookmarksToolbarFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
+                   is="places-popup"
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
@@ -326,6 +331,7 @@
         <menupopup id="otherBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
+                   is="places-popup"
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
@@ -338,6 +344,7 @@
         <menupopup id="mobileBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
+                   is="places-popup"
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
