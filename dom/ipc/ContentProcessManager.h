@@ -26,8 +26,6 @@ struct RemoteFrameInfo {
 
 struct ContentProcessInfo {
   ContentParent* mCp;
-  ContentParentId mParentCpId;
-  std::set<ContentParentId> mChildrenCpId;
   std::map<TabId, RemoteFrameInfo> mRemoteFrames;
 };
 
@@ -38,31 +36,18 @@ class ContentProcessManager final {
 
   /**
    * Add a new content process into the map.
-   * If aParentCpId is not 0, it's a nested content process.
    */
-  void AddContentProcess(
-      ContentParent* aChildCp,
-      const ContentParentId& aParentCpId = ContentParentId(0));
+  void AddContentProcess(ContentParent* aChildCp);
+
   /**
    * Remove the content process by id.
    */
   void RemoveContentProcess(const ContentParentId& aChildCpId);
-  /**
-   * Get the parent process's id by child process's id.
-   * Used to check if a child really belongs to the parent.
-   */
-  bool GetParentProcessId(const ContentParentId& aChildCpId,
-                          /*out*/ ContentParentId* aParentCpId);
+
   /**
    * Return the ContentParent pointer by id.
    */
   ContentParent* GetContentProcessById(const ContentParentId& aChildCpId);
-
-  /**
-   * Return a list of all child process's id.
-   */
-  nsTArray<ContentParentId> GetAllChildProcessById(
-      const ContentParentId& aParentCpId);
 
   /**
    * Register RemoteFrameInfo with given tab id.
