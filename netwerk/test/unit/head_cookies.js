@@ -528,7 +528,7 @@ CookieDatabaseConnection.prototype = {
     switch (this.db.schemaVersion) {
       case 1:
         do_throw("can't update a schema 1 cookie!");
-
+        break;
       case 2:
       case 3:
         this.stmtUpdate.bindByName("id", cookie.creationTime);
