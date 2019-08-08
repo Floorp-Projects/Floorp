@@ -12,6 +12,7 @@
 #include "ContentParent.h"
 #include "ProcessUtils.h"
 #include "BrowserParent.h"
+#include "mozilla/dom/MediaControlService.h"
 
 #if defined(ANDROID) || defined(LINUX)
 #  include <sys/time.h>
@@ -5764,6 +5765,28 @@ ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
 mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
     const Principal& aPrincipal) {
   AntiTrackingCommon::StoreUserInteractionFor(aPrincipal);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaActiveChanged(
+    BrowsingContext* aContext, bool aActive) {
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
+  RefPtr<MediaController> controller =
+      service->GetOrCreateControllerById(aContext->Id());
+  controller->NotifyMediaActiveChanged(aActive);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
+    BrowsingContext* aContext, bool aAudible) {
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
+  RefPtr<MediaController> controller =
+      service->GetControllerById(aContext->Id());
+  if (controller) {
+    controller->NotifyMediaAudibleChanged(aAudible);
+  }
   return IPC_OK();
 }
 
