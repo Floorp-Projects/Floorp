@@ -40,8 +40,7 @@ ContentProcessManager* ContentProcessManager::GetSingleton() {
   return sSingleton;
 }
 
-void ContentProcessManager::AddContentProcess(
-    ContentParent* aChildCp, const ContentParentId& aParentCpId) {
+void ContentProcessManager::AddContentProcess(ContentParent* aChildCp) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChildCp);
 
@@ -50,9 +49,7 @@ void ContentProcessManager::AddContentProcess(
     info.mCp = aChildCp;
   } else {
     MOZ_ASSERT(info.mCp == aChildCp);
-    MOZ_ASSERT_IF(!!info.mParentCpId, info.mParentCpId == aParentCpId);
   }
-  info.mParentCpId = aParentCpId;
 }
 
 void ContentProcessManager::RemoveContentProcess(
@@ -61,26 +58,6 @@ void ContentProcessManager::RemoveContentProcess(
   MOZ_ASSERT(mContentParentMap.find(aChildCpId) != mContentParentMap.end());
 
   mContentParentMap.erase(aChildCpId);
-  for (auto iter = mContentParentMap.begin(); iter != mContentParentMap.end();
-       ++iter) {
-    if (!iter->second.mChildrenCpId.empty()) {
-      iter->second.mChildrenCpId.erase(aChildCpId);
-    }
-  }
-}
-
-bool ContentProcessManager::GetParentProcessId(
-    const ContentParentId& aChildCpId,
-    /*out*/ ContentParentId* aParentCpId) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  auto iter = mContentParentMap.find(aChildCpId);
-  if (NS_WARN_IF(iter == mContentParentMap.end())) {
-    ASSERT_UNLESS_FUZZING();
-    return false;
-  }
-  *aParentCpId = iter->second.mParentCpId;
-  return true;
 }
 
 ContentParent* ContentProcessManager::GetContentProcessById(
@@ -93,25 +70,6 @@ ContentParent* ContentProcessManager::GetContentProcessById(
     return nullptr;
   }
   return iter->second.mCp;
-}
-
-nsTArray<ContentParentId> ContentProcessManager::GetAllChildProcessById(
-    const ContentParentId& aParentCpId) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsTArray<ContentParentId> cpIdArray;
-  auto iter = mContentParentMap.find(aParentCpId);
-  if (NS_WARN_IF(iter == mContentParentMap.end())) {
-    ASSERT_UNLESS_FUZZING();
-    return cpIdArray;
-  }
-
-  for (auto cpIter = iter->second.mChildrenCpId.begin();
-       cpIter != iter->second.mChildrenCpId.end(); ++cpIter) {
-    cpIdArray.AppendElement(*cpIter);
-  }
-
-  return cpIdArray;
 }
 
 bool ContentProcessManager::RegisterRemoteFrame(
