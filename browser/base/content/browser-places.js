@@ -155,8 +155,7 @@ var StarUI = {
           break;
         }
         this._isComposing = true;
-      // Explicit fall-through, during composition, panel shouldn't be
-      // hidden automatically.
+      // Explicit fall-through, during composition, panel shouldn't be hidden automatically.
       case "input":
       // Might have edited some text without keyboard events nor composition
       // events. Fall-through to cancel auto close in such case.

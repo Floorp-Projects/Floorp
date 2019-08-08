@@ -208,6 +208,7 @@ var ContentSearch = {
         if (data != "init-complete") {
           break;
         }
+      // fall through
       case "nsPref:changed":
       case "browser-search-engine-modified":
         this._eventQueue.push({
