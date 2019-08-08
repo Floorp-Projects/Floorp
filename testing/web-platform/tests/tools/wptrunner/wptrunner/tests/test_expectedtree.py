@@ -118,6 +118,8 @@ def test_build_tree_3():
     assert dump_tree(tree) == expected
 
 
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
 def test_build_tree_4():
     # Check counts for multiple statuses
     results = [({"os": "linux", "version": "18.04", "debug": False}, "FAIL"),
