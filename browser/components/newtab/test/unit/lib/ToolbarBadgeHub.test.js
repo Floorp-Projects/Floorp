@@ -101,7 +101,10 @@ describe("ToolbarBadgeHub", () => {
 
       await instance.init(waitForInitialized, {});
       assert.calledOnce(instance.messageRequest);
-      assert.calledWithExactly(instance.messageRequest, "toolbarBadgeUpdate");
+      assert.calledWithExactly(instance.messageRequest, {
+        template: "toolbar_badge",
+        triggerId: "toolbarBadgeUpdate",
+      });
     });
     it("should add a pref observer", async () => {
       await instance.init(sandbox.stub().resolves(), {});
@@ -167,12 +170,15 @@ describe("ToolbarBadgeHub", () => {
       sandbox.stub(instance, "registerBadgeNotificationListener");
     });
     it("should fetch a message with the provided trigger and template", async () => {
-      await instance.messageRequest("trigger");
+      await instance.messageRequest({
+        triggerId: "trigger",
+        template: "template",
+      });
 
       assert.calledOnce(handleMessageRequestStub);
       assert.calledWithExactly(handleMessageRequestStub, {
         triggerId: "trigger",
-        template: instance.template,
+        template: "template",
       });
     });
     it("should call addToolbarNotification with browser window and message", async () => {
@@ -323,6 +329,15 @@ describe("ToolbarBadgeHub", () => {
       assert.calledOnce(everyWindowStub.unregisterCallback);
       assert.calledWithExactly(everyWindowStub.unregisterCallback, instance.id);
     });
+    it("should only call executeAction for 'update_action' messages", () => {
+      const stub = sandbox.stub(instance, "executeAction");
+      const updateActionMsg = { ...msg_no_delay, template: "update_action" };
+
+      instance.registerBadgeNotificationListener(updateActionMsg);
+
+      assert.notCalled(everyWindowStub.registerCallback);
+      assert.calledOnce(stub);
+    });
   });
   describe("executeAction", () => {
     let blockMessageByIdStub;
@@ -404,7 +419,7 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledOnce(fakeElement.removeAttribute);
       assert.calledWithExactly(fakeElement.removeAttribute, "badged");
-      assert.calledTwice(fakeElement.classList.remove);
+      assert.calledOnce(fakeElement.classList.remove);
       assert.calledWithExactly(fakeElement.classList.remove, "feature-callout");
     });
   });
@@ -580,7 +595,10 @@ describe("ToolbarBadgeHub", () => {
       instance.observe("", "", instance.prefs.WHATSNEW_TOOLBAR_PANEL);
 
       assert.calledOnce(instance.messageRequest);
-      assert.calledWithExactly(instance.messageRequest, "toolbarBadgeUpdate");
+      assert.calledWithExactly(instance.messageRequest, {
+        template: "toolbar_badge",
+        triggerId: "toolbarBadgeUpdate",
+      });
     });
     it("should not react to other pref changes", () => {
       sandbox.stub(instance, "messageRequest");
@@ -632,7 +650,10 @@ describe("ToolbarBadgeHub", () => {
 
       assert.notCalled(unblockMessageByIdStub);
       assert.calledOnce(messageRequestStub);
-      assert.calledWithExactly(messageRequestStub, "momentsUpdate");
+      assert.calledWithExactly(messageRequestStub, {
+        template: "update_action",
+        triggerId: "momentsUpdate",
+      });
     });
   });
 });

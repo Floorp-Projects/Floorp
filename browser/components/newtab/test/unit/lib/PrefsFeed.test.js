@@ -8,6 +8,7 @@ describe("PrefsFeed", () => {
   let feed;
   let FAKE_PREFS;
   let sandbox;
+  let ServicesStub;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     FAKE_PREFS = new Map([
@@ -19,6 +20,13 @@ describe("PrefsFeed", () => {
     const storage = {
       getAll: sandbox.stub().resolves(),
       set: sandbox.stub().resolves(),
+    };
+    ServicesStub = {
+      prefs: {
+        clearUserPref: sinon.spy(),
+        getStringPref: sinon.spy(),
+        getBoolPref: sinon.spy(),
+      },
     };
     feed.store = {
       dispatch: sinon.spy(),
@@ -37,8 +45,12 @@ describe("PrefsFeed", () => {
       ignore: sinon.spy(),
       ignoreBranch: sinon.spy(),
       reset: sinon.stub(),
+      _branchStr: "branch.str.",
     };
-    overrider.set({ PrivateBrowsingUtils: { enabled: true } });
+    overrider.set({
+      PrivateBrowsingUtils: { enabled: true },
+      Services: ServicesStub,
+    });
   });
   afterEach(() => {
     overrider.restore();
@@ -48,6 +60,10 @@ describe("PrefsFeed", () => {
   it("should set a pref when a SET_PREF action is received", () => {
     feed.onAction(ac.SetPref("foo", 2));
     assert.calledWith(feed._prefs.set, "foo", 2);
+  });
+  it("should call clearUserPref with action CLEAR_PREF", () => {
+    feed.onAction({ type: at.CLEAR_PREF, data: { name: "pref.test" } });
+    assert.calledWith(ServicesStub.prefs.clearUserPref, "branch.str.pref.test");
   });
   it("should dispatch PREFS_INITIAL_VALUES on init with pref values and .isPrivateBrowsingEnabled", () => {
     feed.onAction({ type: at.INIT });

@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionCreators as ac } from "common/Actions.jsm";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+  ASRouterActions as ra,
+} from "common/Actions.jsm";
 import { OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME } from "content-src/lib/init-store";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";
@@ -109,6 +113,9 @@ export class ASRouterUISurface extends React.PureComponent {
     this.sendClick = this.sendClick.bind(this);
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
+    this.onUserAction = this.onUserAction.bind(this);
+    this.fetchFlowParams = this.fetchFlowParams.bind(this);
+
     this.state = { message: {} };
     if (props.document) {
       this.headerPortal = props.document.getElementById(
@@ -118,6 +125,49 @@ export class ASRouterUISurface extends React.PureComponent {
         "footer-asrouter-container"
       );
     }
+  }
+
+  async fetchFlowParams(params = {}) {
+    let result = {};
+    const { fxaEndpoint, dispatch } = this.props;
+    if (!fxaEndpoint) {
+      const err =
+        "Tried to fetch flow params before fxaEndpoint pref was ready";
+      console.error(err); // eslint-disable-line no-console
+    }
+
+    try {
+      const urlObj = new URL(fxaEndpoint);
+      urlObj.pathname = "metrics-flow";
+      Object.keys(params).forEach(key => {
+        urlObj.searchParams.append(key, params[key]);
+      });
+      const response = await fetch(urlObj.toString(), { credentials: "omit" });
+      if (response.status === 200) {
+        const { deviceId, flowId, flowBeginTime } = await response.json();
+        result = { deviceId, flowId, flowBeginTime };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+        dispatch(
+          ac.OnlyToMain({
+            type: at.TELEMETRY_UNDESIRED_EVENT,
+            data: {
+              event: "FXA_METRICS_FETCH_ERROR",
+              value: response.status,
+            },
+          })
+        );
+      }
+    } catch (error) {
+      console.error(error); // eslint-disable-line no-console
+      dispatch(
+        ac.OnlyToMain({
+          type: at.TELEMETRY_UNDESIRED_EVENT,
+          data: { event: "FXA_METRICS_ERROR" },
+        })
+      );
+    }
+    return result;
   }
 
   sendUserActionTelemetry(extraProps = {}) {
@@ -238,6 +288,32 @@ export class ASRouterUISurface extends React.PureComponent {
     ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
+  async getMonitorUrl({ url, flowRequestParams = {} }) {
+    const flowValues = await this.fetchFlowParams(flowRequestParams);
+
+    // Note that flowParams are actually added dynamically on the page
+    const urlObj = new URL(url);
+    ["deviceId", "flowId", "flowBeginTime"].forEach(key => {
+      if (key in flowValues) {
+        urlObj.searchParams.append(key, flowValues[key]);
+      }
+    });
+
+    return urlObj.toString();
+  }
+
+  async onUserAction(action) {
+    switch (action.type) {
+      // This needs to be handled locally because its
+      case ra.ENABLE_FIREFOX_MONITOR:
+        const url = await this.getMonitorUrl(action.data.args);
+        ASRouterUtils.executeAction({ type: ra.OPEN_URL, data: { args: url } });
+        break;
+      default:
+        ASRouterUtils.executeAction(action);
+    }
+  }
+
   renderSnippets() {
     const { message } = this.state;
     if (!SnippetsTemplates[message.template]) {
@@ -261,7 +337,7 @@ export class ASRouterUISurface extends React.PureComponent {
             UISurface="NEWTAB_FOOTER_BAR"
             onBlock={this.onBlockById(this.state.message.id)}
             onDismiss={this.onDismissById(this.state.message.id)}
-            onAction={ASRouterUtils.executeAction}
+            onAction={this.onUserAction}
             sendClick={this.sendClick}
             sendUserActionTelemetry={this.sendUserActionTelemetry}
           />
@@ -304,6 +380,7 @@ export class ASRouterUISurface extends React.PureComponent {
             onBlock={this.onBlockById(this.state.message.id)}
             onDismiss={this.onDismissById(this.state.message.id)}
             fxaEndpoint={this.props.fxaEndpoint}
+            fetchFlowParams={this.fetchFlowParams}
           />
         </ImpressionsWrapper>
       );

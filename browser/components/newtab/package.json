@@ -12,6 +12,7 @@
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-redux": "7.0.3",
+    "react-transition-group": "4.2.1",
     "redux": "4.0.1",
     "reselect": "4.0.0"
   },

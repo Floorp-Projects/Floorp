@@ -60,7 +60,6 @@
       ]
     },
     "button_action_args": {
-      "type": "string",
       "description": "Additional parameters for button action, example which specific menu the button should open"
     },
     "button_label": {

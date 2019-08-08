@@ -634,6 +634,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           return Object.assign({}, item, {
             open_url: action.data.open_url,
             pocket_id: action.data.pocket_id,
+            context_type: "pocket",
           });
         }
         return item;
@@ -658,6 +659,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             bookmarkGuid,
             bookmarkTitle,
             bookmarkDateCreated: dateAdded,
+            context_type: "bookmark",
           });
         }
         return item;
@@ -673,6 +675,9 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           delete newSite.bookmarkGuid;
           delete newSite.bookmarkTitle;
           delete newSite.bookmarkDateCreated;
+          if (!newSite.context_type || newSite.context_type === "bookmark") {
+            newSite.context_type = "removedBookmark";
+          }
           return newSite;
         }
         return item;
