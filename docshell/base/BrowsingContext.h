@@ -394,6 +394,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
                   uint64_t aBrowsingContextId, Type aType);
 
  private:
+  // Returns true if the given name is one of the "special" names, currently:
+  // "_self", "_parent", "_top", or "_blank".
+  static bool IsSpecialName(const nsAString& aName);
+
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
   BrowsingContext* FindWithSpecialName(const nsAString& aName,
