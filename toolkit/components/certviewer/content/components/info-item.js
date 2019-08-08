@@ -23,7 +23,12 @@ export class InfoItem extends HTMLElement {
 
   render() {
     let label = this.shadowRoot.querySelector("label");
-    let labelText = this.item.label.replace(/\s+/g, "-").toLowerCase();
+    let labelText = this.item.label
+      .replace(/\s+/g, "-")
+      .replace(/\./g, "")
+      .replace(/\//g, "")
+      .replace(/--/g, "-")
+      .toLowerCase();
     label.setAttribute("data-l10n-id", "certificate-viewer-" + labelText);
 
     let info = this.shadowRoot.querySelector(".info");
