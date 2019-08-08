@@ -316,7 +316,9 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
 
 void Breakpoint::destroy(FreeOp* fop,
                          MayDestroySite mayDestroySite /* true */) {
-  site->dec(fop);
+  if (debugger->enabled) {
+    site->dec(fop);
+  }
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
   gc::Cell* cell = site->owningCellUnbarriered();
@@ -371,6 +373,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     : object(dbg),
       debuggees(cx->zone()),
       uncaughtExceptionHook(nullptr),
+      enabled(true),
       allowUnobservedAsmJS(false),
       collectCoverageInfo(false),
       observedGCs(cx->zone()),
@@ -476,13 +479,14 @@ static void GlobalDebuggerVectorHolder_finalize(FreeOp* fop, JSObject* obj) {
 }
 
 static const ClassOps GlobalDebuggerVectorHolder_classOps = {
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    GlobalDebuggerVectorHolder_finalize};
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  GlobalDebuggerVectorHolder_finalize
+};
 
 static const Class GlobalDebuggerVectorHolder_class = {
     "GlobalDebuggerVectorHolder",
@@ -491,8 +495,9 @@ static const Class GlobalDebuggerVectorHolder_class = {
 
 /* static */
 JSObject* DebugAPI::newGlobalDebuggersHolder(JSContext* cx) {
-  NativeObject* obj = NewNativeObjectWithGivenProto(
-      cx, &GlobalDebuggerVectorHolder_class, nullptr);
+  NativeObject* obj =
+      NewNativeObjectWithGivenProto(cx, &GlobalDebuggerVectorHolder_class,
+                                    nullptr);
   if (!obj) {
     return nullptr;
   }
@@ -607,8 +612,8 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
   return true;
 }
 
-static bool DebuggerExists(
-    GlobalObject* global, const std::function<bool(Debugger* dbg)>& predicate) {
+static bool DebuggerExists(GlobalObject* global,
+                           const std::function<bool(Debugger* dbg)>& predicate) {
   // The GC analysis can't determine that the predicate can't GC, so let it know
   // explicitly.
   JS::AutoSuppressGCAnalysis nogc;
@@ -627,26 +632,30 @@ static bool DebuggerExists(
 
 /* static */
 bool Debugger::hasLiveHook(GlobalObject* global, Hook which) {
-  return DebuggerExists(global,
-                        [=](Debugger* dbg) { return dbg->getHook(which); });
+  return DebuggerExists(global, [=](Debugger* dbg) {
+      return dbg->enabled && dbg->getHook(which);
+    });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesAllExecution(GlobalObject* global) {
-  return DebuggerExists(
-      global, [=](Debugger* dbg) { return dbg->observesAllExecution(); });
+  return DebuggerExists(global, [=](Debugger* dbg) {
+      return dbg->observesAllExecution();
+    });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesCoverage(GlobalObject* global) {
-  return DebuggerExists(global,
-                        [=](Debugger* dbg) { return dbg->observesCoverage(); });
+  return DebuggerExists(global, [=](Debugger* dbg) {
+      return dbg->observesCoverage();
+    });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesAsmJS(GlobalObject* global) {
-  return DebuggerExists(global,
-                        [=](Debugger* dbg) { return dbg->observesAsmJS(); });
+  return DebuggerExists(global, [=](Debugger* dbg) {
+      return dbg->observesAsmJS();
+    });
 }
 
 /* static */
@@ -666,6 +675,10 @@ JSObject* Debugger::getHook(Hook hook) const {
 }
 
 bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
+  if (!enabled) {
+    return false;
+  }
+
   // A onNewGlobalObject hook does not hold its Debugger live, so its behavior
   // is nondeterministic. This behavior is not satisfying, but it is at least
   // documented.
@@ -904,7 +917,7 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       Debugger* dbg = Debugger::fromChildJSObject(frameobj);
       EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
-      if (frameobj->isLive() && frameobj->onPopHandler()) {
+      if (dbg->enabled && frameobj->isLive() && frameobj->onPopHandler()) {
         OnPopHandler* handler = frameobj->onPopHandler();
 
         Maybe<AutoRealm> ar;
@@ -1053,8 +1066,7 @@ ResumeMode DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
 
   RootedValue rval(cx);
   ResumeMode resumeMode = Debugger::dispatchHook(
-      cx,
-      [](Debugger* dbg) -> bool {
+      cx, [](Debugger* dbg) -> bool {
         return dbg->getHook(Debugger::OnExceptionUnwind);
       },
       [&](Debugger* dbg) -> ResumeMode {
@@ -2177,7 +2189,7 @@ ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
   if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
     for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
       Debugger* dbg = *p;
-      if (hookIsEnabled(dbg)) {
+      if (dbg->enabled && hookIsEnabled(dbg)) {
         if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
           return ResumeMode::Terminate;
         }
@@ -2198,7 +2210,7 @@ ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
   for (Value* p = triggered.begin(); p != triggered.end(); p++) {
     Debugger* dbg = Debugger::fromJSObject(&p->toObject());
     EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
-    if (dbg->debuggees.has(global) && hookIsEnabled(dbg)) {
+    if (dbg->debuggees.has(global) && dbg->enabled && hookIsEnabled(dbg)) {
       ResumeMode resumeMode = fireHook(dbg);
       adjqi.runJobs();
       if (resumeMode != ResumeMode::Continue) {
@@ -2310,8 +2322,8 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         continue;
       }
 
-      // There are two reasons we have to check whether dbg is debugging
-      // global.
+      // There are two reasons we have to check whether dbg is enabled and
+      // debugging global.
       //
       // One is just that one breakpoint handler can disable other Debuggers
       // or remove debuggees.
@@ -2320,7 +2332,8 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
       // specific global--until they are executed. Only now do we know which
       // global the script is running against.
       Debugger* dbg = bp->debugger;
-      if (dbg->debuggees.has(global)) {
+      bool hasDebuggee = dbg->enabled && dbg->debuggees.has(global);
+      if (hasDebuggee) {
         Maybe<AutoRealm> ar;
         ar.emplace(cx, dbg->object);
         EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
@@ -2396,7 +2409,8 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
       for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
         Debugger* dbg = *p;
-        for (Debugger::FrameMap::Range r = dbg->frames.all(); !r.empty();
+        for (Debugger::FrameMap::Range r = dbg->frames.all();
+             !r.empty();
              r.popFront()) {
           AbstractFramePtr frame = r.front().key();
           NativeObject* frameobj = r.front().value();
@@ -2412,7 +2426,8 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
 
         // Also count hooks set on suspended generator frames.
         for (Debugger::GeneratorWeakMap::Range r = dbg->generatorFrames.all();
-             !r.empty(); r.popFront()) {
+             !r.empty();
+             r.popFront()) {
           AbstractGeneratorObject& genObj =
               r.front().key()->as<AbstractGeneratorObject>();
           DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
@@ -2582,7 +2597,8 @@ void DebugAPI::slowPathOnNewGlobalObject(JSContext* cx,
 
 /* static */
 void DebugAPI::slowPathNotifyParticipatesInGC(
-    uint64_t majorGCNumber, GlobalObject::DebuggerVector& dbgs) {
+    uint64_t majorGCNumber,
+    GlobalObject::DebuggerVector& dbgs) {
   for (GlobalObject::DebuggerVector::Range r = dbgs.all(); !r.empty();
        r.popFront()) {
     if (!r.front().unbarrieredGet()->debuggeeIsBeingCollected(majorGCNumber)) {
@@ -2616,7 +2632,7 @@ Maybe<double> DebugAPI::allocationSamplingProbability(GlobalObject* global) {
     // this is safe as long as dbgp does not escape.
     Debugger* dbgp = p->unbarrieredGet();
 
-    if (dbgp->trackingAllocationSites) {
+    if (dbgp->trackingAllocationSites && dbgp->enabled) {
       foundAnyDebuggers = true;
       probability = std::max(dbgp->allocationSamplingProbability, probability);
     }
@@ -2652,7 +2668,7 @@ bool DebugAPI::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj,
     // such that the vector gets reallocated.
     MOZ_ASSERT(dbgs.begin() == begin);
 
-    if ((*dbgp)->trackingAllocationSites &&
+    if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled &&
         !(*dbgp)->appendAllocationSite(cx, obj, frame, when)) {
       return false;
     }
@@ -2670,7 +2686,7 @@ bool Debugger::isDebuggeeUnbarriered(const Realm* realm) const {
 bool Debugger::appendAllocationSite(JSContext* cx, HandleObject obj,
                                     HandleSavedFrame frame,
                                     mozilla::TimeStamp when) {
-  MOZ_ASSERT(trackingAllocationSites);
+  MOZ_ASSERT(trackingAllocationSites && enabled);
 
   AutoRealm ar(cx, object);
   RootedObject wrappedFrame(cx, frame);
@@ -3084,8 +3100,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
 
 /* static */
 bool Debugger::updateExecutionObservabilityOfScripts(
-    JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
-    IsObserving observing) {
+    JSContext* cx, const DebugAPI::ExecutionObservableSet& obs, IsObserving observing) {
   if (Zone* zone = obs.singleZone()) {
     return UpdateExecutionObservabilityOfScriptsInZone(cx, zone, obs,
                                                        observing);
@@ -3197,21 +3212,21 @@ bool Debugger::hookObservesAllExecution(Hook which) {
 }
 
 Debugger::IsObserving Debugger::observesAllExecution() const {
-  if (!!getHook(OnEnterFrame)) {
+  if (enabled && !!getHook(OnEnterFrame)) {
     return Observing;
   }
   return NotObserving;
 }
 
 Debugger::IsObserving Debugger::observesAsmJS() const {
-  if (!allowUnobservedAsmJS) {
+  if (enabled && !allowUnobservedAsmJS) {
     return Observing;
   }
   return NotObserving;
 }
 
 Debugger::IsObserving Debugger::observesCoverage() const {
-  if (collectCoverageInfo) {
+  if (enabled && collectCoverageInfo) {
     return Observing;
   }
   return NotObserving;
@@ -3328,7 +3343,7 @@ bool DebugAPI::isObservedByDebuggerTrackingAllocations(
       // Use unbarrieredGet() to prevent triggering read barrier while
       // collecting, this is safe as long as dbg does not escape.
       Debugger* dbg = p->unbarrieredGet();
-      if (dbg->trackingAllocationSites) {
+      if (dbg->trackingAllocationSites && dbg->enabled) {
         return true;
       }
     }
@@ -3841,6 +3856,71 @@ static Debugger* Debugger_fromThisValue(JSContext* cx, const CallArgs& args,
   if (!dbg) return false
 
 /* static */
+bool Debugger::getEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGGER(cx, argc, vp, "get enabled", args, dbg);
+  args.rval().setBoolean(dbg->enabled);
+  return true;
+}
+
+/* static */
+bool Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGGER(cx, argc, vp, "set enabled", args, dbg);
+  if (!args.requireAtLeast(cx, "Debugger.set enabled", 1)) {
+    return false;
+  }
+
+  bool wasEnabled = dbg->enabled;
+  dbg->enabled = ToBoolean(args[0]);
+
+  if (wasEnabled != dbg->enabled) {
+    if (dbg->trackingAllocationSites) {
+      if (wasEnabled) {
+        dbg->removeAllocationsTrackingForAllDebuggees();
+      } else {
+        if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
+          dbg->enabled = false;
+          return false;
+        }
+      }
+    }
+
+    for (Breakpoint* bp = dbg->firstBreakpoint(); bp;
+         bp = bp->nextInDebugger()) {
+      if (!wasEnabled) {
+        bp->site->inc(cx->runtime()->defaultFreeOp());
+      } else {
+        bp->site->dec(cx->runtime()->defaultFreeOp());
+      }
+    }
+
+    // Add or remove ourselves from the runtime's list of Debuggers
+    // that care about new globals.
+    if (dbg->getHook(OnNewGlobalObject)) {
+      if (!wasEnabled) {
+        cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
+      } else {
+        cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
+      }
+    }
+
+    // Ensure the compartment is observable if we are re-enabling a
+    // Debugger with hooks that observe all execution.
+    if (!dbg->updateObservesAllExecutionOnDebuggees(
+            cx, dbg->observesAllExecution())) {
+      return false;
+    }
+
+    // Note: To toogle code coverage, we currently need to have no live
+    // stack frame, thus the coverage does not depend on the enabled flag.
+
+    dbg->updateObservesAsmJSOnDebuggees(dbg->observesAsmJS());
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+/* static */
 bool Debugger::getHookImpl(JSContext* cx, CallArgs& args, Debugger& dbg,
                            Hook which) {
   MOZ_ASSERT(which >= 0 && which < HookCount);
@@ -3967,11 +4047,13 @@ bool Debugger::setOnNewGlobalObject(JSContext* cx, unsigned argc, Value* vp) {
 
   // Add or remove ourselves from the runtime's list of Debuggers that care
   // about new globals.
-  JSObject* newHook = dbg->getHook(OnNewGlobalObject);
-  if (!oldHook && newHook) {
-    cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
-  } else if (oldHook && !newHook) {
-    cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
+  if (dbg->enabled) {
+    JSObject* newHook = dbg->getHook(OnNewGlobalObject);
+    if (!oldHook && newHook) {
+      cx->runtime()->onNewGlobalObjectWatchers().pushBack(dbg);
+    } else if (oldHook && !newHook) {
+      cx->runtime()->onNewGlobalObjectWatchers().remove(dbg);
+    }
   }
 
   return true;
@@ -4499,13 +4581,13 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   });
 
   // (5)
-  if (trackingAllocationSites &&
+  if (trackingAllocationSites && enabled &&
       !Debugger::addAllocationsTracking(cx, global)) {
     return false;
   }
 
   auto allocationsTrackingGuard = MakeScopeExit([&] {
-    if (trackingAllocationSites) {
+    if (trackingAllocationSites && enabled) {
       Debugger::removeAllocationsTracking(*global);
     }
   });
@@ -5930,6 +6012,7 @@ bool Debugger::adoptSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 const JSPropertySpec Debugger::properties[] = {
+    JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
             Debugger::setOnDebuggerStatement, 0),
     JS_PSGS("onExceptionUnwind", Debugger::getOnExceptionUnwind,
@@ -6051,10 +6134,10 @@ DebuggerScript* Debugger::wrapVariantReferent(
         wrapVariantReferent<DebuggerScript, DebuggerScriptReferent, LazyScript*,
                             LazyScriptWeakMap>(cx, lazyScripts, referent);
   } else {
-    referent.template as<WasmInstanceObject*>();
-    obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
-                              WasmInstanceObject*, WasmInstanceWeakMap>(
-        cx, wasmInstanceScripts, referent);
+        referent.template as<WasmInstanceObject*>();
+        obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
+                                  WasmInstanceObject*, WasmInstanceWeakMap>(
+            cx, wasmInstanceScripts, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6104,13 +6187,16 @@ bool Debugger::observesFrame(const FrameIter& iter) const {
 }
 
 bool Debugger::observesScript(JSScript* script) const {
+  if (!enabled) {
+    return false;
+  }
   // Don't ever observe self-hosted scripts: the Debugger API can break
   // self-hosted invariants.
   return observesGlobal(&script->global()) && !script->selfHosted();
 }
 
 bool Debugger::observesWasm(wasm::Instance* instance) const {
-  if (!instance->debugEnabled()) {
+  if (!enabled || !instance->debugEnabled()) {
     return false;
   }
   return observesGlobal(&instance->object()->global());
@@ -6202,8 +6288,10 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 /* static */
 bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
   bool foundAny = false;
-  Debugger::forEachDebuggerFrame(
-      frame, [&](DebuggerFrame* frameobj) { foundAny = true; });
+  Debugger::forEachDebuggerFrame(frame,
+                                 [&](DebuggerFrame* frameobj) {
+                                   foundAny = true;
+                                 });
   return foundAny;
 }
 
@@ -6386,7 +6474,8 @@ JSObject* Debugger::wrapWasmSource(JSContext* cx,
   return wrapVariantReferent(cx, referent);
 }
 
-bool DebugAPI::getScriptInstrumentationId(JSContext* cx, HandleObject dbgObject,
+bool DebugAPI::getScriptInstrumentationId(JSContext* cx,
+                                          HandleObject dbgObject,
                                           HandleScript script,
                                           MutableHandleValue rval) {
   Debugger* dbg = Debugger::fromJSObject(dbgObject);
@@ -7212,7 +7301,7 @@ JS_PUBLIC_API bool FireOnGarbageCollectionHookRequired(JSContext* cx) {
   AutoCheckCannotGC noGC;
 
   for (Debugger* dbg : cx->runtime()->debuggerList()) {
-    if (dbg->observedGC(cx->runtime()->gc.majorGCCount()) &&
+    if (dbg->enabled && dbg->observedGC(cx->runtime()->gc.majorGCCount()) &&
         dbg->getHook(Debugger::OnGarbageCollection)) {
       return true;
     }
@@ -7232,7 +7321,7 @@ JS_PUBLIC_API bool FireOnGarbageCollectionHook(
     AutoCheckCannotGC noGC;
 
     for (Debugger* dbg : cx->runtime()->debuggerList()) {
-      if (dbg->observedGC(data->majorGCNumber()) &&
+      if (dbg->enabled && dbg->observedGC(data->majorGCNumber()) &&
           dbg->getHook(Debugger::OnGarbageCollection)) {
         if (!triggered.append(dbg->object)) {
           JS_ReportOutOfMemory(cx);
