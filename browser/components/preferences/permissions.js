@@ -9,8 +9,8 @@ var { AppConstants } = ChromeUtils.import(
 
 const permissionExceptionsL10n = {
   trackingprotection: {
-    window: "permissions-exceptions-content-blocking-window",
-    description: "permissions-exceptions-content-blocking-desc",
+    window: "permissions-exceptions-etp-window",
+    description: "permissions-exceptions-etp-desc",
   },
   cookie: {
     window: "permissions-exceptions-cookie-window",
