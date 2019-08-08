@@ -630,7 +630,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     // value it's relative to has changed.
     SetBResize(true);
     mFlags.mIsBResizeForPercentages = true;
-  } else if (IsTableCell(aFrameType) &&
+  } else if (aFrameType == LayoutFrameType::TableCell &&
              (mFlags.mSpecialBSizeReflow ||
               (mFrame->FirstInFlow()->GetStateBits() &
                NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) &&
@@ -688,7 +688,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
   // the special bsize reflow, since in that case it will already be
   // set correctly above if we need it set.
   if (!IsBResize() && mCBReflowInput &&
-      (IsTableCell(mCBReflowInput->mFrame->Type()) ||
+      (mCBReflowInput->mFrame->IsTableCellFrame() ||
        mCBReflowInput->mFlags.mHeightDependsOnAncestorCell) &&
       !mCBReflowInput->mFlags.mSpecialBSizeReflow && dependsOnCBBSize) {
     SetBResize(true);
@@ -2241,7 +2241,7 @@ void ReflowInput::InitConstraints(
       // passed in.
       // XXX It seems like this could lead to bugs with min-height and friends
       if (cbri->mParentReflowInput) {
-        if (IsTableCell(cbri->mFrame->Type())) {
+        if (cbri->mFrame->IsTableCellFrame()) {
           // use the cell's computed block size
           cbSize.BSize(wm) = cbri->ComputedSize(wm).BSize(wm);
         }
@@ -2276,7 +2276,7 @@ void ReflowInput::InitConstraints(
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
               eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
-            if (!IsTableCell(cbri->mFrame->Type())) {
+            if (!cbri->mFrame->IsTableCellFrame()) {
               cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(cbri);
               if (cbSize.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
                 isAutoBSize = true;
