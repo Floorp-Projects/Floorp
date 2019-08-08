@@ -1289,3 +1289,42 @@ class RustTests(MachCommandBase):
                                                     what=['pre-export',
                                                           'export',
                                                           'recurse_rusttests'])
+
+
+@CommandProvider
+class TestFluentMigration(MachCommandBase):
+    @Command('fluent-migration-test', category='testing',
+             description="Test Fluent migration recipes.")
+    @CommandArgument('test_paths', nargs='*', metavar='N',
+                     help="Recipe paths to test.")
+    def run_migration_tests(self, test_paths=None, **kwargs):
+        if not test_paths:
+            test_paths = []
+        self._activate_virtualenv()
+        from test_fluent_migrations import fmt
+        rv = 0
+        with_context = []
+        for to_test in test_paths:
+            try:
+                context = fmt.inspect_migration(to_test)
+                for issue in context['issues']:
+                    self.log(logging.ERROR, 'fluent-migration-test', {
+                        'error': issue['msg'],
+                        'file': to_test,
+                    }, 'ERROR in {file}: {error}')
+                if context['issues']:
+                    continue
+                with_context.append({
+                    'to_test': to_test,
+                    'references': context['references'],
+                })
+            except Exception as e:
+                self.log(logging.ERROR, 'fluent-migration-test', {
+                    'error': str(e),
+                    'file': to_test
+                }, 'ERROR in {file}: {error}')
+                rv |= 1
+        obj_dir = fmt.prepare_object_dir(self)
+        for context in with_context:
+            rv |= fmt.test_migration(self, obj_dir, **context)
+        return rv
