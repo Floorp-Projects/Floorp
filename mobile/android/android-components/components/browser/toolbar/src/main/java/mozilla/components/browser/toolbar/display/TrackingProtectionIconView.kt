@@ -58,7 +58,13 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
         updateIcon()
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     override fun onCreateDrawableState(extraSpace: Int): IntArray {
+        // We need this here because in some situations, this function is getting called from
+        // the super() constructor on the View class, way before this class properties get
+        // initialized causing a null pointer exception.
+        // See for more details: https://github.com/mozilla-mobile/android-components/issues/4058
+        if (siteTrackingProtection == null) return super.onCreateDrawableState(extraSpace)
 
         val drawableState = when (siteTrackingProtection) {
             ON_NO_TRACKERS_BLOCKED -> R.attr.stateOnNoTrackersBlocked
