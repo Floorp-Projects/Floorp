@@ -176,6 +176,33 @@ struct MovingTracer final : public JS::CallbackTracer {
   bool updateEdge(T** thingp);
 };
 
+struct SweepingTracer final : public JS::CallbackTracer {
+  explicit SweepingTracer(JSRuntime* rt)
+      : CallbackTracer(rt, TraceWeakMapKeysValues) {}
+
+  bool onObjectEdge(JSObject** objp) override;
+  bool onShapeEdge(Shape** shapep) override;
+  bool onStringEdge(JSString** stringp) override;
+  bool onScriptEdge(JSScript** scriptp) override;
+  bool onLazyScriptEdge(LazyScript** lazyp) override;
+  bool onBaseShapeEdge(BaseShape** basep) override;
+  bool onScopeEdge(Scope** scopep) override;
+  bool onRegExpSharedEdge(RegExpShared** sharedp) override;
+  bool onBigIntEdge(BigInt** bip) override;
+  bool onChild(const JS::GCCellPtr& thing) override {
+    MOZ_CRASH("unexpected edge.");
+    return true;
+  }
+
+#ifdef DEBUG
+  TracerKind getTracerKind() const override { return TracerKind::Sweeping; }
+#endif
+
+ private:
+  template <typename T>
+  bool sweepEdge(T** thingp);
+};
+
 // Structure for counting how many times objects in a particular group have
 // been tenured during a minor collection.
 struct TenureCount {

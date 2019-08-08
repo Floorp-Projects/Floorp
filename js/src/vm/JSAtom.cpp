@@ -476,15 +476,15 @@ void js::TraceWellKnownSymbols(JSTracer* trc) {
   }
 }
 
-void AtomsTable::sweepAll(JSRuntime* rt) {
+void AtomsTable::traceWeak(JSTracer* trc) {
+  JSRuntime* rt = trc->runtime();
   for (size_t i = 0; i < PartitionCount; i++) {
     AutoLock lock(rt, partitions[i]->lock);
     AtomSet& atoms = partitions[i]->atoms;
     for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
       JSAtom* atom = e.front().asPtrUnbarriered();
       MOZ_DIAGNOSTIC_ASSERT(atom);
-      if (IsAboutToBeFinalizedUnbarriered(&atom)) {
-        MOZ_ASSERT(!atom->isPinned());
+      if (!TraceWeakEdge(trc, &atom, "AtomsTable::partitions::atoms")) {
         e.removeFront();
       } else {
         MOZ_ASSERT(atom == e.front().asPtrUnbarriered());
@@ -589,8 +589,8 @@ void AtomsTable::mergeAtomsAddedWhileSweeping(Partition& part) {
   js_delete(newAtoms);
 }
 
-bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
-                                    SliceBudget& budget) {
+bool AtomsTable::traceWeakIncrementally(JSTracer* trc, SweepIterator& atomsToSweep,
+                                        SliceBudget& budget) {
   // Sweep the table incrementally until we run out of work or budget.
   while (!atomsToSweep.empty()) {
     budget.step();
@@ -600,8 +600,7 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
 
     JSAtom* atom = atomsToSweep.front();
     MOZ_DIAGNOSTIC_ASSERT(atom);
-    if (IsAboutToBeFinalizedUnbarriered(&atom)) {
-      MOZ_ASSERT(!atom->isPinned());
+    if (!TraceWeakEdge(trc, &atom, "maybeAtomsToSweep")) {
       atomsToSweep.removeFront();
     } else {
       MOZ_ASSERT(atom == atomsToSweep.front());

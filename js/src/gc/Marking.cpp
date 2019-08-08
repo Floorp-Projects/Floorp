@@ -246,7 +246,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
       isGcMarkingTracer ||
           IsTracerKind(trc, JS::CallbackTracer::TracerKind::GrayBuffering) ||
           IsTracerKind(trc, JS::CallbackTracer::TracerKind::UnmarkGray) ||
-          IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges));
+          IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) ||
+          IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping));
 
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
@@ -3433,6 +3434,47 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thingp) {
   }
   return dying;
 }
+
+template <typename T>
+inline bool SweepingTracer::sweepEdge(T** thingp) {
+  CheckIsMarkedThing(thingp);
+  T* thing = *thingp;
+  JSRuntime* rt = thing->runtimeFromAnyThread();
+
+  if (ThingIsPermanentAtomOrWellKnownSymbol(thing) && runtime() != rt) {
+    return true;
+  }
+
+  TenuredCell& tenured = thing->asTenured();
+  MOZ_ASSERT(tenured.zoneFromAnyThread()->isGCSweeping(),
+             "Should be called during Sweeping.");
+  if (!tenured.isMarkedAny()) {
+    *thingp = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+bool SweepingTracer::onObjectEdge(JSObject** objp) { return sweepEdge(objp); }
+bool SweepingTracer::onShapeEdge(Shape** shapep) { return sweepEdge(shapep); }
+bool SweepingTracer::onStringEdge(JSString** stringp) {
+  return sweepEdge(stringp);
+}
+bool SweepingTracer::onScriptEdge(JSScript** scriptp) {
+  return sweepEdge(scriptp);
+}
+bool SweepingTracer::onLazyScriptEdge(LazyScript** lazyp) {
+  return sweepEdge(lazyp);
+}
+bool SweepingTracer::onBaseShapeEdge(BaseShape** basep) {
+  return sweepEdge(basep);
+}
+bool SweepingTracer::onScopeEdge(Scope** scopep) { return sweepEdge(scopep); }
+bool SweepingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
+  return sweepEdge(sharedp);
+}
+bool SweepingTracer::onBigIntEdge(BigInt** bip) { return sweepEdge(bip); }
 
 namespace js {
 namespace gc {
