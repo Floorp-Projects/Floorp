@@ -215,10 +215,21 @@ themselves. Having an attribute on a pref definition would be better.
 
 Sync
 ----
-On desktop, a pref is synced via Sync if there is an accompanying
-``services.sync.prefs.sync.``-prefixed pref. I.e. the pref ``foo.bar`` is
-synced if the pref ``services.sync.prefs.sync.foo.bar`` exists and is true. In
-practice, only a small subset of prefs (about 70) have this treatment.
+On desktop, a pref is synced onto a device via Sync if there is an
+accompanying ``services.sync.prefs.sync.``-prefixed pref. I.e. the pref
+``foo.bar`` is synced if the pref ``services.sync.prefs.sync.foo.bar`` exists
+and is true.
+
+Previously, one could push prefs onto a device even if a local
+``services.sync.prefs.sync.``-prefixed pref was not present; however this
+behavior changed in `bug 1538015 <https://bugzilla.mozilla.org/show_bug.cgi?id=1538015>`_
+to require the local prefixed pref to be present. The old (insecure) behavior
+can be re-enabled by setting a single pref ``services.sync.prefs.dangerously_allow_arbitrary``
+to true on the target browser - subsequently any pref can be pushed there by
+creating a *remote* ``services.sync.prefs.sync.``-prefixed pref.
+
+In practice, only a small subset of prefs (about 70) have a ``services.sync.prefs.sync.``-prefixed
+pref by default.
 
 **Problem:** This is gross. An attribute on the pref definition would be
 better, but it might be hard to change that at this point.
