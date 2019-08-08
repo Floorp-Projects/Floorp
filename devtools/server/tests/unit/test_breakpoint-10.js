@@ -10,62 +10,68 @@
  */
 
 add_task(
-  threadFrontTest(({ threadFront, client, debuggee }) => {
-    return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
-        const source = await getSourceById(
-          threadFront,
-          packet.frame.where.actor
-        );
-        const location = {
-          sourceUrl: source.url,
-          line: debuggee.line0 + 3,
-          column: 5,
-        };
+  threadFrontTest(async ({ threadFront, client, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+    const location = {
+      sourceUrl: source.url,
+      line: debuggee.line0 + 3,
+      column: 5,
+    };
 
-        threadFront.setBreakpoint(location, {});
-        await client.waitForRequestsToSettle();
+    //Pause at debugger statement.
+    Assert.equal(packet.frame.where.line, debuggee.line0 + 1);
+    Assert.equal(packet.why.type, "debuggerStatement");
 
-        threadFront.once("paused", async function(packet) {
-          // Check the return value.
-          Assert.equal(packet.why.type, "breakpoint");
-          // Check that the breakpoint worked.
-          Assert.equal(debuggee.i, 0);
+    threadFront.setBreakpoint(location, {});
+    await client.waitForRequestsToSettle();
 
-          // Remove the breakpoint.
-          threadFront.removeBreakpoint(location);
-          await client.waitForRequestsToSettle();
+    await resume(threadFront);
 
-          const location2 = {
-            sourceUrl: source.url,
-            line: debuggee.line0 + 3,
-            column: 12,
-          };
-          threadFront.setBreakpoint(location2, {});
-          await client.waitForRequestsToSettle();
+    const packet2 = await waitForPause(threadFront);
+    // Check the return value.
+    Assert.equal(packet2.why.type, "breakpoint");
+    // Check that the breakpoint worked.
+    Assert.equal(debuggee.i, 0);
+    // Check pause location
+    Assert.equal(packet2.frame.where.line, debuggee.line0 + 3);
+    Assert.equal(packet2.frame.where.column, 5);
 
-          threadFront.once("paused", async function(packet) {
-            // Check the return value.
-            Assert.equal(packet.why.type, "breakpoint");
-            // Check that the breakpoint worked.
-            Assert.equal(debuggee.i, 1);
+    // Remove the breakpoint.
+    threadFront.removeBreakpoint(location);
+    await client.waitForRequestsToSettle();
 
-            // Remove the breakpoint.
-            threadFront.removeBreakpoint(location2);
-            await client.waitForRequestsToSettle();
+    const location2 = {
+      sourceUrl: source.url,
+      line: debuggee.line0 + 3,
+      column: 12,
+    };
+    threadFront.setBreakpoint(location2, {});
+    await client.waitForRequestsToSettle();
 
-            threadFront.resume().then(resolve);
-          });
+    await resume(threadFront);
+    const packet3 = await waitForPause(threadFront);
+    // Check the return value.
+    Assert.equal(packet3.why.type, "breakpoint");
+    // Check that the breakpoint worked.
+    Assert.equal(debuggee.i, 1);
+    // Check execution location
+    Assert.equal(packet3.frame.where.line, debuggee.line0 + 3);
+    Assert.equal(packet3.frame.where.column, 12);
 
-          // Continue until the breakpoint is hit again.
-          await threadFront.resume();
-        });
+    // Remove the breakpoint.
+    threadFront.removeBreakpoint(location2);
+    await client.waitForRequestsToSettle();
 
-        // Continue until the breakpoint is hit.
-        await threadFront.resume();
-      });
+    await resume(threadFront);
+  })
+);
 
-      /* eslint-disable */
+function evaluateTestCode(debuggee) {
+  /* eslint-disable */
       Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
                        "debugger;\n" +                      // line0 + 1
                        "var a, i = 0;\n" +                  // line0 + 2
@@ -74,6 +80,4 @@ add_task(
                        "}\n",                               // line0 + 5
                        debuggee);
       /* eslint-enable */
-    });
-  })
-);
+}
