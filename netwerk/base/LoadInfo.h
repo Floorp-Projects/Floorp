@@ -40,7 +40,7 @@ namespace ipc {
 // we have to forward declare that function so we can use it as a friend.
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-    nsILoadInfo** outLoadInfo);
+    nsINode* aLoadingContext, nsILoadInfo** outLoadInfo);
 }  // namespace ipc
 
 namespace net {
@@ -155,7 +155,7 @@ class LoadInfo final : public nsILoadInfo {
            bool aServiceWorkerTaintingSynthesized,
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
            const nsAString& aCspNonce, bool aSkipContentSniffing,
-           uint32_t aRequestBlockingReason);
+           uint32_t aRequestBlockingReason, nsINode* aLoadingContext);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -164,7 +164,7 @@ class LoadInfo final : public nsILoadInfo {
 
   friend nsresult mozilla::ipc::LoadInfoArgsToLoadInfo(
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-      nsILoadInfo** outLoadInfo);
+      nsINode* aLoadingContext, nsILoadInfo** outLoadInfo);
 
   ~LoadInfo() = default;
 

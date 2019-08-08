@@ -15,6 +15,7 @@
 
 class nsIContentSecurityPolicy;
 class nsILoadInfo;
+class nsINode;
 class nsIPrincipal;
 class nsIRedirectHistoryEntry;
 
@@ -132,6 +133,9 @@ nsresult LoadInfoToLoadInfoArgs(
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<mozilla::net::LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsILoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<mozilla::net::LoadInfoArgs>& aOptionalLoadInfoArgs,
+    nsINode* aLoadingContext, nsILoadInfo** outLoadInfo);
 
 /**
  * Fills ParentLoadInfoForwarderArgs with properties we want to carry to child

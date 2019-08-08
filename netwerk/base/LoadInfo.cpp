@@ -508,7 +508,8 @@ LoadInfo::LoadInfo(
     bool aIsPreflight, bool aLoadTriggeredFromExternal,
     bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
     bool aDocumentHasLoaded, const nsAString& aCspNonce,
-    bool aSkipContentSniffing, uint32_t aRequestBlockingReason)
+    bool aSkipContentSniffing, uint32_t aRequestBlockingReason,
+    nsINode* aLoadingContext)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(aPrincipalToInherit),
@@ -521,6 +522,7 @@ LoadInfo::LoadInfo(
       mReservedClientInfo(aReservedClientInfo),
       mInitialClientInfo(aInitialClientInfo),
       mController(aController),
+      mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mSecurityFlags(aSecurityFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
