@@ -6,13 +6,35 @@
 
 #include "debugger/DebugScript.h"
 
-#include "jit/BaselineJIT.h"
+#include "mozilla/Assertions.h"  // for AssertionConditionType
+#include "mozilla/HashTable.h"   // for HashMapEntry, HashTable<>::Ptr, HashMap
+#include "mozilla/Move.h"        // for std::move
+#include "mozilla/UniquePtr.h"   // for UniquePtr
 
-#include "gc/FreeOp-inl.h"
-#include "gc/GC-inl.h"
-#include "gc/Marking-inl.h"
-#include "vm/JSContext-inl.h"
-#include "vm/Realm-inl.h"
+#include "jsapi.h"
+
+#include "debugger/DebugAPI.h"  // for DebugAPI
+#include "debugger/Debugger.h"  // for BreakpointSite, Breakpoint
+#include "gc/Barrier.h"         // for GCPtrNativeObject, WriteBarriered
+#include "gc/Cell.h"            // for TenuredCell
+#include "gc/FreeOp.h"          // for FreeOp
+#include "gc/GCEnum.h"          // for MemoryUse, MemoryUse::BreakpointSite
+#include "gc/Marking.h"         // for IsAboutToBeFinalized
+#include "gc/Zone.h"            // for Zone
+#include "gc/ZoneAllocator.h"   // for AddCellMemory
+#include "jit/BaselineJIT.h"    // for BaselineScript
+#include "vm/JSContext.h"       // for JSContext
+#include "vm/JSScript.h"        // for JSScript, DebugScriptMap
+#include "vm/NativeObject.h"    // for NativeObject
+#include "vm/Realm.h"           // for Realm, AutoRealm
+#include "vm/Runtime.h"         // for ReportOutOfMemory
+#include "vm/Stack.h"           // for ActivationIterator, Activation
+
+#include "gc/FreeOp-inl.h"     // for FreeOp::free_
+#include "gc/GC-inl.h"         // for ZoneCellIter
+#include "gc/Marking-inl.h"    // for CheckGCThingAfterMovingGC
+#include "vm/JSContext-inl.h"  // for JSContext::check
+#include "vm/Realm-inl.h"      // for AutoRealm::AutoRealm
 
 namespace js {
 

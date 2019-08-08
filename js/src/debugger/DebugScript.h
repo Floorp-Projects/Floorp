@@ -7,9 +7,21 @@
 #ifndef dbg_DebugScript_h
 #define dbg_DebugScript_h
 
-#include "debugger/Debugger.h"
+#include <stddef.h>  // for offsetof
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint32_t
+
+#include "jsapi.h"
+
+namespace JS {
+class Realm;
+}
 
 namespace js {
+
+class BreakpointSite;
+class Debugger;
+class FreeOp;
 
 // DebugScript manages the internal debugger state for a JSScript, which may be
 // associated with multiple Debuggers.
@@ -74,8 +86,8 @@ class DebugScript {
   static void destroyBreakpointSite(FreeOp* fop, JSScript* script,
                                     jsbytecode* pc);
 
-  static void clearBreakpointsIn(FreeOp* fop, Realm* realm,
-                                 Debugger* dbg, JSObject* handler);
+  static void clearBreakpointsIn(FreeOp* fop, JS::Realm* realm, Debugger* dbg,
+                                 JSObject* handler);
   static void clearBreakpointsIn(FreeOp* fop, JSScript* script,
                                  Debugger* dbg, JSObject* handler);
 

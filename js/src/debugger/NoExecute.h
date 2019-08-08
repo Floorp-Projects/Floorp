@@ -7,16 +7,17 @@
 #ifndef debugger_NoExecute_h
 #define debugger_NoExecute_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
+#include "mozilla/Attributes.h"  // for MOZ_RAII
 
-#include "debugger/Debugger.h"
-#include "js/Promise.h"
-#include "vm/JSContext.h"
-#include "vm/Realm.h"
+#include "jsapi.h"
+
+#include "NamespaceImports.h"  // for HandleScript
+#include "js/Promise.h"        // for JS::AutoDebuggerJobQueueInterruption
 
 namespace js {
 
+class Debugger;
 class LeaveDebuggeeNoExecute;
 
 // Given a Debugger instance dbg, if it is enabled, prevents all its debuggee

@@ -6,18 +6,63 @@
 
 #include "debugger/Object-inl.h"
 
-#include "debugger/NoExecute.h"
-#include "debugger/Script.h"
-#include "proxy/ScriptedProxyHandler.h"
-#include "vm/EnvironmentObject.h"
-#include "vm/Instrumentation.h"
-#include "vm/WrapperObject.h"
+#include "mozilla/Maybe.h"   // for Maybe, Nothing, Some
+#include "mozilla/Range.h"   // for Range
+#include "mozilla/Result.h"  // for Result
+#include "mozilla/Vector.h"  // for Vector
 
-#include "debugger/Debugger-inl.h"
-#include "vm/Compartment-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
+#include <string.h>     // for size_t, strlen
+#include <type_traits>  // for remove_reference<>::type
+#include <utility>      // for move
+
+#include "jsapi.h"        // for CallArgs, RootedObject, Rooted
+#include "jsfriendapi.h"  // for GetErrorMessage
+#include "jsutil.h"       // for Min
+
+#include "builtin/Array.h"       // for NewDenseCopiedArray
+#include "debugger/Debugger.h"   // for Completion, Debugger
+#include "debugger/NoExecute.h"  // for LeaveDebuggeeNoExecute
+#include "debugger/Script.h"     // for DebuggerScript
+#include "gc/Barrier.h"          // for ImmutablePropertyNamePtr
+#include "gc/Rooting.h"          // for RootedDebuggerObject
+#include "gc/Tracer.h"       // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/Conversions.h"  // for ToObject
+#include "js/HeapAPI.h"      // for IsInsideNursery
+#include "js/Promise.h"      // for PromiseState
+#include "js/Proxy.h"        // for PropertyDescriptor
+#include "js/StableStringChars.h"        // for AutoStableStringChars
+#include "proxy/ScriptedProxyHandler.h"  // for ScriptedProxyHandler
+#include "vm/ArgumentsObject.h"          // for ARGS_LENGTH_MAX
+#include "vm/ArrayObject.h"              // for ArrayObject
+#include "vm/BytecodeUtil.h"             // for JSDVG_SEARCH_STACK
+#include "vm/Compartment.h"              // for Compartment
+#include "vm/EnvironmentObject.h"        // for GetDebugEnvironmentForFunction
+#include "vm/ErrorObject.h"              // for JSObject::is, ErrorObject
+#include "vm/GlobalObject.h"             // for JSObject::is, GlobalObject
+#include "vm/Instrumentation.h"          // for RealmInstrumentation
+#include "vm/Interpreter.h"              // for Call
+#include "vm/JSAtom.h"                   // for Atomize, js_apply_str
+#include "vm/JSContext.h"                // for JSContext, ReportValueError
+#include "vm/JSFunction.h"               // for JSFunction
+#include "vm/JSScript.h"                 // for JSScript
+#include "vm/NativeObject.h"             // for NativeObject, JSObject::is
+#include "vm/ObjectGroup.h"              // for GenericObject, NewObjectKind
+#include "vm/ObjectOperations.h"         // for DefineProperty
+#include "vm/Realm.h"                    // for AutoRealm, ErrorCopier, Realm
+#include "vm/Runtime.h"                  // for JSAtomState
+#include "vm/SavedFrame.h"               // for SavedFrame
+#include "vm/Scope.h"                    // for PositionalFormalParameterIter
+#include "vm/Shape.h"                    // for Shape
+#include "vm/Stack.h"                    // for InvokeArgs
+#include "vm/StringType.h"               // for JSAtom, PropertyName
+#include "vm/WrapperObject.h"            // for JSObject::is, WrapperObject
+
+#include "vm/Compartment-inl.h"       // for Compartment::wrap
+#include "vm/JSAtom-inl.h"            // for ValueToId
+#include "vm/JSObject-inl.h"          // for GetObjectClassName, InitClass
+#include "vm/NativeObject-inl.h"      // for NativeObject::global
+#include "vm/ObjectOperations-inl.h"  // for DeleteProperty, GetProperty
+#include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 
 using namespace js;
 
