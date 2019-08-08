@@ -468,13 +468,12 @@ BrowsingContext* BrowsingContext::FindWithName(
   if (aName.IsEmpty()) {
     // You can't find a browsing context with an empty name.
     found = nullptr;
-  } else if (BrowsingContext* special =
-                 FindWithSpecialName(aName, aRequestingContext)) {
-    found = special;
   } else if (aName.LowerCaseEqualsLiteral("_blank")) {
     // Just return null. Caller must handle creating a new window with
     // a blank name.
     found = nullptr;
+  } else if (IsSpecialName(aName)) {
+    found = FindWithSpecialName(aName, aRequestingContext);
   } else if (BrowsingContext* child =
                  FindWithNameInSubtree(aName, aRequestingContext)) {
     found = child;
@@ -538,6 +537,14 @@ BrowsingContext* BrowsingContext::FindChildWithName(
   }
 
   return nullptr;
+}
+
+/* static */
+bool BrowsingContext::IsSpecialName(const nsAString& aName) {
+  return (aName.LowerCaseEqualsLiteral("_self") ||
+          aName.LowerCaseEqualsLiteral("_parent") ||
+          aName.LowerCaseEqualsLiteral("_top") ||
+          aName.LowerCaseEqualsLiteral("_blank"));
 }
 
 BrowsingContext* BrowsingContext::FindWithSpecialName(
