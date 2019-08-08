@@ -2817,6 +2817,11 @@ class nsIFrame : public nsQueryFrame {
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunknown-pragmas"
+#  pragma clang diagnostic ignored "-Wtautological-unsigned-zero-compare"
+#endif
 
 #define FRAME_TYPE(name_, first_class_, last_class_)                 \
   bool Is##name_##Frame() const {                                    \
@@ -2828,6 +2833,9 @@ class nsIFrame : public nsQueryFrame {
 
 #ifdef __GNUC__
 #  pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#  pragma clang diagnostic pop
 #endif
 
   /**
