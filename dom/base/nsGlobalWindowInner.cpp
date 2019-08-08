@@ -7166,13 +7166,6 @@ bool nsPIDOMWindowInner::HasStorageAccessGranted(
   return mStorageAccessGranted.Contains(aPermissionKey);
 }
 
-// XXX: Can we define this in a header instead of here?
-namespace mozilla {
-namespace dom {
-extern uint64_t NextWindowID();
-}  // namespace dom
-}  // namespace mozilla
-
 nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
     : mMutationBits(0),
       mActivePeerConnections(0),
@@ -7185,8 +7178,7 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow)
       mMayHavePointerEnterLeaveEventListener(false),
       mMayHaveTextEventListenerInDefaultGroup(false),
       mOuterWindow(aOuterWindow),
-      // Make sure no actual window ends up with mWindowID == 0
-      mWindowID(NextWindowID()),
+      mWindowID(nsContentUtils::GenerateWindowId()),
       mHasNotifiedGlobalCreated(false),
       mMarkedCCGeneration(0),
       mHasTriedToCacheTopInnerWindow(false),
