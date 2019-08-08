@@ -62,6 +62,3 @@ pref("ui.android.mouse_as_touch", 2);
 
 // Fenix is currently not whitelisted for Web Authentication
 pref("security.webauth.webauthn_enable_android_fido2", false);
-
-// Do not persist permissions to disk.
-pref("permissions.memory_only", true);
