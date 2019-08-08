@@ -2173,6 +2173,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
         if (event.button != 1) {
           break;
         }
+      // fall through
       case "command":
         this._onCommand(event);
         break;
