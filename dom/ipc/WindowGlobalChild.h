@@ -50,7 +50,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsGlobalWindowInner* WindowGlobal() { return mWindowGlobal; }
 
   // Has this actor been shut down
-  bool IsClosed() { return mIPCClosed; }
+  bool IsClosed() { return !CanSend(); }
   void Destroy();
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
@@ -127,7 +127,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   int64_t mBeforeUnloadListeners;
-  bool mIPCClosed;
 };
 
 }  // namespace dom
