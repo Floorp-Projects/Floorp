@@ -2107,15 +2107,12 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
   }
 
-  WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
-      aBrowsingContext, owner->NodePrincipal());
-
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
-      windowInit, chromeFlags, tabId);
+      aBrowsingContext, chromeFlags, tabId);
   browserBridge->mIPCOpen = true;
 
 #if defined(ACCESSIBILITY)
@@ -2278,7 +2275,8 @@ PBenchmarkStorageChild* ContentChild::AllocPBenchmarkStorageChild() {
   return BenchmarkStorageChild::Instance();
 }
 
-bool ContentChild::DeallocPBenchmarkStorageChild(PBenchmarkStorageChild* aActor) {
+bool ContentChild::DeallocPBenchmarkStorageChild(
+    PBenchmarkStorageChild* aActor) {
   delete aActor;
   return true;
 }
