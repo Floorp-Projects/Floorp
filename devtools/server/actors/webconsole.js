@@ -194,6 +194,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     this.dbg = this.parentActor.makeDebugger();
 
     this._gripDepth = 0;
+    this._evalCounter = 0;
     this._listeners = new Set();
     this._lastConsoleInputEvaluation = undefined;
 
@@ -659,17 +660,17 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * Handler for the "startListeners" request.
    *
-   * @param array events
+   * @param array listeners
    *        An array of events to start sent by the Web Console client.
    * @return object
    *        The response object which holds the startedListeners array.
    */
   /* eslint-disable complexity */
-  startListeners: async function(events) {
+  startListeners: async function(listeners) {
     const startedListeners = [];
     const window = !this.parentActor.isRootActor ? this.window : null;
 
-    for (const event of events) {
+    for (const event of listeners) {
       switch (event) {
         case "PageError":
           // Workers don't support this message type yet
@@ -842,18 +843,18 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   /**
    * Handler for the "stopListeners" request.
    *
-   * @param array events
+   * @param array listeners
    *        An array of events to stop sent by the Web Console client.
    * @return object
    *        The response packet to send to the client: holds the
    *        stoppedListeners array.
    */
-  stopListeners: function(events) {
+  stopListeners: function(listeners) {
     const stoppedListeners = [];
 
     // If no specific listeners are requested to be detached, we stop all
     // listeners.
-    const eventsToDetach = events || [
+    const eventsToDetach = listeners || [
       "PageError",
       "ConsoleAPI",
       "NetworkActivity",
@@ -1052,23 +1053,34 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         `resultID` field.
    */
   evaluateJSAsync: async function(request) {
-    try {
-      // Execute the script that may pause.
-      let response = this.evaluateJS(request);
-      // Wait for any potential returned Promise.
-      response = await this._maybeWaitForResponseResult(response);
-      // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
-      this.emit("evaluationResult", {
-        from: this.actorID,
-        type: "evaluationResult",
-        resultID: request.resultID,
-        ...response,
-      });
-      return;
-    } catch (e) {
-      const message = `Encountered error while waiting for Helper Result: ${e}`;
-      DevToolsUtils.reportException("evaluateJSAsync", Error(message));
-    }
+    // Use Date instead of UUID as this code is used by workers, which
+    // don't have access to the UUID XPCOM component.
+    // Also use a counter in order to prevent mixing up response when calling
+    // evaluateJSAsync during the same millisecond.
+    const resultID = Date.now() + "-" + this._evalCounter++;
+
+    // Execute the evaluation in the next event loop in order to immediately
+    // reply with the resultID.
+    DevToolsUtils.executeSoon(async () => {
+      try {
+        // Execute the script that may pause.
+        let response = this.evaluateJS(request);
+        // Wait for any potential returned Promise.
+        response = await this._maybeWaitForResponseResult(response);
+        // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
+        this.emit("evaluationResult", {
+          from: this.actorID,
+          type: "evaluationResult",
+          resultID,
+          ...response,
+        });
+        return;
+      } catch (e) {
+        const message = `Encountered error while waiting for Helper Result: ${e}`;
+        DevToolsUtils.reportException("evaluateJSAsync", Error(message));
+      }
+    });
+    return { resultID };
   },
 
   /**
