@@ -8,6 +8,7 @@
 
 #include "debugger/Debugger.h"
 #include "debugger/DebugScript.h"
+#include "debugger/Source.h"
 #include "wasm/WasmInstance.h"
 
 #include "vm/BytecodeUtil-inl.h"
@@ -392,7 +393,7 @@ class DebuggerScript::GetSourceMatcher {
  public:
   GetSourceMatcher(JSContext* cx, Debugger* dbg) : cx_(cx), dbg_(dbg) {}
 
-  using ReturnType = JSObject*;
+  using ReturnType = DebuggerSource*;
 
   ReturnType match(HandleScript script) {
     // JSScript holds the refefence to possibly wrapped ScriptSourceObject.
@@ -419,7 +420,7 @@ bool DebuggerScript::getSource(JSContext* cx, unsigned argc, Value* vp) {
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   GetSourceMatcher matcher(cx, dbg);
-  RootedObject sourceObject(cx, referent.match(matcher));
+  RootedDebuggerSource sourceObject(cx, referent.match(matcher));
   if (!sourceObject) {
     return false;
   }

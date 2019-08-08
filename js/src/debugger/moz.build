@@ -30,4 +30,5 @@ UNIFIED_SOURCES = [
     'NoExecute.cpp',
     'Object.cpp',
     'Script.cpp',
+    'Source.cpp',
 ]
