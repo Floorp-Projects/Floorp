@@ -7,7 +7,13 @@ package org.mozilla.geckoview.test
 import android.os.Handler
 import android.os.Looper
 import android.support.test.InstrumentationRegistry
+import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
+import org.mozilla.geckoview.GeckoSessionSettings
+import org.mozilla.geckoview.WebRequestError
 
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
@@ -23,7 +29,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.UiThreadUtils
@@ -549,8 +554,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.loadTestPath(VIEWPORT_PATH)
         sessionRule.waitForPageStop()
 
-        val desktopInnerWidthTablet = GeckoRuntimeSettings.DESKTOP_VIEWPORT_WIDTH_TABLET
-        val desktopInnerWidthPhone = GeckoRuntimeSettings.DESKTOP_VIEWPORT_WIDTH_PHONE
+        val desktopInnerWidth = 980.0
         val physicalWidth = 600.0
         val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
         val mobileInnerWidth = physicalWidth / pixelRatio
@@ -561,23 +565,13 @@ class NavigationDelegateTest : BaseSessionTest() {
                 innerWidth, closeTo(mobileInnerWidth, 0.1))
 
         sessionRule.session.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
-        sessionRule.runtime.settings.desktopViewportWidth = desktopInnerWidthTablet
 
         sessionRule.session.reload()
         sessionRule.session.waitForPageStop()
 
         innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
-        assertThat("innerWidth should be equal to $desktopInnerWidthTablet", innerWidth,
-                closeTo(desktopInnerWidthTablet.toDouble(), 0.1))
-
-        sessionRule.runtime.settings.desktopViewportWidth = desktopInnerWidthPhone
-
-        sessionRule.session.reload()
-        sessionRule.session.waitForPageStop()
-
-        innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
-        assertThat("innerWidth should be equal to $desktopInnerWidthPhone", innerWidth,
-                closeTo(desktopInnerWidthPhone.toDouble(), 0.1))
+        assertThat("innerWidth should be equal to $desktopInnerWidth", innerWidth,
+                closeTo(desktopInnerWidth, 0.1))
 
         sessionRule.session.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_MOBILE
 
