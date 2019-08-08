@@ -456,7 +456,7 @@ this.LoginHelper = {
 
       for (let prop of aNewLoginData.enumerator) {
         switch (prop.name) {
-          // nsILoginInfo (fall through)
+          // nsILoginInfo
           case "origin":
           case "httpRealm":
           case "formActionOrigin":
@@ -464,7 +464,7 @@ this.LoginHelper = {
           case "password":
           case "usernameField":
           case "passwordField":
-          // nsILoginMetaInfo (fall through)
+          // nsILoginMetaInfo
           case "guid":
           case "timeCreated":
           case "timeLastUsed":

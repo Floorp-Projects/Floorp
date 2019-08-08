@@ -1733,7 +1733,6 @@
           if (relatedTarget && relatedTarget.ownerDocument == document) {
             break;
           }
-        // fall through
         case "mousemove":
           if (document.getElementById("tabContextMenu").state != "open") {
             this._unlockTabSizing();

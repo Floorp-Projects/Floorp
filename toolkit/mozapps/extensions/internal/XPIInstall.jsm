@@ -1421,7 +1421,6 @@ class AddonInstall {
         let stagedAddon = stagingDir.clone();
 
         this.unstageInstall(stagedAddon);
-        break;
       default:
         throw new Error(
           "Cannot cancel install of " +
