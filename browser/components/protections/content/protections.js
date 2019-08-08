@@ -7,6 +7,11 @@
 import LockwiseCard from "./lockwise-card.js";
 import MonitorCard from "./monitor-card.js";
 
+// We need to send the close telemetry before unload while we still have a connection to RPM.
+window.addEventListener("beforeunload", () => {
+  document.sendTelemetryEvent("close", "protection_report");
+});
+
 document.addEventListener("DOMContentLoaded", e => {
   let todayInMs = Date.now();
   let weekAgoInMs = todayInMs - 7 * 24 * 60 * 60 * 1000;
@@ -52,6 +57,17 @@ document.addEventListener("DOMContentLoaded", e => {
   let legend = document.getElementById("legend");
   legend.style.gridTemplateAreas =
     "'social cookie tracker fingerprinter cryptominer'";
+
+  document.sendTelemetryEvent = (action, object) => {
+    // eslint-disable-next-line no-undef
+    // eslint-disable-next-line no-undef
+    RPMRecordTelemetryEvent("security.ui.protections", action, object, "", {
+      category: cbCategory,
+    });
+  };
+
+  // Send telemetry on arriving and closing this page
+  document.sendTelemetryEvent("show", "protection_report");
 
   let createGraph = data => {
     // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp

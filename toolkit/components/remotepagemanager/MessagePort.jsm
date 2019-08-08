@@ -62,7 +62,12 @@ let RPMAccessManager = {
         "browser.contentblocking.report.lockwise.enabled",
         "browser.contentblocking.report.monitor.enabled",
       ],
-      getStringPref: ["browser.contentblocking.category"],
+      getStringPref: [
+        "browser.contentblocking.category",
+        "browser.contentblocking.report.lockwise.url",
+        "browser.contentblocking.report.monitor.url",
+      ],
+      recordTelemetryEvent: ["yes"],
     },
     "about:newinstall": {
       getUpdateChannel: ["yes"],
@@ -478,5 +483,27 @@ class MessagePort {
     }
 
     return this.sendRequest("FxAccountsEndpoint", aEntrypoint);
+  }
+
+  recordTelemetryEvent(category, event, object, value, extra) {
+    let principal = this.window.document.nodePrincipal;
+    if (
+      !RPMAccessManager.checkAllowAccess(
+        principal,
+        "recordTelemetryEvent",
+        "yes"
+      )
+    ) {
+      throw new Error(
+        "RPMAccessManager does not allow access to recordTelemetryEvent"
+      );
+    }
+    return Services.telemetry.recordEvent(
+      category,
+      event,
+      object,
+      value,
+      extra
+    );
   }
 }

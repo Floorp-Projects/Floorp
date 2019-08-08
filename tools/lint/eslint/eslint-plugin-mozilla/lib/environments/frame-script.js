@@ -34,6 +34,7 @@ module.exports = {
     RPMIsWindowPrivate: false,
     RPMSendAsyncMessage: false,
     RPMAddMessageListener: false,
+    RPMRecordTelemetryEvent: false,
     RPMRemoveMessageListener: false,
   },
 };

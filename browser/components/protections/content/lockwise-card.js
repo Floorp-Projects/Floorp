@@ -4,6 +4,11 @@
 
 /* eslint-env mozilla/frame-script */
 
+const LOCKWISE_URL = RPMGetStringPref(
+  "browser.contentblocking.report.lockwise.url",
+  ""
+);
+
 export default class LockwiseCard {
   constructor(document) {
     this.doc = document;
@@ -17,13 +22,25 @@ export default class LockwiseCard {
       "open-about-logins-button"
     );
     openAboutLoginsButton.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_open_button");
       RPMSendAsyncMessage("OpenAboutLogins");
     });
 
     const syncLink = this.doc.querySelector(".synced-devices-text a");
     // Register a click handler for the anchor since it's not possible to navigate to about:preferences via href
     syncLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_app_link");
       RPMSendAsyncMessage("OpenSyncPreferences");
+    });
+
+    const lockwiseAppLink = this.doc.getElementById("lockwise-inline-link");
+    lockwiseAppLink.href = LOCKWISE_URL;
+    lockwiseAppLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_sync_link");
+    });
+    const lockwiseReportLink = this.doc.getElementById("lockwise-how-it-works");
+    lockwiseReportLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_about_link");
     });
 
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
