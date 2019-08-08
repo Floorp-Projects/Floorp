@@ -13,7 +13,6 @@
 MOZ_BC_FIELD(Name, nsString)
 MOZ_BC_FIELD(Closed, bool)
 MOZ_BC_FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
-MOZ_BC_FIELD(InheritedEmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
 MOZ_BC_FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)
 
 // The current opener for this BrowsingContext. This is a weak reference, and
