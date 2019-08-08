@@ -10,6 +10,7 @@
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientSource.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -35,7 +36,6 @@
 #include "nsQueryObject.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSandboxFlags.h"
-#include "LoadInfo.h"
 
 using namespace mozilla::dom;
 
@@ -1453,7 +1453,39 @@ void LoadInfo::SetPerformanceStorage(PerformanceStorage* aPerformanceStorage) {
 }
 
 PerformanceStorage* LoadInfo::GetPerformanceStorage() {
-  return mPerformanceStorage;
+  if (mPerformanceStorage) {
+    return mPerformanceStorage;
+  }
+
+  RefPtr<dom::Document> loadingDocument;
+  GetLoadingDocument(getter_AddRefs(loadingDocument));
+  if (!loadingDocument) {
+    return nullptr;
+  }
+
+  if (!TriggeringPrincipal()->Equals(loadingDocument->NodePrincipal())) {
+    return nullptr;
+  }
+
+  if (nsILoadInfo::GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_SUBDOCUMENT &&
+      !GetIsFromProcessingFrameAttributes()) {
+    // We only report loads caused by processing the attributes of the
+    // browsing context container.
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow = loadingDocument->GetInnerWindow();
+  if (!innerWindow) {
+    return nullptr;
+  }
+
+  mozilla::dom::Performance* performance = innerWindow->GetPerformance();
+  if (!performance) {
+    return nullptr;
+  }
+
+  return performance->AsPerformanceStorage();
 }
 
 NS_IMETHODIMP
