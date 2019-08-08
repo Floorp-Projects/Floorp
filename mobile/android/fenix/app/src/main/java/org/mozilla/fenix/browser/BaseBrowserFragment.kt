@@ -101,6 +101,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     private var browserInitialized: Boolean = false
     private var initUIJob: Job? = null
 
+    val viewModel: CreateCollectionViewModel by activityViewModels()
+
     @CallSuper
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -145,7 +147,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         val sessionManager = requireComponents.core.sessionManager
 
         return getSessionById()?.also { session ->
-            val viewModel: CreateCollectionViewModel by activityViewModels()
 
             val browserToolbarController = DefaultBrowserToolbarController(
                 context!!,
