@@ -15,7 +15,7 @@ class nsIHandlerApp;
 class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent {
  public:
   HandlerServiceParent();
-  NS_INLINE_DECL_REFCOUNTING(HandlerServiceParent)
+  NS_INLINE_DECL_REFCOUNTING(HandlerServiceParent, final)
 
  private:
   virtual ~HandlerServiceParent();

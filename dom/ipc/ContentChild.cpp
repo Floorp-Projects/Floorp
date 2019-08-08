@@ -2219,27 +2219,6 @@ bool ContentChild::DeallocPPSMContentDownloaderChild(
   return true;
 }
 
-PExternalHelperAppChild* ContentChild::AllocPExternalHelperAppChild(
-    const Maybe<URIParams>& uri,
-    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-    const nsCString& aMimeContentType, const nsCString& aContentDisposition,
-    const uint32_t& aContentDispositionHint,
-    const nsString& aContentDispositionFilename, const bool& aForceSave,
-    const int64_t& aContentLength, const bool& aWasFileChannel,
-    const Maybe<URIParams>& aReferrer, PBrowserChild* aBrowser) {
-  auto* child = new ExternalHelperAppChild();
-  child->AddRef();
-  return child;
-}
-
-bool ContentChild::DeallocPExternalHelperAppChild(
-    PExternalHelperAppChild* aService) {
-  ExternalHelperAppChild* child =
-      static_cast<ExternalHelperAppChild*>(aService);
-  child->Release();
-  return true;
-}
-
 PHandlerServiceChild* ContentChild::AllocPHandlerServiceChild() {
   auto* actor = new HandlerServiceChild();
   actor->AddRef();
