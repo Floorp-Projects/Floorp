@@ -27,7 +27,7 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { SocketListener } = require("devtools/shared/security/socket");
 

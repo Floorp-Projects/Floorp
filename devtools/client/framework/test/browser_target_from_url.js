@@ -83,7 +83,7 @@ add_task(async function() {
 async function setupDebuggerServer(webSocket) {
   info("Create a separate loader instance for the DebuggerServer.");
   const loader = new DevToolsLoader();
-  const { DebuggerServer } = loader.require("devtools/server/main");
+  const { DebuggerServer } = loader.require("devtools/server/debugger-server");
   const { SocketListener } = loader.require("devtools/shared/security/socket");
 
   DebuggerServer.init();

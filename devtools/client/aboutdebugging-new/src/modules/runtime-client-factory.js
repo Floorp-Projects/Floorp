@@ -6,7 +6,7 @@
 
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { ClientWrapper } = require("./client-wrapper");
 const {
   remoteClientManager,

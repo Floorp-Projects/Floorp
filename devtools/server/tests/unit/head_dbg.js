@@ -38,9 +38,9 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require(
-  "devtools/server/main"
+  "devtools/server/debugger-server"
 );
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");

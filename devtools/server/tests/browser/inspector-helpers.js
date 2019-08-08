@@ -17,7 +17,7 @@ function serverOwnershipTree(walkerArg) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/main");
+      const { DebuggerServer } = require("devtools/server/debugger-server");
       const {
         DocumentWalker,
       } = require("devtools/server/actors/inspector/document-walker");

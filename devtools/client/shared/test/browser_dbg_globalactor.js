@@ -9,7 +9,7 @@
 
 "use strict";
 
-var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerServer } = require("devtools/server/debugger-server");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 

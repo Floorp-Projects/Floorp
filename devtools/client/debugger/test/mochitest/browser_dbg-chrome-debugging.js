@@ -14,7 +14,7 @@ var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.j
 var customLoader = new DevToolsLoader({
   invisibleToDebugger: true,
 });
-var { DebuggerServer } = customLoader.require("devtools/server/main");
+var { DebuggerServer } = customLoader.require("devtools/server/debugger-server");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function initDebuggerClient() {

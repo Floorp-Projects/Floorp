@@ -5,7 +5,7 @@
 
 // DebuggerClient tests
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 add_task(async function() {

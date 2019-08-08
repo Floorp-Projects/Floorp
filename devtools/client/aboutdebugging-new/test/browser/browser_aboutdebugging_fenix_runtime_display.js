@@ -151,7 +151,7 @@ add_task(async function() {
 
 async function createLocalClientWrapper() {
   info("Create a local DebuggerClient");
-  const { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerServer } = require("devtools/server/debugger-server");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
   const {
     ClientWrapper,

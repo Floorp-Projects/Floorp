@@ -12,7 +12,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 var Services = require("Services");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 var TEST_BASE;
 if (window.location === AppConstants.BROWSER_CHROME_URL) {

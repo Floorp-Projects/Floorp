@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyGetter(this, "require", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
-  const { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerServer } = require("devtools/server/debugger-server");
   return DebuggerServer;
 });
 

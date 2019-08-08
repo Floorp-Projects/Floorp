@@ -39,7 +39,7 @@ function testThrowOutput() {
     });
   });
 
-  const { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerServer } = require("devtools/server/debugger-server");
 
   const longLength = DebuggerServer.LONG_STRING_LENGTH + 1;
   const longString = new Array(longLength).join("a");

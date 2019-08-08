@@ -10,7 +10,7 @@
  * are open.
  */
 
-var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerServer } = require("devtools/server/debugger-server");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 const TAB1_URL = "data:text/html;charset=utf-8,first-tab";

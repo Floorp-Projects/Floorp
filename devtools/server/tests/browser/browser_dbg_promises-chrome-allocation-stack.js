@@ -32,7 +32,9 @@ add_task(async function test() {
   const customLoader = new DevToolsLoader({
     invisibleToDebugger: true,
   });
-  const { DebuggerServer } = customLoader.require("devtools/server/main");
+  const { DebuggerServer } = customLoader.require(
+    "devtools/server/debugger-server"
+  );
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
