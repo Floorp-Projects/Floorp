@@ -42,3 +42,11 @@ web-tooling-benchmark:
         url: https://github.com/mozilla/perf-automation/releases/download/V1/web-tooling-benchmark-b2ac25c897c9.zip
         sha256: 93b0b51df0cec3ca9bfa0bdf81d782306dcf18532e39b3ff3180409125daaff1
         size: 5444135
+
+jetstream2:
+    description: JetStream2 Benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/jetstream2-v1.1/jetstream2-e19a0865c946.zip
+        sha256: 808e67528c114d45d0cf34aedbf71f8ecc8cefa99323879fc503678a32d8c407
+        size: 25486847
