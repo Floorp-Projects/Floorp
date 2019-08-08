@@ -32,7 +32,7 @@ function enableNetProvider(webConsoleUI) {
   let dataProvider;
   return next => (reducer, initialState, enhancer) => {
     function netProviderEnhancer(state, action) {
-      const proxy = webConsoleUI ? webConsoleUI.proxy : null;
+      const proxy = webConsoleUI ? webConsoleUI.getProxy() : null;
       if (!proxy) {
         return reducer(state, action);
       }

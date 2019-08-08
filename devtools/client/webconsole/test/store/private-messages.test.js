@@ -18,6 +18,7 @@ const {
   getFirstMessage,
   getLastMessage,
   getPrivatePacket,
+  getWebConsoleUiMock,
   setupActions,
   setupStore,
 } = require("devtools/client/webconsole/test/helpers");
@@ -190,13 +191,11 @@ describe("private messages", () => {
   it("releases private backend actors on PRIVATE_MESSAGES_CLEAR action", () => {
     const releasedActors = [];
     const { dispatch, getState } = setupStore([], {
-      hud: {
-        proxy: {
-          releaseActor: actor => {
-            releasedActors.push(actor);
-          },
+      webConsoleUI: getWebConsoleUiMock(null, {
+        releaseActor: actor => {
+          releasedActors.push(actor);
         },
-      },
+      }),
     });
 
     // Add a log message.

@@ -134,10 +134,12 @@ class WebConsoleWrapper {
           return ownProperties;
         },
         getLongString: grip => {
-          return webConsoleUI.proxy.webConsoleClient.getString(grip);
+          const proxy = webConsoleUI.getProxy();
+          return proxy.webConsoleClient.getString(grip);
         },
         requestData(id, type) {
-          return webConsoleUI.proxy.networkDataProvider.requestData(id, type);
+          const proxy = webConsoleUI.getProxy();
+          return proxy.networkDataProvider.requestData(id, type);
         },
         onViewSource(frame) {
           if (webConsoleUI && webConsoleUI.hud && webConsoleUI.hud.viewSource) {
@@ -212,7 +214,7 @@ class WebConsoleWrapper {
         },
 
         requestEvaluation: (string, options) => {
-          return webConsoleUI.webConsoleClient.evaluateJSAsync(string, options);
+          return webConsoleUI.evaluateJSAsync(string, options);
         },
 
         getInputCursor: () => {
@@ -612,7 +614,7 @@ class WebConsoleWrapper {
       packet.type = "will-navigate";
       this.dispatchMessageAdd(packet);
     } else {
-      this.webConsoleUI.webConsoleClient.clearNetworkRequests();
+      this.webConsoleUI.clearNetworkRequests();
       this.dispatchMessagesClear();
       store.dispatch({
         type: Constants.WILL_NAVIGATE,

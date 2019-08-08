@@ -26,7 +26,6 @@ class WebConsoleConnectionProxy {
   constructor(webConsoleUI, target, isBrowserConsole, fissionSupport) {
     this.webConsoleUI = webConsoleUI;
     this.target = target;
-    this.webConsoleClient = target.activeConsole;
     this.isBrowserConsole = isBrowserConsole;
     this.fissionSupport = fissionSupport;
 
@@ -69,6 +68,7 @@ class WebConsoleConnectionProxy {
     this.target.on("navigate", this._onTabNavigated);
 
     const connection = (async () => {
+      this.webConsoleClient = await this.target.getFront("console");
       this._addWebConsoleClientEventListeners();
       await this._attachConsole();
 
@@ -121,8 +121,10 @@ class WebConsoleConnectionProxy {
   _attachConsole() {
     const listeners = ["PageError", "ConsoleAPI", "NetworkActivity"];
     // Enable the forwarding of console messages to the parent process
-    // when we open the Browser Console or Toolbox.
-    if (this.target.chrome && !this.target.isAddon) {
+    // when we open the Browser Console or Toolbox without fission support. If Fission
+    // is enabled, we don't use the ContentProcessMessages listener, but attach to the
+    // content processes directly.
+    if (this.target.chrome && !this.target.isAddon && !this.fissionSupport) {
       listeners.push("ContentProcessMessages");
     }
     return this.webConsoleClient.startListeners(listeners);

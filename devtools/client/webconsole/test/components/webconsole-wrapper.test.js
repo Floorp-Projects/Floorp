@@ -14,6 +14,7 @@ const {
   getLastMessage,
   getMessageAt,
   getPrivatePacket,
+  getWebConsoleUiMock,
 } = require("devtools/client/webconsole/test/helpers");
 
 const WebConsoleWrapper = require("devtools/client/webconsole/webconsole-wrapper");
@@ -21,17 +22,7 @@ const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
 async function getWebConsoleWrapper() {
   const hud = { target: { client: {} }, getMappedExpression: () => {} };
-  const webConsoleUi = {
-    emit: () => {},
-    hud,
-    proxy: {
-      releaseActor: () => {},
-      target: {
-        ensureCSSErrorReportingEnabled: () => {},
-      },
-    },
-    inspectObjectActor: () => {},
-  };
+  const webConsoleUi = getWebConsoleUiMock(hud);
 
   const wcow = new WebConsoleWrapper(null, webConsoleUi, null, null);
   await wcow.init();

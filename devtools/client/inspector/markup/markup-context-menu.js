@@ -371,10 +371,7 @@ class MarkupContextMenu {
     const options = {
       selectedNodeActor: this.selection.nodeFront.actorID,
     };
-    const res = await hud.ui.webConsoleClient.evaluateJSAsync(
-      evalString,
-      options
-    );
+    const res = await hud.ui.evaluateJSAsync(evalString, options);
     hud.setInputValue(res.result);
     this.inspector.emit("console-var-ready");
   }
