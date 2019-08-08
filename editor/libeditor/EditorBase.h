@@ -1467,7 +1467,7 @@ class EditorBase : public nsIEditor,
 
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
-  virtual bool IsBlockNode(nsINode* aNode);
+  virtual bool IsBlockNode(nsINode* aNode) const;
 
   /**
    * Set outOffset to the offset of aChild in the parent.
@@ -1591,14 +1591,14 @@ class EditorBase : public nsIEditor,
    * return nullptr if aCurrentNode has no children.
    */
   nsIContent* GetRightmostChild(nsINode* aCurrentNode,
-                                bool bNoBlockCrossing = false);
+                                bool bNoBlockCrossing = false) const;
 
   /**
    * Get the leftmost child of aCurrentNode;
    * return nullptr if aCurrentNode has no children.
    */
   nsIContent* GetLeftmostChild(nsINode* aCurrentNode,
-                               bool bNoBlockCrossing = false);
+                               bool bNoBlockCrossing = false) const;
 
   /**
    * Returns true if aParent can contain a child of type aTag.
@@ -1623,12 +1623,12 @@ class EditorBase : public nsIEditor,
   /**
    * Returns true if aNode is a container.
    */
-  virtual bool IsContainer(nsINode* aNode);
+  virtual bool IsContainer(nsINode* aNode) const;
 
   /**
    * returns true if aNode is an editable node.
    */
-  bool IsEditable(nsINode* aNode) {
+  bool IsEditable(nsINode* aNode) const {
     if (NS_WARN_IF(!aNode)) {
       return false;
     }

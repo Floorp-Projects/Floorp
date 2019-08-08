@@ -521,6 +521,28 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
               //".zpaq",
 };
 
+static const char* const kMozNonBinaryExecutables[] = {
+    ".001", ".7z",   ".ace",  ".arc",   ".arj",    ".b64",      ".balz",
+    ".bhx", ".cpio", ".fat",  ".lha",   ".lpaq1",  ".lpaq5",    ".lpaq8",
+    ".lzh", ".lzma", ".ntfs", ".paq8f", ".paq8jd", ".paq8l",    ".paq8o",
+    ".pea", ".quad", ".r00",  ".r01",   ".r02",    ".r03",      ".r04",
+    ".r05", ".r06",  ".r07",  ".r08",   ".r09",    ".r10",      ".r11",
+    ".r12", ".r13",  ".r14",  ".r15",   ".r16",    ".r17",      ".r18",
+    ".r19", ".r20",  ".r21",  ".r22",   ".r23",    ".r24",      ".r25",
+    ".r26", ".r27",  ".r28",  ".r29",   ".rar",    ".squashfs", ".uu",
+    ".uue", ".wrc",  ".xxe",  ".zpaq",  ".toast",
+};
+
+static const char* const kSafeFileExtensions[] = {
+    ".jpg",  ".jpeg", ".mp3",      ".mp4",  ".png",  ".csv",  ".ica",
+    ".gif",  ".txt",  ".package",  ".tif",  ".webp", ".mkv",  ".wav",
+    ".mov",  ".paf",  ".vbscript", ".ad",   ".inx",  ".isu",  ".job",
+    ".rgs",  ".u3p",  ".out",      ".run",  ".bmp",  ".css",  ".ehtml",
+    ".flac", ".ico",  ".jfif",     ".m4a",  ".m4v",  ".mpeg", ".mpg",
+    ".oga",  ".ogg",  ".ogm",      ".ogv",  ".opus", ".pjp",  ".pjpeg",
+    ".svgz", ".text", ".tiff",     ".weba", ".webm", ".xbm",
+};
+
 enum class LookupType { AllowlistOnly, BlocklistOnly, BothLists };
 
 // Define the reasons that download protection service accepts or blocks this
@@ -1014,15 +1036,28 @@ nsresult PendingLookup::LookupNext() {
   }
 
   if (!mFileName.IsEmpty()) {
-    AccumulateCategorical(
-        mIsBinaryFile
-            ? mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
-                  BinaryFile
-            : mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
-                  NonBinaryFile);
+    if (IsBinary(mFileName)) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_TYPE::
+              BinaryFile);
+    } else if (IsFileType(mFileName, kSafeFileExtensions,
+                          ArrayLength(kSafeFileExtensions))) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_TYPE::
+              NonBinaryFile);
+    } else if (IsFileType(mFileName, kMozNonBinaryExecutables,
+                          ArrayLength(kMozNonBinaryExecutables))) {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_TYPE::
+              MozNonBinaryFile);
+    } else {
+      AccumulateCategorical(
+          mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_TYPE::
+              UnknownFile);
+    }
   } else {
     AccumulateCategorical(
-        mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
+        mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY_TYPE::
             MissingFilename);
   }
 

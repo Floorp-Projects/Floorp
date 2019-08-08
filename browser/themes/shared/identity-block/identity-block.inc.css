@@ -218,22 +218,10 @@
   padding-inline-end: 6px;
   fill-opacity: .3;
   fill: currentColor;
-  position: relative;
-}
-
-/* Separator */
-#tracking-protection-icon-container::after {
-  content: "";
-  border-right: 1px solid var(--urlbar-separator-color);
-  position: absolute;
-  right: 0;
-  top: 4px;
-  height: 21px;
-}
-
-#tracking-protection-icon-container:-moz-locale-dir(rtl)::after {
-  right: unset;
-  left: 0;
+  /* Separator */
+  border-inline-end: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
 }
 
 #urlbar[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {

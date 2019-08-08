@@ -9,7 +9,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "builtin/String.h"
 #ifdef DEBUG
 #  include "jsutil.h"
 #endif

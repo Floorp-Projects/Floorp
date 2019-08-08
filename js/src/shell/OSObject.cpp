@@ -25,7 +25,6 @@
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
 
-#include "builtin/String.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"

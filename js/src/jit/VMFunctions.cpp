@@ -7,6 +7,7 @@
 #include "jit/VMFunctions.h"
 
 #include "builtin/Promise.h"
+#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"

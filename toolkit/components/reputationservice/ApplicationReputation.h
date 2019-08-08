@@ -33,6 +33,7 @@ class ApplicationReputationService final
 #else
   static const char* const kBinaryFileExtensions[185];
 #endif
+
   static already_AddRefed<ApplicationReputationService> GetSingleton();
 
  private:

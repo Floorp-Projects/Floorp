@@ -8,7 +8,9 @@
 const mcRoot = `${__dirname}/../../../../`;
 const getModule = mcPath => `module.exports = require("${mcRoot}${mcPath}");`;
 
-const { Services: { pref } } = require("devtools-modules");
+const {
+  Services: { pref },
+} = require("devtools-modules");
 pref("devtools.debugger.remote-timeout", 10000);
 pref("devtools.hud.loglimit", 10000);
 pref("devtools.webconsole.filter.error", true);
@@ -32,12 +34,12 @@ pref("devtools.webconsole.input.editorWidth", 800);
 
 global.loader = {
   lazyServiceGetter: () => {},
-  lazyGetter: (context, name, fn) => {
-
-  },
+  lazyGetter: (context, name, fn) => {},
   lazyRequireGetter: (context, name, path, destruct) => {
     if (path === "devtools/shared/async-storage") {
-      global[name] = require("devtools/client/webconsole/test/fixtures/async-storage");
+      global[
+        name
+      ] = require("devtools/client/webconsole/test/fixtures/async-storage");
     }
     const excluded = [
       "Debugger",
@@ -59,7 +61,7 @@ global.loader = {
 
 // Setting up globals used in some modules.
 global.isWorker = false;
-global.indexedDB = {open: () => ({})};
+global.indexedDB = { open: () => ({}) };
 
 // URLSearchParams was added to the global object in Node 10.0.0. To not cause any issue
 // with prior versions, we add it to the global object if it is not defined there.
@@ -92,7 +94,9 @@ requireHacker.global_hook("default", (path, module) => {
     case "react-dom/server":
       return getModule("devtools/client/shared/vendor/react-dom-server");
     case "react-dom/test-utils":
-      return getModule("devtools/client/shared/vendor/react-dom-test-utils-dev");
+      return getModule(
+        "devtools/client/shared/vendor/react-dom-test-utils-dev"
+      );
     case "react-redux":
       return getModule("devtools/client/shared/vendor/react-redux");
     // Use react-dev. This would be handled by browserLoader in Firefox.
@@ -108,10 +112,10 @@ requireHacker.global_hook("default", (path, module) => {
   switch (path) {
     case "devtools/shared/l10n":
       return getModule(
-        "devtools/client/webconsole/test/fixtures/LocalizationHelper");
+        "devtools/client/webconsole/test/fixtures/LocalizationHelper"
+      );
     case "devtools/shared/plural-form":
-      return getModule(
-        "devtools/client/webconsole/test/fixtures/PluralForm");
+      return getModule("devtools/client/webconsole/test/fixtures/PluralForm");
     case "Services":
     case "Services.default":
       return `module.exports = require("devtools-modules/src/Services")`;

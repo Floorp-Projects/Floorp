@@ -108,15 +108,15 @@
     "bug_numbers": [1245901],
     "alert_emails": ["benjamin@smedbergs.us"]
   },
-  "APPLICATION_REPUTATION_BINARY": {
+  "APPLICATION_REPUTATION_BINARY_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
-    "bug_numbers": [1480639, 1531034],
+    "bug_numbers": [156404],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
-    "labels": ["BinaryFile", "NonBinaryFile", "MissingFilename"],
+    "labels": ["BinaryFile", "NonBinaryFile", "MozNonBinaryFile", "UnknownFile", "MissingFilename"],
     "description": "Whether or not the file examined by download protection is a binary type (or it's not possible to tell because the filename is missing)."
   },
   "APPLICATION_REPUTATION_BINARY_ARCHIVE": {

@@ -66,7 +66,8 @@
         "*://*/wasm-godot/index.html*",
         "*://*/assorted-dom/assorted/results.html*",
         "*://*.mozaws.net/*",
-        "*://*/ARES-6/index.html*"
+        "*://*/ARES-6/index.html*",
+        "*://*/JetStream2/index.html*"
       ],
       "js": ["benchmark.js"],
       "run_at": "document_end"

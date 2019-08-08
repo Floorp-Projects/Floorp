@@ -35,6 +35,7 @@
 #include "builtin/Reflect.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
+#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CreateScriptSourceObject
@@ -2182,20 +2183,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     StringToLowerCase),
     JS_INLINABLE_FN("std_String_toUpperCase", str_toUpperCase, 0, 0,
                     StringToUpperCase),
-
-    JS_INLINABLE_FN("std_String_charAt", str_charAt, 1, 0, StringCharAt),
     JS_FN("std_String_endsWith", str_endsWith, 1, 0),
-    JS_FN("std_String_trim", str_trim, 0, 0),
-    JS_FN("std_String_trimStart", str_trimStart, 0, 0),
-    JS_FN("std_String_trimEnd", str_trimEnd, 0, 0),
-#if !EXPOSE_INTL_API
-    JS_FN("std_String_toLocaleLowerCase", str_toLocaleLowerCase, 0, 0),
-    JS_FN("std_String_toLocaleUpperCase", str_toLocaleUpperCase, 0, 0),
-    JS_FN("std_String_localeCompare", str_localeCompare, 1, 0),
-#else
-    JS_FN("std_String_normalize", str_normalize, 0, 0),
-#endif
-    JS_FN("std_String_concat", str_concat, 1, 0),
 
     JS_FN("std_TypedArray_buffer", js::TypedArray_bufferGetter, 1, 0),
 
@@ -2450,7 +2438,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \
     JS_FN("Store_" #_name, js::StoreScalar##_type::Func, 3, 0),         \
     JS_FN("Load_" #_name,  js::LoadScalar##_type::Func, 3, 0),
-    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+    JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+    JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(LOAD_AND_STORE_SCALAR_FN_DECLS)
 // clang-format on
 #undef LOAD_AND_STORE_SCALAR_FN_DECLS
 

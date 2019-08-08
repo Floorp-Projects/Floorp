@@ -104,6 +104,7 @@ raptor-firefox:
     - raptor-tp6-3-firefox-cold
     - raptor-tp6-4-firefox-cold
     - raptor-ares6-firefox
+    - raptor-jetstream2-firefox
 
 raptor-profiling:
     - raptor-tp6-1-firefox-profiling
@@ -124,6 +125,7 @@ raptor-profiling:
     - raptor-sunspider-firefox-profiling
     - raptor-wasm-godot-firefox-profiling
     - raptor-ares6-firefox-profiling
+    - raptor-jetstream2-firefox-profiling
 
 raptor-chromium:
     - raptor-tp6-1-chromium
@@ -148,6 +150,7 @@ raptor-chromium:
     - raptor-tp6-3-chromium-cold
     - raptor-tp6-4-chromium-cold
     - raptor-ares6-chromium
+    - raptor-jetstream2-chromium
 
 # Fetch tasks are only supported on Linux for now,
 # so these need to be separate sets.
@@ -180,6 +183,7 @@ raptor-fetch-chromium:
     - raptor-unity-webgl-chromium
     - raptor-wasm-misc-chromium
     - raptor-assorted-dom-chromium
+    - raptor-jetstream2-chromium
 
 awsy:
     - awsy

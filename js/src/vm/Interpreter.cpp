@@ -25,7 +25,6 @@
 #include "builtin/Eval.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
-#include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
