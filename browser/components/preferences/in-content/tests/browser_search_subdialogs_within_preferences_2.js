@@ -21,13 +21,12 @@ add_task(async function() {
 });
 
 /**
- * Test for searching for the "Exceptions - Enhanced Tracking Protection" subdialog:
- * "You’ve turned off protections on these websites." #permissions-exceptions-etp-desc
+ * Test for searching for the "Exceptions - Tracking Protection" subdialog.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("turned off protections", "trackingGroup");
+  await evaluateSearchResults("disabled content blocking", "trackingGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

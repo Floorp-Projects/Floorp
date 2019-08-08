@@ -234,17 +234,6 @@ function dataCollectionCheckboxHandler({
   updateCheckbox();
 }
 
-// Sets the "Learn how" SUMO link in the Strict/Custom options of Content Blocking.
-function addCustomBlockingLearnMore() {
-  let links = document.querySelectorAll(".contentBlockWarningLink");
-  let contentBlockingWarningUrl =
-    Services.urlFormatter.formatURLPref("app.support.baseURL") +
-    "turn-off-etp-desktop";
-  for (let link of links) {
-    link.setAttribute("href", contentBlockingWarningUrl);
-  }
-}
-
 var gPrivacyPane = {
   _pane: null,
 
@@ -737,24 +726,8 @@ var gPrivacyPane = {
     let link = document.getElementById("contentBlockingLearnMore");
     let contentBlockingUrl =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "enhanced-tracking-protection";
+      "content-blocking";
     link.setAttribute("href", contentBlockingUrl);
-
-    // Toggles the text "Cross-site and social media trackers" based on the
-    // social tracking pref. If the pref is false, the text reads
-    // "Cross-site trackers".
-    const STP_COOKIES_PREF = "privacy.socialtracking.block_cookies.enabled";
-    if (Services.prefs.getBoolPref(STP_COOKIES_PREF)) {
-      let contentBlockOptionSocialMedia = document.getElementById(
-        "blockCookiesSocialMedia"
-      );
-      document.l10n.setAttributes(
-        contentBlockOptionSocialMedia,
-        "sitedata-option-block-cross-site-and-social-media-trackers"
-      );
-    }
-
-    addCustomBlockingLearnMore();
   },
 
   populateCategoryContents() {
@@ -806,13 +779,6 @@ var gPrivacyPane = {
             : "-fp"
         );
         rulesArray.push(
-          Services.prefs.getBoolPref(
-            "privacy.socialtracking.block_cookies.enabled"
-          )
-            ? "stp"
-            : "-stp"
-        );
-        rulesArray.push(
           defaults.getBoolPref("privacy.trackingprotection.enabled")
             ? "tp"
             : "-tp"
@@ -823,7 +789,6 @@ var gPrivacyPane = {
             : "-tpPrivate"
         );
       }
-
       // Hide all cookie options first, until we learn which one should be showing.
       document.querySelector(selector + " .all-cookies-option").hidden = true;
       document.querySelector(
@@ -835,7 +800,6 @@ var gPrivacyPane = {
       document.querySelector(
         selector + " .all-third-party-cookies-option"
       ).hidden = true;
-      document.querySelector(selector + " .social-media-option").hidden = true;
 
       for (let item of rulesArray) {
         // Note "cookieBehavior0", will result in no UI changes, so is not listed here.
@@ -878,23 +842,6 @@ var gPrivacyPane = {
           case "-cm":
             document.querySelector(
               selector + " .cryptominers-option"
-            ).hidden = true;
-            break;
-          case "stp":
-            // Store social tracking cookies pref
-            const STP_COOKIES_PREF =
-              "privacy.socialtracking.block_cookies.enabled";
-
-            if (Services.prefs.getBoolPref(STP_COOKIES_PREF)) {
-              document.querySelector(
-                selector + " .social-media-option"
-              ).hidden = false;
-            }
-            break;
-          case "-stp":
-            // Store social tracking cookies pref
-            document.querySelector(
-              selector + " .social-media-option"
             ).hidden = true;
             break;
           case "cookieBehavior1":
@@ -1488,6 +1435,7 @@ var gPrivacyPane = {
       blockCookiesMenu.selectedIndex = 0;
       return this.writeBlockCookiesFrom();
     }
+
     return Ci.nsICookieService.BEHAVIOR_ACCEPT;
   },
 
