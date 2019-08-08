@@ -793,7 +793,9 @@
 
         if (changed) {
           this._fullZoom = val;
-          this.sendMessageToActor("FullZoom", { value: val }, "Zoom", true);
+          try {
+            this.messageManager.sendAsyncMessage("FullZoom", { value: val });
+          } catch (ex) {}
 
           let event = new Event("FullZoomChange", { bubbles: true });
           this.dispatchEvent(event);
@@ -816,7 +818,9 @@
 
         if (changed) {
           this._textZoom = val;
-          this.sendMessageToActor("TextZoom", { value: val }, "Zoom", true);
+          try {
+            this.messageManager.sendAsyncMessage("TextZoom", { value: val });
+          } catch (ex) {}
 
           let event = new Event("TextZoomChange", { bubbles: true });
           this.dispatchEvent(event);
@@ -1239,6 +1243,12 @@
         this.messageManager.addMessageListener("Browser:Init", this);
         this.messageManager.addMessageListener("DOMTitleChanged", this);
         this.messageManager.addMessageListener("ImageDocumentLoaded", this);
+        this.messageManager.addMessageListener("FullZoomChange", this);
+        this.messageManager.addMessageListener("TextZoomChange", this);
+        this.messageManager.addMessageListener(
+          "ZoomChangeUsingMouseWheel",
+          this
+        );
 
         // browser-child messages, such as Content:LocationChange, are handled in
         // RemoteWebProgress, ensure it is loaded and ready.
@@ -1492,6 +1502,30 @@
             height: data.height,
           };
           break;
+
+        case "FullZoomChange": {
+          this._fullZoom = data.value;
+          let event = document.createEvent("Events");
+          event.initEvent("FullZoomChange", true, false);
+          this.dispatchEvent(event);
+          break;
+        }
+
+        case "TextZoomChange": {
+          this._textZoom = data.value;
+          let event = document.createEvent("Events");
+          event.initEvent("TextZoomChange", true, false);
+          this.dispatchEvent(event);
+          break;
+        }
+
+        case "ZoomChangeUsingMouseWheel": {
+          let event = document.createEvent("Events");
+          event.initEvent("ZoomChangeUsingMouseWheel", true, false);
+          this.dispatchEvent(event);
+          break;
+        }
+
         default:
           return this._receiveMessage(aMessage);
       }
