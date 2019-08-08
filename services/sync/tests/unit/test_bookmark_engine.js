@@ -390,8 +390,8 @@ add_bookmark_test(async function test_processIncoming_error_orderChildren(
     };
 
     // Make the 10 minutes old so it will only be synced in the toFetch phase.
-    bogus_record.modified = Date.now() / 1000 - 60 * 10;
-    await engine.setLastSync(Date.now() / 1000 - 60);
+    bogus_record.modified = new_timestamp() - 60 * 10;
+    await engine.setLastSync(new_timestamp() - 60);
     engine.toFetch = new SerializableSet([BOGUS_GUID]);
 
     let error;
@@ -1251,7 +1251,7 @@ add_task(async function test_resume_buffer() {
   try {
     let children = [];
 
-    let timestamp = Math.floor(Date.now() / 1000);
+    let timestamp = round_timestamp(Date.now());
     // Add two chunks worth of records to the server
     for (let i = 0; i < batchChunkSize * 2; ++i) {
       let cleartext = {
@@ -1536,7 +1536,7 @@ add_bookmark_test(async function test_livemarks(engine) {
         children: ["livemarkAAAA"],
         parentid: "places",
       }),
-      modifiedForA / 1000
+      round_timestamp(modifiedForA)
     );
     collection.insert(
       "livemarkAAAA",
@@ -1548,7 +1548,7 @@ add_bookmark_test(async function test_livemarks(engine) {
         title: "A",
         parentid: "menu",
       }),
-      modifiedForA / 1000
+      round_timestamp(modifiedForA)
     );
 
     _("Insert remotely updated livemark");
@@ -1570,7 +1570,7 @@ add_bookmark_test(async function test_livemarks(engine) {
         children: ["livemarkBBBB"],
         parentid: "places",
       }),
-      now / 1000
+      round_timestamp(now)
     );
     collection.insert(
       "livemarkBBBB",
@@ -1582,7 +1582,7 @@ add_bookmark_test(async function test_livemarks(engine) {
         title: "B",
         parentid: "toolbar",
       }),
-      now / 1000
+      round_timestamp(now)
     );
 
     _("Insert new remote livemark");
@@ -1596,7 +1596,7 @@ add_bookmark_test(async function test_livemarks(engine) {
         children: ["livemarkCCCC"],
         parentid: "places",
       }),
-      now / 1000
+      round_timestamp(now)
     );
     collection.insert(
       "livemarkCCCC",
@@ -1608,11 +1608,11 @@ add_bookmark_test(async function test_livemarks(engine) {
         title: "C",
         parentid: "unfiled",
       }),
-      now / 1000
+      round_timestamp(now)
     );
 
     _("Bump last sync time to ignore A");
-    await engine.setLastSync(now / 1000 - 60);
+    await engine.setLastSync(round_timestamp(now) - 60);
 
     _("Sync");
     await sync_engine_and_validate_telem(engine, false);
