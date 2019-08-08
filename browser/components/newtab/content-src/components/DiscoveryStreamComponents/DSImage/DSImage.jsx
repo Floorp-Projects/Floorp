@@ -46,13 +46,7 @@ export class DSImage extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
-      // Assume an image will be eventually seen if it is within 520px of the viewport
-      // This is half the average Desktop vertical screen size:
-      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
-      rootMargin: `540px`,
-    });
-
+    this.observer = new IntersectionObserver(this.onSeen.bind(this));
     this.observer.observe(ReactDOM.findDOMNode(this));
   }
 
