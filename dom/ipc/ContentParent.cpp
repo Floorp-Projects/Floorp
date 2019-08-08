@@ -3689,7 +3689,8 @@ bool ContentParent::DeallocPPSMContentDownloaderParent(
   return true;
 }
 
-PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
+already_AddRefed<PExternalHelperAppParent>
+ContentParent::AllocPExternalHelperAppParent(
     const Maybe<URIParams>& uri,
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
@@ -3697,19 +3698,10 @@ PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
     const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
-  ExternalHelperAppParent* parent = new ExternalHelperAppParent(
+  RefPtr<ExternalHelperAppParent> parent = new ExternalHelperAppParent(
       uri, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
-  parent->AddRef();
-  return parent;
-}
-
-bool ContentParent::DeallocPExternalHelperAppParent(
-    PExternalHelperAppParent* aService) {
-  ExternalHelperAppParent* parent =
-      static_cast<ExternalHelperAppParent*>(aService);
-  parent->Release();
-  return true;
+  return parent.forget();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(

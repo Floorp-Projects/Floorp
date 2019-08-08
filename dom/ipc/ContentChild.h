@@ -272,17 +272,6 @@ class ContentChild final : public PContentChild,
   bool DeallocPPSMContentDownloaderChild(
       PPSMContentDownloaderChild* aDownloader);
 
-  PExternalHelperAppChild* AllocPExternalHelperAppChild(
-      const Maybe<URIParams>& uri,
-      const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-      const nsCString& aMimeContentType, const nsCString& aContentDisposition,
-      const uint32_t& aContentDispositionHint,
-      const nsString& aContentDispositionFilename, const bool& aForceSave,
-      const int64_t& aContentLength, const bool& aWasFileChannel,
-      const Maybe<URIParams>& aReferrer, PBrowserChild* aBrowser);
-
-  bool DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService);
-
   PHandlerServiceChild* AllocPHandlerServiceChild();
 
   bool DeallocPHandlerServiceChild(PHandlerServiceChild*);
