@@ -864,6 +864,15 @@ fn try_convert_to_marionette_message(
             MarionetteWebDriverCommand::GetWindowRect,
         )),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        IsDisplayed(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsDisplayed(
+            x.to_marionette()?,
+        ))),
+        IsEnabled(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsEnabled(
+            x.to_marionette()?,
+        ))),
+        IsSelected(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsSelected(
+            x.to_marionette()?,
+        ))),
         MaximizeWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::MaximizeWindow,
         )),
@@ -991,12 +1000,6 @@ impl MarionetteCommand {
                 GetTitle => (Some("WebDriver:GetTitle"), None),
                 GoBack => (Some("WebDriver:Back"), None),
                 GoForward => (Some("WebDriver:Forward"), None),
-                IsDisplayed(ref x) => (
-                    Some("WebDriver:IsElementDisplayed"),
-                    Some(x.to_marionette()),
-                ),
-                IsEnabled(ref x) => (Some("WebDriver:IsElementEnabled"), Some(x.to_marionette())),
-                IsSelected(ref x) => (Some("WebDriver:IsElementSelected"), Some(x.to_marionette())),
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
