@@ -594,6 +594,12 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
 nsresult LoadInfoArgsToLoadInfo(
     const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsILoadInfo** outLoadInfo) {
+  return LoadInfoArgsToLoadInfo(aOptionalLoadInfoArgs, nullptr, outLoadInfo);
+}
+
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs, nsINode* aLoadingContext,
+    nsILoadInfo** outLoadInfo) {
   if (aOptionalLoadInfoArgs.isNothing()) {
     *outLoadInfo = nullptr;
     return NS_OK;
@@ -747,7 +753,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.serviceWorkerTaintingSynthesized(),
       loadInfoArgs.documentHasUserInteracted(),
       loadInfoArgs.documentHasLoaded(), loadInfoArgs.cspNonce(),
-      loadInfoArgs.skipContentSniffing(), loadInfoArgs.requestBlockingReason());
+      loadInfoArgs.skipContentSniffing(), loadInfoArgs.requestBlockingReason(),
+      aLoadingContext);
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
