@@ -661,8 +661,10 @@ class nsTableFrame : public nsContainerFrame {
   void DistributeBSizeToRows(const ReflowInput& aReflowInput, nscoord aAmount);
 
   void PlaceChild(TableReflowInput& aReflowInput, nsIFrame* aKidFrame,
-                  const ReflowInput& aKidReflowInput, nsPoint aKidPosition,
-                  ReflowOutput& aKidDesiredSize, const nsRect& aOriginalKidRect,
+                  const ReflowInput& aKidReflowInput,
+                  const mozilla::LogicalPoint& aKidPosition,
+                  const nsSize& aContainerSize, ReflowOutput& aKidDesiredSize,
+                  const nsRect& aOriginalKidRect,
                   const nsRect& aOriginalKidVisualOverflow);
   void PlaceRepeatedFooter(TableReflowInput& aReflowInput,
                            nsTableRowGroupFrame* aTfoot, nscoord aFooterHeight);
