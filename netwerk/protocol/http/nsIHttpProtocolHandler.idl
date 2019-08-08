@@ -57,6 +57,11 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     [must_use] readonly attribute ACString misc;
 
     /**
+     * Get the Alt-Svc cache keys (used for testing).
+     */
+    [must_use] readonly attribute Array<ACString> altSvcCacheKeys;
+
+    /**
      * This function is used to ensure HSTS data storage is ready to read after
      * the returned promise is resolved.
      * Note that this function should only used for testing.
