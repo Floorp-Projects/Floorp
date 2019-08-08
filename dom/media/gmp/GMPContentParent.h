@@ -69,13 +69,6 @@ class GMPContentParent final : public PGMPContentParent, public GMPSharedMem {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent(
-      const uint32_t& aDecryptorId) override;
-  bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) override;
-
-  PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() override;
-  bool DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor) override;
-
   void CloseIfUnused();
   // Needed because NewRunnableMethod tried to use the class that the method
   // lives on to store the receiver, but PGMPContentParent isn't refcounted.

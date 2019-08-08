@@ -177,15 +177,15 @@ already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM() {
 nsresult GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
                                               uint32_t aDecryptorId) {
   GMP_LOG("GMPContentParent::GetGMPVideoDecoder(this=%p)", this);
-  // returned with one anonymous AddRef that locks it until Destroy
-  PGMPVideoDecoderParent* pvdp = SendPGMPVideoDecoderConstructor(aDecryptorId);
-  if (!pvdp) {
+
+  RefPtr<GMPVideoDecoderParent> vdp = new GMPVideoDecoderParent(this);
+  if (!SendPGMPVideoDecoderConstructor(vdp, aDecryptorId)) {
     return NS_ERROR_FAILURE;
   }
-  GMPVideoDecoderParent* vdp = static_cast<GMPVideoDecoderParent*>(pvdp);
+
   // This addref corresponds to the Proxy pointer the consumer is returned.
   // It's dropped by calling Close() on the interface.
-  NS_ADDREF(vdp);
+  vdp.get()->AddRef();
   *aGMPVD = vdp;
   mVideoDecoders.AppendElement(vdp);
 
@@ -194,52 +194,19 @@ nsresult GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
 
 nsresult GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE) {
   GMP_LOG("GMPContentParent::GetGMPVideoEncoder(this=%p)", this);
-  // returned with one anonymous AddRef that locks it until Destroy
-  PGMPVideoEncoderParent* pvep = SendPGMPVideoEncoderConstructor();
-  if (!pvep) {
+
+  RefPtr<GMPVideoEncoderParent> vep = new GMPVideoEncoderParent(this);
+  if (!SendPGMPVideoEncoderConstructor(vep)) {
     return NS_ERROR_FAILURE;
   }
-  GMPVideoEncoderParent* vep = static_cast<GMPVideoEncoderParent*>(pvep);
+
   // This addref corresponds to the Proxy pointer the consumer is returned.
   // It's dropped by calling Close() on the interface.
-  NS_ADDREF(vep);
+  vep.get()->AddRef();
   *aGMPVE = vep;
   mVideoEncoders.AppendElement(vep);
 
   return NS_OK;
-}
-
-PGMPVideoDecoderParent* GMPContentParent::AllocPGMPVideoDecoderParent(
-    const uint32_t& aDecryptorId) {
-  GMP_LOG("GMPContentParent::AllocPGMPVideoDecoderParent(this=%p)", this);
-  GMPVideoDecoderParent* vdp = new GMPVideoDecoderParent(this);
-  NS_ADDREF(vdp);
-  return vdp;
-}
-
-bool GMPContentParent::DeallocPGMPVideoDecoderParent(
-    PGMPVideoDecoderParent* aActor) {
-  GMP_LOG("GMPContentParent::DeallocPGMPVideoDecoderParent(this=%p, aActor=%p)",
-          this, aActor);
-  GMPVideoDecoderParent* vdp = static_cast<GMPVideoDecoderParent*>(aActor);
-  NS_RELEASE(vdp);
-  return true;
-}
-
-PGMPVideoEncoderParent* GMPContentParent::AllocPGMPVideoEncoderParent() {
-  GMP_LOG("GMPContentParent::AllocPGMPVideoEncoderParent(this=%p)", this);
-  GMPVideoEncoderParent* vep = new GMPVideoEncoderParent(this);
-  NS_ADDREF(vep);
-  return vep;
-}
-
-bool GMPContentParent::DeallocPGMPVideoEncoderParent(
-    PGMPVideoEncoderParent* aActor) {
-  GMP_LOG("GMPContentParent::DeallocPGMPVideoEncoderParent(this=%p, aActor=%p)",
-          this, aActor);
-  GMPVideoEncoderParent* vep = static_cast<GMPVideoEncoderParent*>(aActor);
-  NS_RELEASE(vep);
-  return true;
 }
 
 }  // namespace gmp
