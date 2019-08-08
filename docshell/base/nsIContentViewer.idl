@@ -21,7 +21,10 @@ class nsDOMNavigationTiming;
 namespace mozilla {
 class Encoding;
 class PresShell;
-}
+namespace dom {
+class WindowGlobalChild;
+} // namespace dom
+} // namespace mozilla
 %}
 
 [ptr] native nsIWidgetPtr(nsIWidget);
@@ -32,12 +35,14 @@ class PresShell;
 [ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 [ptr] native Encoding(const mozilla::Encoding);
 [ptr] native PresShellPtr(mozilla::PresShell);
+[ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
 
 [scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
 interface nsIContentViewer : nsISupports
 {
   [noscript] void init(in nsIWidgetPtr aParentWidget,
-                       [const] in nsIntRectRef aBounds);
+                       [const] in nsIntRectRef aBounds,
+                       in WindowGlobalChildPtr aWindowActor);
 
   attribute nsIDocShell container;
 

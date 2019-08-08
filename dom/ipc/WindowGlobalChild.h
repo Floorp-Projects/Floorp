@@ -60,6 +60,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsIURI* GetDocumentURI() override { return mDocumentURI; }
   void SetDocumentURI(nsIURI* aDocumentURI);
 
+  nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
+
   // The Window ID for this WindowGlobal
   uint64_t InnerWindowId() { return mInnerWindowId; }
   uint64_t OuterWindowId() { return mOuterWindowId; }
@@ -97,6 +99,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
                     nsGlobalWindowInner* aWindow);
 
   void Init();
+
+  void InitWindowGlobal(nsGlobalWindowInner* aWindow);
 
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,

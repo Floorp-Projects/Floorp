@@ -34,6 +34,8 @@ UNIFIED_SOURCES += [
     'nsWebBrowserContentPolicy.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/docshell/base',
