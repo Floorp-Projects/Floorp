@@ -480,8 +480,6 @@ class nsHttpChannel final : public HttpBaseChannel,
    */
   void ProcessSecurityReport(nsresult status);
 
-  nsresult GetResponseEmbedderPolicy(
-      nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy);
   nsresult ProcessCrossOriginEmbedderPolicyHeader();
   nsresult ProcessCrossOriginResourcePolicyHeader();
 

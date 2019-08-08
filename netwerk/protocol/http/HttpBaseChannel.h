@@ -545,6 +545,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   bool MaybeWaitForUploadStreamLength(nsIStreamListener* aListener,
                                       nsISupports* aContext);
 
+  nsresult GetResponseEmbedderPolicy(
+      nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy);
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 

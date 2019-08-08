@@ -1065,6 +1065,8 @@ struct CrossOriginOpenerPolicyValidator {
     return e == nsILoadInfo::OPENER_POLICY_NULL ||
            e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN ||
            e == nsILoadInfo::OPENER_POLICY_SAME_SITE ||
+           e == nsILoadInfo::
+                    OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP ||
            e == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING ||
            e == nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
   }
