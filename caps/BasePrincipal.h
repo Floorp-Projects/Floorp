@@ -218,6 +218,7 @@ class BasePrincipal : public nsJSPrincipals {
   }
 
   uint32_t GetOriginNoSuffixHash() const { return mOriginNoSuffix->hash(); }
+  uint32_t GetOriginSuffixHash() const { return mOriginSuffix->hash(); }
 
   virtual nsresult GetSiteIdentifier(SiteIdentifier& aSite) = 0;
 
