@@ -435,6 +435,12 @@ interface nsISearchService : nsISupports
   readonly attribute nsISearchEngine originalDefaultEngine;
 
   /**
+   * The original Engine object that is the default for this region when in
+   * private browsing mode, ignoring changes the user may have subsequently made.
+   */
+  readonly attribute nsISearchEngine originalPrivateDefaultEngine;
+
+  /**
    * The currently active search engine.
    * Unless the application doesn't ship any search plugin, this should never
    * be null. If the currently active engine is removed, this attribute will

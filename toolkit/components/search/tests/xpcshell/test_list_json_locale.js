@@ -5,15 +5,11 @@
 
 "use strict";
 
-// Override list.json with test data from data/list.json
-// and check that different locale is working
-add_task(async function test_listJSONlocale() {
-  let url = "resource://test/data/";
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+add_task(function test_setup() {
+  useTestEngineConfig();
+});
 
+add_task(async function test_listJSONlocale() {
   Services.locale.availableLocales = ["de"];
   Services.locale.requestedLocales = ["de"];
 
