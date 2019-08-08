@@ -64,7 +64,7 @@ class FluentSerializer(object):
 def serialize_comment(comment, prefix="#"):
     prefixed = "\n".join([
         prefix if len(line) == 0 else "{} {}".format(prefix, line)
-        for line in comment.content.splitlines(False)
+        for line in comment.content.split("\n")
     ])
     # Add the trailing line break.
     return '{}\n'.format(prefixed)
