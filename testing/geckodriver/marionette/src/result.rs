@@ -20,12 +20,21 @@ pub struct WindowRect {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ElementRect {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MarionetteResult {
     #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
     Null,
     NewWindow(NewWindow),
     WindowRect(WindowRect),
+    ElementRect(ElementRect),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     String(String),
     Strings(Vec<String>),
@@ -84,7 +93,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::{assert_ser_de, ELEMENT_KEY};
+    use crate::test::{assert_de, assert_ser_de, ELEMENT_KEY};
     use serde_json::json;
 
     #[test]
@@ -186,5 +195,17 @@ mod tests {
         };
         let json = json!({"x": 100, "y": 100, "width": 800, "height": 600});
         assert_ser_de(&MarionetteResult::WindowRect(data), json);
+    }
+
+    #[test]
+    fn test_element_rect_response() {
+        let data = ElementRect {
+            x: 8.0,
+            y: 8.0,
+            width: 148.6666717529297,
+            height: 22.0,
+        };
+        let json = json!({"x": 8, "y": 8, "width": 148.6666717529297, "height": 22});
+        assert_de(&MarionetteResult::ElementRect(data), json);
     }
 }
