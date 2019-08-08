@@ -1,7 +1,12 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "gtest/gtest.h"
+#include "HashStore.h"
 #include "LookupCache.h"
 #include "LookupCacheV4.h"
-#include "HashStore.h"
-#include "gtest/gtest.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 namespace mozilla {
@@ -18,14 +23,11 @@ class PerProviderDirectoryTestUtils {
 }  // end of namespace safebrowsing
 }  // end of namespace mozilla
 
-using namespace mozilla;
-using namespace mozilla::safebrowsing;
-
 template <typename T>
-void VerifyPrivateStorePath(T* target, const nsCString& aTableName,
-                            const nsCString& aProvider,
-                            nsCOMPtr<nsIFile> aRootDir,
-                            bool aUsePerProviderStore) {
+static void VerifyPrivateStorePath(T* target, const nsCString& aTableName,
+                                   const nsCString& aProvider,
+                                   const nsCOMPtr<nsIFile>& aRootDir,
+                                   bool aUsePerProviderStore) {
   nsString rootStorePath;
   nsresult rv = aRootDir->GetPath(rootStorePath);
   EXPECT_EQ(rv, NS_OK);

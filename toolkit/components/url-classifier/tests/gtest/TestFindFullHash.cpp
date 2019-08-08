@@ -1,16 +1,23 @@
-#include "safebrowsing.pb.h"
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "gtest/gtest.h"
-#include "nsUrlClassifierUtils.h"
 #include "mozilla/Base64.h"
+#include "nsUrlClassifierUtils.h"
+#include "safebrowsing.pb.h"
 
-using namespace mozilla;
-using namespace mozilla::safebrowsing;
-
-namespace {
 template <size_t N>
-void ToBase64EncodedStringArray(nsCString (&aInput)[N],
-                                nsTArray<nsCString>& aEncodedArray);
-}  // end of unnamed namespace.
+static void ToBase64EncodedStringArray(nsCString (&aInput)[N],
+                                       nsTArray<nsCString>& aEncodedArray) {
+  for (size_t i = 0; i < N; i++) {
+    nsCString encoded;
+    nsresult rv = mozilla::Base64Encode(aInput[i], encoded);
+    NS_ENSURE_SUCCESS_VOID(rv);
+    aEncodedArray.AppendElement(encoded);
+  }
+}
 
 TEST(UrlClassifierFindFullHash, Request)
 {
@@ -204,19 +211,3 @@ TEST(UrlClassifierFindFullHash, ParseRequest)
 
   ASSERT_EQ(callbackCount, ArrayLength(EXPECTED_MATCH));
 }
-
-/////////////////////////////////////////////////////////////
-namespace {
-
-template <size_t N>
-void ToBase64EncodedStringArray(nsCString (&aArray)[N],
-                                nsTArray<nsCString>& aEncodedArray) {
-  for (size_t i = 0; i < N; i++) {
-    nsCString encoded;
-    nsresult rv = Base64Encode(aArray[i], encoded);
-    NS_ENSURE_SUCCESS_VOID(rv);
-    aEncodedArray.AppendElement(encoded);
-  }
-}
-
-}  // namespace
