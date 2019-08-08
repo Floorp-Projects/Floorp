@@ -4,7 +4,12 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerServer",
+  "devtools/server/debugger-server",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "DebuggerClient",

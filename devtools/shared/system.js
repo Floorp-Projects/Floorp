@@ -6,7 +6,12 @@
 const { Cc, Ci } = require("chrome");
 
 loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerServer",
+  "devtools/server/debugger-server",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "AppConstants",

@@ -11,7 +11,7 @@ const { loader, require } = ChromeUtils.import(
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const xpcInspector = require("xpcInspector");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 // We need to require lazily since will be crashed if we load SocketListener too early
 // in xpc shell test due to SocketListener loads PSM module.

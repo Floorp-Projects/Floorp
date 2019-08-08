@@ -86,7 +86,7 @@ async function initToolbox(url, host) {
     targetFromURL,
   } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
-  const { DebuggerServer } = require("devtools/server/main");
+  const { DebuggerServer } = require("devtools/server/debugger-server");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
   // Specify the default tool to open

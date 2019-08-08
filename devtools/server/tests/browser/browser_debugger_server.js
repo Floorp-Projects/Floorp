@@ -114,7 +114,7 @@ async function assertServerInitialized(browser, expected, message) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
-    const { DebuggerServer } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/debugger-server");
     return DebuggerServer.initialized;
   });
   is(isInitialized, expected, message);
@@ -125,7 +125,7 @@ async function setContentServerKeepAlive(browser, keepAlive, message) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
-    const { DebuggerServer } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/debugger-server");
     DebuggerServer.keepAlive = _keepAlive;
   });
 }

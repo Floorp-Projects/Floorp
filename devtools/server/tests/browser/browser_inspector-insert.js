@@ -47,7 +47,7 @@ async function testRearrange(walker) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/main");
+      const { DebuggerServer } = require("devtools/server/debugger-server");
       const {
         DocumentWalker,
       } = require("devtools/server/actors/inspector/document-walker");
@@ -86,7 +86,7 @@ async function testInsertInvalidInput(walker) {
       const { require } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const { DebuggerServer } = require("devtools/server/main");
+      const { DebuggerServer } = require("devtools/server/debugger-server");
       // Convert actorID to current compartment string otherwise
       // searchAllConnectionsForActor is confused and won't find the actor.
       actorID = String(actorID);

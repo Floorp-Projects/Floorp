@@ -1017,7 +1017,7 @@ DevToolsStartup.prototype = {
         invisibleToDebugger: true,
       });
       const { DebuggerServer: debuggerServer } = serverLoader.require(
-        "devtools/server/main"
+        "devtools/server/debugger-server"
       );
       const { SocketListener } = serverLoader.require(
         "devtools/shared/security/socket"

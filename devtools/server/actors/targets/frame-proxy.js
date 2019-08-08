@@ -12,7 +12,7 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 loader.lazyImporter(
   this,
   "PlacesUtils",

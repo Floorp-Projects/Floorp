@@ -149,7 +149,7 @@ add_task(async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
-    const { DebuggerServer } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/debugger-server");
     const EventEmitter = require("devtools/shared/event-emitter");
 
     // !Hack! Retrieve a server side object, the FrameTargetActor instance

@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {

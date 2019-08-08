@@ -62,7 +62,7 @@ add_task(async function setup() {
         const { require } = ChromeUtils.import(
           "resource://devtools/shared/Loader.jsm"
         );
-        const { DebuggerServer } = require("devtools/server/main");
+        const { DebuggerServer } = require("devtools/server/debugger-server");
         // Convert actorID to current compartment string otherwise
         // searchAllConnectionsForActor is confused and won't find the actor.
         actorID = String(actorID);

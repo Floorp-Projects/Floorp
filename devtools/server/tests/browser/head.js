@@ -16,7 +16,7 @@ const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 const PATH = "browser/devtools/server/tests/browser/";
 const TEST_DOMAIN = "http://test1.example.org";

@@ -6,7 +6,7 @@
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { TargetFactory } = require("devtools/client/framework/target");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const {
   BrowserTestUtils,
 } = require("resource://testing-common/BrowserTestUtils.jsm");

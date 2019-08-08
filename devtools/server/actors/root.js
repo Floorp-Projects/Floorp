@@ -13,7 +13,7 @@ const {
   LazyPool,
   createExtraActors,
 } = require("devtools/shared/protocol/lazy-pool");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 loader.lazyRequireGetter(
   this,

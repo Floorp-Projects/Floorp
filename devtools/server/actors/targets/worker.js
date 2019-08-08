@@ -12,7 +12,7 @@
 
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");

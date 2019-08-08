@@ -14,7 +14,7 @@ const {
   removeDebugServiceWorkersListener,
 } = require("devtools/shared/service-workers-debug-helper");
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { getSystemInfo } = require("devtools/shared/system");
 const { deviceSpec } = require("devtools/shared/specs/device");
 const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");

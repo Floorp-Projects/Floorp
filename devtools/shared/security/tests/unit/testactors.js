@@ -8,7 +8,7 @@ const {
 } = require("devtools/shared/protocol/lazy-pool");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");

@@ -93,7 +93,9 @@ class BrowserConsoleManager {
       const loader = new DevToolsLoader({
         freshCompartment: true,
       });
-      const { DebuggerServer } = loader.require("devtools/server/main");
+      const { DebuggerServer } = loader.require(
+        "devtools/server/debugger-server"
+      );
 
       DebuggerServer.init();
 

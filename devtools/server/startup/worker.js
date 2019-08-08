@@ -43,7 +43,7 @@ var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
 var { TabSources } = worker.require("devtools/server/actors/utils/TabSources");
 var makeDebugger = worker.require("devtools/server/actors/utils/make-debugger");
-var { DebuggerServer } = worker.require("devtools/server/main");
+var { DebuggerServer } = worker.require("devtools/server/debugger-server");
 
 DebuggerServer.init();
 DebuggerServer.createRootActor = function() {

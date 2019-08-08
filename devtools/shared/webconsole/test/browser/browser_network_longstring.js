@@ -6,7 +6,7 @@
 
 // Test that the network actor uses the LongStringActor
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const LONG_STRING_LENGTH = 400;
 const LONG_STRING_INITIAL_LENGTH = 400;
 let ORIGINAL_LONG_STRING_LENGTH, ORIGINAL_LONG_STRING_INITIAL_LENGTH;

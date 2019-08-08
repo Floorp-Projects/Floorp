@@ -427,7 +427,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
         "See also https://bugzil.la/1215378."
     );
   }
-  let { DebuggerServer } = require("devtools/server/main");
+  let { DebuggerServer } = require("devtools/server/debugger-server");
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
   let { createRootActor } = require("resource://testing-common/dbg-actors.js");

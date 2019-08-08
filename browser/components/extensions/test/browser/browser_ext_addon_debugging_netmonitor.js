@@ -5,7 +5,7 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { Toolbox } = require("devtools/client/framework/toolbox");
 
