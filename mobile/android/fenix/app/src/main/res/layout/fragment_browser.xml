@@ -31,10 +31,12 @@
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior" />
 
     <ViewStub
-        android:id="@+id/stub_find_in_page"
+        android:id="@+id/stubFindInPage"
         android:inflatedId="@+id/findInPageView"
         android:layout="@layout/stub_find_in_page"
-        android:layout_gravity="bottom" />
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="56dp" />
 
     <mozilla.components.feature.readerview.view.ReaderViewControlsBar
         android:id="@+id/readerViewControlsBar"
