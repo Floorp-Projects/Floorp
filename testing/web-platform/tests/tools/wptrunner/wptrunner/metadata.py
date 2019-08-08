@@ -1,9 +1,6 @@
 from __future__ import print_function
 import array
 import os
-import shutil
-import tempfile
-import uuid
 from collections import defaultdict, namedtuple
 
 from mozlog import structuredlog
@@ -373,7 +370,7 @@ class ExpectedUpdater(object):
     def test_start(self, data):
         test_id = intern(data["test"].encode("utf8"))
         try:
-            test_data = self.id_test_map[test_id]
+            self.id_test_map[test_id]
         except KeyError:
             print("Test not found %s, skipping" % test_id)
             return
@@ -676,7 +673,7 @@ class TestFileData(object):
 Result = namedtuple("Result", ["status", "default_expected"])
 
 
-def create_expected(url_base, test_path,  run_info_properties):
+def create_expected(url_base, test_path, run_info_properties):
     expected = manifestupdate.ExpectedManifest(None,
                                                test_path,
                                                url_base,
