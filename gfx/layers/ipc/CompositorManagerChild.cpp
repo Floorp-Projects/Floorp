@@ -101,13 +101,13 @@ bool CompositorManagerChild::CreateContentCompositorBridge(
   }
 
   CompositorBridgeOptions options = ContentCompositorOptions();
-  PCompositorBridgeChild* pbridge =
-      sInstance->SendPCompositorBridgeConstructor(options);
-  if (NS_WARN_IF(!pbridge)) {
+
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return false;
   }
 
-  auto bridge = static_cast<CompositorBridgeChild*>(pbridge);
   bridge->InitForContent(aNamespace);
   return true;
 }
@@ -131,14 +131,13 @@ CompositorManagerChild::CreateWidgetCompositorBridge(
 
   CompositorBridgeOptions options = WidgetCompositorOptions(
       aScale, vsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
-  PCompositorBridgeChild* pbridge =
-      sInstance->SendPCompositorBridgeConstructor(options);
-  if (NS_WARN_IF(!pbridge)) {
+
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return nullptr;
   }
 
-  RefPtr<CompositorBridgeChild> bridge =
-      static_cast<CompositorBridgeChild*>(pbridge);
   bridge->InitForWidget(aProcessToken, aLayerManager, aNamespace);
   return bridge.forget();
 }
@@ -154,14 +153,13 @@ CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(
   }
 
   CompositorBridgeOptions options = SameProcessWidgetCompositorOptions();
-  PCompositorBridgeChild* pbridge =
-      sInstance->SendPCompositorBridgeConstructor(options);
-  if (NS_WARN_IF(!pbridge)) {
+
+  RefPtr<CompositorBridgeChild> bridge = new CompositorBridgeChild(sInstance);
+  if (NS_WARN_IF(
+          !sInstance->SendPCompositorBridgeConstructor(bridge, options))) {
     return nullptr;
   }
 
-  RefPtr<CompositorBridgeChild> bridge =
-      static_cast<CompositorBridgeChild*>(pbridge);
   bridge->InitForWidget(1, aLayerManager, aNamespace);
   return bridge.forget();
 }
@@ -213,19 +211,6 @@ void CompositorManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (sInstance == this) {
     sInstance = nullptr;
   }
-}
-
-PCompositorBridgeChild* CompositorManagerChild::AllocPCompositorBridgeChild(
-    const CompositorBridgeOptions& aOptions) {
-  CompositorBridgeChild* child = new CompositorBridgeChild(this);
-  child->AddRef();
-  return child;
-}
-
-bool CompositorManagerChild::DeallocPCompositorBridgeChild(
-    PCompositorBridgeChild* aActor) {
-  static_cast<CompositorBridgeChild*>(aActor)->Release();
-  return true;
 }
 
 void CompositorManagerChild::HandleFatalError(const char* aMsg) const {

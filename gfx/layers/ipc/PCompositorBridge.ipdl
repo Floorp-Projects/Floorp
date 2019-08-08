@@ -90,7 +90,7 @@ struct FrameStats {
  * protocol, which is per-browser. A lot of the functions in the protocol are
  * basically multiplexing/demultiplexing stuff in PLayerTransaction.
  */
-sync protocol PCompositorBridge
+sync refcounted protocol PCompositorBridge
 {
   manager PCompositorManager;
 
