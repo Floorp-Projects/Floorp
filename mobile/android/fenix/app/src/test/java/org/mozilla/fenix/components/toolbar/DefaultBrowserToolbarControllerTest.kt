@@ -13,6 +13,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
@@ -36,6 +38,8 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 
+@ExperimentalCoroutinesApi
+@ObsoleteCoroutinesApi
 class DefaultBrowserToolbarControllerTest {
 
     private var context: HomeActivity = mockk(relaxed = true)
