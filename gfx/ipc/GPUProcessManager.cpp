@@ -812,12 +812,11 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     }
     apz = static_cast<APZCTreeManagerChild*>(papz);
 
-    PAPZInputBridgeChild* pinput =
-        mGPUChild->SendPAPZInputBridgeConstructor(aRootLayerTreeId);
-    if (!pinput) {
+    RefPtr<APZInputBridgeChild> pinput = new APZInputBridgeChild();
+    if (!mGPUChild->SendPAPZInputBridgeConstructor(pinput, aRootLayerTreeId)) {
       return nullptr;
     }
-    apz->SetInputBridge(static_cast<APZInputBridgeChild*>(pinput));
+    apz->SetInputBridge(pinput);
   }
 
   RefPtr<RemoteCompositorSession> session = new RemoteCompositorSession(

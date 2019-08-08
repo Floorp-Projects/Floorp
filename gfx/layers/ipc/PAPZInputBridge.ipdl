@@ -31,7 +31,7 @@ namespace layers {
  * and the parent side lives on the main thread in the GPU process. If there
  * is no GPU process, then this protocol is not instantiated.
  */
-sync protocol PAPZInputBridge
+sync refcounted protocol PAPZInputBridge
 {
 manager PGPU;
 
