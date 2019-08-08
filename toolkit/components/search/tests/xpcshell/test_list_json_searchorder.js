@@ -7,17 +7,11 @@
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+
+  useTestEngineConfig();
 });
 
-// Override list.json with test data from data/list.json
-// and check that searchOrder is working
 add_task(async function test_searchOrderJSON() {
-  let url = "resource://test/data/";
-  let resProt = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
-
   await asyncReInit();
 
   Assert.ok(Services.search.isInitialized, "search initialized");

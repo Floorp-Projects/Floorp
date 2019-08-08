@@ -33,6 +33,13 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "gSeparatePrivateDefault",
+  SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "gGeoSpecificDefaultsEnabled",
   SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults",
   false
@@ -622,9 +629,15 @@ SearchService.prototype = {
   _visibleDefaultEngines: [],
 
   /**
-   * The short name of the suggested default search engine from the configuration.
+   * The user visible name of the configuration suggested default search engine.
    */
   _searchDefault: null,
+
+  /**
+   * The user visible name of the configuration suggested default search engine
+   * for private browsing mode.
+   */
+  _searchPrivateDefault: null,
 
   /**
    * The suggested order of engines from the configuration.
@@ -654,6 +667,22 @@ SearchService.prototype = {
    * to validate the value is set by the application.
    */
   _metaData: {},
+
+  /**
+   * Resets the locally stored data to the original empty values in preparation
+   * for a reinit or a reset.
+   */
+  _resetLocalData() {
+    this._engines.clear();
+    this.__sortedEngines = null;
+    this._currentEngine = null;
+    this._privateEngine = null;
+    this._visibleDefaultEngines = [];
+    this._searchDefault = null;
+    this._searchPrivateDefault = null;
+    this._searchOrder = [];
+    this._metaData = {};
+  },
 
   // If initialization has not been completed yet, perform synchronous
   // initialization.
@@ -865,24 +894,32 @@ SearchService.prototype = {
     return this.__sortedEngines;
   },
 
-  // Get the original Engine object that is the default for this region,
-  // ignoring changes the user may have subsequently made.
-  get originalDefaultEngine() {
-    let defaultEngineName = this.getVerifiedGlobalAttr("searchDefault");
+  /**
+   * Returns the engine that is the default for this locale/region, ignoring any
+   * user changes to the default engine.
+   *
+   * @param {boolean} privateMode
+   *   Set to true to return the default engine in private mode,
+   *   false for normal mode.
+   * @returns {SearchEngine}
+   *   The engine that is default.
+   */
+  _originalDefaultEngine(privateMode = false) {
+    let defaultEngineName = this.getVerifiedGlobalAttr(
+      privateMode ? "searchDefaultPrivate" : "searchDefault"
+    );
     if (!defaultEngineName) {
       // We only allow the old defaultenginename pref for distributions
       // We can't use isPartnerBuild because we need to allow reading
       // of the defaultengine name pref for funnelcakes.
-      if (distroID) {
+      if (distroID && !privateMode) {
         let defaultPrefB = Services.prefs.getDefaultBranch(
           SearchUtils.BROWSER_SEARCH_PREF
         );
-        let nsIPLS = Ci.nsIPrefLocalizedString;
-
         try {
           defaultEngineName = defaultPrefB.getComplexValue(
             "defaultenginename",
-            nsIPLS
+            Ci.nsIPrefLocalizedString
           ).data;
         } catch (ex) {
           // If the default pref is invalid (e.g. an add-on set it to a bogus value)
@@ -893,18 +930,45 @@ SearchService.prototype = {
           defaultEngineName = this._searchDefault;
         }
       } else {
-        defaultEngineName = this._searchDefault;
+        defaultEngineName = privateMode
+          ? this._searchPrivateDefault
+          : this._searchDefault;
       }
+    }
+
+    if (!defaultEngineName && privateMode) {
+      // We don't have a separate engine, fall back to the non-private one.
+      return this._originalDefaultEngine(false);
     }
 
     let defaultEngine = this.getEngineByName(defaultEngineName);
     if (!defaultEngine) {
       // Something unexpected as happened. In order to recover the original default engine,
-      // use the first visible engine which us what currentEngine will use.
+      // use the first visible engine which is the best we can do.
       return this._getSortedEngines(false)[0];
     }
 
     return defaultEngine;
+  },
+
+  /**
+   * @returns {SearchEngine}
+   *   The engine that is the default for this locale/region, ignoring any
+   *   user changes to the default engine.
+   */
+  get originalDefaultEngine() {
+    return this._originalDefaultEngine();
+  },
+
+  /**
+   * @returns {SearchEngine}
+   *   The engine that is the default for this locale/region in private browsing
+   *   mode, ignoring any user changes to the default engine.
+   *   Note: if there is no default for this locale/region, then the non-private
+   *   browsing engine will be returned.
+   */
+  get originalPrivateDefaultEngine() {
+    return this._originalDefaultEngine(gSeparatePrivateDefault);
   },
 
   resetToOriginalDefaultEngine() {
@@ -1211,13 +1275,7 @@ SearchService.prototype = {
         }
 
         // Clear the engines, too, so we don't stick with the stale ones.
-        this._engines.clear();
-        this.__sortedEngines = null;
-        this._currentEngine = null;
-        this._visibleDefaultEngines = [];
-        this._searchDefault = null;
-        this._searchOrder = [];
-        this._metaData = {};
+        this._resetLocalData();
 
         // Tests that want to force a synchronous re-initialization need to
         // be notified when we are done uninitializing.
@@ -1278,13 +1336,10 @@ SearchService.prototype = {
    */
   reset() {
     gInitialized = false;
+    this._resetLocalData();
     this._initObservers = PromiseUtils.defer();
-    this._initStarted = this.__sortedEngines = this._currentEngine = this._searchDefault = null;
+    this._initStarted = null;
     this._startupExtensions = new Set();
-    this._engines.clear();
-    this._visibleDefaultEngines = [];
-    this._searchOrder = [];
-    this._metaData = {};
   },
 
   /**
@@ -1740,6 +1795,24 @@ SearchService.prototype = {
     if (
       searchRegion &&
       searchRegion in searchSettings &&
+      "searchPrivateDefault" in searchSettings[searchRegion]
+    ) {
+      this._searchPrivateDefault =
+        searchSettings[searchRegion].searchPrivateDefault;
+    } else if ("searchPrivateDefault" in searchSettings.default) {
+      this._searchPrivateDefault = searchSettings.default.searchPrivateDefault;
+    } else {
+      this._searchPrivateDefault = json.default.searchPrivateDefault;
+    }
+
+    if (!this._searchPrivateDefault) {
+      // Fallback to the normal default if nothing is specified for private mode.
+      this._searchPrivateDefault = this._searchDefault;
+    }
+
+    if (
+      searchRegion &&
+      searchRegion in searchSettings &&
       "searchOrder" in searchSettings[searchRegion]
     ) {
       this._searchOrder = searchSettings[searchRegion].searchOrder;
@@ -2053,6 +2126,14 @@ SearchService.prototype = {
     return engines;
   },
 
+  /**
+   * Returns the engine associated with the name.
+   *
+   * @param {string} engineName
+   *   The name of the engine.
+   * @returns {SearchEngine}
+   *   The associated engine if found, null otherwise.
+   */
   getEngineByName(engineName) {
     this._ensureInitialized();
     return this._engines.get(engineName) || null;

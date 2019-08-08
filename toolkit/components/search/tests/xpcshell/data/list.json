@@ -1,6 +1,7 @@
 {
   "default": {
     "searchDefault": "Test search engine",
+    "searchPrivateDefault": "engine-pref",
     "searchOrder": ["engine-resourceicon", "engine-chromeicon"],
     "visibleDefaultEngines": [
       "engine", "engine-pref", "engine-rel-searchform-purpose", "engine-chromeicon", "engine-resourceicon", "engine-reordered"
