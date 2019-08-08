@@ -9,11 +9,12 @@ import java.io.IOException
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.core.app.ApplicationProvider
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.ext.toUri
 
 object MockWebServerHelper {
@@ -47,7 +48,7 @@ class AndroidAssetDispatcher : Dispatcher() {
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
     override fun dispatch(request: RecordedRequest): MockResponse {
-        val assetManager = InstrumentationRegistry.getInstrumentation().targetContext.assets
+        val assetManager = ApplicationProvider.getApplicationContext<HomeActivity>().assets
         val assetContents = try {
             val pathNoLeadingSlash = request.path.drop(1)
             assetManager.open(pathNoLeadingSlash).use { inputStream ->
