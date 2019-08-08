@@ -52,6 +52,16 @@ static void FrameCallback(void* aEncoder, void* aFrameParams, OSStatus aStatus,
   static_cast<AppleVTEncoder*>(aEncoder)->OutputFrame(aSampleBuffer);
 }
 
+static bool SetAverageBitrate(VTCompressionSessionRef& aSession,
+                              MediaDataEncoder::Rate aBitsPerSec) {
+  int64_t bps(aBitsPerSec);
+  AutoCFRelease<CFNumberRef> bitrate(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &bps));
+  return VTSessionSetProperty(aSession,
+                              kVTCompressionPropertyKey_AverageBitRate,
+                              bitrate) == noErr;
+}
+
 static bool SetProfileLevel(VTCompressionSessionRef& aSession,
                             AppleVTEncoder::H264Specific::ProfileLevel aValue) {
   CFStringRef profileLevel = nullptr;
@@ -88,6 +98,11 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   if (status != noErr) {
     VTENC_LOGE("fail to create encoder session");
     // TODO: new error codes for encoder
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+  }
+
+  if (!SetAverageBitrate(mSession, mConfig.mBitsPerSec)) {
+    VTENC_LOGE("fail to configurate average bitrate");
     return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
   }
 
@@ -543,11 +558,7 @@ RefPtr<GenericPromise> AppleVTEncoder::SetBitrate(
   RefPtr<AppleVTEncoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
     MOZ_ASSERT(self->mSession);
-    AutoCFRelease<CFNumberRef> bitrate(
-        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &aBitsPerSec));
-    return VTSessionSetProperty(self->mSession,
-                                kVTCompressionPropertyKey_AverageBitRate,
-                                bitrate) == noErr
+    return SetAverageBitrate(self->mSession, aBitsPerSec)
                ? GenericPromise::CreateAndResolve(true, __func__)
                : GenericPromise::CreateAndReject(
                      NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, __func__);
