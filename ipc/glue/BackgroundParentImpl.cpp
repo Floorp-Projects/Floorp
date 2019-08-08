@@ -605,7 +605,7 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
   return true;
 }
 
-dom::PIPCBlobInputStreamParent*
+already_AddRefed<dom::PIPCBlobInputStreamParent>
 BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
                                                      const uint64_t& aSize) {
   AssertIsInMainOrSocketProcess();
@@ -613,7 +613,7 @@ BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
 
   RefPtr<dom::IPCBlobInputStreamParent> actor =
       dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
-  return actor.forget().take();
+  return actor.forget();
 }
 
 mozilla::ipc::IPCResult
@@ -625,17 +625,6 @@ BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
   }
 
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPIPCBlobInputStreamParent(
-    dom::PIPCBlobInputStreamParent* aActor) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<dom::IPCBlobInputStreamParent> actor =
-      dont_AddRef(static_cast<dom::IPCBlobInputStreamParent*>(aActor));
-  return true;
 }
 
 PFileDescriptorSetParent* BackgroundParentImpl::AllocPFileDescriptorSetParent(
