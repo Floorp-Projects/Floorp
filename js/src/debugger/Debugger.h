@@ -262,9 +262,9 @@ extern void CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * it's re-enabled later, new Frame objects are created.)
  */
 template <class Referent, class Wrapper, bool InvisibleKeysOk = false>
-class DebuggerWeakMap : private WeakMap<HeapPtr<Referent>, HeapPtr<Wrapper*>> {
+class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
  private:
-  typedef HeapPtr<Referent> Key;
+  typedef HeapPtr<Referent*> Key;
   typedef HeapPtr<Wrapper*> Value;
 
   typedef HashMap<JS::Zone*, uintptr_t, DefaultHasher<JS::Zone*>,
@@ -632,40 +632,40 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * An entry in this table exists if and only if the Debugger.Frame's
    * GENERATOR_INFO_SLOT is set.
    */
-  typedef DebuggerWeakMap<JSObject*, DebuggerFrame> GeneratorWeakMap;
+  typedef DebuggerWeakMap<JSObject, DebuggerFrame> GeneratorWeakMap;
   GeneratorWeakMap generatorFrames;
 
   /* An ephemeral map from JSScript* to Debugger.Script instances. */
-  typedef DebuggerWeakMap<JSScript*, DebuggerScript> ScriptWeakMap;
+  typedef DebuggerWeakMap<JSScript, DebuggerScript> ScriptWeakMap;
   ScriptWeakMap scripts;
 
-  using LazyScriptWeakMap = DebuggerWeakMap<LazyScript*, DebuggerScript>;
+  using LazyScriptWeakMap = DebuggerWeakMap<LazyScript, DebuggerScript>;
   LazyScriptWeakMap lazyScripts;
 
   using LazyScriptVector = JS::GCVector<LazyScript*>;
 
   // The map from debuggee source script objects to their Debugger.Source
   // instances.
-  typedef DebuggerWeakMap<JSObject*, DebuggerSource, true> SourceWeakMap;
+  typedef DebuggerWeakMap<JSObject, DebuggerSource, true> SourceWeakMap;
   SourceWeakMap sources;
 
   // The map from debuggee objects to their Debugger.Object instances.
-  typedef DebuggerWeakMap<JSObject*, DebuggerObject> ObjectWeakMap;
+  typedef DebuggerWeakMap<JSObject, DebuggerObject> ObjectWeakMap;
   ObjectWeakMap objects;
 
   // The map from debuggee Envs to Debugger.Environment instances.
-  typedef DebuggerWeakMap<JSObject*, DebuggerEnvironment> EnvironmentWeakMap;
+  typedef DebuggerWeakMap<JSObject, DebuggerEnvironment> EnvironmentWeakMap;
   EnvironmentWeakMap environments;
 
   // The map from WasmInstanceObjects to synthesized Debugger.Script
   // instances.
-  typedef DebuggerWeakMap<WasmInstanceObject*, DebuggerScript>
+  typedef DebuggerWeakMap<WasmInstanceObject, DebuggerScript>
       WasmInstanceScriptWeakMap;
   WasmInstanceScriptWeakMap wasmInstanceScripts;
 
   // The map from WasmInstanceObjects to synthesized Debugger.Source
   // instances.
-  typedef DebuggerWeakMap<WasmInstanceObject*, DebuggerSource>
+  typedef DebuggerWeakMap<WasmInstanceObject, DebuggerSource>
       WasmInstanceSourceWeakMap;
   WasmInstanceSourceWeakMap wasmInstanceSources;
 
