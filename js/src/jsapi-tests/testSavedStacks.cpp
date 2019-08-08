@@ -8,7 +8,6 @@
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include "jsfriendapi.h"
-#include "builtin/String.h"
 
 #include "builtin/TestingFunctions.h"
 #include "js/CompilationAndEvaluation.h"  // JS::EvaluateDontInflate

@@ -25,7 +25,6 @@
 
 #include "jsnum.h"
 
-#include "builtin/String.h"
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"

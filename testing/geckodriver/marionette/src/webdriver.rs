@@ -4,6 +4,11 @@ use serde_json::Value;
 use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Timeouts};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct LegacyWebElement {
+    pub id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Locator {
     pub using: Selector,
     pub value: String,
@@ -86,10 +91,22 @@ pub enum Command {
     FindElements(Locator),
     #[serde(rename = "WebDriver:FullscreenWindow")]
     FullscreenWindow,
+    #[serde(rename = "WebDriver:GetActiveElement")]
+    GetActiveElement,
     #[serde(rename = "WebDriver:GetAlertText")]
     GetAlertText,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
+    #[serde(rename = "WebDriver:GetElementAttribute")]
+    GetElementAttribute { id: String, name: String },
+    #[serde(rename = "WebDriver:GetElementProperty")]
+    GetElementProperty { id: String, name: String },
+    #[serde(rename = "WebDriver:GetElementRect")]
+    GetElementRect(LegacyWebElement),
+    #[serde(rename = "WebDriver:GetElementTagName")]
+    GetElementTagName(LegacyWebElement),
+    #[serde(rename = "WebDriver:GetElementText")]
+    GetElementText(LegacyWebElement),
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
     #[serde(rename = "WebDriver:GetWindowHandle")]
@@ -98,6 +115,12 @@ pub enum Command {
     GetWindowHandles,
     #[serde(rename = "WebDriver:GetWindowRect")]
     GetWindowRect,
+    #[serde(rename = "WebDriver:IsElementDisplayed")]
+    IsDisplayed(LegacyWebElement),
+    #[serde(rename = "WebDriver:IsElementEnabled")]
+    IsEnabled(LegacyWebElement),
+    #[serde(rename = "WebDriver:IsElementSelected")]
+    IsSelected(LegacyWebElement),
     #[serde(rename = "WebDriver:MaximizeWindow")]
     MaximizeWindow,
     #[serde(rename = "WebDriver:MinimizeWindow")]

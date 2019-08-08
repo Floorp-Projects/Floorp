@@ -25,7 +25,6 @@
 
 #include "jstypes.h"
 
-#include "builtin/String.h"
 #include "double-conversion/double-conversion.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"

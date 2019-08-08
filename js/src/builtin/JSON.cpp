@@ -17,7 +17,6 @@
 
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
-#include "builtin/String.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "util/StringBuffer.h"

@@ -324,3 +324,29 @@ raptor-ares6-chromium:
         extra-options:
             - --test=raptor-ares6
             - --app=chromium
+
+raptor-jetstream2-chromium:
+    description: "Raptor Jetstream2 on Chromium"
+    try-name: raptor-jetstream2-chromium
+    treeherder-symbol: Rap-Cr(js2)
+    tier: 3
+    max-run-time: 8000
+    mozharness:
+        extra-options:
+            - --test=raptor-jetstream2
+            - --app=chromium
+    fetches:
+        fetch:
+            by-test-platform:
+                win.*64.*:
+                    - win64-chromium
+                    - jetstream2
+                win.*32.*:
+                    - win32-chromium
+                    - jetstream2
+                macosx.*:
+                    - mac-chromium
+                    - jetstream2
+                default:
+                    - linux64-chromium
+                    - jetstream2
