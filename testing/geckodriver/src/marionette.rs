@@ -5,6 +5,7 @@ use crate::command::{
 use marionette_rs::common::{
     Cookie as MarionetteCookie, Date as MarionetteDate, Timeouts as MarionetteTimeouts,
 };
+use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
@@ -810,6 +811,11 @@ fn try_convert_to_marionette_message(
         DeleteCookies => Some(Command::WebDriver(
             MarionetteWebDriverCommand::DeleteCookies,
         )),
+        DeleteSession => Some(Command::Marionette(
+            marionette_rs::marionette::Command::DeleteSession {
+                flags: vec![AppStatus::eForceQuit],
+            },
+        )),
         DismissAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::DismissAlert)),
         ExecuteAsyncScript(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ExecuteAsyncScript(x.to_marionette()?),
@@ -943,14 +949,6 @@ impl MarionetteCommand {
         } else {
             let (opt_name, opt_parameters) = match msg.command {
                 Status => panic!("Got status command that should already have been handled"),
-                DeleteSession => {
-                    let mut body = Map::new();
-                    body.insert(
-                        "flags".to_owned(),
-                        serde_json::to_value(vec!["eForceQuit".to_string()])?,
-                    );
-                    (Some("Marionette:Quit"), Some(Ok(body)))
-                }
                 ElementClear(ref x) => (Some("WebDriver:ElementClear"), Some(x.to_marionette())),
                 ElementClick(ref x) => (Some("WebDriver:ElementClick"), Some(x.to_marionette())),
                 ElementSendKeys(ref e, ref x) => {
