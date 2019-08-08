@@ -46,8 +46,7 @@ WindowGlobalChild::WindowGlobalChild(nsGlobalWindowInner* aWindow,
       mBrowsingContext(aBrowsingContext),
       mInnerWindowId(aWindow->WindowID()),
       mOuterWindowId(aWindow->GetOuterWindow()->WindowID()),
-      mBeforeUnloadListeners(0),
-      mIPCClosed(true) {}
+      mBeforeUnloadListeners(0) {}
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     nsGlobalWindowInner* aWindow) {
@@ -99,7 +98,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     // Note: ref is released in DeallocPWindowGlobalChild
     browserChild->SendPWindowGlobalConstructor(do_AddRef(wgc).take(), init);
   }
-  wgc->mIPCClosed = false;
 
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
   if (!gWindowGlobalChildById) {
@@ -123,11 +121,11 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::GetByInnerWindowId(
 }
 
 bool WindowGlobalChild::IsCurrentGlobal() {
-  return !mIPCClosed && mWindowGlobal->IsCurrentInnerWindow();
+  return CanSend() && mWindowGlobal->IsCurrentInnerWindow();
 }
 
 already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
-  if (mIPCClosed) {
+  if (!CanSend()) {
     return nullptr;
   }
   IProtocol* otherSide = InProcessChild::ParentActorFor(this);
@@ -135,7 +133,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
 }
 
 already_AddRefed<BrowserChild> WindowGlobalChild::GetBrowserChild() {
-  if (IsInProcess() || mIPCClosed) {
+  if (IsInProcess() || !CanSend()) {
     return nullptr;
   }
   return do_AddRef(static_cast<BrowserChild*>(Manager()));
@@ -160,7 +158,7 @@ bool WindowGlobalChild::IsProcessRoot() {
 
 void WindowGlobalChild::BeforeUnloadAdded() {
   // Don't bother notifying the parent if we don't have an IPC link open.
-  if (mBeforeUnloadListeners == 0 && !mIPCClosed) {
+  if (mBeforeUnloadListeners == 0 && CanSend()) {
     SendSetHasBeforeUnload(true);
   }
 
@@ -173,7 +171,7 @@ void WindowGlobalChild::BeforeUnloadRemoved() {
   MOZ_ASSERT(mBeforeUnloadListeners >= 0);
 
   // Don't bother notifying the parent if we don't have an IPC link open.
-  if (mBeforeUnloadListeners == 0 && !mIPCClosed) {
+  if (mBeforeUnloadListeners == 0 && CanSend()) {
     SendSetHasBeforeUnload(false);
   }
 }
@@ -196,8 +194,6 @@ void WindowGlobalChild::Destroy() {
     }
     SendDestroy();
   }
-
-  mIPCClosed = true;
 }
 
 static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
@@ -355,7 +351,7 @@ const nsAString& WindowGlobalChild::GetRemoteType() {
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
     const nsAString& aName, ErrorResult& aRv) {
-  if (mIPCClosed) {
+  if (!CanSend()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -386,7 +382,6 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
 }
 
 void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCClosed = true;
   gWindowGlobalChildById->Remove(mInnerWindowId);
 
   // Destroy our JSWindowActors, and reject any pending queries.
