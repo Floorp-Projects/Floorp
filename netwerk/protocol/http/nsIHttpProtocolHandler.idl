@@ -12,7 +12,8 @@ class HSTSDataCallbackWrapper;
 }
 }
 %}
-[ptr] native HSTSDataCallbackWrapperPtr(mozilla::net::HSTSDataCallbackWrapper);
+
+native HSTSDataCallbackWrapperAlreadyAddRefed(RefPtr<mozilla::net::HSTSDataCallbackWrapper>);
 
 [scriptable, builtinclass, uuid(c48126d9-2ddd-485b-a51a-378e917e75f8)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
@@ -73,10 +74,8 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     /**
      * A C++ friendly version of EnsureHSTSDataReady
      */
-    %{C++
-        virtual nsresult EnsureHSTSDataReadyNative(
-            already_AddRefed<mozilla::net::HSTSDataCallbackWrapper> aCallback) = 0;
-    %}
+    [noscript]
+    void EnsureHSTSDataReadyNative(in HSTSDataCallbackWrapperAlreadyAddRefed aCallback);
 };
 
 %{C++
