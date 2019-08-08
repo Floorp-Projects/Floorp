@@ -1202,10 +1202,9 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       new BrowserParent(constructorSender, tabId, aContext,
                         aBrowsingContext->Canonical(), chromeFlags);
 
-  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
-  // releases the ref taken.
+  // Open a remote endpoint for our PBrowser actor.
   ManagedEndpoint<PBrowserChild> childEp =
-      constructorSender->OpenPBrowserEndpoint(do_AddRef(browserParent).take());
+      constructorSender->OpenPBrowserEndpoint(browserParent);
   if (NS_WARN_IF(!childEp.IsValid())) {
     return nullptr;
   }
@@ -3281,12 +3280,6 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
   return true;
 }
 
-bool ContentParent::DeallocPBrowserParent(PBrowserParent* frame) {
-  BrowserParent* parent = BrowserParent::GetFrom(frame);
-  NS_RELEASE(parent);
-  return true;
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     ManagedEndpoint<PBrowserParent>&& aBrowserEp,
     ManagedEndpoint<PWindowGlobalParent>&& aWindowEp, const TabId& aTabId,
@@ -3344,10 +3337,8 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   auto parent = MakeRefPtr<BrowserParent>(this, aTabId, tc.GetTabContext(),
                                           browsingContext, chromeFlags);
 
-  // Bind the created BrowserParent to IPC to actually link the actor. The ref
-  // here is released in DeallocPBrowserParent.
-  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
-                                       do_AddRef(parent).take()))) {
+  // Bind the created BrowserParent to IPC to actually link the actor.
+  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp), parent))) {
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 

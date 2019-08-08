@@ -71,10 +71,9 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
       constructorSender, aTabId, tabContext, browsingContext, aChromeFlags);
   browserParent->SetBrowserBridgeParent(this);
 
-  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
-  // releases the ref taken.
+  // Open a remote endpoint for our PBrowser actor.
   ManagedEndpoint<PBrowserChild> childEp =
-      constructorSender->OpenPBrowserEndpoint(do_AddRef(browserParent).take());
+      constructorSender->OpenPBrowserEndpoint(browserParent);
   if (NS_WARN_IF(!childEp.IsValid())) {
     MOZ_ASSERT(false, "Browser Open Endpoint Failed");
     return NS_ERROR_FAILURE;

@@ -198,8 +198,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSetProcessSandbox(
       const Maybe<FileDescriptor>& aBroker);
 
-  bool DeallocPBrowserChild(PBrowserChild*);
-
   PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
       const nsID& aID, const uint64_t& aSize);
 

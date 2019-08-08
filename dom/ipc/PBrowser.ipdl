@@ -166,7 +166,7 @@ struct WebProgressLocationChangeData
  * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
  * actors.
  */
-nested(upto inside_cpow) sync protocol PBrowser
+nested(upto inside_cpow) sync refcounted protocol PBrowser
 {
     manager PContent;
 
