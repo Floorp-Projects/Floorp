@@ -196,6 +196,7 @@ class AltSvcCache {
   void ClearHostMapping(nsHttpConnectionInfo* ci);
   DataStorage* GetStoragePtr() { return mStorage.get(); }
   int32_t StorageEpoch() { return mStorageEpoch; }
+  nsresult GetAltSvcCacheKeys(nsTArray<nsCString>& value);
 
  private:
   already_AddRefed<AltSvcMapping> LookupMapping(const nsCString& key,

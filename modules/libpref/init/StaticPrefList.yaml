@@ -5681,6 +5681,12 @@
   value: true
   mirror: always
 
+# Whether to run proxy checks when processing Alt-Svc headers.
+- name: network.http.altsvc.proxy_checks
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

@@ -12,6 +12,23 @@ function hasAnyTopWindowOrigin(key) {
   return !!key.match(/{{[^}]+}}/);
 }
 
+function altSvcCacheKeyIsolated(parsed) {
+  return parsed.length > 5 && parsed[5] == "I";
+}
+
+function altSvcTopWindowOrigin(key) {
+  let index = -1;
+  for (let i = 0; i < 6; ++i) {
+    index = key.indexOf(":", index + 1);
+  }
+  let indexEnd = key.indexOf("|", index + 1);
+  return key.substring(index + 1, indexEnd);
+}
+
+const gHttpHandler = Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+  Ci.nsIHttpProtocolHandler
+);
+
 add_task(async function() {
   info("Starting tlsSessionTickets test");
 
@@ -24,6 +41,7 @@ add_task(async function() {
         "network.cookie.cookieBehavior",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
       ],
+      ["network.http.altsvc.proxy_checks", false],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
@@ -40,7 +58,8 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   const trackingURL =
-    "https://tlsresumptiontest.example.org/browser/toolkit/components/antitracking/test/browser/empty.js";
+    "https://tlsresumptiontest.example.org/browser/toolkit/components/antitracking/test/browser/empty-altsvc.js";
+  const topWindowOrigin = TEST_DOMAIN.replace(/\/$/, "");
   const kTopic = "http-on-examine-response";
 
   let resumedState = [];
@@ -67,6 +86,31 @@ add_task(async function() {
   Services.obs.addObserver(observer, kTopic);
   registerCleanupFunction(() => Services.obs.removeObserver(observer, kTopic));
 
+  function checkAltSvcCache(expectedCount, expectedIsolated) {
+    let arr = gHttpHandler.altSvcCacheKeys;
+    is(
+      arr.length,
+      expectedCount,
+      "Found the expected number of items in the cache"
+    );
+    for (let i = 0; i < arr.length; ++i) {
+      let key = arr[i];
+      let parsed = key.split(":");
+      if (altSvcCacheKeyIsolated(parsed)) {
+        ok(expectedIsolated[i], "We expected to find an isolated item");
+        is(
+          altSvcTopWindowOrigin(key),
+          topWindowOrigin,
+          "Expected top window origin found in the Alt-Svc cache key"
+        );
+      } else {
+        ok(!expectedIsolated[i], "We expected to find a non-isolated item");
+      }
+    }
+  }
+
+  checkAltSvcCache(0, []);
+
   info("Loading tracking scripts and tracking images");
   await ContentTask.spawn(browser, { trackingURL }, async function(obj) {
     {
@@ -80,6 +124,8 @@ add_task(async function() {
     }
   });
 
+  checkAltSvcCache(1, [true]);
+
   // Load our tracking URL two more times, but this time in the first-party context.
   // The TLS session should be resumed the second time here.
   await fetch(trackingURL);
@@ -87,7 +133,11 @@ add_task(async function() {
   // at the same time.
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 10));
+
+  checkAltSvcCache(2, [false, true]);
   await fetch(trackingURL).then(() => {
+    checkAltSvcCache(2, [false, true]);
+
     is(
       resumedState.length,
       3,
@@ -126,7 +176,7 @@ add_task(async function() {
       "The third connection must not have been isolated"
     );
     ok(
-      hasTopWindowOrigin(hashKeys[0], TEST_DOMAIN.replace(/\/$/, "")),
+      hasTopWindowOrigin(hashKeys[0], topWindowOrigin),
       "The first connection must be bound to its top-level window"
     );
     ok(
