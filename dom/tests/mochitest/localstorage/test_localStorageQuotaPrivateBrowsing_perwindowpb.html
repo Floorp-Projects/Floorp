@@ -142,8 +142,8 @@ function onMessageReceived(event, aWindow) {
     case "frame loaded":
       if (--slaveLoadsPending)
         break;
-      // Just fall through...
     // Indication of successfully finished step of a test
+    // Just fall through...
     case "perf":
       // postMessage should send to the slaveOrigin. However with the addition of private
       // browsing flags in origin attributes this will cause postMessage to fail. The origin of this
