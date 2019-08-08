@@ -494,8 +494,8 @@ class PluginChild extends JSWindowActorChild {
           "openPluginUpdatePage",
           pluginTag.id
         );
-      /* FALLTHRU */
 
+      /* FALLTHRU */
       case "PluginVulnerableNoUpdate":
       case "PluginClickToPlay":
         this._handleClickToPlayEvent(pluginElement);
