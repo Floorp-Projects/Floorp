@@ -50,8 +50,9 @@ class AltSvcMapping {
                 const nsACString& originScheme, const nsACString& originHost,
                 int32_t originPort, const nsACString& username,
                 const nsACString& topWindowOrigin, bool privateBrowsing,
-                uint32_t expiresAt, const nsACString& alternateHost,
-                int32_t alternatePort, const nsACString& npnToken,
+                bool isolated, uint32_t expiresAt,
+                const nsACString& alternateHost, int32_t alternatePort,
+                const nsACString& npnToken,
                 const OriginAttributes& originAttributes);
 
  public:
@@ -62,7 +63,7 @@ class AltSvcMapping {
                             const nsCString& originHost, int32_t originPort,
                             const nsACString& username,
                             const nsACString& topWindowOrigin,
-                            bool privateBrowsing,
+                            bool privateBrowsing, bool isolated,
                             nsIInterfaceRequestor* callbacks,
                             nsProxyInfo* proxyInfo, uint32_t caps,
                             const OriginAttributes& originAttributes);
@@ -87,6 +88,7 @@ class AltSvcMapping {
   int32_t TTL();
   int32_t StorageEpoch() { return mStorageEpoch; }
   bool Private() { return mPrivate; }
+  bool Isolated() { return mIsolated; }
 
   void SetValidated(bool val);
   void SetMixedScheme(bool val);
@@ -97,7 +99,8 @@ class AltSvcMapping {
 
   static void MakeHashKey(nsCString& outKey, const nsACString& originScheme,
                           const nsACString& originHost, int32_t originPort,
-                          bool privateBrowsing,
+                          bool privateBrowsing, bool isolated,
+                          const nsACString& topWindowOrigin,
                           const OriginAttributes& originAttributes);
 
  private:
@@ -119,6 +122,7 @@ class AltSvcMapping {
   nsCString mUsername;
   nsCString mTopWindowOrigin;
   MOZ_INIT_OUTSIDE_CTOR bool mPrivate;
+  MOZ_INIT_OUTSIDE_CTOR bool mIsolated;
 
   MOZ_INIT_OUTSIDE_CTOR uint32_t mExpiresAt;  // alt-svc mappping
 
@@ -183,10 +187,12 @@ class AltSvcCache {
       const OriginAttributes& originAttributes);  // main thread
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
+      bool isolated, const nsACString& topWindowOrigin,
       const OriginAttributes& originAttributes);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString& host, int32_t port,
-                        const OriginAttributes& originAttributes);
+                        const OriginAttributes& originAttributes,
+                        const nsACString& topWindowOrigin);
   void ClearHostMapping(nsHttpConnectionInfo* ci);
   DataStorage* GetStoragePtr() { return mStorage.get(); }
   int32_t StorageEpoch() { return mStorageEpoch; }
