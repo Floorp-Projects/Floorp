@@ -90,7 +90,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
   // which this WindowGlobal is a part of. This will be the nsFrameLoader
   // holding the BrowserParent for remote tabs, and the root content frameloader
   // for non-remote tabs.
-  nsFrameLoader* GetRootFrameLoader() { return mFrameLoader; }
+  already_AddRefed<nsFrameLoader> GetRootFrameLoader();
 
   // The current URI which loaded in the document.
   nsIURI* GetDocumentURI() override { return mDocumentURI; }
@@ -165,7 +165,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
   // mutations which may have been made in the actual document.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
-  RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> mWindowActors;
   uint64_t mInnerWindowId;
