@@ -233,7 +233,7 @@ panelview {
   max-width: @standaloneSubviewWidth@;
 }
 
-#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box {
+#BMB_bookmarksPopup::part(popupbox) {
   padding: 0;
 }
 
@@ -339,7 +339,8 @@ panelview:not([mainview]) .toolbarbutton-text,
   display: -moz-box;
 }
 
-.cui-widget-panel {
+.cui-widget-panel,
+.cui-widget-panel::part(arrowcontent) {
   --arrowpanel-padding: 4px 0;
 }
 
@@ -361,6 +362,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   min-width: calc(@menuPanelWidth@ + 32px);
 }
 
+.cui-widget-panel.cui-widget-panelWithFooter::part(arrowcontent),
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 0;
 }
@@ -1286,31 +1288,9 @@ menuitem.panel-subview-footer@menuStateActive@,
   margin-inline-end: 3px;
 }
 
-#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-up,
-#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .scrollbutton-down {
-  -moz-appearance: none;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-/* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
-#BMB_bookmarksPopup arrowscrollbox {
-  padding-bottom: 0px;
-}
-
 #BMB_bookmarksPopup menupopup > .bookmarks-actions-menuseparator {
   /* Hide bottom separator as the styled footer includes a top border serving the same purpose */
   display: none;
-}
-
-/* Popups with only one item don't have a footer */
-#BMB_bookmarksPopup menupopup[placespopup=true][singleitempopup=true] > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-/* These popups never have a footer */
-#BMB_bookmarksToolbarPopup > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-#BMB_unsortedBookmarksPopup > hbox > .popup-internal-box > .arrowscrollbox-scrollbox,
-#BMB_mobileBookmarksPopup > hbox > .popup-internal-box > .arrowscrollbox-scrollbox {
-  /* And so they need some bottom padding: */
-  padding-bottom: 4px;
 }
 
 /* Disabled (empty) item is always alone and never has an icon, so fix its left padding */

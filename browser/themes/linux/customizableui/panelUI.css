@@ -13,11 +13,6 @@
   padding-top: 1px;
 }
 
-/* Add some space at the top because there are no headers: */
-#BMB_bookmarksPopup menupopup > hbox > .popup-internal-box > .arrowscrollbox-scrollbox  {
-  padding-top: 4px;
-}
-
 menuitem.subviewbutton {
   -moz-appearance: none !important;
 }

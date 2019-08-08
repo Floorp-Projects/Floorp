@@ -15,8 +15,8 @@
   padding-inline-start: 3px;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
-  /* emulating chrome://browser/content/places/menu.xml#places-popup-arrow but without the arrow */
+#BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {
+  /* emulating MozPlacesPopupArrow but without the arrow */
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
@@ -26,14 +26,9 @@
 
 /* Add border-radius on Windows 7 */
 @media (-moz-os-version: windows-win7) {
-  #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
+  #BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {
     border-radius: 3.5px;
   }
-}
-
-/* Add some space at the top because there are no headers: */
-#BMB_bookmarksPopup menupopup[placespopup=true] > hbox > .popup-internal-box > .arrowscrollbox-scrollbox  {
-  padding-top: 4px;
 }
 
 /* bookmark panel separator */

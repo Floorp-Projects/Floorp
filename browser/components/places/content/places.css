@@ -20,7 +20,7 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
 }
 
 menupopup[placespopup="true"] {
-  -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-base");
+  -moz-binding: none;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */

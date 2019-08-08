@@ -11,7 +11,7 @@ browser.jar:
     content/browser/places/places.css                    (content/places.css)
 *   content/browser/places/bookmarkProperties.xul        (content/bookmarkProperties.xul)
     content/browser/places/bookmarkProperties.js         (content/bookmarkProperties.js)
-    content/browser/places/menu.xml                      (content/menu.xml)
+    content/browser/places/places-menupopup.js           (content/places-menupopup.js)
     content/browser/places/places-tree.js                (content/places-tree.js)
     content/browser/places/controller.js                 (content/controller.js)
     content/browser/places/treeView.js                   (content/treeView.js)
