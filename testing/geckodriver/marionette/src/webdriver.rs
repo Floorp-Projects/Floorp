@@ -81,6 +81,10 @@ pub enum Command {
     DeleteCookies,
     #[serde(rename = "WebDriver:DismissAlert")]
     DismissAlert,
+    #[serde(rename = "WebDriver:ElementClear")]
+    ElementClear(LegacyWebElement),
+    #[serde(rename = "WebDriver:ElementClick")]
+    ElementClick(LegacyWebElement),
     #[serde(rename = "WebDriver:ExecuteAsyncScript")]
     ExecuteAsyncScript(Script),
     #[serde(rename = "WebDriver:ExecuteScript")]
@@ -115,6 +119,10 @@ pub enum Command {
     GetWindowHandles,
     #[serde(rename = "WebDriver:GetWindowRect")]
     GetWindowRect,
+    #[serde(rename = "WebDriver:Back")]
+    GoBack,
+    #[serde(rename = "WebDriver:Forward")]
+    GoForward,
     #[serde(rename = "WebDriver:IsElementDisplayed")]
     IsDisplayed(LegacyWebElement),
     #[serde(rename = "WebDriver:IsElementEnabled")]
