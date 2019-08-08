@@ -497,6 +497,7 @@ function TypedObjectArrayTypeBuild(a, b, c) {
       ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
       ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      break;
   default:
     ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
