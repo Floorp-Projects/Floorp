@@ -86,9 +86,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   auto windowParent =
       MakeRefPtr<WindowGlobalParent>(aWindowInit, /* inprocess */ false);
 
-  // DeallocPWindowGlobalParent releases the ref taken.
   ManagedEndpoint<PWindowGlobalChild> windowChildEp =
-      browserParent->OpenPWindowGlobalEndpoint(do_AddRef(windowParent).take());
+      browserParent->OpenPWindowGlobalEndpoint(windowParent);
   if (NS_WARN_IF(!windowChildEp.IsValid())) {
     MOZ_ASSERT(false, "WindowGlobal Open Endpoint Failed");
     return NS_ERROR_FAILURE;
