@@ -143,7 +143,7 @@ nsresult gfxSVGGlyphsDocument::SetupPresentation() {
                                                    getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = viewer->Init(nullptr, gfx::IntRect(0, 0, 1000, 1000));
+  rv = viewer->Init(nullptr, gfx::IntRect(0, 0, 1000, 1000), nullptr);
   if (NS_SUCCEEDED(rv)) {
     rv = viewer->Open(nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
