@@ -14,7 +14,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -23,10 +22,8 @@ import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.lib.Do
-import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
-import org.mozilla.fenix.settings.SupportUtils
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
@@ -43,7 +40,11 @@ class DefaultBrowserToolbarController(
     private val nestedScrollQuickActionView: NestedScrollView,
     private val engineView: EngineView,
     private val currentSession: Session,
-    private val viewModel: CreateCollectionViewModel
+    private val viewModel: CreateCollectionViewModel,
+    private val getSupportUrl: () -> String,
+    private val openInFenixIntent: Intent,
+    private val currentSessionAsTab: Tab,
+    private val bottomSheetBehavior: BottomSheetBehavior<NestedScrollView>
 ) : BrowserToolbarController {
 
     override fun handleToolbarClick() {
@@ -93,9 +94,7 @@ class DefaultBrowserToolbarController(
                 (context as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
-                (BottomSheetBehavior.from(nestedScrollQuickActionView) as QuickActionSheetBehavior).apply {
-                    state = BottomSheetBehavior.STATE_COLLAPSED
-                }
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 findInPageLauncher()
                 context.components.analytics.metrics.track(Event.FindInPageOpened)
             }
@@ -106,12 +105,7 @@ class DefaultBrowserToolbarController(
                 }
             }
             ToolbarMenu.Item.Help -> {
-                context.components.useCases.tabsUseCases.addTab.invoke(
-                    SupportUtils.getSumoURLForTopic(
-                        context,
-                        SupportUtils.SumoTopic.HELP
-                    )
-                )
+                context.components.useCases.tabsUseCases.addTab.invoke(getSupportUrl())
             }
             ToolbarMenu.Item.NewTab -> {
                 val directions = BrowserFragmentDirections
@@ -123,10 +117,9 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.SaveToCollection -> {
                 context.components.analytics.metrics
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
-                currentSession.let {
-                    val tab = it.toTab(context)
-                    viewModel.tabs = listOf(tab)
-                    val selectedSet = mutableSetOf(tab)
+
+                    viewModel.tabs = listOf(currentSessionAsTab)
+                    val selectedSet = mutableSetOf(currentSessionAsTab)
                     viewModel.selectedTabs = selectedSet
                     viewModel.tabCollections =
                         context.components.core.tabCollectionStorage.cachedTabCollections.reversed()
@@ -136,7 +129,6 @@ class DefaultBrowserToolbarController(
 
                     val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
                     navController.nav(R.id.browserFragment, directions)
-                }
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 // Release the session from this view so that it can immediately be rendered by a different view
@@ -147,10 +139,7 @@ class DefaultBrowserToolbarController(
                 context.components.core.sessionManager.select(currentSession)
 
                 // Switch to the actual browser which should now display our new selected session
-                context.startActivity(Intent(context, IntentReceiverActivity::class.java).also {
-                    it.action = Intent.ACTION_VIEW
-                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                })
+                context.startActivity(openInFenixIntent)
 
                 // Close this activity since it is no longer displaying any session
                 (context as Activity).finish()
@@ -188,6 +177,6 @@ class DefaultBrowserToolbarController(
     }
 
     companion object {
-        private const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
+        internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 }

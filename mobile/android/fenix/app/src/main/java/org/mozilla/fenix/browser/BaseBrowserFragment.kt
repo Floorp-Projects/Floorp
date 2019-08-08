@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
@@ -46,6 +47,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
@@ -65,6 +67,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -142,7 +146,14 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                 nestedScrollQuickActionView = nestedScrollQuickAction,
                 engineView = engineView,
                 currentSession = session,
-                viewModel = viewModel
+                viewModel = viewModel,
+                getSupportUrl = { SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP) },
+                openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).also {
+                    it.action = Intent.ACTION_VIEW
+                    it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                },
+                currentSessionAsTab = session.toTab(context!!),
+                bottomSheetBehavior = BottomSheetBehavior.from(nestedScrollQuickAction)
             )
 
             browserInteractor = createBrowserToolbarViewInteractor(browserToolbarController, session)
