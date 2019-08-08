@@ -78,7 +78,11 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // Determine which content process the window global is coming from.
   dom::ContentParentId processId(0);
   if (!mInProcess) {
-    processId = static_cast<ContentParent*>(Manager()->Manager())->ChildID();
+    ContentParent* cp = static_cast<ContentParent*>(Manager()->Manager());
+    processId = cp->ChildID();
+
+    // Ensure the content process has permissions for this principal.
+    cp->TransmitPermissionsForPrincipal(mDocumentPrincipal);
   }
 
   mBrowsingContext = CanonicalBrowsingContext::Cast(aInit.browsingContext());
