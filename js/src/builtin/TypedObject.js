@@ -115,6 +115,12 @@ function TypedObjectGetScalar(descr, typedObj, offset) {
 
   case JS_SCALARTYPEREPR_FLOAT64:
     return Load_float64(typedObj, offset | 0);
+
+  case JS_SCALARTYPEREPR_BIGINT64:
+    return Load_bigint64(typedObj, offset | 0);
+
+  case JS_SCALARTYPEREPR_BIGUINT64:
+    return Load_biguint64(typedObj, offset | 0);
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -254,6 +260,12 @@ function TypedObjectSetScalar(descr, typedObj, offset, fromValue) {
 
   case JS_SCALARTYPEREPR_FLOAT64:
     return Store_float64(typedObj, offset | 0, +fromValue);
+
+  case JS_SCALARTYPEREPR_BIGINT64:
+    return Store_bigint64(typedObj, offset | 0, fromValue);
+
+  case JS_SCALARTYPEREPR_BIGUINT64:
+    return Store_biguint64(typedObj, offset | 0, fromValue);
   }
 
   assert(false, "Unhandled scalar type: " + type);

@@ -37,7 +37,6 @@
 #include "builtin/MapObject.h"
 #include "builtin/Promise.h"
 #include "builtin/Stream.h"
-#include "builtin/String.h"
 #include "builtin/Symbol.h"
 #ifdef ENABLE_TYPED_OBJECTS
 #  include "builtin/TypedObject.h"

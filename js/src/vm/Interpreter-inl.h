@@ -13,7 +13,6 @@
 
 #include "jsnum.h"
 
-#include "builtin/String.h"
 #include "jit/Ion.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Realm.h"

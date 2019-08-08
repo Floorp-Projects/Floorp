@@ -8,7 +8,6 @@
 #include "mozilla/Range.h"
 
 #include "jsapi.h"
-#include "builtin/String.h"
 
 #include "js/CharacterEncoding.h"
 #include "jsapi-tests/tests.h"
