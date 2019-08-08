@@ -1010,10 +1010,8 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
-  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserChild
-  // releases the ref taken.
-  ManagedEndpoint<PBrowserParent> parentEp =
-      OpenPBrowserEndpoint(do_AddRef(newChild).take());
+  // Open a remote endpoint for our PBrowser actor.
+  ManagedEndpoint<PBrowserParent> parentEp = OpenPBrowserEndpoint(newChild);
   if (NS_WARN_IF(!parentEp.IsValid())) {
     return NS_ERROR_ABORT;
   }
@@ -1873,10 +1871,8 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
       this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
       aWindowInit.browsingContext(), aChromeFlags, aIsTopLevel);
 
-  // Bind the created BrowserChild to IPC to actually link the actor. The ref
-  // here is released in DeallocPBrowserChild.
-  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
-                                       do_AddRef(browserChild).take()))) {
+  // Bind the created BrowserChild to IPC to actually link the actor.
+  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp), browserChild))) {
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 
@@ -1932,12 +1928,6 @@ PFileDescriptorSetChild* ContentChild::AllocPFileDescriptorSetChild(
 bool ContentChild::DeallocPFileDescriptorSetChild(
     PFileDescriptorSetChild* aActor) {
   delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
-}
-
-bool ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe) {
-  BrowserChild* child = static_cast<BrowserChild*>(aIframe);
-  NS_RELEASE(child);
   return true;
 }
 

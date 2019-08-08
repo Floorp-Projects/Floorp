@@ -824,16 +824,6 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*);
 
-  PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
-                                      const TabId& aSameTabGroupAs,
-                                      const IPCTabContext& aContext,
-                                      const uint32_t& aChromeFlags,
-                                      const ContentParentId& aCpId,
-                                      BrowsingContext* aBrowsingContext,
-                                      const bool& aIsForBrowser);
-
-  bool DeallocPBrowserParent(PBrowserParent* frame);
-
   mozilla::ipc::IPCResult RecvConstructPopupBrowser(
       ManagedEndpoint<PBrowserParent>&& actor,
       ManagedEndpoint<PWindowGlobalParent>&& windowEp, const TabId& tabId,
