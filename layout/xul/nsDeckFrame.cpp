@@ -211,8 +211,9 @@ NS_IMETHODIMP
 nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
   // Make sure we tweak the state so it does not resize our children.
   // We will do that.
-  uint32_t oldFlags = aState.LayoutFlags();
-  aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
+  ReflowChildFlags oldFlags = aState.LayoutFlags();
+  aState.SetLayoutFlags(ReflowChildFlags::NoSizeView |
+                        ReflowChildFlags::NoVisibility);
 
   // do a normal layout
   nsresult rv = nsBoxFrame::DoXULLayout(aState);

@@ -172,8 +172,8 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     // will be fixed later.
     const nsSize dummyContainerSize;
     ReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
-                wrapperReflowInput, myWM, wrapperOffset, dummyContainerSize, 0,
-                childStatus);
+                wrapperReflowInput, myWM, wrapperOffset, dummyContainerSize,
+                ReflowChildFlags::Default, childStatus);
     MOZ_ASSERT(childStatus.IsFullyComplete(),
                "We gave our child unconstrained available block-size, "
                "so it should be complete");
@@ -211,7 +211,7 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     // Place the child
     FinishReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
                       &wrapperReflowInput, myWM, wrapperOffset, borderBoxSize,
-                      0);
+                      ReflowChildFlags::Default);
 
     if (!aReflowInput.mStyleDisplay->IsContainLayout()) {
       nsSize contentBoxSize =

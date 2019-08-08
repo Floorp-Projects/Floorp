@@ -438,10 +438,10 @@ void nsComboboxControlFrame::ReflowDropdown(nsPresContext* aPresContext,
 
   // Allow the child to move/size/change-visibility its view if it's currently
   // dropped down
-  int32_t flags = mDroppedDown
-                      ? 0
-                      : NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_VISIBILITY |
-                            NS_FRAME_NO_SIZE_VIEW;
+  ReflowChildFlags flags = mDroppedDown ? ReflowChildFlags::Default
+                                        : ReflowChildFlags::NoMoveFrame |
+                                              ReflowChildFlags::NoVisibility |
+                                              ReflowChildFlags::NoSizeView;
 
   // XXX Can this be different from the dropdown's writing mode?
   // That would be odd!

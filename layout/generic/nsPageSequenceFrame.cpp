@@ -250,14 +250,15 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     nscoord x = pageCSSMargin.left;
 
     // Place and size the page.
-    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, x, y, 0,
-                status);
+    ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, x, y,
+                ReflowChildFlags::Default, status);
 
     // If the page is narrower than our width, then center it horizontally:
     x += ComputeCenteringMargin(aReflowInput.ComputedWidth(), kidSize.Width(),
                                 pageCSSMargin);
 
-    FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, x, y, 0);
+    FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, x, y,
+                      ReflowChildFlags::Default);
     y += kidSize.Height();
     y += pageCSSMargin.bottom;
 

@@ -373,9 +373,9 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
   ReflowInput childReflowInput(aPresContext, aReflowInput, childFrame,
                                availSize);
   ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowInput, 0,
-              0, 0, childStatus, nullptr);
+              0, ReflowChildFlags::Default, childStatus, nullptr);
   FinishReflowChild(childFrame, aPresContext, childDesiredSize,
-                    &childReflowInput, 0, 0, 0);
+                    &childReflowInput, 0, 0, ReflowChildFlags::Default);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsHTMLCanvasFrame::Reflow: size=%d,%d",

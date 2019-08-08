@@ -181,7 +181,7 @@ nsresult nsMathMLTokenFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
                ? 0
                : aDesiredSize.BlockStartAscent() - childSize.BlockStartAscent();
       FinishReflowChild(childFrame, PresContext(), childSize, nullptr, dx, dy,
-                        0);
+                        ReflowChildFlags::Default);
       dx += childSize.Width();
     }
   }
