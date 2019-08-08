@@ -35,8 +35,7 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   PGMPVideoEncoderChild* AllocPGMPVideoEncoderChild();
   bool DeallocPGMPVideoEncoderChild(PGMPVideoEncoderChild* aActor);
 
-  PChromiumCDMChild* AllocPChromiumCDMChild();
-  bool DeallocPChromiumCDMChild(PChromiumCDMChild* aActor);
+  already_AddRefed<PChromiumCDMChild> AllocPChromiumCDMChild();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
