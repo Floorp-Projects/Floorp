@@ -185,7 +185,6 @@ class TabsPanel extends TabsListBase {
           event.target.tab.toggleMuteAudio();
           break;
         }
-      // fall through
       default:
         super.handleEvent(event);
         break;

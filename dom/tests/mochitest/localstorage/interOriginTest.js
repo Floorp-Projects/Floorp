@@ -16,8 +16,9 @@ function onMessageReceived(event) {
         break;
       }
 
+    // Just fall through...
+
     // Indication of successfully finished step of a test
-    // fall through
     case "perf":
       if (event.data == "perf") {
         doStep();

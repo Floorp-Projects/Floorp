@@ -21,8 +21,9 @@ function onMessageReceived(event) {
         break;
       }
 
-    // Indication of successfully finished step of a test
     // Just fall through...
+
+    // Indication of successfully finished step of a test
     case "perf":
       if (callMasterFrame) {
         masterFrame.postMessage("step", "*");

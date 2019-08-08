@@ -562,8 +562,8 @@ LoginManagerStorage_mozStorage.prototype = {
             }
             break;
           }
-        // Normal cases.
         // Fall through
+        // Normal cases.
         case "httpRealm":
         case "id":
         case "usernameField":
