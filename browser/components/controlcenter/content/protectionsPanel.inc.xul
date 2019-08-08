@@ -50,7 +50,8 @@
       </hbox>
 
       <!-- Tracking Protection Section -->
-      <hbox id="tracking-protection-container" class="protections-popup-section">
+      <vbox id="tracking-protection-container" class="protections-popup-section">
+        <description id="protections-popup-no-trackers-found-description">&protections.noTrackersFound.description;</description>
         <tooltip id="protections-popup-not-blocking-why-etp-on-tooltip">&protections.notBlocking.why.etpOn.tooltip;</tooltip>
         <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff.tooltip;</tooltip>
         <vbox id="protections-popup-content" flex="1">
@@ -104,7 +105,7 @@
             </toolbarbutton>
           </vbox>
         </vbox>
-      </hbox>
+      </vbox>
 
       <vbox id="protections-popup-footer" class="protections-popup-section">
         <toolbarbutton id="protections-popup-settings-button"
