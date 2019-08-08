@@ -24,7 +24,9 @@ class GMPVideoDecoderChild : public PGMPVideoDecoderChild,
   friend class PGMPVideoDecoderChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoDecoderChild);
+  // Mark AddRef and Release as `final`, as they overload pure virtual
+  // implementations in PGMPVideoDecoderChild.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoDecoderChild, final);
 
   explicit GMPVideoDecoderChild(GMPContentChild* aPlugin);
 

@@ -28,12 +28,10 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   mozilla::ipc::IPCResult RecvPChromiumCDMConstructor(
       PChromiumCDMChild* aActor) override;
 
-  PGMPVideoDecoderChild* AllocPGMPVideoDecoderChild(
+  already_AddRefed<PGMPVideoDecoderChild> AllocPGMPVideoDecoderChild(
       const uint32_t& aDecryptorId);
-  bool DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor);
 
-  PGMPVideoEncoderChild* AllocPGMPVideoEncoderChild();
-  bool DeallocPGMPVideoEncoderChild(PGMPVideoEncoderChild* aActor);
+  already_AddRefed<PGMPVideoEncoderChild> AllocPGMPVideoEncoderChild();
 
   already_AddRefed<PChromiumCDMChild> AllocPChromiumCDMChild();
 

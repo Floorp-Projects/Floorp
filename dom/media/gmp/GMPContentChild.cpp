@@ -36,29 +36,14 @@ void GMPContentChild::ProcessingError(Result aCode, const char* aReason) {
   mGMPChild->ProcessingError(aCode, aReason);
 }
 
-PGMPVideoDecoderChild* GMPContentChild::AllocPGMPVideoDecoderChild(
-    const uint32_t& aDecryptorId) {
-  GMPVideoDecoderChild* actor = new GMPVideoDecoderChild(this);
-  actor->AddRef();
-  return actor;
+already_AddRefed<PGMPVideoDecoderChild>
+GMPContentChild::AllocPGMPVideoDecoderChild(const uint32_t& aDecryptorId) {
+  return MakeAndAddRef<GMPVideoDecoderChild>(this);
 }
 
-bool GMPContentChild::DeallocPGMPVideoDecoderChild(
-    PGMPVideoDecoderChild* aActor) {
-  static_cast<GMPVideoDecoderChild*>(aActor)->Release();
-  return true;
-}
-
-PGMPVideoEncoderChild* GMPContentChild::AllocPGMPVideoEncoderChild() {
-  GMPVideoEncoderChild* actor = new GMPVideoEncoderChild(this);
-  actor->AddRef();
-  return actor;
-}
-
-bool GMPContentChild::DeallocPGMPVideoEncoderChild(
-    PGMPVideoEncoderChild* aActor) {
-  static_cast<GMPVideoEncoderChild*>(aActor)->Release();
-  return true;
+already_AddRefed<PGMPVideoEncoderChild>
+GMPContentChild::AllocPGMPVideoEncoderChild() {
+  return MakeAndAddRef<GMPVideoEncoderChild>(this);
 }
 
 already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild() {
