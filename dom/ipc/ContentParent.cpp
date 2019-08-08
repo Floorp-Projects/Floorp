@@ -4539,24 +4539,6 @@ void ContentParent::NotifyRebuildFontList() {
   }
 }
 
-/*static*/
-void ContentParent::UnregisterRemoteFrame(const TabId& aTabId,
-                                          const ContentParentId& aCpId,
-                                          bool aMarkedDestroying) {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  ContentParent* cp = cpm->GetContentProcessById(aCpId);
-
-  if (!cp) {
-    return;
-  }
-
-  cp->NotifyTabDestroyed(aTabId, aMarkedDestroying);
-
-  ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(aCpId, aTabId);
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvNotifyTabDestroying(
     const TabId& aTabId, const ContentParentId& aCpId) {
   NotifyTabDestroying(aTabId, aCpId);

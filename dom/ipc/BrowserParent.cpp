@@ -651,13 +651,13 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
 
 mozilla::ipc::IPCResult BrowserParent::Recv__delete__() {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-  ContentParent::UnregisterRemoteFrame(mTabId, Manager()->ChildID(),
-                                       mMarkedDestroying);
-
+  Manager()->NotifyTabDestroyed(mTabId, mMarkedDestroying);
   return IPC_OK();
 }
 
 void BrowserParent::ActorDestroy(ActorDestroyReason why) {
+  ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(mTabId);
+
   if (mRemoteLayerTreeOwner.IsInitialized()) {
     // It's important to unmap layers after the remote browser has been
     // destroyed, otherwise it may still send messages to the compositor which
