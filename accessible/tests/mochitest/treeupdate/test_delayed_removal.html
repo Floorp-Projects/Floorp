@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test accessible delayed removal</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    .gentext:before {
+      content: "START"
+    }
+    .gentext:after {
+      content: "END"
+    }
+  </style>
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+
+    async function hideDivFromInsideSpan() {
+      let msg = "hideDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "div1"], [EVENT_REORDER, "span1"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div1").style.display = "none";
+      await events;
+
+      testAccessibleTree("c1", { SECTION: [ { REGION: [] }, ] });
+    }
+
+    async function showDivFromInsideSpan() {
+      let msg = "showDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_SHOW, "div2"], [EVENT_REORDER, "span2"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div2").style.display = "block";
+      await events;
+
+      testAccessibleTree("c2",
+        { SECTION: [ { REGION: [{ SECTION: [ { TEXT_LEAF: [] } ] }] }, ] });
+    }
+
+    async function removeDivFromInsideSpan() {
+      let msg = "removeDivFromInsideSpan";
+      info(msg);
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, getNode("div3")], [EVENT_REORDER, "span3"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("div3").remove();
+      await events;
+
+      testAccessibleTree("c3", { SECTION: [ { REGION: [] }, ] });
+    }
+
+    // Test to see that generated content is inserted
+    async function addCSSGeneratedContent() {
+      let msg = "addCSSGeneratedContent";
+      let c4_child = getAccessible("c4_child");
+      info(msg);
+      let events = waitForOrderedEvents([
+        [EVENT_SHOW, evt => evt.accessible == c4_child.firstChild],
+        [EVENT_SHOW, evt => evt.accessible == c4_child.lastChild],
+        [EVENT_REORDER, c4_child]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("c4_child").classList.add('gentext');
+      await events;
+
+      testAccessibleTree("c4", { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { STATICTEXT: [] }, // :before
+              { TEXT_LEAF: [] }, // primary text
+              { STATICTEXT: [] }, // :after
+            ] },
+          ] });
+    }
+
+    // Test to see that generated content gets removed
+    async function removeCSSGeneratedContent() {
+      let msg = "removeCSSGeneratedContent";
+      let c5_child = getAccessible("c5_child");
+      info(msg);
+      let events = waitForEvents([
+        [EVENT_HIDE, c5_child.firstChild],
+        [EVENT_HIDE, c5_child.lastChild],
+        [EVENT_REORDER, c5_child]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("c5_child").classList.remove('gentext');
+      await events;
+
+      testAccessibleTree("c5",{ SECTION: [ // container
+            { SECTION: [ // inserted node
+              { TEXT_LEAF: [] }, // primary text
+            ] },
+          ] });
+    }
+
+    // Test to see that a non-accessible intermediate container gets its accessible
+    // descendants removed and inserted correctly.
+    async function intermediateNonAccessibleContainers() {
+      let msg = "intermediateNonAccessibleContainers";
+      info(msg);
+
+      testAccessibleTree("c6",{ SECTION: [
+            { SECTION: [
+              { role: ROLE_PUSHBUTTON, name: "Hello" },
+            ] },
+          ] });
+
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "b1"], [EVENT_SHOW, "b2"], [EVENT_REORDER, "scrollarea"]], msg);
+      document.body.offsetTop; // Flush layout.
+      getNode("scrollarea").style.overflow = "auto";
+      document.querySelector("#scrollarea > div > div:first-child").style.display = "none";
+      document.querySelector("#scrollarea > div > div:last-child").style.display = "block";
+      await events;
+
+      testAccessibleTree("c6",{ SECTION: [
+            { SECTION: [
+              { role: ROLE_PUSHBUTTON, name: "Goodbye" },
+            ] },
+          ] });
+    }
+
+    // Test to see that the button gets reparented into the new accessible container.
+    async function intermediateNonAccessibleContainerBecomesAccessible() {
+      let msg = "intermediateNonAccessibleContainerBecomesAccessible";
+      info(msg);
+
+      testAccessibleTree("c7",{ SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "Hello" },
+        { TEXT_LEAF: [] }
+      ] });
+
+      let events = waitForOrderedEvents(
+        [[EVENT_HIDE, "b3"],
+          // b3 show event coalesced into its new container
+         [EVENT_SHOW, evt => evt.DOMNode.classList.contains('intermediate')],
+         [EVENT_REORDER, "c7"]], msg);
+      document.body.offsetTop; // Flush layout.
+      document.querySelector("#c7 > div").style.display = "block";
+      await events;
+
+      testAccessibleTree("c7",{ SECTION: [
+        { SECTION: [ { role: ROLE_PUSHBUTTON, name: "Hello" } ] }
+      ] });
+    }
+
+    async function doTest() {
+      await hideDivFromInsideSpan();
+
+      await showDivFromInsideSpan();
+
+      await removeDivFromInsideSpan();
+
+      await addCSSGeneratedContent();
+
+      await removeCSSGeneratedContent();
+
+      await intermediateNonAccessibleContainers();
+
+      await intermediateNonAccessibleContainerBecomesAccessible();
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1">
+    <span role="region" id="span1" aria-label="region"><div id="div1">hello</div></span>
+  </div>
+
+  <div id="c2">
+    <span role="region" id="span2" aria-label="region"><div id="div2" style="display: none">hello</div></span>
+  </div>
+
+  <div id="c3">
+    <span role="region" id="span3" aria-label="region"><div id="div3">hello</div></span>
+  </div>
+
+  <div id="c4"><div id="c4_child">text</div></div>
+
+  <div id="c5"><div id="c5_child" class="gentext">text</div></div>
+
+  <div id="c6">
+    <div id="scrollarea" style="overflow:hidden;">
+      <div><div><button id="b1">Hello</button></div><div style="display: none"><button id="b2">Goodbye</button></div></div>
+    </div>
+  </div>
+
+  <div id="c7">
+    <div style="display: inline;" class="intermediate">
+      <button id="b3">Hello</button>
+    </div>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
