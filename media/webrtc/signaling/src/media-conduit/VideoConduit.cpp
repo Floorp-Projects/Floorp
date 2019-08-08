@@ -12,6 +12,7 @@
 #include "YuvStamper.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIGfxInfo.h"
@@ -1681,6 +1682,13 @@ std::unique_ptr<webrtc::VideoEncoder> WebrtcVideoConduit::CreateEncoder(
 #ifdef MOZ_WEBRTC_MEDIACODEC
   bool enabled = false;
 #endif
+
+  if (StaticPrefs::media_webrtc_platformencoder()) {
+    encoder.reset(MediaDataDecoderCodec::CreateEncoder(aType));
+    if (encoder) {
+      return encoder;
+    }
+  }
 
   switch (aType) {
     case webrtc::VideoCodecType::kVideoCodecH264:
