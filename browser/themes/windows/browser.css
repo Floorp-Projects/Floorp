@@ -704,21 +704,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   color: HighlightText !important;
 }
 
-/* rules for menupopup drop indicators */
-.menupopup-drop-indicator-bar {
-  position: relative;
-  /* these two margins must together compensate the indicator's height */
-  margin-top: -1px;
-  margin-bottom: -1px;
-}
-
-.menupopup-drop-indicator {
-  list-style-image: none;
-  height: 2px;
-  margin-inline-end: -4em;
-  background-color: Highlight;
-}
-
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
 

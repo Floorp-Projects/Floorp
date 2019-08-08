@@ -979,7 +979,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
 /* Give this menupopup an arrow panel styling */
 #BMB_bookmarksPopup {
   -moz-appearance: none;
-  -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-arrow");
+  -moz-binding: none;
   background: transparent;
   border: none;
   /* The popup inherits -moz-image-region from the button, must reset it */

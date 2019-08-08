@@ -104,21 +104,6 @@ menuitem.bookmark-item {
   color: HighlightText !important;
 }
 
-/* rules for menupopup drop indicators */
-.menupopup-drop-indicator-bar {
-  position: relative;
-  /* these two margins must together compensate the indicator's height */
-  margin-top: -1px;
-  margin-bottom: -1px;
-}
-
-.menupopup-drop-indicator {
-  list-style-image: none;
-  height: 2px;
-  margin-inline-end: -4em;
-  background-color: Highlight;
-}
-
 /* Bookmarks toolbar */
 #PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);

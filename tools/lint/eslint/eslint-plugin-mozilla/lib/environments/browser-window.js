@@ -49,6 +49,8 @@ const MAPPINGS = {
   "viewSourceUtils.js":
     "toolkit/components/viewsource/content/viewSourceUtils.js",
   "places-tree.js": "browser/components/places/content/places-tree.js",
+  "places-menupopup.js":
+    "browser/components/places/content/places-menupopup.js",
 };
 
 const globalScriptsRegExp = /^\s*Services.scriptloader.loadSubScript\(\"(.*?)\", this\);$/;

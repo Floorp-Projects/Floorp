@@ -44,7 +44,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   background: transparent;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true] > hbox:-moz-lwtheme {
+#BMB_bookmarksPopup menupopup[placespopup=true]:-moz-lwtheme::part(innerbox) {
   background: var(--arrowpanel-background);
   border-radius: var(--arrowpanel-border-radius);
   box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
@@ -52,6 +52,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   border: none;
   margin: 1px;
 }
+
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
