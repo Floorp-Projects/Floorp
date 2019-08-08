@@ -66,5 +66,6 @@ module.exports = (env = {}) => ({
     "react-dom": "ReactDOM",
     redux: "Redux",
     "react-redux": "ReactRedux",
+    "react-transition-group": "ReactTransitionGroup",
   },
 });

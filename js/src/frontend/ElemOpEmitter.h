@@ -256,8 +256,7 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 
   MOZ_MUST_USE bool emitDelete();
 
-  enum class EmitSetFunctionName : bool { No, Yes };
-  MOZ_MUST_USE bool emitAssignment(EmitSetFunctionName emitSetFunName);
+  MOZ_MUST_USE bool emitAssignment();
 
   MOZ_MUST_USE bool emitIncDec();
 };

@@ -1,6 +1,6 @@
 /* import-globals-from partitionedstorage_head.js */
 
-PartitionedStorageHelper.runTest(
+PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "BroadcastChannel",
   async (win3rdParty, win1stParty, allowed) => {
     let a = new win3rdParty.BroadcastChannel("hello");

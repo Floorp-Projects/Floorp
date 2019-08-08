@@ -2018,10 +2018,12 @@ mozilla::Maybe<LexicalScope::Data*> NewLexicalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
-FunctionCreationData GenerateFunctionCreationData(
-    HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, bool isSelfHosting = false,
-    bool inFunctionBox = false);
+FunctionCreationData GenerateFunctionCreationData(HandleAtom atom,
+                                                  FunctionSyntaxKind kind,
+                                                  GeneratorKind generatorKind,
+                                                  FunctionAsyncKind asyncKind,
+                                                  bool isSelfHosting = false,
+                                                  bool inFunctionBox = false);
 
 JSFunction* AllocNewFunction(JSContext* cx,
                              Handle<FunctionCreationData> dataHandle);

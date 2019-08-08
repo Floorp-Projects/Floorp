@@ -929,6 +929,30 @@ describe("ASRouter", () => {
 
       assert.deepEqual(result, [message2, message1]);
     });
+    it("should forward trigger param info", async () => {
+      const trigger = { triggerId: "foo", triggerParam: "bar" };
+      const message1 = {
+        id: "1",
+        campaign: "foocampaign",
+        trigger: { id: "foo" },
+      };
+      const message2 = {
+        id: "2",
+        campaign: "foocampaign",
+        trigger: { id: "bar" },
+      };
+      await Router.setState({ messages: [message2, message1] });
+      // Just return the first message provided as arg
+      const stub = sandbox.stub(Router, "_findMessage");
+
+      Router.handleMessageRequest(trigger);
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, sinon.match.array, {
+        id: trigger.triggerId,
+        param: trigger.triggerParam,
+      });
+    });
   });
 
   describe("#uninit", () => {
@@ -1524,6 +1548,7 @@ describe("ASRouter", () => {
         assert.calledOnce(Router._findMessage);
         assert.deepEqual(Router._findMessage.firstCall.args[1], {
           id: "firstRun",
+          param: undefined,
         });
       });
       it("consider the trigger when picking a message", async () => {

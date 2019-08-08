@@ -136,12 +136,11 @@ static inline bool canonicalizeBase(nsAutoCString& spec, nsACString& out) {
  * underlying resource, or returns any other URI unchanged.
  */
 nsresult ResolveURI(nsIURI* in, nsIURI** out) {
-  bool equals;
   nsresult rv;
 
   // Resolve resource:// URIs. At the end of this if/else block, we
   // have both spec and uri variables identifying the same URI.
-  if (NS_SUCCEEDED(in->SchemeIs("resource", &equals)) && equals) {
+  if (in->SchemeIs("resource")) {
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -157,7 +156,7 @@ nsresult ResolveURI(nsIURI* in, nsIURI** out) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     return ioService->NewURI(spec, nullptr, nullptr, out);
-  } else if (NS_SUCCEEDED(in->SchemeIs("chrome", &equals)) && equals) {
+  } else if (in->SchemeIs("chrome")) {
     nsCOMPtr<nsIChromeRegistry> chromeReg =
         mozilla::services::GetChromeRegistryService();
     if (!chromeReg) return NS_ERROR_UNEXPECTED;
@@ -195,11 +194,8 @@ nsresult ResolveURI(nsIURI* in, nsIURI** out) {
  *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js
  */
 nsresult PathifyURI(nsIURI* in, nsACString& out) {
-  bool equals;
-  nsresult rv;
-
   nsCOMPtr<nsIURI> uri;
-  rv = ResolveURI(in, getter_AddRefs(uri));
+  nsresult rv = ResolveURI(in, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString spec;
@@ -207,7 +203,7 @@ nsresult PathifyURI(nsIURI* in, nsACString& out) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!canonicalizeBase(spec, out)) {
-    if (NS_SUCCEEDED(uri->SchemeIs("file", &equals)) && equals) {
+    if (uri->SchemeIs("file")) {
       nsCOMPtr<nsIFileURL> baseFileURL;
       baseFileURL = do_QueryInterface(uri, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -217,7 +213,7 @@ nsresult PathifyURI(nsIURI* in, nsACString& out) {
       NS_ENSURE_SUCCESS(rv, rv);
 
       out.Append(path);
-    } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &equals)) && equals) {
+    } else if (uri->SchemeIs("jar")) {
       nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 

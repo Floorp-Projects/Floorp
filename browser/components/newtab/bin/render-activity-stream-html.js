@@ -34,6 +34,7 @@ function templateHTML(options) {
     `${options.baseUrl}vendor/prop-types.js`,
     `${options.baseUrl}vendor/redux.js`,
     `${options.baseUrl}vendor/react-redux.js`,
+    `${options.baseUrl}vendor/react-transition-group.js`,
     `${options.baseUrl}data/content/activity-stream.bundle.js`,
   ];
 

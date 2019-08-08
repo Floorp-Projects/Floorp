@@ -255,6 +255,10 @@
   max-width: calc(var(--popup-width) - 2em);
 }
 
+#protections-popup[toast] #protections-popup-info-button {
+  display: none;
+}
+
 #identity-popup-permissions-content > description,
 #protections-popup-content > description {
   color: var(--panel-disabled-color);
@@ -524,11 +528,13 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-trackersView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
+  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image-disabled.svg);
+  width: 16px;
+  height: 16px;
 }
 
 .protections-popup-trackersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
 }
 
 .protections-popup-socialblockView-icon {
@@ -592,12 +598,120 @@ description#identity-popup-content-verifier,
 
 /* Content Blocking categories */
 
+#protections-popup-content {
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+
+#protections-popup-blocking-section-header,
+#protections-popup-not-blocking-section-header {
+  margin: 0;
+  padding: 10px calc(10px + 1em);
+  color: #737373;
+  font-weight: 600;
+}
+
+:root[lwt-popup-brighttext] #protections-popup-blocking-section-header,
+:root[lwt-popup-brighttext] #protections-popup-not-blocking-section-header {
+  color: #f9f9fa;
+}
+
+#tracking-protection-container > tooltip {
+  max-width: var(--popup-width);
+}
+/*
+ * The category list is split into two sections: "Blocking" and "Not Blocking",
+ * with five different category items distributed between them at runtime.
+ * To achieve this, we use a grid layout with 12 rows: one row for each header
+ * label and five rows in each section for the items.
+ * Items with the "blocked" class are assigned rows 2-6, and those without
+ * are assigned rows 8-12, with the headers taking rows 1 and 7.
+ */
+
 #protections-popup-category-list {
+  display: grid;
+  padding: 0;
+  margin: 0;
+}
+
+#protections-popup-blocking-section-header {
+  grid-row: 1;
+}
+
+#protections-popup[hasException] #protections-popup-blocking-section-header {
+  display: none;
+}
+
+#protections-popup:not([hasException]) #protections-popup-category-tracking-protection.blocked {
+  grid-row: 2;
+}
+
+#protections-popup:not([hasException]) #protections-popup-category-socialblock.blocked {
+  grid-row: 3;
+}
+
+#protections-popup:not([hasException]) #protections-popup-category-cookies.blocked {
+  grid-row: 4;
+}
+
+#protections-popup:not([hasException]) #protections-popup-category-cryptominers.blocked {
+  grid-row: 5;
+}
+
+#protections-popup:not([hasException]) #protections-popup-category-fingerprinters.blocked {
+  grid-row: 6;
+}
+
+#protections-popup-not-blocking-section-header {
+  grid-row: 7;
+}
+
+#protections-popup-not-blocking-section-header:not([hidden]) {
+  display: flex;
+}
+
+#protections-popup-not-blocking-section-description {
+  flex: -moz-available;
+  margin: 0;
+}
+
+#protections-popup-not-blocking-section-why {
+  margin: 0;
+}
+
+#protections-popup-not-blocking-section-why:hover {
+  background-color: var(--arrowpanel-dimmed);
+  outline: 4px solid var(--arrowpanel-dimmed);
+  text-decoration: none;
+}
+
+#protections-popup:not([hasException]) #protections-popup-blocking-section-header:not([hidden]) + #protections-popup-not-blocking-section-header {
+  border-top: 1px solid var(--panel-separator-color);
   margin-top: 10px;
 }
 
+#protections-popup-category-tracking-protection {
+  grid-row: 8;
+}
+
+#protections-popup-category-socialblock {
+  grid-row: 9;
+}
+
+#protections-popup-category-cookies {
+  grid-row: 10;
+}
+
+#protections-popup-category-cryptominers {
+  grid-row: 11;
+}
+
+#protections-popup-category-fingerprinters {
+  grid-row: 12;
+}
+
 .tracking-protection-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
 }
 
 .socialblock-icon {
@@ -663,20 +777,13 @@ description#identity-popup-content-verifier,
   margin-inline-start: 0;
 }
 
-#protections-popup-category-list {
-  /* Offset the padding set on #identity-popup-permissions-content so that it
-     shows up just below the section. The permission icons are 16px wide and
-     should be right aligned with the section icon. */
-  margin-inline-start: calc(-1em - 24px);
-}
-
 .protections-popup-category,
 .identity-popup-permission-item {
   min-height: 24px;
 }
 
 .protections-popup-category {
-  padding-inline-end: 12px;
+  padding: 0 calc(10px + 1em);
 }
 
 .identity-popup-permission-item {
@@ -700,10 +807,6 @@ description#identity-popup-content-verifier,
   height: 16px;
 }
 
-.protections-popup-category-icon {
-  margin-inline-start: 12px;
-}
-
 .identity-popup-permission-icon.in-use {
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
@@ -712,10 +815,6 @@ description#identity-popup-content-verifier,
 
 @keyframes in-use-blink {
   50% { opacity: 0; }
-}
-
-.protections-popup-category-label {
-  max-width: 200px;
 }
 
 .protections-popup-category-label,

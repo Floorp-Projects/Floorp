@@ -11,6 +11,7 @@ correctly handling the case where the system crashes.
 
    mozfile
    mozinstall
+   mozpower
    mozprofile
    mozprocess
    mozrunner

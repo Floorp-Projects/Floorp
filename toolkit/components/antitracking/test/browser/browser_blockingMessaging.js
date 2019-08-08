@@ -97,7 +97,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   }
 );
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "BroadcastChannel and Storage Access API",
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
@@ -160,7 +160,7 @@ AntiTracking.runTest(
   false
 );
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "BroadcastChannel in workers and Storage Access API",
   async _ => {
     function blockingCode() {

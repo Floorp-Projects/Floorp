@@ -5,8 +5,7 @@
 import React from "react";
 import { Interrupt } from "./Interrupt";
 import { Triplets } from "./Triplets";
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import { addUtmParams } from "./addUtmParams";
+import { BASE_PARAMS } from "./addUtmParams";
 
 export const FLUENT_FILES = [
   "branding/brand.ftl",
@@ -35,37 +34,6 @@ export const helpers = {
       link.href = file;
       link.rel = "localization";
     });
-  },
-
-  async fetchFlowParams({ fxaEndpoint, UTMTerm, dispatch, setFlowParams }) {
-    try {
-      const url = new URL(
-        `${fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`
-      );
-      addUtmParams(url, UTMTerm);
-      const response = await fetch(url, { credentials: "omit" });
-      if (response.status === 200) {
-        const { deviceId, flowId, flowBeginTime } = await response.json();
-        setFlowParams({ deviceId, flowId, flowBeginTime });
-      } else {
-        dispatch(
-          ac.OnlyToMain({
-            type: at.TELEMETRY_UNDESIRED_EVENT,
-            data: {
-              event: "FXA_METRICS_FETCH_ERROR",
-              value: response.status,
-            },
-          })
-        );
-      }
-    } catch (error) {
-      dispatch(
-        ac.OnlyToMain({
-          type: at.TELEMETRY_UNDESIRED_EVENT,
-          data: { event: "FXA_METRICS_ERROR" },
-        })
-      );
-    }
   },
 };
 
@@ -129,17 +97,18 @@ export class FirstRun extends React.PureComponent {
     return null;
   }
 
-  fetchFlowParams() {
-    const { fxaEndpoint, dispatch } = this.props;
+  async fetchFlowParams() {
+    const { fxaEndpoint, fetchFlowParams } = this.props;
     const { UTMTerm } = this.state;
     if (fxaEndpoint && UTMTerm && !this.didLoadFlowParams) {
       this.didLoadFlowParams = true;
-      helpers.fetchFlowParams({
-        fxaEndpoint,
-        UTMTerm,
-        dispatch,
-        setFlowParams: flowParams => this.setState({ flowParams }),
+      const flowParams = await fetchFlowParams({
+        ...BASE_PARAMS,
+        entrypoint: "activity-stream-firstrun",
+        form_type: "email",
+        utm_term: UTMTerm,
       });
+      this.setState({ flowParams });
     }
   }
 

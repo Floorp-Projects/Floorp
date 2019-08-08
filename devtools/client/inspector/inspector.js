@@ -151,14 +151,9 @@ function Inspector(toolbox) {
   this.telemetry = toolbox.telemetry;
   this.store = Store();
 
-  this._markupBox = this.panelDoc.getElementById("markup-box");
-
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
   this._panels = new Map();
-
-  this.reflowTracker = new ReflowTracker(this._target);
-  this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
   this._clearSearchResultsLabel = this._clearSearchResultsLabel.bind(this);
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(
@@ -208,6 +203,8 @@ Inspector.prototype = {
       this.target.threadFront.on("resumed", this.handleThreadResumed);
     }
 
+    await this.initInspectorFront();
+
     this.target.on("will-navigate", this._onBeforeNavigate);
 
     await Promise.all([
@@ -221,28 +218,23 @@ Inspector.prototype = {
     // Store the URL of the target page prior to navigation in order to ensure
     // telemetry counts in the Grid Inspector are not double counted on reload.
     this.previousURL = this.target.url;
+    this.reflowTracker = new ReflowTracker(this.target);
+    this.styleChangeTracker = new InspectorStyleChangeTracker(this);
+
+    this._markupBox = this.panelDoc.getElementById("markup-box");
 
     return this._deferredOpen();
   },
 
+  async initInspectorFront() {
+    this.inspectorFront = await this.target.getFront("inspector");
+    this.highlighter = this.inspectorFront.highlighter;
+    this.selection = this.inspectorFront.selection;
+    this.walker = this.inspectorFront.walker;
+  },
+
   get toolbox() {
     return this._toolbox;
-  },
-
-  get inspectorFront() {
-    return this.toolbox.inspectorFront;
-  },
-
-  get walker() {
-    return this.toolbox.walker;
-  },
-
-  get selection() {
-    return this.toolbox.selection;
-  },
-
-  get highlighter() {
-    return this.toolbox.highlighter;
   },
 
   get highlighters() {

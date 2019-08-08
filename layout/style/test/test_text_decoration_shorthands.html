@@ -15,6 +15,7 @@ var initial_values = {
     textDecorationColor: "rgb(255, 0, 255)",
     textDecorationLine: "none",
     textDecorationStyle: "solid",
+    textDecorationThickness: "auto",
 };
 
 // For various specified values of the text-decoration shorthand,
@@ -34,6 +35,14 @@ var text_decoration_test_cases = [
     {
         specified: "dotted",
         textDecorationStyle: "dotted",
+    },
+    {
+        specified: "20px",
+        textDecorationThickness: "20px",
+    },
+    {
+        specified: "auto",
+        textDecorationThickness: "auto",
     },
     {
         specified: "#00ff00 underline",
@@ -62,6 +71,30 @@ var text_decoration_test_cases = [
         textDecorationLine: "overline",
         textDecorationStyle: "double",
     },
+    {
+        specified: "solid underline 10px",
+        textDecorationStyle: "solid",
+        textDecorationLine: "underline",
+        textDecorationThickness: "10px",
+    },
+    {
+        specified: "line-through blue 200px",
+        textDecorationLine: "line-through",
+        textDecorationColor:  "rgb(0, 0, 255)",
+        textDecorationThickness: "200px",
+    },
+    {
+        specified: "underline wavy red 0",
+        textDecorationLine: "underline",
+        textDecorationStyle: "wavy",
+        textDecorationColor: "rgb(255, 0, 0)",
+        textDecorationThickness: "0px",
+    },
+    {
+        specified: "overline -30px",
+        textDecorationLine: "overline",
+        textDecorationThickness: "-30px",
+    },
 ];
 
 function run_tests(test_cases, shorthand, subproperties) {
@@ -86,7 +119,7 @@ function run_tests(test_cases, shorthand, subproperties) {
 }
 
 run_tests(text_decoration_test_cases, "textDecoration", [
-    "textDecorationColor", "textDecorationLine", "textDecorationStyle"]);
+    "textDecorationColor", "textDecorationLine", "textDecorationStyle", "textDecorationThickness"]);
 
 </script>
 </body>

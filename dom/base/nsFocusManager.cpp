@@ -1221,7 +1221,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   nsCOMPtr<nsPIDOMWindowOuter> newRootWindow;
   if (dsti) {
     nsCOMPtr<nsIDocShellTreeItem> root;
-    dsti->GetRootTreeItem(getter_AddRefs(root));
+    dsti->GetInProcessRootTreeItem(getter_AddRefs(root));
     newRootWindow = root ? root->GetWindow() : nullptr;
 
     isElementInActiveWindow = (mActiveWindow && newRootWindow == mActiveWindow);
@@ -4076,7 +4076,7 @@ bool nsFocusManager::CanSkipFocus(nsIContent* aContent) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  ds->GetRootTreeItem(getter_AddRefs(root));
+  ds->GetInProcessRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsPIDOMWindowOuter> newRootWindow =
       root ? root->GetWindow() : nullptr;
   if (mActiveWindow != newRootWindow) {

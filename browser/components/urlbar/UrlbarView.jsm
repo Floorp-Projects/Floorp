@@ -385,11 +385,22 @@ class UrlbarView {
         // of the navigation toolbar to reclaim space for results.
         endOffset = startOffset;
       }
-      let identityIcon = this.document.getElementById("identity-icon");
-      let identityRect = this._getBoundsWithoutFlushing(identityIcon);
+
+      // We need to align with the tracking protection icon if the
+      // 'pageproxystate' is valid since the tracking protection icon would be
+      // at the first position instead of the identity icon in this case.
+      let alignIcon;
+      if (this.input.getAttribute("pageproxystate") === "valid") {
+        alignIcon = this.document.getElementById(
+          "tracking-protection-icon-box"
+        );
+      } else {
+        alignIcon = this.document.getElementById("identity-icon");
+      }
+      let alignRect = this._getBoundsWithoutFlushing(alignIcon);
       let start = this.window.RTL_UI
-        ? documentRect.right - identityRect.right
-        : identityRect.left;
+        ? documentRect.right - alignRect.right
+        : alignRect.left;
 
       this.panel.style.setProperty("--item-padding-start", px(start));
       this.panel.style.setProperty("--item-padding-end", px(endOffset));
@@ -586,7 +597,7 @@ class UrlbarView {
 
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      !result.payload.isKeywordOffer
+      !result.payload.keywordOffer
     ) {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {

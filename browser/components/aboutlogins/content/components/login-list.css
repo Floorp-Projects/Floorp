@@ -43,8 +43,10 @@
   display: contents;
 }
 
-:host(.no-logins) ol,
-:host(:not(.no-logins)) .intro {
+:host(.no-logins:not(.create-login-selected)) ol,
+:host(:not(.no-logins)) .intro,
+:host(.create-login-selected) .intro,
+:host(:not(.create-login-selected)) #new-login-list-item {
   display: none;
 }
 

@@ -1,0 +1,11 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg data-name="Flat (For Export)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <path fill="context-fill" d="M2 15a1 1 0 0 1-.71-.29 1 1 0 0 1 0-1.42l12-12a1 1 0 1 1 1.42 1.42l-12 12A1 1 0 0 1 2 15z"/>
+  <path fill="context-fill" d="M14 5v7a1 1 0 0 1-1 1H6l-2 2h9a3 3 0 0 0 3-3V4a3 3 0 0 0-.14-.86z"/>
+  <path fill="context-fill" d="M3 13a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10l1.55-1.55A2.93 2.93 0 0 0 13 1H3a3 3 0 0 0-3 3v8a3 3 0 0 0 1.45 2.55z"/>
+  <path fill="context-fill" d="M11.64 7.36L7 12h6V9.18a.47.47 0 0 0-.12-.32z"/>
+  <path fill="context-fill" d="M7.29 8.71l-1.52-.6a.5.5 0 0 0-.5.07L3.19 9.85a.49.49 0 0 0-.19.39V12h1z"/>
+  <circle fill="context-fill" cx="5" cy="6" r="1"/>
+</svg>

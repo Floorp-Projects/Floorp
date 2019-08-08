@@ -202,13 +202,6 @@ var AboutProtectionsHandler = {
           potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
             logins
           );
-
-          // If the user isn't subscribed to Monitor, then send back their email so the
-          // protections report can direct them to the proper OAuth flow on Monitor.
-          if (monitorData.errorMessage) {
-            const { email } = await fxAccounts.getSignedInUser();
-            userEmail = email;
-          }
         }
       } else {
         // If no account exists, then the user is not logged in with an fxAccount.
@@ -218,6 +211,8 @@ var AboutProtectionsHandler = {
       }
     } catch (e) {
       Cu.reportError(e.message);
+      monitorData.errorMessage = e.message;
+
       // If the user's OAuth token is invalid, we clear the cached token and refetch
       // again. If OAuth token is invalid after the second fetch, then the monitor UI
       // will simply show the "no logins" UI version.
@@ -229,8 +224,12 @@ var AboutProtectionsHandler = {
           monitorData = await this.fetchUserBreachStats(token);
         } catch (_) {
           Cu.reportError(e.message);
-          monitorData.errorMessage = INVALID_OAUTH_TOKEN;
         }
+      } else if (e.message === USER_UNSUBSCRIBED_TO_MONITOR) {
+        // Send back user's email so the protections report can direct them to the proper
+        // OAuth flow on Monitor.
+        const { email } = await fxAccounts.getSignedInUser();
+        userEmail = email;
       } else {
         monitorData.errorMessage = e.message || "An error ocurred.";
       }

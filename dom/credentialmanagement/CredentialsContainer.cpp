@@ -63,7 +63,7 @@ static bool IsInActiveTab(nsPIDOMWindowInner* aParent) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  docShell->GetRootTreeItem(getter_AddRefs(rootItem));
+  docShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
   if (!rootItem) {
     return false;
   }
