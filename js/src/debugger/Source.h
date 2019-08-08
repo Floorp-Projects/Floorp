@@ -36,6 +36,8 @@ class DebuggerSource : public NativeObject {
 
   static void trace(JSTracer* trc, JSObject* obj);
 
+  using ReferentVariant = DebuggerSourceReferent;
+
   NativeObject* getReferentRawObject() const;
   DebuggerSourceReferent getReferent() const;
 
