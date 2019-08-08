@@ -854,8 +854,8 @@
   mirror: always
 
 # When this pref is enabled document loads with a mismatched
-# Cross-Origin header will fail to load
-- name: browser.tabs.remote.useCrossOriginPolicy
+# Cross-Origin-Embedder-Policy header will fail to load
+- name: browser.tabs.remote.useCrossOriginEmbedderPolicy
   type: bool
   value: false
   mirror: always

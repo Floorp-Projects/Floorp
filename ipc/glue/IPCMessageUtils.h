@@ -1075,18 +1075,17 @@ struct ParamTraits<nsILoadInfo::CrossOriginOpenerPolicy>
     : EnumSerializer<nsILoadInfo::CrossOriginOpenerPolicy,
                      CrossOriginOpenerPolicyValidator> {};
 
-struct CrossOriginPolicyValidator {
-  static bool IsLegalValue(nsILoadInfo::CrossOriginPolicy e) {
-    return e == nsILoadInfo::CROSS_ORIGIN_POLICY_NULL ||
-           e == nsILoadInfo::CROSS_ORIGIN_POLICY_ANONYMOUS ||
-           e == nsILoadInfo::CROSS_ORIGIN_POLICY_USE_CREDENTIALS;
+struct CrossOriginEmbedderPolicyValidator {
+  static bool IsLegalValue(nsILoadInfo::CrossOriginEmbedderPolicy e) {
+    return e == nsILoadInfo::EMBEDDER_POLICY_NULL ||
+           e == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
   }
 };
 
 template <>
-struct ParamTraits<nsILoadInfo::CrossOriginPolicy>
-    : EnumSerializer<nsILoadInfo::CrossOriginPolicy,
-                     CrossOriginPolicyValidator> {};
+struct ParamTraits<nsILoadInfo::CrossOriginEmbedderPolicy>
+    : EnumSerializer<nsILoadInfo::CrossOriginEmbedderPolicy,
+                     CrossOriginEmbedderPolicyValidator> {};
 
 // Helper class for reading bitfields.
 // If T has bitfields members, derive ParamTraits<T> from BitfieldHelper<T>.

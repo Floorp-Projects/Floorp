@@ -2556,7 +2556,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     LOG(("  continuation state has been reset"));
   }
 
-  rv = ProcessCrossOriginHeader();
+  rv = ProcessCrossOriginEmbedderPolicyHeader();
   if (NS_FAILED(rv)) {
     mStatus = NS_ERROR_BLOCKED_BY_POLICY;
     HandleAsyncAbort();
@@ -7479,36 +7479,35 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   return NS_OK;
 }
 
-nsresult nsHttpChannel::GetResponseCrossOriginPolicy(
-    nsILoadInfo::CrossOriginPolicy* aResponseCrossOriginPolicy) {
+nsresult nsHttpChannel::GetResponseEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy) {
   if (!mResponseHead) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsILoadInfo::CrossOriginPolicy policy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
+  nsILoadInfo::CrossOriginEmbedderPolicy policy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   nsAutoCString content;
-  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin, content);
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
+                                     content);
 
-  // Cross-Origin = %s"anonymous" / %s"use-credentials" ; case-sensitive
-
-  if (content.EqualsLiteral("anonymous")) {
-    policy = nsILoadInfo::CROSS_ORIGIN_POLICY_ANONYMOUS;
-  } else if (content.EqualsLiteral("use-credentials")) {
-    policy = nsILoadInfo::CROSS_ORIGIN_POLICY_USE_CREDENTIALS;
+  if (content.EqualsLiteral("require-corp")) {
+    policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
   }
 
-  *aResponseCrossOriginPolicy = policy;
+  *aResponseEmbedderPolicy = policy;
   return NS_OK;
 }
 
-nsresult nsHttpChannel::ProcessCrossOriginHeader() {
+// https://mikewest.github.io/corpp/#process-navigation-response
+nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
   nsresult rv;
-  if (!StaticPrefs::browser_tabs_remote_useCrossOriginPolicy()) {
+  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
     return NS_OK;
   }
 
-  // Only consider Cross-Origin for document loads.
+  // Only consider Cross-Origin-Embedder-Policy for document loads.
   if (mLoadInfo->GetExternalContentPolicyType() !=
           nsIContentPolicy::TYPE_DOCUMENT &&
       mLoadInfo->GetExternalContentPolicyType() !=
@@ -7528,19 +7527,19 @@ nsresult nsHttpChannel::ProcessCrossOriginHeader() {
     return NS_OK;
   }
 
-  nsILoadInfo::CrossOriginPolicy documentPolicy =
-      ctx->GetInheritedCrossOriginPolicy();
-  nsILoadInfo::CrossOriginPolicy resultPolicy =
-      nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
-  rv = GetResponseCrossOriginPolicy(&resultPolicy);
+  nsILoadInfo::CrossOriginEmbedderPolicy documentPolicy =
+      ctx->GetInheritedEmbedderPolicy();
+  nsILoadInfo::CrossOriginEmbedderPolicy resultPolicy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
+  rv = GetResponseEmbedderPolicy(&resultPolicy);
   if (NS_FAILED(rv)) {
     return NS_OK;
   }
 
-  ctx->SetCrossOriginPolicy(resultPolicy);
+  ctx->SetEmbedderPolicy(resultPolicy);
 
-  if (documentPolicy != nsILoadInfo::CROSS_ORIGIN_POLICY_NULL &&
-      resultPolicy == nsILoadInfo::CROSS_ORIGIN_POLICY_NULL) {
+  if (documentPolicy != nsILoadInfo::EMBEDDER_POLICY_NULL &&
+      resultPolicy == nsILoadInfo::EMBEDDER_POLICY_NULL) {
     return NS_ERROR_BLOCKED_BY_POLICY;
   }
 
@@ -7727,7 +7726,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     return NS_OK;
   }
 
-  rv = ProcessCrossOriginHeader();
+  rv = ProcessCrossOriginEmbedderPolicyHeader();
   if (NS_FAILED(rv)) {
     mStatus = NS_ERROR_BLOCKED_BY_POLICY;
     HandleAsyncAbort();
