@@ -94,25 +94,6 @@ ContentParentId ContentProcessManager::GetTabProcessId(
   return ContentParentId(0);
 }
 
-nsTArray<TabId> ContentProcessManager::GetBrowserParentsByProcessId(
-    const ContentParentId& aChildCpId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTArray<TabId> tabIdList;
-  ContentParent* contentParent = mContentParentMap.Get(aChildCpId);
-  if (!contentParent) {
-    ASSERT_UNLESS_FUZZING();
-    return tabIdList;
-  }
-
-  const auto& browsers = contentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    BrowserParent* tab = BrowserParent::GetFrom(iter.Get()->GetKey());
-    tabIdList.AppendElement(tab->GetTabId());
-  }
-
-  return tabIdList;
-}
-
 uint32_t ContentProcessManager::GetBrowserParentCountByProcessId(
     const ContentParentId& aChildCpId) {
   MOZ_ASSERT(NS_IsMainThread());
