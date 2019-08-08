@@ -231,14 +231,13 @@ public final class GeckoSessionSettings implements Parcelable {
     /**
      * Mobile-friendly pages will be rendered using a viewport based on their &lt;meta&gt; viewport
      * tag. All other pages will be rendered using a special desktop mode viewport, which has a
-     * default width of 980 CSS px.
+     * width of 980 CSS px.
      */
     public static final int VIEWPORT_MODE_MOBILE = 0;
 
     /**
-     * All pages will be rendered using the special desktop mode viewport, which has a default width
-     * of 980 CSS px, regardless of whether the page has a &lt;meta&gt; viewport tag specified or
-     * not.
+     * All pages will be rendered using the special desktop mode viewport, which has a width of
+     * 980 CSS px, regardless of whether the page has a &lt;meta&gt; viewport tag specified or not.
      */
     public static final int VIEWPORT_MODE_DESKTOP = 1;
 
