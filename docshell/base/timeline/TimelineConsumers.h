@@ -122,7 +122,7 @@ class TimelineConsumers : public nsIObserver {
   LinkedList<MarkersStorage> mMarkersStores;
 
   // Protects this class's data structures.
-  static StaticMutex sMutex;
+  static StaticMutexNotRecorded sMutex;
 };
 
 }  // namespace mozilla
