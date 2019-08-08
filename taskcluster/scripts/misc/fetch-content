@@ -575,7 +575,7 @@ def api(root_url, service, version, path):
     if root_url == 'https://taskcluster.net':
         return 'https://{service}.taskcluster.net/{version}/{path}'.format(
                 service=service, version=version, path=path)
-    return 'https://{root_url}/api/{service}/{version}/{path}'.format(
+    return '{root_url}/api/{service}/{version}/{path}'.format(
             root_url=root_url, service=service, version=version, path=path)
 
 
