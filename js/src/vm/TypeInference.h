@@ -165,7 +165,7 @@ class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray {
  */
 class TypeNewScriptInitializer {
  public:
-  enum Kind { SETPROP, SETPROP_FRAME, DONE } kind;
+  enum Kind { SETPROP, SETPROP_FRAME } kind;
   uint32_t offset;
 
   TypeNewScriptInitializer(Kind kind, uint32_t offset)
