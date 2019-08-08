@@ -167,9 +167,17 @@ var AboutProtectionsHandler = {
       Cu.reportError("There was an error fetching login data: ", e.message);
     }
 
+    const userFacingLogins =
+      Services.logins.countLogins("", "", "") -
+      Services.logins.countLogins(
+        "chrome://FirefoxAccounts",
+        null,
+        "Firefox Accounts credentials"
+      );
+
     return {
       hasFxa,
-      numLogins: Services.logins.countLogins("", "", ""),
+      numLogins: userFacingLogins,
       numSyncedDevices: syncedDevices.length,
     };
   },
