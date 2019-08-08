@@ -19,8 +19,6 @@ certificate-viewer-algorithm = Algorithm
 certificate-viewer-certificate-authority = Certificate Authority
 certificate-viewer-cipher-suite = Cipher Suite
 certificate-viewer-common-name = Common Name 
-# Inc. means Incorporated, e.g GitHub is incorporated in Delaware
-certificate-viewer-inc-country = Inc. Country 
 certificate-viewer-country = Country 
 certificate-viewer-curve = Curve 
 certificate-viewer-distribution-point = Distribution Point
@@ -47,8 +45,6 @@ certificate-viewer-purposes = Purposes
 certificate-viewer-qualifier = Qualifier
 certificate-viewer-qualifiers = Qualifiers 
 certificate-viewer-required = Required
-# Inc. means Incorporated, e.g GitHub is incorporated in Delaware
-certificate-viewer-inc-state-province = Inc. State/Province
 certificate-viewer-state-province = State/Province
 certificate-viewer-sha-1 = SHA-1
 certificate-viewer-sha-256 = SHA-256
@@ -59,4 +55,3 @@ certificate-viewer-signature-scheme = Signature Scheme
 certificate-viewer-timestamp = Timestamp
 certificate-viewer-value = Value
 certificate-viewer-version = Version
-certificate-viewer-business-category = Business Category
