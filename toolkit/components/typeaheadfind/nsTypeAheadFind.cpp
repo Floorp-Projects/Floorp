@@ -448,9 +448,9 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
       // side effects (like updating mStartPointRange and
       // setting usesIndependentSelection) that we'll need whether
       // or not the range is visible.
-      bool canSeeRange = IsRangeVisible(
-          presShell, presContext, returnRange, aIsFirstVisiblePreferred, false,
-          getter_AddRefs(mStartPointRange), &usesIndependentSelection);
+      bool canSeeRange = IsRangeVisible(returnRange, aIsFirstVisiblePreferred,
+                                        false, getter_AddRefs(mStartPointRange),
+                                        &usesIndependentSelection);
 
       // If we can't see the range, we still might be able to scroll
       // it into view if usesIndependentSelection is true. If both are
@@ -811,8 +811,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
     // Ensure visible range, move forward if necessary
     // This ignores the return value, but uses the side effect of
     // IsRangeVisible. It returns the first visible range after searchRange
-    IsRangeVisible(presShell, presContext, mSearchRange,
-                   aIsFirstVisiblePreferred, true,
+    IsRangeVisible(mSearchRange, aIsFirstVisiblePreferred, true,
                    getter_AddRefs(mStartPointRange), nullptr);
   } else {
     uint32_t startOffset;
@@ -1123,17 +1122,9 @@ nsTypeAheadFind::GetFoundRange(nsRange** aFoundRange) {
 NS_IMETHODIMP
 nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
                                 bool* aResult) {
-  nsCOMPtr<nsINode> node = aRange->GetStartContainer();
-
-  Document* doc = node->OwnerDoc();
-  RefPtr<PresShell> presShell = doc->GetPresShell();
-  if (!presShell) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   RefPtr<nsRange> ignored;
-  *aResult = IsRangeVisible(presShell, presContext, aRange, aMustBeInViewPort,
-                            false, getter_AddRefs(ignored), nullptr);
+  *aResult = IsRangeVisible(aRange, aMustBeInViewPort, false,
+                            getter_AddRefs(ignored), nullptr);
   return NS_OK;
 }
 
@@ -1165,16 +1156,14 @@ enum class RectVisibility {
  *         RectVisibility::RightOfViewport rectangle is outside the
  *         topmost ancestor scrollable frame in the specified direction
  */
-static RectVisibility GetRectVisibility(PresShell* aPresShell, nsIFrame* aFrame,
-                                        const nsRect& aRect,
+static RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
                                         nscoord aMinTwips) {
-  NS_ASSERTION(aFrame->PresContext() == aPresShell->GetPresContext(),
-               "prescontext mismatch?");
-  nsIFrame* rootFrame = aPresShell->GetRootFrame();
-  NS_ASSERTION(
+  PresShell* ps = aFrame->PresShell();
+  nsIFrame* rootFrame = ps->GetRootFrame();
+  MOZ_DIAGNOSTIC_ASSERT(
       rootFrame,
       "How can someone have a frame for this presshell when there's no root?");
-  nsIScrollableFrame* sf = aPresShell->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf = ps->GetRootScrollFrameAsScrollable();
   nsRect scrollPortRect;
   if (sf) {
     scrollPortRect = sf->GetScrollPortRect();
@@ -1230,14 +1219,11 @@ static RectVisibility GetRectVisibility(PresShell* aPresShell, nsIFrame* aFrame,
   return RectVisibility::Visible;
 }
 
-bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
-                                     nsPresContext* aPresContext,
-                                     nsRange* aRange, bool aMustBeInViewPort,
+bool nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
                                      bool aGetTopVisibleLeaf,
                                      nsRange** aFirstVisibleRange,
                                      bool* aUsesIndependentSelection) {
-  NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange,
-               "params are invalid");
+  NS_ASSERTION(aRange && aFirstVisibleRange, "params are invalid");
 
   // We need to know if the range start is visible.
   // Otherwise, return the first visible range start
@@ -1295,8 +1281,8 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
   RectVisibility rectVisibility = RectVisibility::AboveViewport;
 
   if (!aGetTopVisibleLeaf && !frame->GetRect().IsEmpty()) {
-    rectVisibility = GetRectVisibility(
-        aPresShell, frame, frame->GetRectRelativeToSelf(), minDistance);
+    rectVisibility =
+        GetRectVisibility(frame, frame->GetRectRelativeToSelf(), minDistance);
 
     if (rectVisibility == RectVisibility::Visible) {
       // The primary frame of the range is visible, but we don't yet know if
@@ -1321,7 +1307,7 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
             nsLayoutUtils::TransformRect(containerFrame, frame, r);
         if (res == nsLayoutUtils::TransformResult::TRANSFORM_SUCCEEDED) {
           RectVisibility rangeRectVisibility =
-              GetRectVisibility(aPresShell, frame, r, minDistance);
+              GetRectVisibility(frame, r, minDistance);
 
           if (rangeRectVisibility == RectVisibility::Visible) {
             atLeastOneRangeRectVisible = true;
@@ -1333,7 +1319,7 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
       if (atLeastOneRangeRectVisible) {
         // This is an early exit case, where we return true if and only if
         // the range is actually rendered.
-        return IsRangeRendered(aPresShell, aPresContext, aRange);
+        return IsRangeRendered(aRange);
       }
     }
   }
@@ -1352,8 +1338,8 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
   nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
   if (trav)
-    trav->NewFrameTraversal(getter_AddRefs(frameTraversal), aPresContext, frame,
-                            eLeaf,
+    trav->NewFrameTraversal(getter_AddRefs(frameTraversal),
+                            frame->PresContext(), frame, eLeaf,
                             false,  // aVisual
                             false,  // aLockInScrollView
                             false,  // aFollowOOFs
@@ -1382,9 +1368,8 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
       continue;
     }
 
-    rectVisibility =
-        GetRectVisibility(aPresShell, frame,
-                          nsRect(nsPoint(0, 0), frame->GetSize()), minDistance);
+    rectVisibility = GetRectVisibility(
+        frame, nsRect(nsPoint(0, 0), frame->GetSize()), minDistance);
   }
 
   if (frame) {
@@ -1404,23 +1389,12 @@ bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
 
 NS_IMETHODIMP
 nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
-  nsINode* node = aRange->GetStartContainer();
-
-  RefPtr<PresShell> presShell = node->OwnerDoc()->GetPresShell();
-  if (!presShell) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  *aResult = IsRangeRendered(presShell, presContext, aRange);
+  *aResult = IsRangeRendered(aRange);
   return NS_OK;
 }
 
-bool nsTypeAheadFind::IsRangeRendered(PresShell* aPresShell,
-                                      nsPresContext* aPresContext,
-                                      nsRange* aRange) {
+bool nsTypeAheadFind::IsRangeRendered(nsRange* aRange) {
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
-  NS_ASSERTION(aPresShell && aPresContext && aRange, "params are invalid");
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(aRange->GetCommonAncestor());
   if (!content) {
     return false;
@@ -1438,9 +1412,13 @@ bool nsTypeAheadFind::IsRangeRendered(PresShell* aPresShell,
   // Having a primary frame doesn't mean that the range is visible inside the
   // viewport. Do a hit-test to determine that quickly and properly.
   AutoTArray<nsIFrame*, 8> frames;
-  nsIFrame* rootFrame = aPresShell->GetRootFrame();
+  nsIFrame* rootFrame = frame->PresShell()->GetRootFrame();
   RefPtr<nsRange> range = static_cast<nsRange*>(aRange);
-  RefPtr<mozilla::dom::DOMRectList> rects = range->GetClientRects(true, true);
+
+  // NOTE(emilio): This used to flush layout, _after_ checking style above.
+  // Instead, don't flush.
+  RefPtr<mozilla::dom::DOMRectList> rects =
+      range->GetClientRects(true, /* aFlushLayout = */ false);
   for (uint32_t i = 0; i < rects->Length(); ++i) {
     RefPtr<mozilla::dom::DOMRect> rect = rects->Item(i);
     nsRect r(nsPresContext::CSSPixelsToAppUnits((float)rect->X()),
