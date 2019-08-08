@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/WindowGlobalActor.h"
 
+#include "nsContentUtils.h"
 #include "mozJSComponentLoader.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/JSWindowActorService.h"
@@ -14,6 +15,21 @@
 
 namespace mozilla {
 namespace dom {
+
+WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
+    dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<nsIURI> documentURI;
+  Unused << NS_NewURI(getter_AddRefs(documentURI), "about:blank");
+
+  uint64_t outerWindowId = nsContentUtils::GenerateWindowId();
+  uint64_t innerWindowId = nsContentUtils::GenerateWindowId();
+
+  return WindowGlobalInit(aPrincipal, documentURI, aBrowsingContext,
+                          innerWindowId, outerWindowId);
+}
 
 void WindowGlobalActor::ConstructActor(const nsAString& aName,
                                        JS::MutableHandleObject aActor,

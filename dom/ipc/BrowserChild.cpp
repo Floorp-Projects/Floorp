@@ -492,8 +492,11 @@ bool BrowserChild::DoUpdateZoomConstraints(
   return true;
 }
 
-nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
+nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
+                            WindowGlobalChild* aInitialWindowChild) {
   MOZ_DIAGNOSTIC_ASSERT(mTabGroup);
+  MOZ_ASSERT_IF(aInitialWindowChild,
+                aInitialWindowChild->BrowsingContext() == mBrowsingContext);
 
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(this);
   mPuppetWidget = static_cast<PuppetWidget*>(widget.get());
@@ -504,8 +507,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
   mPuppetWidget->InfallibleCreate(nullptr,
                                   nullptr,  // no parents
                                   LayoutDeviceIntRect(0, 0, 0, 0),
-                                  nullptr  // HandleWidgetEvent
-  );
+                                  nullptr);  // HandleWidgetEvent
 
   mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(),
                                      mBrowsingContext);
