@@ -1778,8 +1778,8 @@ var PanelView = class extends AssociatedToNode {
         if (!button || !button.classList.contains("subviewbutton-nav")) {
           break;
         }
-        // Fall-through...
       }
+      // Fall-through...
       case "Space":
       case "NumpadEnter":
       case "Enter": {
