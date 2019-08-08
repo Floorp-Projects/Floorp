@@ -7515,8 +7515,11 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
     return NS_OK;
   }
 
-  if (documentPolicy != nsILoadInfo::EMBEDDER_POLICY_NULL &&
-      resultPolicy == nsILoadInfo::EMBEDDER_POLICY_NULL) {
+  // https://mikewest.github.io/corpp/#abstract-opdef-process-navigation-response
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+          nsIContentPolicy::TYPE_SUBDOCUMENT &&
+      documentPolicy != nsILoadInfo::EMBEDDER_POLICY_NULL &&
+      resultPolicy != nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
     return NS_ERROR_BLOCKED_BY_POLICY;
   }
 
