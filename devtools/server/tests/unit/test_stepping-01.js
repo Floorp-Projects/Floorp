@@ -32,6 +32,7 @@ function getPauseLocation(packet) {
 }
 
 function getPauseReturn(packet) {
+  dump(`>> getPauseReturn yo ${JSON.stringify(packet.why)}\n`);
   return packet.why.frameFinished.return;
 }
 
@@ -49,7 +50,9 @@ async function stepOutOfA(dbg, func, expectedLocation) {
   const { threadFront } = dbg;
   await steps(threadFront, [stepOver, stepIn]);
 
+  dump(`>>> oof\n`);
   const packet = await stepOut(threadFront);
+  dump(`>>> foo\n`);
 
   deepEqual(
     getPauseLocation(packet),
@@ -66,6 +69,7 @@ async function stepOverInA(dbg, func, expectedLocation) {
   await steps(threadFront, [stepOver, stepIn]);
 
   let packet = await stepOver(threadFront);
+  dump(`>> stepOverInA hi\n`);
   equal(getPauseReturn(packet).ownPropertyLength, 1, "a() is returning obj");
 
   packet = await stepOver(threadFront);
@@ -77,18 +81,18 @@ async function stepOverInA(dbg, func, expectedLocation) {
   await dbg.threadFront.resume();
 }
 
-async function testStep(dbg, func, expectedValue) {
-  await stepOverInA(dbg, func, expectedValue);
-  await stepOutOfA(dbg, func, expectedValue);
+async function testStep(dbg, func, expectedLocation) {
+  await stepOverInA(dbg, func, expectedLocation);
+  await stepOutOfA(dbg, func, expectedLocation);
 }
 
 function run_test() {
   return (async function() {
     const dbg = await setupTestFromUrl("stepping.js");
 
-    await testStep(dbg, "arithmetic", { line: 16, column: 8 });
-    await testStep(dbg, "composition", { line: 21, column: 3 });
-    await testStep(dbg, "chaining", { line: 26, column: 6 });
+    await testStep(dbg, "arithmetic", { line: 17, column: 0 });
+    await testStep(dbg, "composition", { line: 22, column: 0 });
+    await testStep(dbg, "chaining", { line: 27, column: 0 });
 
     await testFinish(dbg);
   })();
