@@ -83,38 +83,27 @@ void EbmlComposer::GenerateHeader() {
 }
 
 void EbmlComposer::FinishCluster() {
-  if (!mWritingCluster) {
+  if (!WritingCluster()) {
     return;
   }
 
-  MOZ_ASSERT(mClusterLengthLoc > 0);
+  MOZ_ASSERT(mCurrentClusterLengthLoc > 0);
   EbmlGlobal ebml;
   EbmlLoc ebmlLoc;
-  ebmlLoc.offset = mClusterLengthLoc;
+  ebmlLoc.offset = mCurrentClusterLengthLoc;
   ebml.offset = 0;
-  for (uint32_t i = mClusterHeaderIndex; i < mClusters.Length(); i++) {
-    ebml.offset += mClusters[i].Length();
+  for (const auto& block : mCurrentCluster) {
+    ebml.offset += block.Length();
   }
-  ebml.buf = mClusters[mClusterHeaderIndex].Elements();
+  ebml.buf = mCurrentCluster[0].Elements();
   Ebml_EndSubElement(&ebml, &ebmlLoc);
-  // Move the mClusters data from mClusterHeaderIndex that we can skip
-  // the metadata and the rest P-frames after ContainerWriter::FLUSH_NEEDED.
-  for (uint32_t i = mClusterHeaderIndex; i < mClusters.Length(); i++) {
-    mFinishedClusters.AppendElement()->SwapElements(mClusters[i]);
-  }
-
-  mClusterHeaderIndex = 0;
-  mClusterLengthLoc = 0;
-  mClusters.Clear();
-  mWritingCluster = false;
+  mFinishedClusters.AppendElements(std::move(mCurrentCluster));
+  mCurrentClusterLengthLoc = 0;
+  MOZ_ASSERT(mCurrentCluster.IsEmpty());
 }
 
 void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
   MOZ_RELEASE_ASSERT(mMetadataFinished);
-
-  EbmlGlobal ebml;
-  ebml.offset = 0;
-
   auto frameType = aFrame->mFrameType;
   const bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
   const bool isVP8PFrame = (frameType == EncodedFrame::FrameType::VP8_P_FRAME);
@@ -124,12 +113,13 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     FinishCluster();
   }
 
-  if (isVP8PFrame && !mWritingCluster) {
+  if (isVP8PFrame && !WritingCluster()) {
     // We ensure that clusters start with I-frames.
     return;
   }
 
-  int64_t timeCode = aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
+  int64_t timeCode =
+      aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
 
   if (!mHasVideo && timeCode >= FLUSH_AUDIO_ONLY_AFTER_MS) {
     MOZ_ASSERT(mHasAudio);
@@ -142,25 +132,25 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     FinishCluster();
   }
 
-  auto block = mClusters.AppendElement();
+  bool needClusterHeader = !WritingCluster();
+  auto block = mCurrentCluster.AppendElement();
   block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
+
+  EbmlGlobal ebml;
+  ebml.offset = 0;
   ebml.buf = block->Elements();
 
-  if (!mWritingCluster) {
+  if (needClusterHeader) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
-    MOZ_ASSERT(mClusters.Length() > 0);
-    // current cluster header array index
-    mClusterHeaderIndex = mClusters.Length() - 1;
-    mClusterLengthLoc = ebmlLoc.offset;
+    mCurrentClusterLengthLoc = ebmlLoc.offset;
     // if timeCode didn't under/overflow before, it shouldn't after this
-    mClusterTimecode = aFrame->mTime / PR_USEC_PER_MSEC;
-    Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
+    mCurrentClusterTimecode = aFrame->mTime / PR_USEC_PER_MSEC;
+    Ebml_SerializeUnsigned(&ebml, Timecode, mCurrentClusterTimecode);
 
     // Can't under-/overflow now
-    timeCode = aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
-
-    mWritingCluster = true;
+    timeCode =
+        aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
   }
 
   writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode),
@@ -205,11 +195,8 @@ void EbmlComposer::ExtractBuffer(nsTArray<nsTArray<uint8_t> >* aDestBufs,
   if (aFlag & ContainerWriter::FLUSH_NEEDED) {
     FinishCluster();
   }
-  // aDestBufs may have some element
-  for (uint32_t i = 0; i < mFinishedClusters.Length(); i++) {
-    aDestBufs->AppendElement()->SwapElements(mFinishedClusters[i]);
-  }
-  mFinishedClusters.Clear();
+  aDestBufs->AppendElements(std::move(mFinishedClusters));
+  MOZ_ASSERT(mFinishedClusters.IsEmpty());
 }
 
 }  // namespace mozilla

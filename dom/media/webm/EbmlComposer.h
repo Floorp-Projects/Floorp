@@ -45,33 +45,30 @@ class EbmlComposer {
   /*
    * Get valid cluster data.
    */
-  void ExtractBuffer(nsTArray<nsTArray<uint8_t> >* aDestBufs,
+  void ExtractBuffer(nsTArray<nsTArray<uint8_t>>* aDestBufs,
                      uint32_t aFlag = 0);
+  /*
+   * True if we have an open cluster.
+   */
+  bool WritingCluster() const { return !mCurrentCluster.IsEmpty(); }
 
  private:
   // Close current cluster and move data to mFinishedClusters. Idempotent.
   void FinishCluster();
-  // Canonical storage of clusters. Each element in the outer array corresponds
-  // to a cluster. These are never removed, to keep mClusterHeaderIndex
-  // accurate. The payload data in the inner array is however removed. It is
-  // moved to mFinishedClusters as a cluster is finished.
-  nsTArray<nsTArray<uint8_t> > mClusters;
-  // Finished clusters to be flushed out by ExtractBuffer().
-  nsTArray<nsTArray<uint8_t> > mFinishedClusters;
-
-  // Metadata has been serialized.
-  bool mMetadataFinished = false;
-  // True if we have an open cluster.
-  bool mWritingCluster = false;
-  // Indicate the current cluster's header index in mClusters.
-  size_t mClusterHeaderIndex = 0;
+  // The current cluster. Each element in the outer array corresponds to a block
+  // in the cluster. When the cluster is finished it is moved to
+  // mFinishedClusters.
+  nsTArray<nsTArray<uint8_t>> mCurrentCluster;
   // The cluster length position.
-  uint64_t mClusterLengthLoc = 0;
-  // Audio codec specific header data.
-  nsTArray<uint8_t> mCodecPrivateData;
-
+  uint64_t mCurrentClusterLengthLoc = 0;
   // The timecode of the cluster.
-  uint64_t mClusterTimecode = 0;
+  uint64_t mCurrentClusterTimecode = 0;
+
+  // Finished clusters to be flushed out by ExtractBuffer().
+  nsTArray<nsTArray<uint8_t>> mFinishedClusters;
+
+  // True when Metadata has been serialized into mFinishedClusters.
+  bool mMetadataFinished = false;
 
   // Video configuration
   int mWidth = 0;
@@ -79,10 +76,13 @@ class EbmlComposer {
   int mDisplayWidth = 0;
   int mDisplayHeight = 0;
   bool mHasVideo = false;
+
   // Audio configuration
   float mSampleFreq = 0;
   int mChannels = 0;
   bool mHasAudio = false;
+  // Audio codec specific header data.
+  nsTArray<uint8_t> mCodecPrivateData;
 };
 
 }  // namespace mozilla
