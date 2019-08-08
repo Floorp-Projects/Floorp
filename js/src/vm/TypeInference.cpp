@@ -4014,9 +4014,6 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
     // Found a matching frame.
     RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
 
-    // Whether all identified 'new' properties have been initialized.
-    bool finished = false;
-
     // If not finished, number of properties that have been added.
     uint32_t numProperties = 0;
 
@@ -4030,7 +4027,8 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
     // Index in pcOffsets of the frame currently being checked for a SETPROP.
     int setpropDepth = callDepth;
 
-    for (size_t i = 0; i < initializerList->length; i++) {
+    size_t i;
+    for (i = 0; i < initializerList->length; i++) {
       const TypeNewScriptInitializer init = initializerList->entries[i];
       if (init.kind == TypeNewScriptInitializer::SETPROP) {
         if (!pastProperty && pcOffsets[setpropDepth] < init.offset) {
@@ -4041,7 +4039,8 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
         numProperties++;
         pastProperty = false;
         setpropDepth = callDepth;
-      } else if (init.kind == TypeNewScriptInitializer::SETPROP_FRAME) {
+      } else {
+        MOZ_ASSERT(init.kind == TypeNewScriptInitializer::SETPROP_FRAME);
         if (!pastProperty) {
           if (pcOffsets[setpropDepth] < init.offset) {
             // Have not yet reached this inner call.
@@ -4057,12 +4056,11 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
             setpropDepth--;
           }
         }
-      } else {
-        MOZ_ASSERT(init.kind == TypeNewScriptInitializer::DONE);
-        finished = true;
-        break;
       }
     }
+
+    // Whether all identified 'new' properties have been initialized.
+    bool finished = i == initializerList->length;
 
     if (!finished) {
       (void)NativeObject::rollbackProperties(cx, obj, numProperties);
