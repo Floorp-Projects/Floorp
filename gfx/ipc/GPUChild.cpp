@@ -89,19 +89,6 @@ base::ProcessHandle GPUChild::GetChildProcessHandle() {
   return mHost->GetChildProcessHandle();
 }
 
-PAPZInputBridgeChild* GPUChild::AllocPAPZInputBridgeChild(
-    const LayersId& aLayersId) {
-  APZInputBridgeChild* child = new APZInputBridgeChild();
-  child->AddRef();
-  return child;
-}
-
-bool GPUChild::DeallocPAPZInputBridgeChild(PAPZInputBridgeChild* aActor) {
-  APZInputBridgeChild* child = static_cast<APZInputBridgeChild*>(aActor);
-  child->Release();
-  return true;
-}
-
 mozilla::ipc::IPCResult GPUChild::RecvInitComplete(const GPUDeviceData& aData) {
   // We synchronously requested GPU parameters before this arrived.
   if (mGPUReady) {

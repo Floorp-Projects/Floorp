@@ -15,7 +15,7 @@ namespace layers {
 class IAPZCTreeManager;
 
 class APZInputBridgeParent : public PAPZInputBridgeParent {
-  NS_INLINE_DECL_REFCOUNTING(APZInputBridgeParent)
+  NS_INLINE_DECL_REFCOUNTING(APZInputBridgeParent, final)
 
  public:
   explicit APZInputBridgeParent(const LayersId& aLayersId);
