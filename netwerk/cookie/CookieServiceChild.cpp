@@ -290,10 +290,9 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   }
 
   nsAutoCString hostFromURI, pathFromURI;
-  bool isSecure;
   aHostURI->GetAsciiHost(hostFromURI);
   aHostURI->GetPathQueryRef(pathFromURI);
-  aHostURI->SchemeIs("https", &isSecure);
+  bool isSecure = aHostURI->SchemeIs("https");
   int64_t currentTimeInUsec = PR_Now();
   int64_t currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
 

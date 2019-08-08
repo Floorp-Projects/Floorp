@@ -163,10 +163,9 @@ nsresult nsChannelClassifier::StartInternal() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't bother checking certain types of URIs.
-  bool isAbout = false;
-  rv = uri->SchemeIs("about", &isAbout);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (isAbout) return NS_ERROR_UNEXPECTED;
+  if (uri->SchemeIs("about")) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   bool hasFlags;
   rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,

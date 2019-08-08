@@ -681,9 +681,7 @@ Result<nsCOMPtr<nsIInputStream>, nsresult> ExtensionProtocolHandler::NewStream(
   // these requests ordinarily come from the child's ExtensionProtocolHandler.
   // Ensure this request is for a moz-extension URI. A rogue child process
   // could send us any URI.
-  bool isExtScheme = false;
-  if (NS_FAILED(aChildURI->SchemeIs(EXTENSION_SCHEME, &isExtScheme)) ||
-      !isExtScheme) {
+  if (!aChildURI->SchemeIs(EXTENSION_SCHEME)) {
     return Err(NS_ERROR_UNKNOWN_PROTOCOL);
   }
 
@@ -799,9 +797,7 @@ Result<Ok, nsresult> ExtensionProtocolHandler::NewFD(
   nsresult rv;
 
   // Ensure this is a moz-extension URI
-  bool isExtScheme = false;
-  if (NS_FAILED(aChildURI->SchemeIs(EXTENSION_SCHEME, &isExtScheme)) ||
-      !isExtScheme) {
+  if (!aChildURI->SchemeIs(EXTENSION_SCHEME)) {
     return Err(NS_ERROR_UNKNOWN_PROTOCOL);
   }
 
