@@ -17,9 +17,8 @@ function onMessageReceived(event) {
         break;
       }
 
-    // Just fall through...
-
     // Indication of successfully finished step of a test
+    // Just fall through...
     case "perf":
       // We called doStep before the frame was load
       if (event.data == "perf") {

@@ -180,6 +180,7 @@ NotificationStorage.prototype = {
         } catch (e) {
           debug("Error calling callback done: " + e);
         }
+        break;
       case kMessageNotificationSaveKo:
       case kMessageNotificationDeleteKo:
         if (DEBUG) {
