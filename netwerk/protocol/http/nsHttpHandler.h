@@ -331,9 +331,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(
       const nsACString& scheme, const nsACString& host, int32_t port, bool pb,
+      bool isolated, const nsACString& topWindowOrigin,
       const OriginAttributes& originAttributes) {
-    return mConnMgr->GetAltServiceMapping(scheme, host, port, pb,
-                                          originAttributes);
+    return mConnMgr->GetAltServiceMapping(scheme, host, port, pb, isolated,
+                                          topWindowOrigin, originAttributes);
   }
 
   //
