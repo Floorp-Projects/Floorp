@@ -111,6 +111,9 @@ this.PrefsFeed = class PrefsFeed {
       case at.UNINIT:
         this.removeListeners();
         break;
+      case at.CLEAR_PREF:
+        Services.prefs.clearUserPref(this._prefs._branchStr + action.data.name);
+        break;
       case at.SET_PREF:
         this._prefs.set(action.data.name, action.data.value);
         break;

@@ -9,6 +9,7 @@ import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
 import React from "react";
 import { mount } from "enzyme";
 import { Trailhead } from "../../../content-src/asrouter/templates/Trailhead/Trailhead";
+import { actionCreators as ac } from "common/Actions.jsm";
 
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
 const FAKE_NEWSLETTER_SNIPPET = FAKE_LOCAL_MESSAGES.find(
@@ -48,17 +49,23 @@ describe("ASRouterUtils", () => {
 
 describe("ASRouterUISurface", () => {
   let wrapper;
-  let global;
+  let globalO;
   let sandbox;
   let headerPortal;
   let footerPortal;
   let fakeDocument;
+  let fetchStub;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     headerPortal = document.createElement("div");
     footerPortal = document.createElement("div");
     sandbox.stub(footerPortal, "querySelector").returns(footerPortal);
+    fetchStub = sandbox.stub(global, "fetch").resolves({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    });
     fakeDocument = {
       location: { href: "" },
       _listeners: new Set(),
@@ -99,8 +106,8 @@ describe("ASRouterUISurface", () => {
         return document.createElement(tag);
       },
     };
-    global = new GlobalOverrider();
-    global.set({
+    globalO = new GlobalOverrider();
+    globalO.set({
       RPMAddMessageListener: sandbox.stub(),
       RPMRemoveMessageListener: sandbox.stub(),
       RPMSendAsyncMessage: sandbox.stub(),
@@ -113,7 +120,7 @@ describe("ASRouterUISurface", () => {
 
   afterEach(() => {
     sandbox.restore();
-    global.restore();
+    globalO.restore();
   });
 
   it("should render the component if a message id is defined", () => {
@@ -365,6 +372,146 @@ describe("ASRouterUISurface", () => {
         `${FAKE_MESSAGE.provider}_user_event`
       );
       assert.propertyVal(payload, "source", "NEWTAB_FOOTER_BAR");
+    });
+  });
+
+  describe(".fetchFlowParams", () => {
+    let dispatchStub;
+    const assertCalledWithURL = url =>
+      assert.calledWith(fetchStub, new URL(url).toString(), {
+        credentials: "omit",
+      });
+    beforeEach(() => {
+      dispatchStub = sandbox.stub();
+      wrapper = mount(
+        <ASRouterUISurface
+          dispatch={dispatchStub}
+          fxaEndpoint="https://accounts.firefox.com"
+        />
+      );
+    });
+    it("should use the base url returned from the endpoint pref", async () => {
+      wrapper = mount(
+        <ASRouterUISurface
+          dispatch={dispatchStub}
+          fxaEndpoint="https://foo.com"
+        />
+      );
+      await wrapper.instance().fetchFlowParams();
+
+      assertCalledWithURL("https://foo.com/metrics-flow");
+    });
+    it("should add given search params to the URL", async () => {
+      const params = { foo: "1", bar: "2" };
+
+      await wrapper.instance().fetchFlowParams(params);
+
+      assertCalledWithURL(
+        "https://accounts.firefox.com/metrics-flow?foo=1&bar=2"
+      );
+    });
+    it("should return flowId, flowBeginTime, deviceId on a 200 response", async () => {
+      const flowInfo = { flowId: "foo", flowBeginTime: 123, deviceId: "bar" };
+      fetchStub.withArgs("https://accounts.firefox.com/metrics-flow").resolves({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(flowInfo),
+      });
+
+      const result = await wrapper.instance().fetchFlowParams();
+      assert.deepEqual(result, flowInfo);
+    });
+    it("should return {} and dispatch a TELEMETRY_UNDESIRED_EVENT on a non-200 response", async () => {
+      fetchStub.withArgs("https://accounts.firefox.com/metrics-flow").resolves({
+        ok: false,
+        status: 400,
+        statusText: "Client error",
+        url: "https://accounts.firefox.com/metrics-flow",
+      });
+
+      const result = await wrapper.instance().fetchFlowParams();
+      assert.deepEqual(result, {});
+      assert.calledWith(
+        dispatchStub,
+        ac.OnlyToMain({
+          type: "TELEMETRY_UNDESIRED_EVENT",
+          data: {
+            event: "FXA_METRICS_FETCH_ERROR",
+            value: 400,
+          },
+        })
+      );
+    });
+    it("should return {} and dispatch a TELEMETRY_UNDESIRED_EVENT on a parsing erorr", async () => {
+      fetchStub.withArgs("https://accounts.firefox.com/metrics-flow").resolves({
+        ok: false,
+        status: 200,
+        // No json to parse, throws an error
+      });
+
+      const result = await wrapper.instance().fetchFlowParams();
+      assert.deepEqual(result, {});
+      assert.calledWith(
+        dispatchStub,
+        ac.OnlyToMain({
+          type: "TELEMETRY_UNDESIRED_EVENT",
+          data: { event: "FXA_METRICS_ERROR" },
+        })
+      );
+    });
+
+    describe(".onUserAction", () => {
+      it("if the action.type is ENABLE_FIREFOX_MONITOR, it should generate the right monitor URL given some flowParams", async () => {
+        const flowInfo = { flowId: "foo", flowBeginTime: 123, deviceId: "bar" };
+        fetchStub
+          .withArgs(
+            "https://accounts.firefox.com/metrics-flow?utm_term=avocado"
+          )
+          .resolves({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(flowInfo),
+          });
+
+        sandbox.spy(ASRouterUtils, "executeAction");
+
+        const msg = {
+          type: "ENABLE_FIREFOX_MONITOR",
+          data: {
+            args: {
+              url: "https://monitor.firefox.com?foo=bar",
+              flowRequestParams: {
+                utm_term: "avocado",
+              },
+            },
+          },
+        };
+
+        await wrapper.instance().onUserAction(msg);
+
+        assertCalledWithURL(
+          "https://accounts.firefox.com/metrics-flow?utm_term=avocado"
+        );
+        assert.calledWith(ASRouterUtils.executeAction, {
+          type: "OPEN_URL",
+          data: {
+            args: new URL(
+              "https://monitor.firefox.com?foo=bar&deviceId=bar&flowId=foo&flowBeginTime=123"
+            ).toString(),
+          },
+        });
+      });
+      it("if the action.type is not ENABLE_FIREFOX_MONITOR, it should just call ASRouterUtils.executeAction", async () => {
+        const msg = {
+          type: "FOO",
+          data: {
+            args: "bar",
+          },
+        };
+        sandbox.spy(ASRouterUtils, "executeAction");
+        await wrapper.instance().onUserAction(msg);
+        assert.calledWith(ASRouterUtils.executeAction, msg);
+      });
     });
   });
 });
