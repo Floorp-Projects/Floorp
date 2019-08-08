@@ -41,6 +41,10 @@ XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
 
 const NEWINSTALL_PAGE = "about:newinstall";
 
+// One-time startup homepage override configurations
+const ONCE_DOMAINS = ["mozilla.org", "firefox.com"];
+const ONCE_PREF = "browser.startup.homepage_override.once";
+
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome")) {
     return true;
@@ -698,18 +702,44 @@ nsBrowserContentHandler.prototype = {
     }
 
     // Allow showing a one-time startup override if we're not showing one
-    const ONCE_PREF = "browser.startup.homepage_override.once";
     if (isStartup && overridePage == "" && prefb.prefHasUserValue(ONCE_PREF)) {
       try {
         // Show if we haven't passed the expiration or there's no expiration
         const { expire, url } = JSON.parse(
           Services.urlFormatter.formatURLPref(ONCE_PREF)
         );
-        if (!(Date.now() > expire) && typeof url == "string") {
-          overridePage = url;
+        if (!(Date.now() > expire)) {
+          // Only set allowed urls as override pages
+          overridePage = url
+            .split("|")
+            .map(val => {
+              try {
+                return new URL(val);
+              } catch (ex) {
+                // Invalid URL, so filter out below
+                Cu.reportError(`Invalid once url: ${ex}`);
+                return null;
+              }
+            })
+            .filter(
+              parsed =>
+                parsed &&
+                parsed.protocol == "https:" &&
+                // Only accept exact hostname or subdomain; without port
+                ONCE_DOMAINS.includes(
+                  Services.eTLD.getBaseDomainFromHost(parsed.host)
+                )
+            )
+            .join("|");
+
+          // Be noisy as properly configured urls should be unchanged
+          if (overridePage != url) {
+            Cu.reportError(`Mismatched once urls: ${url}`);
+          }
         }
       } catch (ex) {
         // Invalid json pref, so ignore (and clear below)
+        Cu.reportError(`Invalid once pref: ${ex}`);
       } finally {
         prefb.clearUserPref(ONCE_PREF);
       }
