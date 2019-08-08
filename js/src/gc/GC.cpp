@@ -6180,7 +6180,8 @@ void GCRuntime::startSweepingAtomsTable() {
   // Create secondary tables to hold new atoms added while we're sweeping the
   // main tables incrementally.
   if (!atomsTable->startIncrementalSweep()) {
-    atomsTable->sweepAll(rt);
+    SweepingTracer trc(rt);
+    atomsTable->traceWeak(&trc);
     return;
   }
 
@@ -6201,7 +6202,9 @@ IncrementalProgress GCRuntime::sweepAtomsTable(FreeOp* fop,
     return Finished;
   }
 
-  if (!rt->atomsForSweeping()->sweepIncrementally(maybeAtoms.ref(), budget)) {
+  SweepingTracer trc(rt);
+  if (!rt->atomsForSweeping()->traceWeakIncrementally(&trc, maybeAtoms.ref(),
+                                                      budget)) {
     return NotFinished;
   }
 
@@ -6367,9 +6370,8 @@ IncrementalProgress GCRuntime::sweepShapeTree(FreeOp* fop,
     return NotFinished;
   }
 
-  if (!SweepArenaList<AccessorShape>(fop,
-                                     &al.gcAccessorShapeArenasToUpdate.ref(),
-                                     budget)) {
+  if (!SweepArenaList<AccessorShape>(
+          fop, &al.gcAccessorShapeArenasToUpdate.ref(), budget)) {
     return NotFinished;
   }
 
