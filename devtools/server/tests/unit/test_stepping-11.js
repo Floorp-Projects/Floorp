@@ -22,7 +22,8 @@ add_task(
     );
 
     await waitForEvent(threadFront, "paused");
-    const packet = await stepOver(threadFront);
+    await threadFront.stepOver();
+    const packet = await waitForEvent(threadFront, "paused");
     Assert.equal(packet.frame.where.line, 3, "step to line 3");
     await threadFront.resume();
   })
