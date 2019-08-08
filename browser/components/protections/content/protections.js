@@ -49,6 +49,10 @@ document.addEventListener("DOMContentLoaded", e => {
     );
   }
 
+  let legend = document.getElementById("legend");
+  legend.style.gridTemplateAreas =
+    "'social cookie tracker fingerprinter cryptominer'";
+
   let createGraph = data => {
     // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
     // to ensure we display the correct date no matter the user's location.
@@ -121,12 +125,6 @@ document.addEventListener("DOMContentLoaded", e => {
       );
       weekSummary.setAttribute("data-l10n-id", "graph-week-summary");
 
-      // Set the total number of each type of tracker on the tabs
-      for (let type of dataTypes) {
-        document.querySelector(`label[data-type=${type}]`).textContent =
-          weekTypeCounts[type];
-      }
-
       let label = document.createElement("span");
       label.className = "column-label";
       if (i == 6) {
@@ -137,11 +135,21 @@ document.addEventListener("DOMContentLoaded", e => {
       graph.append(label);
       date.setDate(date.getDate() - 1);
     }
+    // Set the total number of each type of tracker on the tabs
+    for (let type of dataTypes) {
+      document.querySelector(`label[data-type=${type}]`).textContent =
+        weekTypeCounts[type];
+    }
 
-    let legend = document.getElementById("legend");
-    // This will change when we remove trackers from standard.
-    legend.style.gridTemplateAreas =
-      "'social cookie tracker fingerprinter cryptominer'";
+    // Hide the trackers tab if the user is in standard and
+    // has no recorded trackers blocked.
+    if (weekTypeCounts.tracker == 0 && cbCategory == "standard") {
+      legend.style.gridTemplateAreas =
+        "'social cookie fingerprinter cryptominer'";
+      let radio = document.getElementById("tab-tracker");
+      radio.setAttribute("disabled", true);
+      document.querySelector("#tab-tracker ~ label").style.display = "none";
+    }
 
     addListeners();
   };
