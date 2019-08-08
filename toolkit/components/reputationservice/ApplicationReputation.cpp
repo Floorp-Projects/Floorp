@@ -1061,19 +1061,6 @@ nsresult PendingLookup::LookupNext() {
             MissingFilename);
   }
 
-  if (!mFileName.IsEmpty()) {
-    AccumulateCategorical(
-        mIsBinaryFile
-            ? mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
-                  BinaryFile
-            : mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
-                  NonBinaryFile);
-  } else {
-    AccumulateCategorical(
-        mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_BINARY::
-            MissingFilename);
-  }
-
   if (IsFileType(mFileName, kDmgFileExtensions,
                  ArrayLength(kDmgFileExtensions))) {
     AccumulateCategorical(
