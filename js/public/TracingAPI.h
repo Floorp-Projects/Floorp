@@ -252,7 +252,8 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
     GrayBuffering,
     VerifyTraceProtoAndIface,
     ClearEdges,
-    UnmarkGray
+    UnmarkGray,
+    Sweeping
   };
   virtual TracerKind getTracerKind() const { return TracerKind::Unspecified; }
 #endif
