@@ -271,9 +271,9 @@ this.BrowserIDManager.prototype = {
           this._log.info("The user is not verified");
           break;
         }
-        // intentional fall-through - the user is verified.
       }
       // We've been configured with an already verified user, so fall-through.
+      // intentional fall-through - the user is verified.
       case fxAccountsCommon.ONVERIFIED_NOTIFICATION: {
         this._log.info("The user became verified");
 
