@@ -818,8 +818,18 @@ import android.view.inputmethod.EditorInfo;
         }
 
         if (notifyGecko) {
-            // Set the selection by using a composition without ranges
-            mFocusedChild.onImeUpdateComposition(selStart, selEnd, updateFlags);
+            // Set the selection by using a composition without ranges.
+            final Spanned currentText = mText.getCurrentText();
+            if (Selection.getSelectionStart(currentText) != selStart ||
+                Selection.getSelectionEnd(currentText) != selEnd) {
+                // Gecko's selection is different of requested selection, so
+                // we have to set selection of Gecko side.
+                // If selection is same, it is unnecessary to update it.
+                // This may be race with Gecko's updating selection via
+                // JavaScript or keyboard event. But we don't know whether
+                // Gecko is during updating selection.
+                mFocusedChild.onImeUpdateComposition(selStart, selEnd, updateFlags);
+            }
         }
 
         if (DEBUG) {
