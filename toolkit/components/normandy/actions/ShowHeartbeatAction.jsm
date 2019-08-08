@@ -149,7 +149,6 @@ class ShowHeartbeatAction extends BaseAction {
           );
           return false;
         }
-        break;
       }
 
       case "nag": {
@@ -162,7 +161,6 @@ class ShowHeartbeatAction extends BaseAction {
           );
           return false;
         }
-        break;
       }
 
       case "xdays": {

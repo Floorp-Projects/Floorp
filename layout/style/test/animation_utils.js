@@ -516,7 +516,6 @@ const ExpectComparisonTo = {
           };
           break;
         }
-      // fall through
       case "transform":
         normalize = convertTo3dMatrix;
         compare = matricesRoughlyEqual;
