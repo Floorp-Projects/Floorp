@@ -44,6 +44,7 @@ namespace js {
 class Breakpoint;
 class DebuggerFrame;
 class DebuggerScript;
+class DebuggerSource;
 class DebuggerMemory;
 class ScriptedOnStepHandler;
 class ScriptedOnPopHandler;
@@ -930,8 +931,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                     Handle<DebuggerScriptReferent> referent) {
     return newDebuggerScript(cx, referent);
   }
-  NativeObject* newVariantWrapper(JSContext* cx,
-                                  Handle<DebuggerSourceReferent> referent) {
+  DebuggerSource* newVariantWrapper(JSContext* cx,
+                                    Handle<DebuggerSourceReferent> referent) {
     return newDebuggerSource(cx, referent);
   }
 
@@ -949,8 +950,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                Handle<ReferentVariant> referent);
   DebuggerScript* wrapVariantReferent(JSContext* cx,
                                       Handle<DebuggerScriptReferent> referent);
-  JSObject* wrapVariantReferent(JSContext* cx,
-                                Handle<DebuggerSourceReferent> referent);
+  DebuggerSource* wrapVariantReferent(JSContext* cx,
+                                      Handle<DebuggerSourceReferent> referent);
 
   /*
    * Allocate and initialize a Debugger.Script instance whose referent is
@@ -963,8 +964,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Allocate and initialize a Debugger.Source instance whose referent is
    * |referent|.
    */
-  NativeObject* newDebuggerSource(JSContext* cx,
-                                  Handle<DebuggerSourceReferent> referent);
+  DebuggerSource* newDebuggerSource(JSContext* cx,
+                                    Handle<DebuggerSourceReferent> referent);
 
   /*
    * Receive a "new script" event from the engine. A new script was compiled
@@ -1128,7 +1129,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * needed. The context |cx| must be in the debugger compartment; |source|
    * must be a script source object in a debuggee realm.
    */
-  JSObject* wrapSource(JSContext* cx, js::HandleScriptSourceObject source);
+  DebuggerSource* wrapSource(JSContext* cx,
+                             js::HandleScriptSourceObject source);
 
   /*
    * Return the Debugger.Source object for |wasmInstance| (the entire module),
@@ -1136,12 +1138,61 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * debugger compartment; |wasmInstance| must be a WasmInstanceObject in the
    * debuggee realm.
    */
-  JSObject* wrapWasmSource(JSContext* cx,
-                           Handle<WasmInstanceObject*> wasmInstance);
+  DebuggerSource* wrapWasmSource(JSContext* cx,
+                                 Handle<WasmInstanceObject*> wasmInstance);
 
  private:
   Debugger(const Debugger&) = delete;
   Debugger& operator=(const Debugger&) = delete;
+};
+
+class DebuggerSource : public NativeObject {
+ public:
+  static const Class class_;
+
+  enum {
+    OWNER_SLOT,
+    TEXT_SLOT,
+    RESERVED_SLOTS,
+  };
+
+  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandleObject debugCtor);
+  static DebuggerSource* create(JSContext* cx, HandleObject proto,
+                                Handle<DebuggerSourceReferent> referent,
+                                HandleNativeObject debugger);
+
+  static void trace(JSTracer* trc, JSObject* obj);
+
+  NativeObject* getReferentRawObject() const;
+  DebuggerSourceReferent getReferent() const;
+
+  static DebuggerSource* check(JSContext* cx, HandleValue v,
+                               const char* fnname);
+  template <typename ReferentT>
+  static DebuggerSource* checkThis(JSContext* cx, const CallArgs& args,
+                                   const char* fnname, const char* refname);
+
+  // JS methods
+  static bool construct(JSContext* cx, unsigned argc, Value* vp);
+  static bool getText(JSContext* cx, unsigned argc, Value* vp);
+  static bool getBinary(JSContext* cx, unsigned argc, Value* vp);
+  static bool getURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getId(JSContext* cx, unsigned argc, Value* vp);
+  static bool getDisplayURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getElement(JSContext* cx, unsigned argc, Value* vp);
+  static bool getElementProperty(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionScript(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionOffset(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIntroductionType(JSContext* cx, unsigned argc, Value* vp);
+  static bool setSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
+
+ private:
+  static const ClassOps classOps_;
+
+  static const JSPropertySpec properties_[];
+  static const JSFunctionSpec methods_[];
 };
 
 /*
