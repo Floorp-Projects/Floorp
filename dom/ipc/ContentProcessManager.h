@@ -53,13 +53,6 @@ class ContentProcessManager final {
   ContentParentId GetTabProcessId(const TabId& aChildTabId);
 
   /**
-   * Get all BrowserParents' Ids managed by the givent content process.
-   * Return empty array when ContentParent couldn't be found via aChildCpId.
-   */
-  nsTArray<TabId> GetBrowserParentsByProcessId(
-      const ContentParentId& aChildCpId);
-
-  /**
    * Get the number of BrowserParents managed by the givent content process.
    * Return 0 when ContentParent couldn't be found via aChildCpId.
    */
