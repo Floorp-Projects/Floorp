@@ -889,9 +889,7 @@ class ContentParent final : public PContentParent,
       const int64_t& aContentLength, const bool& aWasFileChannel,
       const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) override;
 
-  PHandlerServiceParent* AllocPHandlerServiceParent();
-
-  bool DeallocPHandlerServiceParent(PHandlerServiceParent*);
+  already_AddRefed<PHandlerServiceParent> AllocPHandlerServiceParent();
 
   PMediaParent* AllocPMediaParent();
 

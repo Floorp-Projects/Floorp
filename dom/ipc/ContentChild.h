@@ -272,10 +272,6 @@ class ContentChild final : public PContentChild,
   bool DeallocPPSMContentDownloaderChild(
       PPSMContentDownloaderChild* aDownloader);
 
-  PHandlerServiceChild* AllocPHandlerServiceChild();
-
-  bool DeallocPHandlerServiceChild(PHandlerServiceChild*);
-
   PMediaChild* AllocPMediaChild();
 
   bool DeallocPMediaChild(PMediaChild* aActor);
