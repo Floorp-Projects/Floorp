@@ -119,6 +119,7 @@ class LinkHandlerChild extends ActorChild {
         case "apple-touch-icon-precomposed":
         case "fluid-icon":
           isRichIcon = true;
+        // fall through
         case "icon":
           if (iconAdded || link.hasAttribute("mask")) {
             // Masked icons are not supported yet.
