@@ -90,6 +90,10 @@ pub enum Command {
     GetAlertText,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
+    #[serde(rename = "WebDriver:GetElementAttribute")]
+    GetElementAttribute { id: String, name: String },
+    #[serde(rename = "WebDriver:GetElementProperty")]
+    GetElementProperty { id: String, name: String },
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
     #[serde(rename = "WebDriver:GetWindowHandle")]

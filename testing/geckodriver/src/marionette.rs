@@ -830,6 +830,18 @@ fn try_convert_to_marionette_message(
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
+        GetElementAttribute(ref e, ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetElementAttribute {
+                id: e.clone().to_string(),
+                name: x.clone(),
+            },
+        )),
+        GetElementProperty(ref e, ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetElementProperty {
+                id: e.clone().to_string(),
+                name: x.clone(),
+            },
+        )),
         GetWindowHandle => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetWindowHandle,
         )),
@@ -963,18 +975,6 @@ impl MarionetteCommand {
                     data.insert("id".to_string(), Value::String(e.to_string()));
                     data.insert("propertyName".to_string(), Value::String(x.clone()));
                     (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
-                }
-                GetElementAttribute(ref e, ref x) => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::String(e.to_string()));
-                    data.insert("name".to_string(), Value::String(x.clone()));
-                    (Some("WebDriver:GetElementAttribute"), Some(Ok(data)))
-                }
-                GetElementProperty(ref e, ref x) => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::String(e.to_string()));
-                    data.insert("name".to_string(), Value::String(x.clone()));
-                    (Some("WebDriver:GetElementProperty"), Some(Ok(data)))
                 }
                 GetElementRect(ref x) => {
                     (Some("WebDriver:GetElementRect"), Some(x.to_marionette()))
