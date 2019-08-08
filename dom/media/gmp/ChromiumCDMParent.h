@@ -36,7 +36,9 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
  public:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> InitPromise;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMParent)
+  // Mark AddRef and Release as `final`, as they overload pure virtual
+  // implementations in PChromiumCDMParent.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMParent, final)
 
   ChromiumCDMParent(GMPContentParent* aContentParent, uint32_t aPluginId);
 
