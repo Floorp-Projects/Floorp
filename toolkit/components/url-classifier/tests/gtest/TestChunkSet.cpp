@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <set>
 
-#include "gtest/gtest.h"
 #include "ChunkSet.h"
+#include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
 
 TEST(UrlClassifierChunkSet, Empty)
