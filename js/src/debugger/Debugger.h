@@ -275,6 +275,8 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
 
  public:
   typedef WeakMap<Key, Value> Base;
+  using ReferentType = Referent;
+  using WrapperType = Wrapper;
 
   explicit DebuggerWeakMap(JSContext* cx)
       : Base(cx), compartment(cx->compartment()) {}
@@ -949,10 +951,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Prefer using wrapScript, wrapWasmScript, wrapSource, and wrapWasmSource
    * whenever possible.
    */
-  template <typename Wrapper, typename Referent, typename Map>
-  Wrapper* wrapVariantReferent(
+  template <typename Map>
+  typename Map::WrapperType* wrapVariantReferent(
       JSContext* cx, Map& map,
-      Handle<typename Wrapper::ReferentVariant> referent);
+      Handle<typename Map::WrapperType::ReferentVariant> referent);
   DebuggerScript* wrapVariantReferent(JSContext* cx,
                                       Handle<DebuggerScriptReferent> referent);
   DebuggerSource* wrapVariantReferent(JSContext* cx,
