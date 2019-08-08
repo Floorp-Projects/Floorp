@@ -47,6 +47,7 @@ testProcessor.onaudioprocess = function(event) {
     referenceProcessor.onaudioprocess = event.target.onaudioprocess;
     referenceProcessor = null;
     event.target.onaudioprocess = null;
+    break;
   case 2:
     // There are no references to testProcessor and so GC can begin.
     SpecialPowers.forceGC();
