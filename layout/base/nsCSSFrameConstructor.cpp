@@ -8119,7 +8119,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     nsIFrame* cellFrame = aFrame->PrincipalChildList().FirstChild();
     while (cellFrame) {
       // See if it's a table cell frame
-      if (IsTableCell(cellFrame->Type())) {
+      if (cellFrame->IsTableCellFrame()) {
         nsIFrame* continuingCellFrame =
             CreateContinuingFrame(aPresContext, cellFrame, rowFrame);
         newChildList.AppendFrame(nullptr, continuingCellFrame);
@@ -8130,7 +8130,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     rowFrame->SetInitialChildList(kPrincipalList, newChildList);
     newFrame = rowFrame;
 
-  } else if (IsTableCell(frameType)) {
+  } else if (LayoutFrameType::TableCell == frameType) {
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
