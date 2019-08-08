@@ -1256,10 +1256,19 @@ bool BrowserParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
 
 IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType, const WindowGlobalInit& aWindowInit,
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
     const uint32_t& aChromeFlags, const TabId& aTabId) {
+  // The initial about:blank document loaded in the new iframe will have a newly
+  // created null principal. This is done in the parent process so we don't have
+  // to trust a principal from content.
+  nsCOMPtr<nsIPrincipal> initialPrincipal =
+      NullPrincipal::CreateWithInheritedAttributes(OriginAttributesRef(),
+                                                   /* isFirstParty */ false);
+  WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
+      aBrowsingContext, initialPrincipal);
+
   nsresult rv = static_cast<BrowserBridgeParent*>(aActor)->Init(
-      aName, aRemoteType, aWindowInit, aChromeFlags, aTabId);
+      aName, aRemoteType, windowInit, aChromeFlags, aTabId);
   if (NS_FAILED(rv)) {
     return IPC_FAIL(this, "Failed to construct BrowserBridgeParent");
   }
@@ -1268,7 +1277,7 @@ IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
 
 already_AddRefed<PBrowserBridgeParent> BrowserParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType,
-    const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
+    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
     const TabId& aTabId) {
   return do_AddRef(new BrowserBridgeParent());
 }

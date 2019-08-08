@@ -3782,7 +3782,8 @@ PBenchmarkStorageParent* ContentParent::AllocPBenchmarkStorageParent() {
   return new BenchmarkStorageParent;
 }
 
-bool ContentParent::DeallocPBenchmarkStorageParent(PBenchmarkStorageParent* aActor) {
+bool ContentParent::DeallocPBenchmarkStorageParent(
+    PBenchmarkStorageParent* aActor) {
   delete aActor;
   return true;
 }
