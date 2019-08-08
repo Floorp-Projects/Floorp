@@ -1,0 +1,7 @@
+%include build/sparse-profiles/mach
+%include build/sparse-profiles/taskgraph
+
+[include]
+path:gfx/wr/
+path:mobile/android/debug_sign_tool.py
+path:taskcluster/scripts/misc/

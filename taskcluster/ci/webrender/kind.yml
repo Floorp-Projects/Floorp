@@ -24,6 +24,8 @@ job-defaults:
         env:
             RUST_BACKTRACE: 'full'
             RUSTFLAGS: '--deny warnings'
+    run:
+        sparse-profile: webrender
 
 jobs:
     lint-tidy:
