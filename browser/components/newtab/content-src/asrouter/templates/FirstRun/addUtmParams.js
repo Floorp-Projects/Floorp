@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const BASE_PARAMS = {
+export const BASE_PARAMS = {
   utm_source: "activity-stream",
   utm_campaign: "firstrun",
   utm_medium: "referral",

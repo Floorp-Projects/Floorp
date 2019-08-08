@@ -8,6 +8,7 @@ import { DSLinkMenu } from "../DSLinkMenu/DSLinkMenu";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
+import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 
 export class DSCard extends React.PureComponent {
   constructor(props) {
@@ -68,9 +69,10 @@ export class DSCard extends React.PureComponent {
                 <p className="excerpt clamp">{this.props.excerpt}</p>
               )}
             </div>
-            {this.props.context && (
-              <p className="context">{this.props.context}</p>
-            )}
+            <DSContextFooter
+              context_type={this.props.context_type}
+              context={this.props.context}
+            />
           </div>
           <ImpressionStats
             campaignId={this.props.campaignId}

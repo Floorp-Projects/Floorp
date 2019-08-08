@@ -1,5 +1,4 @@
 import {
-  helpers,
   FirstRun,
   FLUENT_FILES,
 } from "content-src/asrouter/templates/FirstRun/FirstRun";
@@ -134,41 +133,48 @@ describe("<FirstRun>", () => {
   });
 
   it("should load flow params on mount if fxaEndpoint is defined", () => {
-    const spy = sandbox.spy(helpers, "fetchFlowParams");
+    const stub = sandbox.stub();
     wrapper = mount(
       <FirstRun
         message={message}
         document={fakeDoc}
         dispatch={() => {}}
+        fetchFlowParams={stub}
         fxaEndpoint="https://foo.com"
       />
     );
-    assert.calledOnce(spy);
+    assert.calledOnce(stub);
   });
 
   it("should load flow params onUpdate if fxaEndpoint is not defined on mount and then later defined", () => {
-    const spy = sandbox.spy(helpers, "fetchFlowParams");
+    const stub = sandbox.stub();
     wrapper = mount(
-      <FirstRun message={message} document={fakeDoc} dispatch={() => {}} />
+      <FirstRun
+        message={message}
+        document={fakeDoc}
+        fetchFlowParams={stub}
+        dispatch={() => {}}
+      />
     );
-    assert.notCalled(spy);
+    assert.notCalled(stub);
     wrapper.setProps({ fxaEndpoint: "https://foo.com" });
-    assert.calledOnce(spy);
+    assert.calledOnce(stub);
   });
 
   it("should not load flow params again onUpdate if they were already set", () => {
-    const spy = sandbox.spy(helpers, "fetchFlowParams");
+    const stub = sandbox.stub();
     wrapper = mount(
       <FirstRun
         message={message}
         document={fakeDoc}
         dispatch={() => {}}
+        fetchFlowParams={stub}
         fxaEndpoint="https://foo.com"
       />
     );
     wrapper.setProps({ foo: "bar" });
     wrapper.setProps({ foo: "baz" });
-    assert.calledOnce(spy);
+    assert.calledOnce(stub);
   });
 
   it("should load fluent files on mount", () => {
