@@ -1,23 +1,21 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Common.h"
+#include "gtest/gtest.h"
+#include "mozilla/Preferences.h"
 #include <mozilla/RefPtr.h>
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsClassHashtable.h"
+#include "nsIFile.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsClassHashtable.h"
 #include "VariableLengthPrefixSet.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsIFile.h"
-#include "mozilla/Preferences.h"
-#include "gtest/gtest.h"
-
-using namespace mozilla::safebrowsing;
-
-namespace {
 
 // Create fullhash by appending random characters.
-nsCString CreateFullHash(const nsACString& in) {
+static nsCString CreateFullHash(const nsACString& in) {
   nsCString out(in);
   out.SetLength(32);
   for (size_t i = in.Length(); i < 32; i++) {
@@ -29,8 +27,8 @@ nsCString CreateFullHash(const nsACString& in) {
 
 // This function generate N prefixes with size between MIN and MAX.
 // The output array will not be cleared, random result will append to it
-void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX,
-                    _PrefixArray& array) {
+static void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX,
+                           _PrefixArray& array) {
   array.SetCapacity(array.Length() + N);
 
   uint32_t range = (MAX - MIN + 1);
@@ -58,7 +56,7 @@ void RandomPrefixes(uint32_t N, uint32_t MIN, uint32_t MAX,
 // This test loops through all the prefixes and converts each prefix to
 // fullhash by appending random characters, each converted fullhash
 // should at least match its original length in the prefixSet.
-void DoExpectedLookup(LookupCacheV4* cache, _PrefixArray& array) {
+static void DoExpectedLookup(LookupCacheV4* cache, _PrefixArray& array) {
   uint32_t matchLength = 0;
   for (uint32_t i = 0; i < array.Length(); i++) {
     const nsCString& prefix = array[i];
@@ -91,7 +89,8 @@ void DoExpectedLookup(LookupCacheV4* cache, _PrefixArray& array) {
   }
 }
 
-void DoRandomLookup(LookupCacheV4* cache, uint32_t N, _PrefixArray& array) {
+static void DoRandomLookup(LookupCacheV4* cache, uint32_t N,
+                           _PrefixArray& array) {
   for (uint32_t i = 0; i < N; i++) {
     // Random 32-bytes test fullhash
     char buf[32];
@@ -119,7 +118,8 @@ void DoRandomLookup(LookupCacheV4* cache, uint32_t N, _PrefixArray& array) {
   }
 }
 
-already_AddRefed<LookupCacheV4> SetupLookupCache(const nsACString& aName) {
+static already_AddRefed<LookupCacheV4> SetupLookupCache(
+    const nsACString& aName) {
   nsCOMPtr<nsIFile> rootDir;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(rootDir));
 
@@ -129,8 +129,6 @@ already_AddRefed<LookupCacheV4> SetupLookupCache(const nsACString& aName) {
 
   return lookup.forget();
 }
-
-};  // namespace
 
 class UrlClassifierPrefixSetTest : public ::testing::TestWithParam<uint32_t> {
  protected:
@@ -151,13 +149,13 @@ class UrlClassifierPrefixSetTest : public ::testing::TestWithParam<uint32_t> {
 
   nsresult SetupPrefixes(_PrefixArray&& aArray) {
     mArray = std::move(aArray);
-    SetupPrefixMap(mArray, mMap);
+    PrefixArrayToPrefixStringMap(mArray, mMap);
     return mCache->Build(mMap);
   }
 
   void SetupPrefixesAndVerify(_PrefixArray& aArray) {
     mArray = aArray;
-    SetupPrefixMap(mArray, mMap);
+    PrefixArrayToPrefixStringMap(mArray, mMap);
 
     ASSERT_TRUE(NS_SUCCEEDED(mCache->Build(mMap)));
     Verify();
@@ -172,7 +170,7 @@ class UrlClassifierPrefixSetTest : public ::testing::TestWithParam<uint32_t> {
   void SetupRandomPrefixesAndVerify(uint32_t N, uint32_t MIN, uint32_t MAX) {
     srand(time(nullptr));
     RandomPrefixes(N, MIN, MAX, mArray);
-    SetupPrefixMap(mArray, mMap);
+    PrefixArrayToPrefixStringMap(mArray, mMap);
 
     ASSERT_TRUE(NS_SUCCEEDED(mCache->Build(mMap)));
     Verify();
@@ -340,7 +338,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveFixedLengthPrefixSet) {
 
     RandomPrefixes(10000, 4, 4, array);
 
-    SetupPrefixMap(array, map);
+    PrefixArrayToPrefixStringMap(array, map);
     save->Build(map);
 
     DoExpectedLookup(save, array);
@@ -379,7 +377,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveVariableLengthPrefixSet) {
 
     RandomPrefixes(10000, 5, 32, array);
 
-    SetupPrefixMap(array, map);
+    PrefixArrayToPrefixStringMap(array, map);
     save->Build(map);
 
     DoExpectedLookup(save, array);
@@ -420,7 +418,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSavePrefixSet) {
     RandomPrefixes(20000, 4, 4, array);
     RandomPrefixes(1000, 5, 32, array);
 
-    SetupPrefixMap(array, map);
+    PrefixArrayToPrefixStringMap(array, map);
     save->Build(map);
 
     DoExpectedLookup(save, array);
@@ -465,7 +463,7 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveNoDelta) {
     RefPtr<LookupCacheV4> save =
         SetupLookupCache(NS_LITERAL_CSTRING("test-save"));
 
-    SetupPrefixMap(array, map);
+    PrefixArrayToPrefixStringMap(array, map);
     save->Build(map);
 
     DoExpectedLookup(save, array);
