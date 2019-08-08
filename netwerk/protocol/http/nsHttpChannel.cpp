@@ -7528,7 +7528,7 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
   }
 
   nsILoadInfo::CrossOriginEmbedderPolicy documentPolicy =
-      ctx->GetInheritedEmbedderPolicy();
+      ctx->GetEmbedderPolicy();
   nsILoadInfo::CrossOriginEmbedderPolicy resultPolicy =
       nsILoadInfo::EMBEDDER_POLICY_NULL;
   rv = GetResponseEmbedderPolicy(&resultPolicy);
@@ -7536,12 +7536,12 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
     return NS_OK;
   }
 
-  ctx->SetEmbedderPolicy(resultPolicy);
-
   if (documentPolicy != nsILoadInfo::EMBEDDER_POLICY_NULL &&
       resultPolicy == nsILoadInfo::EMBEDDER_POLICY_NULL) {
     return NS_ERROR_BLOCKED_BY_POLICY;
   }
+
+  ctx->SetEmbedderPolicy(resultPolicy);
 
   return NS_OK;
 }

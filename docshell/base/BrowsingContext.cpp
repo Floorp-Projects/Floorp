@@ -134,12 +134,12 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   context->mName = aName;
   context->mOpenerId = aOpener ? aOpener->Id() : 0;
   context->mEmbedderPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
-  context->mInheritedEmbedderPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   BrowsingContext* inherit = aParent ? aParent : aOpener;
   if (inherit) {
     context->mOpenerPolicy = inherit->mOpenerPolicy;
-    context->mInheritedEmbedderPolicy = inherit->mEmbedderPolicy;
+    // CORPP 3.1.3 https://mikewest.github.io/corpp/#integration-html
+    context->mEmbedderPolicy = inherit->mEmbedderPolicy;
   }
 
   Register(context);
