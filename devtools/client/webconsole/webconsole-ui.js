@@ -8,7 +8,6 @@
 
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
-const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
@@ -65,7 +64,39 @@ class WebConsoleUI {
    * @type object
    */
   get webConsoleClient() {
-    return this.proxy ? this.proxy.webConsoleClient : null;
+    const proxy = this.getProxy();
+
+    if (!proxy) {
+      return null;
+    }
+
+    return proxy.webConsoleClient;
+  }
+
+  /**
+   * Return the main target proxy, i.e. the proxy for MainProcessTarget in BrowserConsole,
+   * and the proxy for the target passed from the Toolbox to WebConsole.
+   *
+   * @returns {WebConsoleConnectionProxy}
+   */
+  getProxy() {
+    return this.proxy;
+  }
+
+  /**
+   * Return all the proxies we're currently managing (i.e. the "main" one, and the
+   * possible additional ones).
+   *
+   * @returns {Array<WebConsoleConnectionProxy>}
+   */
+  getAllProxies() {
+    let proxies = [this.getProxy()];
+
+    if (this.additionalProxies) {
+      proxies = proxies.concat(this.additionalProxies);
+    }
+
+    return proxies;
   }
 
   /**
@@ -73,15 +104,23 @@ class WebConsoleUI {
    * @return object
    *         A promise object that resolves once the frame is ready to use.
    */
-  async init() {
-    this._initUI();
-    await this._initConnection();
-    await this.wrapper.init();
-
-    const id = WebConsoleUtils.supportsString(this.hudId);
-    if (Services.obs) {
-      Services.obs.notifyObservers(id, "web-console-created");
+  init() {
+    if (this._initializer) {
+      return this._initializer;
     }
+
+    this._initializer = (async () => {
+      this._initUI();
+      await this._initConnection();
+      await this.wrapper.init();
+
+      const id = WebConsoleUtils.supportsString(this.hudId);
+      if (Services.obs) {
+        Services.obs.notifyObservers(id, "web-console-created");
+      }
+    })();
+
+    return this._initializer;
   }
 
   destroy() {
@@ -115,10 +154,11 @@ class WebConsoleUI {
 
     this.window = this.hud = this.wrapper = null;
 
-    if (this.proxy) {
-      this.proxy.disconnect();
-      this.proxy = null;
+    for (const proxy of this.getAllProxies()) {
+      proxy.disconnect();
     }
+    this.proxy = null;
+    this.additionalProxies = null;
   }
 
   /**
@@ -139,11 +179,23 @@ class WebConsoleUI {
     if (this.wrapper) {
       this.wrapper.dispatchMessagesClear();
     }
-    this.webConsoleClient.clearNetworkRequests();
+    this.clearNetworkRequests();
     if (clearStorage) {
-      this.webConsoleClient.clearMessagesCache();
+      this.clearMessagesCache();
     }
     this.emit("messages-cleared");
+  }
+
+  clearNetworkRequests() {
+    for (const proxy of this.getAllProxies()) {
+      proxy.webConsoleClient.clearNetworkRequests();
+    }
+  }
+
+  clearMessagesCache() {
+    for (const proxy of this.getAllProxies()) {
+      proxy.webConsoleClient.clearMessagesCache();
+    }
   }
 
   /**
@@ -204,15 +256,9 @@ class WebConsoleUI {
    *
    * @private
    * @return object
-   *         A promise object that is resolved/reject based on the connection
-   *         result.
+   *         A promise object that is resolved/reject based on the proxies connections.
    */
-  _initConnection() {
-    if (this._initDefer) {
-      return this._initDefer.promise;
-    }
-
-    this._initDefer = defer();
+  async _initConnection() {
     this.proxy = new WebConsoleConnectionProxy(
       this,
       this.hud.target,
@@ -220,19 +266,44 @@ class WebConsoleUI {
       this.fissionSupport
     );
 
-    this.proxy.connect().then(
-      () => {
-        // on success
-        this._initDefer.resolve(this);
-      },
-      reason => {
-        // on failure
-        // TODO Print a message to console
-        this._initDefer.reject(reason);
-      }
-    );
+    if (
+      this.fissionSupport &&
+      this.hud.target.chrome &&
+      !this.hud.target.isAddon
+    ) {
+      const { mainRoot } = this.hud.target.client;
+      const { processes } = await mainRoot.listProcesses();
 
-    return this._initDefer.promise;
+      this.additionalProxies = [];
+      for (const processDescriptor of processes) {
+        const targetFront = await processDescriptor.getTarget();
+
+        // Don't create a proxy for the "main" target,
+        // as we already created it in this.proxy.
+        if (targetFront === this.hud.target) {
+          continue;
+        }
+
+        if (!targetFront) {
+          console.warn(
+            "Can't retrieve the target front for process",
+            processDescriptor
+          );
+          continue;
+        }
+
+        this.additionalProxies.push(
+          new WebConsoleConnectionProxy(
+            this,
+            targetFront,
+            this.isBrowserConsole,
+            this.fissionSupport
+          )
+        );
+      }
+    }
+
+    return Promise.all(this.getAllProxies().map(proxy => proxy.connect()));
   }
 
   _initUI() {
@@ -347,10 +418,25 @@ class WebConsoleUI {
    * @param string actor
    *        The actor ID you want to release.
    */
-  _releaseObject(actor) {
-    if (this.proxy) {
-      this.proxy.releaseActor(actor);
+  releaseActor(actor) {
+    const proxy = this.getProxy();
+    if (!proxy) {
+      return null;
     }
+
+    return proxy.releaseActor(actor);
+  }
+
+  /**
+   * @param {String} expression
+   * @param {Object} options
+   * @returns {Promise}
+   */
+  evaluateJSAsync(expression, options) {
+    return this.getProxy().webConsoleClient.evaluateJSAsync(
+      expression,
+      options
+    );
   }
 
   /**
