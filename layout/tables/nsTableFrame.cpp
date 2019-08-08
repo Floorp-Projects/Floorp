@@ -2683,7 +2683,7 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
 
   // Place and size the child
   FinishReflowChild(aKidFrame, PresContext(), aKidDesiredSize, nullptr,
-                    aKidPosition.x, aKidPosition.y, 0);
+                    aKidPosition.x, aKidPosition.y, ReflowChildFlags::Default);
 
   InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
                        isFirstReflow);
@@ -2822,7 +2822,7 @@ nsresult nsTableFrame::SetupHeaderFooterChild(
   nsReflowStatus status;
   ReflowChild(aFrame, presContext, desiredSize, kidReflowInput, wm,
               LogicalPoint(wm, aReflowInput.iCoord, aReflowInput.bCoord),
-              containerSize, 0, status);
+              containerSize, ReflowChildFlags::Default, status);
   // The child will be reflowed again "for real" so no need to place it now
 
   aFrame->SetRepeatable(IsRepeatable(desiredSize.Height(), pageHeight));
@@ -2855,7 +2855,8 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
   desiredSize.ClearSize();
   LogicalPoint kidPosition(wm, aReflowInput.iCoord, aReflowInput.bCoord);
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowInput, wm,
-              kidPosition, containerSize, 0, footerStatus);
+              kidPosition, containerSize, ReflowChildFlags::Default,
+              footerStatus);
   footerReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
 
   PlaceChild(aReflowInput, aTfoot,
@@ -3015,7 +3016,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       LogicalPoint kidPosition(wm, aReflowInput.iCoord, aReflowInput.bCoord);
       aStatus.Reset();
       ReflowChild(kidFrame, presContext, desiredSize, kidReflowInput, wm,
-                  kidPosition, containerSize, 0, aStatus);
+                  kidPosition, containerSize, ReflowChildFlags::Default,
+                  aStatus);
       kidReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
 
       if (reorder) {
@@ -3192,9 +3194,10 @@ void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
         ReflowInput kidReflowInput(presContext, kidFrame, aRenderingContext,
                                    LogicalSize(kidFrame->GetWritingMode()));
         nsReflowStatus cgStatus;
-        ReflowChild(kidFrame, presContext, kidMet, kidReflowInput, 0, 0, 0,
-                    cgStatus);
-        FinishReflowChild(kidFrame, presContext, kidMet, nullptr, 0, 0, 0);
+        ReflowChild(kidFrame, presContext, kidMet, kidReflowInput, 0, 0,
+                    ReflowChildFlags::Default, cgStatus);
+        FinishReflowChild(kidFrame, presContext, kidMet, nullptr, 0, 0,
+                          ReflowChildFlags::Default);
       }
     }
     SetHaveReflowedColGroups(true);

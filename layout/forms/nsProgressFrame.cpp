@@ -178,9 +178,9 @@ void nsProgressFrame::ReflowChildFrame(nsIFrame* aChild,
 
   ReflowOutput barDesiredSize(aReflowInput);
   ReflowChild(aChild, aPresContext, barDesiredSize, reflowInput, xoffset,
-              yoffset, 0, aStatus);
+              yoffset, ReflowChildFlags::Default, aStatus);
   FinishReflowChild(aChild, aPresContext, barDesiredSize, &reflowInput, xoffset,
-                    yoffset, 0);
+                    yoffset, ReflowChildFlags::Default);
 }
 
 nsresult nsProgressFrame::AttributeChanged(int32_t aNameSpaceID,

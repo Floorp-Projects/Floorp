@@ -315,14 +315,15 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       kidReflowInput.SetComputedWidth(posterRenderRect.width);
       kidReflowInput.SetComputedHeight(posterRenderRect.height);
       ReflowChild(imageFrame, aPresContext, kidDesiredSize, kidReflowInput,
-                  posterRenderRect.x, posterRenderRect.y, 0, childStatus);
+                  posterRenderRect.x, posterRenderRect.y,
+                  ReflowChildFlags::Default, childStatus);
       MOZ_ASSERT(childStatus.IsFullyComplete(),
                  "We gave our child unconstrained available block-size, "
                  "so it should be complete!");
 
       FinishReflowChild(imageFrame, aPresContext, kidDesiredSize,
                         &kidReflowInput, posterRenderRect.x, posterRenderRect.y,
-                        0);
+                        ReflowChildFlags::Default);
 
     } else if (child->GetContent() == mCaptionDiv ||
                child->GetContent() == videoControlsDiv) {
@@ -335,7 +336,8 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                                  availableSize);
       ReflowOutput kidDesiredSize(kidReflowInput);
       ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput,
-                  borderPadding.left, borderPadding.top, 0, childStatus);
+                  borderPadding.left, borderPadding.top,
+                  ReflowChildFlags::Default, childStatus);
       MOZ_ASSERT(childStatus.IsFullyComplete(),
                  "We gave our child unconstrained available block-size, "
                  "so it should be complete!");
@@ -353,7 +355,8 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       }
 
       FinishReflowChild(child, aPresContext, kidDesiredSize, &kidReflowInput,
-                        borderPadding.left, borderPadding.top, 0);
+                        borderPadding.left, borderPadding.top,
+                        ReflowChildFlags::Default);
 
       if (child->GetSize() != oldChildSize) {
         const nsString name = child->GetContent() == videoControlsDiv

@@ -16,6 +16,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
+#include "nsIFrame.h"
 
 class gfxContext;
 namespace mozilla {
@@ -37,8 +38,10 @@ class MOZ_STACK_CLASS nsBoxLayoutState {
   nsPresContext* PresContext() const { return mPresContext; }
   mozilla::PresShell* PresShell() const { return mPresContext->PresShell(); }
 
-  uint32_t LayoutFlags() const { return mLayoutFlags; }
-  void SetLayoutFlags(uint32_t aFlags) { mLayoutFlags = aFlags; }
+  nsIFrame::ReflowChildFlags LayoutFlags() const { return mLayoutFlags; }
+  void SetLayoutFlags(nsIFrame::ReflowChildFlags aFlags) {
+    mLayoutFlags = aFlags;
+  }
 
   // if true no one under us will paint during reflow.
   void SetPaintingDisabled(bool aDisable) { mPaintingDisabled = aDisable; }
@@ -68,7 +71,7 @@ class MOZ_STACK_CLASS nsBoxLayoutState {
   RefPtr<nsPresContext> mPresContext;
   gfxContext* mRenderingContext;
   const ReflowInput* mOuterReflowInput;
-  uint32_t mLayoutFlags;
+  nsIFrame::ReflowChildFlags mLayoutFlags;
   uint16_t mReflowDepth;
   bool mPaintingDisabled;
 };
