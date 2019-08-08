@@ -7022,11 +7022,13 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
 
   onSeen(entries) {
     if (this.state) {
-      if (entries.some(entry => entry.isIntersecting)) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: external_ReactDOM_default.a.findDOMNode(this).clientWidth,
-            containerHeight: external_ReactDOM_default.a.findDOMNode(this).clientHeight
+            containerWidth: entry.boundingClientRect.width,
+            containerHeight: entry.boundingClientRect.height
           });
         }
 

@@ -16,11 +16,13 @@ export class DSImage extends React.PureComponent {
 
   onSeen(entries) {
     if (this.state) {
-      if (entries.some(entry => entry.isIntersecting)) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: ReactDOM.findDOMNode(this).clientWidth,
-            containerHeight: ReactDOM.findDOMNode(this).clientHeight,
+            containerWidth: entry.boundingClientRect.width,
+            containerHeight: entry.boundingClientRect.height,
           });
         }
 
