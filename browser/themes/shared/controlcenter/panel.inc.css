@@ -615,7 +615,6 @@ description#identity-popup-content-verifier,
   margin: 0;
   padding: 10px calc(10px + 1em);
   color: #737373;
-  font-weight: 600;
 }
 
 :root[lwt-popup-brighttext] #protections-popup-no-trackers-found-description,
