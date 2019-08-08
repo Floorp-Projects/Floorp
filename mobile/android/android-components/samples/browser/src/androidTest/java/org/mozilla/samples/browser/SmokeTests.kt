@@ -20,7 +20,7 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.android.test.leaks.LeakDetectionRule
-import mozilla.components.support.test.rules.WebserverRule
+import mozilla.components.support.android.test.rules.WebserverRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
