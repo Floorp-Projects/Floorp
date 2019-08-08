@@ -358,6 +358,7 @@ strong {
    * padding.
    */
   margin-bottom: 0;
+  padding-top: 6px;
   padding-bottom: 2px;
 }
 
@@ -368,6 +369,7 @@ strong {
    */
   margin-top: 0;
   padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .tooltip-container[type="doorhanger"].tooltip-top > .tooltip-arrow {
