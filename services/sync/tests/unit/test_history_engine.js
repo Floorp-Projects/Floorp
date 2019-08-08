@@ -47,7 +47,7 @@ add_task(async function test_history_download_limit() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  let lastSync = Date.now() / 1000;
+  let lastSync = new_timestamp();
 
   let collection = server.user("foo").collection("history");
   for (let i = 0; i < 15; i++) {
@@ -220,11 +220,11 @@ add_task(async function test_history_visit_roundtrip() {
         type: PlacesUtils.history.TRANSITIONS.LINK,
       });
     },
-    Date.now() / 1000 + 10
+    new_timestamp() + 10
   );
 
   // Force a remote sync.
-  await engine.setLastSync(Date.now() / 1000 - 30);
+  await engine.setLastSync(new_timestamp() - 30);
   await sync_engine_and_validate_telem(engine, false);
 
   // Make sure that we didn't duplicate the visit when inserting. (Prior to bug
@@ -298,10 +298,10 @@ add_task(async function test_history_visit_dedupe_old() {
         }
       );
     },
-    Date.now() / 1000 + 10
+    new_timestamp() + 10
   );
 
-  await engine.setLastSync(Date.now() / 1000 - 30);
+  await engine.setLastSync(new_timestamp() - 30);
   await sync_engine_and_validate_telem(engine, false);
 
   allVisits = (await PlacesUtils.history.fetch("https://www.example.com", {
