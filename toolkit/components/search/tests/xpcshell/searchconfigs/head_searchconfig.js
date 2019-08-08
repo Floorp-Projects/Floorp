@@ -127,7 +127,6 @@ class SearchConfigTest {
     // when updating the requested/available locales.
     for (let region of regions) {
       for (let locale of locales) {
-        info(`Checking region: "${region}" locale: "${locale}"`);
         await this._reinit(region, locale);
 
         this._assertDefaultEngines(region, locale);
