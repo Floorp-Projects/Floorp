@@ -2110,7 +2110,7 @@ fuzzy-if(!webrender,0-6,0-34) fuzzy-if(geckoview,9-9,44-44) fails-if(webrender) 
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml
 skip-if(!asyncPan) == 1544895.html 1544895-ref.html
-fails == 1547759-1.html 1547759-1-ref.html
+== 1547759-1.html 1547759-1-ref.html
 == 1548809.html 1548809-ref.html
 != 1552789-1.html 1552789-ref-1.html
 == 1558937-1.html 1558937-1-ref.html

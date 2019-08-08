@@ -6364,9 +6364,8 @@ void nsGridContainerFrame::ReflowInFlowChild(
     JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRI, size, &childPos);
   }  // else, nsAbsoluteContainingBlock.cpp will handle align/justify-self.
 
-  childRI.ApplyRelativePositioning(&childPos, aContainerSize);
   FinishReflowChild(aChild, pc, childSize, &childRI, childWM, childPos,
-                    aContainerSize, ReflowChildFlags::Default);
+                    aContainerSize, ReflowChildFlags::ApplyRelativePositioning);
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
 }
 

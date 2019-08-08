@@ -5210,6 +5210,21 @@ void nsFlexContainerFrame::ReflowFlexItem(
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
+  // ApplyRelativePositioning in right-to-left writing modes needs to know the
+  // updated frame width to set the normal position correctly.
+  //
+  // It may look like we could handle this instead by passing the
+  // ApplyRelativePositioning flag to FinishReflowChild.  However, we're
+  // unlike other callers of FinishReflowChild in that we're keeping its aPos
+  // (our aFramePos) in the parent's writing mode rather than the child's, and
+  // thus passing its aWM (our outerWM) as the parent's writing mode as well.
+  //
+  // Thus this could be converted, but requires a little bit of care to do so
+  // (and would probably require a point conversion like the one in
+  // nsBlockReflowContext::PlaceBlock).  Alternatively, maybe things should be
+  // restructured a bit so that sort of conversion isn't needed.
+  aItem.Frame()->SetSize(outerWM,
+                         childDesiredSize.Size(wm).ConvertTo(outerWM, wm));
   LogicalMargin offsets =
       childReflowInput.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
   ReflowInput::ApplyRelativePositioning(aItem.Frame(), outerWM, offsets,
