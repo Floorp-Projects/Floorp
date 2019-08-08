@@ -633,7 +633,7 @@ var SpecialPowers = {
   clearUserPref(prefName) {
     Services.prefs.clearUserPref(prefName);
   },
-  // Copied (and slightly adjusted) from specialpowersAPI.js
+  // Copied (and slightly adjusted) from testing/specialpowers/content/SpecialPowersAPI.jsm
   exactGC(callback) {
     let count = 0;
 
@@ -641,7 +641,7 @@ var SpecialPowers = {
       function scheduledGCCallback() {
         Cu.forceCC();
 
-        if (++count < 2) {
+        if (++count < 3) {
           doPreciseGCandCC();
         } else {
           callback();
