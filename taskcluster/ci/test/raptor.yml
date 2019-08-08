@@ -4432,3 +4432,39 @@ raptor-ares6-firefox-profiling:
         extra-options:
             - --test=raptor-ares6
             - --gecko-profile
+
+raptor-jetstream2-firefox:
+    description: "Raptor Jetstream2 on Firefox"
+    variants: ["fission"]
+    try-name: raptor-jetstream2-firefox
+    treeherder-symbol: Rap(js2)
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: []
+            default: ['mozilla-central', 'try']
+    tier: 3
+    max-run-time: 8000
+    mozharness:
+        extra-options:
+            - --test=raptor-jetstream2
+    fetches:
+        fetch:
+            - jetstream2
+
+raptor-jetstream2-firefox-profiling:
+    description: "Raptor Jetstream2 on Firefox with Gecko Profiling"
+    try-name: raptor-jetstream2-firefox-profiling
+    treeherder-symbol: Rap-Prof(js2)
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: []
+            default: ['mozilla-central', 'try']
+    max-run-time: 8000
+    tier: 3
+    mozharness:
+        extra-options:
+            - --test=raptor-jetstream2
+            - --gecko-profile
+    fetches:
+        fetch:
+            - jetstream2
