@@ -85,9 +85,9 @@ add_task(async function test_trailhead_branches() {
     // Expected selectors:
     [
       ".trailhead.syncCohort",
-      "button[data-l10n-id=onboarding-mobile-phone-button]",
       "button[data-l10n-id=onboarding-data-sync-button2]",
       "button[data-l10n-id=onboarding-firefox-monitor-button]",
+      "button[data-l10n-id=onboarding-mobile-phone-button]",
     ]
   );
 
