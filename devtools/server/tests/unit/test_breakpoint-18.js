@@ -9,51 +9,48 @@
  */
 
 add_task(
-  threadFrontTest(({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      // Expose console as the test script uses it
-      debuggee.console = { log: x => void x };
+  threadFrontTest(async ({ threadFront, client, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
 
-      // Inline all paused listeners as promises won't resolve when paused
-      threadFront.once("paused", async packet1 => {
-        await setBreakpoint(packet1, threadFront, client);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+    const location = { sourceUrl: source.url, line: 3 };
+    threadFront.setBreakpoint(location, {});
+    await client.waitForRequestsToSettle();
 
-        threadFront.once("paused", ({ why }) => {
-          Assert.equal(why.type, "breakpoint");
+    debuggee.console = { log: x => void x };
 
-          threadFront.once("paused", packet3 => {
-            testDbgStatement(packet3);
-            resolve();
-          });
-          threadFront.resume();
-        });
-        debuggee.test();
-      });
+    await resume(threadFront);
 
-      Cu.evalInSandbox(
-        "debugger;\n" +
-          function test() {
-            console.log("foo bar");
-            debugger;
-          },
-        debuggee,
-        "1.8",
-        "http://example.com/",
-        1
-      );
-    });
+    const packet2 = await executeOnNextTickAndWaitForPause(
+      debuggee.test,
+      threadFront
+    );
+    Assert.equal(packet2.why.type, "breakpoint");
+
+    threadFront.resume();
+
+    const packet3 = await waitForPause(threadFront);
+    testDbgStatement(packet3);
+
+    await resume(threadFront);
   })
 );
 
-function setBreakpoint(packet, threadFront, client) {
-  return new Promise(async resolve => {
-    const source = await getSourceById(threadFront, packet.frame.where.actor);
-    threadFront.once("resumed", resolve);
-
-    threadFront.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
-    await client.waitForRequestsToSettle();
-    await threadFront.resume();
-  });
+function evaluateTestCode(debuggee) {
+  Cu.evalInSandbox(
+    "debugger;\n" +
+      function test() {
+        console.log("foo bar");
+        debugger;
+      },
+    debuggee,
+    "1.8",
+    "http://example.com/",
+    1
+  );
 }
 
 function testDbgStatement({ why }) {
