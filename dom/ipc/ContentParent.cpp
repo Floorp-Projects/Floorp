@@ -3717,16 +3717,10 @@ mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
   return IPC_OK();
 }
 
-PHandlerServiceParent* ContentParent::AllocPHandlerServiceParent() {
-  HandlerServiceParent* actor = new HandlerServiceParent();
-  actor->AddRef();
-  return actor;
-}
-
-bool ContentParent::DeallocPHandlerServiceParent(
-    PHandlerServiceParent* aHandlerServiceParent) {
-  static_cast<HandlerServiceParent*>(aHandlerServiceParent)->Release();
-  return true;
+already_AddRefed<PHandlerServiceParent>
+ContentParent::AllocPHandlerServiceParent() {
+  RefPtr<HandlerServiceParent> actor = new HandlerServiceParent();
+  return actor.forget();
 }
 
 media::PMediaParent* ContentParent::AllocPMediaParent() {

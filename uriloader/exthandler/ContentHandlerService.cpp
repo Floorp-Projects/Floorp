@@ -28,8 +28,10 @@ nsresult ContentHandlerService::Init() {
   }
   ContentChild* cpc = ContentChild::GetSingleton();
 
-  mHandlerServiceChild =
-      static_cast<HandlerServiceChild*>(cpc->SendPHandlerServiceConstructor());
+  mHandlerServiceChild = new HandlerServiceChild();
+  if (!cpc->SendPHandlerServiceConstructor(mHandlerServiceChild)) {
+    mHandlerServiceChild = nullptr;
+  }
   return NS_OK;
 }
 
