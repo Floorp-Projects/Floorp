@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 
 class CreateCollectionFragment : DialogFragment() {
     private lateinit var collectionCreationComponent: CollectionCreationComponent
-    private lateinit var viewModel: CreateCollectionViewModel
+    private val viewModel: CreateCollectionViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,10 +42,6 @@ class CreateCollectionFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
-
-        viewModel = activity!!.run {
-            ViewModelProvider(this).get(CreateCollectionViewModel::class.java)
-        }
 
         collectionCreationComponent = CollectionCreationComponent(
             view.createCollectionWrapper,

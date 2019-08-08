@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.Dispatchers
@@ -114,14 +115,15 @@ class DeleteBrowsingDataFragment : Fragment() {
         }
     }
 
-    fun startDeletion() {
+    private fun startDeletion() {
         progress_bar.visibility = View.VISIBLE
         delete_browsing_data_wrapper.isEnabled = false
         delete_browsing_data_wrapper.isClickable = false
         delete_browsing_data_wrapper.alpha = DISABLED_ALPHA
     }
 
-    fun finishDeletion() {
+    private fun finishDeletion() {
+        val popAfter = open_tabs_item.isChecked
         progress_bar.visibility = View.GONE
         delete_browsing_data_wrapper.isEnabled = true
         delete_browsing_data_wrapper.isClickable = true
@@ -138,6 +140,10 @@ class DeleteBrowsingDataFragment : Fragment() {
         FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()
+
+        if (popAfter) viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            findNavController().popBackStack(R.id.homeFragment, false)
+        }
     }
 
     private fun updateDeleteButton() {

@@ -8,7 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - #4137 - Adds pagination to the history view
 - #3695 - Made search suggestions for other tabs clickable
+
+### Changed
 - Remove forced focus of toolbar on homescreen
+- #4529 - Fixed an issue where the app would sometimes return to a blank toolbar
+- #4427 - Fixed an issue where the app would sometimes return to the home fragment
+
+### Removed
 
 ## [1.1.0 and earlier] - 2019-07-23
 ### Added

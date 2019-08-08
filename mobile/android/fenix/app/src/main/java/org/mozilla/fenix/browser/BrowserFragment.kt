@@ -14,7 +14,6 @@ import android.widget.RadioButton
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
@@ -30,7 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.lib.state.ext.consumeFrom
@@ -59,6 +57,8 @@ import java.net.URL
 /**
  * Fragment used for browsing the web within the main app and external apps.
  */
+@ObsoleteCoroutinesApi
+@ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private lateinit var quickActionSheetView: QuickActionSheetView
@@ -91,17 +91,12 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         return view
     }
 
-    @Suppress("LongMethod", "ComplexMethod")
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
+    override fun initializeUI(view: View): Session? {
         val sessionManager = requireComponents.core.sessionManager
 
-        getSessionById()?.let {
-            quickActionSheetView =
-                QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
+        return super.initializeUI(view)?.also { session ->
+
+            quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
 
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(
@@ -119,57 +114,58 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                     view = view)
             }
 
+            thumbnailsFeature.set(
+                feature = ThumbnailsFeature(
+                    requireContext(),
+                    view.engineView,
+                    requireComponents.core.sessionManager
+                ),
+                owner = this,
+                view = view
+            )
+
+            readerViewFeature.set(
+                feature = ReaderViewFeature(
+                    requireContext(),
+                    requireComponents.core.engine,
+                    requireComponents.core.sessionManager,
+                    view.readerViewControlsBar
+                ) { available ->
+                    if (available) {
+                        requireComponents.analytics.metrics.track(Event.ReaderModeAvailable)
+                    }
+
+                    browserStore.apply {
+                        dispatch(QuickActionSheetAction.ReadableStateChange(available))
+                        dispatch(
+                            QuickActionSheetAction.ReaderActiveStateChange(
+                                sessionManager.selectedSession?.readerMode ?: false
+                            )
+                        )
+                    }
+                },
+                owner = this,
+                view = view
+            )
+
+            if ((activity as HomeActivity).browsingModeManager.isPrivate) {
+                // We need to update styles for private mode programmatically for now:
+                // https://github.com/mozilla-mobile/android-components/issues/3400
+                themeReaderViewControlsForPrivateMode(view.readerViewControlsBar)
+            }
+
+            updateBookmarkState(session)
+
             consumeFrom(browserStore) {
                 quickActionSheetView.update(it)
                 browserToolbarView.update(it)
             }
-        }
-
-        thumbnailsFeature.set(
-            feature = ThumbnailsFeature(
-                requireContext(),
-                view.engineView,
-                requireComponents.core.sessionManager
-            ),
-            owner = this,
-            view = view
-        )
-
-        readerViewFeature.set(
-            feature = ReaderViewFeature(
-                requireContext(),
-                requireComponents.core.engine,
-                requireComponents.core.sessionManager,
-                view.readerViewControlsBar
-            ) { available ->
-                if (available) {
-                    requireComponents.analytics.metrics.track(Event.ReaderModeAvailable)
-                }
-
-                browserStore.apply {
-                    dispatch(QuickActionSheetAction.ReadableStateChange(available))
-                    dispatch(
-                        QuickActionSheetAction.ReaderActiveStateChange(
-                            sessionManager.selectedSession?.readerMode ?: false
-                        )
-                    )
-                }
-            },
-            owner = this,
-            view = view
-        )
-
-        if ((activity as HomeActivity).browsingModeManager.isPrivate) {
-            // We need to update styles for private mode programmatically for now:
-            // https://github.com/mozilla-mobile/android-components/issues/3400
-            themeReaderViewControlsForPrivateMode(view.readerViewControlsBar)
         }
     }
 
     override fun onStart() {
         super.onStart()
         subscribeToSession()
-        subscribeToSessions()
         subscribeToTabCollections()
     }
 
@@ -177,11 +173,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         super.onResume()
 
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
-
-        getSessionById()?.let { updateBookmarkState(it) }
-
-        // See #4387 for why we're popping here
-        if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
     }
 
     override fun onBackPressed(): Boolean {
@@ -332,14 +323,9 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         getSessionById()?.register(observer, this, autoPause = true)
     }
 
-    private fun subscribeToSessions() {
-        val observer = object : SessionManager.Observer {
-            override fun onSessionSelected(session: Session) {
-                (activity as HomeActivity).updateThemeForSession(session)
-                updateBookmarkState(session)
-            }
-        }
-        requireComponents.core.sessionManager.register(observer, this, autoPause = true)
+    override fun onSessionSelected(session: Session) {
+        super.onSessionSelected(session)
+        updateBookmarkState(session)
     }
 
     private suspend fun findBookmarkedURL(session: Session?): Boolean {

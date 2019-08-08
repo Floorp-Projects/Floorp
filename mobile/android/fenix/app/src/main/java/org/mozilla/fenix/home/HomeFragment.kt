@@ -19,11 +19,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.Observer
 import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -204,15 +204,12 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun restoreLayoutState() {
-        val homeViewModel = activity?.run {
-            ViewModelProvider(this).get(HomeScreenViewModel::class.java)
-        }
-
-        homeViewModel?.layoutManagerState?.also { parcelable ->
+        val homeViewModel: HomeScreenViewModel by activityViewModels()
+        homeViewModel.layoutManagerState?.also { parcelable ->
             sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
         }
-        homeLayout?.progress = homeViewModel?.motionLayoutProgress ?: 0F
-        homeViewModel?.layoutManagerState = null
+        homeLayout?.progress = homeViewModel.motionLayoutProgress
+        homeViewModel.layoutManagerState = null
     }
 
     @SuppressWarnings("LongMethod")
@@ -555,12 +552,10 @@ class HomeFragment : Fragment(), AccountObserver {
     override fun onPause() {
         invokePendingDeleteJobs()
         super.onPause()
-        val homeViewModel = activity?.run {
-            ViewModelProvider(this).get(HomeScreenViewModel::class.java)
-        }
-        homeViewModel?.layoutManagerState =
+        val homeViewModel: HomeScreenViewModel by activityViewModels()
+        homeViewModel.layoutManagerState =
             sessionControlComponent.view.layoutManager?.onSaveInstanceState()
-        homeViewModel?.motionLayoutProgress = homeLayout?.progress ?: 0F
+        homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
     }
 
     private fun setupHomeMenu() {
@@ -691,21 +686,18 @@ class HomeFragment : Fragment(), AccountObserver {
 
         val tabs = getListOfSessions().toTabs()
 
-        val viewModel = activity?.run {
-            ViewModelProvider(this).get(CreateCollectionViewModel::class.java)
-        }
-        viewModel?.tabs = tabs
+        val viewModel: CreateCollectionViewModel by activityViewModels()
+        viewModel.tabs = tabs
         val selectedTabs =
             tabs.find { tab -> tab.sessionId == selectedTabId }
                 ?: if (tabs.size == 1) tabs[0] else null
         val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
-        viewModel?.selectedTabs = selectedSet
-        viewModel?.tabCollections =
-            requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
-        viewModel?.selectedTabCollection = selectedTabCollection
-        viewModel?.saveCollectionStep =
-            step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
-        viewModel?.previousFragmentId = R.id.homeFragment
+        viewModel.selectedTabs = selectedSet
+        viewModel.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+        viewModel.selectedTabCollection = selectedTabCollection
+        viewModel.saveCollectionStep =
+            step ?: viewModel.getStepForTabsAndCollectionSize()
+        viewModel.previousFragmentId = R.id.homeFragment
 
         // Only register the observer right before moving to collection creation
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)

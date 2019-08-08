@@ -10,6 +10,8 @@ import android.content.Intent
 import androidx.core.widget.NestedScrollView
 import androidx.navigation.NavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.BrowsingModeManager
@@ -59,6 +61,8 @@ class DefaultBrowserToolbarController(
         )
     }
 
+    @ExperimentalCoroutinesApi
+    @ObsoleteCoroutinesApi
     @SuppressWarnings("ComplexMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = context.components.useCases.sessionUseCases

@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -25,9 +25,12 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.intent.EXTRA_SESSION_ID
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -76,8 +79,8 @@ import org.mozilla.fenix.utils.Settings
  * This class only contains shared code focused on the main browsing content.
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
-@Suppress("TooManyFunctions")
-abstract class BaseBrowserFragment : Fragment(), BackHandler {
+@Suppress("TooManyFunctions", "LargeClass")
+abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Observer {
     protected lateinit var browserStore: BrowserStore
     protected lateinit var browserInteractor: BrowserInteractor
     protected lateinit var browserToolbarView: BrowserToolbarView
@@ -94,6 +97,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
 
     var customTabSessionId: String? = null
+
+    private var browserInitialized: Boolean = false
+    private var initUIJob: Job? = null
 
     @CallSuper
     override fun onCreateView(
@@ -127,17 +133,19 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
         return view
     }
 
-    @Suppress("ComplexMethod")
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        browserInitialized = initializeUI(view) != null
+    }
 
+    @Suppress("ComplexMethod")
+    @CallSuper
+    protected open fun initializeUI(view: View): Session? {
         val sessionManager = requireComponents.core.sessionManager
 
-        getSessionById()?.let { session ->
-            val viewModel = activity!!.run {
-                ViewModelProvider(this).get(CreateCollectionViewModel::class.java)
-            }
+        return getSessionById()?.also { session ->
+            val viewModel: CreateCollectionViewModel by activityViewModels()
 
             val browserToolbarController = DefaultBrowserToolbarController(
                 context!!,
@@ -185,157 +193,179 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             browserToolbarView.view.setOnSiteSecurityClickedListener {
                 showQuickSettingsDialog()
             }
-        }
 
-        contextMenuFeature.set(
-            feature = ContextMenuFeature(
-                requireFragmentManager(),
-                sessionManager,
-                FenixContextMenuCandidate.defaultCandidates(
-                    requireContext(),
-                    requireComponents.useCases.tabsUseCases,
-                    view,
-                    FenixSnackbarDelegate(
+            contextMenuFeature.set(
+                feature = ContextMenuFeature(
+                    requireFragmentManager(),
+                    sessionManager,
+                    FenixContextMenuCandidate.defaultCandidates(
+                        requireContext(),
+                        requireComponents.useCases.tabsUseCases,
                         view,
-                        if (getSessionById()?.isCustomTabSession() == true) null else nestedScrollQuickAction
-                    )
-                ),
-                view.engineView
-            ),
-            owner = this,
-            view = view
-        )
-
-        downloadsFeature.set(
-            feature = DownloadsFeature(
-                requireContext().applicationContext,
-                sessionManager = sessionManager,
-                fragmentManager = childFragmentManager,
-                sessionId = customTabSessionId,
-                downloadManager = FetchDownloadManager(requireContext().applicationContext, DownloadService::class),
-                onNeedToRequestPermissions = { permissions ->
-                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
-                }),
-            owner = this,
-            view = view
-        )
-
-        appLinksFeature.set(
-            feature = AppLinksFeature(
-                requireContext(),
-                sessionManager = sessionManager,
-                sessionId = customTabSessionId,
-                interceptLinkClicks = true,
-                fragmentManager = requireFragmentManager()
-            ),
-            owner = this,
-            view = view
-        )
-
-        promptsFeature.set(
-            feature = PromptFeature(
-                fragment = this,
-                sessionManager = sessionManager,
-                sessionId = customTabSessionId,
-                fragmentManager = requireFragmentManager(),
-                onNeedToRequestPermissions = { permissions ->
-                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-                }),
-            owner = this,
-            view = view
-        )
-
-        sessionFeature.set(
-            feature = SessionFeature(
-                sessionManager,
-                SessionUseCases(sessionManager),
-                view.engineView,
-                customTabSessionId
-            ),
-            owner = this,
-            view = view
-        )
-
-        val accentHighContrastColor = ThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
-
-        sitePermissionsFeature.set(
-            feature = SitePermissionsFeature(
-                context = requireContext(),
-                sessionManager = sessionManager,
-                fragmentManager = requireFragmentManager(),
-                promptsStyling = SitePermissionsFeature.PromptsStyling(
-                    gravity = getAppropriateLayoutGravity(),
-                    shouldWidthMatchParent = true,
-                    positiveButtonBackgroundColor = accentHighContrastColor,
-                    positiveButtonTextColor = R.color.photonWhite
-                ),
-                sessionId = customTabSessionId
-            ) { permissions ->
-                requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
-            },
-            owner = this,
-            view = view
-        )
-
-        fullScreenFeature.set(
-            feature = FullScreenFeature(
-                sessionManager,
-                SessionUseCases(sessionManager),
-                customTabSessionId
-            ) { inFullScreen ->
-                if (inFullScreen) {
-                    FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
-                        .setText(getString(R.string.full_screen_notification))
-                        .show()
-                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-                    activity?.enterToImmersiveMode()
-                    toolbar.visibility = View.GONE
-                    nestedScrollQuickAction.visibility = View.GONE
-                } else {
-                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-                    activity?.exitImmersiveModeIfNeeded()
-                    (activity as HomeActivity).let { activity: HomeActivity ->
-                        ThemeManager.applyStatusBarTheme(
-                            activity.window,
-                            activity.themeManager,
-                            activity
+                        FenixSnackbarDelegate(
+                            view,
+                            if (getSessionById()?.isCustomTabSession() == true) null else nestedScrollQuickAction
                         )
-                    }
-                    toolbar.visibility = View.VISIBLE
-                    nestedScrollQuickAction.visibility = View.VISIBLE
-                }
-                view.swipeRefresh.apply {
-                    val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
-                    (layoutParams as CoordinatorLayout.LayoutParams).setMargins(0, topMargin, 0, bottomMargin)
-                }
-            },
-            owner = this,
-            view = view
-        )
+                    ),
+                    view.engineView
+                ),
+                owner = this,
+                view = view
+            )
 
-        if (FeatureFlags.pullToRefreshEnabled) {
-            val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-            view.swipeRefresh.setColorSchemeColors(primaryTextColor)
-            swipeRefreshFeature.set(
-                feature = SwipeRefreshFeature(
-                    requireComponents.core.sessionManager,
-                    requireComponents.useCases.sessionUseCases.reload,
-                    view.swipeRefresh,
+            downloadsFeature.set(
+                feature = DownloadsFeature(
+                    requireContext().applicationContext,
+                    sessionManager = sessionManager,
+                    fragmentManager = childFragmentManager,
+                    sessionId = customTabSessionId,
+                    downloadManager = FetchDownloadManager(requireContext().applicationContext, DownloadService::class),
+                    onNeedToRequestPermissions = { permissions ->
+                        requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                    }),
+                owner = this,
+                view = view
+            )
+
+            appLinksFeature.set(
+                feature = AppLinksFeature(
+                    requireContext(),
+                    sessionManager = sessionManager,
+                    sessionId = customTabSessionId,
+                    interceptLinkClicks = true,
+                    fragmentManager = requireFragmentManager()
+                ),
+                owner = this,
+                view = view
+            )
+
+            promptsFeature.set(
+                feature = PromptFeature(
+                    fragment = this,
+                    sessionManager = sessionManager,
+                    sessionId = customTabSessionId,
+                    fragmentManager = requireFragmentManager(),
+                    onNeedToRequestPermissions = { permissions ->
+                        requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                    }),
+                owner = this,
+                view = view
+            )
+
+            sessionFeature.set(
+                feature = SessionFeature(
+                    sessionManager,
+                    SessionUseCases(sessionManager),
+                    view.engineView,
                     customTabSessionId
                 ),
                 owner = this,
                 view = view
             )
-        } else {
-            // Disable pull to refresh
-            view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
+
+            val accentHighContrastColor = ThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
+
+            sitePermissionsFeature.set(
+                feature = SitePermissionsFeature(
+                    context = requireContext(),
+                    sessionManager = sessionManager,
+                    fragmentManager = requireFragmentManager(),
+                    promptsStyling = SitePermissionsFeature.PromptsStyling(
+                        gravity = getAppropriateLayoutGravity(),
+                        shouldWidthMatchParent = true,
+                        positiveButtonBackgroundColor = accentHighContrastColor,
+                        positiveButtonTextColor = R.color.photonWhite
+                    ),
+                    sessionId = customTabSessionId
+                ) { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
+                },
+                owner = this,
+                view = view
+            )
+
+            fullScreenFeature.set(
+                feature = FullScreenFeature(
+                    sessionManager,
+                    SessionUseCases(sessionManager),
+                    customTabSessionId
+                ) { inFullScreen ->
+                    if (inFullScreen) {
+                        FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
+                            .setText(getString(R.string.full_screen_notification))
+                            .show()
+                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                        activity?.enterToImmersiveMode()
+                        toolbar.visibility = View.GONE
+                        nestedScrollQuickAction.visibility = View.GONE
+                    } else {
+                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+                        activity?.exitImmersiveModeIfNeeded()
+                        (activity as HomeActivity).let { activity: HomeActivity ->
+                            ThemeManager.applyStatusBarTheme(
+                                activity.window,
+                                activity.themeManager,
+                                activity
+                            )
+                        }
+                        toolbar.visibility = View.VISIBLE
+                        nestedScrollQuickAction.visibility = View.VISIBLE
+                    }
+                    view.swipeRefresh.apply {
+                        val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
+                        (layoutParams as CoordinatorLayout.LayoutParams).setMargins(0, topMargin, 0, bottomMargin)
+                    }
+                },
+                owner = this,
+                view = view
+            )
+
+            @Suppress("ConstantConditionIf")
+            if (FeatureFlags.pullToRefreshEnabled) {
+                val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+                view.swipeRefresh.setColorSchemeColors(primaryTextColor)
+                swipeRefreshFeature.set(
+                    feature = SwipeRefreshFeature(
+                        requireComponents.core.sessionManager,
+                        requireComponents.useCases.sessionUseCases.reload,
+                        view.swipeRefresh,
+                        customTabSessionId
+                    ),
+                    owner = this,
+                    view = view
+                )
+            } else {
+                // Disable pull to refresh
+                view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
+            }
+
+            (activity as HomeActivity).updateThemeForSession(session)
         }
+    }
+
+    @CallSuper
+    override fun onSessionSelected(session: Session) {
+        super.onSessionSelected(session)
+        if (!browserInitialized) {
+            // Initializing a new coroutineScope to avoid ConcurrentModificationException in ObserverRegistry
+            // This will be removed when ObserverRegistry is deprecated by browser-state.
+            initUIJob = MainScope().launch {
+                view?.let {
+                    browserInitialized = initializeUI(it) != null
+                }
+            }
+        }
+    }
+
+    @CallSuper
+    override fun onStart() {
+        super.onStart()
+        requireComponents.core.sessionManager.register(this, this, autoPause = true)
     }
 
     @CallSuper
     override fun onResume() {
         super.onResume()
-        val session = getSessionById() ?: return
         val components = requireComponents
 
         val preferredColorScheme = components.core.getPreferredColorScheme()
@@ -343,18 +373,21 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             components.core.engine.settings.preferredColorScheme = preferredColorScheme
             components.useCases.sessionUseCases.reload()
         }
-        (activity as HomeActivity).updateThemeForSession(session)
         (activity as AppCompatActivity).supportActionBar?.hide()
 
         assignSitePermissionsRules()
     }
 
-    /**
-     * Exits full screen mode.
-     */
+    @CallSuper
     final override fun onPause() {
         super.onPause()
         fullScreenFeature.onBackPressed()
+    }
+
+    @CallSuper
+    override fun onStop() {
+        super.onStop()
+        initUIJob?.cancel()
     }
 
     @CallSuper
@@ -480,8 +513,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
      */
     protected fun getSessionById(): Session? {
         val sessionManager = context?.components?.core?.sessionManager ?: return null
-        return if (customTabSessionId != null) {
-            sessionManager.findSessionById(customTabSessionId!!)
+        val localCustomTabId = customTabSessionId
+        return if (localCustomTabId != null) {
+            sessionManager.findSessionById(localCustomTabId)
         } else {
             sessionManager.selectedSession
         }
