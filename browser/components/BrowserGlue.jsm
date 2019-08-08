@@ -3600,7 +3600,6 @@ var ContentBlockingCategoriesPrefs = {
         "network.cookie.cookieBehavior": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
-        "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
       },
@@ -3608,7 +3607,6 @@ var ContentBlockingCategoriesPrefs = {
         "network.cookie.cookieBehavior": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
-        "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
       },
@@ -3657,16 +3655,6 @@ var ContentBlockingCategoriesPrefs = {
         case "-cm":
           this.CATEGORY_PREFS[type][
             "privacy.trackingprotection.cryptomining.enabled"
-          ] = false;
-          break;
-        case "stp":
-          this.CATEGORY_PREFS[type][
-            "privacy.trackingprotection.socialtracking.enabled"
-          ] = true;
-          break;
-        case "-stp":
-          this.CATEGORY_PREFS[type][
-            "privacy.trackingprotection.socialtracking.enabled"
           ] = false;
           break;
         case "cookieBehavior0":
