@@ -5390,9 +5390,9 @@ void MaybeInitOncePrefs() {
 // For mirrored prefs we generate a variable definition.
 #define NEVER_PREF(name, cpp_type, value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value) \
-  cpp_type sVarCache_##full_id(default_value);
+  cpp_type sMirror_##full_id(default_value);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, default_value) \
-  cpp_type sVarCache_##full_id(default_value);
+  cpp_type sMirror_##full_id(default_value);
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
 #undef ALWAYS_PREF
@@ -5423,8 +5423,8 @@ static void InitAll(bool aIsStartup) {
 #undef ONCE_PREF
   }
 #define NEVER_PREF(name, cpp_type, value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)            \
-  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sVarCache_##full_id, value, \
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)          \
+  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sMirror_##full_id, value, \
                  aIsStartup, isParent);
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)
 #include "mozilla/StaticPrefListAll.h"
@@ -5449,7 +5449,7 @@ static void InitOncePrefs() {
 #  define ONCE_PREF(name, base_id, full_id, cpp_type, value)                   \
     {                                                                          \
       MOZ_ASSERT(gOnceStaticPrefsAntiFootgun);                                 \
-      sVarCache_##full_id = Internals::GetPref(name, cpp_type(value));         \
+      sMirror_##full_id = Internals::GetPref(name, cpp_type(value));           \
       auto checkPref = [&]() {                                                 \
         MOZ_ASSERT(sOncePrefRead);                                             \
         cpp_type staticPrefValue = full_id();                                  \
@@ -5467,7 +5467,7 @@ static void InitOncePrefs() {
     }
 #else
 #  define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
-    sVarCache_##full_id = Internals::GetPref(name, cpp_type(value));
+    sMirror_##full_id = Internals::GetPref(name, cpp_type(value));
 #endif
 
 #include "mozilla/StaticPrefListAll.h"
@@ -5547,7 +5547,7 @@ static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder) {
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
   SaveOncePrefToSharedMap(aBuilder, ONCE_PREF_NAME(name),  \
-                          cpp_type(sVarCache_##full_id));
+                          cpp_type(sMirror_##full_id));
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
 #undef ALWAYS_PREF
@@ -5566,14 +5566,14 @@ static void InitStaticPrefsFromShared() {
     StripAtomic<cpp_type> val;                               \
     nsresult rv = Internals::GetSharedPrefValue(name, &val); \
     MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));            \
-    StaticPrefs::sVarCache_##full_id = val;                  \
+    StaticPrefs::sMirror_##full_id = val;                    \
   }
 #define ONCE_PREF(name, base_id, full_id, cpp_type, value)                   \
   {                                                                          \
     cpp_type val;                                                            \
     nsresult rv = Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val); \
     MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));                            \
-    StaticPrefs::sVarCache_##full_id = val;                                  \
+    StaticPrefs::sMirror_##full_id = val;                                    \
   }
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
