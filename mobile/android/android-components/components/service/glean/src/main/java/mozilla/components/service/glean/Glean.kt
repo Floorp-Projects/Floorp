@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.work.WorkManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.joinAll
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
@@ -23,6 +24,7 @@ import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
+import mozilla.components.service.glean.scheduler.MetricsPingWorker
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.storages.PingStorageEngine
@@ -205,8 +207,18 @@ open class GleanInternalAPI internal constructor () {
         if (enabled) {
             initializeCoreMetrics(applicationContext!!)
         } else {
+            cancelPingWorkers()
             clearMetrics()
         }
+    }
+
+    /**
+     * Cancel any pending [PingUploadWorker] objects that have been enqueued.
+     */
+    private fun cancelPingWorkers() {
+        val workManager = WorkManager.getInstance()
+        workManager.cancelUniqueWork(PingUploadWorker.PING_WORKER_TAG)
+        workManager.cancelUniqueWork(MetricsPingWorker.TAG)
     }
 
     /**
