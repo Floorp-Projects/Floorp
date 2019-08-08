@@ -12,7 +12,7 @@
 #include "vm/JSScript.h"
 namespace js {
 
-BytecodeIterator::BytecodeIterator(const JSScript* script)
+inline BytecodeIterator::BytecodeIterator(const JSScript* script)
     : current_(script, script->code()) {}
 
 // AllBytecodesIterable
