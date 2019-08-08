@@ -79,10 +79,10 @@ permissions-invalid-uri-label = Please enter a valid hostname
 
 ## Exceptions - Tracking Protection
 
-permissions-exceptions-etp-window =
-    .title = Exceptions for Enhanced Tracking Protection
+permissions-exceptions-content-blocking-window =
+    .title = Exceptions - Content Blocking
     .style = { permissions-window.style }
-permissions-exceptions-etp-desc = You’ve turned off protections on these websites.
+permissions-exceptions-content-blocking-desc = You have disabled content blocking on these websites.
 
 ## Exceptions - Cookies
 
