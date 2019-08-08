@@ -21,7 +21,7 @@ When the actor is loaded for the first time in the `DebuggerServer` running in t
 Example code for the actor running in the child process:
 
 ```
-  const {DebuggerServer} = require("devtools/server/main");
+  const {DebuggerServer} = require("devtools/server/debugger-server");
 
   // Setup the child<->parent communication only if the actor module
   // is running in a child process.

@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerServer } = require("devtools/server/debugger-server");
 
 var protocol = require("devtools/shared/protocol");
 const { longStringSpec } = require("devtools/shared/specs/string");

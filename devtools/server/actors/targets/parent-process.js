@@ -15,7 +15,7 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const {
   getChildDocShells,
   BrowsingContextTargetActor,

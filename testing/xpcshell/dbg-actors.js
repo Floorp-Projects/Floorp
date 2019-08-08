@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { RootActor } = require("devtools/server/actors/root");
 const { BrowserTabList } = require("devtools/server/actors/webbrowser");
 const Services = require("Services");

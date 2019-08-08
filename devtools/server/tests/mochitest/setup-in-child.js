@@ -2,7 +2,7 @@
 
 const { Cc } = require("chrome");
 const cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 exports.setupChild = function(a, b, c) {
   cpmm.sendAsyncMessage("test:setupChild", [a, b, c]);

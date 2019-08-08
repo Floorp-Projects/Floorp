@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { Cc, Ci } = require("chrome");
 
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");

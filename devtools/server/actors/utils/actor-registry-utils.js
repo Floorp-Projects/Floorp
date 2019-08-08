@@ -6,7 +6,7 @@
 
 const { Cu, CC } = require("chrome");
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const {
   ActorRegistry,
 } = require("devtools/server/actors/utils/actor-registry");

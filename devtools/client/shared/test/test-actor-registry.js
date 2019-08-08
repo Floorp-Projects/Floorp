@@ -59,7 +59,7 @@
   // Sometimes, we need the test actor before opening or without a toolbox then just
   // create a front for the given `tab`
   exports.getTestActorWithoutToolbox = async function(tab) {
-    const { DebuggerServer } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/debugger-server");
     const {
       DebuggerClient,
     } = require("devtools/shared/client/debugger-client");

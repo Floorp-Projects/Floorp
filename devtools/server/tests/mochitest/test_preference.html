@@ -17,7 +17,7 @@ Bug 943251 - Allow accessing about:config from WebIDE
 function runTests() {
   const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
-  const {DebuggerServer} = require("devtools/server/main");
+  const {DebuggerServer} = require("devtools/server/debugger-server");
   const Services = require("Services");
 
   SimpleTest.waitForExplicitFinish();

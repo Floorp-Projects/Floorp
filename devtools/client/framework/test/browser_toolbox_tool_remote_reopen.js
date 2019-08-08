@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 // Bug 1277805: Too slow for debug runs
 requestLongerTimeout(2);

@@ -8,7 +8,7 @@ const protocol = require("devtools/shared/protocol");
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 

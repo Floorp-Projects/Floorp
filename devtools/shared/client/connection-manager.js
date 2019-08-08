@@ -8,7 +8,7 @@
 
 const { Cc, Ci, Cr } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const Services = require("Services");
 

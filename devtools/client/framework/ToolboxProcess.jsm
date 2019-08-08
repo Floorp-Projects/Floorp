@@ -121,7 +121,9 @@ BrowserToolboxProcess.prototype = {
     this.loader = new DevToolsLoader({
       invisibleToDebugger: true,
     });
-    const { DebuggerServer } = this.loader.require("devtools/server/main");
+    const { DebuggerServer } = this.loader.require(
+      "devtools/server/debugger-server"
+    );
     const { SocketListener } = this.loader.require(
       "devtools/shared/security/socket"
     );

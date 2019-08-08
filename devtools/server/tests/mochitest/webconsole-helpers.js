@@ -2,7 +2,7 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 const { TargetFactory } = require("devtools/client/framework/target");
 
 const Services = require("Services");

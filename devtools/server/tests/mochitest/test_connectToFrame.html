@@ -19,7 +19,7 @@ Bug 966991 - Test DebuggerServer.connectToFrame
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -46,7 +46,7 @@ function runTests() {
   mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
     /* eslint-disable no-shadow */
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-    const { DebuggerServer } = require("devtools/server/main");
+    const { DebuggerServer } = require("devtools/server/debugger-server");
     const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
     /* eslint-enable no-shadow */
 

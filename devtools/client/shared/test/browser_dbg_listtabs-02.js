@@ -8,7 +8,7 @@
  */
 
 var { BrowserTabList } = require("devtools/server/actors/webbrowser");
-var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerServer } = require("devtools/server/debugger-server");
 
 var gTestPage =
   "data:text/html;charset=utf-8," +

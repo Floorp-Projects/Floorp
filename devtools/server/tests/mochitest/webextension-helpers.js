@@ -9,7 +9,7 @@ const { require, loader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
-const { DebuggerServer } = require("devtools/server/main");
+const { DebuggerServer } = require("devtools/server/debugger-server");
 
 const {
   AddonTestUtils,

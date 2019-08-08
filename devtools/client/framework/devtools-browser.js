@@ -30,7 +30,12 @@ loader.lazyRequireGetter(
   "devtools/client/framework/toolbox",
   true
 );
-loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
+loader.lazyRequireGetter(
+  this,
+  "DebuggerServer",
+  "devtools/server/debugger-server",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "DebuggerClient",
