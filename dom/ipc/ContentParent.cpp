@@ -1171,92 +1171,87 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   // BrowsingContextGroup.
   aBrowsingContext->Group()->EnsureSubscribed(constructorSender);
 
-  if (constructorSender) {
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-    if (!treeOwner) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIWebBrowserChrome> wbc = do_GetInterface(treeOwner);
-    if (!wbc) {
-      return nullptr;
-    }
-    uint32_t chromeFlags = 0;
-    wbc->GetChromeFlags(&chromeFlags);
-
-    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-    if (loadContext && loadContext->UsePrivateBrowsing()) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-    }
-    if (docShell->GetAffectPrivateSessionLifetime()) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
-    }
-
-    if (tabId == 0) {
-      return nullptr;
-    }
-
-    aBrowsingContext->Canonical()->SetOwnerProcessId(
-        constructorSender->ChildID());
-
-    RefPtr<BrowserParent> browserParent =
-        new BrowserParent(constructorSender, tabId, aContext,
-                          aBrowsingContext->Canonical(), chromeFlags);
-
-    // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
-    // releases the ref taken.
-    ManagedEndpoint<PBrowserChild> childEp =
-        constructorSender->OpenPBrowserEndpoint(
-            do_AddRef(browserParent).take());
-    if (NS_WARN_IF(!childEp.IsValid())) {
-      return nullptr;
-    }
-
-    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-    cpm->RegisterRemoteFrame(browserParent);
-
-    nsCOMPtr<nsIPrincipal> initialPrincipal =
-        NullPrincipal::Create(aContext.OriginAttributesRef());
-    WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
-        aBrowsingContext, initialPrincipal);
-
-    auto windowParent =
-        MakeRefPtr<WindowGlobalParent>(windowInit, /* inprocess */ false);
-
-    // Open a remote endpoint for the initial PWindowGlobal actor.
-    // DeallocPWindowGlobalParent releases the ref taken.
-    ManagedEndpoint<PWindowGlobalChild> windowEp =
-        browserParent->OpenPWindowGlobalEndpoint(
-            do_AddRef(windowParent).take());
-    if (NS_WARN_IF(!windowEp.IsValid())) {
-      return nullptr;
-    }
-
-    // Tell the content process to set up its PBrowserChild.
-    bool ok = constructorSender->SendConstructBrowser(
-        std::move(childEp), std::move(windowEp), tabId,
-        aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
-        aContext.AsIPCTabContext(), windowInit, chromeFlags,
-        constructorSender->ChildID(), constructorSender->IsForBrowser(),
-        /* aIsTopLevel */ true);
-    if (NS_WARN_IF(!ok)) {
-      return nullptr;
-    }
-
-    windowParent->Init(windowInit);
-
-    if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
-      // Tell the BrowserChild object that it was created due to a
-      // Large-Allocation request.
-      Unused << browserParent->SendAwaitLargeAlloc();
-    }
-
-    RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
-    browserParent->SetOwnerElement(aFrameElement);
-    return browserHost.forget();
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) {
+    return nullptr;
   }
-  return nullptr;
+
+  nsCOMPtr<nsIWebBrowserChrome> wbc = do_GetInterface(treeOwner);
+  if (!wbc) {
+    return nullptr;
+  }
+  uint32_t chromeFlags = 0;
+  wbc->GetChromeFlags(&chromeFlags);
+
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  if (loadContext && loadContext->UsePrivateBrowsing()) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+  }
+  if (docShell->GetAffectPrivateSessionLifetime()) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
+  }
+
+  if (tabId == 0) {
+    return nullptr;
+  }
+
+  aBrowsingContext->Canonical()->SetOwnerProcessId(
+      constructorSender->ChildID());
+
+  RefPtr<BrowserParent> browserParent =
+      new BrowserParent(constructorSender, tabId, aContext,
+                        aBrowsingContext->Canonical(), chromeFlags);
+
+  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
+  // releases the ref taken.
+  ManagedEndpoint<PBrowserChild> childEp =
+      constructorSender->OpenPBrowserEndpoint(do_AddRef(browserParent).take());
+  if (NS_WARN_IF(!childEp.IsValid())) {
+    return nullptr;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  cpm->RegisterRemoteFrame(browserParent);
+
+  nsCOMPtr<nsIPrincipal> initialPrincipal =
+      NullPrincipal::Create(aContext.OriginAttributesRef());
+  WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
+      aBrowsingContext, initialPrincipal);
+
+  auto windowParent =
+      MakeRefPtr<WindowGlobalParent>(windowInit, /* inprocess */ false);
+
+  // Open a remote endpoint for the initial PWindowGlobal actor.
+  // DeallocPWindowGlobalParent releases the ref taken.
+  ManagedEndpoint<PWindowGlobalChild> windowEp =
+      browserParent->OpenPWindowGlobalEndpoint(do_AddRef(windowParent).take());
+  if (NS_WARN_IF(!windowEp.IsValid())) {
+    return nullptr;
+  }
+
+  // Tell the content process to set up its PBrowserChild.
+  bool ok = constructorSender->SendConstructBrowser(
+      std::move(childEp), std::move(windowEp), tabId,
+      aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
+      aContext.AsIPCTabContext(), windowInit, chromeFlags,
+      constructorSender->ChildID(), constructorSender->IsForBrowser(),
+      /* aIsTopLevel */ true);
+  if (NS_WARN_IF(!ok)) {
+    return nullptr;
+  }
+
+  windowParent->Init(windowInit);
+
+  if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
+    // Tell the BrowserChild object that it was created due to a
+    // Large-Allocation request.
+    Unused << browserParent->SendAwaitLargeAlloc();
+  }
+
+  RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
+  browserParent->SetOwnerElement(aFrameElement);
+  return browserHost.forget();
 }
 
 void ContentParent::GetAll(nsTArray<ContentParent*>& aArray) {
