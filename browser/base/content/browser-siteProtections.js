@@ -912,10 +912,19 @@ var SocialTracking = {
   },
 
   isBlocking(state) {
-    return (
+    let cookieTrackerBlocked =
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0;
+    let socialtrackingContentBlocked =
       (state &
         Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT) !=
-      0
+      0;
+    let socialtrackingContentLoaded =
+      (state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
+      0;
+    return (
+      this.enabled &&
+      ((socialtrackingContentLoaded && cookieTrackerBlocked) ||
+        socialtrackingContentBlocked)
     );
   },
 
