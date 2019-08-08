@@ -6,25 +6,84 @@
 
 #include "debugger/Frame-inl.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/ScopeExit.h"
+#include "mozilla/Assertions.h"   // for AssertionConditionType
+#include "mozilla/HashTable.h"    // for HashMapEntry
+#include "mozilla/Maybe.h"        // for Maybe
+#include "mozilla/Move.h"         // for std::move
+#include "mozilla/Range.h"        // for Range
+#include "mozilla/RangedPtr.h"    // for RangedPtr
+#include "mozilla/Result.h"       // for Result
+#include "mozilla/ScopeExit.h"    // for MakeScopeExit, ScopeExit
+#include "mozilla/ThreadLocal.h"  // for ThreadLocal
+#include "mozilla/Vector.h"       // for Vector
 
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for int32_t
+#include <string.h>  // for strlen
+
+#include "jsapi.h"        // for CallArgs, Handle
+#include "jsfriendapi.h"  // for GetErrorMessage
+#include "jsnum.h"        // for Int32ToString
+
+#include "builtin/Array.h"      // for NewDenseCopiedArray
+#include "debugger/Debugger.h"  // for Completion, Debugger
 #include "debugger/DebugScript.h"
-#include "debugger/Environment.h"
-#include "debugger/NoExecute.h"
-#include "debugger/Object.h"
-#include "debugger/Script.h"
-#include "frontend/BytecodeCompilation.h"
-#include "gc/ZoneAllocator.h"
-#include "jit/JitFrames.h"
-#include "jit/RematerializedFrame.h"
-#include "vm/Interpreter.h"
-#include "wasm/WasmInstance.h"
+#include "debugger/Environment.h"          // for DebuggerEnvironment
+#include "debugger/NoExecute.h"            // for LeaveDebuggeeNoExecute
+#include "debugger/Object.h"               // for DebuggerObject
+#include "debugger/Script.h"               // for DebuggerScript
+#include "frontend/BytecodeCompilation.h"  // for CompileEvalScript
+#include "gc/Barrier.h"                    // for HeapPtr
+#include "gc/FreeOp.h"                     // for FreeOp
+#include "gc/GC.h"                         // for MemoryUse
+#include "gc/Marking.h"                    // for IsAboutToBeFinalized
+#include "gc/Rooting.h"                    // for RootedDebuggerFrame
+#include "gc/Tracer.h"                     // for TraceCrossCompartmentEdge
+#include "gc/ZoneAllocator.h"              // for AddCellMemory
+#include "jit/JSJitFrameIter.h"            // for InlineFrameIterator
+#include "jit/RematerializedFrame.h"       // for RematerializedFrame
+#include "js/Proxy.h"                      // for PrivateValue
+#include "js/SourceText.h"                 // for SourceText, SourceOwnership
+#include "js/StableStringChars.h"          // for AutoStableStringChars
+#include "vm/ArgumentsObject.h"            // for ArgumentsObject
+#include "vm/ArrayObject.h"                // for ArrayObject
+#include "vm/BytecodeUtil.h"               // for JSDVG_SEARCH_STACK
+#include "vm/Compartment.h"                // for Compartment
+#include "vm/EnvironmentObject.h"          // for IsGlobalLexicalEnvironment
+#include "vm/GeneratorObject.h"            // for AbstractGeneratorObject
+#include "vm/GlobalObject.h"               // for GlobalObject
+#include "vm/Interpreter.h"                // for Call, ExecuteKernel
+#include "vm/JSAtom.h"                     // for Atomize
+#include "vm/JSContext.h"                  // for JSContext, ReportValueError
+#include "vm/JSFunction.h"                 // for JSFunction, NewNativeFunction
+#include "vm/JSObject.h"                   // for JSObject, RequireObject
+#include "vm/JSScript.h"                   // for JSScript
+#include "vm/NativeObject.h"               // for NativeDefineDataProperty
+#include "vm/Realm.h"                      // for AutoRealm
+#include "vm/Runtime.h"                    // for JSAtomState
+#include "vm/Scope.h"                      // for PositionalFormalParameterIter
+#include "vm/Stack.h"                      // for AbstractFramePtr, FrameIter
+#include "vm/StringType.h"                 // for PropertyName, JSString
+#include "wasm/WasmDebug.h"                // for DebugState
+#include "wasm/WasmInstance.h"             // for Instance
+#include "wasm/WasmJS.h"                   // for WasmInstanceObject
+#include "wasm/WasmTypes.h"                // for DebugFrame
 
-#include "debugger/Debugger-inl.h"
-#include "vm/Compartment-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/Stack-inl.h"
+#include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
+#include "vm/Compartment-inl.h"     // for Compartment::wrap
+#include "vm/JSContext-inl.h"       // for JSContext::check
+#include "vm/JSObject-inl.h"        // for NewObjectWithGivenProto
+#include "vm/JSScript-inl.h"        // for JSScript::ensureHasAnalyzedArgsUsage
+#include "vm/NativeObject-inl.h"    // for NativeObject::global
+#include "vm/ObjectOperations-inl.h"  // for GetProperty
+#include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
+#include "vm/Stack-inl.h"             // for AbstractFramePtr::script
+
+namespace js {
+namespace jit {
+class JitFrameLayout;
+} /* namespace jit */
+} /* namespace js */
 
 using namespace js;
 

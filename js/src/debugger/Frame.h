@@ -7,23 +7,29 @@
 #ifndef debugger_Frame_h
 #define debugger_Frame_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
+#include "mozilla/Attributes.h"  // for MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // for Maybe
+#include "mozilla/Range.h"       // for Range
+#include "mozilla/Result.h"      // for Result
 
-#include "jsapi.h"
+#include <stddef.h>  // for size_t
 
-#include "debugger/Debugger.h"
-#include "gc/Rooting.h"
-#include "js/Class.h"
-#include "js/PropertySpec.h"
-#include "js/Result.h"
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
-#include "vm/GlobalObject.h"
-#include "vm/NativeObject.h"
+#include "jsapi.h"  // for JSContext, CallArgs
+
+#include "NamespaceImports.h"   // for Value, MutableHandleValue, HandleObject
+#include "debugger/DebugAPI.h"  // for ResumeMode
+#include "debugger/Debugger.h"  // for ResumeMode, Handler, Debugger
+#include "gc/Barrier.h"         // for HeapPtr
+#include "gc/Rooting.h"         // for HandleDebuggerFrame, HandleNativeObject
+#include "vm/JSObject.h"        // for JSObject
+#include "vm/NativeObject.h"    // for NativeObject
+#include "vm/Stack.h"           // for FrameIter, AbstractFramePtr
 
 namespace js {
+
+class AbstractGeneratorObject;
+class FreeOp;
+class GlobalObject;
 
 /*
  * An OnStepHandler represents a handler function that is called when a small

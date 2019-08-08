@@ -6,68 +6,146 @@
 
 #include "debugger/Debugger-inl.h"
 
-#include "mozilla/DebugOnly.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/TypeTraits.h"
+#include "mozilla/Attributes.h"        // for MOZ_STACK_CLASS, MOZ_RAII
+#include "mozilla/DebugOnly.h"         // for DebugOnly
+#include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedList<>::Iterator
+#include "mozilla/GuardObjects.h"      // for MOZ_GUARD_OBJECT_NOTIFIER_PARAM
+#include "mozilla/HashTable.h"         // for HashSet<>::Range, HashMapEntry
+#include "mozilla/Maybe.h"             // for Maybe, Nothing, Some
+#include "mozilla/Move.h"              // for std::move
+#include "mozilla/RecordReplay.h"      // for IsMiddleman
+#include "mozilla/ScopeExit.h"         // for MakeScopeExit, ScopeExit
+#include "mozilla/ThreadLocal.h"       // for ThreadLocal
+#include "mozilla/TimeStamp.h"         // for TimeStamp, TimeDuration
+#include "mozilla/TypeTraits.h"        // for RemoveConst<>::Type
+#include "mozilla/UniquePtr.h"         // for UniquePtr
+#include "mozilla/Variant.h"           // for AsVariant, AsVariantTemporary
+#include "mozilla/Vector.h"            // for Vector, Vector<>::ConstRange
 
-#include <utility>
+#include <algorithm>   // for std::max
+#include <functional>  // for function
+#include <stddef.h>    // for size_t
+#include <stdint.h>    // for uint32_t, uint64_t, int32_t
+#include <string.h>    // for strlen, strcmp
 
-#include "jsfriendapi.h"
-#include "jsnum.h"
+#include "jsapi.h"        // for CallArgs, CallArgsFromVp
+#include "jsfriendapi.h"  // for GetErrorMessage
+#include "jstypes.h"      // for JS_PUBLIC_API
+#include "jsutil.h"       // for Find
 
-#include "builtin/Promise.h"
-#include "debugger/DebuggerMemory.h"
-#include "debugger/DebugScript.h"
-#include "debugger/Environment.h"
-#include "debugger/Frame.h"
-#include "debugger/NoExecute.h"
-#include "debugger/Object.h"
-#include "debugger/Script.h"
-#include "debugger/Source.h"
-#include "frontend/BytecodeCompilation.h"
-#include "frontend/Parser.h"
-#include "gc/FreeOp.h"
-#include "gc/HashUtil.h"
-#include "gc/Marking.h"
-#include "gc/Policy.h"
-#include "gc/PublicIterators.h"
-#include "jit/BaselineDebugModeOSR.h"
-#include "jit/BaselineJIT.h"
-#include "js/CharacterEncoding.h"
-#include "js/Date.h"
-#include "js/Promise.h"
-#include "js/PropertyDescriptor.h"
-#include "js/PropertySpec.h"
-#include "js/SourceText.h"
-#include "js/StableStringChars.h"
-#include "js/UbiNodeBreadthFirst.h"
-#include "js/Vector.h"
-#include "js/Wrapper.h"
-#include "util/Text.h"
-#include "vm/ArgumentsObject.h"
-#include "vm/AsyncFunction.h"
-#include "vm/AsyncIteration.h"
-#include "vm/GeckoProfiler.h"
-#include "vm/Instrumentation.h"
-#include "vm/JSContext.h"
-#include "vm/JSObject.h"
-#include "vm/Realm.h"
-#include "vm/TraceLogging.h"
-#include "vm/WrapperObject.h"
-#include "wasm/WasmInstance.h"
+#include "builtin/Array.h"               // for NewDenseFullyAllocatedArray
+#include "builtin/Promise.h"             // for PromiseObject
+#include "debugger/DebugAPI.h"           // for ResumeMode, DebugAPI
+#include "debugger/DebuggerMemory.h"     // for DebuggerMemory
+#include "debugger/DebugScript.h"        // for DebugScript
+#include "debugger/Environment.h"        // for DebuggerEnvironment
+#include "debugger/Frame.h"              // for DebuggerFrame
+#include "debugger/NoExecute.h"          // for EnterDebuggeeNoExecute
+#include "debugger/Object.h"             // for DebuggerObject
+#include "debugger/Script.h"             // for DebuggerScript
+#include "debugger/Source.h"             // for DebuggerSource
+#include "frontend/BytecodeCompiler.h"   // for CreateScriptSourceObject
+#include "frontend/NameAnalysisTypes.h"  // for ParseGoal, ParseGoal::Script
+#include "frontend/ParseContext.h"       // for UsedNameTracker
+#include "frontend/Parser.h"             // for Parser
+#include "gc/Barrier.h"                  // for GCPtrNativeObject
+#include "gc/FreeOp.h"                   // for FreeOp
+#include "gc/GC.h"                       // for IterateLazyScripts
+#include "gc/GCMarker.h"                 // for GCMarker
+#include "gc/GCRuntime.h"                // for GCRuntime, AutoEnterIteration
+#include "gc/HashUtil.h"                 // for DependentAddPtr
+#include "gc/Marking.h"                  // for IsMarkedUnbarriered, IsMarked
+#include "gc/PublicIterators.h"          // for RealmsIter, CompartmentsIter
+#include "gc/Rooting.h"                  // for RootedNativeObject
+#include "gc/Statistics.h"               // for Statistics::SliceData
+#include "gc/Tracer.h"                   // for TraceEdge
+#include "gc/Zone.h"                     // for Zone
+#include "gc/ZoneAllocator.h"            // for ZoneAllocPolicy
+#include "jit/BaselineDebugModeOSR.h"  // for RecompileOnStackBaselineScriptsForDebugMode
+#include "jit/BaselineJIT.h"           // for FinishDiscardBaselineScript
+#include "jit/Ion.h"                   // for JitContext
+#include "jit/JitScript.h"             // for JitScript
+#include "jit/JSJitFrameIter.h"       // for InlineFrameIterator
+#include "jit/RematerializedFrame.h"  // for RematerializedFrame
+#include "js/Conversions.h"           // for ToBoolean, ToUint32
+#include "js/Debug.h"                 // for Builder::Object, Builder
+#include "js/GCAPI.h"                 // for GarbageCollectionEvent
+#include "js/HeapAPI.h"               // for ExposeObjectToActiveJS
+#include "js/Promise.h"               // for AutoDebuggerJobQueueInterruption
+#include "js/Proxy.h"                 // for PropertyDescriptor
+#include "js/SourceText.h"            // for SourceOwnership, SourceText
+#include "js/StableStringChars.h"     // for AutoStableStringChars
+#include "js/UbiNode.h"               // for Node, RootList, Edge
+#include "js/UbiNodeBreadthFirst.h"   // for BreadthFirst
+#include "js/Warnings.h"              // for AutoSuppressWarningReporter
+#include "js/Wrapper.h"               // for CheckedUnwrapStatic
+#include "util/Text.h"                // for DuplicateString, js_strlen
+#include "vm/ArrayObject.h"           // for ArrayObject
+#include "vm/AsyncFunction.h"         // for AsyncFunctionGeneratorObject
+#include "vm/AsyncIteration.h"        // for AsyncGeneratorObject
+#include "vm/BytecodeUtil.h"          // for JSDVG_IGNORE_STACK
+#include "vm/Compartment.h"           // for CrossCompartmentKey
+#include "vm/EnvironmentObject.h"     // for IsSyntacticEnvironment
+#include "vm/ErrorReporting.h"        // for ReportErrorToGlobal
+#include "vm/GeneratorObject.h"       // for AbstractGeneratorObject
+#include "vm/GlobalObject.h"          // for GlobalObject
+#include "vm/Interpreter.h"           // for Call, ReportIsNotFunction
+#include "vm/Iteration.h"             // for CreateIterResultObject
+#include "vm/JSAtom.h"                // for Atomize, ClassName
+#include "vm/JSContext.h"             // for JSContext
+#include "vm/JSFunction.h"            // for JSFunction
+#include "vm/JSObject.h"              // for JSObject, RequireObject
+#include "vm/ObjectGroup.h"           // for TenuredObject
+#include "vm/ObjectOperations.h"      // for DefineDataProperty
+#include "vm/ProxyObject.h"           // for ProxyObject, JSObject::is
+#include "vm/Realm.h"                 // for AutoRealm, Realm
+#include "vm/Runtime.h"               // for ReportOutOfMemory, JSRuntime
+#include "vm/SavedFrame.h"            // for SavedFrame
+#include "vm/SavedStacks.h"           // for SavedStacks
+#include "vm/Scope.h"                 // for Scope
+#include "vm/StringType.h"            // for JSString, PropertyName
+#include "vm/TraceLogging.h"          // for TraceLoggerForCurrentThread
+#include "vm/TypeInference.h"         // for TypeZone
+#include "vm/WrapperObject.h"         // for CrossCompartmentWrapperObject
+#include "wasm/WasmDebug.h"           // for DebugState
+#include "wasm/WasmInstance.h"        // for Instance
+#include "wasm/WasmJS.h"              // for WasmInstanceObject
+#include "wasm/WasmRealm.h"           // for Realm
+#include "wasm/WasmTypes.h"           // for WasmInstanceObjectVector
 
 #include "debugger/DebugAPI-inl.h"
-#include "debugger/Frame-inl.h"
-#include "debugger/Script-inl.h"
-#include "gc/GC-inl.h"
-#include "gc/WeakMap-inl.h"
-#include "jit/JSJitFrameIter-inl.h"
-#include "vm/Compartment-inl.h"
-#include "vm/GeckoProfiler-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
-#include "vm/Stack-inl.h"
+#include "debugger/Frame-inl.h"    // for DebuggerFrame::hasGenerator
+#include "debugger/Script-inl.h"   // for DebuggerScript::getReferent
+#include "gc/GC-inl.h"             // for ZoneCellIter
+#include "gc/Marking-inl.h"        // for MaybeForwarded
+#include "gc/WeakMap-inl.h"        // for DebuggerWeakMap::trace
+#include "vm/Compartment-inl.h"    // for Compartment::wrap
+#include "vm/GeckoProfiler-inl.h"  // for AutoSuppressProfilerSampling
+#include "vm/JSAtom-inl.h"         // for AtomToId, ValueToId
+#include "vm/JSContext-inl.h"      // for JSContext::check
+#include "vm/JSObject-inl.h"       // for JSObject::isCallable
+#include "vm/JSScript-inl.h"       // for JSScript::isDebuggee, JSScript
+#include "vm/NativeObject-inl.h"  // for NativeObject::ensureDenseInitializedLength
+#include "vm/ObjectOperations-inl.h"  // for GetProperty, HasProperty
+#include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
+#include "vm/Stack-inl.h"             // for AbstractFramePtr::script
+#include "vm/TypeInference-inl.h"     // for AutoEnterAnalysis
+
+namespace js {
+
+namespace frontend {
+class FullParseHandler;
+}
+
+namespace gc {
+struct Cell;
+}
+
+namespace jit {
+class BaselineFrame;
+}
+
+} /* namespace js */
 
 using namespace js;
 

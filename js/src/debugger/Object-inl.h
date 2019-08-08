@@ -7,7 +7,18 @@
 #ifndef debugger_Object_inl_h
 #define debugger_Object_inl_h
 
-#include "debugger/Object.h"
+#include "debugger/Object.h"  // for DebuggerObject
+
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
+
+#include "NamespaceImports.h"  // for Value
+
+#include "builtin/Promise.h"    // for PromiseObject
+#include "debugger/Debugger.h"  // for Debugger
+#include "js/Wrapper.h"         // for CheckedUnwrapStatic
+#include "vm/JSObject.h"        // for JSObject
+
+#include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
 
 inline js::Debugger* js::DebuggerObject::owner() const {
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
