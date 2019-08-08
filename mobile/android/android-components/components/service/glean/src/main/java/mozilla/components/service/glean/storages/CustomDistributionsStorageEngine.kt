@@ -120,7 +120,7 @@ internal open class CustomDistributionsStorageEngineImplementation(
         return getSnapshot(storeName, clearStore)?.let { dataMap ->
             val jsonObj = JSONObject()
             dataMap.forEach {
-                jsonObj.put(it.key, it.value.toJsonObject())
+                jsonObj.put(it.key, it.value.toJsonPayloadObject())
             }
             return jsonObj
         }
@@ -291,6 +291,36 @@ data class CustomDistributionData(
             "range" to JSONArray(arrayOf(rangeMin, rangeMax)),
             "histogram_type" to histogramType.toString().toLowerCase(),
             "values" to values.mapKeys { "${it.key}" },
+            "sum" to sum
+        ))
+    }
+
+    /**
+     * Helper function to build the [CustomDistributionData] into a JSONObject for sending in the
+     * ping payload. Compared to [toJsonObject] which is designed for lossless roundtripping:
+     *
+     *   - this does not include the bucketing parameters
+     *   - all buckets [0, max) are inserted into values
+     */
+    internal fun toJsonPayloadObject(): JSONObject {
+        // Include all buckets [0, max), where max is the maximum bucket with
+        // any value recorded.
+        val contiguousValues = if (!values.isEmpty()) {
+            val bucketMax = values.keys.max()!!
+            val contiguousValues = mutableMapOf<String, Long>()
+            for (bucketMin in buckets) {
+                contiguousValues["$bucketMin"] = values.getOrDefault(bucketMin, 0)
+                if (bucketMin > bucketMax) {
+                    break
+                }
+            }
+            contiguousValues
+        } else {
+            values
+        }
+
+        return JSONObject(mapOf(
+            "values" to contiguousValues,
             "sum" to sum
         ))
     }

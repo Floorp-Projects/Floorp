@@ -201,7 +201,7 @@ class CustomDistributionsStorageEngineTest {
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"${metric.identifier}\":${td.toJsonObject()}}",
+            assertEquals("{\"${metric.identifier}\":${td.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
@@ -225,7 +225,7 @@ class CustomDistributionsStorageEngineTest {
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"telemetry.test_custom_distribution\":${td.toJsonObject()}}",
+            assertEquals("{\"telemetry.test_custom_distribution\":${td.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
@@ -511,7 +511,38 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `toJsonObject correctly converts a CustomDistributionData object`() {
+    fun `toJsonPayloadObject correctly inserts zero buckets`() {
+        // Define a custom distribution metric, which will be stored in "store1".
+        val metric = CustomDistributionMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "test_custom_distribution",
+            sendInPings = listOf("store1"),
+            rangeMin = 0L,
+            rangeMax = 60000L,
+            bucketCount = 100,
+            histogramType = HistogramType.Linear
+        )
+
+        metric.accumulateSamples(listOf(10000L).toLongArray())
+
+        // Make sure that the samples are in the correct buckets
+        val snapshot = metric.testGetValue()
+        val payload = snapshot.toJsonPayloadObject()
+        val payloadValues = payload.getJSONObject("values")
+
+        assertEquals(18, payloadValues.length())
+        assertEquals(1L, payloadValues["9796"])
+        for (key in payloadValues.keys()) {
+            if (key != "9796") {
+                assertEquals(0L, payloadValues[key])
+            }
+        }
+    }
+
+    @Test
+    fun `toJsonObject and toJsonPayloadObject correctly converts a CustomDistributionData object`() {
         // Define a CustomDistributionData object
         val tdd = CustomDistributionData(
             category = "telemetry",
@@ -555,5 +586,24 @@ class CustomDistributionsStorageEngineTest {
             tdd.values[3], jsonValue.getLong("3"))
         assertEquals("JSON sum must match Custom Distribution sum",
             tdd.sum, jsonTdd.getLong("sum"))
+
+        // Convert to JSON object using toJsonObject()
+        val jsonPayload = tdd.toJsonPayloadObject()
+
+        // Verify properties
+        assertEquals(2, jsonPayload.length())
+        val jsonPayloadValue = jsonPayload.getJSONObject("values")
+        assertEquals("JSON values must match Custom Distribution values",
+            0, jsonPayloadValue.getLong("0"))
+        assertEquals("JSON values must match Custom Distribution values",
+            tdd.values[1], jsonPayloadValue.getLong("1"))
+        assertEquals("JSON values must match Custom Distribution values",
+            tdd.values[2], jsonPayloadValue.getLong("2"))
+        assertEquals("JSON values must match Custom Distribution values",
+            tdd.values[3], jsonPayloadValue.getLong("3"))
+        assertEquals("JSON values must match Custom Distribution values",
+            0, jsonPayloadValue.getLong("4"))
+        assertEquals("JSON sum must match Custom Distribution sum",
+            tdd.sum, jsonPayload.getLong("sum"))
     }
 }
