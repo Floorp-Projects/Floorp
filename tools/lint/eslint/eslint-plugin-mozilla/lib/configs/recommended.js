@@ -175,9 +175,18 @@ module.exports = {
     // Disallow unnecessary calls to .bind()
     "no-extra-bind": "error",
 
-    // XXX Bug 1487642 - decide if we want to enable this or not.
     // Disallow fallthrough of case statements
-    "no-fallthrough": "off",
+    "no-fallthrough": [
+      "error",
+      {
+        // The eslint rule doesn't allow for case-insensitive regex option.
+        // The following pattern allows for a dash between "fall through" as
+        // well as alternate spelling of "fall thru". The pattern also allows
+        // for an optional "s" at the end of "fall" ("falls through").
+        commentPattern:
+          "[Ff][Aa][Ll][Ll][Ss]?[\\s-]?([Tt][Hh][Rr][Oo][Uu][Gg][Hh]|[Tt][Hh][Rr][Uu])",
+      },
+    ],
 
     // Disallow assignments to native objects or read-only global variables
     "no-global-assign": "error",
