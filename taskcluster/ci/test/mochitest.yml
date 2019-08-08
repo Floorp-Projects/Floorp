@@ -127,6 +127,7 @@ mochitest-browser-chrome:
             windows10-aarch64/*: 7200
             macosx.*64-ccov/debug: 10800
             linux.*/debug: 5400
+            windows10-64-qr/debug: 5400
             default: 3600
     virtualization:
         by-test-platform:
