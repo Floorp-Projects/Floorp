@@ -68,6 +68,7 @@ class OpusDataDecoder : public MediaDataDecoder,
   Maybe<int64_t> mLastFrameTime;
   AutoTArray<uint8_t, 8> mMappingTable;
   AudioConfig::ChannelLayout::ChannelMap mChannelMap;
+  bool mDefaultPlaybackDeviceMono;
 };
 
 }  // namespace mozilla
