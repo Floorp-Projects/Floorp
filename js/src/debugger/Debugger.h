@@ -1146,55 +1146,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   Debugger& operator=(const Debugger&) = delete;
 };
 
-class DebuggerSource : public NativeObject {
- public:
-  static const Class class_;
-
-  enum {
-    OWNER_SLOT,
-    TEXT_SLOT,
-    RESERVED_SLOTS,
-  };
-
-  static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
-                                 HandleObject debugCtor);
-  static DebuggerSource* create(JSContext* cx, HandleObject proto,
-                                Handle<DebuggerSourceReferent> referent,
-                                HandleNativeObject debugger);
-
-  static void trace(JSTracer* trc, JSObject* obj);
-
-  NativeObject* getReferentRawObject() const;
-  DebuggerSourceReferent getReferent() const;
-
-  static DebuggerSource* check(JSContext* cx, HandleValue v,
-                               const char* fnname);
-  template <typename ReferentT>
-  static DebuggerSource* checkThis(JSContext* cx, const CallArgs& args,
-                                   const char* fnname, const char* refname);
-
-  // JS methods
-  static bool construct(JSContext* cx, unsigned argc, Value* vp);
-  static bool getText(JSContext* cx, unsigned argc, Value* vp);
-  static bool getBinary(JSContext* cx, unsigned argc, Value* vp);
-  static bool getURL(JSContext* cx, unsigned argc, Value* vp);
-  static bool getId(JSContext* cx, unsigned argc, Value* vp);
-  static bool getDisplayURL(JSContext* cx, unsigned argc, Value* vp);
-  static bool getElement(JSContext* cx, unsigned argc, Value* vp);
-  static bool getElementProperty(JSContext* cx, unsigned argc, Value* vp);
-  static bool getIntroductionScript(JSContext* cx, unsigned argc, Value* vp);
-  static bool getIntroductionOffset(JSContext* cx, unsigned argc, Value* vp);
-  static bool getIntroductionType(JSContext* cx, unsigned argc, Value* vp);
-  static bool setSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
-  static bool getSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
-
- private:
-  static const ClassOps classOps_;
-
-  static const JSPropertySpec properties_[];
-  static const JSFunctionSpec methods_[];
-};
-
 /*
  * A Handler represents a Debugger API reflection object's handler function,
  * like a Debugger.Frame's onStep handler. These handler functions are called by
