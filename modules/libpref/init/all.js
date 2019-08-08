@@ -5395,6 +5395,7 @@ pref("browser.search.suggest.enabled", true);
 pref("browser.search.geoSpecificDefaults", false);
 pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
 pref("browser.search.geoip.timeout", 3000);
+pref("browser.search.separatePrivateDefault", false);
 
 #ifdef MOZ_OFFICIAL_BRANDING
 // {moz:official} expands to "official"

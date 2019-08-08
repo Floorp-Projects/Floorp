@@ -177,24 +177,47 @@ const kDefaultenginenamePref = "browser.search.defaultenginename";
 const kTestEngineName = "Test search engine";
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 
-function getDefaultEngineName(isUS) {
+/**
+ * Overrides list.json with test data from the specified location,
+ * e.g. data/list.json.
+ *
+ * @param {string} url
+ *   The resource url to set the location from.
+ */
+function useTestEngineConfig(url = "resource://test/data/") {
+  const resProt = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
+}
+
+/**
+ * Loads the current default engine list.json via parsing the json manually.
+ *
+ * @param {boolean} isUS
+ *   If this is false, the requested locale will be checked, otherwise the
+ *   US region will be used if it exists.
+ * @param {boolean} privateMode
+ *   If this is true, then the engine for private mode is returned.
+ * @returns {string}
+ *   Returns the name of the private engine.
+ */
+function getDefaultEngineName(isUS = false, privateMode = false) {
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   let chan = NetUtil.newChannel({
     uri: "resource://search-extensions/list.json",
     loadUsingSystemPrincipal: true,
   });
+  const settingName = privateMode ? "searchPrivateDefault" : "searchDefault";
   let searchSettings = parseJsonFromStream(chan.open());
-  let defaultEngineName = searchSettings.default.searchDefault;
+  let defaultEngineName = searchSettings.default[settingName];
 
-  if (isUS === undefined) {
+  if (!isUS) {
     isUS = Services.locale.requestedLocale == "en-US" && isUSTimezone();
   }
 
-  if (
-    isUS &&
-    ("US" in searchSettings && "searchDefault" in searchSettings.US)
-  ) {
-    defaultEngineName = searchSettings.US.searchDefault;
+  if (isUS && ("US" in searchSettings && settingName in searchSettings.US)) {
+    defaultEngineName = searchSettings.US[settingName];
   }
   return defaultEngineName;
 }
