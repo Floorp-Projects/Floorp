@@ -1,3 +1,4 @@
+use serde::de;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
 
@@ -25,9 +26,9 @@ pub enum MarionetteResult {
     Null,
     NewWindow(NewWindow),
     WindowRect(WindowRect),
-    Strings(Vec<String>),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     String(String),
+    Strings(Vec<String>),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     WebElement(WebElement),
     WebElements(Vec<WebElement>),
@@ -71,8 +72,13 @@ where
         value: T,
     }
 
-    let w = Wrapper::deserialize(deserializer)?;
-    Ok(w.value)
+    let v = Value::deserialize(deserializer)?;
+    if v.is_object() {
+        let w = serde_json::from_value::<Wrapper<T>>(v).map_err(de::Error::custom)?;
+        Ok(w.value)
+    } else {
+        Err(de::Error::custom("Cannot be deserialized to struct"))
+    }
 }
 
 #[cfg(test)]
