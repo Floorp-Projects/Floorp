@@ -1296,6 +1296,9 @@ class MediaStreamGraph {
   virtual bool OnGraphThreadOrNotRunning() const = 0;
   virtual bool OnGraphThread() const = 0;
 
+  // Intended only for internal assertions. Main thread only.
+  virtual bool Destroyed() const = 0;
+
   /**
    * Sample rate at which this graph runs. For real time graphs, this is
    * the rate of the audio mixer. For offline graphs, this is the rate specified
