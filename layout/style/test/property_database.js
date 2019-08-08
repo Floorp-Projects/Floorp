@@ -7371,6 +7371,9 @@ var gCSSProperties = {
     domProp: "textDecorationSkipInk",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
     initial_values: ["auto"],
     other_values: ["none"],
     invalid_values: [
