@@ -193,10 +193,10 @@ static nsTArray<typename T::KeyVal> GetJSONKeys(const Json::Value* aInput) {
 already_AddRefed<BasePrincipal> BasePrincipal::FromJSON(
     const nsACString& aJSON) {
   Json::Value root;
-  Json::Reader reader;
-  char* jsonString = ToNewCString(aJSON);
-  bool parseSuccess = reader.parse(jsonString, root);
-  free(jsonString);
+  Json::CharReaderBuilder builder;
+  std::unique_ptr<Json::CharReader> const reader(builder.newCharReader());
+  bool parseSuccess =
+      reader->parse(aJSON.BeginReading(), aJSON.EndReading(), &root, nullptr);
   if (!parseSuccess) {
     MOZ_ASSERT(false,
                "Unable to parse string as JSON to deserialize as a principal");
@@ -254,8 +254,8 @@ nsresult BasePrincipal::ToJSON(nsACString& aResult) {
   MOZ_ASSERT(aResult.IsEmpty(), "ToJSON only supports an empty result input");
   aResult.Truncate();
 
-  Json::FastWriter writer;
-  writer.omitEndingLineFeed();
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
   Json::Value innerJSONObject = Json::objectValue;
 
   nsresult rv = PopulateJSONObject(innerJSONObject);
@@ -264,7 +264,7 @@ nsresult BasePrincipal::ToJSON(nsACString& aResult) {
   Json::Value root = Json::objectValue;
   std::string key = std::to_string(Kind());
   root[key] = innerJSONObject;
-  std::string result = writer.write(root);
+  std::string result = Json::writeString(builder, root);
   aResult.Append(result);
   if (aResult.Length() == 0) {
     MOZ_ASSERT(false, "JSON writer failed to output a principal serialization");
