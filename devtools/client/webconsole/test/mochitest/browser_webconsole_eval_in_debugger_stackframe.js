@@ -18,11 +18,11 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Check `foo` value");
-  executeAndWaitForMessage(hud, "foo", "globalFooBug783499", ".result");
+  await executeAndWaitForMessage(hud, "foo", "globalFooBug783499", ".result");
   ok(true, "|foo| value is correct");
 
   info("Assign and check `foo2` value");
-  executeAndWaitForMessage(
+  await executeAndWaitForMessage(
     hud,
     "foo2 = 'newFoo'; window.foo2",
     "newFoo",
@@ -38,7 +38,7 @@ add_task(async function() {
   await openConsole();
 
   info("Check `foo + foo2` value");
-  executeAndWaitForMessage(
+  await executeAndWaitForMessage(
     hud,
     "foo + foo2",
     "globalFooBug783499newFoo",
@@ -55,7 +55,7 @@ add_task(async function() {
   await openConsole();
 
   info("Check `foo + foo2` value when paused");
-  executeAndWaitForMessage(
+  await executeAndWaitForMessage(
     hud,
     "foo + foo2",
     "globalFooBug783499foo2SecondCall",
@@ -71,7 +71,7 @@ add_task(async function() {
   await openConsole();
 
   info("Check `foo + foo2 + foo3` value when paused on a given frame");
-  executeAndWaitForMessage(
+  await executeAndWaitForMessage(
     hud,
     "foo + foo2 + foo3",
     "fooFirstCallnewFoofoo3FirstCall",
@@ -79,7 +79,7 @@ add_task(async function() {
   );
   ok(true, "`foo + foo2 + foo3` from `firstCall()`");
 
-  executeAndWaitForMessage(
+  await executeAndWaitForMessage(
     hud,
     "foo = 'abba'; foo3 = 'bug783499'; foo + foo3",
     "abbabug783499",
