@@ -45,8 +45,7 @@ class ContentProcessManager final {
   /**
    * Remove the browser parent by the given tab id.
    */
-  void UnregisterRemoteFrame(const ContentParentId& aChildCpId,
-                             const TabId& aChildTabId);
+  void UnregisterRemoteFrame(const TabId& aChildTabId);
 
   /**
    * Get the ContentParentId of the parent of the given tab id.
