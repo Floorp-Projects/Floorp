@@ -19,11 +19,11 @@
 }
 
 #contentBlockingTrackingProtectionCheckbox > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/trackers.svg");
+  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image.svg");
 }
 
 #contentBlockingTrackingProtectionCheckbox[checked] > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/trackers-disabled.svg");
+  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image-disabled.svg");
 }
 
 #contentBlockingBlockCookiesCheckbox > .checkbox-label-box {
@@ -263,7 +263,12 @@
 }
 
 .content-blocking-trackers-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/trackers-disabled.svg");
+  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image-disabled.svg");
+  margin-inline-end: 5px;
+}
+
+.content-blocking-social-media-image {
+  list-style-image: url("chrome://browser/skin/controlcenter/socialblock-disabled.svg");
   margin-inline-end: 5px;
 }
 
