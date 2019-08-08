@@ -160,17 +160,9 @@ void GPUParent::NotifyDeviceReset() {
   Unused << SendNotifyDeviceReset(data);
 }
 
-PAPZInputBridgeParent* GPUParent::AllocPAPZInputBridgeParent(
+already_AddRefed<PAPZInputBridgeParent> GPUParent::AllocPAPZInputBridgeParent(
     const LayersId& aLayersId) {
-  APZInputBridgeParent* parent = new APZInputBridgeParent(aLayersId);
-  parent->AddRef();
-  return parent;
-}
-
-bool GPUParent::DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor) {
-  APZInputBridgeParent* parent = static_cast<APZInputBridgeParent*>(aActor);
-  parent->Release();
-  return true;
+  return MakeAndAddRef<APZInputBridgeParent>(aLayersId);
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvInit(
