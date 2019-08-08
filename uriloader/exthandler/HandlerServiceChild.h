@@ -13,7 +13,7 @@ namespace mozilla {
 
 class HandlerServiceChild final : public mozilla::dom::PHandlerServiceChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING(HandlerServiceChild)
+  NS_INLINE_DECL_REFCOUNTING(HandlerServiceChild, final)
   HandlerServiceChild() {}
 
  private:

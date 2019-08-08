@@ -10,7 +10,7 @@ include protocol PChannelDiverter;
 namespace mozilla {
 namespace dom {
 
-protocol PExternalHelperApp
+refcounted protocol PExternalHelperApp
 {
   manager PContent;
 

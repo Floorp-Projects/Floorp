@@ -871,7 +871,7 @@ class ContentParent final : public PContentParent,
   bool DeallocPPSMContentDownloaderParent(
       PPSMContentDownloaderParent* aDownloader);
 
-  PExternalHelperAppParent* AllocPExternalHelperAppParent(
+  already_AddRefed<PExternalHelperAppParent> AllocPExternalHelperAppParent(
       const Maybe<URIParams>& aUri,
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       const nsCString& aMimeContentType, const nsCString& aContentDisposition,
@@ -879,8 +879,6 @@ class ContentParent final : public PContentParent,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
       const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser);
-
-  bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
   mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
       PExternalHelperAppParent* actor, const Maybe<URIParams>& uri,
