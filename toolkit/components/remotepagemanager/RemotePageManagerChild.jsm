@@ -59,6 +59,9 @@ class ChildMessagePort extends MessagePort {
     Cu.exportFunction(this.getFxAccountsEndpoint.bind(this), window, {
       defineAs: "RPMGetFxAccountsEndpoint",
     });
+    Cu.exportFunction(this.recordTelemetryEvent.bind(this), window, {
+      defineAs: "RPMRecordTelemetryEvent",
+    });
 
     // Send a message for load events
     let loadListener = () => {
