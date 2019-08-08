@@ -1308,6 +1308,7 @@ void DocAccessible::ContentInserted(nsIContent* aStartChildNode,
 }
 
 bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
+  bool insert = false;
   // If we already have an accessible, check if we need to remove it, recreate
   // it, or keep it in place.
   Accessible* acc = GetAccessible(aRoot);
@@ -1349,7 +1350,19 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // If there is no current accessible, and the node has a frame, or is
     // display:contents, schedule it for insertion.
     if (aRoot->GetPrimaryFrame() || nsCoreUtils::IsDisplayContents(aRoot)) {
-      return true;
+      // This may be a new subtree, the insertion process will recurse through
+      // its descendants.
+      if (!GetAccessibleOrDescendant(aRoot)) {
+        return true;
+      }
+
+      // Content is not an accessible, but has accessible descendants.
+      // We schedule this container for insertion strictly for the case where it
+      // itself now needs an accessible. We will still need to recurse into the
+      // descendant content to prune accessibles, and in all likelyness to
+      // insert accessibles since accessible insertions will likeley get missed
+      // in an existing subtree.
+      insert = true;
     }
   }
 
@@ -1368,11 +1381,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     }
   }
 
-  // If we get here we either already have an accessible we don't want to touch,
-  // or the content does not have a frame and is not display:contents.
-  MOZ_ASSERT(acc || (!aRoot->GetPrimaryFrame() &&
-                     !nsCoreUtils::IsDisplayContents(aRoot)));
-  return false;
+  return insert;
 }
 
 void DocAccessible::RecreateAccessible(nsIContent* aContent) {
