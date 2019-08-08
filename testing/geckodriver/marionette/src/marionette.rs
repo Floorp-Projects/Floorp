@@ -3,9 +3,20 @@ use serde::{Deserialize, Serialize};
 use crate::common::BoolValue;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[allow(non_camel_case_types)]
+pub enum AppStatus {
+    eAttemptQuit,
+    eConsiderQuit,
+    eForceQuit,
+    eRestart,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
     #[serde(rename = "Marionette:AcceptConnections")]
     AcceptConnections(BoolValue),
+    #[serde(rename = "Marionette:Quit")]
+    DeleteSession { flags: Vec<AppStatus> },
     #[serde(rename = "Marionette:GetContext")]
     GetContext,
     #[serde(rename = "Marionette:GetScreenOrientation")]
@@ -24,6 +35,14 @@ mod tests {
             &Command::AcceptConnections(BoolValue::new(false)),
             json!({"Marionette:AcceptConnections": {"value": false }}),
         );
+    }
+
+    #[test]
+    fn test_json_command_delete_session() {
+        let data = &Command::DeleteSession {
+            flags: vec![AppStatus::eForceQuit],
+        };
+        assert_ser_de(data, json!({"Marionette:Quit": {"flags": ["eForceQuit"]}}));
     }
 
     #[test]
