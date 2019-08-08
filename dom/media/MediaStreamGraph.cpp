@@ -1016,6 +1016,11 @@ bool MediaStreamGraphImpl::OnGraphThread() const {
   return mDriver->OnThread();
 }
 
+bool MediaStreamGraphImpl::Destroyed() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return !mSelfRef;
+}
+
 bool MediaStreamGraphImpl::ShouldUpdateMainThread() {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
   if (mRealtime) {
@@ -3512,6 +3517,7 @@ AudioCaptureStream* MediaStreamGraph::CreateAudioCaptureStream(
 }
 
 void MediaStreamGraph::AddStream(MediaStream* aStream) {
+  MOZ_DIAGNOSTIC_ASSERT(!Destroyed(), "Can't add stream to destroyed graph");
   NS_ADDREF(aStream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   aStream->SetGraphImpl(graph);
