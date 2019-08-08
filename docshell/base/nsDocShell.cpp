@@ -308,7 +308,7 @@ static void DecreasePrivateDocShellCount() {
 
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
     : nsDocLoader(),
-      mContentWindowID(NextWindowID()),
+      mContentWindowID(nsContentUtils::GenerateWindowId()),
       mBrowsingContext(aBrowsingContext),
       mForcedCharset(nullptr),
       mParentCharset(nullptr),
