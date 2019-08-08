@@ -6058,6 +6058,7 @@ var CombinedStopReload = {
         if (event.button == 0 && !this.stop.disabled) {
           this._stopClicked = true;
         }
+        break;
       case "animationend": {
         if (
           event.target.classList.contains("toolbarbutton-animatable-image") &&
