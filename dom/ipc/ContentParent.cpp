@@ -4563,11 +4563,6 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyTabDestroying(
   return IPC_OK();
 }
 
-nsTArray<TabContext> ContentParent::GetManagedTabContext() {
-  return ContentProcessManager::GetSingleton()->GetTabContextByContentProcess(
-      this->ChildID());
-}
-
 mozilla::docshell::POfflineCacheUpdateParent*
 ContentParent::AllocPOfflineCacheUpdateParent(
     const URIParams& aManifestURI, const URIParams& aDocumentURI,
