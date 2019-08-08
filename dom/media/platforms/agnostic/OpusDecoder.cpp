@@ -35,7 +35,9 @@ OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
       mDecodedHeader(false),
       mPaddingDiscarded(false),
       mFrames(0),
-      mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP) {}
+      mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP),
+      mDefaultPlaybackDeviceMono(aParams.mOptions.contains(
+          CreateDecoderParams::Option::DefaultPlaybackDeviceMono)) {}
 
 OpusDataDecoder::~OpusDataDecoder() {
   if (mOpusDecoder) {
@@ -99,8 +101,7 @@ RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
   // needs to be disabled when the output is downmixed to mono. Playback number
   // of channels are set in AudioSink, using the same method
   // `DecideAudioPlaybackChannels()`, and triggers downmix if needed.
-  if (IsDefaultPlaybackDeviceMono() ||
-      DecideAudioPlaybackChannels(mInfo) == 1) {
+  if (mDefaultPlaybackDeviceMono || DecideAudioPlaybackChannels(mInfo) == 1) {
     opus_multistream_decoder_ctl(mOpusDecoder,
                                  OPUS_SET_PHASE_INVERSION_DISABLED(1));
   }

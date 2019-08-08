@@ -88,7 +88,14 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
   if (VorbisDataDecoder::IsVorbis(config.mMimeType)) {
     m = new VorbisDataDecoder(aParams);
   } else if (OpusDataDecoder::IsOpus(config.mMimeType)) {
-    m = new OpusDataDecoder(aParams);
+    CreateDecoderParams params(aParams);
+    // Check IsDefaultPlaybackDeviceMono here and set the option in
+    // mOptions so OpusDataDecoder doesn't have to do it later (in case
+    // it is running on RDD).
+    if (IsDefaultPlaybackDeviceMono()) {
+      params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
+    }
+    m = new OpusDataDecoder(params);
   } else if (WaveDataDecoder::IsWave(config.mMimeType)) {
     m = new WaveDataDecoder(aParams);
   }
