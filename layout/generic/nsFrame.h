@@ -639,7 +639,6 @@ class nsFrame : public nsBox {
       mozilla::LayoutFrameType type = aFrame->Type();
       if (type == mozilla::LayoutFrameType::Table ||
           type == mozilla::LayoutFrameType::TableCell ||
-          type == mozilla::LayoutFrameType::BCTableCell ||
           type == mozilla::LayoutFrameType::SVGOuterSVG ||
           type == mozilla::LayoutFrameType::SVGInnerSVG ||
           type == mozilla::LayoutFrameType::SVGSymbol ||

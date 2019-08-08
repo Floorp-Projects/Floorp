@@ -3037,8 +3037,7 @@ static int8_t GetRequiredInnerTextLineBreakCount(nsIFrame* aFrame) {
 
 static bool IsLastCellOfRow(nsIFrame* aFrame) {
   LayoutFrameType type = aFrame->Type();
-  if (type != LayoutFrameType::TableCell &&
-      type != LayoutFrameType::BCTableCell) {
+  if (type != LayoutFrameType::TableCell) {
     return true;
   }
   for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {

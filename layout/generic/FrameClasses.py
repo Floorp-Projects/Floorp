@@ -8,7 +8,7 @@ from FrameClass import Frame, AbstractFrame, LEAF, NOT_LEAF, DYNAMIC_LEAF
 FRAME_CLASSES = [
     Frame("BRFrame", "Br", LEAF),
     Frame("DetailsFrame", "Details", NOT_LEAF),
-    Frame("nsBCTableCellFrame", "BCTableCell", NOT_LEAF),
+    Frame("nsBCTableCellFrame", "TableCell", NOT_LEAF),
     Frame("nsBackdropFrame", "Backdrop", LEAF),
     Frame("nsBlockFrame", "Block", NOT_LEAF),
     Frame("nsBox", "None", NOT_LEAF),
