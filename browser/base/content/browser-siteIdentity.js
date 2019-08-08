@@ -789,6 +789,9 @@ var gIdentityHandler = {
           PrivateBrowsingUtils.isWindowPrivate(window));
       let className = warnOnInsecure ? "notSecure" : "unknownIdentity";
       this._identityBox.className = className;
+      tooltip = warnOnInsecure
+        ? gNavigatorBundle.getString("identity.notSecure.tooltip")
+        : "";
 
       let warnTextOnInsecure =
         this._insecureConnectionTextEnabled ||
