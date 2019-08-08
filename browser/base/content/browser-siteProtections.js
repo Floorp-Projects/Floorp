@@ -1222,6 +1222,13 @@ var gProtectionsHandler = {
     return SocialTracking.sessionPageLoad;
   },
 
+  get noTrackersDetectedDescription() {
+    delete this.noTrackersDetectedDescription;
+    return (this.noTrackersDetectedDescription = document.getElementById(
+      "protections-popup-no-trackers-found-description"
+    ));
+  },
+
   get blockingSectionDescription() {
     delete this.blockingSectionDescription;
     return (this.blockingSectionDescription = document.getElementById(
@@ -1546,6 +1553,7 @@ var gProtectionsHandler = {
 
     let anyDetected = false;
     let anyBlocking = false;
+    this.noTrackersDetectedDescription.hidden = false;
     this.blockingSectionDescription.hidden = true;
     this.notBlockingSectionDescription.hidden = true;
 
@@ -1566,6 +1574,10 @@ var gProtectionsHandler = {
       }
       anyDetected = anyDetected || detected;
       anyBlocking = anyBlocking || blocker.activated;
+    }
+
+    if (anyDetected) {
+      this.noTrackersDetectedDescription.hidden = true;
     }
 
     // Check whether the user has added an exception for this site.

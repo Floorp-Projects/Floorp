@@ -598,6 +598,13 @@ description#identity-popup-content-verifier,
 
 /* Content Blocking categories */
 
+#protections-popup-no-trackers-found-description {
+  margin: 4.85em 7.25em;
+  font-size: 1.1em;
+  text-align: center;
+  color: #737373;
+}
+
 #protections-popup-content {
   padding: 0;
   margin: 0 0 10px 0;
@@ -611,6 +618,7 @@ description#identity-popup-content-verifier,
   font-weight: 600;
 }
 
+:root[lwt-popup-brighttext] #protections-popup-no-trackers-found-description,
 :root[lwt-popup-brighttext] #protections-popup-blocking-section-header,
 :root[lwt-popup-brighttext] #protections-popup-not-blocking-section-header {
   color: #f9f9fa;
