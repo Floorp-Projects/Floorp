@@ -42,7 +42,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 components.sessionUseCases.loadUrl)
             .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
             .addSearchProvider(
-                components.searchEngineManager.getDefaultSearchEngine(requireContext()),
+                requireContext(),
+                components.searchEngineManager,
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS)

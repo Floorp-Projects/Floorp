@@ -24,6 +24,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * This class provides access to a centralized registry of search engines.
  */
+@Suppress("TooManyFunctions")
 class SearchEngineManager(
     private val providers: List<SearchEngineProvider> = listOf(
             AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())),
@@ -62,13 +63,22 @@ class SearchEngineManager(
     /**
      * Gets the localized list of search engines and a default search engine from providers.
      *
-     * If no call to load() has been made then calling this method will perform a load.
+     * If no previous call was made to [load] or [loadAsync] then calling this method will
+     * perform a blocking load.
      */
-    @Synchronized
     private fun getSearchEngineList(context: Context): SearchEngineList = runBlocking {
-        (deferredSearchEngines ?: loadAsync(context))
-            .await()
+        getSearchEngineListAsync(context)
     }
+
+    /**
+     * Gets the localized list of search engines and a default search engine from providers.
+     *
+     * If no previous call was made to [load] or [loadAsync] then calling this method will perform
+     * a load asynchronously.
+     */
+    private suspend fun getSearchEngineListAsync(context: Context): SearchEngineList =
+        (deferredSearchEngines ?: loadAsync(context))
+                .await()
 
     /**
      * Returns all search engines.
@@ -76,6 +86,13 @@ class SearchEngineManager(
     @Synchronized
     fun getSearchEngines(context: Context): List<SearchEngine> {
         return getSearchEngineList(context).list
+    }
+
+    /**
+     * Returns all search engines.
+     */
+    suspend fun getSearchEnginesAsync(context: Context): List<SearchEngine> {
+        return getSearchEngineListAsync(context).list
     }
 
     /**
@@ -100,12 +117,41 @@ class SearchEngineManager(
     }
 
     /**
+     * Returns the default search engine.
+     *
+     * If defaultSearchEngine has not been set, the default engine is set by the search provider,
+     * (e.g. as set in `list.json`). If that is not set, then the first search engine listed is
+     * returned.
+     *
+     * Optionally a name can be passed to this method (e.g. from the user's preferences). If
+     * a matching search engine was loaded then this search engine will be returned instead.
+     */
+    suspend fun getDefaultSearchEngineAsync(context: Context, name: String = EMPTY): SearchEngine {
+        val searchEngineList = getSearchEngineListAsync(context)
+        val providedDefault = getProvidedDefaultSearchEngineAsync(context)
+
+        return when (name) {
+            EMPTY -> defaultSearchEngine ?: providedDefault
+            else -> searchEngineList.list.find { it.name == name } ?: providedDefault
+        }
+    }
+
+    /**
      * Returns the provided default search engine or the first search engine if the default
      * is not set.
      */
     @Synchronized
     fun getProvidedDefaultSearchEngine(context: Context): SearchEngine {
         val searchEngineList = getSearchEngineList(context)
+        return searchEngineList.default ?: searchEngineList.list[0]
+    }
+
+    /**
+     * Returns the provided default search engine or the first search engine if the default
+     * is not set.
+     */
+    suspend fun getProvidedDefaultSearchEngineAsync(context: Context): SearchEngine {
+        val searchEngineList = getSearchEngineListAsync(context)
         return searchEngineList.default ?: searchEngineList.list[0]
     }
 
