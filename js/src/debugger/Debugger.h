@@ -632,7 +632,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * An entry in this table exists if and only if the Debugger.Frame's
    * GENERATOR_INFO_SLOT is set.
    */
-  typedef DebuggerWeakMap<JSObject, DebuggerFrame> GeneratorWeakMap;
+  typedef DebuggerWeakMap<AbstractGeneratorObject, DebuggerFrame>
+      GeneratorWeakMap;
   GeneratorWeakMap generatorFrames;
 
   /* An ephemeral map from JSScript* to Debugger.Script instances. */
@@ -646,7 +647,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   // The map from debuggee source script objects to their Debugger.Source
   // instances.
-  typedef DebuggerWeakMap<JSObject, DebuggerSource, true> SourceWeakMap;
+  typedef DebuggerWeakMap<ScriptSourceObject, DebuggerSource, true>
+      SourceWeakMap;
   SourceWeakMap sources;
 
   // The map from debuggee objects to their Debugger.Object instances.
