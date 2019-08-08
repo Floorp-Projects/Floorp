@@ -13,18 +13,15 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellationObserver
-import mozilla.components.lib.state.ext.observe
-import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.FxaPanicException
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -86,16 +83,14 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                             LastSyncTime.Never
                         else
                             LastSyncTime.Success(getLastSynced(requireContext())),
-                    deviceName = ""
+                    deviceName = requireComponents.backgroundServices.defaultDeviceName(requireContext())
                 )
             )
         }
 
-        accountSettingsStore.observe(this) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                updateLastSyncTimePref(it)
-                updateDeviceName(it)
-            }
+        consumeFrom(accountSettingsStore) {
+            updateLastSyncTimePref(it)
+            updateDeviceName(it)
         }
 
         accountManager = requireComponents.backgroundServices.accountManager
@@ -103,8 +98,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         accountSettingsInteractor = AccountSettingsInteractor(
             findNavController(),
-            ::onSyncNow,
-            ::makeSnackbar,
+            ::syncNow,
+            ::checkValidName,
             ::syncDeviceName,
             accountSettingsStore
         )
@@ -153,7 +148,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         )
     }
 
-    private fun onSyncNow() {
+    private fun syncNow() {
         lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
@@ -166,7 +161,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun makeSnackbar(newValue: String): Boolean {
+    private fun checkValidName(newValue: String): Boolean {
         // The network request requires a nonempty string, so don't persist any changes if the user inputs one.
         if (newValue.trim().isEmpty()) {
             FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
@@ -179,17 +174,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private fun syncDeviceName(newValue: String) {
         // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
-        lifecycleScope.launch(IO) {
-            try {
-                accountManager.authenticatedAccount()
-                    ?.deviceConstellation()
-                    ?.setDeviceNameAsync(newValue)
-                    ?.await()
-            } catch (e: FxaPanicException) {
-                throw e
-            } catch (e: FxaException) {
-                Logger.error("Setting device name failed.", e)
-            }
+        lifecycleScope.launch(Main) {
+            accountManager.authenticatedAccount()
+                ?.deviceConstellation()
+                ?.setDeviceNameAsync(newValue)
+                ?.await()
         }
     }
 

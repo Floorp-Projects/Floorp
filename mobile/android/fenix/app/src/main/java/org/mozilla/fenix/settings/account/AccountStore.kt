@@ -28,8 +28,8 @@ sealed class LastSyncTime {
  * The state for the Account Settings Screen
  */
 data class AccountSettingsState(
-    val lastSyncedDate: LastSyncTime,
-    val deviceName: String
+    val lastSyncedDate: LastSyncTime = LastSyncTime.Never,
+    val deviceName: String = ""
 ) : State
 
 /**

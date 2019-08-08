@@ -55,7 +55,7 @@ class BackgroundServices(
         const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
     }
 
-    private val defaultDeviceName = context.getString(
+    fun defaultDeviceName(context: Context): String = context.getString(
         R.string.default_device_name,
         context.getString(R.string.app_name),
         Build.MANUFACTURER,
@@ -64,7 +64,7 @@ class BackgroundServices(
 
     private val serverConfig = ServerConfig.release(CLIENT_ID, REDIRECT_URL)
     private val deviceConfig = DeviceConfig(
-        name = defaultDeviceName,
+        name = defaultDeviceName(context),
         type = DeviceType.MOBILE,
 
         // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
