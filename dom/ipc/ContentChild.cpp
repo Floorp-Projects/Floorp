@@ -2219,18 +2219,6 @@ bool ContentChild::DeallocPPSMContentDownloaderChild(
   return true;
 }
 
-PHandlerServiceChild* ContentChild::AllocPHandlerServiceChild() {
-  auto* actor = new HandlerServiceChild();
-  actor->AddRef();
-  return actor;
-}
-
-bool ContentChild::DeallocPHandlerServiceChild(
-    PHandlerServiceChild* aHandlerServiceChild) {
-  static_cast<HandlerServiceChild*>(aHandlerServiceChild)->Release();
-  return true;
-}
-
 media::PMediaChild* ContentChild::AllocPMediaChild() {
   return media::AllocPMediaChild();
 }
