@@ -7,16 +7,27 @@
 #ifndef debugger_Environment_h
 #define debugger_Environment_h
 
-#include "debugger/Debugger.h"
-#include "gc/Rooting.h"
-#include "js/Class.h"
-#include "js/PropertySpec.h"
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
-#include "vm/GlobalObject.h"
-#include "vm/NativeObject.h"
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
+#include "mozilla/Attributes.h"  // for MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // for Maybe
+
+#include "NamespaceImports.h"   // for Value, HandleId, HandleObject
+#include "debugger/Debugger.h"  // for Env
+#include "gc/Rooting.h"         // for HandleDebuggerEnvironment
+#include "js/PropertySpec.h"    // for JSFunctionSpec, JSPropertySpec
+#include "js/RootingAPI.h"      // for Handle, MutableHandle
+#include "vm/NativeObject.h"    // for NativeObject
+#include "vm/Scope.h"           // for ScopeKind
+
+class JSObject;
+class JSTracer;
+struct JSContext;
 
 namespace js {
+
+class GlobalObject;
+struct Class;
+struct ClassOps;
 
 enum class DebuggerEnvironmentType { Declarative, With, Object };
 

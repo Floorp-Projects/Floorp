@@ -7,7 +7,20 @@
 #ifndef debugger_Script_inl_h
 #define debugger_Script_inl_h
 
-#include "debugger/Script.h"
+#include "debugger/Script.h"  // for DebuggerScript
+
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
+#include "mozilla/Variant.h"     // for AsVariant
+
+#include <utility>  // for move
+
+#include "debugger/Debugger.h"  // for DebuggerScriptReferent
+#include "gc/Cell.h"            // for Cell
+#include "vm/JSScript.h"        // for BaseScript, JSScript, LazyScript
+#include "vm/NativeObject.h"    // for NativeObject
+#include "wasm/WasmJS.h"        // for WasmInstanceObject
+
+class JSObject;
 
 js::gc::Cell* js::DebuggerScript::getReferentCell() const {
   return static_cast<gc::Cell*>(getPrivate());
