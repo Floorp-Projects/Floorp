@@ -480,10 +480,6 @@ class ContentParent final : public PContentParent,
                             nsICycleCollectorLogSink* aSink,
                             nsIDumpGCAndCCLogsCallback* aCallback);
 
-  mozilla::ipc::IPCResult RecvUnregisterRemoteFrame(
-      const TabId& aTabId, const ContentParentId& aCpId,
-      const bool& aMarkedDestroying);
-
   mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                   const ContentParentId& aCpId);
 

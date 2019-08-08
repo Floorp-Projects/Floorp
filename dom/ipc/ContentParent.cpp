@@ -1171,11 +1171,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   // BrowsingContextGroup.
   aBrowsingContext->Group()->EnsureSubscribed(constructorSender);
 
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
-                           aContext.AsIPCTabContext(),
-                           constructorSender->ChildID());
-
   if (constructorSender) {
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
     docShell->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -1217,6 +1212,9 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     if (NS_WARN_IF(!childEp.IsValid())) {
       return nullptr;
     }
+
+    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+    cpm->RegisterRemoteFrame(browserParent);
 
     nsCOMPtr<nsIPrincipal> initialPrincipal =
         NullPrincipal::Create(aContext.OriginAttributesRef());
@@ -3303,6 +3301,8 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     ManagedEndpoint<PWindowGlobalParent>&& aWindowEp, const TabId& aTabId,
     const IPCTabContext& aContext, const WindowGlobalInit& aInitialWindowInit,
     const uint32_t& aChromeFlags) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   if (!CanOpenBrowser(aContext)) {
     return IPC_FAIL(this, "CanOpenBrowser Failed");
   }
@@ -3334,23 +3334,6 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     }
   }
 
-  if (openerTabId > 0 ||
-      aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    if (!XRE_IsParentProcess()) {
-      return IPC_FAIL(this, "Not in Parent Process");
-    }
-
-    // The creation of PBrowser was triggered from content process through
-    // either window.open() or service worker's openWindow().
-    // We need to register remote frame with the child generated tab id.
-    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-    if (!cpm->RegisterRemoteFrame(aTabId, openerCpId, openerTabId, aContext,
-                                  ChildID())) {
-      return IPC_FAIL(this, "RegisterRemoteFrame Failed");
-    }
-  }
-
   // And because we're allocating a remote browser, of course the
   // window is remote.
   chromeFlags |= nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
@@ -3375,6 +3358,19 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
                                        do_AddRef(parent).take()))) {
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
+  }
+
+  // XXX: Why are we checking these requirements? It seems we should register
+  // the created frame unconditionally?
+  if (openerTabId > 0 ||
+      aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
+    // The creation of PBrowser was triggered from content process through
+    // either window.open() or service worker's openWindow().
+    // We need to register remote frame with the child generated tab id.
+    auto* cpm = ContentProcessManager::GetSingleton();
+    if (!cpm->RegisterRemoteFrame(parent)) {
+      return IPC_FAIL(this, "RegisterRemoteFrame Failed");
+    }
   }
 
   // The ref here is released in DeallocPWindowGlobalParent.
@@ -4552,28 +4548,18 @@ void ContentParent::NotifyRebuildFontList() {
 void ContentParent::UnregisterRemoteFrame(const TabId& aTabId,
                                           const ContentParentId& aCpId,
                                           bool aMarkedDestroying) {
-  if (XRE_IsParentProcess()) {
-    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-    ContentParent* cp = cpm->GetContentProcessById(aCpId);
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
-    if (!cp) {
-      return;
-    }
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  ContentParent* cp = cpm->GetContentProcessById(aCpId);
 
-    cp->NotifyTabDestroyed(aTabId, aMarkedDestroying);
-
-    ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(aCpId, aTabId);
-  } else {
-    ContentChild::GetSingleton()->SendUnregisterRemoteFrame(aTabId, aCpId,
-                                                            aMarkedDestroying);
+  if (!cp) {
+    return;
   }
-}
 
-mozilla::ipc::IPCResult ContentParent::RecvUnregisterRemoteFrame(
-    const TabId& aTabId, const ContentParentId& aCpId,
-    const bool& aMarkedDestroying) {
-  UnregisterRemoteFrame(aTabId, aCpId, aMarkedDestroying);
-  return IPC_OK();
+  cp->NotifyTabDestroyed(aTabId, aMarkedDestroying);
+
+  ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(aCpId, aTabId);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyTabDestroying(
