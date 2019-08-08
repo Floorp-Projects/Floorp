@@ -14,10 +14,8 @@ browser/branding/aurora/pref/firefox-branding.js
 browser/branding/nightly/pref/firefox-branding.js
 browser/branding/official/pref/firefox-branding.js
 browser/branding/unofficial/pref/firefox-branding.js
-devtools/client/netmonitor/launchpad.js
 devtools/client/preferences/debugger.js
 devtools/client/preferences/devtools-client.js
-devtools/client/webconsole/test/mocha-test-setup.js
 devtools/client/webide/preferences/webide.js
 devtools/shared/preferences/devtools-shared.js
 devtools/startup/preferences/devtools-startup.js
