@@ -133,13 +133,13 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   // using transactions to set them, as we haven't been attached yet.
   context->mName = aName;
   context->mOpenerId = aOpener ? aOpener->Id() : 0;
-  context->mCrossOriginPolicy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
-  context->mInheritedCrossOriginPolicy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
+  context->mEmbedderPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
+  context->mInheritedEmbedderPolicy = nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   BrowsingContext* inherit = aParent ? aParent : aOpener;
   if (inherit) {
     context->mOpenerPolicy = inherit->mOpenerPolicy;
-    context->mInheritedCrossOriginPolicy = inherit->mCrossOriginPolicy;
+    context->mInheritedEmbedderPolicy = inherit->mEmbedderPolicy;
   }
 
   Register(context);
