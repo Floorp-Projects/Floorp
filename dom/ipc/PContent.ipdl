@@ -1054,11 +1054,6 @@ parent:
 
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
-    /** Clear RemoteFrameInfo of the given tab id. */
-    async UnregisterRemoteFrame(TabId tabId,
-                                ContentParentId cpId,
-                                bool aMarkedDestroying);
-
     /**
      * Tell the chrome process there is a destruction of PBrowser(Tab)
      */
