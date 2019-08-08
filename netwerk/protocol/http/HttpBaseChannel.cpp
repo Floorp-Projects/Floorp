@@ -4278,6 +4278,27 @@ void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
 
 void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
 
+nsresult HttpBaseChannel::GetResponseEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy) {
+  if (!mResponseHead) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsILoadInfo::CrossOriginEmbedderPolicy policy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
+
+  nsAutoCString content;
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
+                                     content);
+
+  if (content.EqualsLiteral("require-corp")) {
+    policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
+  }
+
+  *aResponseEmbedderPolicy = policy;
+  return NS_OK;
+}
+
 NS_IMETHODIMP HttpBaseChannel::GetCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
   if (!mResponseHead) {
@@ -4325,6 +4346,18 @@ NS_IMETHODIMP HttpBaseChannel::GetCrossOriginOpenerPolicy(
     policy = nsILoadInfo::OPENER_POLICY_SAME_SITE;
     if (allowOutgoing) {
       policy = nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
+    }
+  }
+
+  // Step 9 in obtain a cross-origin opener-policy
+  // https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
+  if (policy == nsILoadInfo::OPENER_POLICY_SAME_ORIGIN) {
+    nsILoadInfo::CrossOriginEmbedderPolicy coep =
+        nsILoadInfo::EMBEDDER_POLICY_NULL;
+    if (NS_SUCCEEDED(GetResponseEmbedderPolicy(&coep)) &&
+        coep == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
+      policy =
+          nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
     }
   }
 

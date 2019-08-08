@@ -7479,27 +7479,6 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   return NS_OK;
 }
 
-nsresult nsHttpChannel::GetResponseEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy) {
-  if (!mResponseHead) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsILoadInfo::CrossOriginEmbedderPolicy policy =
-      nsILoadInfo::EMBEDDER_POLICY_NULL;
-
-  nsAutoCString content;
-  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
-                                     content);
-
-  if (content.EqualsLiteral("require-corp")) {
-    policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
-  }
-
-  *aResponseEmbedderPolicy = policy;
-  return NS_OK;
-}
-
 // https://mikewest.github.io/corpp/#process-navigation-response
 nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
   nsresult rv;
