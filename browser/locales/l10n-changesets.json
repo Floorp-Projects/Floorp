@@ -1124,7 +1124,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "9645ed74d9b2"
+        "revision": "96a5f058ae64"
     },
     "oc": {
         "platforms": [
@@ -1566,6 +1566,6 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "eea9ed443311"
+        "revision": "1a3f12719d4c"
     }
 }
