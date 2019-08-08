@@ -47,6 +47,41 @@ add_task(async function test_once_invalid() {
   await checkArgs("not string", "about:blank", {
     "browser.startup.homepage_override.once": { url: 5 },
   });
+
+  await checkArgs("not https", "about:blank", {
+    "browser.startup.homepage_override.once": {
+      url: "http://www.mozilla.org/",
+    },
+  });
+
+  await checkArgs("not portless", "about:blank", {
+    "browser.startup.homepage_override.once": {
+      url: "https://www.mozilla.org:123/",
+    },
+  });
+
+  await checkArgs("invalid protocol", "about:blank", {
+    "browser.startup.homepage_override.once": {
+      url: "data:text/plain,hello world",
+    },
+  });
+
+  await checkArgs("invalid domain", "about:blank", {
+    "browser.startup.homepage_override.once": {
+      url: "https://wwwmozilla.org/",
+    },
+  });
+
+  await checkArgs(
+    "invalid second domain",
+    "https://valid.firefox.com/|https://mozilla.org/",
+    {
+      "browser.startup.homepage_override.once": {
+        url:
+          "https://valid.firefox.com|https://invalidfirefox.com|https://mozilla.org",
+      },
+    }
+  );
 });
 
 add_task(async function test_once() {
