@@ -817,6 +817,12 @@ fn try_convert_to_marionette_message(
             },
         )),
         DismissAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::DismissAlert)),
+        ElementClear(ref e) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::ElementClear(e.to_marionette()?),
+        )),
+        ElementClick(ref e) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::ElementClick(e.to_marionette()?),
+        )),
         ExecuteAsyncScript(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ExecuteAsyncScript(x.to_marionette()?),
         )),
@@ -870,6 +876,8 @@ fn try_convert_to_marionette_message(
             MarionetteWebDriverCommand::GetWindowRect,
         )),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        GoBack => Some(Command::WebDriver(MarionetteWebDriverCommand::GoBack)),
+        GoForward => Some(Command::WebDriver(MarionetteWebDriverCommand::GoForward)),
         IsDisplayed(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::IsDisplayed(
             x.to_marionette()?,
         ))),
@@ -949,8 +957,6 @@ impl MarionetteCommand {
         } else {
             let (opt_name, opt_parameters) = match msg.command {
                 Status => panic!("Got status command that should already have been handled"),
-                ElementClear(ref x) => (Some("WebDriver:ElementClear"), Some(x.to_marionette())),
-                ElementClick(ref x) => (Some("WebDriver:ElementClick"), Some(x.to_marionette())),
                 ElementSendKeys(ref e, ref x) => {
                     let mut data = Map::new();
                     data.insert("id".to_string(), Value::String(e.to_string()));
@@ -996,8 +1002,6 @@ impl MarionetteCommand {
                 }
                 GetPageSource => (Some("WebDriver:GetPageSource"), None),
                 GetTitle => (Some("WebDriver:GetTitle"), None),
-                GoBack => (Some("WebDriver:Back"), None),
-                GoForward => (Some("WebDriver:Forward"), None),
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
