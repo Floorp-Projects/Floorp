@@ -78,8 +78,7 @@ bool ContentProcessManager::RegisterRemoteFrame(BrowserParent* aChildBp) {
   return !entry;
 }
 
-void ContentProcessManager::UnregisterRemoteFrame(
-    const ContentParentId& aChildCpId, const TabId& aChildTabId) {
+void ContentProcessManager::UnregisterRemoteFrame(const TabId& aChildTabId) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ALWAYS_TRUE(mBrowserParentMap.Remove(aChildTabId));

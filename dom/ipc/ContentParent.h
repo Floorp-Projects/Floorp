@@ -362,10 +362,6 @@ class ContentParent final : public PContentParent,
 
   jsipc::CPOWManager* GetCPOWManager() override;
 
-  static void UnregisterRemoteFrame(const TabId& aTabId,
-                                    const ContentParentId& aCpId,
-                                    bool aMarkedDestroying);
-
   // This method can be called on any thread.
   void RegisterRemoteWorkerActor();
 
