@@ -3482,8 +3482,9 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
       return frame->generatorScript() == &dst.as<JSScript>() &&
              dbg->generatorFrames.hasEntry(genObj, src);
     }
-    return dst.is<JSObject>() &&
-           dbg->generatorFrames.hasEntry(&dst.as<JSObject>(), src);
+    return dst.is<AbstractGeneratorObject>() &&
+           dbg->generatorFrames.hasEntry(&dst.as<AbstractGeneratorObject>(),
+                                         src);
   }
   if (src->is<DebuggerObject>()) {
     return dst.is<JSObject>() &&
@@ -6042,18 +6043,19 @@ DebuggerScript* Debugger::newDebuggerScript(
   return DebuggerScript::create(cx, proto, referent, debugger);
 }
 
-template <typename Wrapper, typename Referent, typename Map>
-Wrapper* Debugger::wrapVariantReferent(
+template <typename Map>
+typename Map::WrapperType* Debugger::wrapVariantReferent(
     JSContext* cx, Map& map,
-    Handle<typename Wrapper::ReferentVariant> referent) {
+    Handle<typename Map::WrapperType::ReferentVariant> referent) {
   cx->check(object);
 
-  Handle<Referent> untaggedReferent = referent.template as<Referent>();
+  Handle<typename Map::ReferentType*> untaggedReferent =
+      referent.template as<typename Map::ReferentType*>();
   MOZ_ASSERT(cx->compartment() != untaggedReferent->compartment());
 
   DependentAddPtr<Map> p(cx, map, untaggedReferent);
   if (!p) {
-    Wrapper* wrapper = newVariantWrapper(cx, referent);
+    typename Map::WrapperType* wrapper = newVariantWrapper(cx, referent);
     if (!wrapper) {
       return nullptr;
     }
@@ -6064,7 +6066,7 @@ Wrapper* Debugger::wrapVariantReferent(
     }
   }
 
-  return &p->value()->template as<Wrapper>();
+  return &p->value()->template as<typename Map::WrapperType>();
 }
 
 DebuggerScript* Debugger::wrapVariantReferent(
@@ -6087,24 +6089,19 @@ DebuggerScript* Debugger::wrapVariantReferent(
       Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
       Rooted<DebuggerScriptReferent> lazyScriptReferent(cx, lazyScript.get());
 
-      obj = wrapVariantReferent<DebuggerScript, LazyScript*, LazyScriptWeakMap>(
-          cx, lazyScripts, lazyScriptReferent);
+      obj = wrapVariantReferent(cx, lazyScripts, lazyScriptReferent);
       MOZ_ASSERT_IF(obj, obj->getReferent() == lazyScriptReferent);
       return obj;
     } else {
       // If the JSScript doesn't have corresponding LazyScript, the script
       // is not lazifiable, and we can safely use JSScript as referent.
-      obj = wrapVariantReferent<DebuggerScript, JSScript*, ScriptWeakMap>(
-          cx, scripts, referent);
+      obj = wrapVariantReferent(cx, scripts, referent);
     }
   } else if (referent.is<LazyScript*>()) {
-    obj = wrapVariantReferent<DebuggerScript, LazyScript*, LazyScriptWeakMap>(
-        cx, lazyScripts, referent);
+    obj = wrapVariantReferent(cx, lazyScripts, referent);
   } else {
         referent.template as<WasmInstanceObject*>();
-        obj = wrapVariantReferent<DebuggerScript, WasmInstanceObject*,
-                                  WasmInstanceScriptWeakMap>(
-            cx, wasmInstanceScripts, referent);
+        obj = wrapVariantReferent(cx, wasmInstanceScripts, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6142,13 +6139,9 @@ DebuggerSource* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerSourceReferent> referent) {
   DebuggerSource* obj;
   if (referent.is<ScriptSourceObject*>()) {
-    obj =
-        wrapVariantReferent<DebuggerSource, ScriptSourceObject*, SourceWeakMap>(
-            cx, sources, referent);
+    obj = wrapVariantReferent(cx, sources, referent);
   } else {
-    obj = wrapVariantReferent<DebuggerSource, WasmInstanceObject*,
-                              WasmInstanceSourceWeakMap>(
-        cx, wasmInstanceSources, referent);
+    obj = wrapVariantReferent(cx, wasmInstanceSources, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
