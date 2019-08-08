@@ -34,5 +34,5 @@ function run_test()
     g.stopMe(doc.createEvent("MouseEvent"));
   } + ")()");
 
-  dbg.removeAllDebuggees();
+  dbg.enabled = false;
 }
