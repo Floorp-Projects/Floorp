@@ -1671,13 +1671,13 @@ CanvasRenderingContext2D::GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType) {
     *aOutAlphaType = (mOpaque ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
   }
 
-  if (!mBufferProvider) {
-    if (!EnsureTarget()) {
-      MOZ_ASSERT(
-          mTarget == sErrorTarget,
-          "On EnsureTarget failure mTarget should be set to sErrorTarget.");
-      return mTarget->Snapshot();
-    }
+  // For GetSurfaceSnapshot we always call EnsureTarget even if mBufferProvider
+  // already exists, otherwise we get performance issues. See bug 1567054.
+  if (!EnsureTarget()) {
+    MOZ_ASSERT(
+        mTarget == sErrorTarget,
+        "On EnsureTarget failure mTarget should be set to sErrorTarget.");
+    return mTarget->Snapshot();
   }
 
   // The concept of BorrowSnapshot seems a bit broken here, but the original
