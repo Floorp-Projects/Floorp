@@ -49,12 +49,6 @@ class ContentProcessManager final {
                              const TabId& aChildTabId);
 
   /**
-   * Get all TabContext which are inside the given content process.
-   */
-  nsTArray<TabContext> GetTabContextByContentProcess(
-      const ContentParentId& aChildCpId);
-
-  /**
    * Get the ContentParentId of the parent of the given tab id.
    */
   ContentParentId GetTabProcessId(const TabId& aChildTabId);

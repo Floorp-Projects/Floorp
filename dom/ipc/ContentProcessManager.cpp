@@ -85,26 +85,6 @@ void ContentProcessManager::UnregisterRemoteFrame(
   MOZ_ALWAYS_TRUE(mBrowserParentMap.Remove(aChildTabId));
 }
 
-nsTArray<TabContext> ContentProcessManager::GetTabContextByContentProcess(
-    const ContentParentId& aChildCpId) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsTArray<TabContext> tabContextArray;
-  ContentParent* contentParent = mContentParentMap.Get(aChildCpId);
-  if (!contentParent) {
-    ASSERT_UNLESS_FUZZING();
-    return tabContextArray;
-  }
-
-  const auto& browsers = contentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    BrowserParent* tab = BrowserParent::GetFrom(iter.Get()->GetKey());
-    tabContextArray.AppendElement(TabContext(*tab));
-  }
-
-  return tabContextArray;
-}
-
 ContentParentId ContentProcessManager::GetTabProcessId(
     const TabId& aChildTabId) {
   MOZ_ASSERT(NS_IsMainThread());
