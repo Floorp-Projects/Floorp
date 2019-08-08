@@ -7546,12 +7546,13 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
   return NS_OK;
 }
 
-// https://fetch.spec.whatwg.org/#cross-origin-resource-policy-header
+// https://mikewest.github.io/corpp/#corp-check
 nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   if (!StaticPrefs::browser_tabs_remote_useCORP()) {
     return NS_OK;
   }
 
+  // Fetch 4.5.9
   uint32_t corsMode;
   MOZ_ALWAYS_SUCCEEDS(GetCorsMode(&corsMode));
   if (corsMode != nsIHttpChannelInternal::CORS_MODE_NO_CORS) {
@@ -7574,6 +7575,20 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy,
                                      content);
 
+  // 3.2.1.6 If policy is null, and embedder policy is "require-corp", set
+  // policy to "same-origin".
+  if (StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
+    RefPtr<mozilla::dom::BrowsingContext> ctx;
+    mLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
+
+    // Note that we treat invalid value as "cross-origin", which spec indicates.
+    // We might want to make that stricter.
+    if ((content.IsEmpty() && ctx &&
+        ctx->GetEmbedderPolicy() == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP)) {
+      content = NS_LITERAL_CSTRING("same-origin");
+    }
+  }
+
   if (content.IsEmpty()) {
     return NS_OK;
   }
@@ -7582,7 +7597,8 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
   nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
       this, getter_AddRefs(channelOrigin));
 
-  // Cross-Origin-Resource-Policy = %s"same-origin" / %s"same-site"
+  // Cross-Origin-Resource-Policy = %s"same-origin" / %s"same-site" /
+  // %s"cross-origin"
   if (content.EqualsLiteral("same-origin")) {
     if (!channelOrigin->Equals(mLoadInfo->LoadingPrincipal())) {
       return NS_ERROR_DOM_CORP_FAILED;
