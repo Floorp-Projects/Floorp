@@ -2676,7 +2676,8 @@ void nsTableFrame::InitChildReflowInput(ReflowInput& aReflowInput) {
 void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
                               nsIFrame* aKidFrame,
                               const ReflowInput& aKidReflowInput,
-                              nsPoint aKidPosition,
+                              const mozilla::LogicalPoint& aKidPosition,
+                              const nsSize& aContainerSize,
                               ReflowOutput& aKidDesiredSize,
                               const nsRect& aOriginalKidRect,
                               const nsRect& aOriginalKidVisualOverflow) {
@@ -2685,7 +2686,8 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
 
   // Place and size the child
   FinishReflowChild(aKidFrame, PresContext(), aKidDesiredSize, &aKidReflowInput,
-                    aKidPosition.x, aKidPosition.y, ReflowChildFlags::Default);
+                    wm, aKidPosition, aContainerSize,
+                    ReflowChildFlags::Default);
 
   InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
                        isFirstReflow);
@@ -2861,14 +2863,9 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
               footerStatus);
   footerReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
 
-  PlaceChild(aReflowInput, aTfoot, footerReflowInput,
-             // We subtract desiredSize.PhysicalSize() from containerSize here
-             // to account for the fact that in RTL modes, the origin is
-             // on the right-hand side so we're not simply converting a
-             // point, we're also swapping the child's origin side.
-             kidPosition.GetPhysicalPoint(
-                 wm, containerSize - desiredSize.PhysicalSize()),
-             desiredSize, origTfootRect, origTfootVisualOverflow);
+  PlaceChild(aReflowInput, aTfoot, footerReflowInput, kidPosition,
+             containerSize, desiredSize, origTfootRect,
+             origTfootVisualOverflow);
 }
 
 // Reflow the children based on the avail size and reason in aReflowInput
@@ -3052,10 +3049,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           if (childX + 1 < rowGroups.Length()) {
             nsIFrame* nextRowGroupFrame = rowGroups[childX + 1];
             if (nextRowGroupFrame) {
-              PlaceChild(aReflowInput, kidFrame, kidReflowInput,
-                         kidPosition.GetPhysicalPoint(
-                             wm, containerSize - desiredSize.PhysicalSize()),
-                         desiredSize, oldKidRect, oldKidVisualOverflow);
+              PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
+                         containerSize, desiredSize, oldKidRect,
+                         oldKidVisualOverflow);
               if (allowRepeatedFooter) {
                 PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
               } else if (tfoot && tfoot->IsRepeatable()) {
@@ -3081,10 +3077,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
             aLastChildReflowed = prevKidFrame;
             break;
           } else {  // we can't push so lets make clear how much space we need
-            PlaceChild(aReflowInput, kidFrame, kidReflowInput,
-                       kidPosition.GetPhysicalPoint(
-                           wm, containerSize - desiredSize.PhysicalSize()),
-                       desiredSize, oldKidRect, oldKidVisualOverflow);
+            PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
+                       containerSize, desiredSize, oldKidRect,
+                       oldKidVisualOverflow);
             aLastChildReflowed = kidFrame;
             if (allowRepeatedFooter) {
               PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
@@ -3108,10 +3103,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       }
 
       // Place the child
-      PlaceChild(aReflowInput, kidFrame, kidReflowInput,
-                 kidPosition.GetPhysicalPoint(
-                     wm, containerSize - desiredSize.PhysicalSize()),
-                 desiredSize, oldKidRect, oldKidVisualOverflow);
+      PlaceChild(aReflowInput, kidFrame, kidReflowInput, kidPosition,
+                 containerSize, desiredSize, oldKidRect, oldKidVisualOverflow);
 
       // Remember where we just were in case we end up pushing children
       prevKidFrame = kidFrame;
