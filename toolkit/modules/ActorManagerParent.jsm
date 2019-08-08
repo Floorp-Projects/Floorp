@@ -179,28 +179,6 @@ let ACTORS = {
     allFrames: true,
   },
 
-  Zoom: {
-    parent: {
-      moduleURI: "resource://gre/actors/ZoomParent.jsm",
-      messages: [
-        "FullZoomChange",
-        "TextZoomChange",
-        "ZoomChangeUsingMouseWheel",
-      ],
-    },
-    child: {
-      moduleURI: "resource://gre/actors/ZoomChild.jsm",
-      events: {
-        FullZoomChange: {},
-        TextZoomChange: {},
-        ZoomChangeUsingMouseWheel: {},
-      },
-      messages: ["FullZoom", "TextZoom"],
-    },
-
-    allFrames: true,
-  },
-
   // UAWidgetsDateTimeBox is a _duplicate_ of UAWidgetsChild
   // that handles only the datetime box widget. The original
   // intention to port all all UAWidgets to JSWindowActor
@@ -415,6 +393,18 @@ let LEGACY_ACTORS = {
         "WebNavigation:SetOriginAttributes",
         "WebNavigation:Stop",
       ],
+    },
+  },
+
+  Zoom: {
+    child: {
+      module: "resource://gre/actors/ZoomChild.jsm",
+      events: {
+        FullZoomChange: {},
+        TextZoomChange: {},
+        ZoomChangeUsingMouseWheel: {},
+      },
+      messages: ["FullZoom", "TextZoom"],
     },
   },
 };
