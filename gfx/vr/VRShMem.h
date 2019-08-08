@@ -22,11 +22,11 @@ namespace mozilla {
 namespace gfx {
 class VRShMem final {
  public:
-  VRShMem(volatile VRExternalShmem* aShmem, bool aVRProcessEnabled,
-          bool aIsParentProcess);
+  VRShMem(volatile VRExternalShmem* aShmem, bool aRequiresMutex);
   ~VRShMem() = default;
 
-  void CreateShMem();
+  void CreateShMem(bool aCreateOnSharedMemory);
+  void CreateShMemForAndroid();
   void ClearShMem();
   void CloseShMem();
 
@@ -47,15 +47,36 @@ class VRShMem final {
   void PullWindowState(VRWindowState& aState);
 
   bool HasExternalShmem() const { return mExternalShmem != nullptr; }
+  bool IsSharedExternalShmem() const { return mIsSharedExternalShmem; }
   volatile VRExternalShmem* GetExternalShmem() const;
   bool IsDisplayStateShutdown() const;
 
  private:
+  bool IsCreatedOnSharedMemory() const;
+
+  // mExternalShmem can have one of three sources:
+  // - Allocated outside of this class on the heap and passed in via
+  //   constructor, or acquired via GeckoVRManager (for GeckoView scenario).
+  //   This is usually for scenarios where there is no VR process for cross-
+  //   proc communication, and VRService is receiving the object.
+  //   --> mIsSharedExternalShmem == true, IsCreatedOnSharedMemory() == false
+  //   --> [Windows 7, Mac, Android, Linux]
+  // - Allocated inside this class on the heap. This is usually for scenarios
+  //   where there is no VR process, and VRManager is creating the object.
+  //   --> mIsSharedExternalShmem == false, IsCreatedOnSharedMemory() == false
+  //   --> [Windows 7, Mac, Linux]
+  // - Allocated inside this class on shared memory. This is usually for
+  //   scenarios where there is a VR process and cross-process communication
+  //   is necessary
+  //   --> mIsSharedExternalShmem == false, IsCreatedOnSharedMemory() == true
+  //   --> [Windows 10 with VR process enabled]
   volatile VRExternalShmem* mExternalShmem = nullptr;
-  bool mVRProcessEnabled;
+  // This member is true when mExternalShmem was allocated externally, via
+  // being passed into the constructor or accessed via GeckoVRManager
+  bool mIsSharedExternalShmem;
 
 #if defined(XP_WIN)
-  bool mIsParentProcess = false;
+  bool mRequiresMutex;
 #endif
 
 #if defined(XP_MACOSX)

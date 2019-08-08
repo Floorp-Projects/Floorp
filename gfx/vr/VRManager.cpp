@@ -152,10 +152,10 @@ VRManager::VRManager()
 
 void VRManager::OpenShmem() {
   if (mShmem == nullptr) {
-    mShmem = (new VRShMem(nullptr, mVRProcessEnabled, XRE_IsParentProcess()));
-    mShmem->CreateShMem();
+    mShmem = new VRShMem(nullptr, true /*aRequiresMutex*/);
 
 #if !defined(MOZ_WIDGET_ANDROID)
+    mShmem->CreateShMem(mVRProcessEnabled /*aCreateOnSharedMemory*/);
     // The VR Service accesses all hardware from a separate process
     // and replaces the other VRManager when enabled.
     // If the VR process is not enabled, create an in-process VRService.
@@ -165,6 +165,8 @@ void VRManager::OpenShmem() {
       mServiceHost->CreateService(mShmem->GetExternalShmem());
       return;
     }
+#else
+    mShmem->CreateShMemForAndroid();
 #endif
   } else {
     mShmem->ClearShMem();

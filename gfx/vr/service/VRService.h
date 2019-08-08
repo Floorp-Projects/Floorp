@@ -36,6 +36,8 @@ class VRService {
   explicit VRService(volatile VRExternalShmem* aShmem);
   ~VRService();
 
+  void StopInternal(bool aFromDtor);
+
   bool InitShmem();
   void PushState(const mozilla::gfx::VRSystemState& aState);
   void PullState(mozilla::gfx::VRBrowserState& aState);
