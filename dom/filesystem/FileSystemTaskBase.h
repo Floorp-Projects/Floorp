@@ -102,7 +102,7 @@ class FileSystemTaskChildBase : public PFileSystemRequestChild {
   friend class PFileSystemRequestChild;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(FileSystemTaskChildBase)
+  NS_INLINE_DECL_REFCOUNTING(FileSystemTaskChildBase, final)
 
   /*
    * Start the task. It will dispatch all the information to the parent process,
