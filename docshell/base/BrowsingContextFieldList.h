@@ -7,11 +7,18 @@
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
+// By defualt, synced fields may only be set by the currently active process,
+// however a field can be marked as `MOZ_BC_FIELD_RACY` to relax this
+// restriction, and allow it to be set from any process.
 //
-// Process restrictions may be added by declaring a method `MaySet{name}` on
-// `BrowsingContext`.
-MOZ_BC_FIELD(Name, nsString)
-MOZ_BC_FIELD(Closed, bool)
+// Process restrictions on racy fields may be added in `WillSet{name}`
+// validators.
+#ifndef MOZ_BC_FIELD_RACY
+#  define MOZ_BC_FIELD_RACY MOZ_BC_FIELD
+#endif
+
+MOZ_BC_FIELD_RACY(Name, nsString)
+MOZ_BC_FIELD_RACY(Closed, bool)
 MOZ_BC_FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)
 MOZ_BC_FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)
 
@@ -21,6 +28,7 @@ MOZ_BC_FIELD(OpenerId, uint64_t)
 
 // Toplevel browsing contexts only. This field controls whether the browsing
 // context is currently considered to be activated by a gesture.
-MOZ_BC_FIELD(IsActivatedByUserGesture, bool)
+MOZ_BC_FIELD_RACY(IsActivatedByUserGesture, bool)
 
 #undef MOZ_BC_FIELD
+#undef MOZ_BC_FIELD_RACY
