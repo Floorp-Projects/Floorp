@@ -28,5 +28,10 @@ export CARGOFLAGS='--verbose --frozen'
 export FREETYPE_CMAKE_GENERATOR=Ninja
 cmd.exe /c 'ci-scripts\windows-tests.cmd'
 
-# Diagnostic for bug 1571986.
-tasklist -M
+# For some reason, by the time the task finishes, and when run-task
+# starts its cleanup, there is still a vctip.exe (MSVC telemetry-related
+# process) running and using a dll that run-task can't then delete.
+# "For some reason", because the same doesn't happen with other tasks.
+# In fact, this used to happen with older versions of MSVC for other
+# tasks, and stopped when upgrading to 15.8.4...
+taskkill -f -im vctip.exe || true
