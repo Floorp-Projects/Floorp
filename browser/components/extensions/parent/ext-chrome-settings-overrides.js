@@ -264,11 +264,12 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     ]);
   }
 
-  static onUpdate(id, manifest) {
+  static async onUpdate(id, manifest) {
     let haveHomepage =
       manifest &&
       manifest.chrome_settings_overrides &&
       manifest.chrome_settings_overrides.homepage;
+
     if (!haveHomepage) {
       ExtensionPreferencesManager.removeSetting(id, "homepage_override");
     }
@@ -277,8 +278,23 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       manifest &&
       manifest.chrome_settings_overrides &&
       manifest.chrome_settings_overrides.search_provider;
+
     if (!haveSearchProvider) {
       this.removeSearchSettings(id);
+    } else if (
+      !!haveSearchProvider.is_default &&
+      (await ExtensionSettingsStore.initialize()) &&
+      ExtensionSettingsStore.hasSetting(
+        id,
+        DEFAULT_SEARCH_STORE_TYPE,
+        DEFAULT_SEARCH_SETTING_NAME
+      )
+    ) {
+      // is_default has been removed, but we still have a setting. Remove it.
+      chrome_settings_overrides.processDefaultSearchSetting(
+        "removeSetting",
+        id
+      );
     }
   }
 
@@ -292,9 +308,6 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   async onManifestEntry(entryName) {
     let { extension } = this;
     let { manifest } = extension;
-
-    await ExtensionSettingsStore.initialize();
-
     let homepageUrl = manifest.chrome_settings_overrides.homepage;
 
     // If this is a page we ignore, just skip the homepage setting completely.
@@ -380,8 +393,9 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
               icon: this.extension.iconURL,
               currentEngine: defaultEngine.name,
               newEngine: engineName,
-              respond(allow) {
+              async respond(allow) {
                 if (allow) {
+                  await ExtensionSettingsStore.initialize();
                   ExtensionSettingsStore.addSetting(
                     extension.id,
                     DEFAULT_SEARCH_STORE_TYPE,
@@ -406,18 +420,6 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         // only sets default for install or enable.
         this.setDefault(engineName);
       }
-    } else if (
-      ExtensionSettingsStore.hasSetting(
-        extension.id,
-        DEFAULT_SEARCH_STORE_TYPE,
-        DEFAULT_SEARCH_SETTING_NAME
-      )
-    ) {
-      // is_default has been removed, but we still have a setting. Remove it.
-      chrome_settings_overrides.processDefaultSearchSetting(
-        "removeSetting",
-        extension.id
-      );
     }
   }
 
@@ -425,6 +427,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let { extension } = this;
     if (extension.startupReason === "ADDON_INSTALL") {
       let defaultEngine = await Services.search.getDefault();
+      await ExtensionSettingsStore.initialize();
       let item = await ExtensionSettingsStore.addSetting(
         extension.id,
         DEFAULT_SEARCH_STORE_TYPE,
@@ -468,6 +471,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     try {
       let engines = await Services.search.addEnginesFromExtension(extension);
       if (engines.length > 0) {
+        await ExtensionSettingsStore.initialize();
         await ExtensionSettingsStore.addSetting(
           extension.id,
           DEFAULT_SEARCH_STORE_TYPE,
