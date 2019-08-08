@@ -203,8 +203,7 @@
 }
 
 #identity-popup-mainView-panel-header,
-#protections-popup-mainView-panel-header,
-#protections-popup-siteNotWorkingView-footer {
+#protections-popup-mainView-panel-header {
   padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
@@ -920,6 +919,10 @@ description#identity-popup-content-verifier,
   );
 }
 
+#protections-popup-siteNotWorkingView-header {
+  border-bottom: 1px solid var(--panel-separator-color);
+}
+
 #protections-popup-siteNotWorkingView-body,
 .protections-popup-tp-switch-label-box,
 .protections-popup-tp-switch-box {
@@ -987,10 +990,6 @@ description#identity-popup-content-verifier,
 
 #protections-popup-siteNotWorkingView-body-issue-list {
   padding-inline-start: 1em;
-}
-
-#protections-popup-siteNotWorkingView-footer {
-  border-top: 1px solid var(--panel-separator-color);
 }
 
 /* Protection popup footer categories */

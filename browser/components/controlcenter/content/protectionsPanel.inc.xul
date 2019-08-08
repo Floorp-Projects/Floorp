@@ -148,7 +148,7 @@
                            oncommand="gProtectionsHandler.onTPSwitchCommand();" />
           </vbox>
         </hbox>
-        <vbox id="protections-popup-siteNotWorkingView-body" flex="1">
+        <vbox id="protections-popup-siteNotWorkingView-body">
           <label>&protections.siteNotWorkingView.header;</label>
           <label>
             <html:ul id="protections-popup-siteNotWorkingView-body-issue-list">
@@ -159,14 +159,11 @@
               <html:li>&protections.siteNotWorkingView.issueList.videos;</html:li>
             </html:ul>
           </label>
-        </vbox>
-        <hbox id="protections-popup-siteNotWorkingView-footer"
-              class="panel-footer">
-          <label id="protections-popup-siteNotWorkingView-siteStillBroken" flex="1">&protections.siteNotWorkingView.siteStillBroken.label;</label>
+          <label id="protections-popup-siteNotWorkingView-siteStillBroken">&protections.siteNotWorkingView.siteStillBroken.label;</label>
           <label id="protections-popup-siteNotWorkingView-sendReport"
             onclick="gProtectionsHandler.showSendReportView();"
             class="text-link">&protections.siteNotWorkingView.sendReport.label;</label>
-        </hbox>
+        </vbox>
     </panelview>
 
     <!-- Trackers SubView -->
