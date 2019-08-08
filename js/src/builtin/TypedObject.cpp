@@ -52,28 +52,6 @@ static void ReportCannotConvertTo(JSContext* cx, HandleValue fromValue,
                             InformalValueTypeName(fromValue), toType);
 }
 
-template <typename T>
-BigInt* CreateBigInt(JSContext* cx, T i);
-template <>
-BigInt* CreateBigInt<int64_t>(JSContext* cx, int64_t i) {
-  return BigInt::createFromInt64(cx, i);
-}
-template <>
-BigInt* CreateBigInt<uint64_t>(JSContext* cx, uint64_t u) {
-  return BigInt::createFromUint64(cx, u);
-}
-
-template <typename T>
-T ConvertBigInt(BigInt* bi);
-template <>
-int64_t ConvertBigInt<int64_t>(BigInt* bi) {
-  return BigInt::toInt64(bi);
-}
-template <>
-uint64_t ConvertBigInt<uint64_t>(BigInt* bi) {
-  return BigInt::toUint64(bi);
-}
-
 template <class T>
 static inline T* ToObjectIf(HandleValue value) {
   if (!value.isObject()) {
@@ -255,38 +233,25 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<ScalarTypeDescr*> descr(cx, &args.callee().as<ScalarTypeDescr>());
   ScalarTypeDescr::Type type = descr->type();
 
+  double number;
+  if (!ToNumber(cx, args[0], &number)) {
+    return false;
+  }
+
+  if (type == Scalar::Uint8Clamped) {
+    number = ClampDoubleToUint8(number);
+  }
+
   switch (type) {
-#define NUMBER_CALL(constant_, type_, name_)        \
+#define SCALARTYPE_CALL(constant_, type_, name_)    \
   case constant_: {                                 \
-    double number;                                  \
-    if (!ToNumber(cx, args[0], &number)) {          \
-      return false;                                 \
-    }                                               \
-    if (type == Scalar::Uint8Clamped) {             \
-      number = ClampDoubleToUint8(number);          \
-    }                                               \
     type_ converted = ConvertScalar<type_>(number); \
     args.rval().setNumber((double)converted);       \
     return true;                                    \
   }
-    JS_FOR_EACH_SCALAR_NUMBER_TYPE_REPR(NUMBER_CALL)
-#undef NUMBER_CALL
-#define BIGINT_CALL(constant_, type_, name_)          \
-  case constant_: {                                   \
-    BigInt* bi = ToBigInt(cx, args[0]);               \
-    if (!bi) {                                        \
-      return false;                                   \
-    }                                                 \
-    type_ converted = ConvertBigInt<type_>(bi);       \
-    BigInt* ret = CreateBigInt<type_>(cx, converted); \
-    if (!ret) {                                       \
-      return false;                                   \
-    }                                                 \
-    args.rval().setBigInt(ret);                       \
-    return true;                                      \
-  }
-    JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(BIGINT_CALL)
-#undef BIGINT_CALL
+
+    JS_FOR_EACH_SCALAR_TYPE_REPR(SCALARTYPE_CALL)
+#undef SCALARTYPE_CALL
     case Scalar::Int64:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH();
@@ -303,8 +268,7 @@ TypeDescr* GlobalObject::getOrCreateScalarTypeDescr(
       slot = TypedObjectModuleObject::Int32Desc;
       break;
     case Scalar::Int64:
-      slot = TypedObjectModuleObject::Int64Desc;
-      break;
+      MOZ_CRASH("No Int64 support yet");
     case Scalar::Float32:
       slot = TypedObjectModuleObject::Float32Desc;
       break;
@@ -1416,11 +1380,6 @@ bool GlobalObject::initTypedObjectModule(JSContext* cx,
     return false;
   }
   module->initReservedSlot(TypedObjectModuleObject::Int32Desc, typeDescr);
-
-  if (!JS_GetProperty(cx, module, "int64", &typeDescr)) {
-    return false;
-  }
-  module->initReservedSlot(TypedObjectModuleObject::Int64Desc, typeDescr);
 
   if (!JS_GetProperty(cx, module, "float32", &typeDescr)) {
     return false;
@@ -2545,7 +2504,7 @@ bool js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#define JS_STORE_NUMBER_CLASS_IMPL(_constant, T, _name)                     \
+#define JS_STORE_SCALAR_CLASS_IMPL(_constant, T, _name)                     \
   bool js::StoreScalar##T::Func(JSContext* cx, unsigned argc, Value* vp) {  \
     CallArgs args = CallArgsFromVp(argc, vp);                               \
     MOZ_ASSERT(args.length() == 3);                                         \
@@ -2563,29 +2522,6 @@ bool js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp) {
     T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));      \
     double d = args[2].toNumber();                                          \
     *target = ConvertScalar<T>(d);                                          \
-    args.rval().setUndefined();                                             \
-    return true;                                                            \
-  }
-
-#define JS_STORE_BIGINT_CLASS_IMPL(_constant, T, _name)                     \
-  bool js::StoreScalar##T::Func(JSContext* cx, unsigned argc, Value* vp) {  \
-    CallArgs args = CallArgsFromVp(argc, vp);                               \
-    MOZ_ASSERT(args.length() == 3);                                         \
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>()); \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                  \
-    TypedObject& typedObj = args[0].toObject().as<TypedObject>();           \
-    int32_t offset = args[1].toInt32();                                     \
-    BigInt* bi = ToBigInt(cx, args[2]);                                     \
-    if (!bi) {                                                              \
-      return false;                                                         \
-    }                                                                       \
-                                                                            \
-    /* Should be guaranteed by the typed objects API: */                    \
-    MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                               \
-                                                                            \
-    JS::AutoCheckCannotGC nogc(cx);                                         \
-    T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));      \
-    *target = ConvertBigInt<T>(bi);                                         \
     args.rval().setUndefined();                                             \
     return true;                                                            \
   }
@@ -2616,7 +2552,7 @@ bool js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp) {
     return true;                                                            \
   }
 
-#define JS_LOAD_NUMBER_CLASS_IMPL(_constant, T, _name)                      \
+#define JS_LOAD_SCALAR_CLASS_IMPL(_constant, T, _name)                      \
   bool js::LoadScalar##T::Func(JSContext* cx, unsigned argc, Value* vp) {   \
     CallArgs args = CallArgsFromVp(argc, vp);                               \
     MOZ_ASSERT(args.length() == 2);                                         \
@@ -2632,32 +2568,6 @@ bool js::GetTypedObjectModule(JSContext* cx, unsigned argc, Value* vp) {
     JS::AutoCheckCannotGC nogc(cx);                                         \
     T* target = reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));      \
     args.rval().setNumber(JS::CanonicalizeNaN((double)*target));            \
-    return true;                                                            \
-  }
-
-#define JS_LOAD_BIGINT_CLASS_IMPL(_constant, T, _name)                      \
-  bool js::LoadScalar##T::Func(JSContext* cx, unsigned argc, Value* vp) {   \
-    CallArgs args = CallArgsFromVp(argc, vp);                               \
-    MOZ_ASSERT(args.length() == 2);                                         \
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>()); \
-    MOZ_RELEASE_ASSERT(args[1].isInt32());                                  \
-                                                                            \
-    TypedObject& typedObj = args[0].toObject().as<TypedObject>();           \
-    int32_t offset = args[1].toInt32();                                     \
-                                                                            \
-    /* Should be guaranteed by the typed objects API: */                    \
-    MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                               \
-                                                                            \
-    T value;                                                                \
-    {                                                                       \
-      JS::AutoCheckCannotGC nogc(cx);                                       \
-      value = *reinterpret_cast<T*>(typedObj.typedMem(offset, nogc));       \
-    }                                                                       \
-    BigInt* bi = CreateBigInt<T>(cx, value);                                \
-    if (!bi) {                                                              \
-      return false;                                                         \
-    }                                                                       \
-    args.rval().setBigInt(bi);                                              \
     return true;                                                            \
   }
 
@@ -2778,10 +2688,8 @@ void LoadReferencestring::load(GCPtrString* heap, MutableHandleValue v) {
 
 // I was using templates for this stuff instead of macros, but ran
 // into problems with the Unagi compiler.
-JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_STORE_NUMBER_CLASS_IMPL)
-JS_FOR_EACH_UNIQUE_SCALAR_NUMBER_TYPE_REPR_CTYPE(JS_LOAD_NUMBER_CLASS_IMPL)
-JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_STORE_BIGINT_CLASS_IMPL)
-JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(JS_LOAD_BIGINT_CLASS_IMPL)
+JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(JS_STORE_SCALAR_CLASS_IMPL)
+JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(JS_LOAD_SCALAR_CLASS_IMPL)
 JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_STORE_REFERENCE_CLASS_IMPL)
 JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_IMPL)
 
