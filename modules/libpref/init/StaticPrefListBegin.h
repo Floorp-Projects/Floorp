@@ -18,22 +18,22 @@ namespace StaticPrefs {
 // getter declarations/definitions.
 #define NEVER_PREF(name, cpp_type, default_value)
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)          \
-  extern cpp_type sVarCache_##full_id;                                        \
+  extern cpp_type sMirror_##full_id;                                          \
   inline StripAtomic<cpp_type> full_id() {                                    \
     MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
                           "Non-atomic static pref '" name                     \
                           "' being accessed on background thread by getter"); \
-    return sVarCache_##full_id;                                               \
+    return sMirror_##full_id;                                                 \
   }                                                                           \
   inline const char* GetPrefName_##base_id() { return name; }                 \
   inline StripAtomic<cpp_type> GetPrefDefault_##base_id() {                   \
     return default_value;                                                     \
   }
 #define ONCE_PREF(name, base_id, full_id, cpp_type, default_value) \
-  extern cpp_type sVarCache_##full_id;                             \
+  extern cpp_type sMirror_##full_id;                               \
   inline cpp_type full_id() {                                      \
     MaybeInitOncePrefs();                                          \
-    return sVarCache_##full_id;                                    \
+    return sMirror_##full_id;                                      \
   }                                                                \
   inline const char* GetPrefName_##base_id() { return name; }      \
   inline cpp_type GetPrefDefault_##base_id() { return default_value; }
