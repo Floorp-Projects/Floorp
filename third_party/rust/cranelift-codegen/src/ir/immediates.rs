@@ -1,8 +1,8 @@
 //! Immediate operands for Cranelift instructions
 //!
 //! This module defines the types of immediate operands that can appear on Cranelift instructions.
-//! Each type here should have a corresponding definition in the `cranelift.immediates` Python
-//! module in the meta language.
+//! Each type here should have a corresponding definition in the
+//! `cranelift-codegen/meta/src/shared/immediates` crate in the meta language.
 
 use core::fmt::{self, Display, Formatter};
 use core::mem;
@@ -735,6 +735,12 @@ impl FromStr for Ieee64 {
 impl From<f64> for Ieee64 {
     fn from(x: f64) -> Self {
         Ieee64::with_float(x)
+    }
+}
+
+impl From<u64> for Ieee64 {
+    fn from(x: u64) -> Self {
+        Ieee64::with_float(f64::from_bits(x))
     }
 }
 

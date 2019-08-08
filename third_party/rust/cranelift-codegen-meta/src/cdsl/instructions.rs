@@ -1,47 +1,63 @@
+use cranelift_entity::{entity_impl, PrimaryMap};
+
+use std::collections::HashMap;
+use std::fmt;
+use std::ops;
+use std::rc::Rc;
+use std::slice;
+
 use crate::cdsl::camel_case;
 use crate::cdsl::formats::{
     FormatField, FormatRegistry, InstructionFormat, InstructionFormatIndex,
 };
 use crate::cdsl::operands::Operand;
 use crate::cdsl::type_inference::Constraint;
-use crate::cdsl::types::{LaneType, ValueType};
+use crate::cdsl::types::{LaneType, ValueType, VectorType};
 use crate::cdsl::typevar::TypeVar;
 
-use std::fmt;
-use std::ops;
-use std::rc::Rc;
-use std::slice;
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct OpcodeNumber(u32);
+entity_impl!(OpcodeNumber);
 
-pub struct InstructionGroupBuilder<'format_reg> {
+pub type AllInstructions = PrimaryMap<OpcodeNumber, Instruction>;
+
+pub struct InstructionGroupBuilder<'format_reg, 'all_inst> {
     _name: &'static str,
     _doc: &'static str,
     format_registry: &'format_reg FormatRegistry,
-    instructions: Vec<Instruction>,
+    all_instructions: &'all_inst mut AllInstructions,
+    own_instructions: Vec<Instruction>,
 }
 
-impl<'format_reg> InstructionGroupBuilder<'format_reg> {
+impl<'format_reg, 'all_inst> InstructionGroupBuilder<'format_reg, 'all_inst> {
     pub fn new(
         name: &'static str,
         doc: &'static str,
+        all_instructions: &'all_inst mut AllInstructions,
         format_registry: &'format_reg FormatRegistry,
     ) -> Self {
         Self {
             _name: name,
             _doc: doc,
             format_registry,
-            instructions: Vec::new(),
+            all_instructions,
+            own_instructions: Vec::new(),
         }
     }
 
     pub fn push(&mut self, builder: InstructionBuilder) {
-        self.instructions.push(builder.build(self.format_registry));
+        let opcode_number = OpcodeNumber(self.all_instructions.next_key().as_u32());
+        let inst = builder.build(self.format_registry, opcode_number);
+        // Note this clone is cheap, since Instruction is a Rc<> wrapper for InstructionContent.
+        self.own_instructions.push(inst.clone());
+        self.all_instructions.push(inst);
     }
 
     pub fn build(self) -> InstructionGroup {
         InstructionGroup {
             _name: self._name,
             _doc: self._doc,
-            instructions: self.instructions,
+            instructions: self.own_instructions,
         }
     }
 }
@@ -78,9 +94,10 @@ pub struct InstructionContent {
     /// Instruction mnemonic, also becomes opcode name.
     pub name: String,
     pub camel_name: String,
+    pub opcode_number: OpcodeNumber,
 
     /// Documentation string.
-    doc: String,
+    pub doc: String,
 
     /// Input operands. This can be a mix of SSA value operands and other operand kinds.
     pub operands_in: Vec<Operand>,
@@ -145,16 +162,6 @@ impl Instruction {
         }
     }
 
-    pub fn doc_comment_first_line(&self) -> &str {
-        for line in self.doc.split("\n") {
-            let stripped = line.trim();
-            if stripped.len() > 0 {
-                return stripped;
-            }
-        }
-        ""
-    }
-
     pub fn all_typevars(&self) -> Vec<&TypeVar> {
         match &self.polymorphic_info {
             Some(poly) => {
@@ -167,7 +174,15 @@ impl Instruction {
     }
 
     pub fn bind(&self, lane_type: impl Into<LaneType>) -> BoundInstruction {
-        bind(self.clone(), lane_type.into(), Vec::new())
+        bind(self.clone(), Some(lane_type.into()), Vec::new())
+    }
+
+    pub fn bind_vector(&self, lane_type: impl Into<LaneType>, num_lanes: u64) -> BoundInstruction {
+        bind_vector(self.clone(), lane_type.into(), num_lanes, Vec::new())
+    }
+
+    pub fn bind_any(&self) -> BoundInstruction {
+        bind(self.clone(), None, Vec::new())
     }
 }
 
@@ -300,7 +315,7 @@ impl InstructionBuilder {
         self
     }
 
-    fn build(self, format_registry: &FormatRegistry) -> Instruction {
+    fn build(self, format_registry: &FormatRegistry, opcode_number: OpcodeNumber) -> Instruction {
         let operands_in = self.operands_in.unwrap_or_else(Vec::new);
         let operands_out = self.operands_out.unwrap_or_else(Vec::new);
 
@@ -333,10 +348,12 @@ impl InstructionBuilder {
         let writes_cpu_flags = operands_out.iter().any(|op| op.is_cpu_flags());
 
         let camel_name = camel_case(&self.name);
+
         Instruction {
             content: Rc::new(InstructionContent {
                 name: self.name,
                 camel_name,
+                opcode_number,
                 doc: self.doc,
                 operands_in,
                 operands_out,
@@ -362,15 +379,39 @@ impl InstructionBuilder {
     }
 }
 
+/// A thin wrapper like Option<ValueType>, but with more precise semantics.
+#[derive(Clone)]
+pub enum ValueTypeOrAny {
+    ValueType(ValueType),
+    Any,
+}
+
+impl ValueTypeOrAny {
+    pub fn expect(self, msg: &str) -> ValueType {
+        match self {
+            ValueTypeOrAny::ValueType(vt) => vt,
+            ValueTypeOrAny::Any => panic!(format!("Unexpected Any: {}", msg)),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct BoundInstruction {
     pub inst: Instruction,
-    pub value_types: Vec<ValueType>,
+    pub value_types: Vec<ValueTypeOrAny>,
 }
 
 impl BoundInstruction {
     pub fn bind(self, lane_type: impl Into<LaneType>) -> BoundInstruction {
-        bind(self.inst, lane_type.into(), self.value_types)
+        bind(self.inst, Some(lane_type.into()), self.value_types)
+    }
+
+    pub fn bind_vector(self, lane_type: impl Into<LaneType>, num_lanes: u64) -> BoundInstruction {
+        bind_vector(self.inst, lane_type.into(), num_lanes, self.value_types)
+    }
+
+    pub fn bind_any(self) -> BoundInstruction {
+        bind(self.inst, None, self.value_types)
     }
 }
 
@@ -533,12 +574,118 @@ fn verify_ctrl_typevar(
     Ok(other_typevars)
 }
 
-/// A basic node in an instruction predicate: either an atom, or an AND of two conditions.
-pub enum InstructionPredicateNode {
-    /// Is the field member (first member) equal to the actual argument (which name is the second
-    /// field)?
-    IsFieldEqual(String, String),
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum FormatPredicateKind {
+    /// Is the field member equal to the expected value (stored here)?
+    IsEqual(String),
 
+    /// Is the immediate instruction format field representable as an n-bit two's complement
+    /// integer? (with width: first member, scale: second member).
+    /// The predicate is true if the field is in the range: `-2^(width-1) -- 2^(width-1)-1` and a
+    /// multiple of `2^scale`.
+    IsSignedInt(usize, usize),
+
+    /// Is the immediate instruction format field representable as an n-bit unsigned integer? (with
+    /// width: first member, scale: second member).
+    /// The predicate is true if the field is in the range: `0 -- 2^width - 1` and a multiple of
+    /// `2^scale`.
+    IsUnsignedInt(usize, usize),
+
+    /// Is the immediate format field member equal to zero? (float32 version)
+    IsZero32BitFloat,
+
+    /// Is the immediate format field member equal to zero? (float64 version)
+    IsZero64BitFloat,
+
+    /// Has the value list (in member_name) the size specified in parameter?
+    LengthEquals(usize),
+
+    /// Is the referenced function colocated?
+    IsColocatedFunc,
+
+    /// Is the referenced data object colocated?
+    IsColocatedData,
+}
+
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct FormatPredicateNode {
+    format_name: &'static str,
+    member_name: &'static str,
+    kind: FormatPredicateKind,
+}
+
+impl FormatPredicateNode {
+    fn new(
+        format: &InstructionFormat,
+        field_name: &'static str,
+        kind: FormatPredicateKind,
+    ) -> Self {
+        let member_name = format.imm_by_name(field_name).member;
+        Self {
+            format_name: format.name,
+            member_name,
+            kind,
+        }
+    }
+
+    fn new_raw(
+        format: &InstructionFormat,
+        member_name: &'static str,
+        kind: FormatPredicateKind,
+    ) -> Self {
+        Self {
+            format_name: format.name,
+            member_name,
+            kind,
+        }
+    }
+
+    fn destructuring_member_name(&self) -> &'static str {
+        match &self.kind {
+            FormatPredicateKind::LengthEquals(_) => {
+                // Length operates on the argument value list.
+                assert!(self.member_name == "args");
+                "ref args"
+            }
+            _ => self.member_name,
+        }
+    }
+
+    fn rust_predicate(&self) -> String {
+        match &self.kind {
+            FormatPredicateKind::IsEqual(arg) => {
+                format!("predicates::is_equal({}, {})", self.member_name, arg)
+            }
+            FormatPredicateKind::IsSignedInt(width, scale) => format!(
+                "predicates::is_signed_int({}, {}, {})",
+                self.member_name, width, scale
+            ),
+            FormatPredicateKind::IsUnsignedInt(width, scale) => format!(
+                "predicates::is_unsigned_int({}, {}, {})",
+                self.member_name, width, scale
+            ),
+            FormatPredicateKind::IsZero32BitFloat => {
+                format!("predicates::is_zero_32_bit_float({})", self.member_name)
+            }
+            FormatPredicateKind::IsZero64BitFloat => {
+                format!("predicates::is_zero_64_bit_float({})", self.member_name)
+            }
+            FormatPredicateKind::LengthEquals(num) => format!(
+                "predicates::has_length_of({}, {}, func)",
+                self.member_name, num
+            ),
+            FormatPredicateKind::IsColocatedFunc => {
+                format!("predicates::is_colocated_func({}, func)", self.member_name,)
+            }
+            FormatPredicateKind::IsColocatedData => {
+                format!("predicates::is_colocated_data({}, func)", self.member_name)
+            }
+        }
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum TypePredicateNode {
     /// Is the value argument (at the index designated by the first member) the same type as the
     /// type name (second member)?
     TypeVarCheck(usize, String),
@@ -546,41 +693,111 @@ pub enum InstructionPredicateNode {
     /// Is the controlling type variable the same type as the one designated by the type name
     /// (only member)?
     CtrlTypeVarCheck(String),
+}
 
-    /// A combination of two other predicates.
+impl TypePredicateNode {
+    fn rust_predicate(&self) -> String {
+        match self {
+            TypePredicateNode::TypeVarCheck(index, value_type_name) => format!(
+                "func.dfg.value_type(args[{}]) == {}",
+                index, value_type_name
+            ),
+            TypePredicateNode::CtrlTypeVarCheck(value_type_name) => {
+                format!("func.dfg.ctrl_typevar(inst) == {}", value_type_name)
+            }
+        }
+    }
+}
+
+/// A basic node in an instruction predicate: either an atom, or an AND of two conditions.
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum InstructionPredicateNode {
+    FormatPredicate(FormatPredicateNode),
+
+    TypePredicate(TypePredicateNode),
+
+    /// An AND-combination of two or more other predicates.
     And(Vec<InstructionPredicateNode>),
+
+    /// An OR-combination of two or more other predicates.
+    Or(Vec<InstructionPredicateNode>),
 }
 
 impl InstructionPredicateNode {
     fn rust_predicate(&self) -> String {
         match self {
-            InstructionPredicateNode::IsFieldEqual(field_name, arg) => {
-                let new_args = vec![field_name.clone(), arg.clone()];
-                format!("crate::predicates::is_equal({})", new_args.join(", "))
-            }
-            InstructionPredicateNode::TypeVarCheck(index, value_type_name) => format!(
-                "func.dfg.value_type(args[{}]) == {}",
-                index, value_type_name
-            ),
-            InstructionPredicateNode::CtrlTypeVarCheck(value_type_name) => {
-                format!("func.dfg.ctrl_typevar(inst) == {}", value_type_name)
-            }
+            InstructionPredicateNode::FormatPredicate(node) => node.rust_predicate(),
+            InstructionPredicateNode::TypePredicate(node) => node.rust_predicate(),
             InstructionPredicateNode::And(nodes) => nodes
                 .iter()
                 .map(|x| x.rust_predicate())
                 .collect::<Vec<_>>()
-                .join(" &&\n"),
+                .join(" && "),
+            InstructionPredicateNode::Or(nodes) => nodes
+                .iter()
+                .map(|x| x.rust_predicate())
+                .collect::<Vec<_>>()
+                .join(" || "),
         }
+    }
+
+    pub fn format_destructuring_member_name(&self) -> &str {
+        match self {
+            InstructionPredicateNode::FormatPredicate(format_pred) => {
+                format_pred.destructuring_member_name()
+            }
+            _ => panic!("Only for leaf format predicates"),
+        }
+    }
+
+    pub fn format_name(&self) -> &str {
+        match self {
+            InstructionPredicateNode::FormatPredicate(format_pred) => format_pred.format_name,
+            _ => panic!("Only for leaf format predicates"),
+        }
+    }
+
+    pub fn is_type_predicate(&self) -> bool {
+        match self {
+            InstructionPredicateNode::FormatPredicate(_)
+            | InstructionPredicateNode::And(_)
+            | InstructionPredicateNode::Or(_) => false,
+            InstructionPredicateNode::TypePredicate(_) => true,
+        }
+    }
+
+    fn collect_leaves(&self) -> Vec<&InstructionPredicateNode> {
+        let mut ret = Vec::new();
+        match self {
+            InstructionPredicateNode::And(nodes) | InstructionPredicateNode::Or(nodes) => {
+                for node in nodes {
+                    ret.extend(node.collect_leaves());
+                }
+            }
+            _ => ret.push(&self),
+        }
+        ret
     }
 }
 
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct InstructionPredicate {
     node: Option<InstructionPredicateNode>,
+}
+
+impl Into<InstructionPredicate> for InstructionPredicateNode {
+    fn into(self) -> InstructionPredicate {
+        InstructionPredicate { node: Some(self) }
+    }
 }
 
 impl InstructionPredicate {
     pub fn new() -> Self {
         Self { node: None }
+    }
+
+    pub fn unwrap(self) -> InstructionPredicateNode {
+        self.node.unwrap()
     }
 
     pub fn new_typevar_check(
@@ -596,18 +813,121 @@ impl InstructionPredicate {
             .next()
             .unwrap()
             .0;
-        InstructionPredicateNode::TypeVarCheck(index, value_type.rust_name())
-    }
-
-    pub fn new_is_field_equal(
-        format_field: &FormatField,
-        imm_value: String,
-    ) -> InstructionPredicateNode {
-        InstructionPredicateNode::IsFieldEqual(format_field.member.into(), imm_value)
+        InstructionPredicateNode::TypePredicate(TypePredicateNode::TypeVarCheck(
+            index,
+            value_type.rust_name(),
+        ))
     }
 
     pub fn new_ctrl_typevar_check(value_type: &ValueType) -> InstructionPredicateNode {
-        InstructionPredicateNode::CtrlTypeVarCheck(value_type.rust_name())
+        InstructionPredicateNode::TypePredicate(TypePredicateNode::CtrlTypeVarCheck(
+            value_type.rust_name(),
+        ))
+    }
+
+    pub fn new_is_field_equal(
+        format: &InstructionFormat,
+        field_name: &'static str,
+        imm_value: String,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsEqual(imm_value),
+        ))
+    }
+
+    /// Used only for the AST module, which directly passes in the format field.
+    pub fn new_is_field_equal_ast(
+        format: &InstructionFormat,
+        field: &FormatField,
+        imm_value: String,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new_raw(
+            format,
+            field.member,
+            FormatPredicateKind::IsEqual(imm_value),
+        ))
+    }
+
+    pub fn new_is_signed_int(
+        format: &InstructionFormat,
+        field_name: &'static str,
+        width: usize,
+        scale: usize,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsSignedInt(width, scale),
+        ))
+    }
+
+    pub fn new_is_unsigned_int(
+        format: &InstructionFormat,
+        field_name: &'static str,
+        width: usize,
+        scale: usize,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsUnsignedInt(width, scale),
+        ))
+    }
+
+    pub fn new_is_zero_32bit_float(
+        format: &InstructionFormat,
+        field_name: &'static str,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsZero32BitFloat,
+        ))
+    }
+
+    pub fn new_is_zero_64bit_float(
+        format: &InstructionFormat,
+        field_name: &'static str,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsZero64BitFloat,
+        ))
+    }
+
+    pub fn new_length_equals(format: &InstructionFormat, size: usize) -> InstructionPredicateNode {
+        assert!(
+            format.has_value_list,
+            "the format must be variadic in number of arguments"
+        );
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new_raw(
+            format,
+            "args",
+            FormatPredicateKind::LengthEquals(size),
+        ))
+    }
+
+    pub fn new_is_colocated_func(
+        format: &InstructionFormat,
+        field_name: &'static str,
+    ) -> InstructionPredicateNode {
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            field_name,
+            FormatPredicateKind::IsColocatedFunc,
+        ))
+    }
+
+    pub fn new_is_colocated_data(format_registry: &FormatRegistry) -> InstructionPredicateNode {
+        let format = format_registry.get(format_registry.by_name("UnaryGlobalValue"));
+        InstructionPredicateNode::FormatPredicate(FormatPredicateNode::new(
+            format,
+            "global_value",
+            FormatPredicateKind::IsColocatedData,
+        ))
     }
 
     pub fn and(mut self, new_node: InstructionPredicateNode) -> Self {
@@ -615,6 +935,9 @@ impl InstructionPredicate {
         let mut and_nodes = match node {
             Some(node) => match node {
                 InstructionPredicateNode::And(nodes) => nodes,
+                InstructionPredicateNode::Or(_) => {
+                    panic!("Can't mix and/or without implementing operator precedence!")
+                }
                 _ => vec![node],
             },
             _ => Vec::new(),
@@ -624,11 +947,80 @@ impl InstructionPredicate {
         self
     }
 
+    pub fn or(mut self, new_node: InstructionPredicateNode) -> Self {
+        let node = self.node;
+        let mut or_nodes = match node {
+            Some(node) => match node {
+                InstructionPredicateNode::Or(nodes) => nodes,
+                InstructionPredicateNode::And(_) => {
+                    panic!("Can't mix and/or without implementing operator precedence!")
+                }
+                _ => vec![node],
+            },
+            _ => Vec::new(),
+        };
+        or_nodes.push(new_node);
+        self.node = Some(InstructionPredicateNode::Or(or_nodes));
+        self
+    }
+
     pub fn rust_predicate(&self) -> String {
         match &self.node {
             Some(root) => root.rust_predicate(),
             None => "true".into(),
         }
+    }
+
+    /// Returns true if the predicate only depends on type parameters (and not on an instruction
+    /// format).
+    pub fn is_type_predicate(&self) -> bool {
+        self.node.as_ref().unwrap().is_type_predicate()
+    }
+
+    /// Returns references to all the nodes that are leaves in the condition (i.e. by flattening
+    /// AND/OR).
+    pub fn collect_leaves(&self) -> Vec<&InstructionPredicateNode> {
+        self.node.as_ref().unwrap().collect_leaves()
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct InstructionPredicateNumber(u32);
+entity_impl!(InstructionPredicateNumber);
+
+pub type InstructionPredicateMap = PrimaryMap<InstructionPredicateNumber, InstructionPredicate>;
+
+/// A registry of predicates to help deduplicating them, during Encodings construction. When the
+/// construction process is over, it needs to be extracted with `extract` and associated to the
+/// TargetIsa.
+pub struct InstructionPredicateRegistry {
+    /// Maps a predicate number to its actual predicate.
+    map: InstructionPredicateMap,
+
+    /// Inverse map: maps a predicate to its predicate number. This is used before inserting a
+    /// predicate, to check whether it already exists.
+    inverted_map: HashMap<InstructionPredicate, InstructionPredicateNumber>,
+}
+
+impl InstructionPredicateRegistry {
+    pub fn new() -> Self {
+        Self {
+            map: PrimaryMap::new(),
+            inverted_map: HashMap::new(),
+        }
+    }
+    pub fn insert(&mut self, predicate: InstructionPredicate) -> InstructionPredicateNumber {
+        match self.inverted_map.get(&predicate) {
+            Some(&found) => found,
+            None => {
+                let key = self.map.push(predicate.clone());
+                self.inverted_map.insert(predicate, key);
+                key
+            }
+        }
+    }
+    pub fn extract(self) -> InstructionPredicateMap {
+        self.map
     }
 }
 
@@ -643,6 +1035,12 @@ impl InstSpec {
         match &self {
             InstSpec::Inst(inst) => inst,
             InstSpec::Bound(bound_inst) => &bound_inst.inst,
+        }
+    }
+    pub fn bind(&self, lane_type: impl Into<LaneType>) -> BoundInstruction {
+        match self {
+            InstSpec::Inst(inst) => inst.bind(lane_type),
+            InstSpec::Bound(inst) => inst.clone().bind(lane_type),
         }
     }
 }
@@ -662,10 +1060,38 @@ impl Into<InstSpec> for BoundInstruction {
 /// Helper bind reused by {Bound,}Instruction::bind.
 fn bind(
     inst: Instruction,
-    lane_type: LaneType,
-    mut value_types: Vec<ValueType>,
+    lane_type: Option<LaneType>,
+    mut value_types: Vec<ValueTypeOrAny>,
 ) -> BoundInstruction {
-    value_types.push(ValueType::from(lane_type));
+    match lane_type {
+        Some(lane_type) => {
+            value_types.push(ValueTypeOrAny::ValueType(lane_type.into()));
+        }
+        None => {
+            value_types.push(ValueTypeOrAny::Any);
+        }
+    }
+
+    verify_polymorphic_binding(&inst, &value_types);
+
+    BoundInstruction { inst, value_types }
+}
+
+/// Helper bind for vector types reused by {Bound,}Instruction::bind.
+fn bind_vector(
+    inst: Instruction,
+    lane_type: LaneType,
+    num_lanes: u64,
+    mut value_types: Vec<ValueTypeOrAny>,
+) -> BoundInstruction {
+    let vector_type = ValueType::Vector(VectorType::new(lane_type, num_lanes));
+    value_types.push(ValueTypeOrAny::ValueType(vector_type));
+    verify_polymorphic_binding(&inst, &value_types);
+    BoundInstruction { inst, value_types }
+}
+
+/// Helper to verify that binding types to the instruction does not violate polymorphic rules
+fn verify_polymorphic_binding(inst: &Instruction, value_types: &Vec<ValueTypeOrAny>) {
     match &inst.polymorphic_info {
         Some(poly) => {
             assert!(
@@ -680,5 +1106,4 @@ fn bind(
             ));
         }
     }
-    BoundInstruction { inst, value_types }
 }

@@ -174,7 +174,7 @@ uint64_t InProcessBrowserChildMessageManager::ChromeOuterWindowID() {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  nsresult rv = mDocShell->GetRootTreeItem(getter_AddRefs(root));
+  nsresult rv = mDocShell->GetInProcessRootTreeItem(getter_AddRefs(root));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return 0;
   }

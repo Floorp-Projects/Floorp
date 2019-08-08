@@ -1489,6 +1489,22 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#onAction: DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", async () => {
+    it("Should dispatch CLEAR_PREF with pref name", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      await feed.onAction({
+        type: at.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS,
+      });
+
+      assert.calledWithMatch(feed.store.dispatch, {
+        data: {
+          name: CONFIG_PREF_NAME,
+        },
+        type: at.CLEAR_PREF,
+      });
+    });
+  });
+
   describe("#onAction: DISCOVERY_STREAM_RETRY_FEED", async () => {
     it("should call retryFeed", async () => {
       sandbox.spy(feed, "retryFeed");

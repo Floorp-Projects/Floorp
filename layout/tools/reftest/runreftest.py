@@ -358,7 +358,7 @@ class RefTest(object):
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
-        prefs['gfx.font_ahem_antialias_none'] = True
+        prefs['gfx.font_rendering.ahem_antialias_none'] = True
 
         # Set tests to run or manifests to parse.
         if tests:

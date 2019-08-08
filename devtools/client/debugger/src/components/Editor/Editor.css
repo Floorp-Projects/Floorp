@@ -17,7 +17,6 @@
 
 .editor-wrapper .CodeMirror-linewidget {
   margin-right: -7px;
-  overflow: hidden;
 }
 
 .editor-wrapper {
@@ -94,30 +93,6 @@ html[dir="rtl"] .editor-mount {
   .CodeMirror-gutter-wrapper
   .CodeMirror-linenumber {
   color: white;
-}
-
-/* set the linenumber blue when breakpoint is disabled */
-.editor-wrapper:not(.skip-pausing)
-  .breakpoint-disabled
-  .CodeMirror-gutter-wrapper
-  .CodeMirror-linenumber {
-  color: var(--breakpoint-stroke);
-}
-
-/* set the linenumber yellow when conditional breakpoint is disabled */
-.editor-wrapper:not(.skip-pausing)
-  .breakpoint-disabled.has-condition
-  .CodeMirror-gutter-wrapper
-  .CodeMirror-linenumber {
-  color: var(--breakpoint-condition-stroke);
-}
-
-/* set the linenumber purple when logpoint is disabled */
-.editor-wrapper:not(.skip-pausing)
-  .breakpoint-disabled.has-log
-  .CodeMirror-gutter-wrapper
-  .CodeMirror-linenumber {
-  color: var(--logpoint-stroke);
 }
 
 /* move the breakpoint below the other gutter elements */

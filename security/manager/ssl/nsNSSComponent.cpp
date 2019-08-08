@@ -1251,7 +1251,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
 // TLS 1.2 (max) when the prefs aren't set or set to invalid values.
 nsresult nsNSSComponent::setEnabledTLSVersions() {
-  // keep these values in sync with security-prefs.js
+  // Keep these values in sync with all.js.
   // 1 means TLS 1.0, 2 means TLS 1.1, etc.
   static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;

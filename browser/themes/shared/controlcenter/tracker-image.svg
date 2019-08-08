@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg data-name="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M13 1H3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V4a3 3 0 0 0-3-3zm1 11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1z"/>
   <path fill="context-fill" fill-opacity="context-fill-opacity" d="M3.25 10.07l2-1.76a.49.49 0 0 1 .49-.1l1.93.67a.5.5 0 0 0 .56-.17L10 6.37a.5.5 0 0 1 .77 0l2.13 2.27A.58.58 0 0 1 13 9l.12 2.82-10 .45-.08-1.75a.53.53 0 0 1 .21-.45z"/>
   <circle fill="context-fill" cx="4.89" cy="6.14" r="1"/>

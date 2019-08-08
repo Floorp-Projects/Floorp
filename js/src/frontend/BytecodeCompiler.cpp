@@ -525,6 +525,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
       if (!emitter->emitScript(pn)) {
         return nullptr;
       }
+
+      // Success!
       break;
     }
 
@@ -662,10 +664,12 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
     if (!parser->publishDeferredItems()) {
       return false;
     }
+
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(info, emitter, funbox)) {
       return false;
     }
+
     if (!emitter->emitFunctionScript(parsedFunction,
                                      BytecodeEmitter::TopLevelFunction::Yes)) {
       return false;

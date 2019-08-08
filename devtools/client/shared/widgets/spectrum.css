@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- :root {
+:root {
   --learn-more-underline: var(--grey-30);
 }
 
@@ -23,14 +23,28 @@
 
 .spectrum-checker {
   background-color: #eee;
-  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
-    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-image: linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    ),
+    linear-gradient(
+      45deg,
+      #ccc 25%,
+      transparent 25%,
+      transparent 75%,
+      #ccc 75%,
+      #ccc
+    );
   background-size: 12px 12px;
   background-position: 0 0, 6px 6px;
 }
 
 .spectrum-box {
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 2px;
   background-clip: content-box;
 }
@@ -74,8 +88,8 @@
   height: 27px;
   background-color: #fff;
   background-image: linear-gradient(var(--overlay-color), var(--overlay-color)),
-    linear-gradient(45deg,#ccc 25%,transparent 25%, transparent 75%, #ccc 75%),
-    linear-gradient(45deg,#ccc 25%, transparent 25%,transparent 75%,#ccc 75%);
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%);
   background-size: 12px 12px;
   background-position: 0 0, 6px 6px;
 }
@@ -109,7 +123,8 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   width: 100%;
 }
 
-.spectrum-sat, .spectrum-val {
+.spectrum-sat,
+.spectrum-val {
   position: absolute;
   top: 0;
   left: 0;
@@ -134,6 +149,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   position: absolute;
   height: 8px;
   border-radius: 2px;
+  direction: initial;
 }
 
 /* Focus style already exists on input[type="range"]. Remove overlap */
@@ -147,21 +163,30 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   cursor: pointer;
   height: 12px;
   width: 12px;
-  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
   background: #fff;
   border-radius: 50%;
-  opacity: .9;
+  opacity: 0.9;
   border: none;
 }
 
 .spectrum-hue-input::-moz-range-track {
   border-radius: 2px;
   height: 8px;
-  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
 }
 
 .spectrum-sat {
-  background-image: linear-gradient(to right, #FFF, rgba(204, 154, 129, 0));
+  background-image: linear-gradient(to right, #fff, rgba(204, 154, 129, 0));
 }
 
 .spectrum-val {
@@ -178,7 +203,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   height: 8px;
   width: 8px;
   border: 1px solid white;
-  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
 }
 
 .spectrum-color-contrast {
@@ -223,19 +248,19 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 }
 
 .learn-more {
-  background-size: auto;
+  background-size: 12px 12px;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   background-image: url(chrome://devtools/skin/images/info-small.svg);
   background-color: transparent;
   fill: var(--theme-icon-dimmed-color);
   border: none;
-  margin-left: auto;
-  margin-top: 2px;
-  margin-right: 1px;
+  margin-inline-start: auto;
+  margin-block-start: 2px;
 }
 
-.learn-more:hover, .learn-more:focus {
+.learn-more:hover,
+.learn-more:focus {
   fill: var(--theme-icon-color);
   cursor: pointer;
   outline: none;

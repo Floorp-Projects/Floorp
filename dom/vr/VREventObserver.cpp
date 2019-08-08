@@ -8,7 +8,6 @@
 
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
-#include "VRManagerChild.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -83,7 +82,7 @@ void VREventObserver::StopActivity() {
   vmc->StopActivity();
 }
 
-bool VREventObserver::GetStopActivityStatus() { return mStopActivity; }
+bool VREventObserver::GetStopActivityStatus() const { return mStopActivity; }
 
 void VREventObserver::NotifyAfterLoad() {
   if (VRManagerChild::IsCreated()) {

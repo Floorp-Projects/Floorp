@@ -447,12 +447,8 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
       if (principal) {
         nsCOMPtr<nsIURI> uri;
         nsresult rv = principal->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv) && uri) {
-          bool isAbout;
-          rv = uri->SchemeIs("about", &isAbout);
-          if (NS_SUCCEEDED(rv) && isAbout) {
-            ignore = true;
-          }
+        if (NS_SUCCEEDED(rv) && uri && uri->SchemeIs("about")) {
+          ignore = true;
         }
       }
     }

@@ -142,6 +142,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     return this._prefCache.config;
   }
 
+  resetConfigDefauts() {
+    this.store.dispatch({
+      type: at.CLEAR_PREF,
+      data: {
+        name: PREF_CONFIG,
+      },
+    });
+  }
+
   get showSpocs() {
     // Combine user-set sponsored opt-out with Mozilla-set config
     return (
@@ -1134,6 +1143,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             })
           )
         );
+        break;
+      case at.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS:
+        this.resetConfigDefauts();
         break;
       case at.DISCOVERY_STREAM_RETRY_FEED:
         this.retryFeed(action.data.feed);

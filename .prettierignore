@@ -31,7 +31,6 @@ modules/libpref/test/unit/data/testPrefLocked.js
 modules/libpref/test/unit/data/testPrefSticky.js
 modules/libpref/test/unit/extdata/testExt.js
 remote/pref/remote.js
-security/manager/ssl/security-prefs.js
 services/common/services-common.js
 services/sync/services-sync.js
 services/sync/tests/unit/prefs_test_prefs_store.js

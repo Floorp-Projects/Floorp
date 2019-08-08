@@ -22,7 +22,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Range.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -2161,9 +2160,9 @@ JSFunction* AllocNewFunction(JSContext* cx,
   }
   RootedFunction fun(cx);
 
-
-  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr, data.getAtom(cx), proto,
-                             data.allocKind, TenuredObject);
+  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr,
+                             data.getAtom(cx), proto, data.allocKind,
+                             TenuredObject);
   if (!fun) {
     return nullptr;
   }

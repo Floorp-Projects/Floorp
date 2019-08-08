@@ -30,6 +30,7 @@ job-defaults:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
+    variants: ["fission"]
 
 marionette:
     description: "Marionette unittest run"

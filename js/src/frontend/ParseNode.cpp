@@ -395,13 +395,13 @@ BigIntBox::BigIntBox(BigInt* bi, TraceListNode* traceLink)
 
 ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
     : TraceListNode(obj, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT_IF(hasObject(), !object()->is<JSFunction>());
+  MOZ_ASSERT(!object()->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction* function, TraceListNode* traceLink)
     : TraceListNode(function, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT_IF(hasObject(), object()->is<JSFunction>());
-  MOZ_ASSERT_IF(hasObject(), asFunctionBox()->function() == function);
+  MOZ_ASSERT(object()->is<JSFunction>());
+  MOZ_ASSERT(asFunctionBox()->function() == function);
 }
 
 FunctionBox* ObjectBox::asFunctionBox() {

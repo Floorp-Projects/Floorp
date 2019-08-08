@@ -1568,10 +1568,6 @@ pref("dom.storage_access.enabled", true);
 pref("dom.storage_access.auto_grants", true);
 pref("dom.storage_access.max_concurrent_auto_grants", 5);
 
-// Define a set of default features for the Content Blocking UI.
-pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
-
 pref("browser.contentblocking.control-center.ui.showBlockedLabels", true);
 pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 
@@ -1618,6 +1614,7 @@ pref("browser.contentblocking.report.monitor.enabled", true);
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
 pref("browser.protections_panel.enabled", true);
+pref("browser.protections_panel.infoMessage.seen", false);
 #endif
 
 // Always enable newtab segregation using containers

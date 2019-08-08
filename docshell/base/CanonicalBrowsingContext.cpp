@@ -136,31 +136,6 @@ void CanonicalBrowsingContext::SetEmbedderWindowGlobal(
   mEmbedderWindowGlobal = aGlobal;
 }
 
-bool CanonicalBrowsingContext::ValidateTransaction(
-    const Transaction& aTransaction, ContentParent* aProcess) {
-  if (MOZ_LOG_TEST(GetLog(), LogLevel::Debug)) {
-#define MOZ_BC_FIELD(name, ...)                                               \
-  if (aTransaction.m##name.isSome()) {                                        \
-    MOZ_LOG(GetLog(), LogLevel::Debug,                                        \
-            ("Validate Transaction 0x%08" PRIx64 " set " #name                \
-             " (from: 0x%08" PRIx64 " owner: 0x%08" PRIx64 ")",               \
-             Id(), aProcess ? static_cast<uint64_t>(aProcess->ChildID()) : 0, \
-             mProcessId));                                                    \
-  }
-#include "mozilla/dom/BrowsingContextFieldList.h"
-  }
-
-  // Check that the correct process is performing sets for transactions with
-  // non-racy fields.
-  if (aTransaction.HasNonRacyField()) {
-    if (NS_WARN_IF(aProcess && mProcessId != aProcess->ChildID())) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
@@ -207,21 +182,6 @@ void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendSetMediaMuted(this, aMuted);
   });
-}
-
-void CanonicalBrowsingContext::SetFieldEpochsForChild(
-    ContentParent* aChild, const BrowsingContext::FieldEpochs& aEpochs) {
-  mChildFieldEpochs.Put(aChild->ChildID(), aEpochs);
-}
-
-const BrowsingContext::FieldEpochs&
-CanonicalBrowsingContext::GetFieldEpochsForChild(ContentParent* aChild) {
-  static const BrowsingContext::FieldEpochs sDefaultFieldEpochs;
-
-  if (auto entry = mChildFieldEpochs.Lookup(aChild->ChildID())) {
-    return entry.Data();
-  }
-  return sDefaultFieldEpochs;
 }
 
 }  // namespace dom

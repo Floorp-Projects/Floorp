@@ -16,8 +16,8 @@ name = "baldrdash"
 # dependencies (codegen and wasm).
 # - $TOP_LEVEL/.cargo/config.in, look for the revision (rev) field of the
 # Cranelift source.
-cranelift-codegen = { version = "0.32", default-features = false }
-cranelift-wasm = "0.32"
+cranelift-codegen = { version = "0.37", default-features = false }
+cranelift-wasm = "0.37"
 target-lexicon = "0.4.0"
 log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
 env_logger = "0.5.6"

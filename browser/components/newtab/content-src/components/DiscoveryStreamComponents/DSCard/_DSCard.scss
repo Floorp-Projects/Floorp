@@ -23,7 +23,6 @@ $excerpt-line-height: 20;
     }
   }
 
-
   .img-wrapper {
     width: 100%;
   }
@@ -96,10 +95,6 @@ $excerpt-line-height: 20;
       flex-grow: 1;
     }
 
-    .context {
-      margin: 12px 0 0;
-    }
-
     .title {
       // show only 3 lines of copy
       @include limit-visibile-lines(3, $header-line-height, $header-font-size);
@@ -108,20 +103,20 @@ $excerpt-line-height: 20;
 
     .excerpt {
       // show only 3 lines of copy
-      @include limit-visibile-lines(3, $excerpt-line-height, $excerpt-font-size);
+      @include limit-visibile-lines(
+        3,
+        $excerpt-line-height,
+        $excerpt-font-size
+      );
     }
 
-    .source {
-      -webkit-line-clamp: 1;
-      margin-bottom: 2px;
-    }
-
-    .context,
     .source {
       @include dark-theme-only {
         color: $grey-40;
       }
 
+      -webkit-line-clamp: 1;
+      margin-bottom: 2px;
       font-size: 13px;
       color: $grey-50;
     }

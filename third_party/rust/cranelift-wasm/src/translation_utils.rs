@@ -3,10 +3,13 @@ use crate::environ::{WasmError, WasmResult};
 use core::u32;
 use cranelift_codegen::entity::entity_impl;
 use cranelift_codegen::ir;
+#[cfg(feature = "enable-serde")]
+use serde::{Deserialize, Serialize};
 use wasmparser;
 
 /// Index type of a function (imported or defined) inside the WebAssembly module.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
 pub struct FuncIndex(u32);
 entity_impl!(FuncIndex);
 
@@ -51,7 +54,7 @@ pub struct SignatureIndex(u32);
 entity_impl!(SignatureIndex);
 
 /// WebAssembly global.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct Global {
     /// The type of the value stored in the global.
     pub ty: ir::Type,
@@ -62,7 +65,7 @@ pub struct Global {
 }
 
 /// Globals are initialized via the four `const` operators or by referring to another import.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum GlobalInit {
     /// An `i32.const`.
     I32Const(i32),
@@ -79,7 +82,7 @@ pub enum GlobalInit {
 }
 
 /// WebAssembly table.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct Table {
     /// The type of data stored in elements of the table.
     pub ty: TableElementType,
@@ -90,7 +93,7 @@ pub struct Table {
 }
 
 /// WebAssembly table element. Can be a function or a scalar type.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum TableElementType {
     /// A scalar type.
     Val(ir::Type),
@@ -99,7 +102,7 @@ pub enum TableElementType {
 }
 
 /// WebAssembly linear memory.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub struct Memory {
     /// The minimum number of pages in the memory.
     pub minimum: u32,

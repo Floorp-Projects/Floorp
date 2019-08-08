@@ -880,9 +880,7 @@ nsIURI* nsHtml5TreeOpExecutor::GetViewSourceBaseURI() {
     }
 
     nsCOMPtr<nsIURI> orig = mDocument->GetOriginalURI();
-    bool isViewSource;
-    orig->SchemeIs("view-source", &isViewSource);
-    if (isViewSource) {
+    if (orig->SchemeIs("view-source")) {
       nsCOMPtr<nsINestedURI> nested = do_QueryInterface(orig);
       NS_ASSERTION(nested, "URI with scheme view-source didn't QI to nested!");
       nested->GetInnerURI(getter_AddRefs(mViewSourceBaseURI));
@@ -899,11 +897,10 @@ bool nsHtml5TreeOpExecutor::IsExternalViewSource() {
   if (!StaticPrefs::view_source_editor_external()) {
     return false;
   }
-  bool isViewSource = false;
   if (mDocumentURI) {
-    mDocumentURI->SchemeIs("view-source", &isViewSource);
+    return mDocumentURI->SchemeIs("view-source");
   }
-  return isViewSource;
+  return false;
 }
 
 // Speculative loading

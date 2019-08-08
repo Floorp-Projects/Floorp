@@ -12,6 +12,8 @@ exclude: true
 
 ## v70
 
+- Add GeckoSession.LOAD_FLAGS_REPLACE_HISTORY
+
 - Removed the obsolete `success` parameter from
   [`CrashReporter#sendCrashReport(Context, File, File, String)`][70.3] and
   [`CrashReporter#sendCrashReport(Context, File, Map, String)`][70.4].
@@ -289,4 +291,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b101f0344e941cb50eaaf75326e126ce3efc52b4
+[api-version]: d2e22c0efa7c1dbec1f68965e035a9ccc47eca39

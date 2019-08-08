@@ -50,38 +50,11 @@ fn main() {
     let crate_dir = cur_dir.as_path();
 
     // Make sure we rebuild if this build script changes (will not happen with
-    // if the path to this file contains non-UTF8 bytes). The `build.py` script
-    // prints out its own dependencies.
+    // if the path to this file contains non-UTF-8 bytes).
     println!(
         "cargo:rerun-if-changed={}",
         crate_dir.join("build.rs").to_str().unwrap()
     );
-
-    // Scripts are in `$crate_dir/meta-python`.
-    let meta_dir = crate_dir.join("meta-python");
-    let build_script = meta_dir.join("build.py");
-
-    // Launch build script with Python. We'll just find python in the path.
-    // Use -B to disable .pyc files, because they cause trouble for vendoring
-    // scripts, and this is a build step that isn't run very often anyway.
-    let python = identify_python();
-    let status = process::Command::new(python)
-        .current_dir(crate_dir)
-        .arg("-B")
-        .arg(build_script)
-        .arg("--out-dir")
-        .arg(out_dir.clone())
-        .status()
-        .expect("Failed to launch second-level build script; is python installed?");
-    if !status.success() {
-        process::exit(status.code().unwrap());
-    }
-
-    // DEVELOPMENT:
-    // ------------------------------------------------------------------------
-    // Now that the Python build process is complete, generate files that are
-    // emitted by the `meta` crate.
-    // ------------------------------------------------------------------------
 
     if let Err(err) = meta::generate(&isas, &out_dir) {
         eprintln!("Error: {}", err);
@@ -98,17 +71,4 @@ fn main() {
         );
         println!("cargo:warning=Generated files are in {}", out_dir);
     }
-}
-
-fn identify_python() -> &'static str {
-    for python in &["python", "python3", "python2.7"] {
-        if process::Command::new(python)
-            .arg("--version")
-            .status()
-            .is_ok()
-        {
-            return python;
-        }
-    }
-    panic!("The Cranelift build requires Python (version 2.7 or version 3)");
 }

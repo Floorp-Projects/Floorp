@@ -488,8 +488,7 @@ void nsContentSecurityManager::AssertEvalNotRestricted(
   }
   if (!sTelemetryEventEnabled.exchange(true)) {
     sTelemetryEventEnabled = true;
-    Telemetry::SetEventRecordingEnabled(
-        NS_LITERAL_CSTRING("security.evalUsage"), true);
+    Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
   }
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameType.first()), extra);
 
@@ -625,7 +624,7 @@ static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+  docShellTreeItem->GetInProcessRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
   if (docShell) {
     appType = docShell->GetAppType();

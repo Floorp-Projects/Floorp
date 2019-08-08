@@ -232,9 +232,6 @@ struct HttpChannelOpenArgs
   URIParams?                  original;
   URIParams?                  doc;
   nsIReferrerInfo             referrerInfo;
-  URIParams?                  originalReferrer;
-  uint32_t                    originalReferrerPolicy;
-  uint32_t                    referrerPolicy;
   URIParams?                  apiRedirectTo;
   URIParams?                  topWindowURI;
   uint32_t                    loadFlags;

@@ -2,16 +2,23 @@
 
 use crate::cdsl::formats::FormatRegistry;
 use crate::cdsl::instructions::{
-    InstructionBuilder as Inst, InstructionGroup, InstructionGroupBuilder,
+    AllInstructions, InstructionBuilder as Inst, InstructionGroup, InstructionGroupBuilder,
 };
 use crate::cdsl::operands::{create_operand as operand, create_operand_doc as operand_doc};
 use crate::cdsl::types::ValueType;
 use crate::cdsl::typevar::{Interval, TypeSetBuilder, TypeVar};
-use crate::shared::types;
+use crate::shared::{immediates, types, OperandKinds};
 
-pub fn define(format_registry: &FormatRegistry) -> InstructionGroup {
-    let mut ig =
-        InstructionGroupBuilder::new("x86", "x86 specific instruction set", format_registry);
+pub fn define(
+    mut all_instructions: &mut AllInstructions,
+    format_registry: &FormatRegistry,
+) -> InstructionGroup {
+    let mut ig = InstructionGroupBuilder::new(
+        "x86",
+        "x86 specific instruction set",
+        &mut all_instructions,
+        format_registry,
+    );
 
     let iflags: &TypeVar = &ValueType::Special(types::Flag::IFlags.into()).into();
 
@@ -144,7 +151,7 @@ pub fn define(format_registry: &FormatRegistry) -> InstructionGroup {
         Floating point minimum with x86 semantics.
 
         This is equivalent to the C ternary operator `x < y ? x : y` which
-        differs from :inst:`fmin` when either operand is NaN or when comparing
+        differs from `fmin` when either operand is NaN or when comparing
         +0.0 to -0.0.
 
         When the two operands don't compare as LT, `y` is returned unchanged,
@@ -162,7 +169,7 @@ pub fn define(format_registry: &FormatRegistry) -> InstructionGroup {
         Floating point maximum with x86 semantics.
 
         This is equivalent to the C ternary operator `x > y ? x : y` which
-        differs from :inst:`fmax` when either operand is NaN or when comparing
+        differs from `fmax` when either operand is NaN or when comparing
         +0.0 to -0.0.
 
         When the two operands don't compare as GT, `y` is returned unchanged,
@@ -240,6 +247,47 @@ pub fn define(format_registry: &FormatRegistry) -> InstructionGroup {
         )
         .operands_in(vec![x])
         .operands_out(vec![y, rflags]),
+    );
+
+    let immediates = OperandKinds::from(immediates::define());
+    let uimm8 = immediates.by_name("uimm8");
+    let TxN = &TypeVar::new(
+        "TxN",
+        "A SIMD vector type",
+        TypeSetBuilder::new()
+            .ints(Interval::All)
+            .floats(Interval::All)
+            .bools(Interval::All)
+            .simd_lanes(Interval::All)
+            .includes_scalars(false)
+            .build(),
+    );
+    let a = &operand_doc("a", TxN, "A vector value (i.e. held in an XMM register)");
+    let b = &operand_doc("b", TxN, "A vector value (i.e. held in an XMM register)");
+    let i = &operand_doc("i", uimm8, "An ordering operand controlling the copying of data from the source to the destination; see PSHUFD in Intel manual for details");
+
+    ig.push(
+        Inst::new(
+            "x86_pshufd",
+            r#"
+    Packed Shuffle Doublewords -- copies data from either memory or lanes in an extended
+    register and re-orders the data according to the passed immediate byte.
+    "#,
+        )
+        .operands_in(vec![a, i]) // TODO allow copying from memory here (need more permissive type than TxN)
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "x86_pshufb",
+            r#"
+    Packed Shuffle Bytes -- re-orders data in an extended register using a shuffle
+    mask from either memory or another extended register
+    "#,
+        )
+        .operands_in(vec![a, b]) // TODO allow re-ordering from memory here (need more permissive type than TxN)
+        .operands_out(vec![a]),
     );
 
     ig.build()
