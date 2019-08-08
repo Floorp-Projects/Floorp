@@ -167,7 +167,6 @@ FxAccountsPushService.prototype = {
           } catch (err) {
             this.log.error("Error during unsubscribe", err);
           }
-        default:
           break;
       }
     } catch (err) {
