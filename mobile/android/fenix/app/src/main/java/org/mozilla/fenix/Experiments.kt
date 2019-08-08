@@ -8,7 +8,7 @@ import android.content.Context
 import mozilla.components.service.fretboard.ExperimentDescriptor
 
 const val EXPERIMENTS_JSON_FILENAME = "experiments.json"
-const val EXPERIMENTS_BASE_URL = "https://settings.prod.mozaws.net/v1"
+const val EXPERIMENTS_BASE_URL = "https://firefox.settings.services.mozilla.com/v1"
 const val EXPERIMENTS_BUCKET_NAME = "main"
 // collection name below, see https://bugzilla.mozilla.org/show_bug.cgi?id=1523395 for ownership details
 const val EXPERIMENTS_COLLECTION_NAME = "fenix-experiments"
