@@ -16,7 +16,6 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONObject
-import java.lang.Math.log
 import java.lang.Math.pow
 import kotlin.math.log
 
@@ -128,7 +127,7 @@ internal open class TimingDistributionsStorageEngineImplementation(
                 logger,
                 numTooLongSamples
             )
-            // Too long samples should just be truncated, but otherwise we deal record and handle them
+            // Too long samples should just be truncated, but otherwise we record and handle them
         }
 
         // Since the custom combiner closure captures this value, we need to just create a dummy
