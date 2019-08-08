@@ -631,21 +631,6 @@ bool BackgroundChildImpl::DeallocPMIDIManagerChild(PMIDIManagerChild* aActor) {
   return true;
 }
 
-dom::PFileSystemRequestChild* BackgroundChildImpl::AllocPFileSystemRequestChild(
-    const FileSystemParams& aParams) {
-  MOZ_CRASH("Should never get here!");
-  return nullptr;
-}
-
-bool BackgroundChildImpl::DeallocPFileSystemRequestChild(
-    PFileSystemRequestChild* aActor) {
-  // The reference is increased in FileSystemTaskBase::Start of
-  // FileSystemTaskBase.cpp. We should decrease it after IPC.
-  RefPtr<dom::FileSystemTaskChildBase> child =
-      dont_AddRef(static_cast<dom::FileSystemTaskChildBase*>(aActor));
-  return true;
-}
-
 // Gamepad API Background IPC
 dom::PGamepadEventChannelChild*
 BackgroundChildImpl::AllocPGamepadEventChannelChild() {

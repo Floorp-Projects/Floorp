@@ -139,11 +139,6 @@ void FileSystemTaskChildBase::Start() {
     return;
   }
 
-  // Retain a reference so the task object isn't deleted without IPDL's
-  // knowledge. The reference will be released by
-  // mozilla::ipc::BackgroundChildImpl::DeallocPFileSystemRequestChild.
-  NS_ADDREF_THIS();
-
   if (NS_IsMainThread()) {
     nsIEventTarget* target = mGlobalObject->EventTargetFor(TaskCategory::Other);
     MOZ_ASSERT(target);
