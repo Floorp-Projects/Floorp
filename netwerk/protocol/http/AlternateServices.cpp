@@ -17,6 +17,8 @@
 #include "NullHttpTransaction.h"
 #include "nsISSLSocketControl.h"
 #include "nsIWellKnownOpportunisticUtils.h"
+#include "mozilla/StaticPrefs_network.h"
+#include "mozilla/dom/PContent.h"
 
 /* RFC 7838 Alternative Services
    http://httpwg.org/http-extensions/opsec.html
@@ -60,7 +62,8 @@ void AltSvcMapping::ProcessHeader(
     return;
   }
 
-  if (!AcceptableProxy(proxyInfo)) {
+  if (StaticPrefs::network_http_altsvc_proxy_checks() &&
+      !AcceptableProxy(proxyInfo)) {
     LOG(("AltSvcMapping::ProcessHeader ignoring due to proxy\n"));
     return;
   }
@@ -1122,6 +1125,19 @@ void AltSvcCache::ClearAltServiceMappings() {
   if (mStorage) {
     mStorage->Clear();
   }
+}
+
+nsresult AltSvcCache::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (gHttpHandler->AllowAltSvc() && mStorage) {
+    nsTArray<mozilla::dom::DataStorageItem> items;
+    mStorage->GetAll(&items);
+
+    for (const auto& item : items) {
+      value.AppendElement(item.key());
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -2121,6 +2121,11 @@ nsHttpHandler::GetMisc(nsACString& value) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpHandler::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
+  return mConnMgr->GetAltSvcCacheKeys(value);
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------
