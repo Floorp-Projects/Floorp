@@ -103,6 +103,7 @@ function do_check_equiv(dom1, dom2) {
     case Node.PROCESSING_INSTRUCTION_NODE:
       Assert.equal(dom1.target, dom2.target);
       Assert.equal(dom1.data, dom2.data);
+    // fall through
     case Node.TEXT_NODE:
     case Node.CDATA_SECTION_NODE:
     case Node.COMMENT_NODE:
