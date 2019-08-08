@@ -23,9 +23,8 @@ function enableActorReleaser(webConsoleUI) {
       state = reducer(state, action);
 
       const type = action.type;
-      const proxy = webConsoleUI ? webConsoleUI.proxy : null;
       if (
-        proxy &&
+        webConsoleUI &&
         [
           MESSAGES_ADD,
           MESSAGES_CLEAR,
@@ -33,7 +32,9 @@ function enableActorReleaser(webConsoleUI) {
           MESSAGES_CLEAR_LOGPOINT,
         ].includes(type)
       ) {
-        releaseActors(state.messages.removedActors, proxy);
+        state.messages.removedActors.forEach(actor =>
+          webConsoleUI.releaseActor(actor)
+        );
 
         // Reset `removedActors` in message reducer.
         state = reducer(state, {
@@ -46,17 +47,6 @@ function enableActorReleaser(webConsoleUI) {
 
     return next(releaseActorsEnhancer, initialState, enhancer);
   };
-}
-
-/**
- * Helper function for releasing backend actors.
- */
-function releaseActors(removedActors, proxy) {
-  if (!proxy) {
-    return;
-  }
-
-  removedActors.forEach(actor => proxy.releaseActor(actor));
 }
 
 module.exports = enableActorReleaser;

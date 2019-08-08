@@ -5,6 +5,7 @@
 const {
   clonePacket,
   getFirstMessage,
+  getWebConsoleUiMock,
   setupActions,
   setupStore,
 } = require("devtools/client/webconsole/test/helpers");
@@ -27,13 +28,11 @@ describe("Release actor enhancer:", () => {
       const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
         storeOptions: { logLimit },
-        hud: {
-          proxy: {
-            releaseActor: actor => {
-              releasedActors.push(actor);
-            },
+        webConsoleUI: getWebConsoleUiMock(null, {
+          releaseActor: actor => {
+            releasedActors.push(actor);
           },
-        },
+        }),
       });
 
       // Add a log message.
@@ -73,13 +72,11 @@ describe("Release actor enhancer:", () => {
       const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
         storeOptions: { logLimit },
-        hud: {
-          proxy: {
-            releaseActor: actor => {
-              releasedActors.push(actor);
-            },
+        webConsoleUI: getWebConsoleUiMock(null, {
+          releaseActor: actor => {
+            releasedActors.push(actor);
           },
-        },
+        }),
       });
 
       // Add a log message.
@@ -126,13 +123,11 @@ describe("Release actor enhancer:", () => {
     it("properly releases backend actors after clear", () => {
       const releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        hud: {
-          proxy: {
-            releaseActor: actor => {
-              releasedActors.push(actor);
-            },
+        webConsoleUI: getWebConsoleUiMock(null, {
+          releaseActor: actor => {
+            releasedActors.push(actor);
           },
-        },
+        }),
       });
 
       // Add a log message.

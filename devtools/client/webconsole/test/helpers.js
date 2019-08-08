@@ -41,18 +41,14 @@ function setupActions() {
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input = [], { storeOptions = {}, actions, hud } = {}) {
-  if (!hud) {
-    hud = {
-      proxy: {
-        releaseActor: () => {},
-        target: {
-          ensureCSSErrorReportingEnabled: () => {},
-        },
-      },
-    };
+function setupStore(
+  input = [],
+  { storeOptions = {}, actions, webConsoleUI } = {}
+) {
+  if (!webConsoleUI) {
+    webConsoleUI = getWebConsoleUiMock();
   }
-  const store = configureStore(hud, {
+  const store = configureStore(webConsoleUI, {
     ...storeOptions,
     sessionId: -1,
     telemetry: new Telemetry(),
@@ -131,6 +127,30 @@ function getPrivatePacket(key) {
   return packet;
 }
 
+function getWebConsoleUiMock(hud, proxyOverrides) {
+  const proxy = getProxyMock(proxyOverrides);
+  return {
+    emit: () => {},
+    hud,
+    proxy,
+    clearNetworkRequests: () => {},
+    clearMessagesCache: () => {},
+    releaseActor: proxy.releaseActor,
+    getProxy: () => proxy,
+    inspectObjectActor: () => {},
+  };
+}
+
+function getProxyMock(overrides = {}) {
+  return {
+    releaseActor: actor => {},
+    target: {
+      ensureCSSErrorReportingEnabled: () => {},
+    },
+    ...overrides,
+  };
+}
+
 module.exports = {
   clearPrefs,
   clonePacket,
@@ -139,6 +159,7 @@ module.exports = {
   getLastMessage,
   getMessageAt,
   getPrivatePacket,
+  getWebConsoleUiMock,
   prefsService,
   setupActions,
   setupStore,

@@ -164,12 +164,10 @@ function createContextMenu(
           selectedObjectActor: actor,
         };
 
-        webConsoleUI.webConsoleClient
-          .evaluateJSAsync(evalString, options)
-          .then(res => {
-            webConsoleUI.jsterm.focus();
-            webConsoleUI.hud.setInputValue(res.result);
-          });
+        webConsoleUI.evaluateJSAsync(evalString, options).then(res => {
+          webConsoleUI.jsterm.focus();
+          webConsoleUI.hud.setInputValue(res.result);
+        });
       },
     })
   );
@@ -206,8 +204,10 @@ function createContextMenu(
         if (actor) {
           // The Debugger.Object of the OA will be bound to |_self| during evaluation.
           // See server/actors/webconsole/eval-with-debugger.js `evalWithDebugger`.
-          webConsoleUI.webConsoleClient
-            .evaluateJSAsync("copy(_self)", { selectedObjectActor: actor })
+          webConsoleUI
+            .evaluateJSAsync("copy(_self)", {
+              selectedObjectActor: actor,
+            })
             .then(res => {
               clipboardHelper.copyString(res.helperResult.value);
             });
