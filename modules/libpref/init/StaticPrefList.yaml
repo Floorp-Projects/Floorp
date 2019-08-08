@@ -6009,15 +6009,15 @@
   value: 40
   mirror: always
 
-# Disabled by default so it doesn't affect Thunderbird/SeaMonkey, but
-# enabled in firefox.js
+# Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
+# not allowed for Firefox Desktop in firefox.js
 - name: security.allow_eval_with_system_principal
   type: bool
   value: true
   mirror: always
 
-# Disabled by default so it doesn't affect Thunderbird/SeaMonkey, but
-# enabled in firefox.js
+# Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
+# not allowed for Firefox Desktop in firefox.js
 - name: security.allow_eval_in_parent_process
   type: bool
   value: true
