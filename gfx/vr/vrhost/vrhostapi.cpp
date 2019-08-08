@@ -138,8 +138,8 @@ void CreateVRWindow(char* firefoxFolderPath, char* firefoxProfilePath,
 
     if (hEvent != nullptr) {
       // Create Shmem and push state
-      mozilla::gfx::VRShMem shmem(nullptr, true, false);
-      shmem.CreateShMem();
+      mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+      shmem.CreateShMem(true /*aCreateOnSharedMemory*/);
       shmem.PushWindowState(windowState);
 
       // Start Firefox in another thread so that this thread can wait for the
