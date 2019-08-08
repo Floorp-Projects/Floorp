@@ -30,6 +30,8 @@ pub struct ElementRect {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MarionetteResult {
+    #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
+    Bool(bool),
     #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
     Null,
     NewWindow(NewWindow),
@@ -95,6 +97,11 @@ mod tests {
     use super::*;
     use crate::test::{assert_de, assert_ser_de, ELEMENT_KEY};
     use serde_json::json;
+
+    #[test]
+    fn test_boolean_response() {
+        assert_ser_de(&MarionetteResult::Bool(true), json!({"value": true}));
+    }
 
     #[test]
     fn test_cookies_response() {

@@ -115,6 +115,12 @@ pub enum Command {
     GetWindowHandles,
     #[serde(rename = "WebDriver:GetWindowRect")]
     GetWindowRect,
+    #[serde(rename = "WebDriver:IsElementDisplayed")]
+    IsDisplayed(LegacyWebElement),
+    #[serde(rename = "WebDriver:IsElementEnabled")]
+    IsEnabled(LegacyWebElement),
+    #[serde(rename = "WebDriver:IsElementSelected")]
+    IsSelected(LegacyWebElement),
     #[serde(rename = "WebDriver:MaximizeWindow")]
     MaximizeWindow,
     #[serde(rename = "WebDriver:MinimizeWindow")]
