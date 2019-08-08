@@ -30,6 +30,7 @@ class DebuggerEnvironment;
 class DebuggerFrame;
 class DebuggerObject;
 class DebuggerScript;
+class DebuggerSource;
 class Scope;
 class ModuleObject;
 
@@ -50,6 +51,7 @@ typedef JS::Handle<DebuggerEnvironment*> HandleDebuggerEnvironment;
 typedef JS::Handle<DebuggerFrame*> HandleDebuggerFrame;
 typedef JS::Handle<DebuggerObject*> HandleDebuggerObject;
 typedef JS::Handle<DebuggerScript*> HandleDebuggerScript;
+typedef JS::Handle<DebuggerSource*> HandleDebuggerSource;
 typedef JS::Handle<Scope*> HandleScope;
 typedef JS::Handle<ModuleObject*> HandleModuleObject;
 
@@ -64,6 +66,7 @@ typedef JS::MutableHandle<DebuggerEnvironment*>
 typedef JS::MutableHandle<DebuggerFrame*> MutableHandleDebuggerFrame;
 typedef JS::MutableHandle<DebuggerObject*> MutableHandleDebuggerObject;
 typedef JS::MutableHandle<DebuggerScript*> MutableHandleDebuggerScript;
+typedef JS::MutableHandle<DebuggerSource*> MutableHandleDebuggerSource;
 typedef JS::MutableHandle<Scope*> MutableHandleScope;
 typedef JS::MutableHandle<ModuleObject*> MutableHandleModuleObject;
 
@@ -83,6 +86,7 @@ typedef JS::Rooted<DebuggerEnvironment*> RootedDebuggerEnvironment;
 typedef JS::Rooted<DebuggerFrame*> RootedDebuggerFrame;
 typedef JS::Rooted<DebuggerObject*> RootedDebuggerObject;
 typedef JS::Rooted<DebuggerScript*> RootedDebuggerScript;
+typedef JS::Rooted<DebuggerSource*> RootedDebuggerSource;
 typedef JS::Rooted<Scope*> RootedScope;
 typedef JS::Rooted<ModuleObject*> RootedModuleObject;
 
