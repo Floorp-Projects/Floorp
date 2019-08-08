@@ -214,11 +214,6 @@ async function insecureTest(secureCheck) {
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
   if (secureCheck) {
     is(getIdentityMode(), "notSecure", "Identity should be not secure");
-    is(
-      document.getElementById("identity-box").getAttribute("tooltiptext"),
-      gNavigatorBundle.getString("identity.notSecure.tooltip"),
-      "The insecure lock icon has a correct tooltip text."
-    );
   } else {
     is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
   }
@@ -229,11 +224,6 @@ async function insecureTest(secureCheck) {
   gBrowser.selectedTab = newTab;
   if (secureCheck) {
     is(getIdentityMode(), "notSecure", "Identity should be not secure");
-    is(
-      document.getElementById("identity-box").getAttribute("tooltiptext"),
-      gNavigatorBundle.getString("identity.notSecure.tooltip"),
-      "The insecure lock icon has a correct tooltip text."
-    );
   } else {
     is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
   }
