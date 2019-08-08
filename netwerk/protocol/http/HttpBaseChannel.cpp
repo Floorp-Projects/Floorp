@@ -4061,43 +4061,7 @@ mozilla::dom::PerformanceStorage* HttpBaseChannel::GetPerformanceStorage() {
     return nullptr;
   }
 
-  // If a custom performance storage is set, let's use it.
-  mozilla::dom::PerformanceStorage* performanceStorage =
-      mLoadInfo->GetPerformanceStorage();
-  if (performanceStorage) {
-    return performanceStorage;
-  }
-
-  RefPtr<dom::Document> loadingDocument;
-  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
-  if (!loadingDocument) {
-    return nullptr;
-  }
-
-  if (!mLoadInfo->TriggeringPrincipal()->Equals(
-          loadingDocument->NodePrincipal())) {
-    return nullptr;
-  }
-
-  if (mLoadInfo->GetExternalContentPolicyType() ==
-          nsIContentPolicy::TYPE_SUBDOCUMENT &&
-      !mLoadInfo->GetIsFromProcessingFrameAttributes()) {
-    // We only report loads caused by processing the attributes of the
-    // browsing context container.
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> innerWindow = loadingDocument->GetInnerWindow();
-  if (!innerWindow) {
-    return nullptr;
-  }
-
-  mozilla::dom::Performance* performance = innerWindow->GetPerformance();
-  if (!performance) {
-    return nullptr;
-  }
-
-  return performance->AsPerformanceStorage();
+  return mLoadInfo->GetPerformanceStorage();
 }
 
 void HttpBaseChannel::MaybeReportTimingData() {
