@@ -61,15 +61,8 @@ bool GMPContentChild::DeallocPGMPVideoEncoderChild(
   return true;
 }
 
-PChromiumCDMChild* GMPContentChild::AllocPChromiumCDMChild() {
-  ChromiumCDMChild* actor = new ChromiumCDMChild(this);
-  actor->AddRef();
-  return actor;
-}
-
-bool GMPContentChild::DeallocPChromiumCDMChild(PChromiumCDMChild* aActor) {
-  static_cast<ChromiumCDMChild*>(aActor)->Release();
-  return true;
+already_AddRefed<PChromiumCDMChild> GMPContentChild::AllocPChromiumCDMChild() {
+  return MakeAndAddRef<ChromiumCDMChild>(this);
 }
 
 mozilla::ipc::IPCResult GMPContentChild::RecvPGMPVideoDecoderConstructor(

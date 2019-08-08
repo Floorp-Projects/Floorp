@@ -162,11 +162,11 @@ nsCOMPtr<nsISerialEventTarget> GMPContentParent::GMPEventTarget() {
 
 already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM() {
   GMP_LOG("GMPContentParent::GetChromiumCDM(this=%p)", this);
-  PChromiumCDMParent* actor = SendPChromiumCDMConstructor();
-  if (!actor) {
+
+  RefPtr<ChromiumCDMParent> parent = new ChromiumCDMParent(this, GetPluginId());
+  if (!SendPChromiumCDMConstructor(parent)) {
     return nullptr;
   }
-  RefPtr<ChromiumCDMParent> parent = static_cast<ChromiumCDMParent*>(actor);
 
   // TODO: Remove parent from mChromiumCDMs in ChromiumCDMParent::Destroy().
   mChromiumCDMs.AppendElement(parent);
@@ -209,27 +209,12 @@ nsresult GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE) {
   return NS_OK;
 }
 
-PChromiumCDMParent* GMPContentParent::AllocPChromiumCDMParent() {
-  GMP_LOG("GMPContentParent::AllocPChromiumCDMParent(this=%p)", this);
-  ChromiumCDMParent* parent = new ChromiumCDMParent(this, GetPluginId());
-  NS_ADDREF(parent);
-  return parent;
-}
-
 PGMPVideoDecoderParent* GMPContentParent::AllocPGMPVideoDecoderParent(
     const uint32_t& aDecryptorId) {
   GMP_LOG("GMPContentParent::AllocPGMPVideoDecoderParent(this=%p)", this);
   GMPVideoDecoderParent* vdp = new GMPVideoDecoderParent(this);
   NS_ADDREF(vdp);
   return vdp;
-}
-
-bool GMPContentParent::DeallocPChromiumCDMParent(PChromiumCDMParent* aActor) {
-  GMP_LOG("GMPContentParent::DeallocPChromiumCDMParent(this=%p, aActor=%p)",
-          this, aActor);
-  ChromiumCDMParent* parent = static_cast<ChromiumCDMParent*>(aActor);
-  NS_RELEASE(parent);
-  return true;
 }
 
 bool GMPContentParent::DeallocPGMPVideoDecoderParent(
