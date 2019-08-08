@@ -393,6 +393,7 @@ dependencies {
         exclude module: 'espresso-core'
     }
 
+    androidTestImplementation Deps.androidx_test_core
     androidTestImplementation Deps.espresso_idling_resources
 
     androidTestImplementation Deps.tools_test_runner
