@@ -481,12 +481,12 @@ class BrowserParent final : public PBrowserParent,
 
   already_AddRefed<PBrowserBridgeParent> AllocPBrowserBridgeParent(
       const nsString& aPresentationURL, const nsString& aRemoteType,
-      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
       const TabId& aTabId);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
       PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
-      const nsString& aRemoteType, const WindowGlobalInit& aWindowInit,
+      const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
       const uint32_t& aChromeFlags, const TabId& aTabId) override;
 
   void LoadURL(nsIURI* aURI);
