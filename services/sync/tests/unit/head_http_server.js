@@ -37,7 +37,12 @@ const SYNC_API_VERSION = "1.1";
 // The server returns timestamps with 1/100 sec granularity. Note that this is
 // subject to change: see Bug 650435.
 function new_timestamp() {
-  return Math.round(Date.now() / 10) / 100;
+  return round_timestamp(Date.now());
+}
+
+// Rounds a millisecond timestamp `t` to seconds, with centisecond precision.
+function round_timestamp(t) {
+  return Math.round(t / 10) / 100;
 }
 
 function return_timestamp(request, response, timestamp) {
