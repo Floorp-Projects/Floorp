@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 import io
 import mimetypes
@@ -13,17 +13,17 @@ import botocore
 import boto3
 import concurrent.futures as futures
 import requests
+from pprint import pprint
+
+from mozbuild.util import memoize
 
 
-def s3_upload(files, key_prefix=None):
-    """Upload files to an S3 bucket.
-
-    ``files`` is an iterable of ``(path, BaseFile)`` (typically from a
-    mozpack Finder).
-
-    Keys in the bucket correspond to source filenames. If ``key_prefix`` is
-    defined, key names will be ``<key_prefix>/<path>``.
-    """
+@memoize
+def create_aws_session():
+    '''
+    This function creates an aws session that is
+    shared between upload and delete both.
+    '''
     region = 'us-west-2'
     level = os.environ.get('MOZ_SCM_LEVEL', '1')
     bucket = {
@@ -53,6 +53,62 @@ def s3_upload(files, key_prefix=None):
 
     s3 = session.client('s3',
                         config=botocore.client.Config(max_pool_connections=20))
+
+    return s3, bucket
+
+
+@memoize
+def get_s3_keys(s3, bucket):
+    kwargs = {'Bucket': bucket}
+    all_keys = []
+    while True:
+        response = s3.list_objects_v2(**kwargs)
+        for obj in response['Contents']:
+            all_keys.append(obj['Key'])
+
+        try:
+            kwargs['ContinuationToken'] = response['NextContinuationToken']
+        except KeyError:
+            break
+
+    return all_keys
+
+
+def s3_delete_missing(files, key_prefix=None):
+
+    s3, bucket = create_aws_session()
+    files_on_server = get_s3_keys(s3, bucket)
+    if key_prefix:
+        files_on_server = [path for path in files_on_server if path.startswith(key_prefix)]
+    else:
+        files_on_server = [path for path in files_on_server if not path.startswith("main/")]
+    files = [key_prefix + '/' + path if key_prefix else path for path, f in files]
+    files_to_delete = [path for path in files_on_server if path not in files]
+
+    query_size = 1000
+    while files_to_delete:
+        keys_to_remove = [{'Key': key} for key in files_to_delete[:query_size]]
+        response = s3.delete_objects(
+            Bucket=bucket,
+            Delete={
+                'Objects': keys_to_remove,
+            },
+        )
+        pprint(response, indent=2)
+        files_to_delete = files_to_delete[query_size:]
+
+
+def s3_upload(files, key_prefix=None):
+    """Upload files to an S3 bucket.
+
+    ``files`` is an iterable of ``(path, BaseFile)`` (typically from a
+    mozpack Finder).
+
+    Keys in the bucket correspond to source filenames. If ``key_prefix`` is
+    defined, key names will be ``<key_prefix>/<path>``.
+    """
+    s3, bucket = create_aws_session()
+    s3_delete_missing(files, key_prefix)
 
     def upload(f, path, bucket, key, extra_args):
         # Need to flush to avoid buffering/interleaving from multiple threads.
