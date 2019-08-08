@@ -375,6 +375,23 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mGlMsaaLevel.set(level);
             return this;
         }
+
+        /**
+         * Set the width of the special desktop mode viewport, which is used for displaying pages
+         * without a &lt;meta&gt; viewport tag, or for all pages when setting
+         * {@link GeckoSessionSettings#setViewportMode(int)} to
+         * {@link GeckoSessionSettings#VIEWPORT_MODE_DESKTOP}.
+         *
+         * @param width The width of the desktop mode viewport in CSS px.
+         *              Some common default values are provided by the
+         *              {@link GeckoRuntimeSettings#DESKTOP_VIEWPORT_WIDTH_PHONE
+         *              GeckoRuntimeSettings#DESKTOP_VIEWPORT_WIDTH_*} constants.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder desktopViewportWidth(final int width) {
+            getSettings().mDesktopViewportWidth.set(width);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -411,6 +428,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "apz.allow_double_tap_zooming", true);
     /* package */ final Pref<Integer> mGlMsaaLevel = new Pref<>(
             "gl.msaa-level", 0);
+    /* package */ final Pref<Integer> mDesktopViewportWidth = new Pref<>(
+            "browser.viewport.desktopWidth", 980);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -976,6 +995,42 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @NonNull GeckoRuntimeSettings setGlMsaaLevel(final int level) {
         mGlMsaaLevel.commit(level);
+        return this;
+    }
+
+    /**
+     * A desktop mode viewport width appropriate for use on phone-sized devices.
+     */
+    public static final int DESKTOP_VIEWPORT_WIDTH_PHONE = 980;
+    /**
+     * A desktop mode viewport width appropriate for use on tablet-sized devices.
+     */
+    public static final int DESKTOP_VIEWPORT_WIDTH_TABLET = 1280;
+
+    /**
+     * Get the current width of the special desktop mode viewport.
+     * @return The width of the desktop mode viewport in CSS px.
+     */
+    public int getDesktopViewportWidth() {
+        return mDesktopViewportWidth.get();
+    }
+
+    /**
+     * Set the width of the special desktop mode viewport, which is used for displaying pages
+     * without a &lt;meta&gt; viewport tag, or for all pages when setting
+     * {@link GeckoSessionSettings#setViewportMode(int)} to
+     * {@link GeckoSessionSettings#VIEWPORT_MODE_DESKTOP}.
+     *
+     * <p>Currently, any changes only take effect after a reload of the session.
+     *
+     * @param width The width of the desktop mode viewport in CSS px.
+     *              Some common default values are provided by the
+     *              {@link GeckoRuntimeSettings#DESKTOP_VIEWPORT_WIDTH_PHONE
+     *              GeckoRuntimeSettings#DESKTOP_VIEWPORT_WIDTH_*} constants.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setDesktopViewportWidth(final int width) {
+        mDesktopViewportWidth.commit(width);
         return this;
     }
 

@@ -27,6 +27,8 @@ exclude: true
   [`CrashReporter#sendCrashReport(Context, File, Map, String)`][70.4].
 - Add GeckoSession.LOAD_FLAGS_REPLACE_HISTORY
 - Complete rewrite of [`PromptDelegate`][70.11].
+- Added [`GeckoRuntimeSettings.setDesktopViewportWidth`][70.12] for configuring the desktop mode
+  viewport width.
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -39,6 +41,7 @@ exclude: true
 [70.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onFilePrompt-org.mozilla.geckoview.GeckoSession-java.lang.String-int-java.lang.String:A-int-org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback-
 [70.10]: {{javadoc_uri}}/GeckoView.html#setSession-org.mozilla.geckoview.GeckoSession-
 [70.11]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html
+[70.12]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setDesktopViewportWidth-int-
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -291,4 +294,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4550b507a55bdf91d21960209b66f893f4b5b317
+[api-version]: badc73dc79860a8f69a5e14d7c3725107af68c8e
