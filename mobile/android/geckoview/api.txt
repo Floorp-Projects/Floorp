@@ -314,7 +314,6 @@ package org.mozilla.geckoview {
     method public boolean getConsoleOutputEnabled();
     method @NonNull public ContentBlocking.Settings getContentBlocking();
     method @Nullable public Class<?> getCrashHandler();
-    method public int getDesktopViewportWidth();
     method @Nullable public Float getDisplayDensityOverride();
     method @Nullable public Integer getDisplayDpiOverride();
     method public boolean getDoubleTapZoomingEnabled();
@@ -336,7 +335,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings setAutoplayDefault(int);
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings setDesktopViewportWidth(int);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontSizeFactor(float);
@@ -353,8 +351,6 @@ package org.mozilla.geckoview {
     field public static final int COLOR_SCHEME_LIGHT = 0;
     field public static final int COLOR_SCHEME_SYSTEM = -1;
     field public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR;
-    field public static final int DESKTOP_VIEWPORT_WIDTH_PHONE = 980;
-    field public static final int DESKTOP_VIEWPORT_WIDTH_TABLET = 1280;
   }
 
   @AnyThread public static final class GeckoRuntimeSettings.Builder extends RuntimeSettings.Builder {
@@ -366,7 +362,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder contentBlocking(@NonNull ContentBlocking.Settings);
     method @NonNull public GeckoRuntimeSettings.Builder crashHandler(@Nullable Class<?>);
-    method @NonNull public GeckoRuntimeSettings.Builder desktopViewportWidth(int);
     method @NonNull public GeckoRuntimeSettings.Builder displayDensityOverride(float);
     method @NonNull public GeckoRuntimeSettings.Builder displayDpiOverride(int);
     method @NonNull public GeckoRuntimeSettings.Builder doubleTapZoomingEnabled(boolean);
