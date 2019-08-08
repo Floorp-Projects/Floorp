@@ -11775,7 +11775,6 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::Root, "root", "root");
   AddFrameTypeInfo(LayoutFrameType::Scroll, "scroll", "scroll");
   AddFrameTypeInfo(LayoutFrameType::TableCell, "cell", "tableCell");
-  AddFrameTypeInfo(LayoutFrameType::BCTableCell, "bcCell", "bcTableCell");
   AddFrameTypeInfo(LayoutFrameType::TableCol, "col", "tableCol");
   AddFrameTypeInfo(LayoutFrameType::TableColGroup, "colG", "tableColGroup");
   AddFrameTypeInfo(LayoutFrameType::Table, "tbl", "table");
