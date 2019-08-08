@@ -1931,21 +1931,12 @@ bool ContentChild::DeallocPFileDescriptorSetChild(
   return true;
 }
 
-PIPCBlobInputStreamChild* ContentChild::AllocPIPCBlobInputStreamChild(
-    const nsID& aID, const uint64_t& aSize) {
-  // IPCBlobInputStreamChild is refcounted. Here it's created and in
-  // DeallocPIPCBlobInputStreamChild is released.
-
+already_AddRefed<PIPCBlobInputStreamChild>
+ContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                            const uint64_t& aSize) {
   RefPtr<IPCBlobInputStreamChild> actor =
       new IPCBlobInputStreamChild(aID, aSize);
-  return actor.forget().take();
-}
-
-bool ContentChild::DeallocPIPCBlobInputStreamChild(
-    PIPCBlobInputStreamChild* aActor) {
-  RefPtr<IPCBlobInputStreamChild> actor =
-      dont_AddRef(static_cast<IPCBlobInputStreamChild*>(aActor));
-  return true;
+  return actor.forget();
 }
 
 mozilla::PRemoteSpellcheckEngineChild*

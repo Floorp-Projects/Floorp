@@ -13,7 +13,7 @@ include IPCStream;
 namespace mozilla {
 namespace dom {
 
-protocol PIPCBlobInputStream
+refcounted protocol PIPCBlobInputStream
 {
   manager PBackground or PContent;
 

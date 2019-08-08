@@ -37,7 +37,7 @@ class IPCBlobInputStreamChild final : public PIPCBlobInputStreamChild {
     eInactiveMigrating,
   };
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamChild, final)
 
   IPCBlobInputStreamChild(const nsID& aID, uint64_t aSize);
 
