@@ -1385,6 +1385,18 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
+   /**
+    * When media started or stopped in content process, we have to notify the
+    * chrome process in order to know which tab is playing media.
+    */
+    async NotifyMediaActiveChanged(BrowsingContext aContext, bool aActive);
+
+   /**
+    * When media became audible or inaudible in content process, we have to
+    * notify chrome process in order to which tab is audible.
+    */
+    async NotifyMediaAudibleChanged(BrowsingContext aContext, bool aAudible);
+
 both:
     async CommitBrowsingContextTransaction(BrowsingContext aContext,
                                            BrowsingContextTransaction aTransaction,
