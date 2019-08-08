@@ -86,6 +86,8 @@ document.addEventListener("DOMContentLoaded", e => {
 
       let bar = document.createElement("div");
       bar.className = "graph-bar";
+      let innerBar = document.createElement("div");
+      innerBar.className = "graph-wrapper-bar";
       if (data[dateString]) {
         let content = data[dateString];
         let count = document.createElement("div");
@@ -103,13 +105,14 @@ document.addEventListener("DOMContentLoaded", e => {
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
             weekTypeCounts[type] += content[type];
-            bar.appendChild(div);
+            innerBar.appendChild(div);
           }
         }
       } else {
         // There were no content blocking events on this day.
         bar.classList.add("empty");
       }
+      bar.appendChild(innerBar);
       graph.prepend(bar);
       let weekSummary = document.getElementById("graph-week-summary");
       weekSummary.setAttribute(
@@ -135,34 +138,49 @@ document.addEventListener("DOMContentLoaded", e => {
       date.setDate(date.getDate() - 1);
     }
 
+    let legend = document.getElementById("legend");
+    // This will change when we remove trackers from standard.
+    legend.style.gridTemplateAreas =
+      "'social cookie tracker fingerprinter cryptominer'";
+
     addListeners();
   };
 
   let addListeners = () => {
     let wrapper = document.querySelector(".body-wrapper");
-    wrapper.addEventListener("mouseover", ev => {
-      if (ev.originalTarget.dataset) {
-        wrapper.classList.add("hover-" + ev.originalTarget.dataset.type);
-      }
-    });
-
-    wrapper.addEventListener("mouseout", ev => {
-      if (ev.originalTarget.dataset) {
-        wrapper.classList.remove("hover-" + ev.originalTarget.dataset.type);
-      }
-    });
-
-    wrapper.addEventListener("click", ev => {
+    let triggerTabClick = ev => {
       if (ev.originalTarget.dataset.type) {
         document.getElementById(`tab-${ev.target.dataset.type}`).click();
       }
-    });
+    };
+
+    let triggerTabFocus = ev => {
+      if (ev.originalTarget.dataset) {
+        wrapper.classList.add("hover-" + ev.originalTarget.dataset.type);
+      }
+    };
+
+    let triggerTabBlur = ev => {
+      if (ev.originalTarget.dataset) {
+        wrapper.classList.remove("hover-" + ev.originalTarget.dataset.type);
+      }
+    };
+    wrapper.addEventListener("mouseout", triggerTabBlur);
+    wrapper.addEventListener("mouseover", triggerTabFocus);
+    wrapper.addEventListener("click", triggerTabClick);
 
     // Change the class on the body to change the color variable.
     let radios = document.querySelectorAll("#legend input");
     for (let radio of radios) {
       radio.addEventListener("change", ev => {
         document.body.setAttribute("focuseddatatype", ev.target.dataset.type);
+      });
+      radio.addEventListener("focus", ev => {
+        wrapper.classList.add("hover-" + ev.originalTarget.dataset.type);
+        document.body.setAttribute("focuseddatatype", ev.target.dataset.type);
+      });
+      radio.addEventListener("blur", ev => {
+        wrapper.classList.remove("hover-" + ev.originalTarget.dataset.type);
       });
     }
   };

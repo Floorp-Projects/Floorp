@@ -494,6 +494,7 @@ class _ASRouter {
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
     this.blockMessageById = this.blockMessageById.bind(this);
+    this.unblockMessageById = this.unblockMessageById.bind(this);
     this.onMessage = this.onMessage.bind(this);
     this.handleMessageRequest = this.handleMessageRequest.bind(this);
     this.addImpression = this.addImpression.bind(this);
@@ -1486,7 +1487,13 @@ class _ASRouter {
     return impressions;
   }
 
-  handleMessageRequest({ triggerId, template, provider, returnAll = false }) {
+  handleMessageRequest({
+    triggerId,
+    triggerParam,
+    template,
+    provider,
+    returnAll = false,
+  }) {
     const msgs = this._getUnblockedMessages().filter(m => {
       if (provider && m.provider !== provider) {
         return false;
@@ -1502,10 +1509,16 @@ class _ASRouter {
     });
 
     if (returnAll) {
-      return this._findAllMessages(msgs, triggerId && { id: triggerId });
+      return this._findAllMessages(
+        msgs,
+        triggerId && { id: triggerId, param: triggerParam }
+      );
     }
 
-    return this._findMessage(msgs, triggerId && { id: triggerId });
+    return this._findMessage(
+      msgs,
+      triggerId && { id: triggerId, param: triggerParam }
+    );
   }
 
   async setMessageById(id, target, force = true, action = {}) {
@@ -1835,7 +1848,10 @@ class _ASRouter {
       }
     }
 
-    const message = await this.handleMessageRequest({ triggerId: trigger.id });
+    const message = await this.handleMessageRequest({
+      triggerId: trigger.id,
+      triggerParam: trigger.param,
+    });
 
     await this.setState({ lastMessageId: message ? message.id : null });
     await this._sendMessageToTarget(message, target, trigger);

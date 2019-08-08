@@ -9,6 +9,7 @@ mozinstall.pth:testing/mozbase/mozinstall
 mozleak.pth:testing/mozbase/mozleak
 mozlog.pth:testing/mozbase/mozlog
 moznetwork.pth:testing/mozbase/moznetwork
+mozpower.pth:testing/mozbase/mozpower
 mozprocess.pth:testing/mozbase/mozprocess
 mozprofile.pth:testing/mozbase/mozprofile
 mozproxy.pth:testing/mozbase/mozproxy

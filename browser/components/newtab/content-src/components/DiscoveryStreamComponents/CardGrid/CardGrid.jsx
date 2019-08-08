@@ -33,6 +33,7 @@ export class CardGrid extends React.PureComponent {
             dispatch={this.props.dispatch}
             source={rec.domain}
             pocket_id={rec.pocket_id}
+            context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
           />
         )

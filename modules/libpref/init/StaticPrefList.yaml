@@ -717,11 +717,6 @@
   value: 32
   mirror: always
 
-- name: browser.contentblocking.rejecttrackers.control-center.ui.enabled
-  type: bool
-  value: false
-  mirror: always
-
 - name: browser.display.background_color
   type: String
   value: ""
@@ -731,7 +726,7 @@
 # 1 = always
 # 2 = never
 - name: browser.display.document_color_use
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 0
   mirror: always
   rust: true
@@ -782,6 +777,7 @@
   type: RelaxedAtomicInt32
   value: 1
   mirror: always
+  rust: true
 
 - name: browser.display.use_focus_colors
   type: bool
@@ -2486,9 +2482,10 @@
   mirror: always
 
 - name: full-screen-api.unprefix.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 - name: full-screen-api.allow-trusted-requests-only
   type: bool
@@ -2851,7 +2848,7 @@
   value: false
   mirror: once
 
-- name: gfx.font_ahem_antialias_none
+- name: gfx.font_rendering.ahem_antialias_none
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -2864,9 +2861,10 @@
 #endif
 
 - name: gfx.font_rendering.opentype_svg.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 - name: gfx.layerscope.enabled
   type: RelaxedAtomicBool
@@ -3994,9 +3992,10 @@
 
 # Is path() supported in clip-path?
 - name: layout.css.clip-path-path.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # text underline offset
 - name: layout.css.text-underline-offset.enabled
@@ -4072,9 +4071,10 @@
 
 # Is support for the font-display @font-face descriptor enabled?
 - name: layout.css.font-display.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Is support for document.fonts enabled?
 - name: layout.css.font-loading-api.enabled
@@ -4087,6 +4087,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Is support for GeometryUtils.getBoxQuads enabled?
 - name: layout.css.getBoxQuads.enabled
@@ -4096,9 +4097,10 @@
 
 # Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 - name: layout.css.grid-template-subgrid-value.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
+  rust: true
 
 # Is support for CSS individual transform enabled?
 - name: layout.css.individual-transform.enabled
@@ -4114,9 +4116,10 @@
 
 # Pref to control whether line-height: -moz-block-height is exposed to content.
 - name: layout.css.line-height-moz-block-height.content.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Is support for motion-path enabled?
 - name: layout.css.motion-path.enabled
@@ -4135,26 +4138,29 @@
 #
 # [1]: https://drafts.csswg.org/css-pseudo-4/#selectordef-marker
 - name: layout.css.marker.restricted
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Pref to control whether @-moz-document rules are enabled in content pages.
 - name: layout.css.moz-document.content.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Pref to control whether @-moz-document url-prefix() is parsed in content
 # pages. Only effective when layout.css.moz-document.content.enabled is false.
 - name: layout.css.moz-document.url-prefix-hack.enabled
-  type: bool
+  type: RelaxedAtomicBool
 #ifdef EARLY_BETA_OR_EARLIER
   value: false
 #else
   value: true
 #endif
   mirror: always
+  rust: true
 
 # Whether the offset-* logical property aliases are enabled.
 - name: layout.css.offset-logical-properties.enabled
@@ -4215,9 +4221,10 @@
 
 # Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 - name: layout.css.prefixes.device-pixel-ratio-webkit
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Is support for -moz-prefixed font feature properties enabled?
 - name: layout.css.prefixes.font-features
@@ -4266,9 +4273,10 @@
   mirror: always
 
 - name: layout.css.supports-selector.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 - name: layout.css.scroll-behavior.enabled
   type: RelaxedAtomicBool
@@ -4297,9 +4305,10 @@
 
 # Is steps(jump-*) supported in easing functions?
 - name: layout.css.step-position-jump.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # W3C touch-action css property (related to touch and pointer events)
 # Note that we turn this on even on platforms/configurations where touch
@@ -4313,9 +4322,10 @@
 
 # Does arbitrary ::-webkit-* pseudo-element parsed?
 - name: layout.css.unknown-webkit-pseudo-element
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Are style system use counters enabled?
 - name: layout.css.use-counters.enabled
@@ -4336,23 +4346,26 @@
   mirror: always
 
 - name: layout.css.xul-display-values.content.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Pref to control whether display: -moz-box and display: -moz-inline-box are
 # parsed in content pages.
 - name: layout.css.xul-box-display-values.content.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Pref to control whether XUL ::-tree-* pseudo-elements are parsed in content
 # pages.
 - name: layout.css.xul-tree-pseudos.content.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
 
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled
@@ -4508,9 +4521,10 @@
   mirror: always
 
 - name: layout.css.shadow-parts.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
+  rust: true
 
 # Is support for CSS text-justify property enabled?
 - name: layout.css.text-justify.enabled

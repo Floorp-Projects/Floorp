@@ -154,4 +154,10 @@ export type PauseAction =
       +thread: string,
       +path: string,
       +expanded: boolean,
+    |}
+  | {|
+      +type: "ADD_INLINE_PREVIEW",
+      +thread: string,
+      +frame: Frame,
+      +previewData: any,
     |};

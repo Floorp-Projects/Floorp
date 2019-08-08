@@ -587,9 +587,7 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   gfxFontSrcPrincipal* principal = aUserFontEntry->GetPrincipal();
 
   uint32_t securityFlags = 0;
-  bool isFile = false;
-  if (NS_SUCCEEDED(aFontFaceSrc->mURI->get()->SchemeIs("file", &isFile)) &&
-      isFile) {
+  if (aFontFaceSrc->mURI->get()->SchemeIs("file")) {
     securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
   } else {
     securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;

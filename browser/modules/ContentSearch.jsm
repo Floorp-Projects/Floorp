@@ -565,7 +565,7 @@ var ContentSearch = {
     }
 
     // The uri received here can be of two types
-    // 1 - resource://search-plugins/images/foo.ico
+    // 1 - moz-extension://[uuid]/path/to/icon.ico
     // 2 - data:image/x-icon;base64,VERY-LONG-STRING
     //
     // If the URI is not a data: URI, there's no point in converting

@@ -26,6 +26,7 @@ SEARCH_PATHS = [
     'mozbase/mozleak',
     'mozbase/mozlog',
     'mozbase/moznetwork',
+    'mozbase/mozpower',
     'mozbase/mozprocess',
     'mozbase/mozprofile',
     'mozbase/mozrunner',

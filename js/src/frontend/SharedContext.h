@@ -604,7 +604,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
     if (hasObject()) {
       return function()->isLambda();
     }
-    MOZ_ASSERT(functionCreationData().isSome());
     return functionCreationData()->flags.isLambda();
   }
 

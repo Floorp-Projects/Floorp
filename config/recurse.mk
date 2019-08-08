@@ -73,7 +73,12 @@ CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 $(compile_targets) $(syms_targets):
 	$(if $(filter $(RECURSE_BASE_DIR)%,$@),$(call RECURSE,$(@F),$(@D)))
 
-$(syms_targets): %/syms: %/target
+# Equivalent to a mix of:
+# $(syms_targets): %/syms: %/target
+# and
+# $(syms_targets): %/syms: %/target-shared
+# for the right syms targets.
+$(foreach syms_target,$(syms_targets),$(eval $(syms_target): $(filter $(dir $(syms_target))target $(dir $(syms_target))target-shared,$(compile_targets))))
 
 # Only hook symbols targets into the main compile graph in automation.
 ifdef MOZ_AUTOMATION
@@ -189,11 +194,11 @@ endif
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
-toolkit/library/target: widget/gtk/mozgtk/gtk3/target
+toolkit/library/target-shared: widget/gtk/mozgtk/gtk3/target-shared
 endif
 ifdef MOZ_LDAP_XPCOM
-ldap/target: security/target mozglue/build/target
-toolkit/library/target: ldap/target
+ldap/target: security/target-shared mozglue/build/target-shared
+toolkit/library/target-shared: ldap/target
 endif
 endif
 # Most things are built during compile (target/host), but some things happen during export

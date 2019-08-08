@@ -285,6 +285,7 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                    nsIChannel* aChannel,
                                    nsIPrincipal* aPrincipal, nsIURI* aURI,
                                    uint32_t& aRejectedReason) {
+  MOZ_ASSERT(aWindow || aChannel || aPrincipal);
   nsCOMPtr<nsICookieSettings> cookieSettings;
   if (aWindow) {
     if (aWindow->GetExtantDoc()) {
@@ -299,21 +300,18 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   }
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieSettings, aRejectedReason);
-  if (StaticPrefs::
-          browser_contentblocking_rejecttrackers_control_center_ui_enabled()) {
-    if (aWindow) {
-      AntiTrackingCommon::NotifyBlockingDecision(
-          aWindow,
-          disabled ? AntiTrackingCommon::BlockingDecision::eBlock
-                   : AntiTrackingCommon::BlockingDecision::eAllow,
-          aRejectedReason);
-    } else if (aChannel) {
-      AntiTrackingCommon::NotifyBlockingDecision(
-          aChannel,
-          disabled ? AntiTrackingCommon::BlockingDecision::eBlock
-                   : AntiTrackingCommon::BlockingDecision::eAllow,
-          aRejectedReason);
-    }
+  if (aWindow) {
+    AntiTrackingCommon::NotifyBlockingDecision(
+        aWindow,
+        disabled ? AntiTrackingCommon::BlockingDecision::eBlock
+                 : AntiTrackingCommon::BlockingDecision::eAllow,
+        aRejectedReason);
+  } else if (aChannel) {
+    AntiTrackingCommon::NotifyBlockingDecision(
+        aChannel,
+        disabled ? AntiTrackingCommon::BlockingDecision::eBlock
+                 : AntiTrackingCommon::BlockingDecision::eAllow,
+        aRejectedReason);
   }
   return disabled;
 }

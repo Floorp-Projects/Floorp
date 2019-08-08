@@ -490,3 +490,9 @@ export type BreakpointPosition = MappedLocation;
 export type BreakpointPositions = { [number]: BreakpointPosition[] };
 
 export type { Context, ThreadContext } from "./utils/context";
+
+export type Preview = {
+  [line: string]: {
+    [variableName: string]: any,
+  },
+};

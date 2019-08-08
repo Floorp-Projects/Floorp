@@ -390,6 +390,20 @@ const ONBOARDING_MESSAGES = () => [
     targeting: `isFxABadgeEnabled && !hasAccessedFxAPanel && !usesFirefoxSync && isFxAEnabled == true`,
     trigger: { id: "toolbarBadgeUpdate" },
   },
+  {
+    id: "PROTECTIONS_PANEL_1",
+    template: "protections_panel",
+    content: {
+      title: "Browse without being followed",
+      body:
+        "Keep your data to yourself. Firefox protects you from many of the most common trackers that follow what you do online.",
+      link_text: "Learn more",
+      cta_url: `${Services.urlFormatter.formatURLPref(
+        "app.support.baseURL"
+      )}etp-promotions?as=u&utm_source=inproduct`,
+    },
+    trigger: { id: "protectionsPanelOpen" },
+  },
 ];
 
 const OnboardingMessageProvider = {

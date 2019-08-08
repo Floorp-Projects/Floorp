@@ -153,6 +153,7 @@ AboutNewTabService.prototype = {
             `${BASE_URL}vendor/react${debugString}.js`,
             `${BASE_URL}vendor/react-dom${debugString}.js`,
             `${BASE_URL}vendor/prop-types.js`,
+            `${BASE_URL}vendor/react-transition-group.js`,
             `${BASE_URL}vendor/redux.js`,
             `${BASE_URL}vendor/react-redux.js`,
             `${BASE_URL}data/content/activity-stream.bundle.js`,

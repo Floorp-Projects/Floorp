@@ -368,30 +368,28 @@ input[type='text'], input[type='search'] {
   .outer-wrapper a {
     color: var(--newtab-link-primary-color); }
 
-main,
-.below-search-snippet.withButton {
-  margin: auto;
-  width: 274px; }
-  @media (min-width: 610px) {
-    main,
-    .below-search-snippet.withButton {
-      width: 530px; } }
-  @media (min-width: 866px) {
-    main,
-    .below-search-snippet.withButton {
-      width: 786px; } }
-  @media (min-width: 1122px) {
-    main,
-    .below-search-snippet.withButton {
-      width: 1042px; } }
-
 main {
+  margin: auto;
+  width: 274px;
   padding-bottom: 68px; }
   main section {
     margin-bottom: 20px;
     position: relative; }
   .hide-main main {
     visibility: hidden; }
+  @media (min-width: 610px) {
+    main {
+      width: 530px; } }
+  @media (min-width: 866px) {
+    main {
+      width: 786px; } }
+  @media (min-width: 1122px) {
+    main {
+      width: 1042px; } }
+
+.below-search-snippet.withButton {
+  margin: auto;
+  width: 100%; }
 
 .ds-outer-wrapper-search-alignment main {
   margin: 0 auto; }
@@ -1772,11 +1770,6 @@ main {
     border-radius: 3px; }
     .asrouter-admin .helpLink a {
       text-decoration: underline; }
-  .asrouter-admin .dsEnabled {
-    padding: 10px;
-    font-size: 16px;
-    margin-bottom: 20px;
-    border: 1px solid var(--newtab-border-secondary-color); }
   .asrouter-admin .ds-component {
     margin-bottom: 20px; }
   .asrouter-admin .modalOverlayInner {
@@ -2696,8 +2689,6 @@ main {
     flex-grow: 1; }
     .ds-card .meta .info-wrap {
       flex-grow: 1; }
-    .ds-card .meta .context {
-      margin: 12px 0 0; }
     .ds-card .meta .title {
       font-size: 17px;
       -webkit-line-clamp: 3;
@@ -2709,13 +2700,10 @@ main {
       line-height: 20px; }
     .ds-card .meta .source {
       -webkit-line-clamp: 1;
-      margin-bottom: 2px; }
-    .ds-card .meta .context,
-    .ds-card .meta .source {
+      margin-bottom: 2px;
       font-size: 13px;
       color: #737373; }
-      [lwt-newtab-brighttext] .ds-card .meta .context, [lwt-newtab-brighttext]
-      .ds-card .meta .source {
+      [lwt-newtab-brighttext] .ds-card .meta .source {
         color: #B1B1B3; }
   .ds-card header {
     line-height: 24px;
@@ -2730,6 +2718,79 @@ main {
     margin: 0; }
     [lwt-newtab-brighttext] .ds-card p {
       color: #F9F9FA; }
+
+.story-footer {
+  color: var(--newtab-text-secondary-color);
+  inset-inline-start: 0;
+  margin-top: 12px; }
+  .story-footer .story-sponsored-label,
+  .story-footer .status-message {
+    font-size: 13px;
+    line-height: 24px;
+    color: #737373; }
+    [lwt-newtab-brighttext] .story-footer .story-sponsored-label, [lwt-newtab-brighttext]
+    .story-footer .status-message {
+      color: #B1B1B3; }
+  .story-footer .status-message {
+    display: flex;
+    align-items: center;
+    height: 24px; }
+    .story-footer .status-message .story-badge-icon {
+      fill: #737373;
+      height: 16px;
+      margin-inline-end: 6px; }
+      [lwt-newtab-brighttext] .story-footer .status-message .story-badge-icon {
+        fill: #B1B1B3; }
+      .story-footer .status-message .story-badge-icon.icon-bookmark-removed {
+        background-image: url("../data/content/assets/icon-removed-bookmark.svg"); }
+    .story-footer .status-message .story-context-label {
+      color: #737373;
+      flex-grow: 1;
+      font-size: 13px;
+      line-height: 24px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap; }
+      [lwt-newtab-brighttext] .story-footer .status-message .story-context-label {
+        color: #B1B1B3; }
+
+.story-animate-enter {
+  opacity: 0; }
+
+.story-animate-enter-active {
+  opacity: 1;
+  transition: opacity 150ms ease-in 300ms; }
+  .story-animate-enter-active .story-badge-icon,
+  .story-animate-enter-active .story-context-label {
+    animation: color 3s ease-out 0.3s; }
+    [lwt-newtab-brighttext] .story-animate-enter-active .story-badge-icon, [lwt-newtab-brighttext]
+    .story-animate-enter-active .story-context-label {
+      animation: dark-color 3s ease-out 0.3s; }
+
+@keyframes color {
+  0% {
+    color: #058B00;
+    fill: #058B00; }
+  100% {
+    color: #737373;
+    fill: #737373; } }
+
+@keyframes dark-color {
+  0% {
+    color: #7C6;
+    fill: #7C6; }
+  100% {
+    color: #B1B1B3;
+    fill: #B1B1B3; } }
+
+.story-animate-exit {
+  position: absolute;
+  top: 0;
+  opacity: 1; }
+
+.story-animate-exit-active {
+  opacity: 0;
+  transition: opacity 250ms ease-in; }
 
 .ds-image {
   display: block;
@@ -3178,13 +3239,16 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin: 0 auto 16px; }
   .below-search-snippet.withButton {
     padding: 0 25px;
-    margin: auto; }
+    margin: auto;
+    background-color: transparent; }
     .ds-outer-wrapper-breakpoint-override .below-search-snippet.withButton {
       padding: 0 50px; }
     .below-search-snippet.withButton .snippet-hover-wrapper:hover {
       background-color: var(--newtab-element-hover-color); }
       .below-search-snippet.withButton .snippet-hover-wrapper:hover .blockButton {
         display: block; }
+        .ds-outer-wrapper-breakpoint-override .below-search-snippet.withButton .snippet-hover-wrapper:hover .blockButton {
+          inset-inline-end: -8%; }
 
 .SimpleBelowSearchSnippet {
   background-color: transparent;
@@ -3192,9 +3256,11 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   box-shadow: none;
   position: relative;
   line-height: 40px;
-  width: 736px;
   margin: auto;
   z-index: auto; }
+  @media (min-width: 866px) {
+    .SimpleBelowSearchSnippet {
+      width: 736px; } }
   .SimpleBelowSearchSnippet.active {
     background-color: var(--newtab-element-hover-color); }
   .SimpleBelowSearchSnippet .innerWrapper {
@@ -3214,13 +3280,20 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
         flex-direction: row;
         padding: 0;
         text-align: inherit; } }
+    @media (max-width: 1120px) {
+      .SimpleBelowSearchSnippet .innerWrapper {
+        margin: 0 60px; } }
+    @media (max-width: 865px) {
+      .SimpleBelowSearchSnippet .innerWrapper {
+        margin: 0 60px 0 0; } }
     .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet .innerWrapper {
       align-items: flex-start;
       background-color: inherit;
       box-shadow: none;
       flex-direction: row;
       padding: 0;
-      text-align: inherit; }
+      text-align: inherit;
+      margin: auto; }
   .SimpleBelowSearchSnippet .blockButton {
     display: block;
     inset-inline-end: 20px;
@@ -3228,7 +3301,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     top: 24px; }
   .SimpleBelowSearchSnippet .icon {
     height: 32px;
-    margin-inline-start: 12px;
     margin-top: 15px;
     width: 32px; }
     @media (min-width: 610px) {
@@ -3242,12 +3314,22 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       width: 24px; }
   .SimpleBelowSearchSnippet.withButton {
     line-height: 20px;
-    margin-bottom: 10px; }
+    margin-bottom: 10px;
+    background-color: transparent; }
     .SimpleBelowSearchSnippet.withButton .blockButton {
       display: none;
-      inset-inline-end: -80px;
+      inset-inline-end: -15%;
       opacity: 1;
       margin: auto; }
+      @media (max-width: 1120px) {
+        .SimpleBelowSearchSnippet.withButton .blockButton {
+          inset-inline-end: 2%; } }
+      @media (max-width: 865px) {
+        .SimpleBelowSearchSnippet.withButton .blockButton {
+          margin-top: 10px; } }
+      .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet.withButton .blockButton {
+        inset-inline-end: -10%;
+        margin: auto; }
     .SimpleBelowSearchSnippet.withButton .textContainer {
       margin: 10px; }
     .SimpleBelowSearchSnippet.withButton .title {
@@ -3258,8 +3340,10 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     .SimpleBelowSearchSnippet.withButton .icon {
       width: 42px;
       height: 42px;
-      margin-inline-end: 12px;
       flex-shrink: 0; }
+      @media (max-width: 865px) {
+        .SimpleBelowSearchSnippet.withButton .icon {
+          display: none; } }
     .SimpleBelowSearchSnippet.withButton .buttonContainer {
       margin: auto; }
   .SimpleBelowSearchSnippet .body {

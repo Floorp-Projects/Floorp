@@ -2390,7 +2390,7 @@ bool DocAccessible::IsLoadEventTarget() const {
     // Return true if it's either:
     // a) tab document;
     nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-    treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+    treeItem->GetInProcessRootTreeItem(getter_AddRefs(rootTreeItem));
     if (parentTreeItem == rootTreeItem) return true;
 
     // b) frame/iframe document and its parent document is not in loading state

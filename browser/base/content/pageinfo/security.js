@@ -376,14 +376,29 @@ function setText(id, value) {
   }
 }
 
+function getCertificateChain(certChain, options = {}) {
+  let certificates = [];
+  for (let cert of certChain.getEnumerator()) {
+    certificates.push(cert);
+  }
+  return certificates;
+}
+
 function viewCertHelper(parent, cert) {
   if (!cert) {
     return;
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let derb64 = encodeURIComponent(cert.getBase64DERString());
-    let url = `about:certificate?cert=${derb64}`;
+    let ui = security._getSecurityUI();
+    let securityInfo = ui.secInfo;
+    let certChain = getCertificateChain(securityInfo.succeededCertChain);
+    let certs = certChain.map(elem =>
+      encodeURIComponent(elem.getBase64DERString())
+    );
+    let certsStringURL = certs.map(elem => `cert=${elem}`);
+    certsStringURL = certsStringURL.join("&");
+    let url = `about:certificate?${certsStringURL}`;
     openTrustedLinkIn(url, "tab", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });

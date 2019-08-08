@@ -465,6 +465,7 @@ package org.mozilla.geckoview {
     field public static final int LOAD_FLAGS_EXTERNAL = 4;
     field public static final int LOAD_FLAGS_FORCE_ALLOW_DATA_URI = 32;
     field public static final int LOAD_FLAGS_NONE = 0;
+    field public static final int LOAD_FLAGS_REPLACE_HISTORY = 64;
     field @Nullable protected GeckoSession.Window mWindow;
   }
 

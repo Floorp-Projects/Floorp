@@ -56,7 +56,6 @@ let notificationsByWindow = new WeakMap();
 class _ToolbarBadgeHub {
   constructor() {
     this.id = "toolbar-badge-hub";
-    this.template = "toolbar_badge";
     this.state = null;
     this.prefs = {
       WHATSNEW_TOOLBAR_PANEL: "browser.messaging-system.whatsNewPanel.enabled",
@@ -93,7 +92,10 @@ class _ToolbarBadgeHub {
     this._dispatch = dispatch;
     // Need to wait for ASRouter to initialize before trying to fetch messages
     await waitForInitialized;
-    this.messageRequest("toolbarBadgeUpdate");
+    this.messageRequest({
+      triggerId: "toolbarBadgeUpdate",
+      template: "toolbar_badge",
+    });
     // Listen for pref changes that could trigger new badges
     Services.prefs.addObserver(this.prefs.WHATSNEW_TOOLBAR_PANEL, this);
     const _intervalId = setInterval(
@@ -127,13 +129,19 @@ class _ToolbarBadgeHub {
       }
     }
 
-    this.messageRequest("momentsUpdate");
+    this.messageRequest({
+      triggerId: "momentsUpdate",
+      template: "update_action",
+    });
   }
 
   observe(aSubject, aTopic, aPrefName) {
     switch (aPrefName) {
       case this.prefs.WHATSNEW_TOOLBAR_PANEL:
-        this.messageRequest("toolbarBadgeUpdate");
+        this.messageRequest({
+          triggerId: "toolbarBadgeUpdate",
+          template: "toolbar_badge",
+        });
         break;
     }
   }
@@ -254,6 +262,12 @@ class _ToolbarBadgeHub {
     // Send a telemetry ping when adding the notification badge
     this.sendUserEventTelemetry("IMPRESSION", message);
 
+    if (message.template === "update_action") {
+      this.executeAction({ ...message.content.action, message_id: message.id });
+      // No badge to set only an action to execute
+      return;
+    }
+
     EveryWindow.registerCallback(
       this.id,
       win => {
@@ -290,10 +304,10 @@ class _ToolbarBadgeHub {
     }
   }
 
-  async messageRequest(triggerId) {
+  async messageRequest({ triggerId, template }) {
     const message = await this._handleMessageRequest({
       triggerId,
-      template: this.template,
+      template,
     });
     if (message) {
       this.registerBadgeNotificationListener(message);

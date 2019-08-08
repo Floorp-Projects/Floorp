@@ -112,6 +112,7 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY fxa.service.send.launch "Launch &sendShortName;">
 <!ENTITY fxa.service.monitor.description "Check if your email has appeared in a data breach and get alerted if it appears in a new breach.">
 <!ENTITY fxa.service.monitor.launch "Launch &monitorShortName;">
+<!ENTITY fxa.service.sendTab.description "Send a tab instantly to any device you’re signed in on.">
 
 <!-- LOCALIZATION NOTE (fullscreenWarning.beforeDomain.label,
      fullscreenWarning.afterDomain.label): these two strings are used
@@ -802,7 +803,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY getUserMedia.audioCapture.label "Audio from the tab will be shared.">
 <!ENTITY getUserMedia.allWindowsShared.message "All visible windows on your screen will be shared.">
 
-<!ENTITY contentBlocking.trackingProtection3.label "Trackers">
+<!ENTITY contentBlocking.trackingProtection4.label "Tracking Content">
 
 <!ENTITY contentBlocking.manageSettings.label "Manage Content Blocking">
 <!ENTITY contentBlocking.manageSettings.accesskey "M">

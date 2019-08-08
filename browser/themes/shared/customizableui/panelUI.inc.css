@@ -786,6 +786,13 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   width: 80px;
 }
 
+.fxaSendToDeviceLogo {
+  margin-top: 15px;
+  height: 119px;
+  width: 164px;
+  list-style-image: url(chrome://browser/skin/fxa/send-to-device.svg);
+}
+
 .fxaSendLogo {
   list-style-image: url(chrome://browser/content/logos/send.svg);
 }
@@ -1098,7 +1105,8 @@ panelview .toolbarbutton-1,
   float: right;
 }
 
-.PanelUI-subView .subviewbutton-nav::after {
+.PanelUI-subView .subviewbutton-nav::after,
+#protections-popup-message button::after {
   -moz-context-properties: fill, fill-opacity;
   content: url(chrome://browser/skin/back-12.svg);
   fill: currentColor;
@@ -1107,13 +1115,22 @@ panelview .toolbarbutton-1,
   transform: translateY(1px);
 }
 
+#protections-popup-message button::after {
+  transform: scale(1.5) translateY(1px);
+}
+
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(ltr)::after {
   transform: scaleX(-1) translateY(1px);
 }
 
+#protections-popup-message button:-moz-locale-dir(ltr)::after {
+  transform: scaleX(-1) translateY(1px) scale(1.5);
+}
+
 .subviewbutton[shortcut]::after,
 .subviewbutton[shortcut]::after,
-.PanelUI-subView .subviewbutton-nav::after {
+.PanelUI-subView .subviewbutton-nav::after,
+#protections-popup-message button::after {
   margin-inline-start: 10px;
 }
 
@@ -1784,6 +1801,43 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   padding: 0 10px;
 }
 
+#protections-popup-main-header-label {
+  margin-inline-start: 30px;
+  text-align: center;
+}
+
+#protections-popup #messaging-system-message-container {
+  height: 260px;
+  overflow: hidden;
+  transition: height .25s;
+}
+
+#protections-popup #messaging-system-message-container[disabled] {
+  height: 0;
+}
+
+#protections-popup #messaging-system-message-container[disabled] #protections-popup-message {
+  /* height + margins */
+  transform: translateY(calc(-100% - 10px));
+}
+
+#protections-popup-message {
+  display: flex;
+  align-items: flex-end;
+  transition: transform .25s;
+}
+
+#protections-popup-message.whatsNew-hero-message {
+  background-image: url(chrome://browser/skin/controlcenter/hero-message-background.svg);
+  background-color: #0250BB;
+  background-repeat: no-repeat;
+  background-position: right;
+  height: calc(100% - 20px);
+  margin: 10px;
+  border-radius: 4px;
+  color: white;
+}
+
 #customizationui-widget-multiview #PanelUI-whatsNew-content {
   height: 586px;
 }
@@ -1815,6 +1869,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   padding: 6px;
 }
 
+#protections-popup-message .whatsNew-message-body {
+  margin: 0 10px 20px;
+}
+
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {
   padding-inline-end: 46px;
   position: relative;
@@ -1828,20 +1886,23 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   width: 32px;
 }
 
-#PanelUI-whatsNew .whatsNew-message-title {
+#PanelUI-whatsNew .whatsNew-message-title,
+#protections-popup-message .whatsNew-message-title {
   font-size: 17px;
   font-weight: 600;
   line-height: 24px;
   margin: 2px 0;
 }
 
-#PanelUI-whatsNew  .whatsNew-message-body p {
+#PanelUI-whatsNew .whatsNew-message-body p,
+#protections-popup-message .whatsNew-message-body p {
   font-size: 13px;
   line-height: 18px;
   margin: 0;
 }
 
-#PanelUI-whatsNew button {
+#PanelUI-whatsNew button,
+#protections-popup-message button {
   background: none;
   border: 0;
   color: #45a1ff;
@@ -1858,4 +1919,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #PanelUI-whatsNew button:active {
   color: #0060df;
+}
+
+#protections-popup-message button {
+  color: white;
+  width: 100%;
+  text-align: end;
 }

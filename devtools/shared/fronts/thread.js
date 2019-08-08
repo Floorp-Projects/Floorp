@@ -185,7 +185,9 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     if (this.paused) {
       return warp();
     }
-    return this.interrupt().then(warp);
+
+    this.interrupt();
+    return this.once("paused", warp);
   }
 
   /**

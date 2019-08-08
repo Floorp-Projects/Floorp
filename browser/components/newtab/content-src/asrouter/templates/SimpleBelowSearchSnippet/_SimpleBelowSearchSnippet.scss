@@ -5,6 +5,7 @@
   &.withButton {
     padding: 0 25px;
     margin: auto;
+    background-color: transparent;
 
     // Add more padding if discovery stream is enabled.
     .ds-outer-wrapper-breakpoint-override & {
@@ -18,6 +19,11 @@
 
         .blockButton {
           display: block;
+
+          // larger inset if discovery stream is enabled.
+          .ds-outer-wrapper-breakpoint-override & {
+            inset-inline-end: -8%;
+          }
         }
       }
     }
@@ -30,9 +36,12 @@
   box-shadow: none;
   position: relative;
   line-height: 40px;
-  width: 736px;
   margin: auto;
   z-index: auto;
+
+  @media (min-width: $break-point-large) {
+    width: 736px;
+  }
 
   &.active {
     background-color: var(--newtab-element-hover-color);
@@ -61,9 +70,18 @@
       @include full-width-styles;
     }
 
+    @media (max-width: 1120px) {
+      margin: 0 60px;
+    }
+
+    @media (max-width: 865px) {
+      margin: 0 60px 0 0;
+    }
+
     // Disable breakpoints for now if discovery stream is enabled.
     .ds-outer-wrapper-breakpoint-override & {
       @include full-width-styles;
+      margin: auto;
     }
   }
 
@@ -76,7 +94,6 @@
 
   .icon {
     height: 32px;
-    margin-inline-start: 12px;
     margin-top: 15px;
     width: 32px;
 
@@ -99,12 +116,26 @@
   &.withButton {
     line-height: 20px;
     margin-bottom: 10px;
+    background-color: transparent;
 
     .blockButton {
       display: none;
-      inset-inline-end: -80px;
+      inset-inline-end: -15%;
       opacity: 1;
       margin: auto;
+
+      @media (max-width: 1120px) {
+        inset-inline-end: 2%;
+      }
+
+      @media (max-width: 865px) {
+        margin-top: 10px;
+      }
+
+      .ds-outer-wrapper-breakpoint-override & {
+        inset-inline-end: -10%;
+        margin: auto;
+      }
     }
 
     .textContainer {
@@ -123,8 +154,11 @@
     .icon {
       width: 42px;
       height: 42px;
-      margin-inline-end: 12px;
       flex-shrink: 0;
+
+      @media (max-width: 865px) {
+        display: none;
+      }
     }
 
     .buttonContainer {

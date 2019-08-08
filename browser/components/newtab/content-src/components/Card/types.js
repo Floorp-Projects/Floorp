@@ -7,6 +7,10 @@ export const cardContextTypes = {
     fluentID: "newtab-label-visited",
     icon: "history-item",
   },
+  removedBookmark: {
+    fluentID: "newtab-label-removed-bookmark",
+    icon: "bookmark-removed",
+  },
   bookmark: {
     fluentID: "newtab-label-bookmarked",
     icon: "bookmark-added",
