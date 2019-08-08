@@ -137,15 +137,13 @@ class BackgroundParentImpl : public PBackgroundParent {
   virtual bool DeallocPPendingIPCBlobParent(
       PPendingIPCBlobParent* aActor) override;
 
-  virtual PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
-      const nsID& aID, const uint64_t& aSize) override;
+  virtual already_AddRefed<PIPCBlobInputStreamParent>
+  AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                 const uint64_t& aSize) override;
 
   virtual mozilla::ipc::IPCResult RecvPIPCBlobInputStreamConstructor(
       PIPCBlobInputStreamParent* aActor, const nsID& aID,
       const uint64_t& aSize) override;
-
-  virtual bool DeallocPIPCBlobInputStreamParent(
-      PIPCBlobInputStreamParent* aActor) override;
 
   virtual PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
 

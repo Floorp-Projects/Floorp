@@ -830,11 +830,6 @@ class ContentParent final : public PContentParent,
       const IPCTabContext& context, const WindowGlobalInit& initialWindowInit,
       const uint32_t& chromeFlags);
 
-  PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
-      const nsID& aID, const uint64_t& aSize);
-
-  bool DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor);
-
   mozilla::ipc::IPCResult RecvIsSecureURI(
       const uint32_t& aType, const URIParams& aURI, const uint32_t& aFlags,
       const OriginAttributes& aOriginAttributes, bool* aIsSecureURI);

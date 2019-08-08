@@ -3372,19 +3372,6 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   return IPC_OK();
 }
 
-PIPCBlobInputStreamParent* ContentParent::AllocPIPCBlobInputStreamParent(
-    const nsID& aID, const uint64_t& aSize) {
-  MOZ_CRASH("PIPCBlobInputStreamParent actors should be manually constructed!");
-  return nullptr;
-}
-
-bool ContentParent::DeallocPIPCBlobInputStreamParent(
-    PIPCBlobInputStreamParent* aActor) {
-  RefPtr<IPCBlobInputStreamParent> actor =
-      dont_AddRef(static_cast<IPCBlobInputStreamParent*>(aActor));
-  return true;
-}
-
 mozilla::PRemoteSpellcheckEngineParent*
 ContentParent::AllocPRemoteSpellcheckEngineParent() {
   mozilla::RemoteSpellcheckEngineParent* parent =
