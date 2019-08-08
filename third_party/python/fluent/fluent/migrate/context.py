@@ -19,7 +19,9 @@ from .transforms import Source
 from .merge import merge_resource
 from .util import get_message
 from .errors import (
-    EmptyLocalizationError, NotSupportedError, UnreadableReferenceError)
+    EmptyLocalizationError,
+    UnreadableReferenceError,
+)
 
 
 class MergeContext(object):
@@ -68,6 +70,7 @@ class MergeContext(object):
         # Parsed input resources stored by resource path.
         self.reference_resources = {}
         self.localization_resources = {}
+        self.target_resources = {}
 
         # An iterable of `FTL.Message` objects some of whose nodes can be the
         # transform operations.
@@ -158,22 +161,16 @@ class MergeContext(object):
     def maybe_add_localization(self, path):
         """Add a localization resource to migrate translations from.
 
-        Only legacy resources can be added as migration sources.  The resource
-        may be missing on disk.
-
         Uses a compare-locales parser to create a dict of (key, string value)
         tuples.
+        For Fluent sources, we store the AST.
         """
-        if path.endswith('.ftl'):
-            error_message = (
-                'Migrating translations from Fluent files is not supported '
-                '({})'.format(path))
-            logging.getLogger('migrate').error(error_message)
-            raise NotSupportedError(error_message)
-
         try:
             fullpath = os.path.join(self.localization_dir, path)
-            collection = self.read_legacy_resource(fullpath)
+            if not fullpath.endswith('.ftl'):
+                collection = self.read_legacy_resource(fullpath)
+            else:
+                collection = self.read_ftl_resource(fullpath)
         except IOError:
             logger = logging.getLogger('migrate')
             logger.warning('Missing localization file: {}'.format(path))
@@ -243,17 +240,40 @@ class MergeContext(object):
         path_transforms = self.transforms.setdefault(target, [])
         path_transforms += transforms
 
-        if target not in self.localization_resources:
+        if target not in self.target_resources:
             target_ast = self.read_localization_ftl(target)
-            self.localization_resources[target] = target_ast
+            self.target_resources[target] = target_ast
 
-    def get_source(self, path, key):
+    def get_legacy_source(self, path, key):
         """Get an entity value from a localized legacy source.
 
         Used by the `Source` transform.
         """
         resource = self.localization_resources[path]
         return resource.get(key, None)
+
+    def get_fluent_source_pattern(self, path, key):
+        """Get a pattern from a localized Fluent source.
+
+        If the key contains a `.`, does an attribute lookup.
+        Used by the `COPY_PATTERN` transform.
+        """
+        resource = self.localization_resources[path]
+        msg_key, _, attr_key = key.partition('.')
+        found = None
+        for entry in resource.body:
+            if isinstance(entry, (FTL.Message, FTL.Term)):
+                if entry.id.name == msg_key:
+                    found = entry
+                    break
+        if found is None:
+            return None
+        if not attr_key:
+            return found.value
+        for attribute in found.attributes:
+            if attribute.id.name == attr_key:
+                return attribute.value
+        return None
 
     def messages_equal(self, res1, res2):
         """Compare messages and terms of two FTL resources.
@@ -313,7 +333,7 @@ class MergeContext(object):
             known_translations = changeset
 
         for path, reference in self.reference_resources.items():
-            current = self.localization_resources[path]
+            current = self.target_resources[path]
             transforms = self.transforms.get(path, [])
             in_changeset = partial(
                 self.in_changeset, changeset, known_translations, path)
@@ -336,7 +356,7 @@ class MergeContext(object):
 
             # Store the merged snapshot on the context so that the next merge
             # already takes it into account as the existing localization.
-            self.localization_resources[path] = snapshot
+            self.target_resources[path] = snapshot
 
             # The result for this path is a complete `FTL.Resource`.
             yield path, snapshot

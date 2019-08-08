@@ -195,6 +195,50 @@ class Transform(FTL.BaseNode):
 
 
 class Source(Transform):
+    """Base class for Transforms that get translations from source files.
+
+    The contract is that the first argument is the source path, and the
+    second is a key representing legacy string IDs, or Fluent id.attr.
+    """
+    def __init__(self, path, key):
+        self.path = path
+        self.key = key
+
+
+class FluentSource(Source):
+    """Declare a Fluent source translation to be copied over.
+
+    When evaluated, it clones the Pattern of the parsed source.
+    """
+    def __init__(self, path, key):
+        if not path.endswith('.ftl'):
+            raise NotSupportedError(
+                'Please use COPY to migrate from legacy files '
+                '({})'.format(path)
+            )
+        if key[0] == '-' and '.' in key:
+            raise NotSupportedError(
+                'Cannot migrate from Term Attributes, as they are'
+                'locale-dependent ({})'.format(path)
+            )
+        super(FluentSource, self).__init__(path, key)
+
+    def __call__(self, ctx):
+        pattern = ctx.get_fluent_source_pattern(self.path, self.key)
+        return pattern.clone()
+
+
+class COPY_PATTERN(FluentSource):
+    """Create a Pattern with the translation value from the given source.
+
+    The given key can be a Message ID, Message ID.attribute_name, or
+    Term ID. Accessing Term attributes is not supported, as they're internal
+    to the localization.
+    """
+    pass
+
+
+class LegacySource(Source):
     """Declare the source translation to be migrated with other transforms.
 
     When evaluated, `Source` returns a TextElement with the content from the
@@ -214,15 +258,14 @@ class Source(Transform):
     def __init__(self, path, key, trim=False):
         if path.endswith('.ftl'):
             raise NotSupportedError(
-                'Migrating translations from Fluent files is not supported '
+                'Please use COPY_PATTERN to migrate from Fluent files '
                 '({})'.format(path))
 
-        self.path = path
-        self.key = key
+        super(LegacySource, self).__init__(path, key)
         self.trim = trim
 
     def get_text(self, ctx):
-        return ctx.get_source(self.path, self.key)
+        return ctx.get_legacy_source(self.path, self.key)
 
     @staticmethod
     def trim_text(text):
@@ -241,7 +284,7 @@ class Source(Transform):
         return FTL.TextElement(text)
 
 
-class COPY(Source):
+class COPY(LegacySource):
     """Create a Pattern with the translation value from the given source."""
 
     def __call__(self, ctx):
@@ -344,7 +387,7 @@ class REPLACE_IN_TEXT(Transform):
         return Transform.pattern_of(*elements)
 
 
-class REPLACE(Source):
+class REPLACE(LegacySource):
     """Create a Pattern with interpolations from given source.
 
     Interpolations in the translation value from the given source will be
@@ -367,7 +410,7 @@ class REPLACE(Source):
         )(ctx)
 
 
-class PLURALS(Source):
+class PLURALS(LegacySource):
     """Create a Pattern with plurals from given source.
 
     Build an `FTL.SelectExpression` with the supplied `selector` and variants

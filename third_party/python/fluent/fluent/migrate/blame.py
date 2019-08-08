@@ -7,6 +7,7 @@ import json
 import os
 
 from compare_locales.parser import getParser, Junk
+from compare_locales.parser.fluent import FluentEntity
 from compare_locales import mozpath
 import hglib
 from hglib.util import b, cmdbuilder
@@ -46,18 +47,28 @@ class Blame(object):
         for e in entities:
             if isinstance(e, Junk):
                 continue
-            entity_lines = file_blame['lines'][
-                (e.value_position()[0] - 1):e.value_position(-1)[0]
-            ]
-            # ignore timezone
-            entity_lines.sort(key=lambda blame: -blame['date'][0])
-            line_blame = entity_lines[0]
-            user = line_blame['user']
-            timestamp = line_blame['date'][0]  # ignore timezone
-            if user not in self.users:
-                self.users.append(user)
-            userid = self.users.index(user)
-            self.blame[path][e.key] = [userid, timestamp]
+            if e.val_span:
+                key_vals = [(e.key, e.val_span)]
+            else:
+                key_vals = []
+            if isinstance(e, FluentEntity):
+                key_vals += [
+                    ('{}.{}'.format(e.key, attr.key), attr.val_span)
+                    for attr in e.attributes
+                ]
+            for key, (val_start, val_end) in key_vals:
+                entity_lines = file_blame['lines'][
+                    (e.ctx.linecol(val_start)[0] - 1):e.ctx.linecol(val_end)[0]
+                ]
+                # ignore timezone
+                entity_lines.sort(key=lambda blame: -blame['date'][0])
+                line_blame = entity_lines[0]
+                user = line_blame['user']
+                timestamp = line_blame['date'][0]  # ignore timezone
+                if user not in self.users:
+                    self.users.append(user)
+                userid = self.users.index(user)
+                self.blame[path][key] = [userid, timestamp]
 
     def readFile(self, parser, path):
         parser.readFile(os.path.join(self.client.root().decode('utf-8'), path))

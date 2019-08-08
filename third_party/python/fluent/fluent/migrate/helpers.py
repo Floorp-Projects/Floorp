@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 
 from fluent.syntax import FluentParser, ast as FTL
-from .transforms import Transform, CONCAT, COPY
+from .transforms import Transform, CONCAT, COPY, COPY_PATTERN
 from .errors import NotSupportedError, InvalidTransformError
 
 
@@ -73,14 +73,16 @@ class IntoTranforms(FTL.Transformer):
             raise NotSupportedError(
                 "{} may not be used with transforms_from(). It requires "
                 "additional logic in Python code.".format(name))
-        if name == 'COPY':
+        if name in ('COPY', 'COPY_PATTERN'):
             args = (
                 self.into_argument(arg) for arg in node.arguments.positional
             )
             kwargs = {
                 arg.name.name: self.into_argument(arg.value)
                 for arg in node.arguments.named}
-            return COPY(*args, **kwargs)
+            if name == 'COPY':
+                return COPY(*args, **kwargs)
+            return COPY_PATTERN(*args, **kwargs)
         return self.generic_visit(node)
 
     def visit_Placeable(self, node):
