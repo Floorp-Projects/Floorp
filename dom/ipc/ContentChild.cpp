@@ -1019,9 +1019,8 @@ nsresult ContentChild::ProvideWindowCommon(
   }
 
   // Open a remote endpoint for our PWindowGlobal actor.
-  // DeallocPWindowGlobalChild releases the ref taken.
   ManagedEndpoint<PWindowGlobalParent> windowParentEp =
-      newChild->OpenPWindowGlobalEndpoint(do_AddRef(windowChild).take());
+      newChild->OpenPWindowGlobalEndpoint(windowChild);
   if (NS_WARN_IF(!windowParentEp.IsValid())) {
     return NS_ERROR_ABORT;
   }
@@ -1881,9 +1880,8 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 
-  // The ref here is released in DeallocPWindowGlobalChild.
-  if (NS_WARN_IF(!browserChild->BindPWindowGlobalEndpoint(
-          std::move(aWindowEp), do_AddRef(windowChild).take()))) {
+  if (NS_WARN_IF(!browserChild->BindPWindowGlobalEndpoint(std::move(aWindowEp),
+                                                          windowChild))) {
     return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
   }
   windowChild->Init();

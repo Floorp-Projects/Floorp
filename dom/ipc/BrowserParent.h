@@ -473,8 +473,6 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
 
-  bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor);
-
   mozilla::ipc::IPCResult RecvNewWindowGlobal(
       ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,
       const WindowGlobalInit& aInit);

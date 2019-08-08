@@ -660,10 +660,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
  protected:
   virtual ~BrowserChild();
 
-  PWindowGlobalChild* AllocPWindowGlobalChild(const WindowGlobalInit& aInit);
-
-  bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor);
-
   mozilla::ipc::IPCResult RecvDestroy();
 
   mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive);

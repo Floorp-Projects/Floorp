@@ -31,7 +31,7 @@ struct JSWindowActorMessageMeta {
  * link either between the chrome/content process, or will be in-process, for
  * documents which are loaded in the chrome process.
  */
-async protocol PWindowGlobal
+async refcounted protocol PWindowGlobal
 {
   manager PBrowser or PInProcess;
 
