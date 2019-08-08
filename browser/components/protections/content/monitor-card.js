@@ -4,7 +4,10 @@
 
 /* eslint-env mozilla/frame-script */
 
-const MONITOR_SIGN_IN_URL = "https://monitor.firefox.com";
+const MONITOR_SIGN_IN_URL = RPMGetStringPref(
+  "browser.contentblocking.report.monitor.url",
+  ""
+);
 
 export default class MonitorClass {
   constructor(document) {
@@ -16,6 +19,21 @@ export default class MonitorClass {
       // Wait for monitor data and display the card.
       this.getMonitorData(data);
       RPMSendAsyncMessage("FetchMonitorData");
+    });
+
+    let monitorReportLink = this.doc.getElementById("full-report-link");
+    monitorReportLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "mtr_report_link");
+    });
+
+    let monitorAboutLink = this.doc.getElementById("monitor-link");
+    monitorAboutLink.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "mtr_about_link");
+    });
+
+    let openLockwise = this.doc.getElementById("lockwise-link");
+    openLockwise.addEventListener("click", () => {
+      this.doc.sendTelemetryEvent("click", "lw_open_breach_link");
     });
   }
 
@@ -58,6 +76,9 @@ export default class MonitorClass {
       signUpForMonitorLink.href = this.buildMonitorUrl(monitorData.userEmail);
       signUpForMonitorLink.setAttribute("data-l10n-id", "monitor-sign-up");
       headerContent.setAttribute("data-l10n-id", "monitor-header-content");
+      signUpForMonitorLink.addEventListener("click", () => {
+        this.doc.sendTelemetryEvent("click", "mtr_signup_button");
+      });
     }
   }
 

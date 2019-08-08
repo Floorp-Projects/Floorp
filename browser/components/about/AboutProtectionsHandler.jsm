@@ -78,6 +78,10 @@ var AboutProtectionsHandler = {
     for (let topic of this._topics) {
       this.pageListener.addMessageListener(topic, this.receiveMessage);
     }
+    Services.telemetry.setEventRecordingEnabled(
+      "security.ui.protections",
+      true
+    );
     this._inited = true;
   },
 

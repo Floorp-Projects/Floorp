@@ -1494,6 +1494,69 @@ security.ui.certerror:
       has_sts: If the error page is for a site with HSTS headers or with a pinned key.
       panel_open: If the advanced panel was open at the time of the interaction.
 
+security.ui.protections:
+  show:
+    objects: [
+      "protection_report",
+    ]
+    bug_numbers:
+      - 1557050
+    description: >
+      User arrived on the protection report.
+    expiry_version: "75"
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+    notification_emails:
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      category: The category of protections the user is in, standard, strict or custom.
+  close:
+    objects: [
+      "protection_report",
+    ]
+    bug_numbers:
+      - 1557050
+    description: >
+      User closed on the protection report.
+    expiry_version: "75"
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+    notification_emails:
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      category: The category of protections the user is in, standard, strict or custom.
+  click:
+    bug_numbers:
+      - 1557050
+    description: >
+      User interaction by click events on the protection report.
+    objects: [
+      "lw_app_link",
+      "lw_open_button",
+      "lw_sync_link",
+      "lw_about_link",
+      "lw_open_breach_link",
+      "mtr_report_link",
+      "mtr_about_link",
+      "mtr_signup_button",
+    ]
+    expiry_version: "75"
+    record_in_processes: ["content"]
+    release_channel_collection: opt-out
+    notification_emails:
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
+    extra_keys:
+      category: The category of protections the user is in, standard, strict or custom.
+
 security.ui.identitypopup:
   open:
     objects: ["identity_popup"]
