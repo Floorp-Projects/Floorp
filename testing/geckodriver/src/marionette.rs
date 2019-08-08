@@ -835,6 +835,26 @@ fn try_convert_to_marionette_message(
         FindElements(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
+        FindElementElement(ref e, ref x) => {
+            let locator = x.to_marionette()?;
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::FindElementElement {
+                    element: e.clone().to_string(),
+                    using: locator.using.clone(),
+                    value: locator.value.clone(),
+                },
+            ))
+        }
+        FindElementElements(ref e, ref x) => {
+            let locator = x.to_marionette()?;
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::FindElementElements {
+                    element: e.clone().to_string(),
+                    using: locator.using.clone(),
+                    value: locator.value.clone(),
+                },
+            ))
+        }
         FullscreenWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FullscreenWindow,
         )),
@@ -971,26 +991,6 @@ impl MarionetteCommand {
                         )?,
                     );
                     (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
-                }
-                FindElementElement(ref e, ref x) => {
-                    let mut data = try_opt!(
-                        serde_json::to_value(x)?.as_object(),
-                        ErrorStatus::UnknownError,
-                        "Expected an object"
-                    )
-                    .clone();
-                    data.insert("element".to_string(), Value::String(e.to_string()));
-                    (Some("WebDriver:FindElement"), Some(Ok(data)))
-                }
-                FindElementElements(ref e, ref x) => {
-                    let mut data = try_opt!(
-                        serde_json::to_value(x)?.as_object(),
-                        ErrorStatus::UnknownError,
-                        "Expected an object"
-                    )
-                    .clone();
-                    data.insert("element".to_string(), Value::String(e.to_string()));
-                    (Some("WebDriver:FindElements"), Some(Ok(data)))
                 }
                 Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
                 GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
