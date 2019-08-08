@@ -5766,6 +5766,11 @@
   value: true
   mirror: always
 
+- name: privacy.fuzzyfox.clockgrainus
+  type: RelaxedAtomicUint32
+  value: 100
+  mirror: always
+
 # Annotate trackers using the strict list. If set to false, the basic list will
 # be used instead.
 - name: privacy.annotate_channels.strict_list.enabled
