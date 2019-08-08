@@ -3075,9 +3075,7 @@ WebSocketChannel::AsyncOnChannelRedirect(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // newuri is expected to be http or https
-  bool newuriIsHttps = false;
-  rv = newuri->SchemeIs("https", &newuriIsHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool newuriIsHttps = newuri->SchemeIs("https");
 
   if (!mAutoFollowRedirects) {
     // Even if redirects configured off, still allow them for HTTP Strict

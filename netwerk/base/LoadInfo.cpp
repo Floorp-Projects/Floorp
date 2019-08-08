@@ -270,9 +270,7 @@ LoadInfo::LoadInfo(
       if (uri) {
         // Checking https not secure context as http://localhost can't be
         // upgraded
-        bool isHttpsScheme;
-        nsresult rv = uri->SchemeIs("https", &isHttpsScheme);
-        if (NS_SUCCEEDED(rv) && isHttpsScheme) {
+        if (uri->SchemeIs("https")) {
           if (nsMixedContentBlocker::ShouldUpgradeMixedDisplayContent()) {
             mBrowserUpgradeInsecureRequests = true;
           } else {

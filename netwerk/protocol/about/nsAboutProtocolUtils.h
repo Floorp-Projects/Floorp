@@ -14,14 +14,8 @@
 
 inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI* aAboutURI,
                                                    nsCString& aModule) {
-#ifdef DEBUG
-  {
-    bool isAbout;
-    NS_ASSERTION(
-        NS_SUCCEEDED(aAboutURI->SchemeIs("about", &isAbout)) && isAbout,
-        "should be used only on about: URIs");
-  }
-#endif
+  NS_ASSERTION(aAboutURI->SchemeIs("about"),
+    "should be used only on about: URIs");
 
   nsresult rv = aAboutURI->GetPathQueryRef(aModule);
   NS_ENSURE_SUCCESS(rv, rv);

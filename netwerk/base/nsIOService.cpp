@@ -1732,9 +1732,7 @@ nsresult nsIOService::SpeculativeConnectInternal(
     bool aAnonymous) {
   NS_ENSURE_ARG(aURI);
 
-  bool isHTTP, isHTTPS;
-  if (!(NS_SUCCEEDED(aURI->SchemeIs("http", &isHTTP)) && isHTTP) &&
-      !(NS_SUCCEEDED(aURI->SchemeIs("https", &isHTTPS)) && isHTTPS)) {
+  if (!aURI->SchemeIs("http") && !aURI->SchemeIs("https")) {
     // We don't speculatively connect to non-HTTP[S] URIs.
     return NS_OK;
   }

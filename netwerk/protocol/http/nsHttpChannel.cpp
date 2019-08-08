@@ -537,11 +537,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> resultPrincipal;
-  if (!isHttps && mLoadInfo) {
+  if (!mURI->SchemeIs("https") && mLoadInfo) {
     nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
         this, getter_AddRefs(resultPrincipal));
   }
@@ -549,15 +546,12 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   if (!NS_GetOriginAttributes(this, originAttributes)) {
     return NS_ERROR_FAILURE;
   }
-  bool isHttp = false;
-  rv = mURI->SchemeIs("http", &isHttp);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // At this point it is no longer possible to call
   // HttpBaseChannel::UpgradeToSecure.
   mUpgradableToSecure = false;
   bool shouldUpgrade = mUpgradeToSecure;
-  if (isHttp) {
+  if (mURI->SchemeIs("http")) {
     if (!shouldUpgrade) {
       // Make sure http channel is released on main thread.
       // See bug 1539148 for details.
@@ -729,10 +723,7 @@ nsresult nsHttpChannel::ConnectOnTailUnblock() {
   SpeculativeConnect();
 
   // open a cache entry for this channel...
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = OpenCacheEntry(isHttps);
+  rv = OpenCacheEntry(mURI->SchemeIs("https"));
 
   // do not continue if asyncOpenCacheEntry is in progress
   if (AwaitingCacheCallbacks()) {
@@ -2174,18 +2165,15 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
  *             it's an HTTPS connection.
  */
 nsresult nsHttpChannel::ProcessSecurityHeaders() {
-  nsresult rv;
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // If this channel is not loading securely, STS or PKP doesn't do anything.
   // In the case of HSTS, the upgrade to HTTPS takes place earlier in the
   // channel load process.
-  if (!isHttps) return NS_OK;
+  if (!mURI->SchemeIs("https")) {
+    return NS_OK;
+  }
 
   nsAutoCString asciiHost;
-  rv = mURI->GetAsciiHost(asciiHost);
+  nsresult rv = mURI->GetAsciiHost(asciiHost);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   // If the channel is not a hostname, but rather an IP, do not process STS
@@ -2267,9 +2255,7 @@ void nsHttpChannel::ProcessSecurityReport(nsresult status) {
 }
 
 bool nsHttpChannel::IsHTTPS() {
-  bool isHttps;
-  if (NS_FAILED(mURI->SchemeIs("https", &isHttps)) || !isHttps) return false;
-  return true;
+  return mURI->SchemeIs("https");
 }
 
 void nsHttpChannel::ProcessSSLInformation() {
@@ -2909,11 +2895,7 @@ nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
   bool doNotRender = DoNotRender3xxBody(rv);
 
   if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
-    bool isHTTP = false;
-    if (NS_FAILED(mRedirectURI->SchemeIs("http", &isHTTP))) isHTTP = false;
-    if (!isHTTP && NS_FAILED(mRedirectURI->SchemeIs("https", &isHTTP)))
-      isHTTP = false;
-
+    bool isHTTP = mRedirectURI->SchemeIs("http") || mRedirectURI->SchemeIs("https");
     if (!isHTTP) {
       // This was a blocked attempt to redirect and subvert the system by
       // redirecting to another protocol (perhaps javascript:)
@@ -4385,9 +4367,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
     }
   }
 
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isHttps = mURI->SchemeIs("https");
 
   bool doValidation = false;
   bool doBackgroundValidation = false;
@@ -4812,10 +4792,7 @@ nsresult nsHttpChannel::OnOfflineCacheEntryAvailable(
            " looking for a regular cache entry",
            this));
 
-      bool isHttps = false;
-      rv = mURI->SchemeIs("https", &isHttps);
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      bool isHttps = mURI->SchemeIs("https");
       rv = OpenCacheEntryInternal(isHttps, nullptr,
                                   false /* don't allow appcache lookups */);
       if (NS_FAILED(rv)) {
@@ -4994,11 +4971,7 @@ nsresult nsHttpChannel::OpenCacheInputStream(nsICacheEntry* cacheEntry,
                                              bool checkingAppCacheEntry) {
   nsresult rv;
 
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (isHttps) {
+  if (mURI->SchemeIs("https")) {
     rv = cacheEntry->GetSecurityInfo(getter_AddRefs(mCachedSecurityInfo));
     if (NS_FAILED(rv)) {
       LOG(("failed to parse security-info [channel=%p, entry=%p]", this,
@@ -5467,9 +5440,8 @@ void nsHttpChannel::UpdateInhibitPersistentCachingFlag() {
   if (mResponseHead->NoStore()) mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
   // Only cache SSL content on disk if the pref is set
-  bool isHttps;
   if (!gHttpHandler->IsPersistentHttpsCachingEnabled() &&
-      NS_SUCCEEDED(mURI->SchemeIs("https", &isHttps)) && isHttps) {
+      mURI->SchemeIs("https")) {
     mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
   }
 }
@@ -6562,10 +6534,9 @@ nsresult nsHttpChannel::BeginConnect() {
   nsAutoCString host;
   nsAutoCString scheme;
   int32_t port = -1;
-  bool isHttps = false;
+  bool isHttps = mURI->SchemeIs("https");
 
   rv = mURI->GetScheme(scheme);
-  if (NS_SUCCEEDED(rv)) rv = mURI->SchemeIs("https", &isHttps);
   if (NS_SUCCEEDED(rv)) rv = mURI->GetAsciiHost(host);
   if (NS_SUCCEEDED(rv)) rv = mURI->GetPort(&port);
   if (NS_SUCCEEDED(rv)) mURI->GetUsername(mUsername);

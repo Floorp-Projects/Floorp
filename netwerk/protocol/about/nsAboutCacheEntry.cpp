@@ -330,19 +330,14 @@ nsresult nsAboutCacheEntry::Channel::WriteCacheEntryDescription(
 
   // Test if the key is actually a URI
   nsCOMPtr<nsIURI> uri;
-  bool isJS = false;
-  bool isData = false;
-
   rv = NS_NewURI(getter_AddRefs(uri), str);
-  // javascript: and data: URLs should not be linkified
-  // since clicking them can cause scripts to run - bug 162584
-  if (NS_SUCCEEDED(rv)) {
-    uri->SchemeIs("javascript", &isJS);
-    uri->SchemeIs("data", &isData);
-  }
+
   nsAutoCString escapedStr;
   nsAppendEscapedHTML(str, escapedStr);
-  if (NS_SUCCEEDED(rv) && !(isJS || isData)) {
+
+  // javascript: and data: URLs should not be linkified
+  // since clicking them can cause scripts to run - bug 162584
+  if (NS_SUCCEEDED(rv) && !(uri->SchemeIs("javascript") || uri->SchemeIs("data"))) {
     buffer.AppendLiteral("<a href=\"");
     buffer.Append(escapedStr);
     buffer.AppendLiteral("\">");
