@@ -54,8 +54,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   void BindComplete(bool aIsRoot);
   void ActorDestroy(ActorDestroyReason aReason) override;
 
-  bool DeallocPCompositorBridgeParent(PCompositorBridgeParent* aActor);
-  PCompositorBridgeParent* AllocPCompositorBridgeParent(
+  already_AddRefed<PCompositorBridgeParent> AllocPCompositorBridgeParent(
       const CompositorBridgeOptions& aOpt);
 
   static void NotifyWebRenderError(wr::WebRenderError aError);
