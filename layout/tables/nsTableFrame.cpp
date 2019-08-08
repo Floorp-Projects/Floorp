@@ -245,7 +245,7 @@ void nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame) {
   // the potential to break sites that apply 'position: relative' to those
   // parts, expecting nothing to happen. We warn at the console to make tracking
   // down the issue easy.
-  if (!IsTableCell(aFrame->Type())) {
+  if (!aFrame->IsTableCellFrame()) {
     nsIContent* content = aFrame->GetContent();
     nsPresContext* presContext = aFrame->PresContext();
     if (content && !presContext->HasWarnedAboutPositionedTableParts()) {
@@ -1583,8 +1583,9 @@ bool nsTableFrame::AncestorsHaveStyleBSize(
   for (const ReflowInput* rs = &aParentReflowInput; rs && rs->mFrame;
        rs = rs->mParentReflowInput) {
     LayoutFrameType frameType = rs->mFrame->Type();
-    if (IsTableCell(frameType) || (LayoutFrameType::TableRow == frameType) ||
-        (LayoutFrameType::TableRowGroup == frameType)) {
+    if (LayoutFrameType::TableCell == frameType ||
+        LayoutFrameType::TableRow == frameType ||
+        LayoutFrameType::TableRowGroup == frameType) {
       const auto& bsize = rs->mStylePosition->BSize(wm);
       // calc() with both lengths and percentages treated like 'auto' on
       // internal table elements
@@ -1603,7 +1604,7 @@ bool nsTableFrame::AncestorsHaveStyleBSize(
 // call RequestSpecialBSizeReflow
 void nsTableFrame::CheckRequestSpecialBSizeReflow(
     const ReflowInput& aReflowInput) {
-  NS_ASSERTION(IsTableCell(aReflowInput.mFrame->Type()) ||
+  NS_ASSERTION(aReflowInput.mFrame->IsTableCellFrame() ||
                    aReflowInput.mFrame->IsTableRowFrame() ||
                    aReflowInput.mFrame->IsTableRowGroupFrame() ||
                    aReflowInput.mFrame->IsTableFrame(),
@@ -1632,7 +1633,7 @@ void nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput) {
   for (const ReflowInput* rs = &aReflowInput; rs && rs->mFrame;
        rs = rs->mParentReflowInput) {
     LayoutFrameType frameType = rs->mFrame->Type();
-    NS_ASSERTION(IsTableCell(frameType) ||
+    NS_ASSERTION(LayoutFrameType::TableCell == frameType ||
                      LayoutFrameType::TableRow == frameType ||
                      LayoutFrameType::TableRowGroup == frameType ||
                      LayoutFrameType::Table == frameType,

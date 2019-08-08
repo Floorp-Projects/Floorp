@@ -36,10 +36,6 @@ class StackingContextHelper;
 
 struct BCPropertyData;
 
-static inline bool IsTableCell(mozilla::LayoutFrameType frameType) {
-  return frameType == mozilla::LayoutFrameType::TableCell;
-}
-
 class nsDisplayTableItem : public nsPaintedDisplayItem {
  public:
   nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
