@@ -3512,8 +3512,9 @@ AudioCaptureStream* MediaStreamGraph::CreateAudioCaptureStream(
 }
 
 void MediaStreamGraph::AddStream(MediaStream* aStream) {
-  NS_ADDREF(aStream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  MOZ_DIAGNOSTIC_ASSERT(graph->mSelfRef, "Can't add stream to destroyed graph");
+  NS_ADDREF(aStream);
   aStream->SetGraphImpl(graph);
   graph->AppendMessage(MakeUnique<CreateMessage>(aStream));
 }
