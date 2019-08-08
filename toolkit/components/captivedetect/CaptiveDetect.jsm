@@ -209,7 +209,7 @@ function LoginObserver(captivePortalDetector) {
         case LOGIN_OBSERVER_STATE_BURST:
           // Wait while network stays idle for a short period
           state = LOGIN_OBSERVER_STATE_VERIFY_NEEDED;
-        // Fall though to start polling timer
+        // Fall through to start polling timer
         case LOGIN_OBSERVER_STATE_IDLE:
         // Just fall through to perform a captive portal check.
         case LOGIN_OBSERVER_STATE_VERIFY_NEEDED:

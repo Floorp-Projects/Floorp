@@ -72,6 +72,7 @@ TimerManager.prototype = {
         // to profile-after-change to initialize the timer.
         minInterval = 500;
         minFirstInterval = 500;
+      // fall through
       case "profile-after-change":
         this._timerMinimumDelay = Math.max(
           1000 *
