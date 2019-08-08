@@ -282,14 +282,11 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   virtual mozilla::ipc::IPCResult RecvShutdownQuotaManager() override;
 
-  virtual PFileSystemRequestParent* AllocPFileSystemRequestParent(
-      const FileSystemParams&) override;
+  virtual already_AddRefed<PFileSystemRequestParent>
+  AllocPFileSystemRequestParent(const FileSystemParams&) override;
 
   virtual mozilla::ipc::IPCResult RecvPFileSystemRequestConstructor(
       PFileSystemRequestParent* actor, const FileSystemParams& params) override;
-
-  virtual bool DeallocPFileSystemRequestParent(
-      PFileSystemRequestParent*) override;
 
   // Gamepad API Background IPC
   virtual PGamepadEventChannelParent* AllocPGamepadEventChannelParent()

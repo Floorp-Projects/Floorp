@@ -225,12 +225,6 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual bool DeallocPQuotaChild(PQuotaChild* aActor) override;
 
-  virtual PFileSystemRequestChild* AllocPFileSystemRequestChild(
-      const FileSystemParams&) override;
-
-  virtual bool DeallocPFileSystemRequestChild(
-      PFileSystemRequestChild*) override;
-
   // Gamepad API Background IPC
   virtual PGamepadEventChannelChild* AllocPGamepadEventChannelChild() override;
 

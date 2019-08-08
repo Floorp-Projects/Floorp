@@ -1027,7 +1027,7 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvShutdownQuotaManager() {
   return IPC_OK();
 }
 
-dom::PFileSystemRequestParent*
+already_AddRefed<dom::PFileSystemRequestParent>
 BackgroundParentImpl::AllocPFileSystemRequestParent(
     const FileSystemParams& aParams) {
   AssertIsInMainOrSocketProcess();
@@ -1039,23 +1039,13 @@ BackgroundParentImpl::AllocPFileSystemRequestParent(
     return nullptr;
   }
 
-  return result.forget().take();
+  return result.forget();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileSystemRequestConstructor(
     PFileSystemRequestParent* aActor, const FileSystemParams& params) {
   static_cast<FileSystemRequestParent*>(aActor)->Start();
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPFileSystemRequestParent(
-    PFileSystemRequestParent* aDoomed) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  RefPtr<FileSystemRequestParent> parent =
-      dont_AddRef(static_cast<FileSystemRequestParent*>(aDoomed));
-  return true;
 }
 
 // Gamepad API Background IPC
