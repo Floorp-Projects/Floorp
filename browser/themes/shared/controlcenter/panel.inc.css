@@ -212,28 +212,28 @@
 }
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
-  fill: #8758FB;
+  fill: #0A51BF;
 }
 
 :root[lwt-popup-brighttext] #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
-  fill: #B98CFE;
+  fill: #0CB0F5;
 }
 
 #protections-popup-mainView-panel-header {
   color: white;
-  background: radial-gradient(circle at top left, #9059FF, #0250BB);
-}
-
-#protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
   background: radial-gradient(circle at top right, #9059FF, #0250BB);
 }
 
+#protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
+  background: radial-gradient(circle at top left, #9059FF, #0250BB);
+}
+
 :root[lwt-popup-brighttext] #protections-popup-mainView-panel-header {
-  background: radial-gradient(circle at top left, #C689FF, #00B3F4);
+  background: radial-gradient(circle at top right, #C689FF, #00B3F4);
 }
 
 :root[lwt-popup-brighttext] #protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
-  background: radial-gradient(circle at top right, #C689FF, #00B3F4);
+  background: radial-gradient(circle at top left, #C689FF, #00B3F4);
 }
 
 #identity-popup-mainView-panel-header-span,
