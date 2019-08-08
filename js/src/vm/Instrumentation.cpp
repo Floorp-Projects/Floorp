@@ -9,6 +9,7 @@
 #include "jsapi.h"
 
 #include "debugger/DebugAPI.h"
+#include "proxy/DeadObjectProxy.h"
 
 #include "vm/JSObject-inl.h"
 
@@ -232,6 +233,12 @@ bool RealmInstrumentation::getScriptId(JSContext* cx,
   RealmInstrumentation* instrumentation = GetInstrumentation(holder);
 
   RootedObject dbgObject(cx, UncheckedUnwrap(instrumentation->dbgObject));
+
+  if (IsDeadProxyObject(dbgObject)) {
+    JS_ReportErrorASCII(cx, "Instrumentation debugger object is dead");
+    return false;
+  }
+
   AutoRealm ar(cx, dbgObject);
 
   RootedValue idValue(cx);
