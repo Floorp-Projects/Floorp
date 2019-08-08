@@ -2,7 +2,7 @@
 
 # DeviceType
 
-`enum class DeviceType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L136)
+`enum class DeviceType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L127)
 
 Describes a type of the physical device in the constellation.
 

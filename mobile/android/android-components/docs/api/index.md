@@ -188,6 +188,7 @@
 | [mozilla.components.support.test.ext](mozilla.components.support.test.ext/index.md) |  |
 | [mozilla.components.support.test.robolectric](mozilla.components.support.test.robolectric/index.md) |  |
 | [mozilla.components.support.test.robolectric.shadow](mozilla.components.support.test.robolectric.shadow/index.md) |  |
+| [mozilla.components.support.test.rules](mozilla.components.support.test.rules/index.md) |  |
 | [mozilla.components.support.utils](mozilla.components.support.utils/index.md) |  |
 | [mozilla.components.tooling.fetch.tests](mozilla.components.tooling.fetch.tests/index.md) |  |
 | [mozilla.components.tooling.lint](mozilla.components.tooling.lint/index.md) |  |

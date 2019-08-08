@@ -2,7 +2,7 @@
 
 # fetchAllDevicesAsync
 
-`fun fetchAllDevicesAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Device`](../../mozilla.components.concept.sync/-device/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L123)
+`fun fetchAllDevicesAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Device`](../../mozilla.components.concept.sync/-device/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L103)
 
 Overrides [DeviceConstellation.fetchAllDevicesAsync](../../mozilla.components.concept.sync/-device-constellation/fetch-all-devices-async.md)
 

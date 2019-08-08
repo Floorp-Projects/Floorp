@@ -2,7 +2,7 @@
 
 # state
 
-`fun state(): `[`ConstellationState`](../../mozilla.components.concept.sync/-constellation-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L174)
+`fun state(): `[`ConstellationState`](../../mozilla.components.concept.sync/-constellation-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L154)
 
 Overrides [DeviceConstellation.state](../../mozilla.components.concept.sync/-device-constellation/state.md)
 

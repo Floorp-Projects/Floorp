@@ -2,7 +2,7 @@
 
 # fromJSONString
 
-`fun fromJSONString(json: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null): `[`FirefoxAccount`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L269)
+`fun fromJSONString(json: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, persistCallback: `[`PersistCallback`](../-persist-callback.md)`? = null): `[`FirefoxAccount`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L288)
 
 Restores the account's authentication state from a JSON string produced by
 [FirefoxAccount.toJSONString](to-j-s-o-n-string.md).

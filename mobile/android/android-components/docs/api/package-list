@@ -239,6 +239,7 @@ mozilla.components.support.test
 mozilla.components.support.test.ext
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
+mozilla.components.support.test.rules
 mozilla.components.support.utils
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint

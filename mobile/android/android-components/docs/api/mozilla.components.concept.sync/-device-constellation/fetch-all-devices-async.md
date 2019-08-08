@@ -2,7 +2,7 @@
 
 # fetchAllDevicesAsync
 
-`abstract fun fetchAllDevicesAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Device`](../-device/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L64)
+`abstract fun fetchAllDevicesAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Device`](../-device/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L55)
 
 Get all devices in the constellation.
 

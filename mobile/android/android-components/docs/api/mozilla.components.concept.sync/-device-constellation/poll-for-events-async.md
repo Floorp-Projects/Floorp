@@ -2,7 +2,7 @@
 
 # pollForEventsAsync
 
-`abstract fun pollForEventsAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceEvent`](../-device-event/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L100)
+`abstract fun pollForEventsAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceEvent`](../-device-event/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L91)
 
 Poll for events targeted at the current [Device](../-device/index.md). It's expected that if a [DeviceEvent](../-device-event/index.md) was
 returned after a poll, it will not be returned in consequent polls.

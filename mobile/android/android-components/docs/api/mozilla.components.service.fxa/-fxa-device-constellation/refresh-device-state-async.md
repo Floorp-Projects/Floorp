@@ -2,7 +2,7 @@
 
 # refreshDeviceStateAsync
 
-`fun refreshDeviceStateAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L186)
+`fun refreshDeviceStateAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L166)
 
 Overrides [DeviceConstellation.refreshDeviceStateAsync](../../mozilla.components.concept.sync/-device-constellation/refresh-device-state-async.md)
 

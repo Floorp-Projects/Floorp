@@ -2,7 +2,7 @@
 
 # setDevicePushSubscriptionAsync
 
-`fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../../mozilla.components.concept.sync/-device-push-subscription/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L151)
+`fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../../mozilla.components.concept.sync/-device-push-subscription/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L131)
 
 Overrides [DeviceConstellation.setDevicePushSubscriptionAsync](../../mozilla.components.concept.sync/-device-constellation/set-device-push-subscription-async.md)
 

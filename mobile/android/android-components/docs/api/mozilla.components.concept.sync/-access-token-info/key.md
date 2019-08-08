@@ -2,7 +2,7 @@
 
 # key
 
-`val key: `[`OAuthScopedKey`](../-o-auth-scoped-key/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L115)
+`val key: `[`OAuthScopedKey`](../-o-auth-scoped-key/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L116)
 
 An OAuthScopedKey if present.
 
