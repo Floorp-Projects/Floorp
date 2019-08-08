@@ -640,93 +640,164 @@ package org.mozilla.geckoview {
   }
 
   public static interface GeckoSession.PromptDelegate {
-    method @UiThread default public void onAlert(@NonNull GeckoSession, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.AlertCallback);
-    method @UiThread default public void onAuthPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.AuthOptions, @NonNull GeckoSession.PromptDelegate.AuthCallback);
-    method @UiThread default public void onButtonPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @Nullable String[], @NonNull GeckoSession.PromptDelegate.ButtonCallback);
-    method @UiThread default public void onChoicePrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, int, @NonNull GeckoSession.PromptDelegate.Choice[], @NonNull GeckoSession.PromptDelegate.ChoiceCallback);
-    method @UiThread default public void onColorPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
-    method @UiThread default public void onDateTimePrompt(@NonNull GeckoSession, @Nullable String, int, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
-    method @UiThread default public void onFilePrompt(@NonNull GeckoSession, @Nullable String, int, @Nullable String[], int, @NonNull GeckoSession.PromptDelegate.FileCallback);
-    method @UiThread @Nullable default public GeckoResult<AllowOrDeny> onPopupRequest(@NonNull GeckoSession, @Nullable String);
-    method @UiThread default public void onTextPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
-    field public static final int BUTTON_TYPE_NEGATIVE = 2;
-    field public static final int BUTTON_TYPE_NEUTRAL = 1;
-    field public static final int BUTTON_TYPE_POSITIVE = 0;
-    field public static final int CAPTURE_TYPE_ANY = 1;
-    field public static final int CAPTURE_TYPE_ENVIRONMENT = 3;
-    field public static final int CAPTURE_TYPE_NONE = 0;
-    field public static final int CAPTURE_TYPE_USER = 2;
-    field public static final int DATETIME_TYPE_DATE = 1;
-    field public static final int DATETIME_TYPE_DATETIME_LOCAL = 5;
-    field public static final int DATETIME_TYPE_MONTH = 2;
-    field public static final int DATETIME_TYPE_TIME = 4;
-    field public static final int DATETIME_TYPE_WEEK = 3;
-    field public static final int FILE_TYPE_MULTIPLE = 2;
-    field public static final int FILE_TYPE_SINGLE = 1;
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAlertPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AlertPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onAuthPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AuthPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onButtonPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ButtonPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onChoicePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ChoicePrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
   }
 
-  public static interface GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void dismiss();
-    method @UiThread @Nullable default public String getCheckboxMessage();
-    method @UiThread default public boolean getCheckboxValue();
-    method @UiThread default public boolean hasCheckbox();
-    method @UiThread default public void setCheckboxValue(boolean);
+  public static class GeckoSession.PromptDelegate.AlertPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected AlertPrompt(@Nullable String, @Nullable String);
+    field @Nullable public final String message;
   }
 
-  public static interface GeckoSession.PromptDelegate.AuthCallback implements GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void confirm(@Nullable String);
-    method @UiThread default public void confirm(@NonNull String, @NonNull String);
+  public static class GeckoSession.PromptDelegate.AuthPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected AuthPrompt(@Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.AuthPrompt.AuthOptions);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String, @NonNull String);
+    field @NonNull public final GeckoSession.PromptDelegate.AuthPrompt.AuthOptions authOptions;
+    field @Nullable public final String message;
   }
 
-  public static class GeckoSession.PromptDelegate.AuthOptions {
+  public static class GeckoSession.PromptDelegate.AuthPrompt.AuthOptions {
     ctor protected AuthOptions();
-    field public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
-    field public static final int AUTH_FLAG_HOST = 1;
-    field public static final int AUTH_FLAG_ONLY_PASSWORD = 8;
-    field public static final int AUTH_FLAG_PREVIOUS_FAILED = 16;
-    field public static final int AUTH_FLAG_PROXY = 2;
-    field public static final int AUTH_LEVEL_NONE = 0;
-    field public static final int AUTH_LEVEL_PW_ENCRYPTED = 1;
-    field public static final int AUTH_LEVEL_SECURE = 2;
-    field public int flags;
-    field public int level;
-    field @Nullable public String password;
-    field @Nullable public String uri;
-    field @Nullable public String username;
+    field public final int flags;
+    field public final int level;
+    field @Nullable public final String password;
+    field @Nullable public final String uri;
+    field @Nullable public final String username;
   }
 
-  public static interface GeckoSession.PromptDelegate.ButtonCallback implements GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void confirm(int);
+  public static class GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.Flags {
+    ctor protected Flags();
+    field public static final int CROSS_ORIGIN_SUB_RESOURCE = 32;
+    field public static final int HOST = 1;
+    field public static final int ONLY_PASSWORD = 8;
+    field public static final int PREVIOUS_FAILED = 16;
+    field public static final int PROXY = 2;
   }
 
-  public static class GeckoSession.PromptDelegate.Choice {
+  public static class GeckoSession.PromptDelegate.AuthPrompt.AuthOptions.Level {
+    ctor protected Level();
+    field public static final int NONE = 0;
+    field public static final int PW_ENCRYPTED = 1;
+    field public static final int SECURE = 2;
+  }
+
+  public static class GeckoSession.PromptDelegate.BasePrompt {
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse dismiss();
+    method @UiThread public boolean isComplete();
+    method @UiThread @NonNull protected GeckoSession.PromptDelegate.PromptResponse confirm();
+    field @Nullable public final String title;
+  }
+
+  public static class GeckoSession.PromptDelegate.ButtonPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected ButtonPrompt(@Nullable String, @Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(int);
+    field @Nullable public final String message;
+  }
+
+  public static class GeckoSession.PromptDelegate.ButtonPrompt.Type {
+    ctor protected Type();
+    field public static final int NEGATIVE = 2;
+    field public static final int POSITIVE = 0;
+  }
+
+  public static class GeckoSession.PromptDelegate.ChoicePrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected ChoicePrompt(@Nullable String, @Nullable String, int, @NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice[]);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String[]);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull GeckoSession.PromptDelegate.ChoicePrompt.Choice[]);
+    field @NonNull public final GeckoSession.PromptDelegate.ChoicePrompt.Choice[] choices;
+    field @Nullable public final String message;
+    field public final int type;
+  }
+
+  public static class GeckoSession.PromptDelegate.ChoicePrompt.Choice {
     ctor protected Choice();
-    field public static final int CHOICE_TYPE_MENU = 1;
-    field public static final int CHOICE_TYPE_MULTIPLE = 3;
-    field public static final int CHOICE_TYPE_SINGLE = 2;
     field public final boolean disabled;
     field @Nullable public final String icon;
     field @NonNull public final String id;
-    field @Nullable public final GeckoSession.PromptDelegate.Choice[] items;
+    field @Nullable public final GeckoSession.PromptDelegate.ChoicePrompt.Choice[] items;
     field @NonNull public final String label;
     field public final boolean selected;
     field public final boolean separator;
   }
 
-  public static interface GeckoSession.PromptDelegate.ChoiceCallback implements GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void confirm(@Nullable String);
-    method @UiThread default public void confirm(@NonNull String[]);
-    method @UiThread default public void confirm(@NonNull GeckoSession.PromptDelegate.Choice);
-    method @UiThread default public void confirm(@Nullable GeckoSession.PromptDelegate.Choice[]);
+  public static class GeckoSession.PromptDelegate.ChoicePrompt.Type {
+    ctor protected Type();
+    field public static final int MENU = 1;
+    field public static final int MULTIPLE = 3;
+    field public static final int SINGLE = 2;
   }
 
-  public static interface GeckoSession.PromptDelegate.FileCallback implements GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void confirm(@Nullable Context, @Nullable Uri);
-    method @UiThread default public void confirm(@Nullable Context, @Nullable Uri[]);
+  public static class GeckoSession.PromptDelegate.ColorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected ColorPrompt(@Nullable String, @Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
+    field @Nullable public final String defaultValue;
   }
 
-  public static interface GeckoSession.PromptDelegate.TextCallback implements GeckoSession.PromptDelegate.AlertCallback {
-    method @UiThread default public void confirm(@Nullable String);
+  public static class GeckoSession.PromptDelegate.DateTimePrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected DateTimePrompt(@Nullable String, int, @Nullable String, @Nullable String, @Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
+    field @Nullable public final String defaultValue;
+    field @Nullable public final String maxValue;
+    field @Nullable public final String minValue;
+    field public final int type;
+  }
+
+  public static class GeckoSession.PromptDelegate.DateTimePrompt.Type {
+    ctor protected Type();
+    field public static final int DATE = 1;
+    field public static final int DATETIME_LOCAL = 5;
+    field public static final int MONTH = 2;
+    field public static final int TIME = 4;
+    field public static final int WEEK = 3;
+  }
+
+  public static class GeckoSession.PromptDelegate.FilePrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected FilePrompt(@Nullable String, int, int, @Nullable String[]);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Context, @NonNull Uri);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull Context, @NonNull Uri[]);
+    field public final int capture;
+    field @Nullable public final String[] mimeTypes;
+    field public final int type;
+  }
+
+  public static class GeckoSession.PromptDelegate.FilePrompt.Capture {
+    ctor protected Capture();
+    field public static final int ANY = 1;
+    field public static final int ENVIRONMENT = 3;
+    field public static final int NONE = 0;
+    field public static final int USER = 2;
+  }
+
+  public static class GeckoSession.PromptDelegate.FilePrompt.Type {
+    ctor protected Type();
+    field public static final int MULTIPLE = 2;
+    field public static final int SINGLE = 1;
+  }
+
+  public static class GeckoSession.PromptDelegate.PopupPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected PopupPrompt(@Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull AllowOrDeny);
+    field @Nullable public final String targetUri;
+  }
+
+  public static class GeckoSession.PromptDelegate.PromptResponse {
+  }
+
+  public static class GeckoSession.PromptDelegate.TextPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected TextPrompt(@Nullable String, @Nullable String, @Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
+    field @Nullable public final String defaultValue;
+    field @Nullable public final String message;
   }
 
   public static interface GeckoSession.ScrollDelegate {
