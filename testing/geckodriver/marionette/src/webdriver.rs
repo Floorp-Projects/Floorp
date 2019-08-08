@@ -93,6 +93,18 @@ pub enum Command {
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
     FindElements(Locator),
+    #[serde(rename = "WebDriver:FindElement")]
+    FindElementElement {
+        element: String,
+        using: Selector,
+        value: String,
+    },
+    #[serde(rename = "WebDriver:FindElements")]
+    FindElementElements {
+        element: String,
+        using: Selector,
+        value: String,
+    },
     #[serde(rename = "WebDriver:FullscreenWindow")]
     FullscreenWindow,
     #[serde(rename = "WebDriver:GetActiveElement")]
@@ -147,7 +159,7 @@ pub enum Command {
 mod tests {
     use super::*;
     use crate::common::Date;
-    use crate::test::assert_ser_de;
+    use crate::test::{assert_ser, assert_ser_de};
     use serde_json::json;
 
     #[test]
@@ -278,5 +290,17 @@ mod tests {
         let data = NewWindow { type_hint: None };
         let json = json!({"WebDriver:NewWindow": {}});
         assert_ser_de(&Command::NewWindow(data), json);
+    }
+
+    #[test]
+    fn test_json_command_as_struct() {
+        assert_ser(
+            &Command::FindElementElement {
+                element: "foo".into(),
+                using: Selector::XPath,
+                value: "bar".into(),
+            },
+            json!({"WebDriver:FindElement": {"element": "foo", "using": "xpath", "value": "bar" }}),
+        );
     }
 }
