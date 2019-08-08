@@ -179,6 +179,7 @@ class _RFPHelper {
       case 0: // will prompt
       // This should only happen when turning privacy.resistFingerprinting off.
       // Works like disabling accept-language spoofing.
+      // fall through
       case 1: // don't spoof
         if (
           Services.prefs.prefHasUserValue("javascript.use_us_english_locale")
