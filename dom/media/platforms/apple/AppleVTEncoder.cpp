@@ -62,6 +62,14 @@ static bool SetAverageBitrate(VTCompressionSessionRef& aSession,
                               bitrate) == noErr;
 }
 
+static bool SetRealtimeProperties(VTCompressionSessionRef& aSession) {
+  return VTSessionSetProperty(aSession, kVTCompressionPropertyKey_RealTime,
+                              kCFBooleanTrue) == noErr &&
+         VTSessionSetProperty(aSession,
+                              kVTCompressionPropertyKey_AllowFrameReordering,
+                              kCFBooleanFalse) == noErr;
+}
+
 static bool SetProfileLevel(VTCompressionSessionRef& aSession,
                             AppleVTEncoder::H264Specific::ProfileLevel aValue) {
   CFStringRef profileLevel = nullptr;
@@ -106,15 +114,21 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
     return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
   }
 
-  const Maybe<H264Specific>& h264Config = mConfig.mCodecSpecific;
-  if (h264Config) {
-    if (!SetProfileLevel(mSession, h264Config.ref().mProfileLevel)) {
-      VTENC_LOGE("fail to configurate profile level");
+  if (mConfig.mUsage == Usage::Realtime && !SetRealtimeProperties(mSession)) {
+    VTENC_LOGE("fail to configurate realtime properties");
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+  }
+
+  if (mConfig.mCodecSpecific) {
+    const H264Specific& specific = mConfig.mCodecSpecific.ref();
+    if (!SetProfileLevel(mSession, specific.mProfileLevel)) {
+      VTENC_LOGE("fail to configurate profile level:%d",
+                 specific.mProfileLevel);
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR,
                                           __func__);
     }
 
-    int64_t interval = h264Config.ref().mKeyframeInterval;
+    int64_t interval = specific.mKeyframeInterval;
     AutoCFRelease<CFNumberRef> cf(
         CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &interval));
     if (VTSessionSetProperty(mSession,
