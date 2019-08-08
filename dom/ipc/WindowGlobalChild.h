@@ -96,6 +96,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   WindowGlobalChild(const WindowGlobalInit& aInit,
                     nsGlobalWindowInner* aWindow);
 
+  void Init();
+
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

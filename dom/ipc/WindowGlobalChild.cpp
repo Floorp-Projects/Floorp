@@ -52,8 +52,9 @@ WindowGlobalChild::WindowGlobalChild(const WindowGlobalInit& aInit,
   MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext);
   MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal);
 
-  MOZ_ASSERT(mInnerWindowId == aWindow->WindowID());
-  MOZ_ASSERT(mOuterWindowId == aWindow->GetOuterWindow()->WindowID());
+  MOZ_ASSERT_IF(aWindow, mInnerWindowId == aWindow->WindowID());
+  MOZ_ASSERT_IF(aWindow,
+                mOuterWindowId == aWindow->GetOuterWindow()->WindowID());
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
@@ -120,16 +121,23 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     browserChild->SendNewWindowGlobal(std::move(endpoint), init);
   }
 
+  wgc->Init();
+  return wgc.forget();
+}
+
+void WindowGlobalChild::Init() {
+  if (!mDocumentURI) {
+    NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
+  }
+
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
   if (!gWindowGlobalChildById) {
     gWindowGlobalChildById = new WGCByIdMap();
     ClearOnShutdown(&gWindowGlobalChildById);
   }
-  auto entry = gWindowGlobalChildById->LookupForAdd(wgc->mInnerWindowId);
+  auto entry = gWindowGlobalChildById->LookupForAdd(mInnerWindowId);
   MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
-  entry.OrInsert([&] { return wgc; });
-
-  return wgc.forget();
+  entry.OrInsert([&] { return this; });
 }
 
 /* static */

@@ -33,7 +33,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   // Initialize this actor after performing startup.
   nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType,
-                CanonicalBrowsingContext* aBrowsingContext,
+                const WindowGlobalInit& aWindowInit,
                 const uint32_t& aChromeFlags, TabId aTabId);
 
   BrowserParent* GetBrowserParent() { return mBrowserParent; }
