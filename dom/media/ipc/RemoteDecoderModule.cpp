@@ -19,6 +19,7 @@
 #include "RemoteMediaDataDecoder.h"
 #include "RemoteVideoDecoder.h"
 #include "OpusDecoder.h"
+#include "VideoUtils.h"
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
 
@@ -105,6 +106,16 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     return nullptr;
   }
 
+  // OpusDataDecoder will check this option to provide the same info
+  // that IsDefaultPlaybackDeviceMono provides.  We want to avoid calls
+  // to IsDefaultPlaybackDeviceMono on RDD because initializing audio
+  // backends on RDD will be blocked by the sandbox.
+  CreateDecoderParams::OptionSet options(aParams.mOptions);
+  if (OpusDataDecoder::IsOpus(aParams.mConfig.mMimeType) &&
+      IsDefaultPlaybackDeviceMono()) {
+    options += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
+  }
+
   RefPtr<RemoteAudioDecoderChild> child = new RemoteAudioDecoderChild();
   MediaResult result(NS_OK);
   // We can use child as a ref here because this is a sync dispatch. In
@@ -116,7 +127,7 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
   // thread during this single dispatch.
   RefPtr<Runnable> task =
       NS_NewRunnableFunction("RemoteDecoderModule::CreateAudioDecoder", [&]() {
-        result = child->InitIPDL(aParams.AudioConfig(), aParams.mOptions);
+        result = child->InitIPDL(aParams.AudioConfig(), options);
         if (NS_FAILED(result)) {
           // Release RemoteAudioDecoderChild here, while we're on
           // manager thread.  Don't just let the RefPtr go out of scope.

@@ -53,6 +53,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
                                   // initialization data are dropped. Pass this
                                   // option to raise an error if frames are
                                   // delivered before initialization data.
+    DefaultPlaybackDeviceMono,    // Currently only used by Opus on RDD to avoid
+                                  // initialization of audio backends on RDD
 
     SENTINEL  // one past the last valid value
   };
