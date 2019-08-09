@@ -535,7 +535,6 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   MOZ_ASSERT(origTarget);
   MOZ_ASSERT(!JS_IsDeadWrapper(origTarget),
              "We don't want a dead proxy in the wrapper map");
-  Value origv = ObjectValue(*origTarget);
   JS::Compartment* wcompartment = wobj->compartment();
   MOZ_ASSERT(wcompartment != newTarget->compartment());
 
@@ -545,11 +544,11 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   // for the same target), we must not have an existing wrapper for the new
   // target, otherwise this will break.
   MOZ_ASSERT_IF(origTarget != newTarget,
-                !wcompartment->lookupWrapper(ObjectValue(*newTarget)));
+                !wcompartment->lookupWrapper(newTarget));
 
   // The old value should still be in the cross-compartment wrapper map, and
   // the lookup should return wobj.
-  WrapperMap::Ptr p = wcompartment->lookupWrapper(origv);
+  WrapperMap::Ptr p = wcompartment->lookupWrapper(origTarget);
   MOZ_ASSERT(&p->value().unsafeGet()->toObject() == wobj);
   wcompartment->removeWrapper(p);
 

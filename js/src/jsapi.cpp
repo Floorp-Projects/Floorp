@@ -589,10 +589,8 @@ JS_PUBLIC_API bool JS_WrapValue(JSContext* cx, MutableHandleValue vp) {
 
 static void ReleaseAssertObjectHasNoWrappers(JSContext* cx,
                                              HandleObject target) {
-  RootedValue origv(cx, ObjectValue(*target));
-
   for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-    if (c->lookupWrapper(origv)) {
+    if (c->lookupWrapper(target)) {
       MOZ_CRASH("wrapper found for target object");
     }
   }
@@ -689,7 +687,7 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     AutoRealm ar(cx, origobj);
     JSObject::swap(cx, origobj, target);
     newIdentity = origobj;
-  } else if (WrapperMap::Ptr p = destination->lookupWrapper(origv)) {
+  } else if (WrapperMap::Ptr p = destination->lookupWrapper(origobj)) {
     // There might already be a wrapper for the original object in
     // the new compartment. If there is, we use its identity and swap
     // in the contents of |target|.
