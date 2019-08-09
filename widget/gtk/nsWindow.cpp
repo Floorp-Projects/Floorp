@@ -3279,8 +3279,19 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }
 
   // We don't care about anything but changes in the maximized/icon/fullscreen
-  // states
-  if ((aEvent->changed_mask &
+  // states but we need a workaround for bug in Wayland:
+  // https://gitlab.gnome.org/GNOME/gtk/issues/67
+  // Under wayland the gtk_window_iconify implementation does NOT synthetize
+  // window_state_event where the GDK_WINDOW_STATE_ICONIFIED is set.
+  // During restore we  won't get aEvent->changed_mask with
+  // the GDK_WINDOW_STATE_ICONIFIED so to detect that change we use the stored
+  // mSizeState and obtaining a focus.
+  bool waylandWasIconified =
+      (!mIsX11Display && aEvent->changed_mask & GDK_WINDOW_STATE_FOCUSED &&
+       aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED &&
+       mSizeState == nsSizeMode_Minimized);
+  if (!waylandWasIconified &&
+      (aEvent->changed_mask &
        (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED |
         GDK_WINDOW_STATE_FULLSCREEN)) == 0) {
     return;
