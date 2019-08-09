@@ -250,7 +250,8 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--root', '-r', default='taskcluster/ci',
                      help="root of the taskgraph definition relative to topsrcdir")
     def action_callback(self, **options):
-        import taskgraph.actions
+        from taskgraph.actions import trigger_action_callback
+        from taskgraph.actions.util import get_parameters
         try:
             self.setup_logging()
 
@@ -260,10 +261,11 @@ class MachCommands(MachCommandBase):
             task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
             input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
             callback = os.environ.get('ACTION_CALLBACK', None)
-            parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
             root = options['root']
 
-            return taskgraph.actions.trigger_action_callback(
+            parameters = get_parameters(task_group_id)
+
+            return trigger_action_callback(
                     task_group_id=task_group_id,
                     task_id=task_id,
                     input=input,

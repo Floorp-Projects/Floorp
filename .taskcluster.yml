@@ -40,7 +40,6 @@
 #     push: {owner, pushlog_id, revision},
 #     repository: {url, project, level},
 #     input,
-#     parameters,
 #     taskId,      // targetted taskId
 #     taskGroupId, // targetted taskGroupId
 #     action: {name, title, description, taskGroupId, symbol, repo_scope, cb_name}
@@ -208,7 +207,6 @@ tasks:
                   ACTION_TASK_ID: {$json: {$eval: 'taskId'}} # taskId of the target task (JSON-encoded)
                   ACTION_INPUT: {$json: {$eval: 'input'}}
                   ACTION_CALLBACK: '${action.cb_name}'
-                  ACTION_PARAMETERS: {$json: {$eval: 'parameters'}}
 
           cache:
             level-${repository.level}-checkouts-sparse-v2: /builds/worker/checkouts
@@ -287,7 +285,6 @@ tasks:
                     taskGroupId: '${action.taskGroupId}'
                     taskId: {$eval: 'taskId'}
                     input: {$eval: 'input'}
-                    parameters: {$eval: 'parameters'}
                     clientId: {$eval: 'clientId'}
             - $if: 'tasks_for == "cron"'
               then:
