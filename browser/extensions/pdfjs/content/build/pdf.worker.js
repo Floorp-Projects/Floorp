@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.57';
-const pdfjsBuild = 'd909b86b';
+const pdfjsVersion = '2.3.71';
+const pdfjsBuild = 'e1aed05c';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.57';
+    let workerVersion = '2.3.71';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -398,8 +398,8 @@ var WorkerMessageHandler = {
         cancelXHRs = null;
       });
 
-      cancelXHRs = function () {
-        pdfStream.cancelAllRequests('abort');
+      cancelXHRs = function (reason) {
+        pdfStream.cancelAllRequests(reason);
       };
 
       return pdfManagerCapability.promise;
@@ -467,7 +467,7 @@ var WorkerMessageHandler = {
       };
       getPdfManager(data, evaluatorOptions).then(function (newPdfManager) {
         if (terminated) {
-          newPdfManager.terminate();
+          newPdfManager.terminate(new _util.AbortException('Worker was terminated.'));
           throw new Error('Worker was terminated');
         }
 
@@ -653,12 +653,12 @@ var WorkerMessageHandler = {
       terminated = true;
 
       if (pdfManager) {
-        pdfManager.terminate();
+        pdfManager.terminate(new _util.AbortException('Worker was terminated.'));
         pdfManager = null;
       }
 
       if (cancelXHRs) {
-        cancelXHRs();
+        cancelXHRs(new _util.AbortException('Worker was terminated.'));
       }
 
       (0, _primitives.clearPrimitiveCaches)();
@@ -894,30 +894,30 @@ const AnnotationBorderStyleType = {
 };
 exports.AnnotationBorderStyleType = AnnotationBorderStyleType;
 const StreamType = {
-  UNKNOWN: 0,
-  FLATE: 1,
-  LZW: 2,
-  DCT: 3,
-  JPX: 4,
-  JBIG: 5,
-  A85: 6,
-  AHX: 7,
-  CCF: 8,
-  RL: 9
+  UNKNOWN: 'UNKNOWN',
+  FLATE: 'FLATE',
+  LZW: 'LZW',
+  DCT: 'DCT',
+  JPX: 'JPX',
+  JBIG: 'JBIG',
+  A85: 'A85',
+  AHX: 'AHX',
+  CCF: 'CCF',
+  RLX: 'RLX'
 };
 exports.StreamType = StreamType;
 const FontType = {
-  UNKNOWN: 0,
-  TYPE1: 1,
-  TYPE1C: 2,
-  CIDFONTTYPE0: 3,
-  CIDFONTTYPE0C: 4,
-  TRUETYPE: 5,
-  CIDFONTTYPE2: 6,
-  TYPE3: 7,
-  OPENTYPE: 8,
-  TYPE0: 9,
-  MMTYPE1: 10
+  UNKNOWN: 'UNKNOWN',
+  TYPE1: 'TYPE1',
+  TYPE1C: 'TYPE1C',
+  CIDFONTTYPE0: 'CIDFONTTYPE0',
+  CIDFONTTYPE0C: 'CIDFONTTYPE0C',
+  TRUETYPE: 'TRUETYPE',
+  CIDFONTTYPE2: 'CIDFONTTYPE2',
+  TYPE3: 'TYPE3',
+  OPENTYPE: 'OPENTYPE',
+  TYPE0: 'TYPE0',
+  MMTYPE1: 'MMTYPE1'
 };
 exports.FontType = FontType;
 const VerbosityLevel = {
@@ -2052,7 +2052,7 @@ class BasePdfManager {
     this._password = password;
   }
 
-  terminate() {
+  terminate(reason) {
     (0, _util.unreachable)('Abstract method `terminate` called');
   }
 
@@ -2090,7 +2090,7 @@ class LocalPdfManager extends BasePdfManager {
     return this._loadedStreamPromise;
   }
 
-  terminate() {}
+  terminate(reason) {}
 
 }
 
@@ -2150,8 +2150,8 @@ class NetworkPdfManager extends BasePdfManager {
     return this.streamManager.onLoadedStream();
   }
 
-  terminate() {
-    this.streamManager.abort();
+  terminate(reason) {
+    this.streamManager.abort(reason);
   }
 
 }
@@ -2743,15 +2743,15 @@ class ChunkedStreamManager {
     return Math.floor((end - 1) / this.chunkSize) + 1;
   }
 
-  abort() {
+  abort(reason) {
     this.aborted = true;
 
     if (this.pdfNetworkStream) {
-      this.pdfNetworkStream.cancelAllRequests('abort');
+      this.pdfNetworkStream.cancelAllRequests(reason);
     }
 
     for (const requestId in this.promisesByRequest) {
-      this.promisesByRequest[requestId].reject(new Error('Request was aborted'));
+      this.promisesByRequest[requestId].reject(reason);
     }
   }
 
@@ -4675,8 +4675,8 @@ var XRef = function XRefClosure() {
     this.xrefstms = Object.create(null);
     this.cache = [];
     this.stats = {
-      streamTypes: [],
-      fontTypes: []
+      streamTypes: Object.create(null),
+      fontTypes: Object.create(null)
     };
   }
 
@@ -6528,7 +6528,7 @@ class Parser {
       }
 
       if (name === 'RunLengthDecode' || name === 'RL') {
-        xrefStreamStats[_util.StreamType.RL] = true;
+        xrefStreamStats[_util.StreamType.RLX] = true;
         return new _stream.RunLengthStream(stream, maybeLength);
       }
 
@@ -18154,6 +18154,7 @@ const LabCS = function LabCSClosure() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getQuadPoints = getQuadPoints;
 exports.MarkupAnnotation = exports.AnnotationFactory = exports.AnnotationBorderStyle = exports.Annotation = void 0;
 
 var _util = __w_pdfjs_require__(2);
@@ -18280,6 +18281,40 @@ class AnnotationFactory {
 }
 
 exports.AnnotationFactory = AnnotationFactory;
+
+function getQuadPoints(dict, rect) {
+  if (!dict.has('QuadPoints')) {
+    return null;
+  }
+
+  const quadPoints = dict.getArray('QuadPoints');
+
+  if (!Array.isArray(quadPoints) || quadPoints.length % 8 > 0) {
+    return null;
+  }
+
+  const quadPointsLists = [];
+
+  for (let i = 0, ii = quadPoints.length / 8; i < ii; i++) {
+    quadPointsLists.push([]);
+
+    for (let j = i * 8, jj = i * 8 + 8; j < jj; j += 2) {
+      const x = quadPoints[j];
+      const y = quadPoints[j + 1];
+
+      if (x < rect[0] || x > rect[2] || y < rect[1] || y > rect[3]) {
+        return null;
+      }
+
+      quadPointsLists[i].push({
+        x,
+        y
+      });
+    }
+  }
+
+  return quadPointsLists;
+}
 
 function getTransformMatrix(rect, bbox, matrix) {
   let bounds = _util.Util.getAxialAlignedBoundingBox(bbox, matrix);
@@ -18978,6 +19013,11 @@ class LinkAnnotation extends Annotation {
   constructor(params) {
     super(params);
     this.data.annotationType = _util.AnnotationType.LINK;
+    const quadPoints = getQuadPoints(params.dict, this.rectangle);
+
+    if (quadPoints) {
+      this.data.quadPoints = quadPoints;
+    }
 
     _obj.Catalog.parseDestDictionary({
       destDict: params.dict,
@@ -19133,6 +19173,11 @@ class HighlightAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.HIGHLIGHT;
+    const quadPoints = getQuadPoints(parameters.dict, this.rectangle);
+
+    if (quadPoints) {
+      this.data.quadPoints = quadPoints;
+    }
   }
 
 }
@@ -19141,6 +19186,11 @@ class UnderlineAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.UNDERLINE;
+    const quadPoints = getQuadPoints(parameters.dict, this.rectangle);
+
+    if (quadPoints) {
+      this.data.quadPoints = quadPoints;
+    }
   }
 
 }
@@ -19149,6 +19199,11 @@ class SquigglyAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.SQUIGGLY;
+    const quadPoints = getQuadPoints(parameters.dict, this.rectangle);
+
+    if (quadPoints) {
+      this.data.quadPoints = quadPoints;
+    }
   }
 
 }
@@ -19157,6 +19212,11 @@ class StrikeOutAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
     this.data.annotationType = _util.AnnotationType.STRIKEOUT;
+    const quadPoints = getQuadPoints(parameters.dict, this.rectangle);
+
+    if (quadPoints) {
+      this.data.quadPoints = quadPoints;
+    }
   }
 
 }
