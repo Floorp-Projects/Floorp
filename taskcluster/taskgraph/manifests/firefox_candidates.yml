@@ -44,7 +44,7 @@ tasktype_map:
     repackage: repackage
     repackage-signing: repackage
     repackage-signing-msi: repackage
-    release-push-langpacks: scriptworker
+    langpack-copy: signing
 platform_names:
     path_platform:
         by-platform:
@@ -185,7 +185,8 @@ mapping:
         locale_prefix: ''
         source_path_modifier: '${locale}'
         from:
-            - release-push-langpacks
+            - langpack-copy
+            - signing
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
