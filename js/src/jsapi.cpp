@@ -725,8 +725,7 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     JSObject::swap(cx, origobj, newIdentityWrapper);
     if (origobj->compartment()->lookupWrapper(newIdentity)) {
       MOZ_ASSERT(origobj->is<CrossCompartmentWrapperObject>());
-      if (!origobj->compartment()->putWrapper(
-              cx, CrossCompartmentKey(newIdentity), origv)) {
+      if (!origobj->compartment()->putWrapper(cx, newIdentity, origv)) {
         MOZ_CRASH();
       }
     }

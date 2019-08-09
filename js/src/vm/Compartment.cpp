@@ -161,7 +161,6 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
   }
 
   /* Check the cache. */
-  RootedValue key(cx, StringValue(str));
   if (WrapperMap::Ptr p = lookupWrapper(str)) {
     strp.set(p->value().get().toString());
     return true;
@@ -172,7 +171,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
   if (!copy) {
     return false;
   }
-  if (!putWrapper(cx, CrossCompartmentKey(key), StringValue(copy))) {
+  if (!putWrapper(cx, strp, StringValue(copy))) {
     return false;
   }
 
@@ -287,7 +286,6 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
 bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
                                      MutableHandleObject obj) {
   // If we already have a wrapper for this value, use it.
-  RootedValue key(cx, ObjectValue(*obj));
   if (WrapperMap::Ptr p = lookupWrapper(obj)) {
     obj.set(&p->value().get().toObject());
     MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
@@ -307,9 +305,9 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
 
   // We maintain the invariant that the key in the cross-compartment wrapper
   // map is always directly wrapped by the value.
-  MOZ_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
+  MOZ_ASSERT(Wrapper::wrappedObject(wrapper) == obj);
 
-  if (!putWrapper(cx, CrossCompartmentKey(key), ObjectValue(*wrapper))) {
+  if (!putWrapper(cx, obj, ObjectValue(*wrapper))) {
     // Enforce the invariant that all cross-compartment wrapper object are
     // in the map by nuking the wrapper if we couldn't add it.
     // Unfortunately it's possible for the wrapper to still be marked if we
