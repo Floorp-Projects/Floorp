@@ -452,5 +452,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_amazon() {
-  await test.run();
+  await test.run(false);
+  await test.run(true);
 });

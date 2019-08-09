@@ -2257,6 +2257,13 @@ SearchService.prototype = {
     locale = DEFAULT_TAG,
     initEngine = false
   ) {
+    let params = this.getEngineParams(extension, manifest, locale, {
+      initEngine,
+    });
+    return this.addEngineWithDetails(params.name, params);
+  },
+
+  getEngineParams(extension, manifest, locale, extraParams = {}) {
     let { IconDetails } = ExtensionParent;
 
     // General set of icons for an engine.
@@ -2290,6 +2297,11 @@ SearchService.prototype = {
       shortName += "-" + locale;
     }
 
+    let searchUrlGetParams = searchProvider.search_url_get_params;
+    if (extraParams.code) {
+      searchUrlGetParams = "?" + extraParams.code;
+    }
+
     let params = {
       name: searchProvider.name.trim(),
       shortName,
@@ -2298,7 +2310,7 @@ SearchService.prototype = {
       // AddonManager will sometimes encode the URL via `new URL()`. We want
       // to ensure we're always dealing with decoded urls.
       template: decodeURI(searchProvider.search_url),
-      searchGetParams: searchProvider.search_url_get_params,
+      searchGetParams: searchUrlGetParams,
       searchPostParams: searchProvider.search_url_post_params,
       iconURL: searchProvider.favicon_url || preferredIconUrl,
       icons: iconList,
@@ -2311,10 +2323,10 @@ SearchService.prototype = {
       suggestGetParams: searchProvider.suggest_url_get_params,
       queryCharset: searchProvider.encoding || "UTF-8",
       mozParams: searchProvider.params,
-      initEngine,
+      initEngine: extraParams.initEngine || false,
     };
 
-    return this.addEngineWithDetails(params.name, params);
+    return params;
   },
 
   async addEngine(engineURL, iconURL, confirm, extensionID) {
