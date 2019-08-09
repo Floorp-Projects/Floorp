@@ -86,9 +86,9 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
 #endif
   if (js::ObjectWrapperMap::Ptr p = lookupWrapper(&vp.toObject())) {
 #ifdef DEBUG
-    cacheResult = &p->value().get().toObject();
+    cacheResult = p->value().get();
 #else
-    vp.set(p->value().get());
+    vp.setObject(*p->value().get());
     return true;
 #endif
   }

@@ -4224,7 +4224,7 @@ static bool InCrossCompartmentMap(JSRuntime* rt, JSObject* src,
 
   if (dst.is<JSObject>()) {
     if (ObjectWrapperMap::Ptr p = srccomp->lookupWrapper(&dst.as<JSObject>())) {
-      if (*p->value().unsafeGet() == ObjectValue(*src)) {
+      if (*p->value().unsafeGet() == src) {
         return true;
       }
     }
@@ -5263,7 +5263,7 @@ static void AssertNoWrappersInGrayList(JSRuntime* rt) {
   for (CompartmentsIter c(rt); !c.done(); c.next()) {
     MOZ_ASSERT(!c->gcIncomingGrayPointers);
     for (Compartment::ObjectWrapperEnum e(c); !e.empty(); e.popFront()) {
-      AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
+      AssertNotOnGrayList(e.front().value().unbarrieredGet());
     }
   }
 #endif
