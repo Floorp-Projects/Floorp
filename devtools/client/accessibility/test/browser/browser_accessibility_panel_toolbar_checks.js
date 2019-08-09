@@ -26,34 +26,16 @@ const tests = [
   {
     desc: "Check initial state.",
     expected: {
-      toolbar: [false, false, false],
+      toolbar: [true, false, false, false],
     },
   },
   {
     desc: "Toggle first filter (all) to activate.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
-    },
-    expected: {
-      toolbar: [true, true, true],
-    },
-  },
-  {
-    desc: "Click on the filter again.",
-    setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
-    },
-    expected: {
-      toolbar: [false, false, false],
-    },
-  },
-  {
-    desc: "Toggle second filter (contrast) to activate.",
-    setup: async ({ doc }) => {
       await toggleFilter(doc, 1);
     },
     expected: {
-      toolbar: [false, true, false],
+      toolbar: [false, true, true, true],
     },
   },
   {
@@ -62,34 +44,52 @@ const tests = [
       await toggleFilter(doc, 1);
     },
     expected: {
-      toolbar: [false, false, false],
+      toolbar: [true, false, false, false],
     },
   },
   {
-    desc: "Toggle second filter (contrast) to activate.",
-    setup: async ({ doc }) => {
-      await toggleFilter(doc, 1);
-    },
-    expected: {
-      toolbar: [false, true, false],
-    },
-  },
-  {
-    desc: "Toggle third filter (all) (text label) to activate.",
+    desc: "Toggle first custom filter to activate.",
     setup: async ({ doc }) => {
       await toggleFilter(doc, 2);
     },
     expected: {
-      toolbar: [true, true, true],
+      toolbar: [false, false, true, false],
     },
   },
   {
-    desc: "Click on the first filter to de-activate all.",
+    desc: "Click on the filter again.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 2);
+    },
+    expected: {
+      toolbar: [true, false, false, false],
+    },
+  },
+  {
+    desc: "Toggle first custom filter to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 2);
+    },
+    expected: {
+      toolbar: [false, false, true, false],
+    },
+  },
+  {
+    desc: "Toggle second custom filter to activate.",
+    setup: async ({ doc }) => {
+      await toggleFilter(doc, 3);
+    },
+    expected: {
+      toolbar: [false, true, true, true],
+    },
+  },
+  {
+    desc: "Click on the none filter to de-activate all.",
     setup: async ({ doc }) => {
       await toggleFilter(doc, 0);
     },
     expected: {
-      toolbar: [false, false, false],
+      toolbar: [true, false, false, false],
     },
   },
 ];

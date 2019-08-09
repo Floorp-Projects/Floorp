@@ -45,6 +45,13 @@ body {
   animation: flash-out 0.5s ease-out;
 }
 
+:root {
+  --theme-popup-border-radius: 0px;
+}
+:root[platform="mac"] {
+  --theme-popup-border-radius: 3.5px;
+}
+
 @keyframes flash-out {
   from {
     background: var(--theme-contrast-background);
@@ -168,6 +175,42 @@ body {
   align-items: center;
   white-space: nowrap;
   margin-inline-end: 5px;
+}
+
+.devtools-toolbar .toolbar-menu-button {
+  border-color: transparent;
+  padding: 0 3px;
+}
+
+.devtools-toolbar .toolbar-menu-button.filters {
+  max-width: 100px;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
+
+.devtools-toolbar .toolbar-menu-button::after {
+  content: "";
+  display: inline-block;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-start: 3px;
+}
+.devtools-toolbar .toolbar-menu-button.filters::after {
+  background: url("chrome://devtools/skin/images/select-arrow.svg") no-repeat;
+  width: 8px;
+  height: 8px;
+}
+
+.devtools-toolbar .badge.toggle-button[disabled],
+.tooltip-container .menuitem > .command[disabled] {
+  opacity: 0.5;
+}
+
+:root .theme-body .tooltip-container.tooltip-visible[type="doorhanger"] > .tooltip-panel,
+:root .theme-body .tooltip-container.tooltip-visible[type="doorhanger"] > .tooltip-arrow::before {
+  border: 1px solid var(--theme-popup-border-color);
+  border-radius: var(--theme-popup-border-radius);
+  box-shadow: 0 0 4px hsla(210,4%,10%,.2);
 }
 
 /* @remove after release 68 (See Bug 1551574) */
@@ -403,7 +446,8 @@ body {
   border-color: transparent;
 }
 
-.devtools-toolbar .badge.toggle-button:focus {
+.devtools-toolbar .badge.toggle-button:focus,
+.devtools-toolbar .toolbar-menu-button:focus {
   outline: 2px solid var(--accessibility-toolbar-focus);
   outline-offset: -2px;
   box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus-alpha30);
