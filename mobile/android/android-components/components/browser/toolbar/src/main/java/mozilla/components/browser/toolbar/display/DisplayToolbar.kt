@@ -140,6 +140,7 @@ internal class DisplayToolbar(
         }
 
     internal val trackingProtectionIconView = TrackingProtectionIconView(context).apply {
+        id = R.id.mozac_browser_toolbar_tracking_protection_icon_view
         isVisible = false
         setImageResource(R.drawable.mozac_tracking_protection_state_list)
         setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding))
