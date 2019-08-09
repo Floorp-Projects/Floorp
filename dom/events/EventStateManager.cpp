@@ -940,8 +940,7 @@ static bool IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame,
       !contentKey.Equals(aKey, nsCaseInsensitiveStringComparator()))
     return false;
 
-  if (!aContent->OwnerDoc()->IsXULDocument() && !aContent->IsXULElement())
-    return true;
+  if (!aContent->IsXULElement()) return true;
 
   // For XUL we do visibility checks.
   if (!aFrame) return false;

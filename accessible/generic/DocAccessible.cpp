@@ -96,10 +96,6 @@ DocAccessible::DocAccessible(dom::Document* aDocument,
 
   MOZ_ASSERT(mPresShell, "should have been given a pres shell");
   mPresShell->SetDocAccessible(this);
-
-  // If this is a XUL Document, it should not implement nsHyperText
-  if (mDocumentNode && mDocumentNode->IsXULDocument())
-    mGenericTypes &= ~eHyperText;
 }
 
 DocAccessible::~DocAccessible() {
@@ -201,10 +197,6 @@ role DocAccessible::NativeRole() const {
         return roles::CHROME_WINDOW;
 
       if (itemType == nsIDocShellTreeItem::typeContent) {
-#ifdef MOZ_XUL
-        if (mDocumentNode && mDocumentNode->IsXULDocument())
-          return roles::APPLICATION;
-#endif
         return roles::DOCUMENT;
       }
     } else if (itemType == nsIDocShellTreeItem::typeContent) {
@@ -346,13 +338,6 @@ void DocAccessible::URL(nsAString& aURL) const {
 }
 
 void DocAccessible::DocType(nsAString& aType) const {
-#ifdef MOZ_XUL
-  if (mDocumentNode->IsXULDocument()) {
-    aType.AssignLiteral("window");  // doctype not implemented for XUL at time
-                                    // of writing - causes assertion
-    return;
-  }
-#endif
   dom::DocumentType* docType = mDocumentNode->GetDoctype();
   if (docType) docType->GetPublicId(aType);
 }

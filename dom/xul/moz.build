@@ -42,7 +42,6 @@ if CONFIG['MOZ_XUL']:
         'nsXULPrototypeDocument.cpp',
         'nsXULSortService.cpp',
         'XULBroadcastManager.cpp',
-        'XULDocument.cpp',
         'XULFrameElement.cpp',
         'XULMenuElement.cpp',
         'XULPersist.cpp',

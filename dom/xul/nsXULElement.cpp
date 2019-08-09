@@ -41,7 +41,6 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsXULControllers.h"
-#include "XULDocument.h"
 #include "nsXULPopupListener.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
@@ -77,6 +76,7 @@
 #include "XULMenuElement.h"
 #include "XULPopupElement.h"
 #include "XULTreeElement.h"
+#include "nsXULPrototypeCache.h"
 
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/XULElementBinding.h"

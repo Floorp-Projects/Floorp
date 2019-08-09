@@ -30,9 +30,6 @@
 #include "nsCharsetSource.h"
 #include "nsMimeTypes.h"
 #include "DecoderTraits.h"
-#ifdef MOZ_XUL
-#  include "XULDocument.h"
-#endif
 
 // plugins
 #include "nsIPluginHost.h"
@@ -63,8 +60,6 @@ static const char* const gXMLTypes[] = {TEXT_XML,
 
 static const char* const gSVGTypes[] = {IMAGE_SVG_XML, 0};
 
-static const char* const gXULTypes[] = {0};
-
 static bool IsTypeInList(const nsACString& aType, const char* const aList[]) {
   int32_t typeIndex;
   for (typeIndex = 0; aList[typeIndex]; ++typeIndex) {
@@ -92,21 +87,6 @@ nsContentDLF::nsContentDLF() {}
 nsContentDLF::~nsContentDLF() {}
 
 NS_IMPL_ISUPPORTS(nsContentDLF, nsIDocumentLoaderFactory)
-
-static bool MayUseXULXBL(nsIChannel* aChannel) {
-  nsIScriptSecurityManager* securityManager =
-      nsContentUtils::GetSecurityManager();
-  if (!securityManager) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal;
-  securityManager->GetChannelResultPrincipal(aChannel,
-                                             getter_AddRefs(principal));
-  NS_ENSURE_TRUE(principal, false);
-
-  return nsContentUtils::AllowXULXBLForPrincipal(principal);
-}
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
@@ -189,16 +169,6 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
-  }
-
-  // Try XUL
-  if (IsTypeInList(contentType, gXULTypes)) {
-    if (!MayUseXULXBL(aChannel)) {
-      return NS_ERROR_REMOTE_XUL;
-    }
-
-    return CreateXULDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                             aExtraInfo, aDocListener, aDocViewer);
   }
 
   if (mozilla::DecoderTraits::ShouldHandleMediaType(
@@ -361,41 +331,6 @@ nsresult nsContentDLF::CreateDocument(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind the document to the Content Viewer
-  contentViewer->LoadStart(doc);
-  contentViewer.forget(aContentViewer);
-  return NS_OK;
-}
-
-nsresult nsContentDLF::CreateXULDocument(
-    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-    nsIDocShell* aContainer, nsISupports* aExtraInfo,
-    nsIStreamListener** aDocListener, nsIContentViewer** aContentViewer) {
-  RefPtr<Document> doc;
-  nsresult rv = NS_NewXULDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIContentViewer> contentViewer = NS_NewContentViewer();
-
-  nsCOMPtr<nsIURI> aURL;
-  rv = aChannel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-
-  /*
-   * Initialize the document to begin loading the data...
-   *
-   * An nsIStreamListener connected to the parser is returned in
-   * aDocListener.
-   */
-
-  doc->SetContainer(static_cast<nsDocShell*>(aContainer));
-
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer,
-                              aDocListener, true);
-  if (NS_FAILED(rv)) return rv;
-
-  /*
-   * Bind the document to the Content Viewer...
-   */
   contentViewer->LoadStart(doc);
   contentViewer.forget(aContentViewer);
   return NS_OK;

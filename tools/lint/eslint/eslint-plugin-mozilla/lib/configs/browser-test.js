@@ -22,7 +22,6 @@ module.exports = {
     SpecialPowers: false,
     TestUtils: false,
     XPCNativeWrapper: false,
-    XULDocument: false,
     addLoadEvent: false,
     add_task: false,
     content: false,
