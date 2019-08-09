@@ -54,3 +54,5 @@ set -x
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
 cp clang*.tar.* $UPLOAD_DIR
+
+. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh
