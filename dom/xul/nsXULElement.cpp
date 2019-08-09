@@ -1979,7 +1979,7 @@ nsresult nsXULPrototypeScript::DeserializeOutOfLine(
     if (mSrcURI) {
       // NB: we must check the XUL script cache early, to avoid
       // multiple deserialization attempts for a given script.
-      // Note that XULDocument::LoadScript
+      // Note that PrototypeDocumentContentSink::LoadScript
       // checks the XUL script cache too, in order to handle the
       // serialization case.
       //
