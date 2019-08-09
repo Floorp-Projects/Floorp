@@ -225,6 +225,9 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
       name = "MediaDecoderStateMachine";
       threads = 1;
       break;
+    case MediaThreadType::PLATFORM_ENCODER:
+      name = "MediaPEncoder";
+      break;
     default:
       MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
     case MediaThreadType::PLAYBACK:

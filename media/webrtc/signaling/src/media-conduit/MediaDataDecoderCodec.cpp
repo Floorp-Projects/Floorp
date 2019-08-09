@@ -4,6 +4,7 @@
 
 #include "MediaDataDecoderCodec.h"
 #include "WebrtcMediaDataDecoderCodec.h"
+#include "WebrtcMediaDataEncoderCodec.h"
 #include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
@@ -11,6 +12,11 @@ namespace mozilla {
 /* static */
 WebrtcVideoEncoder* MediaDataDecoderCodec::CreateEncoder(
     webrtc::VideoCodecType aCodecType) {
+#ifdef MOZ_APPLEMEDIA
+  if (aCodecType == webrtc::VideoCodecType::kVideoCodecH264) {
+    return new WebrtcMediaDataEncoder();
+  }
+#endif
   return nullptr;
 }
 
