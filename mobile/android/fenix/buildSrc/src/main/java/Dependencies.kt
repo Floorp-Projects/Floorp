@@ -205,7 +205,7 @@ object Deps {
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_fragment}"
     const val androidx_junit = "androidx.test.ext:junit:${Versions.androidx_test_ext}"
-    const val androidx_test_core ="androidx.test:core:${Versions.androidx_testing}"
+    const val androidx_test_core = "androidx.test:core:${Versions.androidx_testing}"
 
     const val fenix_megazord = "org.mozilla.appservices:fenix-megazord:${Versions.mozilla_appservices}"
     const val fenix_megazord_forUnitTests = "org.mozilla.appservices:fenix-megazord-forUnitTests:${Versions.mozilla_appservices}"

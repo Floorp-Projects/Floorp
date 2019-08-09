@@ -122,6 +122,9 @@ private val Event.wrapper
         is Event.QuickActionSheetDownloadTapped -> EventWrapper<NoExtraKeys>(
             { QuickActionSheet.downloadTapped.record(it) }
         )
+        is Event.QuickActionSheetOpenInAppTapped -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.openAppTapped.record(it) }
+        )
         is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.openInNewTab.record(it) }
         )

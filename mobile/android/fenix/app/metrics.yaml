@@ -314,6 +314,17 @@ quick_action_sheet:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  open_app_tapped:
+    type: event
+    description: >
+      A user tapped the open in app button
+    bugs:
+      - 1195
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4629
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 metrics:
   default_browser:

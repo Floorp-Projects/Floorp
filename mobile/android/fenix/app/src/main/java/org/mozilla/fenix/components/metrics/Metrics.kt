@@ -73,6 +73,7 @@ sealed class Event {
     object QuickActionSheetShareTapped : Event()
     object QuickActionSheetBookmarkTapped : Event()
     object QuickActionSheetDownloadTapped : Event()
+    object QuickActionSheetOpenInAppTapped : Event()
     object CustomTabsClosed : Event()
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()

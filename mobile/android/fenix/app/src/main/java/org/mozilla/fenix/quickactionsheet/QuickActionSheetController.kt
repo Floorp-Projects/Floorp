@@ -53,6 +53,8 @@ class DefaultQuickActionSheetController(
     }
 
     override fun handleOpenLink() {
+        context.metrics.track(Event.QuickActionSheetOpenInAppTapped)
+
         val getRedirect = appLinksUseCases.appLinkRedirect
         val redirect = currentSession.let {
             getRedirect.invoke(it.url)

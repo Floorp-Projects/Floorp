@@ -314,6 +314,14 @@ tracking_protection</td>
         <td></td>
         <td>2020-03-01</td>
     </tr>
+    <tr>
+        <td>open_app_tapped</td>
+        <td>event</td>
+        <td>A user tapped the open in app button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4629">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
 </table>
 </pre>
 
