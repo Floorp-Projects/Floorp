@@ -5,15 +5,19 @@
 [
   {
     "namespace": "manifest",
-    "types": [{
-      "$extend": "Permission",
-      "choices": [{
-        "type": "string",
-        "enum": [
-          "urlbar"
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [
+          {
+            "type": "string",
+            "enum": [
+              "urlbar"
+            ]
+          }
         ]
-      }]
-    }]
+      }
+    ]
   },
   {
     "namespace": "urlbar",
@@ -162,6 +166,56 @@
           },
           "description": "The results that the provider fetched for the query."
         }
+      }
+    ]
+  },
+  {
+    "namespace": "urlbar.contextualTip",
+    "description": "A contextual tip appears in the urlbar's view (its search results panel) and has a title, optional button, and an optional link. Use the <code>browser.urlbar.contextualTip</code> API to experiment with the contextual tip. Restricted to Mozilla privileged WebExtensions.",
+    "types": [
+      {
+        "id": "ContextualTip",
+        "type": "object",
+        "description": "An object containing the title, button title, and link title to set on the contextual tip.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A string to be used as the contextual tip's title."
+          },
+          "buttonTitle": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A string to be used as the contextual tip's button's title.",
+            "optional": true
+          },
+          "linkTitle": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A string to be used as the contextual tip's link's title.",
+            "optional": true
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "set",
+        "type": "function",
+        "description": "Sets the contextual tip in the most recent browser window with the given title, button title, and link title. If the urlbar's view is not already open, then it will be opened so the contextual tip will be visible. Note that when the urlbar's view is closed, the contextual tip is hidden and will not appear again. `browser.urlbar.contextualTip.set` must be called each time a contextual tip should appear.",
+        "parameters": [
+          {
+            "name": "details",
+            "$ref": "ContextualTip",
+            "description": "Specifies the contextual tip's texts."
+          }
+        ]
+      },
+      {
+        "name": "remove",
+        "type": "function",
+        "description": "Hides the contextual tip (it will still be in the DOM).",
+        "parameters": []
       }
     ]
   }
