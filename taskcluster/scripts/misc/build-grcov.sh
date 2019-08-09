@@ -47,3 +47,5 @@ popd
 if [ -e Cargo.toml.back ]; then
   mv Cargo.toml.back Cargo.toml
 fi
+
+. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

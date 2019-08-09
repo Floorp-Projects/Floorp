@@ -51,3 +51,5 @@ cp target/$TARGET/release/cbindgen* cbindgen/
 tar -acf cbindgen.tar.$COMPRESS_EXT cbindgen
 mkdir -p $UPLOAD_DIR
 cp cbindgen.tar.$COMPRESS_EXT $UPLOAD_DIR
+
+. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

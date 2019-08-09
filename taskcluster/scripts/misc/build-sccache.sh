@@ -78,3 +78,5 @@ cp $SCCACHE_OUT sccache/
 tar -acf sccache.tar.$COMPRESS_EXT sccache
 mkdir -p $UPLOAD_DIR
 cp sccache.tar.$COMPRESS_EXT $UPLOAD_DIR
+
+. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh
