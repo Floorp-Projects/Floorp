@@ -4,6 +4,7 @@
   rel="help"
   href="https://w3c.github.io/browser-payment-api/#dfn-payment-request-is-showing"
 />
+<meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/testdriver-vendor.js"></script>
@@ -399,31 +400,50 @@
     }, "Navigating an iframe as a nested browsing context sets 'payment request is showing boolean' to false.");
 
     promise_test(async t => {
-      const [popupWindow, popupRequest, showPromise] = await test_driver.bless(
-        'test navigating popup after show()',
-        async () => {
-          const popupWindow = await loadPopupInsideUserGesture();
-          const popupRequest = new popupWindow.PaymentRequest(methods, details);
-          return [popupWindow, popupRequest, popupRequest.show()];
-        },
-      );
+      const [popupWindow, popupRequest, popupShowPromise] =
+        await test_driver.bless(
+          'trigger payment in a popup window',
+          async () => {
+            const popupWindow = await loadPopupInsideUserGesture();
+            const popupRequest = new popupWindow.PaymentRequest(methods, details);
+            return [popupWindow, popupRequest, popupRequest.show()];
+          });
 
       // We navigate away, causing the payment sheet to close
       // and the request is showing boolean to become false.
       popupWindow.location = 'blank.html?abc=123';
       await new Promise(resolve => (popupWindow.onload = resolve));
-      await promise_rejects(
-        t,
-        'AbortError',
-        showPromise,
-        'Navigating away must cause the showPromise to reject with an AbortError',
-      );
-      popupWindow.close();
 
-      // Now we should be ok to spin up a new payment request.
+      // Don't wait for |popupShowPromise| to reject because it may never do
+      // (see https://github.com/w3c/payment-request/issues/872). Instead, try
+      // to spin up a new payment request and make sure it succeeds.
       const request = new window.PaymentRequest(methods, details);
-      request.show();
-      await request.abort();
+      const [showPromise] = await test_driver.bless(
+        'trigger payment in main window',
+        () => {
+          return [request.show()];
+        });
+
+      // If a payment sheet fails to show, it should reject immediately. If it
+      // hasn't rejected in 1 second, then the test has passed.
+      t.step_timeout(async () => {
+        // We're done. Clean up.
+        popupWindow.close();
+        await request.abort();
+        t.done();
+      }, 1000);
+
+      // If the navigation in popup window failed to close the original payment
+      // sheet there, |showPromise| should reject immediately and this indicates
+      // a failure of this test.
+      await showPromise.then(() => {
+        assert_true(false,
+          "Second payment sheet should be pending but is resolved.");
+      })
+      .catch(e => {
+        assert_true(false,
+          "Second payment sheet should be pending but is rejected.");
+      });
     }, "Navigating a popup as a nested browsing context sets 'payment request is showing boolean' to false.");
   </script>
 </body>
