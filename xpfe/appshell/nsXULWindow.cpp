@@ -1643,7 +1643,7 @@ nsresult nsXULWindow::SetPersistentValue(const nsAtom* aAttr,
 
   nsAutoString windowElementId;
   docShellElement->GetId(windowElementId);
-  // Match the behavior of XULDocument and only persist values if the element
+  // Match the behavior of XULPersist and only persist values if the element
   // has an ID.
   if (windowElementId.IsEmpty()) {
     return NS_OK;
