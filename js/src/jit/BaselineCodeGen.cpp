@@ -717,17 +717,6 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   // Assert prepareVMCall() has been called.
   MOZ_ASSERT(inCall_);
   inCall_ = false;
-
-  // Assert the frame does not have an override pc when we're executing JIT
-  // code.
-  {
-    Label ok;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_OVERRIDE_PC), &ok);
-    masm.assumeUnreachable(
-        "BaselineFrame shouldn't override pc when executing JIT code");
-    masm.bind(&ok);
-  }
 #endif
 
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
@@ -766,18 +755,6 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   masm.implicitPop(argSize - sizeof(void*));
 
   restoreInterpreterPCReg();
-
-#ifdef DEBUG
-  // Assert the frame does not have an override pc when we're executing JIT
-  // code.
-  {
-    Label ok;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_OVERRIDE_PC), &ok);
-    masm.assumeUnreachable("BaselineFrame shouldn't override pc after VM call");
-    masm.bind(&ok);
-  }
-#endif
 
   return handler.recordCallRetAddr(cx, kind, callOffset);
 }
