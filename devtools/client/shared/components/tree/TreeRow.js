@@ -47,8 +47,8 @@ define(function(require, exports, module) {
     static get propTypes() {
       return {
         member: PropTypes.shape({
-          object: PropTypes.obSject,
-          name: PropTypes.sring,
+          object: PropTypes.object,
+          name: PropTypes.string,
           type: PropTypes.string.isRequired,
           rowClass: PropTypes.string.isRequired,
           level: PropTypes.number.isRequired,
