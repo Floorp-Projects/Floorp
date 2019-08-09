@@ -526,6 +526,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 .monitor-card #monitor-header-content > a {
   display: block;
   margin-block-start: 5px;
+  width: max-content;
 }
 
 .monitor-card.has-logins #monitor-body-content {
