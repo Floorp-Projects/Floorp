@@ -37,6 +37,48 @@
   border-block: 1px solid var(--chrome-content-separator-color);
 }
 
+#urlbar-contextual-tip {
+  font-size: 13px;
+  align-items: center;
+  display: flex;
+
+  padding-top: 24px;
+  padding-bottom: 24px;
+  padding-inline-start: var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@));
+  padding-inline-end: var(--item-padding-end, 5px);
+}
+
+#urlbar-contextual-tip-title {
+  flex-grow: 1;
+  padding-right: 75px;
+}
+
+#urlbar-contextual-tip-button {
+  height: 32px;
+  width: 128px;
+  font-size: 11px;
+  border: none;
+  border-radius: 2px;
+  color: white;
+  background-color: #0060df; /* corresponds to blue-60 */
+}
+
+#urlbar-contextual-tip-button:hover {
+  background-color: #003eaa; /* corresponds to blue-70 */
+}
+
+#urlbar-contextual-tip-button:active {
+  background-color: #002275; /* corresponds to blue-80 */
+}
+
+#urlbar-contextual-tip-button:-moz-focusring {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+#urlbar-contextual-tip-link {
+  text-align: end;
+}
+
 .urlbarView-body-inner {
   box-sizing: border-box;
 }

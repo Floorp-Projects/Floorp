@@ -27,8 +27,40 @@ ExtensionPreferencesManager.addSetting("engagementTelemetry", {
     return { [this.prefNames[0]]: value };
   },
 });
+// Keeps track of the id of the extension using the contextual tip.
+// Only one extension is allowed to use the contextual tip.
+// If another extension attempts to use the contextual tip,
+// then an error is thrown.
+let idOfExtUsingContextualTip = null;
 
 this.urlbar = class extends ExtensionAPI {
+  onShutdown() {
+    if (idOfExtUsingContextualTip === this.extension.id) {
+      for (let w of windowTracker.browserWindows()) {
+        w.gURLBar.view.removeContextualTip();
+      }
+      idOfExtUsingContextualTip = null;
+    }
+  }
+
+  /**
+   * If no extension is using the contextual tip then the current extension
+   * will own the contextual tip. If the contextual tip is already being used
+   * by another extension then an error is thrown.
+   */
+  _registerExtensionToUseContextualTip() {
+    if (idOfExtUsingContextualTip == null) {
+      idOfExtUsingContextualTip = this.extension.id;
+    }
+
+    if (idOfExtUsingContextualTip !== this.extension.id) {
+      throw new Error(
+        "There was an attempt to use the contextual tip API but " +
+          "another extension is already using the contextual tip API."
+      );
+    }
+  }
+
   getAPI(context) {
     return {
       urlbar: {
@@ -100,6 +132,35 @@ this.urlbar = class extends ExtensionAPI {
           "engagementTelemetry",
           () => UrlbarPrefs.get("eventTelemetry.enabled")
         ),
+
+        contextualTip: {
+          /**
+           * Sets the contextual tip's title, button title, and link title.
+           *
+           * @param {object} details
+           *   If null, then the contextual tip will be hidden.
+           * @param {string} details.title
+           *   Main title on the contextual tip.
+           * @param {string} [details.buttonTitle]
+           *   If not given, no button is shown.
+           * @param {string} [details.linkTitle]
+           *   If not given, no link is shown.
+           */
+          set: details => {
+            this._registerExtensionToUseContextualTip();
+            const mostRecentWindow = windowTracker.getTopNormalWindow(context);
+            mostRecentWindow.gURLBar.view.setContextualTip(details);
+          },
+
+          /**
+           * Hides the contextual tip.
+           */
+          remove: () => {
+            this._registerExtensionToUseContextualTip();
+            const mostRecentWindow = windowTracker.getTopNormalWindow(context);
+            mostRecentWindow.gURLBar.view.hideContextualTip();
+          },
+        },
       },
     };
   }
