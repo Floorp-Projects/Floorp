@@ -436,9 +436,7 @@ JS_FRIEND_API bool js::NukeCrossCompartmentWrappers(
          target->compartment() == c.get() && NukedAllRealms(c.get()));
 
     // Iterate only the wrappers that have target compartment matched unless
-    // |nukeAll| is true. The string wrappers that we're not interested in
-    // won't be iterated, we can exclude them easily because they have
-    // compartment nullptr. Use Maybe to avoid copying from conditionally
+    // |nukeAll| is true. Use Maybe to avoid copying from conditionally
     // initializing ObjectWrapperEnum.
     mozilla::Maybe<Compartment::ObjectWrapperEnum> e;
     if (MOZ_LIKELY(!nukeAll)) {
@@ -448,19 +446,13 @@ JS_FRIEND_API bool js::NukeCrossCompartmentWrappers(
       c.get()->nukedOutgoingWrappers = true;
     }
     for (; !e->empty(); e->popFront()) {
-      // Skip debugger references because NukeCrossCompartmentWrapper()
-      // doesn't know how to nuke them yet, see bug 1084626 for more
-      // information.
-      const CrossCompartmentKey& k = e->front().key();
-      if (!k.is<JSObject*>()) {
-        continue;
-      }
+      JSObject* key = e->front().key();
 
       AutoWrapperRooter wobj(cx, WrapperValue(*e));
 
-      // Unwrap from the wrapped object in CrossCompartmentKey instead of
-      // the wrapper, this could save us a bit of time.
-      JSObject* wrapped = UncheckedUnwrap(k.as<JSObject*>());
+      // Unwrap from the wrapped object in key instead of the wrapper, this
+      // could save us a bit of time.
+      JSObject* wrapped = UncheckedUnwrap(key);
 
       // Don't nuke wrappers for objects in other realms in the target
       // compartment unless nukeAll is set because in that case we want to nuke
@@ -642,16 +634,10 @@ JS_FRIEND_API bool js::RecomputeWrappers(
       evictedNursery = true;
     }
 
-    // Iterate over the wrappers, filtering appropriately.
+    // Iterate over object wrappers, filtering appropriately.
     for (Compartment::ObjectWrapperEnum e(c, targetFilter); !e.empty();
          e.popFront()) {
-      // Filter out non-objects.
-      CrossCompartmentKey& k = e.front().mutableKey();
-      if (!k.is<JSObject*>()) {
-        continue;
-      }
-
-      // Add it to the list.
+      // Add the wrapper to the list.
       if (!toRecompute.append(WrapperValue(e))) {
         return false;
       }

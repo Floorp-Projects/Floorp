@@ -4614,7 +4614,7 @@ void GCRuntime::markCompartments() {
   while (!workList.empty()) {
     Compartment* comp = workList.popCopy();
     for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
-      Compartment* dest = e.front().mutableKey().compartment();
+      Compartment* dest = e.front().key()->compartment();
       if (dest && !dest->gcState.maybeAlive) {
         dest->gcState.maybeAlive = true;
         if (!workList.append(dest)) {
@@ -5014,10 +5014,7 @@ static void DropStringWrappers(JSRuntime* rt) {
    * compartment group.
    */
   for (CompartmentsIter c(rt); !c.done(); c.next()) {
-    for (Compartment::StringWrapperEnum e(c); !e.empty(); e.popFront()) {
-      MOZ_ASSERT(e.front().key().is<JSString*>());
-      e.removeFront();
-    }
+    c->dropStringWrappersOnGC();
   }
 }
 
@@ -5041,9 +5038,9 @@ static void DropStringWrappers(JSRuntime* rt) {
 bool Compartment::findSweepGroupEdges() {
   Zone* source = zone();
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    CrossCompartmentKey& key = e.front().mutableKey();
+    JSObject* key = e.front().mutableKey();
 
-    Zone* target = key.zone();
+    Zone* target = key->zone();
     if (!target->isGCMarking()) {
       continue;
     }
@@ -5052,7 +5049,7 @@ bool Compartment::findSweepGroupEdges() {
     // is not still being marked when we start sweeping the wrapped zone. As an
     // optimization, if the wrapped object is already marked black there is no
     // danger of later marking and we can skip this.
-    if (key.as<JSObject*>()->asTenured().isMarkedBlack()) {
+    if (key->asTenured().isMarkedBlack()) {
       continue;
     }
 

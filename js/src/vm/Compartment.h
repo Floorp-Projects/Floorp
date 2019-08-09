@@ -25,103 +25,6 @@
 
 namespace js {
 
-// A key in a WrapperMap, a compartment's map from entities in other
-// compartments to the wrapper objects the compartment's own code must use to
-// refer to them.
-//
-// All cross-compartment edges must be represented either in the source
-// compartment's wrapper map or in one of the debugger weakmaps.
-//
-// WrapperMaps have a complex key type because, in addition to mapping JSObjects
-// to their cross-compartment wrappers, they must also map non-atomized
-// JSStrings to their copies in the local compartment.
-class CrossCompartmentKey {
- public:
-  using WrappedType = mozilla::Variant<JSObject*, JSString*>;
-
-  explicit CrossCompartmentKey(JSObject* obj) : wrapped(obj) {
-    MOZ_RELEASE_ASSERT(obj);
-  }
-  explicit CrossCompartmentKey(JSString* str) : wrapped(str) {
-    MOZ_RELEASE_ASSERT(str);
-  }
-  explicit CrossCompartmentKey(const JS::Value& v)
-      : wrapped(v.isString() ? WrappedType(v.toString())
-                             : WrappedType(&v.toObject())) {}
-
-  bool operator==(const CrossCompartmentKey& other) const {
-    return wrapped == other.wrapped;
-  }
-  bool operator!=(const CrossCompartmentKey& other) const {
-    return wrapped != other.wrapped;
-  }
-
-  template <typename T>
-  bool is() const {
-    return wrapped.is<T>();
-  }
-  template <typename T>
-  const T& as() const {
-    return wrapped.as<T>();
-  }
-
- private:
-  template <typename F>
-  struct ApplyToWrappedMatcher {
-    F f_;
-    explicit ApplyToWrappedMatcher(F f) : f_(f) {}
-    auto operator()(JSObject*& obj) { return f_(&obj); }
-    auto operator()(JSString*& str) { return f_(&str); }
-  };
-
- public:
-  template <typename F>
-  auto applyToWrapped(F f) {
-    return wrapped.match(ApplyToWrappedMatcher<F>(f));
-  }
-
-  JS::Compartment* compartment() {
-    return applyToWrapped([](auto tp) { return (*tp)->maybeCompartment(); });
-  }
-
-  JS::Zone* zone() {
-    return applyToWrapped([](auto tp) { return (*tp)->zone(); });
-  }
-
-  struct Hasher : public DefaultHasher<CrossCompartmentKey> {
-    struct HashFunctor {
-      HashNumber operator()(JSObject* obj) {
-        return DefaultHasher<JSObject*>::hash(obj);
-      }
-      HashNumber operator()(JSString* str) {
-        return DefaultHasher<JSString*>::hash(str);
-      }
-    };
-    static HashNumber hash(const CrossCompartmentKey& key) {
-      return key.wrapped.addTagToHash(key.wrapped.match(HashFunctor()));
-    }
-
-    static bool match(const CrossCompartmentKey& l,
-                      const CrossCompartmentKey& k) {
-      return l.wrapped == k.wrapped;
-    }
-  };
-
-  bool isTenured() const {
-    auto self = const_cast<CrossCompartmentKey*>(this);
-    return self->applyToWrapped([](auto tp) { return (*tp)->isTenured(); });
-  }
-
-  void trace(JSTracer* trc);
-  bool needsSweep();
-
- private:
-  CrossCompartmentKey() = delete;
-  explicit CrossCompartmentKey(WrappedType&& wrapped)
-      : wrapped(std::move(wrapped)) {}
-  WrappedType wrapped;
-};
-
 // The data structure for storing JSObject CCWs, which has a map per target
 // compartment so we can access them easily. String CCWs are stored in a
 // separate map.
@@ -129,8 +32,8 @@ class ObjectWrapperMap {
   static const size_t InitialInnerMapSize = 4;
 
   using InnerMap =
-      NurseryAwareHashMap<CrossCompartmentKey, JS::Value,
-                          CrossCompartmentKey::Hasher, ZoneAllocPolicy>;
+      NurseryAwareHashMap<JSObject*, JS::Value, DefaultHasher<JSObject*>,
+                          ZoneAllocPolicy>;
   using OuterMap = GCHashMap<JS::Compartment*, InnerMap,
                              DefaultHasher<JS::Compartment*>, ZoneAllocPolicy>;
 
@@ -239,11 +142,10 @@ class ObjectWrapperMap {
     return true;
   }
 
-  Ptr lookup(const CrossCompartmentKey& k) const {
-    MOZ_ASSERT(k.is<JSObject*>());
-    auto op = map.lookup(const_cast<CrossCompartmentKey&>(k).compartment());
+  Ptr lookup(JSObject* obj) const {
+    auto op = map.lookup(obj->compartment());
     if (op) {
-      auto ip = op->value().lookup(k);
+      auto ip = op->value().lookup(obj);
       if (ip) {
         return Ptr(ip, op->value());
       }
@@ -257,10 +159,8 @@ class ObjectWrapperMap {
     }
   }
 
-  MOZ_MUST_USE bool put(const CrossCompartmentKey& k, const JS::Value& v) {
-    MOZ_ASSERT(k.is<JSObject*>());
-    JS::Compartment* c = const_cast<CrossCompartmentKey&>(k).compartment();
-    MOZ_ASSERT(c);
+  MOZ_MUST_USE bool put(JSObject* obj, const JS::Value& v) {
+    JS::Compartment* c = obj->compartment();
     auto p = map.lookupForAdd(c);
     if (!p) {
       InnerMap m(zone, InitialInnerMapSize);
@@ -268,7 +168,7 @@ class ObjectWrapperMap {
         return false;
       }
     }
-    return p->value().put(k, v);
+    return p->value().put(obj, v);
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
@@ -322,9 +222,8 @@ class ObjectWrapperMap {
 };
 
 using StringWrapperMap =
-    js::NurseryAwareHashMap<js::CrossCompartmentKey, JS::Value,
-                            js::CrossCompartmentKey::Hasher,
-                            js::ZoneAllocPolicy>;
+    NurseryAwareHashMap<JSString*, JS::Value, DefaultHasher<JSString*>,
+                        ZoneAllocPolicy>;
 
 }  // namespace js
 
@@ -448,11 +347,11 @@ class JS::Compartment {
                                const js::Value& wrapper);
 
   js::ObjectWrapperMap::Ptr lookupWrapper(JSObject* obj) const {
-    return crossCompartmentObjectWrappers.lookup(js::CrossCompartmentKey(obj));
+    return crossCompartmentObjectWrappers.lookup(obj);
   }
 
   js::StringWrapperMap::Ptr lookupWrapper(JSString* str) const {
-    return crossCompartmentStringWrappers.lookup(js::CrossCompartmentKey(str));
+    return crossCompartmentStringWrappers.lookup(str);
   }
 
   void removeWrapper(js::ObjectWrapperMap::Ptr p) {
@@ -489,6 +388,7 @@ class JS::Compartment {
    */
   void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
   static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
+  void dropStringWrappersOnGC();
 
   void sweepRealms(js::FreeOp* fop, bool keepAtleastOne,
                    bool destroyingRuntime);
@@ -596,15 +496,5 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
 };
 
 } /* namespace js */
-
-namespace JS {
-template <>
-struct GCPolicy<js::CrossCompartmentKey>
-    : public StructGCPolicy<js::CrossCompartmentKey> {
-  static bool isTenured(const js::CrossCompartmentKey& key) {
-    return key.isTenured();
-  }
-};
-}  // namespace JS
 
 #endif /* vm_Compartment_h */

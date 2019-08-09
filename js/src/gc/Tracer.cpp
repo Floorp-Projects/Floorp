@@ -108,7 +108,7 @@ JS_PUBLIC_API void JS::TraceIncomingCCWs(
       continue;
     }
     for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
-      JSObject* obj = e.front().key().as<JSObject*>();
+      JSObject* obj = e.front().key();
       Compartment* comp = obj->compartment();
       if (compartments.has(comp)) {
         mozilla::DebugOnly<JSObject*> prior = obj;

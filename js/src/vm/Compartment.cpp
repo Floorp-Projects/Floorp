@@ -54,13 +54,11 @@ static inline void CheckWrapperMapEntry(const Map& map, Entry& entry) {
    * wrapperMap that points into the nursery, and that the hash table entries
    * are discoverable.
    */
-  auto& key = entry.front().mutableKey();
-  key.applyToWrapped([&](auto tp) {
-    CheckGCThingAfterMovingGC(*tp);
+  auto key = entry.front().key();
+  CheckGCThingAfterMovingGC(key);
 
-    auto ptr = map.lookup(CrossCompartmentKey(*tp));
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &entry.front());
-  });
+  auto ptr = map.lookup(key);
+  MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &entry.front());
 }
 
 void Compartment::checkWrapperMapAfterMovingGC() {
@@ -74,10 +72,8 @@ void Compartment::checkWrapperMapAfterMovingGC() {
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-bool Compartment::putWrapper(JSContext* cx, JSObject* obj,
+bool Compartment::putWrapper(JSContext* cx, JSObject* wrapped,
                              const js::Value& wrapper) {
-  CrossCompartmentKey wrapped(obj);
-  MOZ_ASSERT(wrapper.isObject());
   MOZ_ASSERT(!js::IsProxy(&wrapper.toObject()) ||
              js::GetProxyHandler(&wrapper.toObject())->family() !=
                  js::GetDOMRemoteProxyHandlerFamily());
@@ -90,11 +86,8 @@ bool Compartment::putWrapper(JSContext* cx, JSObject* obj,
   return true;
 }
 
-bool Compartment::putWrapper(JSContext* cx, JSString* str,
+bool Compartment::putWrapper(JSContext* cx, JSString* wrapped,
                              const js::Value& wrapper) {
-  CrossCompartmentKey wrapped(str);
-  MOZ_ASSERT(wrapper.isString());
-
   if (!crossCompartmentStringWrappers.put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
     return false;
@@ -443,16 +436,14 @@ void Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc) {
              trc->runtime()->gc.isHeapCompacting());
 
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    if (e.front().key().is<JSObject*>()) {
-      Value v = e.front().value().unbarrieredGet();
-      ProxyObject* wrapper = &v.toObject().as<ProxyObject>();
+    Value v = e.front().value().unbarrieredGet();
+    ProxyObject* wrapper = &v.toObject().as<ProxyObject>();
 
-      /*
-       * We have a cross-compartment wrapper. Its private pointer may
-       * point into the compartment being collected, so we should mark it.
-       */
-      ProxyObject::traceEdgeToTarget(trc, wrapper);
-    }
+    /*
+     * We have a cross-compartment wrapper. Its private pointer may
+     * point into the compartment being collected, so we should mark it.
+     */
+    ProxyObject::traceEdgeToTarget(trc, wrapper);
   }
 }
 
@@ -467,6 +458,11 @@ void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
     }
   }
   DebugAPI::traceCrossCompartmentEdges(trc);
+}
+
+void Compartment::dropStringWrappersOnGC() {
+  MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
+  crossCompartmentStringWrappers.clear();
 }
 
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {
@@ -486,16 +482,6 @@ void Compartment::sweepAfterMinorGC(JSTracer* trc) {
 void Compartment::sweepCrossCompartmentWrappers() {
   crossCompartmentObjectWrappers.sweep();
   crossCompartmentStringWrappers.sweep();
-}
-
-void CrossCompartmentKey::trace(JSTracer* trc) {
-  applyToWrapped(
-      [trc](auto tp) { TraceRoot(trc, tp, "CrossCompartmentKey::wrapped"); });
-}
-
-bool CrossCompartmentKey::needsSweep() {
-  auto needsSweep = [](auto tp) { return IsAboutToBeFinalizedUnbarriered(tp); };
-  return applyToWrapped(needsSweep);
 }
 
 /* static */
