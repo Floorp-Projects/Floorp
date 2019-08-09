@@ -68,7 +68,12 @@ class PageAction {
     this._showPopupOnClick = this._showPopupOnClick.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
-    this._l10n = new DOMLocalization(["browser/newtab/asrouter.ftl"]);
+    this._l10n = new DOMLocalization([
+      "browser/newtab/asrouter.ftl",
+      "browser/branding/brandings.ftl",
+      "browser/branding/sync-brand.ftl",
+      "branding/brand.ftl",
+    ]);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];

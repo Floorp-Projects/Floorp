@@ -94,6 +94,11 @@ const TRAILHEAD_CONFIG = {
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
   EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 3]],
+  // Per bug 1571817, for those who meet the targeting criteria of extended
+  // triplets, 99% users (control group) will see the extended triplets, and
+  // the rest 1% (holdback group) won't.
+  EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS: [["control", 99], ["holdback", 1]],
+  EXTENDED_TRIPLETS_EXPERIMENT_PREF: "trailhead.extendedTriplets.experiment",
 };
 
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
@@ -490,6 +495,8 @@ class _ASRouter {
       trailheadTriplet: "",
       messages: [],
       errors: [],
+      extendedTripletsInitialized: false,
+      showExtendedTriplets: true,
     };
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
@@ -986,6 +993,40 @@ class _ASRouter {
       type: at.TRAILHEAD_ENROLL_EVENT,
       data,
     });
+  }
+
+  async setupExtendedTriplets() {
+    // Don't re-initialize
+    if (this.state.extendedTripletsInitialized) {
+      return;
+    }
+
+    let branch = Services.prefs.getStringPref(
+      TRAILHEAD_CONFIG.EXTENDED_TRIPLETS_EXPERIMENT_PREF,
+      ""
+    );
+    if (!branch) {
+      const { userId } = ClientEnvironment;
+      branch = await chooseBranch(
+        `${userId}-extended-triplets-experiment`,
+        TRAILHEAD_CONFIG.EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS
+      );
+      Services.prefs.setStringPref(
+        TRAILHEAD_CONFIG.EXTENDED_TRIPLETS_EXPERIMENT_PREF,
+        branch
+      );
+    }
+
+    // In order for ping centre to pick this up, it MUST contain a substring activity-stream
+    const experimentName = `activity-stream-extended-triplets`;
+    TelemetryEnvironment.setExperimentActive(experimentName, branch);
+
+    const state = { extendedTripletsInitialized: true };
+    // Disable the extended triplets for the "holdback" group.
+    if (branch === "holdback") {
+      state.showExtendedTriplets = false;
+    }
+    await this.setState(state);
   }
 
   async setupTrailhead() {
@@ -1823,11 +1864,24 @@ class _ASRouter {
       }));
     } else {
       // On new tab, send cards if they match; othwerise send a snippet
-      message =
-        (await this.handleMessageRequest({
-          provider: "onboarding",
-          template: "extended_triplets",
-        })) || (await this.handleMessageRequest({ provider: "snippets" }));
+      message = await this.handleMessageRequest({
+        provider: "onboarding",
+        template: "extended_triplets",
+      });
+
+      // Set up the experiment for extended triplets. It's done here because we
+      // only want to enroll users (for both control and holdback) if they meet
+      // the targeting criteria.
+      if (message) {
+        await this.setupExtendedTriplets();
+      }
+
+      // If no extended triplets message was returned, or the holdback experiment
+      // is active, show snippets instead
+      if (!message || !this.state.showExtendedTriplets) {
+        message = await this.handleMessageRequest({ provider: "snippets" });
+      }
+
       await this.setState({ lastMessageId: message ? message.id : null });
     }
 

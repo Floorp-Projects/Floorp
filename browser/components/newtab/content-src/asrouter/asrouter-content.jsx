@@ -377,7 +377,7 @@ export class ASRouterUISurface extends React.PureComponent {
             sendUserActionTelemetry={this.sendUserActionTelemetry}
             executeAction={ASRouterUtils.executeAction}
             dispatch={this.props.dispatch}
-            onBlock={this.onBlockById(this.state.message.id)}
+            onBlockById={ASRouterUtils.blockById}
             onDismiss={this.onDismissById(this.state.message.id)}
             fxaEndpoint={this.props.fxaEndpoint}
             fetchFlowParams={this.fetchFlowParams}
