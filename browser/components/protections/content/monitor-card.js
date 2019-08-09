@@ -8,6 +8,9 @@ const MONITOR_SIGN_IN_URL = RPMGetStringPref(
   "browser.contentblocking.report.monitor.url",
   ""
 );
+const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
+  "browser.contentblocking.report.monitor.how_it_works.url"
+);
 
 export default class MonitorClass {
   constructor(document) {
@@ -15,6 +18,9 @@ export default class MonitorClass {
   }
 
   init() {
+    const monitorLinkTag = this.doc.getElementById("monitor-inline-link");
+    monitorLinkTag.href = MONITOR_SIGN_IN_URL;
+
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
       // Wait for monitor data and display the card.
       this.getMonitorData(data);
@@ -110,6 +116,9 @@ export default class MonitorClass {
       ".card.monitor-card .card-body"
     );
     monitorCardBody.classList.remove("hidden");
+
+    const howItWorksLink = this.doc.getElementById("monitor-link");
+    howItWorksLink.href = HOW_IT_WORKS_URL_PREF;
 
     const storedEmail = this.doc.querySelector(
       "span[data-type='stored-emails']"

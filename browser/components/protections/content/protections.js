@@ -152,10 +152,15 @@ document.addEventListener("DOMContentLoaded", e => {
       graph.append(label);
       date.setDate(date.getDate() - 1);
     }
-    // Set the total number of each type of tracker on the tabs
+    // Set the total number of each type of tracker on the tabs as well as their
+    // "Learn More" links
     for (let type of dataTypes) {
       document.querySelector(`label[data-type=${type}]`).textContent =
         weekTypeCounts[type];
+      const learnMoreLink = document.getElementById(`${type}-link`);
+      learnMoreLink.href = RPMGetFormatURLPref(
+        `browser.contentblocking.report.${type}.url`
+      );
     }
 
     // Hide the trackers tab if the user is in standard and
