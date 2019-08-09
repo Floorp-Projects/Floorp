@@ -68,9 +68,9 @@ class Preferences(object):
         if not isinstance(value, string_types):
             return value  # no op
         quote = "'"
-        if value == 'true':
+        if value.lower() == "true":
             return True
-        if value == 'false':
+        if value.lower() == "false":
             return False
         try:
             return int(value)
