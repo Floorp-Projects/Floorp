@@ -7,7 +7,6 @@ rst:
         - toolkit/components/extensions/
         - tools/tryselect/docs/
         - browser/docs/
-        - intl/l10n/docs/
     extensions:
         - rst
     support-files:
