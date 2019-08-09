@@ -451,11 +451,8 @@ MessageManagerTunnel.prototype = {
     "Browser:Reload",
     "PageStyle:Disable",
     "PageStyle:Switch",
-    // Messages sent from SelectParentHelper.jsm
-    "Forms:DismissedDropDown",
     "Forms:MouseOut",
     "Forms:MouseOver",
-    "Forms:SelectDropDownItem",
     // Messages sent from SessionStore.jsm
     "SessionStore:flush",
     "SessionStore:restoreHistory",
@@ -477,14 +474,10 @@ MessageManagerTunnel.prototype = {
     // Messages sent to browser.js
     "DOMTitleChanged",
     "ImageDocumentLoaded",
-    "Forms:ShowDropDown",
-    "Forms:HideDropDown",
     "InPermitUnload",
     "PermitUnload",
     // Messages sent to tabbrowser.xml
     "contextmenu",
-    // Messages sent to SelectParentHelper.jsm
-    "Forms:UpdateDropDown",
     // Messages sent to SessionStore.jsm
     "SessionStore:update",
     // Messages sent to BrowserTestUtils.jsm
