@@ -131,10 +131,6 @@ class TextEditRules {
    */
   void HandleNewLines(nsString& aString);
 
-  bool HasPaddingBRElementForEmptyEditor() const {
-    return !!mPaddingBRElementForEmptyEditor;
-  }
-
  protected:
   void InitFields();
 
@@ -388,9 +384,6 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // mPaddingBRElementForEmptyEditor should be used for placing caret
-  // at proper position when editor is empty.
-  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
   // Cached selected node.
   nsCOMPtr<nsINode> mCachedSelectionNode;
   // Cached selected offset.

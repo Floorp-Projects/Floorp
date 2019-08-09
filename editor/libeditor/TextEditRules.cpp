@@ -63,7 +63,6 @@ using namespace dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
@@ -75,7 +74,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
@@ -104,7 +102,6 @@ TextEditRules::TextEditRules()
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mPaddingBRElementForEmptyEditor = nullptr;
   mCachedSelectionNode = nullptr;
   mCachedSelectionOffset = 0;
   mActionNesting = 0;
@@ -395,7 +392,7 @@ nsresult TextEditRules::WillInsert(bool* aCancel) {
   }
 
   // check for the magic content node and delete it if it exists
-  if (!mPaddingBRElementForEmptyEditor) {
+  if (!TextEditorRef().mPaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 
@@ -403,7 +400,7 @@ nsresult TextEditRules::WillInsert(bool* aCancel) {
   // editor again during the call of DeleteNodeWithTransaction().  So, move
   // it first.
   RefPtr<HTMLBRElement> paddingBRElement(
-      std::move(mPaddingBRElementForEmptyEditor));
+      std::move(TextEditorRef().mPaddingBRElementForEmptyEditor));
   DebugOnly<nsresult> rv = MOZ_KnownLive(TextEditorRef())
                                .DeleteNodeWithTransaction(*paddingBRElement);
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -1036,7 +1033,7 @@ nsresult TextEditRules::WillDeleteSelection(
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
     *aCancel = true;
     return NS_OK;
   }
@@ -1176,9 +1173,10 @@ nsresult TextEditRules::DidUndo(nsresult aResult) {
   // sense to take the (small) performance hit here.
   nsIContent* node = TextEditorRef().GetLeftmostChild(rootElement);
   if (node && EditorBase::IsPaddingBRElementForEmptyEditor(*node)) {
-    mPaddingBRElementForEmptyEditor = static_cast<HTMLBRElement*>(node);
+    TextEditorRef().mPaddingBRElementForEmptyEditor =
+        static_cast<HTMLBRElement*>(node);
   } else {
-    mPaddingBRElementForEmptyEditor = nullptr;
+    TextEditorRef().mPaddingBRElementForEmptyEditor = nullptr;
   }
   return aResult;
 }
@@ -1213,15 +1211,16 @@ nsresult TextEditRules::DidRedo(nsresult aResult) {
 
   if (len != 1) {
     // only in the case of one br could there be the padding <br> element.
-    mPaddingBRElementForEmptyEditor = nullptr;
+    TextEditorRef().mPaddingBRElementForEmptyEditor = nullptr;
     return NS_OK;
   }
 
   Element* brElement = nodeList->Item(0);
   if (EditorBase::IsPaddingBRElementForEmptyEditor(*brElement)) {
-    mPaddingBRElementForEmptyEditor = static_cast<HTMLBRElement*>(brElement);
+    TextEditorRef().mPaddingBRElementForEmptyEditor =
+        static_cast<HTMLBRElement*>(brElement);
   } else {
-    mPaddingBRElementForEmptyEditor = nullptr;
+    TextEditorRef().mPaddingBRElementForEmptyEditor = nullptr;
   }
   return NS_OK;
 }
@@ -1247,7 +1246,7 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
     aOutString->Truncate();
     *aHandled = true;
     return NS_OK;
@@ -1330,7 +1329,7 @@ nsresult TextEditRules::RemoveRedundantTrailingBR() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // If the passing <br> element exists, we have no work to do.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 
@@ -1358,9 +1357,11 @@ nsresult TextEditRules::RemoveRedundantTrailingBR() {
 
   // Rather than deleting this node from the DOM tree we should instead
   // morph this <br> element into the padding <br> element for editor.
-  mPaddingBRElementForEmptyEditor = std::move(brElement);
-  mPaddingBRElementForEmptyEditor->UnsetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
-  mPaddingBRElementForEmptyEditor->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+  TextEditorRef().mPaddingBRElementForEmptyEditor = std::move(brElement);
+  TextEditorRef().mPaddingBRElementForEmptyEditor->UnsetFlags(
+      NS_PADDING_FOR_EMPTY_LAST_LINE);
+  TextEditorRef().mPaddingBRElementForEmptyEditor->SetFlags(
+      NS_PADDING_FOR_EMPTY_EDITOR);
 
   return NS_OK;
 }
@@ -1416,7 +1417,7 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
 nsresult TextEditRules::CreatePaddingBRElementForEmptyEditorIfNeeded() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
     // Let's not create more than one, ok?
     return NS_OK;
   }
@@ -1462,7 +1463,7 @@ nsresult TextEditRules::CreatePaddingBRElementForEmptyEditorIfNeeded() {
     return NS_ERROR_FAILURE;
   }
 
-  mPaddingBRElementForEmptyEditor =
+  TextEditorRef().mPaddingBRElementForEmptyEditor =
       static_cast<HTMLBRElement*>(newBrElement.get());
 
   // Give it a special attribute.

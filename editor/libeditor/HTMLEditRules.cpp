@@ -806,7 +806,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
 }
 
 bool HTMLEditRules::DocumentIsEmpty() const {
-  return !!mPaddingBRElementForEmptyEditor;
+  return !!HTMLEditorRef().mPaddingBRElementForEmptyEditor;
 }
 
 nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
@@ -1648,12 +1648,12 @@ nsresult HTMLEditRules::WillLoadHTML() {
 
   // Delete mPaddingBRElementForEmptyEditor if it exists. If we really
   // need one, it will be added during post-processing in AfterEditInner().
-  if (mPaddingBRElementForEmptyEditor) {
+  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
     // A mutation event listener may recreate padding <br> element for empty
     // editor again during the call of DeleteNodeWithTransaction().  So, move
     // it first.
     RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(mPaddingBRElementForEmptyEditor));
+        std::move(HTMLEditorRef().mPaddingBRElementForEmptyEditor));
     DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
                                  .DeleteNodeWithTransaction(*paddingBRElement);
     if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -2292,7 +2292,7 @@ nsresult HTMLEditRules::WillDeleteSelection(
 
   // If there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
     *aCancel = true;
     return NS_OK;
   }
@@ -11132,12 +11132,12 @@ void HTMLEditRules::OnModifyDocument() {
 
   // Delete our padding <br> element for empty editor, if we have one, since
   // the document might not be empty any more.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
     // A mutation event listener may recreate padding <br> element for empty
     // editor again during the call of DeleteNodeWithTransaction().  So, move
     // it first.
     RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(mPaddingBRElementForEmptyEditor));
+        std::move(HTMLEditorRef().mPaddingBRElementForEmptyEditor));
     DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
                                  .DeleteNodeWithTransaction(*paddingBRElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

@@ -1342,7 +1342,7 @@ nsresult TextEditor::IsEmpty(bool* aIsEmpty) const {
 
   *aIsEmpty = true;
 
-  if (mRules->HasPaddingBRElementForEmptyEditor()) {
+  if (mPaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 

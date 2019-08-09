@@ -56,6 +56,7 @@
 #include "mozilla/dom/Element.h"         // for Element, nsINode::AsElement
 #include "mozilla/dom/EventTarget.h"     // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "nsAString.h"                // for nsAString::Length, etc.
@@ -164,6 +165,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIMEContentObserver)
@@ -186,6 +188,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMEContentObserver)
@@ -500,6 +503,7 @@ void EditorBase::PreDestroy(bool aDestroyingFrames) {
   mTextInputListener = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nullptr;
+  mPaddingBRElementForEmptyEditor = nullptr;
 
   // Transaction may grab this instance.  Therefore, they should be released
   // here for stopping the circular reference with this instance.
