@@ -12,31 +12,23 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.settings.account.AccountSettingsAction
-import org.mozilla.fenix.settings.account.AccountSettingsFragmentDirections
-import org.mozilla.fenix.settings.account.AccountSettingsInteractor
-import org.mozilla.fenix.settings.account.AccountSettingsStore
+import org.mozilla.fenix.search.SearchState
+import org.mozilla.fenix.settings.account.*
 
-class AccountSettingsInteractorTest {
+class AccountSettingsStoreTest {
 
     @Test
-    fun onSyncNow() {
-        var ranSyncNow = false
+    fun onSyncFailed() {
+        val initialState = AccountSettingsState()
+        val store = AccountSettingsStore(initialState)
 
-        val interactor = AccountSettingsInteractor(
-            mockk(),
-            { ranSyncNow = true },
-            mockk(),
-            mockk()
-        )
-
-        interactor.onSyncNow()
+        .onSyncNow()
 
         assertEquals(ranSyncNow, true)
     }
 
     @Test
-    fun onChangeDeviceName() {
+    fun onSyncEnded() {
         val store: AccountSettingsStore = mockk(relaxed = true)
 
         val interactor = AccountSettingsInteractor(
