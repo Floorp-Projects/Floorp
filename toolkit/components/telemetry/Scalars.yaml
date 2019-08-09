@@ -4384,6 +4384,7 @@ networking:
       - 1546796
       - 1546906
       - 1550756
+      - 1572666
     description: >
       How many KB of HTTP data transferred by type, there are some categories
       separated by keys based on 5 parameters:
@@ -4429,6 +4430,7 @@ networking:
       - 'geckoview'
     record_in_processes:
       - 'main'
+    release_channel_collection: opt-out
 
   data_transferred_captive_portal:
     bug_numbers:
