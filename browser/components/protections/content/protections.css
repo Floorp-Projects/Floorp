@@ -106,7 +106,13 @@ a.hidden,
 }
 
 .etp-card .icon {
-  background: url("chrome://browser/content/logos/tracking-protection.svg") no-repeat center/cover;
+  background: url("chrome://browser/content/logos/tracking-protection.svg") no-repeat center/contain;
+}
+
+@media (prefers-color-scheme: dark) {
+  .etp-card .icon {
+    background: url("chrome://browser/content/logos/tracking-protection-dark-theme.svg") no-repeat center/contain;
+  }
 }
 
 .lockwise-card .icon {
