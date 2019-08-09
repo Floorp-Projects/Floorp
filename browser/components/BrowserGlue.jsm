@@ -2671,7 +2671,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 84;
+    const UI_VERSION = 86;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -3050,6 +3050,24 @@ BrowserGlue.prototype = {
             (p.expireType == EXPIRE_NEVER || p.expireType == EXPIRE_TIME)
         );
       flashPermissions.forEach(p => Services.perms.removePermission(p));
+    }
+
+    if (currentUIVersion < 86) {
+      // If the user has set "media.autoplay.allow-muted" to false
+      // migrate that to media.autoplay.default=BLOCKED_ALL.
+      if (
+        Services.prefs.prefHasUserValue("media.autoplay.allow-muted") &&
+        !Services.prefs.getBoolPref("media.autoplay.allow-muted") &&
+        !Services.prefs.prefHasUserValue("media.autoplay.default") &&
+        Services.prefs.getIntPref("media.autoplay.default") ==
+          Ci.nsIAutoplay.BLOCKED
+      ) {
+        Services.prefs.setIntPref(
+          "media.autoplay.default",
+          Ci.nsIAutoplay.BLOCKED_ALL
+        );
+      }
+      Services.prefs.clearUserPref("media.autoplay.allow-muted");
     }
 
     // Update the migration version.
