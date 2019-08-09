@@ -1,29 +1,30 @@
 # Console Tests
+
 The console panel uses currently two different frameworks for tests:
 
-* Mochitest - [Mochitest](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest) is an automated testing framework built on top of the MochiKit JavaScript libraries. It's just one of the automated regression testing frameworks used by Mozilla.
+- Mochitest - [Mochitest](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest) is an automated testing framework built on top of the MochiKit JavaScript libraries. It's just one of the automated regression testing frameworks used by Mozilla.
 
-Mochitests are located in `devtools/client/webconsole/test/mochitest/` and can be run with the following command:
+Mochitests are located in `devtools/client/webconsole/test/browser/` and can be run with the following command:
 
 ```sh
-./mach test devtools/client/webconsole/test/mochitest/
+./mach test devtools/client/webconsole/test/browser/
 ```
 
 These tests can be run on CI when pushing to TRY. Not all tests are enabled at the moment since they were copied over from the old frontend (See Bug 1400847).
 
-* Mocha + Enzyme - [mocha](https://mochajs.org/) Mocha is JavaScript test framework running on Node.js
-[Enzyme](http://airbnb.io/enzyme/) is a JavaScript Testing utility for React that makes it easier to assert, manipulate, and traverse your React Components' output.
+- Mocha + Enzyme - [mocha](https://mochajs.org/) Mocha is JavaScript test framework running on Node.js
+  [Enzyme](http://airbnb.io/enzyme/) is a JavaScript Testing utility for React that makes it easier to assert, manipulate, and traverse your React Components' output.
 
-These tests are located in `test/components/` and `test/store/`, and can be run with the following command:
+These tests are located in `tests/node/`, and can be run with the following command:
 
 ```sh
-cd devtools/client/webconsole/test/ && npm install && npm test
+cd devtools/client/webconsole/test/node && npm install && npm test
 ```
 
 or using yarn with
 
 ```sh
-cd devtools/client/webconsole/test/ && yarn && yarn test
+cd devtools/client/webconsole/test/node && yarn && yarn test
 ```
 
 ---
@@ -32,51 +33,29 @@ The team is leaning towards Enzyme since it's well known and suitable for React.
 It's also easier to contribute to tests written on top of Enzyme.
 
 # Stubs
+
 Many tests depends on fix data structures (aka stubs) that mimic
 <abbr title="Remote Debugging Protocol">RDP<abbr> packets that represents Console logs.
 Stubs are stored in `test/fixtures` directory and you might automatically generate them.
 
-## Append new Console API stubs
-See how to generate stubs for Console API calls.
+## Append new stubs
 
-* Append new entry into `consoleApiCommands` array. The array is defined in this module:
-`\test\fixtures\stub-generators\stub-snippets.js`
-* Generate stubs with existing mochitest:
-`\test\fixtures\stub-generators\browser_webconsole_check_stubs_console_api.js`
+- Append new entry into the `getCommands` function return value in on of the `\tests\browser\browser_webconsole_stubs_*.js`
+  and run the generator using `mach` command, with the `WEBCONSOLE_STUBS_UPDATE=true` environment variable.
 
-Run the generator using `mach` command.
-`./mach test devtools/client/webconsole/test/fixtures/stub-generators/browser_webconsole_check_stubs_console_api.js --headless`
+For console API stubs, you can do:
 
-This will override `test/fixtures/stubs/consoleApi.js`.
+`./mach test devtools/client/webconsole/test/browser/browser_webconsole_stubs_console_api.js --headless --setenv WEBCONSOLE_STUBS_UPDATE=true`
 
-## Append new CSS Messages stubs
-See how to generate stubs for CSS messages.
+This will override `tests/node/fixtures/stubs/consoleApi.js`.
 
-* Append new entry into `cssMessage` map into `stub-snippets.js`
-* Generate stubs with: `browser_webconsole_check_stubs_css_message.js`
+The same can be done in:
 
-This will override `test/fixtures/stubs/cssMessage.js`.
+- `browser_webconsole_stubs_css_message.js` (writes to `tests/node/fixtures/stubs/cssMessage.js`)
+- `browser_webconsole_stubs_evaluation_result.js` (writes to `tests/node/fixtures/stubs/evaluationResult.js`)
+- `browser_webconsole_stubs_network_event.js` (writes to `tests/node/fixtures/stubs/networkEvent.js`)
+- `browser_webconsole_stubs_page_error.js` (writes to `tests/node/fixtures/stubs/pageError.js`)
 
-## Append new Evaluation Result stubs
-See how to generate stubs for evaluation results.
+If you made some changes that impact all stubs, you can update all at once using:
 
-* Append new entry into `evaluationResultCommands` map into `stub-snippets.js`
-* Generate stubs with: `browser_webconsole_check_stubs_evaluation_result.js`
-
-This will override `test/fixtures/stubs/evaluationResult.js`.
-
-## Append new Network Events stubs
-See how to generate stubs for network events
-
-* Append new entry into `networkEvent` map into `stub-snippets.js`
-* Generate stubs with: `browser_webconsole_update_stubs_network_event.js`
-
-This will override `test/fixtures/stubs/networkEvent.js`.
-
-## Append new Page Error stubs
-See how to generate stubs for page errors.
-
-* Append new entry into `pageError` array into `stub-snippets.js`
-* Generate stubs with: `browser_webconsole_update_stubs_page_error.js`
-
-This will override `test/fixtures/stubs/pageError.js`.
+`./mach test devtools/client/webconsole/test/browser/browser_webconsole_stubs --headless --setenv WEBCONSOLE_STUBS_UPDATE=true`

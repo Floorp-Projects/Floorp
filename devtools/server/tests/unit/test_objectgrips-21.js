@@ -57,7 +57,7 @@ const defaults = {
 };
 
 // Obtaining a CPOW here does not seem possible, so the CPOW test is in
-// devtools/client/webconsole/test/browser_console.js
+// devtools/client/webconsole/test/browser/browser_console.js
 
 // The following tests use a system principal debuggee.
 const systemPrincipalTests = [
