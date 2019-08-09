@@ -140,10 +140,13 @@ class BookmarkFragmentInteractor(
     }
 
     override fun delete(nodes: Set<BookmarkNode>) {
+        if (nodes.find { it.type == BookmarkNodeType.SEPARATOR } != null) {
+            throw IllegalStateException("Cannot delete separators")
+        }
         val eventType = when (nodes.singleOrNull()?.type) {
-            BookmarkNodeType.ITEM -> Event.RemoveBookmark
+            BookmarkNodeType.ITEM,
+            BookmarkNodeType.SEPARATOR -> Event.RemoveBookmark
             BookmarkNodeType.FOLDER -> Event.RemoveBookmarkFolder
-            BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot delete separators")
             null -> Event.RemoveBookmarks
         }
         deleteBookmarkNodes(nodes, eventType)

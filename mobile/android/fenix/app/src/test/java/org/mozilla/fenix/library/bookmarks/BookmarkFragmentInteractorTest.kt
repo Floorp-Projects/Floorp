@@ -115,6 +115,11 @@ class BookmarkFragmentInteractorTest {
         metrics.track(Event.OpenedBookmark)
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun `open a separator`() {
+        interactor.open(item.copy(type = BookmarkNodeType.SEPARATOR))
+    }
+
     @Test
     fun `expand a level of bookmarks`() {
         interactor.open(tree)
@@ -241,6 +246,11 @@ class BookmarkFragmentInteractorTest {
         verify {
             deleteBookmarkNodes(setOf(item), Event.RemoveBookmark)
         }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `delete a separator`() {
+        interactor.delete(setOf(item, item.copy(type = BookmarkNodeType.SEPARATOR)))
     }
 
     @Test
