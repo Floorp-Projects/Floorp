@@ -161,18 +161,13 @@ js_option(env='MOZ_LD64_KNOWN_GOOD',
 
 imply_option('MOZ_LD64_KNOWN_GOOD', depends_if('MOZ_AUTOMATION')(lambda _: True))
 
-@depends('--enable-lto', 'MOZ_PGO', '--enable-profile-generate', c_compiler,
-         'MOZ_LD64_KNOWN_GOOD', target)
+@depends('--enable-lto', c_compiler, 'MOZ_LD64_KNOWN_GOOD', target)
 @imports('multiprocessing')
-def lto(value, pgo, profile_generate, c_compiler, ld64_known_good, target):
+def lto(value, c_compiler, ld64_known_good, target):
     cflags = []
     ldflags = []
     enabled = None
     rust_lto = False
-
-    # MSVC's implementation of PGO implies LTO. Make clang-cl match this.
-    if c_compiler.type == 'clang-cl' and pgo and not profile_generate and value.origin == 'default':
-        value = ['cross']
 
     if value:
         enabled = True
