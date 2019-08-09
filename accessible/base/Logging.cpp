@@ -352,6 +352,65 @@ static void GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType) {
   }
 }
 
+static void DescribeNode(nsINode* aNode, nsAString& aOutDescription) {
+  if (!aNode) {
+    aOutDescription.AppendLiteral("null");
+    return;
+  }
+
+  aOutDescription.AppendPrintf("%p, ", (void*)aNode);
+  aOutDescription.Append(aNode->NodeInfo()->QualifiedName());
+
+  if (!aNode->IsElement()) {
+    return;
+  }
+
+  dom::Element* elm = aNode->AsElement();
+
+  nsAtom* idAtom = elm->GetID();
+  if (idAtom) {
+    nsAutoCString id;
+    idAtom->ToUTF8String(id);
+    aOutDescription.AppendPrintf("@id=\"%s\" ", id.get());
+  } else {
+    aOutDescription.Append(' ');
+  }
+
+  uint32_t attrCount = elm->GetAttrCount();
+  if (!attrCount || (idAtom && attrCount == 1)) {
+    return;
+  }
+
+  aOutDescription.AppendLiteral("[ ");
+
+  for (uint32_t index = 0; index < attrCount; index++) {
+    BorrowedAttrInfo info = elm->GetAttrInfoAt(index);
+
+    // Skip redundant display of id attribute.
+    if (info.mName->Equals(nsGkAtoms::id)) {
+      continue;
+    }
+
+    // name
+    nsAutoString name;
+    info.mName->GetQualifiedName(name);
+    aOutDescription.Append(name);
+
+    aOutDescription.AppendLiteral("=\"");
+
+    // value
+    nsAutoString value;
+    info.mValue->ToString(value);
+    for (uint32_t i = value.Length(); i > 0; --i) {
+      if (value[i - 1] == char16_t('"')) value.Insert(char16_t('\\'), i - 1);
+    }
+    aOutDescription.Append(value);
+    aOutDescription.AppendLiteral("\" ");
+  }
+
+  aOutDescription.Append(']');
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // namespace logging:: document life cycle logging methods
 
@@ -726,44 +785,13 @@ void logging::Address(const char* aDescr, Accessible* aAcc) {
 }
 
 void logging::Node(const char* aDescr, nsINode* aNode) {
-  printf("    ");
-
-  if (!aNode) {
-    printf("%s: null\n", aDescr);
-    return;
-  }
-
-  if (aNode->IsDocument()) {
-    printf("%s: %p, document\n", aDescr, static_cast<void*>(aNode));
-    return;
-  }
-
-  nsINode* parentNode = aNode->GetParentNode();
+  nsINode* parentNode = aNode ? aNode->GetParentNode() : nullptr;
   int32_t idxInParent = parentNode ? parentNode->ComputeIndexOf(aNode) : -1;
 
-  if (aNode->IsText()) {
-    printf("%s: %p, text node, idx in parent: %d\n", aDescr,
-           static_cast<void*>(aNode), idxInParent);
-    return;
-  }
-
-  if (!aNode->IsElement()) {
-    printf("%s: %p, not accessible node type, idx in parent: %d\n", aDescr,
-           static_cast<void*>(aNode), idxInParent);
-    return;
-  }
-
-  dom::Element* elm = aNode->AsElement();
-
-  nsAutoCString tag;
-  elm->NodeInfo()->NameAtom()->ToUTF8String(tag);
-
-  nsAtom* idAtom = elm->GetID();
-  nsAutoCString id;
-  if (idAtom) idAtom->ToUTF8String(id);
-
-  printf("%s: %p, %s@id='%s', idx in parent: %d\n", aDescr,
-         static_cast<void*>(elm), tag.get(), id.get(), idxInParent);
+  nsAutoString nodeDesc;
+  DescribeNode(aNode, nodeDesc);
+  printf("    %s: %s, idx in parent %d\n", aDescr,
+         NS_ConvertUTF16toUTF8(nodeDesc).get(), idxInParent);
 }
 
 void logging::Document(DocAccessible* aDocument) {
@@ -802,28 +830,9 @@ void logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible) {
 
   printf(", idx: %d", aAccessible->IndexInParent());
 
-  nsINode* node = aAccessible->GetNode();
-  if (!node) {
-    printf(", node: null\n");
-  } else if (node->IsDocument()) {
-    printf(", document node: %p\n", static_cast<void*>(node));
-  } else if (node->IsText()) {
-    printf(", text node: %p\n", static_cast<void*>(node));
-  } else if (node->IsElement()) {
-    dom::Element* el = node->AsElement();
-
-    nsAutoCString tag;
-    el->NodeInfo()->NameAtom()->ToUTF8String(tag);
-
-    nsAtom* idAtom = el->GetID();
-    nsAutoCString id;
-    if (idAtom) {
-      idAtom->ToUTF8String(id);
-    }
-
-    printf(", element node: %p, %s@id='%s'\n", static_cast<void*>(el),
-           tag.get(), id.get());
-  }
+  nsAutoString nodeDesc;
+  DescribeNode(aAccessible->GetNode(), nodeDesc);
+  printf(", node: %s\n", NS_ConvertUTF16toUTF8(nodeDesc).get());
 }
 
 void logging::AccessibleNNode(const char* aDescr, Accessible* aAccessible) {
