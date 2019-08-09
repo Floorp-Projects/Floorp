@@ -153,11 +153,10 @@
       // We first show a payment request via the the top level browsing context,
       // windowRequest.show() sets "is showing boolean" to true. Then we try to
       // show a payment request in the iframe, which should reject.
-      const [iframeShowPromise] = await test_driver.bless(
+      const [windowShowPromise, iframeShowPromise] = await test_driver.bless(
         "testing iframe show() blocked by payment sheet in top window",
         () => {
-          windowRequest.show();
-          return [iframeRequest.show()];
+          return [windowRequest.show(), iframeRequest.show()];
         },
       );
 
@@ -170,6 +169,12 @@
 
       // Cleanup
       await windowRequest.abort();
+      await promise_rejects(
+        t,
+        "AbortError",
+        windowShowPromise,
+        "The window payment request should be aborted by test.",
+        );
       iframe.remove();
     }, "An iframe cannot show a payment request if the top-level window is already showing one.");
 
@@ -200,8 +205,6 @@
           ];
         },
       );
-      await popupRequest.abort();
-      popupWindow.close();
 
       await promise_rejects(
         t,
@@ -209,6 +212,15 @@
         windowShowPromise,
         "Expected window's showPromise to reject, request is already showing",
       );
+
+      await popupRequest.abort();
+      await promise_rejects(
+        t,
+        "AbortError",
+        popupShowPromise,
+        "Expected popupShowPromise to be aborted by test.",
+      );
+      popupWindow.close();
     }, "Using a popup window prevents the top-browsing context from showing a payment request");
 
     promise_test(async t => {
@@ -263,6 +275,12 @@
       );
 
       await windowRequest.abort();
+      await promise_rejects(
+        t,
+        "AbortError",
+        windowShowPromise,
+        "Expect window promise to be aborted by test."
+      );
       popupWindow.close();
       iframe.remove();
     }, "Given multiple nested browsing contexts, and window calls show() first, other nested browsing contexts can't show a request.");
@@ -313,6 +331,12 @@
       );
 
       await popupRequest.abort();
+      await promise_rejects(
+        t,
+        "AbortError",
+        popupShowPromise,
+        "Expected popupShowPromise to be aborted by test.",
+      );
       popupWindow.close();
       iframe.remove();
     }, "Given multiple nested browsing contexts, and popup calls show() first, other nested browsing contexts can't show a request.");
@@ -368,6 +392,12 @@
       );
 
       await iframeRequest.abort();
+      await promise_rejects(
+        t,
+        "AbortError",
+        iframeShowPromise,
+        "Expected iframeShowPromise to be aborted by test."
+      );
       popupWindow.close();
       iframe.remove();
     }, "Given multiple nested browsing contexts, and an iframe calls show() first, other nested browsing contexts can't show a request.");
@@ -395,8 +425,31 @@
 
       // Now we should be ok to spin up a new payment request
       const request = new window.PaymentRequest(methods, details);
-      const showPromise = request.show();
-      await request.abort();
+      const [showPromise] = await test_driver.bless(
+          "start a new payment request",
+          () => {
+            return [request.show()];
+          });
+
+      // If a payment sheet fails to show, it should reject immediately. If it
+      // hasn't rejected in 1 second, then the test has passed.
+      t.step_timeout(async () => {
+        // We're done. Clean up.
+        await request.abort();
+        t.done();
+      });
+
+      // If the navigation in iframe failed to close the original payment sheet
+      // there, |showPromise| should reject immediately and this indicates a
+      // failure of this test.
+      await showPromise.then(() => {
+        assert_true(false,
+          "Second payment sheet should be pending but is resolved.");
+      })
+      .catch(e => {
+        assert_true(false,
+          "Second payment sheet should be pending but is rejected." + e.message);
+      });
     }, "Navigating an iframe as a nested browsing context sets 'payment request is showing boolean' to false.");
 
     promise_test(async t => {
