@@ -834,19 +834,14 @@ nsresult ExternalResourceMap::AddExternalResource(nsIURI* aURI,
     doc = aViewer->GetDocument();
     NS_ASSERTION(doc, "Must have a document");
 
-    if (doc->IsXULDocument()) {
-      // We don't handle XUL stuff here yet.
-      rv = NS_ERROR_NOT_AVAILABLE;
-    } else {
-      doc->SetDisplayDocument(aDisplayDocument);
+    doc->SetDisplayDocument(aDisplayDocument);
 
-      // Make sure that hiding our viewer will tear down its presentation.
-      aViewer->SetSticky(false);
+    // Make sure that hiding our viewer will tear down its presentation.
+    aViewer->SetSticky(false);
 
-      rv = aViewer->Init(nullptr, nsIntRect(0, 0, 0, 0), nullptr);
-      if (NS_SUCCEEDED(rv)) {
-        rv = aViewer->Open(nullptr, nullptr);
-      }
+    rv = aViewer->Init(nullptr, nsIntRect(0, 0, 0, 0), nullptr);
+    if (NS_SUCCEEDED(rv)) {
+      rv = aViewer->Open(nullptr, nullptr);
     }
 
     if (NS_FAILED(rv)) {
@@ -7549,16 +7544,6 @@ already_AddRefed<Element> Document::CreateElement(
     return nullptr;
   }
 
-  // Temporary check until XULDocument has been removed.
-  if (IsXULDocument()) {
-#if DEBUG
-    xpc_DumpJSStack(true, true, false);
-#endif
-    MOZ_ASSERT_UNREACHABLE("CreateElement() not allowed in XUL document.");
-    rv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   bool needsLowercase = IsHTMLDocument() && !IsLowercaseASCII(aTagName);
   nsAutoString lcTagName;
   if (needsLowercase) {
@@ -11526,14 +11511,14 @@ RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
 }
 
 void Document::ResetDocumentDirection() {
-  if (!(nsContentUtils::IsChromeDoc(this) || IsXULDocument())) {
+  if (!nsContentUtils::IsChromeDoc(this)) {
     return;
   }
   UpdateDocumentStates(NS_DOCUMENT_STATE_RTL_LOCALE, true);
 }
 
 bool Document::IsDocumentRightToLeft() {
-  if (!(nsContentUtils::IsChromeDoc(this) || IsXULDocument())) {
+  if (!nsContentUtils::IsChromeDoc(this)) {
     return false;
   }
   // setting the localedir attribute on the root element forces a

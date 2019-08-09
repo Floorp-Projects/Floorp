@@ -749,7 +749,6 @@ module.exports = {
     XPathResult: false,
     XSLTProcessor: false,
     XULCommandEvent: false,
-    XULDocument: false,
     XULElement: false,
     XULFrameElement: false,
     XULMenuElement: false,

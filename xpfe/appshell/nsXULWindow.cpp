@@ -48,7 +48,6 @@
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h"  // get rid of this one, too...
 #include "nsGlobalWindow.h"
-#include "XULDocument.h"
 #include "nsXULTooltipListener.h"
 
 #include "prenv.h"

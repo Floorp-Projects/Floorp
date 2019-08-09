@@ -39,12 +39,6 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aContentViewer);
 
-  nsresult CreateXULDocument(const char* aCommand, nsIChannel* aChannel,
-                             nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
-                             nsISupports* aExtraInfo,
-                             nsIStreamListener** aDocListener,
-                             nsIContentViewer** aContentViewer);
-
   /**
    * Create a blank document using the given loadgroup and given
    * principal.  aPrincipal is allowed to be null, in which case the

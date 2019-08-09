@@ -34,21 +34,4 @@ stubs.set("Location-less Document", {
   },
 });
 
-stubs.set("XULDocument", {
-  type: "object",
-  actor: "server1.conn0.obj434",
-  class: "XULDocument",
-  extensible: true,
-  frozen: false,
-  sealed: false,
-  ownPropertyLength: 1,
-  preview: {
-    kind: "DOMNode",
-    nodeType: 9,
-    nodeName: "#document",
-    isConnected: true,
-    location: "chrome://browser/content/browser.xhtml",
-  },
-});
-
 module.exports = stubs;
