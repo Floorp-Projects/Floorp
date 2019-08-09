@@ -585,11 +585,11 @@ class TextEditor : public EditorBase,
   nsresult EndEditorInit();
 
   /**
-   * If editor has a padding <br> element for empty last line but the editor
-   * is now empty, this method changes it to padding <br> element for empty
-   * editor.
+   * EnsurePaddingBRElementForEmptyEditor() creates padding <br> element for
+   * empty editor or changes padding <br> element for empty last line to for
+   * empty editor when we're empty.
    */
-  nsresult MaybeChangePaddingBRElementForEmptyEditor();
+  MOZ_CAN_RUN_SCRIPT nsresult EnsurePaddingBRElementForEmptyEditor();
 
  protected:  // Shouldn't be used by friend classes
   virtual ~TextEditor();

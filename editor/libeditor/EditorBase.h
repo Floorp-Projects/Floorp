@@ -1474,6 +1474,13 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   EnsureNoPaddingBRElementForEmptyEditor();
 
+  /**
+   * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
+   * for empty editor if there is no children.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeCreatePaddingBRElementForEmptyEditor();
+
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
   virtual bool IsBlockNode(nsINode* aNode) const;

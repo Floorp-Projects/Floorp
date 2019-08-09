@@ -638,7 +638,8 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
   // XXX Need to investigate when the padding <br> element is removed because
   //     I don't see the <br> element with testing manually.  If it won't be
   //     used, we can get rid of this cost.
-  rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .MaybeCreatePaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9493,7 +9494,7 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
       if (point.GetContainer() == rootElement) {
         // Our root node is completely empty. Don't add a <br> here.
         // AfterEditInner() will add one for us when it calls
-        // CreatePaddingBRElementForEmptyEditorIfNeeded()!
+        // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor()!
         return NS_OK;
       }
 
@@ -11167,10 +11168,12 @@ void HTMLEditRules::OnModifyDocument() {
   }
 
   // Try to recreate the padding <br> element for empty editor if needed.
-  DebugOnly<nsresult> rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .MaybeCreatePaddingBRElementForEmptyEditor();
   NS_WARNING_ASSERTION(
-      rv.value != NS_ERROR_EDITOR_DESTROYED,
+      rv != NS_ERROR_EDITOR_DESTROYED,
       "The editor has been destroyed during creating a padding <br> element");
+  Unused << rv;
 }
 
 }  // namespace mozilla
