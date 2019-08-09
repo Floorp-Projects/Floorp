@@ -16,6 +16,7 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.test.util.HttpBin;
@@ -551,7 +552,7 @@ public class GeckoSessionTestRule implements TestRule {
 
         public void delegate(final @Nullable GeckoSession session,
                              final @NonNull Object callback) {
-            for (final Class<?> ifce : DEFAULT_DELEGATES) {
+            for (final Class<?> ifce : mAllDelegates) {
                 if (!ifce.isInstance(callback)) {
                     continue;
                 }
@@ -857,6 +858,10 @@ public class GeckoSessionTestRule implements TestRule {
      */
     public @NonNull GeckoRuntime getRuntime() {
         return RuntimeCreator.getRuntime();
+    }
+
+    public void setTelemetryDelegate(RuntimeTelemetry.Delegate delegate) {
+        RuntimeCreator.setTelemetryDelegate(delegate);
     }
 
     public @Nullable GeckoDisplay getDisplay() {
@@ -1221,6 +1226,7 @@ public class GeckoSessionTestRule implements TestRule {
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
         mTimeoutMillis = 0;
+        RuntimeCreator.setTelemetryDelegate(null);
     }
 
     @Override
@@ -2031,6 +2037,24 @@ public class GeckoSessionTestRule implements TestRule {
             }
 
             return result;
+        } catch (JSONException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Adds value to the given histogram.
+     *
+     * @param id the histogram id to increment.
+     * @param value to add to the histogram.
+     */
+    public void addHistogram(final String id, final long value) {
+        try {
+            final JSONObject args = new JSONObject();
+            args.put("id", id);
+            args.put("value", value);
+
+            webExtensionApiCall("AddHistogram", args);
         } catch (JSONException ex) {
             throw new RuntimeException(ex);
         }

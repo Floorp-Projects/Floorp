@@ -3,6 +3,7 @@ package org.mozilla.geckoview.test.util;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
+import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.test.TestCrashHandler;
 
@@ -27,6 +28,22 @@ public class RuntimeCreator {
             new WebExtension("resource://android/assets/web_extensions/test-support/",
                     "test-support@mozilla.com",
                     WebExtension.Flags.ALLOW_CONTENT_MESSAGING);
+
+    // The RuntimeTelemetry.Delegate can only be set when creating the RuntimeCreator, to
+    // let tests set their own Delegate we need to create a proxy here.
+    public static class RuntimeTelemetryDelegate implements RuntimeTelemetry.Delegate {
+        public RuntimeTelemetry.Delegate delegate = null;
+
+        @Override
+        public void onTelemetryReceived(@NonNull RuntimeTelemetry.Metric metric) {
+            if (delegate != null) {
+                delegate.onTelemetryReceived(metric);
+            }
+        }
+    }
+
+    public static final RuntimeTelemetryDelegate sRuntimeTelemetryProxy =
+            new RuntimeTelemetryDelegate();
 
     private static WebExtension.Port sBackgroundPort;
 
@@ -66,6 +83,17 @@ public class RuntimeCreator {
                 });
     }
 
+    /**
+     * Set the {@link RuntimeTelemetry.Delegate} instance for this test. Application code can only
+     * register this delegate when the {@link GeckoRuntime} is created, so we need to proxy it
+     * for test code.
+     *
+     * @param delegate the {@link RuntimeTelemetry.Delegate} for this test run.
+     */
+    public static void setTelemetryDelegate(RuntimeTelemetry.Delegate delegate) {
+        sRuntimeTelemetryProxy.delegate = delegate;
+    }
+
     public static void setPortDelegate(WebExtension.PortDelegate portDelegate) {
         sPortDelegate = portDelegate;
     }
@@ -76,19 +104,20 @@ public class RuntimeCreator {
             return sRuntime;
         }
 
-        final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
-                new GeckoRuntimeSettings.Builder();
-        runtimeSettingsBuilder.arguments(new String[]{"-purgecaches"})
+        TEST_SUPPORT_WEB_EXTENSION.setMessageDelegate(sMessageDelegate, "browser");
+
+        final GeckoRuntimeSettings runtimeSettings = new GeckoRuntimeSettings.Builder()
+                .arguments(new String[]{"-purgecaches"})
                 .extras(InstrumentationRegistry.getArguments())
                 .remoteDebuggingEnabled(true)
                 .consoleOutput(true)
-                .crashHandler(TestCrashHandler.class);
-
-        TEST_SUPPORT_WEB_EXTENSION.setMessageDelegate(sMessageDelegate, "browser");
+                .crashHandler(TestCrashHandler.class)
+                .telemetryDelegate(sRuntimeTelemetryProxy)
+                .build();
 
         sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
-                runtimeSettingsBuilder.build());
+                runtimeSettings);
 
         registerTestSupport();
 
