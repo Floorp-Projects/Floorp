@@ -669,7 +669,6 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
   JS::AssertCellIsNotGray(origobj);
   JS::AssertCellIsNotGray(target);
 
-  RootedValue origv(cx, ObjectValue(*origobj));
   RootedObject newIdentity(cx);
 
   // Don't allow a compacting GC to observe any intermediate state.
@@ -691,7 +690,7 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     // There might already be a wrapper for the original object in
     // the new compartment. If there is, we use its identity and swap
     // in the contents of |target|.
-    newIdentity = &p->value().get().toObject();
+    newIdentity = p->value().get();
 
     // When we remove origv from the wrapper map, its wrapper, newIdentity,
     // must immediately cease to be a cross-compartment wrapper. Nuke it.
@@ -725,7 +724,7 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     JSObject::swap(cx, origobj, newIdentityWrapper);
     if (origobj->compartment()->lookupWrapper(newIdentity)) {
       MOZ_ASSERT(origobj->is<CrossCompartmentWrapperObject>());
-      if (!origobj->compartment()->putWrapper(cx, newIdentity, origv)) {
+      if (!origobj->compartment()->putWrapper(cx, newIdentity, origobj)) {
         MOZ_CRASH();
       }
     }

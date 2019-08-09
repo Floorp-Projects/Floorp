@@ -73,10 +73,9 @@ void Compartment::checkWrapperMapAfterMovingGC() {
 #endif  // JSGC_HASH_TABLE_CHECKS
 
 bool Compartment::putWrapper(JSContext* cx, JSObject* wrapped,
-                             const js::Value& wrapper) {
-  MOZ_ASSERT(!js::IsProxy(&wrapper.toObject()) ||
-             js::GetProxyHandler(&wrapper.toObject())->family() !=
-                 js::GetDOMRemoteProxyHandlerFamily());
+                             JSObject* wrapper) {
+  MOZ_ASSERT(!js::IsProxy(wrapper) || js::GetProxyHandler(wrapper)->family() !=
+                                          js::GetDOMRemoteProxyHandlerFamily());
 
   if (!crossCompartmentObjectWrappers.put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
@@ -87,7 +86,7 @@ bool Compartment::putWrapper(JSContext* cx, JSObject* wrapped,
 }
 
 bool Compartment::putWrapper(JSContext* cx, JSString* wrapped,
-                             const js::Value& wrapper) {
+                             JSString* wrapper) {
   if (!crossCompartmentStringWrappers.put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
     return false;
@@ -169,7 +168,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
 
   /* Check the cache. */
   if (StringWrapperMap::Ptr p = lookupWrapper(str)) {
-    strp.set(p->value().get().toString());
+    strp.set(p->value().get());
     return true;
   }
 
@@ -178,7 +177,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
   if (!copy) {
     return false;
   }
-  if (!putWrapper(cx, strp, StringValue(copy))) {
+  if (!putWrapper(cx, strp, copy)) {
     return false;
   }
 
@@ -294,7 +293,7 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
                                      MutableHandleObject obj) {
   // If we already have a wrapper for this value, use it.
   if (ObjectWrapperMap::Ptr p = lookupWrapper(obj)) {
-    obj.set(&p->value().get().toObject());
+    obj.set(p->value().get());
     MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
     return true;
   }
@@ -314,7 +313,7 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
   // map is always directly wrapped by the value.
   MOZ_ASSERT(Wrapper::wrappedObject(wrapper) == obj);
 
-  if (!putWrapper(cx, obj, ObjectValue(*wrapper))) {
+  if (!putWrapper(cx, obj, wrapper)) {
     // Enforce the invariant that all cross-compartment wrapper object are
     // in the map by nuking the wrapper if we couldn't add it.
     // Unfortunately it's possible for the wrapper to still be marked if we
@@ -436,8 +435,8 @@ void Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc) {
              trc->runtime()->gc.isHeapCompacting());
 
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    Value v = e.front().value().unbarrieredGet();
-    ProxyObject* wrapper = &v.toObject().as<ProxyObject>();
+    JSObject* obj = e.front().value().unbarrieredGet();
+    ProxyObject* wrapper = &obj->as<ProxyObject>();
 
     /*
      * We have a cross-compartment wrapper. Its private pointer may
