@@ -1237,7 +1237,7 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
     // Steps 6-7.
     // Omit the 'if' clause in step 6, since typed arrays can't have undefined
     // or null elements.
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
     var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
 #else
     var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
@@ -1263,7 +1263,7 @@ function TypedArrayToLocaleString(locales = undefined, options = undefined) {
         // the error message. So despite bug 1079853, we can skip step 9.c.
 
         // Step 9.d.
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
         R = ToString(callContentFunction(nextElement.toLocaleString, nextElement, locales, options));
 #else
         R = ToString(callContentFunction(nextElement.toLocaleString, nextElement));
