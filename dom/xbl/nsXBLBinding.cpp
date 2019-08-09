@@ -20,9 +20,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "ChildIterator.h"
-#ifdef MOZ_XUL
-#  include "XULDocument.h"
-#endif
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/XMLDocument.h"
@@ -165,7 +162,6 @@ void nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
   // aElement.
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
-  Document* doc = aElement->GetUncomposedDoc();
   Element* element = aElement->AsElement();
 
   nsAutoScriptBlocker scriptBlocker;
@@ -181,18 +177,6 @@ void nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
       child->UnbindFromTree();
       return;
     }
-
-#ifdef MOZ_XUL
-    // To make other goodies that happen when an element is added to a XUL
-    // document work, we need to notify the XUL document using its special API.
-    //
-    // FIXME(emilio): Is this needed anymore? Do we really use <linkset> or
-    // <link> from XBL stuff?
-    if (doc && doc->IsXULDocument()) {
-      MOZ_ASSERT(!child->IsXULElement(nsGkAtoms::linkset),
-                 "Linkset not allowed in XBL.");
-    }
-#endif
   }
 }
 
