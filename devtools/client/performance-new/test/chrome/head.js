@@ -183,7 +183,7 @@ function createPerfComponent() {
   const React = require("devtools/client/shared/vendor/react");
   const ReactDOM = require("devtools/client/shared/vendor/react-dom");
   const ReactRedux = require("devtools/client/shared/vendor/react-redux");
-  const createStore = require("devtools/client/shared/redux/create-store")();
+  const createStore = require("devtools/client/shared/redux/create-store");
   const reducers = require("devtools/client/performance-new/store/reducers");
   const actions = require("devtools/client/performance-new/store/actions");
   const selectors = require("devtools/client/performance-new/store/selectors");
