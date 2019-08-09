@@ -135,9 +135,8 @@ nsresult TextEditRules::Init(TextEditor* aTextEditor) {
   mTextEditor = aTextEditor;
   AutoSafeEditorData setData(*this, *mTextEditor);
 
-  // Put in a magic <br> if needed. This method handles null selection,
-  // which should never happen anyway
-  nsresult rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
+  nsresult rv = MOZ_KnownLive(TextEditorRef())
+                    .MaybeCreatePaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -250,14 +249,8 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
     // no longer uses mCachedSelectionNode, so release it.
     mCachedSelectionNode = nullptr;
 
-    rv = TextEditorRef().MaybeChangePaddingBRElementForEmptyEditor();
+    rv = MOZ_KnownLive(TextEditorRef()).EnsurePaddingBRElementForEmptyEditor();
     if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // detect empty doc
-    rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
@@ -1235,8 +1228,11 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
     return NS_ERROR_FAILURE;
   }
 
-  // Assuming CreatePaddingBRElementForEmptyEditorIfNeeded() has been
+  // Assuming EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() has been
   // called first.
+  // XXX This assumption is wrong.  This method may be called alone.  Actually,
+  //     we see this warning in mochitest log.  So, we should fix this bug
+  //     later.
   if (NS_WARN_IF(!rootElement->GetLastChild())) {
     return NS_ERROR_FAILURE;
   }
@@ -1267,84 +1263,6 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
   brElement->UnsetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
   brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
 
-  return NS_OK;
-}
-
-nsresult TextEditRules::CreatePaddingBRElementForEmptyEditorIfNeeded() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
-    // Let's not create more than one, ok?
-    return NS_OK;
-  }
-
-  // tell rules system to not do any post-processing
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-      TextEditorRef(), EditSubAction::eCreatePaddingBRElementForEmptyEditor,
-      nsIEditor::eNone);
-
-  RefPtr<Element> rootElement = TextEditorRef().GetRoot();
-  if (!rootElement) {
-    // We don't even have a body yet, don't insert any padding <br> elements at
-    // this point.
-    return NS_OK;
-  }
-
-  // Now we've got the body element. Iterate over the body element's children,
-  // looking for editable content. If no editable content is found, insert the
-  // padding <br> element.
-  bool isRootEditable = TextEditorRef().IsEditable(rootElement);
-  for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
-       rootChild = rootChild->GetNextSibling()) {
-    if (EditorBase::IsPaddingBRElementForEmptyEditor(*rootChild) ||
-        !isRootEditable || TextEditorRef().IsEditable(rootChild) ||
-        TextEditorRef().IsBlockNode(rootChild)) {
-      return NS_OK;
-    }
-  }
-
-  // Skip adding the padding <br> element for empty editor if body
-  // is read-only.
-  if (!TextEditorRef().IsModifiableNode(*rootElement)) {
-    return NS_OK;
-  }
-
-  // Create a br.
-  RefPtr<Element> newBrElement =
-      TextEditorRef().CreateHTMLContent(nsGkAtoms::br);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_WARN_IF(!newBrElement)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  TextEditorRef().mPaddingBRElementForEmptyEditor =
-      static_cast<HTMLBRElement*>(newBrElement.get());
-
-  // Give it a special attribute.
-  newBrElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
-
-  // Put the node in the document.
-  nsresult rv = MOZ_KnownLive(TextEditorRef())
-                    .InsertNodeWithTransaction(*newBrElement,
-                                               EditorDOMPoint(rootElement, 0));
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Set selection.
-  IgnoredErrorResult error;
-  SelectionRefPtr()->Collapse(EditorRawDOMPoint(rootElement, 0), error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(
-      !error.Failed(),
-      "Failed to collapse selection at start of the root element");
   return NS_OK;
 }
 
