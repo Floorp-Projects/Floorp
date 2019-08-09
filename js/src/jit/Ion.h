@@ -53,7 +53,27 @@ static_assert(sizeof(AbortReasonOr<bool>) <= sizeof(uintptr_t),
 // will not be nullptr.
 
 class JitContext {
+  JitContext* prev_ = nullptr;
+  CompileRealm* realm_ = nullptr;
+  int assemblerCount_ = 0;
+
+#ifdef DEBUG
+  bool isCompilingWasm_ = false;
+  bool oom_ = false;
+#endif
+
  public:
+  // Running context when executing on the main thread. Not available during
+  // compilation.
+  JSContext* cx = nullptr;
+
+  // Allocator for temporary memory during compilation.
+  TempAllocator* temp = nullptr;
+
+  // Wrappers with information about the current runtime/realm for use
+  // during compilation.
+  CompileRuntime* runtime = nullptr;
+
   // Constructor for compilations happening on the main thread.
   JitContext(JSContext* cx, TempAllocator* temp);
 
@@ -65,17 +85,6 @@ class JitContext {
   JitContext();
 
   ~JitContext();
-
-  // Running context when executing on the main thread. Not available during
-  // compilation.
-  JSContext* cx;
-
-  // Allocator for temporary memory during compilation.
-  TempAllocator* temp;
-
-  // Wrappers with information about the current runtime/realm for use
-  // during compilation.
-  CompileRuntime* runtime;
 
   int getNextAssemblerId() { return assemblerCount_++; }
 
@@ -90,15 +99,6 @@ class JitContext {
   bool hasOOM() { return oom_; }
   void setOOM() { oom_ = true; }
 #endif
-
- private:
-  JitContext* prev_;
-  CompileRealm* realm_;
-#ifdef DEBUG
-  bool isCompilingWasm_;
-  bool oom_;
-#endif
-  int assemblerCount_;
 };
 
 // Process-wide initialization of JIT data structures.
