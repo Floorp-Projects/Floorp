@@ -4,19 +4,14 @@
 
 package org.mozilla.fenix.settings
 
-import android.util.Log
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
-import org.mozilla.fenix.R
-import org.mozilla.fenix.search.SearchState
-import org.mozilla.fenix.settings.account.*
+import org.mozilla.fenix.settings.account.AccountSettingsAction
+import org.mozilla.fenix.settings.account.AccountSettingsState
+import org.mozilla.fenix.settings.account.AccountSettingsStore
+import org.mozilla.fenix.settings.account.LastSyncTime
 
 class AccountSettingsStoreTest {
 
