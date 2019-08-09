@@ -94,44 +94,27 @@ JitContext* jit::MaybeGetJitContext() { return CurrentJitContext(); }
 
 JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
                        TempAllocator* temp)
-    : cx(nullptr),
-      temp(temp),
-      runtime(rt),
-      prev_(CurrentJitContext()),
-      realm_(realm),
-#ifdef DEBUG
-      isCompilingWasm_(false),
-      oom_(false),
-#endif
-      assemblerCount_(0) {
+    : prev_(CurrentJitContext()), realm_(realm), temp(temp), runtime(rt) {
+  MOZ_ASSERT(rt);
+  MOZ_ASSERT(realm);
+  MOZ_ASSERT(temp);
   SetJitContext(this);
 }
 
 JitContext::JitContext(JSContext* cx, TempAllocator* temp)
-    : cx(cx),
-      temp(temp),
-      runtime(CompileRuntime::get(cx->runtime())),
-      prev_(CurrentJitContext()),
+    : prev_(CurrentJitContext()),
       realm_(CompileRealm::get(cx->realm())),
-#ifdef DEBUG
-      isCompilingWasm_(false),
-      oom_(false),
-#endif
-      assemblerCount_(0) {
+      cx(cx),
+      temp(temp),
+      runtime(CompileRuntime::get(cx->runtime())) {
   SetJitContext(this);
 }
 
 JitContext::JitContext(TempAllocator* temp)
-    : cx(nullptr),
-      temp(temp),
-      runtime(nullptr),
-      prev_(CurrentJitContext()),
-      realm_(nullptr),
+    : prev_(CurrentJitContext()), temp(temp) {
 #ifdef DEBUG
-      isCompilingWasm_(true),
-      oom_(false),
+  isCompilingWasm_ = true;
 #endif
-      assemblerCount_(0) {
   SetJitContext(this);
 }
 
