@@ -28,7 +28,7 @@ class nsXULPrototypePI;
  * for the XUL cache.
  * Among other things, stores the tree of nsXULPrototype*
  * objects, from which the real DOM tree is built later in
- * XULDocument::ResumeWalk.
+ * PrototypeDocumentContentSink::ResumeWalk.
  */
 class nsXULPrototypeDocument final : public nsISerializable {
  public:
@@ -73,8 +73,8 @@ class nsXULPrototypeDocument final : public nsISerializable {
   /**
    * If current prototype document has not yet finished loading,
    * appends aDocument to the list of documents to notify (via
-   * XULDocument::OnPrototypeLoadDone()) and sets aLoaded to false.
-   * Otherwise sets aLoaded to true.
+   * PrototypeDocumentContentSink::OnPrototypeLoadDone()) and
+   * sets aLoaded to false. Otherwise sets aLoaded to true.
    */
   nsresult AwaitLoadDone(Callback&& aCallback, bool* aResult);
 
@@ -82,7 +82,8 @@ class nsXULPrototypeDocument final : public nsISerializable {
    * Notifies each document registered via AwaitLoadDone on this
    * prototype document that the prototype has finished loading.
    * The notification is performed by calling
-   * XULDocument::OnPrototypeLoadDone on the registered documents.
+   * PrototypeDocumentContentSink::OnPrototypeLoadDone on the
+   * registered documents.
    */
   nsresult NotifyLoadDone();
 

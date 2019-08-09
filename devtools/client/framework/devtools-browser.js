@@ -515,7 +515,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   /**
    * Add this DevTools's presence to a browser window's document
    *
-   * @param {XULDocument} doc
+   * @param {HTMLDocument} doc
    *        The document to which devtools should be hooked to.
    */
   _registerBrowserWindow(win) {
