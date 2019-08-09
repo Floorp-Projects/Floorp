@@ -23,6 +23,11 @@
 
 #include "vm/JSContext-inl.h"
 
+inline js::StringWrapperMap::Ptr JS::Compartment::lookupWrapper(
+    JSString* str) const {
+  return zone()->crossZoneStringWrappers().lookup(str);
+}
+
 inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
   /* Only GC things have to be wrapped or copied. */
   if (!vp.isGCThing()) {
@@ -84,13 +89,11 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
   JS::AssertValueIsNotGray(vp);
   JS::RootedObject cacheResult(cx);
 #endif
-  JS::RootedValue v(cx, vp);
-  if (js::WrapperMap::Ptr p =
-          crossCompartmentWrappers.lookup(js::CrossCompartmentKey(v))) {
+  if (js::ObjectWrapperMap::Ptr p = lookupWrapper(&vp.toObject())) {
 #ifdef DEBUG
-    cacheResult = &p->value().get().toObject();
+    cacheResult = p->value().get();
 #else
-    vp.set(p->value().get());
+    vp.setObject(*p->value().get());
     return true;
 #endif
   }

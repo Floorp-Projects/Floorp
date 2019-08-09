@@ -363,19 +363,20 @@ class MOZ_STACK_CLASS WSRunObject final {
    * closest block within the DOM subtree we're editing, or if none is
    * found, the (inline) root of the editable subtree.
    */
-  nsINode* GetWSBoundingParent();
+  nsINode* GetWSBoundingParent() const;
 
   nsresult GetWSNodes();
   void GetRuns();
   void ClearRuns();
   void MakeSingleWSRun(WSType aType);
   nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
-                                     nsINode* aBlockParent);
+                                     nsINode* aBlockParent) const;
   nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                nsINode* aBlockParent);
-  nsIContent* GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent);
+                                nsINode* aBlockParent) const;
+  nsIContent* GetNextWSNodeInner(nsINode* aStartNode,
+                                 nsINode* aBlockParent) const;
   nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
-                            nsINode* aBlockParent);
+                            nsINode* aBlockParent) const;
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
@@ -453,7 +454,8 @@ class MOZ_STACK_CLASS WSRunObject final {
                                  const EditorDOMPointBase<PT, CT>& aPoint,
                                  dom::Text** outStartNode,
                                  int32_t* outStartOffset,
-                                 dom::Text** outEndNode, int32_t* outEndOffset);
+                                 dom::Text** outEndNode,
+                                 int32_t* outEndOffset) const;
 
   /**
    * FindNearestRun() looks for a WSFragment which is closest to specified
@@ -498,7 +500,7 @@ class MOZ_STACK_CLASS WSRunObject final {
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode, int32_t aOffset);
 
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();
-  bool IsBlockNode(nsINode* aNode);
+  static bool IsBlockNode(nsINode* aNode);
 
   EditorDOMPoint StartPoint() const {
     return EditorDOMPoint(mStartNode, mStartOffset);

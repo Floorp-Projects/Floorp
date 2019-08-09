@@ -37,7 +37,7 @@ lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
 num-traits = "0.2"
-plane-split = "0.14.0"
+plane-split = "0.14.1"
 png = { optional = true, version = "0.14" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }

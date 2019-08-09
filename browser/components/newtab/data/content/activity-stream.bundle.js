@@ -2220,7 +2220,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
         sendUserActionTelemetry: this.sendUserActionTelemetry,
         executeAction: ASRouterUtils.executeAction,
         dispatch: this.props.dispatch,
-        onBlock: this.onBlockById(this.state.message.id),
+        onBlockById: ASRouterUtils.blockById,
         onDismiss: this.onDismissById(this.state.message.id),
         fxaEndpoint: this.props.fxaEndpoint,
         fetchFlowParams: this.fetchFlowParams
@@ -13264,7 +13264,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   });
 
   switch (action.type) {
-    case Actions["actionTypes"].DISCOVERY_STREAM_CONFIG_CHANGE: // The reason this is a separate action is so it doesn't trigger a listener update on init
+    case Actions["actionTypes"].DISCOVERY_STREAM_CONFIG_CHANGE: // Fall through to a separate action is so it doesn't trigger a listener update on init
 
     case Actions["actionTypes"].DISCOVERY_STREAM_CONFIG_SETUP:
       return { ...prevState,
@@ -13545,7 +13545,9 @@ var addUtmParams = __webpack_require__(22);
 
 
 
+ // Note: should match the transition time on .trailheadCards in _Trailhead.scss
 
+const TRANSITION_LENGTH = 500;
 const FLUENT_FILES = ["branding/brand.ftl", "browser/branding/brandings.ftl", "browser/branding/sync-brand.ftl", "browser/newtab/onboarding.ftl"];
 const helpers = {
   selectInterruptAndTriplets(message = {}) {
@@ -13671,11 +13673,11 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
   closeTriplets() {
     this.setState({
       isTripletsContainerVisible: false
-    }); // TODO: Needs to block ALL extended triplets as well
+    }); // Closing triplets should prevent any future extended triplets from showing up
 
-    if (this.props.message.template === "extended_triplets") {
-      this.props.onBlock();
-    }
+    setTimeout(() => {
+      this.props.onBlockById("EXTENDED_TRIPLETS_1");
+    }, TRANSITION_LENGTH);
   }
 
   render() {
@@ -13704,6 +13706,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       onNextScene: this.closeInterrupt,
       UTMTerm: UTMTerm,
       sendUserActionTelemetry: sendUserActionTelemetry,
+      executeAction: executeAction,
       dispatch: dispatch,
       flowParams: flowParams,
       onDismiss: this.closeInterrupt,

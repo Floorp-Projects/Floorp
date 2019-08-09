@@ -57,16 +57,16 @@ const EXPECTED_HASHES = {
   // TEST_DATA_SHORT + TEST_DATA_SHORT
   80: "780c0e91f50bb7ec922cc11e16859e6d5df283c0d9470f61772e3d79f41eeb58",
   // TEST_DATA_LONG
-  8388608: "e3611a47714c42bdf326acfb2eb6ed9fa4cca65cb7d7be55217770a5bf5e7ff0",
+  4718592: "372cb9e5ce7b76d3e2a5042e78aa72dcf973e659a262c61b7ff51df74b36767b",
   // TEST_DATA_LONG + TEST_DATA_LONG
-  16777216: "03a0db69a30140f307587ee746a539247c181bafd85b85c8516a3533c7d9ea1d",
+  9437184: "693e4f8c6855a6fed4f5f9370d12cc53105672f3ff69783581e7d925984c41d3",
 };
 
 const gTextDecoder = new TextDecoder();
 
 // Generate a long string of data in a moderately fast way.
 const TEST_256_CHARS = new Array(257).join("-");
-const DESIRED_LENGTH = REQUEST_SUSPEND_AT * 2;
+const DESIRED_LENGTH = REQUEST_SUSPEND_AT * 1.125;
 const TEST_DATA_LONG = new Array(1 + DESIRED_LENGTH / 256).join(TEST_256_CHARS);
 Assert.equal(TEST_DATA_LONG.length, DESIRED_LENGTH);
 

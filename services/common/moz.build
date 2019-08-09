@@ -36,8 +36,4 @@ TESTING_JS_MODULES.services.common += [
     'modules-testing/logging.js',
 ]
 
-JS_PREFERENCE_FILES += [
-    'services-common.js',
-]
-
 SPHINX_TREES['services'] = 'docs'

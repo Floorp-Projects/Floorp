@@ -22,7 +22,7 @@ langpack_sign_push_description_schema = schema.extend({
     Required('description'): basestring,
     Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): {
-        Required('implementation'): 'push-addons',
+        Required('implementation'): 'sign-and-push-addons',
         Required('channel'): optionally_keyed_by(
             'project',
             optionally_keyed_by('platform', Any('listed', 'unlisted'))),
@@ -39,7 +39,7 @@ langpack_sign_push_description_schema = schema.extend({
 @transforms.add
 def set_label(config, jobs):
     for job in jobs:
-        label = 'push-langpacks-{}'.format(job['primary-dependency'].label)
+        label = 'sign-and-push-langpacks-{}'.format(job['primary-dependency'].label)
         job['label'] = label
 
         yield job

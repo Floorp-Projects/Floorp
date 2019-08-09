@@ -400,3 +400,8 @@ pref("devtools.aboutdebugging.collapsibilities.temporaryExtension", false);
 
 // Map top-level await expressions in the console
 pref("devtools.debugger.features.map-await-expression", true);
+
+// Disable autohide for DevTools popups and tooltips.
+// This is currently not exposed by any UI to avoid making
+// about:devtools-toolbox tabs unusable by mistake.
+pref("devtools.popup.disable_autohide", false);

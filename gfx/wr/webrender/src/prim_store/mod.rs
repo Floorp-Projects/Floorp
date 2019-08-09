@@ -3258,7 +3258,7 @@ impl PrimitiveStore {
                             prim_instance.spatial_node_index,
                             pic.snapped_local_rect,
                             &prim_info.combined_local_clip_rect,
-                            frame_context.global_screen_world_rect,
+                            frame_state.current_dirty_region().combined,
                             plane_split_anchor,
                         );
                     }

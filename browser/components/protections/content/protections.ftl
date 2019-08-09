@@ -41,19 +41,19 @@ etp-card-content = Trackers follow you around online to collect information abou
 graph-today = Today
 
 social-tab-title = Social Media Trackers
-social-tab-contant = Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online.
+social-tab-contant = Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online. <a data-l10n-name="learn-more-link">Learn more</a>
 
 cookie-tab-title = Cross-Site Tracking Cookies
-cookie-tab-content = Cross-site tracking cookies follow you from site to site to collect data about your browsing habits. Advertisers and analytics companies gather this data to create a profile of your interests across many sites. Blocking them reduces the number of personalized ads that follow you around.
+cookie-tab-content = Cross-site tracking cookies follow you from site to site to collect data about your browsing habits. Advertisers and analytics companies gather this data to create a profile of your interests across many sites. Blocking them reduces the number of personalized ads that follow you around. <a data-l10n-name="learn-more-link">Learn more</a>
 
 tracker-tab-title = Tracking Content
-tracker-tab-content = Websites may load outside ads, videos, and other content that contain hidden trackers. Blocking tracking content can make websites load faster, but some buttons, forms, and login fields might not work.
+tracker-tab-content = Websites may load outside ads, videos, and other content that contain hidden trackers. Blocking tracking content can make websites load faster, but some buttons, forms, and login fields might not work. <a data-l10n-name="learn-more-link">Learn more</a>
 
 fingerprinter-tab-title = Fingerprinters
-fingerprinter-tab-content = Fingerprinting is a form of online tracking that’s different from your real fingerprints. Companies use it to create a unique profile of you using data about your browser, device, and other settings. We block ad trackers from fingerprinting your device.
+fingerprinter-tab-content = Fingerprinting is a form of online tracking that’s different from your real fingerprints. Companies use it to create a unique profile of you using data about your browser, device, and other settings. We block ad trackers from fingerprinting your device. <a data-l10n-name="learn-more-link">Learn more</a>
 
 cryptominer-tab-title = Cryptominers
-cryptominer-tab-content = Some websites host hidden malware that secretly uses your system’s computing power to mine cryptocurrency, or digital money. It drains your battery, slows down your computer, and increases your energy bill. We block known cryptominers from using your computing resources to make money.
+cryptominer-tab-content = Some websites host hidden malware that secretly uses your system’s computing power to mine cryptocurrency, or digital money. It drains your battery, slows down your computer, and increases your energy bill. We block known cryptominers from using your computing resources to make money. <a data-l10n-name="learn-more-link">Learn more</a>
 
 lockwise-title = Never forget a password again
 lockwise-title-logged-in = { -lockwise-brand-name }
@@ -133,3 +133,14 @@ go-to-privacy-settings = Go to Privacy Settings
 
 # This is the title attribute describing the Lockwise card's link to about:logins
 go-to-saved-logins = Go to Saved Logins
+
+bar-tooltip-social =
+  .title = Social Media Trackers
+bar-tooltip-cookie =
+  .title = Cross-Site Tracking Cookies
+bar-tooltip-tracker =
+  .title = Tracking Content
+bar-tooltip-fingerprinter =
+  .title = Fingerprinters
+bar-tooltip-cryptominer =
+  .title = Cryptominers

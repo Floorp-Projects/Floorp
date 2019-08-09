@@ -9,18 +9,15 @@
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
 // DOM Panel
 const MainFrame = React.createFactory(require("./components/MainFrame"));
 
 // Store
-const createStore = require("devtools/client/shared/redux/create-store")({
-  log: false,
-});
+const createStore = require("devtools/client/shared/redux/create-store");
 
 const { reducers } = require("./reducers/index");
-const store = createStore(combineReducers(reducers));
+const store = createStore(reducers);
 
 /**
  * This object represents view of the DOM panel and is responsible

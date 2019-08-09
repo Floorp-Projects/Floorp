@@ -536,12 +536,12 @@ JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
                                                GCThingCallback callback,
                                                void* closure) {
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-    for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-      e.front().mutableKey().applyToWrapped([callback, closure](auto tp) {
-        if ((*tp)->isMarkedGray()) {
-          callback(closure, JS::GCCellPtr(*tp));
-        }
-      });
+    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
+      JSObject* target = e.front().key();
+      if (target->isMarkedGray()) {
+        JS::AutoSuppressGCAnalysis nogc;
+        callback(closure, JS::GCCellPtr(target));
+      }
     }
   }
 }

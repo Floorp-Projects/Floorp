@@ -703,6 +703,12 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
   masm.push(scratch1);
 }
 
+static uint32_t GetVMFunctionArgSize(const VMFunctionData& fun) {
+  // Note that this include the size of the frame pointer pushed by
+  // prepareVMCall.
+  return fun.explicitStackSlots() * sizeof(void*) + sizeof(void*);
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
                                               RetAddrEntry::Kind kind,
@@ -711,25 +717,12 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   // Assert prepareVMCall() has been called.
   MOZ_ASSERT(inCall_);
   inCall_ = false;
-
-  // Assert the frame does not have an override pc when we're executing JIT
-  // code.
-  {
-    Label ok;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_OVERRIDE_PC), &ok);
-    masm.assumeUnreachable(
-        "BaselineFrame shouldn't override pc when executing JIT code");
-    masm.bind(&ok);
-  }
 #endif
 
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
 
-  // Compute argument size. Note that this include the size of the frame pointer
-  // pushed by prepareVMCall.
-  uint32_t argSize = fun.explicitStackSlots() * sizeof(void*) + sizeof(void*);
+  uint32_t argSize = GetVMFunctionArgSize(fun);
 
   // Assert all arguments were pushed.
   MOZ_ASSERT(masm.framePushed() - pushedBeforeCall_ == argSize);
@@ -757,22 +750,11 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   uint32_t callOffset = masm.currentOffset();
   masm.Pop(BaselineFrameReg);
 
-  // Pop arguments from framePushed.
-  masm.implicitPop(fun.explicitStackSlots() * sizeof(void*));
+  // Pop arguments from framePushed. Subtract size of the frame pointer because
+  // we popped it explicitly.
+  masm.implicitPop(argSize - sizeof(void*));
 
   restoreInterpreterPCReg();
-
-#ifdef DEBUG
-  // Assert the frame does not have an override pc when we're executing JIT
-  // code.
-  {
-    Label ok;
-    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
-                      Imm32(BaselineFrame::HAS_OVERRIDE_PC), &ok);
-    masm.assumeUnreachable("BaselineFrame shouldn't override pc after VM call");
-    masm.bind(&ok);
-  }
-#endif
 
   return handler.recordCallRetAddr(cx, kind, callOffset);
 }
@@ -6017,6 +5999,36 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FINALYIELDRVAL() {
 }
 
 template <>
+bool BaselineInterpreterCodeGen::emitGeneratorThrowOrReturnCallVM() {
+  // Record the offset for the Baseline JIT code below.
+  handler.setGeneratorThrowOrReturnCallOffset(masm.currentOffset());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*,
+                      Handle<AbstractGeneratorObject*>, HandleValue, uint32_t);
+  return callVM<Fn, jit::GeneratorThrowOrReturn>();
+}
+
+template <>
+bool BaselineCompilerCodeGen::emitGeneratorThrowOrReturnCallVM() {
+  // Jump to the interpreter code where we call GeneratorThrowOrReturn. This way
+  // we ensure we have a sane return address (into the interpreter code instead
+  // of the self-hosted code's BaselineScript) because we turn the generator
+  // frame into an interpreter frame in jit::GeneratorThrowOrReturn.
+  const BaselineInterpreter& interp =
+      cx->runtime()->jitRuntime()->baselineInterpreter();
+  TrampolinePtr code = interp.generatorThrowOrReturnCallAddr();
+  masm.jump(code);
+
+  // Update masm.framePushed() to prevent assertion failures.
+  using Fn = bool (*)(JSContext*, BaselineFrame*,
+                      Handle<AbstractGeneratorObject*>, HandleValue, uint32_t);
+  VMFunctionId id = VMFunctionToId<Fn, jit::GeneratorThrowOrReturn>::id;
+  const VMFunctionData& fun = GetVMFunction(id);
+  masm.implicitPop(GetVMFunctionArgSize(fun));
+  return true;
+}
+
+template <>
 void BaselineCompilerCodeGen::emitJumpToInterpretOpLabel() {
   TrampolinePtr code =
       cx->runtime()->jitRuntime()->baselineInterpreter().interpretOpAddr();
@@ -6262,55 +6274,18 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
     MOZ_ASSERT(resumeKind == GeneratorResumeKind::Throw ||
                resumeKind == GeneratorResumeKind::Return);
 
-    // Update the frame's frameSize field.
-    masm.computeEffectiveAddress(
-        Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch2);
-    masm.movePtr(scratch2, scratch1);
-    masm.subStackPtrFrom(scratch2);
-    masm.store32(scratch2, Address(BaselineFrameReg,
-                                   BaselineFrame::reverseOffsetOfFrameSize()));
     masm.loadBaselineFramePtr(BaselineFrameReg, scratch2);
 
     prepareVMCall();
+
     pushArg(Imm32(int32_t(resumeKind)));
     pushArg(retVal);
     pushArg(genObj);
     pushArg(scratch2);
 
-    using Fn =
-        bool (*)(JSContext*, BaselineFrame*, Handle<AbstractGeneratorObject*>,
-                 HandleValue, uint32_t);
-    TailCallVMFunctionId id =
-        TailCallVMFunctionToId<Fn, jit::GeneratorThrowOrReturn>::id;
-    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
-    const VMFunctionData& fun = GetVMFunction(id);
-
-    // Create and push the frame descriptor.
-    masm.subStackPtrFrom(scratch1);
-    masm.makeFrameDescriptor(scratch1, FrameType::BaselineJS,
-                             ExitFrameLayout::Size());
-    masm.push(scratch1);
-
-    // We have created a baseline frame as if we were the
-    // callee. However, if we just did a regular call at this
-    // point, our return address would be bogus: it would point at
-    // self-hosted code, instead of the generator code that we are
-    // pretending we are already executing. Instead, we push a
-    // dummy return address. In jit::GeneratorThrowOrReturn,
-    // we will make this an interpreter frame so frame iterators
-    // will use the frame's interpreter pc field instead of relying
-    // on the return address.
-
-    // On ARM64, the callee will push a bogus return address. On
-    // other architectures, we push a null return address.
-#ifndef JS_CODEGEN_ARM64
-    masm.push(ImmWord(0));
-#endif
-    masm.jump(code);
-
-    // Pop arguments and frame pointer (pushed by prepareVMCall) from
-    // framePushed.
-    masm.implicitPop((fun.explicitStackSlots() + 1) * sizeof(void*));
+    if (!emitGeneratorThrowOrReturnCallVM()) {
+      return false;
+    }
   }
 
   // Call into the VM to resume the generator in the C++ interpreter if there's
@@ -7213,6 +7188,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
     interpreter.init(
         code, interpretOpOffset_, interpretOpNoDebugTrapOffset_,
         bailoutPrologueOffset_.offset(),
+        handler.generatorThrowOrReturnCallOffset(),
         profilerEnterFrameToggleOffset_.offset(),
         profilerExitFrameToggleOffset_.offset(),
         std::move(handler.debugInstrumentationOffsets()),

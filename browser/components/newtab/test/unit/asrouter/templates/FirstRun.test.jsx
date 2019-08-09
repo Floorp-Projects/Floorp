@@ -44,9 +44,12 @@ describe("<FirstRun>", () => {
   let message;
   let fakeDoc;
   let sandbox;
+  let clock;
+  let onBlockByIdStub;
 
   async function setup() {
     sandbox = sinon.createSandbox();
+    clock = sandbox.useFakeTimers();
     message = await getTestMessage("TRAILHEAD_1");
     fakeDoc = {
       body: document.createElement("body"),
@@ -55,6 +58,7 @@ describe("<FirstRun>", () => {
       getElementById: () => document.createElement("div"),
       activeElement: document.createElement("div"),
     };
+    onBlockByIdStub = sandbox.stub();
 
     sandbox
       .stub(global, "fetch")
@@ -71,6 +75,7 @@ describe("<FirstRun>", () => {
         document={fakeDoc}
         dispatch={() => {}}
         sendUserActionTelemetry={() => {}}
+        onBlockById={onBlockByIdStub}
       />
     );
   }
@@ -130,6 +135,16 @@ describe("<FirstRun>", () => {
 
       assert.isTrue(wrapper.isEmptyRender());
     });
+  });
+
+  it("should pass along executeAction appropriately", () => {
+    const stub = sandbox.stub();
+    wrapper = mount(
+      <FirstRun message={message} document={fakeDoc} executeAction={stub} />
+    );
+
+    assert.propertyVal(wrapper.find(Interrupt).props(), "executeAction", stub);
+    assert.propertyVal(wrapper.find(Triplets).props(), "onAction", stub);
   });
 
   it("should load flow params on mount if fxaEndpoint is defined", () => {
@@ -198,7 +213,7 @@ describe("<FirstRun>", () => {
     );
   });
 
-  it("should hide triplets when closeTriplets is called", () => {
+  it("should hide triplets when closeTriplets is called and block extended triplets after 500ms", () => {
     // Simulate calling next scene
     wrapper
       .find(Triplets)
@@ -212,5 +227,9 @@ describe("<FirstRun>", () => {
         .hasClass("show"),
       "Show triplet content"
     );
+
+    assert.notCalled(onBlockByIdStub);
+    clock.tick(500);
+    assert.calledWith(onBlockByIdStub, "EXTENDED_TRIPLETS_1");
   });
 });

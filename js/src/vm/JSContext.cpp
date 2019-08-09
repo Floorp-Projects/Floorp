@@ -1274,7 +1274,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       unwrappedExceptionStack_(this),
       overRecursed_(this, false),
       propagatingForcedReturn_(this, false),
-      liveVolatileJitFrameIter_(this, nullptr),
       reportGranularity(this, JS_DEFAULT_JITREPORT_GRANULARITY),
       resolvingList(this, nullptr),
 #ifdef DEBUG

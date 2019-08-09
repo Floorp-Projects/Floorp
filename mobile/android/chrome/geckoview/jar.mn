@@ -12,6 +12,7 @@ geckoview.jar:
   content/ErrorPageEventHandler.js
   content/geckoview.xul
   content/geckoview.js
+  content/GeckoViewContentBlockingChild.js
   content/GeckoViewContentChild.js
   content/GeckoViewMediaChild.js
   content/GeckoViewNavigationChild.js

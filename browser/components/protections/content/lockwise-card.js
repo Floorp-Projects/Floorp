@@ -8,6 +8,9 @@ const LOCKWISE_URL = RPMGetStringPref(
   "browser.contentblocking.report.lockwise.url",
   ""
 );
+const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
+  "browser.contentblocking.report.lockwise.how_it_works.url"
+);
 
 export default class LockwiseCard {
   constructor(document) {
@@ -26,18 +29,25 @@ export default class LockwiseCard {
       RPMSendAsyncMessage("OpenAboutLogins");
     });
 
-    const syncLink = this.doc.querySelector(".synced-devices-text a");
+    const syncLink = this.doc.getElementById("turn-on-sync");
     // Register a click handler for the anchor since it's not possible to navigate to about:preferences via href
-    syncLink.addEventListener("click", () => {
-      this.doc.sendTelemetryEvent("click", "lw_app_link");
-      RPMSendAsyncMessage("OpenSyncPreferences");
-    });
+    const eventHandler = evt => {
+      if (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click") {
+        this.doc.sendTelemetryEvent("click", "lw_app_link");
+        RPMSendAsyncMessage("OpenSyncPreferences");
+      }
+    };
+    syncLink.addEventListener("click", eventHandler);
+    syncLink.addEventListener("keydown", eventHandler);
 
+    // Attach link to Firefox Lockwise app page.
     const lockwiseAppLink = this.doc.getElementById("lockwise-inline-link");
     lockwiseAppLink.href = LOCKWISE_URL;
     lockwiseAppLink.addEventListener("click", () => {
       this.doc.sendTelemetryEvent("click", "lw_sync_link");
     });
+
+    // Attack link to Firefox Lockwise "How it works" page.
     const lockwiseReportLink = this.doc.getElementById("lockwise-how-it-works");
     lockwiseReportLink.addEventListener("click", () => {
       this.doc.sendTelemetryEvent("click", "lw_about_link");
@@ -115,6 +125,9 @@ export default class LockwiseCard {
       "lockwise-passwords-stored"
     );
 
+    const howItWorksLink = this.doc.getElementById("lockwise-how-it-works");
+    howItWorksLink.href = HOW_IT_WORKS_URL_PREF;
+
     // Set the text for the number of synced devices.
     const syncedDevicesBlock = container.querySelector(
       ".number-of-synced-devices.block"
@@ -134,7 +147,7 @@ export default class LockwiseCard {
     }
     // Display the link for enabling sync if no synced devices are detected.
     if (syncedDevices === 0) {
-      const syncLink = syncedDevicesText.querySelector("a");
+      const syncLink = this.doc.getElementById("turn-on-sync");
       syncLink.classList.remove("hidden");
     }
   }

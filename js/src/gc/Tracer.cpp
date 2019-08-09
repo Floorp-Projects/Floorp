@@ -107,16 +107,14 @@ JS_PUBLIC_API void JS::TraceIncomingCCWs(
     if (compartments.has(comp)) {
       continue;
     }
-
-    for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-      mozilla::DebugOnly<const CrossCompartmentKey> prior = e.front().key();
-      e.front().mutableKey().applyToWrapped([trc, &compartments](auto tp) {
-        Compartment* comp = (*tp)->maybeCompartment();
-        if (comp && compartments.has(comp)) {
-          TraceManuallyBarrieredEdge(trc, tp, "cross-compartment wrapper");
-        }
-      });
-      MOZ_ASSERT(e.front().key() == prior);
+    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
+      JSObject* obj = e.front().key();
+      Compartment* comp = obj->compartment();
+      if (compartments.has(comp)) {
+        mozilla::DebugOnly<JSObject*> prior = obj;
+        TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
+        MOZ_ASSERT(obj == prior);
+      }
     }
   }
 }
