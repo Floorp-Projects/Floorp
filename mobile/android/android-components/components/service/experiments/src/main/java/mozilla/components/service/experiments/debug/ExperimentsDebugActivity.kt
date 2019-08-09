@@ -16,6 +16,20 @@ import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.experiments.ExperimentsUpdater
 import mozilla.components.support.base.log.logger.Logger
 
+/**
+ * Debugging activity exported by service-experiments to allow easier debugging. This accepts
+ * commands that can force the library to do the following:
+ * - Fetch or update experiments
+ * - Change the Kinto endpoint to the `dev`, `staging`, or `prod` endpoint
+ * - Override the active experiment to a branch specified by the `branch` command
+ * - Clear any overridden experiment
+ *
+ * See here for more information on using the ExperimentsDebugActivity:
+ * https://github.com/mozilla-mobile/android-components/tree/master/components/service/experiments#experimentsdebugactivity-usage
+ *
+ * See the adb developer docs for more info:
+ * https://developer.android.com/studio/command-line/adb#am
+ */
 class ExperimentsDebugActivity : Activity() {
     private val logger = Logger(LOG_TAG)
 
@@ -28,16 +42,34 @@ class ExperimentsDebugActivity : Activity() {
         private const val LOG_TAG = "ExperimentsDebugActivity"
 
         // This is a list of the currently accepted commands
+        /**
+         * Fetch experiments from the server and update the active experiment if necessary.
+         */
         const val UPDATE_EXPERIMENTS_EXTRA_KEY = "updateExperiments"
+        /**
+         * Sets the Kinto endpoint to the supplied endpoint.
+         * Must be one of: `dev`, `staging`, or `prod`.
+         */
         const val SET_KINTO_INSTANCE_EXTRA_KEY = "setKintoInstance"
-
-        // Both of these need to be supplied in order to select both the branch and the
-        // ExperimentDescriptor.id of the experiment to override.
+        /**
+         * Overrides the current experiment and set the active experiment to the given `branch`.
+         * This command requires two parameters to be passed, `overrideExperiment` and `branch` in
+         * order for it to work.
+         */
         const val OVERRIDE_EXPERIMENT_EXTRA_KEY = "overrideExperiment"
+        /**
+         * Used only with [OVERRIDE_EXPERIMENT_EXTRA_KEY].
+         */
         const val OVERRIDE_BRANCH_EXTRA_KEY = "branch"
+        /**
+         * Clears any existing overrides.
+         */
         const val OVERRIDE_CLEAR_ALL_EXTRA_KEY = "clearAllOverrides"
     }
 
+    /**
+     * On creation of the debug activity, process the command switches
+     */
     @Suppress("ComplexMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
