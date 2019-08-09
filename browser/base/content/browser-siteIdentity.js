@@ -1399,7 +1399,10 @@ var gIdentityHandler = {
       "identity-popup-permission-icon",
       aPermission.id + "-icon"
     );
-    if (aPermission.state == SitePermissions.BLOCK) {
+    if (
+      aPermission.state == SitePermissions.BLOCK ||
+      aPermission.state == SitePermissions.AUTOPLAY_BLOCKED_ALL
+    ) {
       img.classList.add("blocked-permission-icon");
     }
 
