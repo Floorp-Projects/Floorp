@@ -30,6 +30,13 @@ const LoginInfo = Components.Constructor(
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
 /**
+ * The maximum age of the password in ms (using `timePasswordChanged`) whereby
+ * a user can toggle the password visibility in a doorhanger to add a username to
+ * a saved login.
+ */
+const VISIBILITY_TOGGLE_MAX_PW_AGE_MS = 2 * 60 * 1000; // 2 minutes
+
+/**
  * Constants for password prompt telemetry.
  * Mirrored in mobile/android/components/LoginManagerPrompter.js */
 const PROMPT_DISPLAYED = 0;
@@ -1274,15 +1281,18 @@ LoginManagerPrompter.prototype = {
                   toggleBtn.addEventListener("command", onVisibilityToggle);
                   toggleBtn.setAttribute("label", togglePasswordLabel);
                   toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
-                  toggleBtn.setAttribute(
-                    "hidden",
-                    LoginHelper.isMasterPasswordSet()
-                  );
-                }
-                if (this.wasDismissed) {
-                  chromeDoc
-                    .getElementById("password-notification-visibilityToggle")
-                    .setAttribute("hidden", true);
+                  let hideToggle =
+                    LoginHelper.isMasterPasswordSet() ||
+                    // Dismissed-by-default prompts should still show the toggle.
+                    (this.timeShown && this.wasDismissed) ||
+                    // If we are only adding a username then the password is
+                    // one that is already saved and we don't want to reveal
+                    // it as the submitter of this form may not be the account
+                    // owner, they may just be using the saved password.
+                    (messageStringID == "updateLoginMsgAddUsername" &&
+                      login.timePasswordChanged <
+                        Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
+                  toggleBtn.setAttribute("hidden", hideToggle);
                 }
                 break;
               case "shown": {
