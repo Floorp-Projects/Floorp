@@ -64,6 +64,7 @@
 #include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
 #include "GeckoSystemStateListener.h"
+#include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
 #include "PrefsHelper.h"
 #include "ScreenHelperAndroid.h"
@@ -387,6 +388,7 @@ nsAppShell::nsAppShell()
       GeckoAppShellSupport::Init();
       mozilla::GeckoSystemStateListener::Init();
       mozilla::widget::Telemetry::Init();
+      mozilla::widget::GeckoTelemetryDelegate::Init();
 
       // Set the corresponding state in GeckoThread.
       java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());
@@ -413,6 +415,7 @@ nsAppShell::nsAppShell()
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
     mozilla::WebAuthnTokenManager::Init();
+    mozilla::widget::GeckoTelemetryDelegate::Init();
 
     if (jni::IsFennec()) {
       BrowserLocaleManagerSupport::Init();
