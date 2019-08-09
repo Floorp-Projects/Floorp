@@ -250,8 +250,7 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
     // no longer uses mCachedSelectionNode, so release it.
     mCachedSelectionNode = nullptr;
 
-    // if only trailing <br> remaining remove it
-    rv = RemoveRedundantTrailingBR();
+    rv = TextEditorRef().MaybeChangePaddingBRElementForEmptyEditor();
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1220,47 +1219,6 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
   text->GetData(*aOutString);
 
   *aHandled = true;
-  return NS_OK;
-}
-
-nsresult TextEditRules::RemoveRedundantTrailingBR() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // If the passing <br> element exists, we have no work to do.
-  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
-    return NS_OK;
-  }
-
-  // Likewise, nothing to be done if we could never have inserted a trailing br
-  if (IsSingleLineEditor()) {
-    return NS_OK;
-  }
-
-  Element* rootElement = TextEditorRef().GetRoot();
-  if (NS_WARN_IF(!rootElement)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (rootElement->GetChildCount() > 1) {
-    // The trailing br is redundant if it is the only remaining child node
-    return NS_OK;
-  }
-
-  RefPtr<HTMLBRElement> brElement =
-      HTMLBRElement::FromNodeOrNull(rootElement->GetFirstChild());
-  if (!brElement ||
-      !EditorBase::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-    return NS_OK;
-  }
-
-  // Rather than deleting this node from the DOM tree we should instead
-  // morph this <br> element into the padding <br> element for editor.
-  TextEditorRef().mPaddingBRElementForEmptyEditor = std::move(brElement);
-  TextEditorRef().mPaddingBRElementForEmptyEditor->UnsetFlags(
-      NS_PADDING_FOR_EMPTY_LAST_LINE);
-  TextEditorRef().mPaddingBRElementForEmptyEditor->SetFlags(
-      NS_PADDING_FOR_EMPTY_EDITOR);
-
   return NS_OK;
 }
 
