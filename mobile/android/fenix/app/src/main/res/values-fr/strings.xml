@@ -23,7 +23,8 @@
     <string name="private_browsing_title">Vous êtes en session privée</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s efface vos historiques de recherche et de navigation quand vous fermez votre session privée. Cela ne vous rend pas anonyme pour les sites web ni pour votre fournisseur d’accès à Internet, mais cela vous permet de garder ce que vous faites en ligne à l’abri des regards de ceux qui utilisent cet appareil.\n\nPrincipales idées reçues sur la navigation privée.</string>
+    <string name="private_browsing_placeholder">
+         %1$s efface vos historiques de recherche et de navigation quand vous quittez l’application ou fermez vos onglets privés. Bien que cela ne vous rende pas anonyme sur les sites web ni pour votre fournisseur d’accès à Internet, cela vous permet de garder confidentielle votre activité en ligne pour toutes les autres personnes qui utiliseraient votre appareil.\n\nPrincipales idées reçues sur la navigation privée.    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Supprimer la session</string>
 
@@ -173,6 +174,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Dernière synchronisation : jamais</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s sur %s %s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Onglets reçus</string>
@@ -202,6 +208,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activer pour tous les sites</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Les exceptions vous permettent de désactiver la protection contre le pistage pour certains sites.\n\nEn savoir plus.</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Désactivée globalement, allez dans les paramètres pour l’activer.</string>
 
@@ -263,6 +271,8 @@
     <string name="quick_action_read">Lire</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Fermer</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Ouvrir dans une application</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Apparence</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -338,11 +348,6 @@
     <string name="collection_rename">Renommer la collection</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Ouvrir les onglets</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Supprimer</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d sites…</string>
 
 
     <!-- History -->
@@ -500,6 +505,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collections</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Menu de la collection</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Aucune collection</string>
 
@@ -552,6 +559,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Envoyer et partager</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Partager</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Partager un lien</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

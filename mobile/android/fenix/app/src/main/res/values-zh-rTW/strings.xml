@@ -23,7 +23,7 @@
     <string name="private_browsing_title">您在隱私瀏覽模式當中</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s 會在結束隱私瀏覽階段時，清除您的搜尋與上網紀錄。雖然這樣做不會讓您對網站或電信業者匿名，但還是可以更簡單就讓使用此裝置的人，無法得知您在線上做了什麼事。\n\n關於隱私瀏覽的常見迷思</string>
+    <string name="private_browsing_placeholder">%1$s 會在關閉程式或所有隱私分頁時，清除您的搜尋與上網紀錄。雖然這樣做不會讓您對網站或電信業者匿名，但還是可以更簡單就讓使用此裝置的人，無法得知您在線上做了什麼事。\n\n關於隱私瀏覽的常見迷思</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">清除瀏覽階段</string>
 
@@ -173,6 +173,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">上次同步: 從未</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%2$s %3$s 上的 %1$s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">收到分頁</string>
@@ -201,6 +206,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">對所有網站開啟</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">您可以針對某些網站設定例外，關閉追蹤保護功能。\n\n了解更多資訊</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">已全域關閉。請到「設定」頁面開啟。</string>
 
@@ -261,6 +268,8 @@
     <string name="quick_action_read">閱讀模式</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">關閉</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">於應用程式開啟</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">外觀設定</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -336,11 +345,6 @@
     <string name="collection_rename">更名收藏集</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">開啟分頁</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">刪除</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">還有 %1$d 個網站…</string>
 
 
     <!-- History -->
@@ -498,6 +502,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">收藏集</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">收藏集選單</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">沒有收藏集</string>
     <!-- No Open Tabs Message Description -->
@@ -548,6 +554,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">傳送並分享</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">分享</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">使用鏈結分享</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -602,8 +611,8 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
-中文字型測試：「永東國酬，愛鬱。靈鷹袋！」</string>
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+中文字型測試：「老闆，來一杯大杯珍奶，半糖去冰！」</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->

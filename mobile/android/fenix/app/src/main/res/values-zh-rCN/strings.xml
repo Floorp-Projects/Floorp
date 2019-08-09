@@ -23,7 +23,7 @@
     <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s 在您关闭所有隐私浏览会话后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
+    <string name="private_browsing_placeholder">%1$s 在您退出应用或关闭所有隐私标签页后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
 
@@ -175,6 +175,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">上次同步: 从未</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%2$s %3$s 上的 %1$s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">收到标签页</string>
@@ -204,6 +209,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">为所有网站启用</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">您可以对某些网站设置例外，禁用其跟踪保护。\n\n详细了解</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">已全局关闭，请前往“设置”开启。</string>
 
@@ -266,6 +273,8 @@
     <string name="quick_action_read">阅读模式</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">关闭</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">在应用中打开</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">外观</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -341,12 +350,6 @@
     <string name="collection_rename">重命名收藏集</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">打开标签页</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">删除</string>
-
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">还有 %1$d 个网站…</string>
 
 
     <!-- History -->
@@ -506,6 +509,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">收藏集</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">收藏集菜单</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">无收藏集</string>
     <!-- No Open Tabs Message Description -->
@@ -557,6 +562,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">发送并分享</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">分享</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">分享链接</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

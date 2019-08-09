@@ -21,14 +21,10 @@
     <string name="private_browsing_title">U bevindt zich in een privésessie</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privénavigatietabbladen en 
-        
-        -vensters sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
-        
+    <string name="private_browsing_placeholder">
+         %1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privénavigatietabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
         makkelijker om wat u online doet privé te houden ten opzichte van anderen die deze computer gebruiken.\n\nVeelgehoorde mythes over
-        
         privénavigatie
-    
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Sessie verwijderen</string>
@@ -176,6 +172,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Laatst gesynchroniseerd: nooit</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s op %s %s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Ontvangen tabbladen</string>
@@ -201,6 +202,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Bescherming tegen volgen is uit voor deze websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Inschakelen voor alle websites</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Met uitzonderingen kunt u de trackingbeveiliging voor geselecteerde websites uitschakelen.\n\nMeer informatie</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Globaal uitgeschakeld, ga naar Instellingen om in te schakelen.</string>
 
@@ -260,6 +263,8 @@
     <string name="quick_action_read">Lezen</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Sluiten</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Openen in app</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Vormgeving</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -337,11 +342,6 @@
     <string name="collection_rename">Naam collectie wijzigen</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Tabbladen openen</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Verwijderen</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d websites…</string>
 
 
     <!-- History -->
@@ -495,6 +495,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collecties</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Collectiesmenu</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Geen collecties</string>
     <!-- No Open Tabs Message Description -->
@@ -534,6 +536,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Verzenden en delen</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Delen</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Een koppeling delen</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

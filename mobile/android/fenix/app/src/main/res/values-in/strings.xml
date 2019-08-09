@@ -13,6 +13,9 @@
     <!-- No Open Tabs Message Header -->
     <string name="no_open_tabs_header">Tidak ada tab yang dibuka</string>
 
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Tab terbuka Anda akan ditampilkan di sini.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Anda berada dalam sesi pribadi</string>
@@ -34,6 +37,8 @@
     <string name="browser_menu_help">Bantuan</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Setelan</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Pustaka Anda</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Situs desktop</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -54,6 +59,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Buka di %1$s</string>
 
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">DITENAGAI OLEH %1$s</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Pindai</string>
@@ -70,10 +79,14 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Setelan</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Dasar</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Tentang</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Mesin pencari</string>
+    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
+    <string name="preference_show_visited_sites_bookmarks">Tampilkan situs dan markah yang dikunjungi</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Bantuan</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -91,6 +104,8 @@
     <string name="preferences_credit_cards_addresses">Kartu kredit dan alamat</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Setel sebagai peramban baku</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Tingkat Lanjut</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privasi</string>
 
@@ -109,10 +124,14 @@
     <string name="preferences_sign_in_description">Sinkronkan markah, riwayat, dan lainnya dengan Akun Firefox Anda</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Hubungkan kembali untuk melanjutkan sinkronisasi</string>
     <!-- Preference for language -->
     <string name="preferences_language">Bahasa</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Pilihan data</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Pengumpulan data</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Pemberitahuan privasi</string>
     <!-- Preference category for developer tools -->
@@ -150,6 +169,11 @@
     <string name="sync_last_synced_summary">Terakhir disinkronkan: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Terakhir disinkronkan: tidak pernah</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s pada %s %s</string>
 
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab dari %s</string>
@@ -397,18 +421,40 @@
 
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Batal Pilih Semua</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d tab dipilih</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d tab dipilih</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Tab disimpan!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Tab disimpan!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Tutup</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Simpan</string>
 
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Koleksi %d</string>
+
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Kirim dan Bagikan</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Bagikan</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Bagikan tautan</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kirim ke peranti</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Masuk ke Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Kirim ke semua peranti</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Sambungkan ulang ke Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Luring</string>
     <!-- An option to connect additional devices -->
@@ -421,6 +467,8 @@
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Koleksi dihapus</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Nama koleksi berubah</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Tab dihapus</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
@@ -444,6 +492,8 @@
     <string name="full_screen_notification">Memasuki mode layar penuh</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL disalin</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Besarkan atau kecilkan teks pada situs web</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -451,6 +501,9 @@
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Ukuran Fon Otomatis</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Ukuran font akan sesuai dengan pengaturan Android Anda. Nonaktifkan untuk mengelola ukuran font di sini.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Hapus data penjelajahan</string>
@@ -472,6 +525,8 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Hapus data penjelajahan</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
+    <string name="preferences_delete_browsing_data_prompt_message">Izinkan %s untuk menghapus data penjelajahan Anda?</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="preferences_delete_browsing_data_prompt_cancel">Jangan izinkan</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -487,10 +542,19 @@
 
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Sudah memiliki akun?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Ketahui tentang %s</string>
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Pilih tema Anda</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description">Coba tema gelap: lebih menghemat baterai dan menyamankan mata Anda.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Dapatkan hasil maksimal dari %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header">Anda masuk ke peramban Firefox lainnya dalam ponsel ini.</string>
     <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Masuk ke Firefox</string>
     <!-- text for the button to stay signed into your Firefox account. -->
@@ -499,8 +563,23 @@
     <string name="onboarding_firefox_account_sign_out">Keluar</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Lindungi diri Anda</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s memblokir pelacak iklan yang mengikuti Anda di web.
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Menjelajah dengan privat</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">Jika Anda melihat ikon %s, penjelajahan privat dapat diakses dalam satu ketukan.
+   </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Privasi Anda</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Kami merancang %s untuk memberi Anda kendali atas apa yang Anda bagikan
+        daring dan apa yang Anda bagikan kepada kami.
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pelajari pemberitahuan privasi kami</string>
 

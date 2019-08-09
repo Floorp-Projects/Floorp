@@ -22,8 +22,8 @@
     <string name="private_browsing_title">Вы находитесь в приватной сессии</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s удаляет историю поиска и просмотра страниц, когда вы завершаете свою приватную
-        сессию. Хотя это не делает вас анонимными для веб-сайтов или вашего Интернет-провайдера, вам будет легче
+    <string name="private_browsing_placeholder">
+         %1$s удаляет историю поиска и просмотра страниц, когда вы закрываете приложение или все приватные вкладки. Хотя это не делает вас анонимными для веб-сайтов или вашего Интернет-провайдера, вам будет легче
         сохранить конфиденциальность ваших действий в Интернете от других людей, которые используют это устройство.\n\nРаспространённые мифы о приватном
         просмотре
     </string>
@@ -176,6 +176,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Последняя синхронизация: пока не было</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s на %s %s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Вкладки с других устройств</string>
@@ -203,6 +208,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Включить для всех сайтов</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Исключения позволяют вам отключить защиту от отслеживания на выбранных сайтах.\n\nУзнать больше</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Выключено глобально. Можно включить в настройках.</string>
 
@@ -263,6 +270,8 @@
     <string name="quick_action_read">Читать</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Закрыть</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Открыть в приложении</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Оформление</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -338,11 +347,6 @@
     <string name="collection_rename">Переименовать коллекцию</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Открытые вкладки</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Удалить</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d сайт(а)…</string>
 
 
     <!-- History -->
@@ -500,6 +504,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Коллекции</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Меню коллекции</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Нет коллекций</string>
     <!-- No Open Tabs Message Description -->
@@ -550,6 +556,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Отправить и поделиться</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Поделиться</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Поделиться ссылкой</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

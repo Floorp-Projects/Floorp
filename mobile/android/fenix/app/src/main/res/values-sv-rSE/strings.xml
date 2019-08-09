@@ -19,9 +19,9 @@
     <string name="private_browsing_title">Du är i en privat session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s rensar din sök- och surfhistorik när du stänger din privata
-        session. Även om detta inte gör dig anonym för webbplatser eller din internetleverantör, blir det
-        lättare att hålla det du gör online privat från alla andra som använder den här enheten.\n\nVanliga myter om privat
+    <string name="private_browsing_placeholder">
+         %1$s rensar din sök- och surfhistorik när du stänger appen eller stänger alla privata flikar. Även om detta inte gör dig anonym på webbplatser eller din internetleverantör, det gör det
+        enklare att hålla vad du gör online privat från alla andra som använder den här enheten.\n\nVanliga myter om privat
         surfning
     </string>
     <!-- Delete session button to erase your history in a private session -->
@@ -173,6 +173,11 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Senast synkroniserad: aldrig</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s på %s%s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Mottagna flikar</string>
@@ -199,6 +204,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Spårningsskydd är avstängt för dessa webbplatser</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Slå på för alla webbplatser</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Med undantag kan du inaktivera spårningsskydd för utvalda webbplatser.\n\nLäs mer</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Stängt av globalt, gå till Inställningar för att slå på den.</string>
 
@@ -261,6 +268,8 @@
     <string name="quick_action_read">Läs</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Stäng</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Öppna i app</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Utseende</string>
 
@@ -337,13 +346,6 @@
     <string name="collection_rename">Byt namn på samling</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Öppna flikar</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Ta bort</string>
-
-
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d webbplatser…</string>
 
 
     <!-- History -->
@@ -498,6 +500,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Samlingar</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Samlingsmeny</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Inga samlingar</string>
     <!-- No Open Tabs Message Description -->
@@ -537,6 +541,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Skicka och dela</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Dela</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Dela en länk</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

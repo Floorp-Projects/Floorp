@@ -18,6 +18,67 @@
     <!-- Title for private session option -->
     <string name="private_browsing_title">Saio pribatuan zaude</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder">
+         %1$s(e)k zure bilaketa- eta nabigazio-historia garbitzen du aplikazioa ixtean edo nabigatze pribatuko fitxa guztiak ixtean. Honek ez zaitu anonimo egiten webguneen edo zure interneteko zerbitzu-hornitzailearen aurrean baina erraztu egiten du ordenagailu hau erabiltzen duten beste erabiltzaileengandik online duzun jarduera pribatu mantentzen.
+    </string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Ezabatu saioa</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Irekitako fitxak</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Atzera</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Aurrera</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Berritu</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Gelditu</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Laguntza</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Ezarpenak</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Zure biltegia</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Mahaigainerako gunea</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Bilatu orrian</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Fitxa pribatua</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Fitxa berria</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Gorde bildumara</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Jakinarazi gunearen arazoa</string>
+
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Partekatu</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Partekatu honekin…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Ireki %1$s nabigatzailean</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s TEKNOLOGIAREKIN</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Eskaneatu</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Lasterbideak</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Bilaketa-motorren ezarpenak</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Bilatu honekin</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Osatu lotura arbeletik</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Ezarpenak</string>
@@ -27,8 +88,12 @@
     <string name="preferences_category_about">Honi buruz</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Bilaketa-motorra</string>
+    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
+    <string name="preference_show_visited_sites_bookmarks">Erakutsi bisitatutako gune eta laster-markak</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Laguntza</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Puntuatu Google Play-n</string>
     <!-- Preference for giving feedback about Fenix -->
     <string name="preferences_feedback">Eman iritzia</string>
     <!-- Preference linking to about page for Fenix
@@ -58,6 +123,10 @@
     <string name="preferences_theme">Itxura</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description">Sinkronizatu laster-markak, historia eta gehiago zure Firefox kontua erabiliz</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox kontua</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Birkonektatu sinkronizatzeari berrekiteko</string>
     <!-- Preference for language -->
     <string name="preferences_language">Hizkuntza</string>
     <!-- Preference for data choices -->
@@ -93,6 +162,38 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sinkronizatzen…</string>
 
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Sinkronizazioak huts egin du. Azken sinkronizazioa: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sinkronizazioak huts egin du. Azken sinkronizazioa: inoiz ez</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Azken sinkronizazioa: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Azken sinkronizazioa: inoiz ez</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s %s %s gailuan</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Jasotako fitxak</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Beste Firefox gailuetatik jasotako fitxen jakinarazpenak.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Fitxa jasota</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Fitxak jasota</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s gailuko fitxa</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Jarraipenaren babesa</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Jarraipenaren babesa</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Blokeatu online zure jarraipena egiten duten eduki eta script-ak</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Salbuespenak</string>
 
@@ -101,6 +202,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Jarraipenaren babesa desgaituta dago gune hauetarako</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Gaitu gune guztietarako</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Salbuespenen bitartez jarraipenaren babesa desgai daiteke gune jakinetarako.\n\nArgibide gehiago</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Modu globalean desgaituta; gaitzeko, joan ezarpenetara.</string>
 
@@ -108,12 +211,21 @@
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Erabilera eta datu teknikoak</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Nabigatzailearen errendimenduaren, erabilpenaren, hardwarearen eta pertsonalizazioen inguruko datuak partekatzen ditu Mozillarekin %1$s hobetzen laguntzeko</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Hutsegiteen berriemailea</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla kokapen-zerbitzua</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s osasun-txostena</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Gaitu sinkronizazioa</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Eskaneatu parekatzeko kodea mahaigaineko Firefoxen</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Hasi saioa</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -121,6 +233,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Kendu kontua</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[QR kodea lortzeko, bisitatu <b>firefox.com/pair</b> zure ordenagailuko Firefoxen.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Ireki kamera</string>
     <!-- Button to cancel pairing -->
@@ -131,6 +246,11 @@
     <string name="preference_light_theme">Argia</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Iluna</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Bateria-aurrezlea ezarrita</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Jarraitu gailuaren itxura</string>
 
     <!-- Quick Action Sheet -->
     <!-- Button in the browser chrome to share the current page -->
@@ -145,8 +265,14 @@
     <string name="quick_action_read">Irakurri</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Itxi</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Ireki aplikazioan</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Itxura</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
+        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
+    <string name="quick_action_sheet_handle">Ekintza bizkorrak</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -217,11 +343,6 @@
     <string name="collection_rename">Berrizendatu bilduma</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Ireki fitxak</string>
-    <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Ezabatu</string>
-    <!-- Text to tell the user how many more tabs this session has.
-        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d gune…</string>
 
 
     <!-- History -->
@@ -245,6 +366,8 @@
     <string name="history_this_week">Aste honetan</string>
     <!-- Text for the header that groups the history the past month -->
     <string name="history_this_month">Hilabete honetan</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Zaharragoa</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Historiarik ez hemen</string>
 
@@ -334,20 +457,49 @@
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Joan ezarpenetara</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Ezarpenen orri bizkorra</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Gomendatua</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Kudeatu gunearen baimenak</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Garbitu baimenak</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Garbitu baimena</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Garbitu gune guztietako baimenak</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Mikrofonoa</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Kokapena</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Jakinarazpena</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Galdetu baimentzeko</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blokeatuta</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Baimenduta</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Androidek blokeatuta</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Salbuespenak</string>
 
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Aktibatuta</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Desaktibatuta</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Bildumak</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Bildumaren menua</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Bildumarik ez</string>
     <!-- No Open Tabs Message Description -->
@@ -387,14 +539,25 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Bidali eta partekatu</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Partekatu</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Partekatu lotura</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Bidali gailura</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Hasi saioa Sync-en</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Bidali gailu guztietara</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Birkonektatu Sync-era</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Deskonektatuta</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Konektatu beste gailu bat</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Fitxa bat bidaltzeko, hasi saioa Firefoxen gutxienez beste gailu batean.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ulertuta</string>
 
@@ -427,6 +590,20 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URLa kopiatuta</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">Iñaki Gorrotxategiren familia jatorrak ez ditu probatu nahi Quebec-eko vodka eta whiskya. Iñaki Gorrotxategiren familia jatorrak ez ditu probatu nahi Quebec-eko vodka eta whiskya. Iñaki Gorrotxategiren familia jatorrak ez ditu probatu nahi Quebec-eko vodka eta whiskya. Iñaki Gorrotxategiren familia jatorrak ez ditu probatu nahi Quebec-eko vodka eta whiskya.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Handiagotu edo txikiagotu webguneetako testua</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Letra-tamaina</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Letra-tamaina automatikoa</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Letra-tamaina zure Androideko ezarpenekin bat etorriko da. Desgaitu letra-tamaina hemen kudeatzeko.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Ezabatu nabigatze-datuak</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">Irekitako fitxak</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
@@ -457,6 +634,21 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Ongi etorri %s(e)ra!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Dagoeneko baduzu kontu bat?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Ezagutu %s</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Aukeratu itxura</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">Probatu itxura iluna: arinagoa bateria eta begietarako.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Atera %s(r)i ahalik eta zuku gehiena.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header">Beste Firefox nabigatzaile batean saioa hasita duzu telefono honetan.</string>
     <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Hasi saioa Firefoxen</string>
     <!-- text for the button to stay signed into your Firefox account. -->
@@ -464,9 +656,36 @@
     <!-- text for the button to sign out of your Firefox account. -->
     <string name="onboarding_firefox_account_sign_out">Amaitu saioa</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Babestu zure burua</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s(e)k webean zehar zure jarraipena egiten duten iragarkiak blokeatzen ditu.
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Nabigatu modu pribatuan</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">%s ikonoa ikustean, nabigatze pribatua sakatze hutsera dago.
+   </string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Zure pribatutasuna</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Online partekatzen duzunaren eta gurekin partekatzen
+        duzunaren inguruko kontrola emateko diseinatu dugu %s.
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Irakurri gure pribatutasun-oharra</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Hasi nabigatzen</string>
+
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatikoa</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Zure gailuaren ezarpenetara moldatzen da</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Itxura iluna</string>
     <!-- Theme setting for light mode -->
@@ -478,10 +697,14 @@
     <string name="sync_sent_tab_snackbar">Fitxa bidalita!</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Eskaneatu kodea</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Ireki Firefox zure ordenagailuan eta zoaz <b>https://firefox.com/pair</b> helbidera]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Eskaneatzeko prest</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Hasi saioa zure kamerarekin</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Erabili helbide elektronikoa horren ordez</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefoxek zure kontuarekin sinkronizatzeari utziko dio baina ez du gailu honetako zure nabigatze-daturik ezabatuko.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->

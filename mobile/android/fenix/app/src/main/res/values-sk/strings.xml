@@ -17,6 +17,13 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v súkromnom prehliadaní</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder">
+         %1$s vymaže históriu vyhľadávania a navštívených stránok po zavretí aplikácie alebo všetkých súkromných kariet a okien.
+        S touto funkciou nie ste na internete neviditeľní a napríklad váš poskytovateľ pripojenia na internet môže stále zistiť, aké stránky navštevujete. Vaša aktivita na internete ale zostane utajená pred ďalšími používateľmi na tomto počítači.\n\nČasté mýty o súkromnom prehliadaní
+        
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Vymazať reláciu</string>
 
@@ -63,6 +70,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skenovať</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Skratky</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Nastavenia vyhľadávacieho modulu</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -115,10 +124,16 @@
     <string name="preferences_sign_in">Prihlásiť sa</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma vzhľadu</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">S účtom Firefox môžete synchronizovať záložky, históriu prehliadania a omnoho viac</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Účet Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Pre spustenie synchronizácie sa znova pripojte</string>
     <!-- Preference for language -->
     <string name="preferences_language">Jazyk</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Odosielanie údajov</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Zber údajov</string>
     <!-- Preference linking to the privacy notice -->
@@ -135,6 +150,8 @@
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchronizovať</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Vyberte si, čo chcete synchronizovať</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">História</string>
     <!-- Preference for syncing bookmarks -->
@@ -156,10 +173,17 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Posledná synchronizácia: nikdy</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s na %s %s</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Prijaté karty</string>
 
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Upozornenia na prijaté karty z iných zariadení s Firefoxom.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Prijatá karta</string>
     <!-- When multiple tabs have been received -->
@@ -177,24 +201,45 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Výnimky</string>
 
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Ochrana pred sledovaním je vypnutá na týchto stránkach</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Zapnúť na všetkých stránkach</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Pomocou výnimiek môžete vypnúť ochranu pred sledovaním na vybraných stránkach.\n\nĎalšie informácie</string>
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Ochranu pred sledovaním môžete opätovne zapnúť v nastaveniach.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetria</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Údaje o používaní a technické údaje</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Zdieľa údaje o výkonnosti, využívaní funkcií, hardvérovej konfigurácii a prispôsobení prehliadača s Mozillou s cieľom urobiť %1$s lepším</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Hlásenie pádov</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Geolokačná služba Mozilly</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">Správa o kondícii aplikácie %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Zapnúť synchronizáciu</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prihlásiť sa</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Pre opätovné pripojenie sa prihláste</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Odstrániť účet</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions"><![CDATA[Ak chcete získať svoj QR kód, navštívte na svojom počítači <b>firefox.com/pair</b>.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Otvoriť fotoaparát</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Zrušiť</string>
 
@@ -218,8 +263,12 @@
     <string name="quick_action_bookmark">Pridať medzi záložky</string>
     <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
     <string name="quick_action_bookmark_edit">Upraviť záložku</string>
+    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
+    <string name="quick_action_read">Čítať</string>
     <!-- Button in the browser chrome to exit reader mode -->
     <string name="quick_action_read_close">Zavrieť</string>
+    <!-- Button in the browser chrome to open the current page in an external app -->
+    <string name="quick_action_open_app_link">Otvoriť v aplikácii</string>
     <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
     <string name="quick_action_read_appearance">Vzhľad</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
@@ -235,12 +284,26 @@
     <string name="library_downloads">Prevzaté súbory</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Záložky</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Záložky z počítača</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Ponuka záložiek</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Panel záložiek</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Ostatné záložky</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">História</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Zoznam na prečítanie</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Hľadať</string>
     <!-- Library Page Title -->
     <string name="library_title">Knižnica</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nastavenia</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Ponuka položky z histórie</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zavrieť</string>
 
@@ -253,10 +316,16 @@
     <string name="add_tab">Pridať kartu</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zavrieť kartu</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Ponuka otvorených kariet</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Zavrieť všetky karty</string>
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Zdieľať karty</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection">Uložiť do kolekcie</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Ponuka kariet</string>
     <!-- Tab menu item to share the tab -->
     <string name="tab_share">Zdieľať kartu</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
@@ -265,6 +334,8 @@
     <string name="current_session_save">Uložiť</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Zdieľať</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Obrázok terajšej relácie</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Uložiť do kolekcie</string>
     <!-- Text for the menu button to delete a collection -->
@@ -278,10 +349,18 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Vymazať históriu</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Naozaj chcete vymazať svoju históriu?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Vymazať</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Odstrániť</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Počet vybraných položiek: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Počet položiek na odstránenie: %1$d</string>
     <!-- Text for the header that groups the history for Today -->
     <string name="history_today">Dnes</string>
     <!-- Text for the header that groups the history the past week -->
@@ -289,16 +368,42 @@
     <!-- Text for the header that groups the history the past month -->
     <string name="history_this_month">Tento mesiac</string>
 
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Staršia</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Nemáte žiadnu históriu prehliadania</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Ospravedlňujeme sa. %1$s nedokáže načítať túto stránku.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Môžete sa pokúsiť túto kartu obnoviť alebo ju zavrieť.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Odoslať správu o zlyhaní Mozille</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Zavrieť kartu</string>
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Obnoviť kartu</string>
 
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Možnosti relácie</string>
+
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Zdieľať reláciu</string>
 
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Ponuka záložiek</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Úprava záložky</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Výber priečinku</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">Pridať priečinok</string>
+    <string name="bookmark_add_folder">Pridanie priečinku</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Záložka bola vytvorená.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Záložka bola uložená!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">UPRAVIŤ</string>
     <!-- Bookmark overflow menu edit button -->
@@ -315,28 +420,74 @@
     <string name="bookmark_menu_open_in_private_tab_button">Otvoriť na súkromnej karte</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Odstrániť</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Počet vybraných položiek: %1$d</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Upraviť záložku</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Upraviť priečinok</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Ak chcete vidieť synchronizované záložky, prihláste sa</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
     <string name="bookmark_folder_label">PRIEČINOK</string>
     <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">NÁZOV</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Pridanie priečinku</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Výber priečinku</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Priečinok musí mať názov</string>
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Neplatná URL adresa</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Nemáte žiadne záložky</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Bola odstránená záložka %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Odstraňovanie vybraných záložiek</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">SPÄŤ</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
     <string name="permissions_header">Povolenia</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Prejsť do nastavení</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Rýchle nastavenia</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Odporúčané</string>
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">Spravovať povolenia stránok</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Odstrániť povolenia</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Odstrániť povolenie</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Odstrániť povolenia pre všetky stránky</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofón</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Poloha</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Upozornenia</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Vždy sa spýtať</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Zablokované</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Povolené</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Zablokované Androidom</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Výnimky</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -347,11 +498,216 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolekcie</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Ponuka kolekcií</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">Nemáte žiadne kolekcie</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Vaše kolekcie budú zobrazené tu.</string>
 
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Výber kariet</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Výber kolekcie</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Pomenujte kolekciu</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Pridať novú kolekciu</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Vybrať všetky</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Zrušiť výber všetkých</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Vyberte karty na uloženie</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Počet vybraných kariet: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">Bola vybraná %d karta</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Karty boli uložené!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Karta bola uložená!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Zavrieť</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Uložiť</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Kolekcia %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Odoslať a zdieľať</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Zdieľať</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Zdieľať odkaz</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Odoslať do zariadenia</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Prihlásiť sa k službe Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Odoslať do všetkých zariadení</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Znovu sa pripojiť k synchronizácii</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Offline</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Pripojiť ďalšie zariadenie</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Ak chcete odoslať kartu, prihláste sa do Firefoxu na aspoň jednom ďalšom zariadení.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Rozumiem</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Kolekcia bola odstránená</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Kolekcia bola premenovaná</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Karta bola odstránená</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Karty boli odstránené</string>
+    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <string name="snackbar_deleted_undo">SPÄŤ</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Chcete aplikácii %1$s povoliť otvorenie %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">POVOLIŤ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ZAMIETNUŤ</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Naozaj chcete odstrániť kolekciu %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Odstrániť</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Zrušiť</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Bol spustený režim celej obrazovky</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Adresa bola skopírovaná</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">A tie vrabce z toho tŕnia, štrng brnk do tŕnia. A tie vrabce z toho tŕnia, štrng brnk do tŕnia. A tie vrabce z toho tŕnia, štrng brnk do tŕnia. A tie vrabce z toho tŕnia, štrng brnk do tŕnia.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Zväčší alebo zmenší veľkosť textu na webových stránkach</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Veľkosť písma</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Automatická veľkosť písma</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Veľkosť písma sa riadi vašimi nastaveniami systému. Ak chcete spravovať veľkosť písma, upravte svoje nastavenia.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Odstrániť údaje o prehliadaní</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Otvorené karty</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">Počet kariet: %d</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">História prehliadania a údaje stránok</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">Počet adries: %d</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">Kolekcie</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">Počet kolekcií: %d</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
+    <string name="preferences_delete_browsing_data_prompt_message">Chcete povoliť aplikácii %s odstrániť vaše údaje o prehliadaní?</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_cancel">Nepovoliť</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_allow">Povoliť</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Údaje o prehliadaní boli odstránené</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Víta vás %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Už máte účet?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Spoznajte %s</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Vyberte si tému vzhľadu</string>
+
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">Vyskúšajte tmavú tému vzhľadu, ktorá šetrí vašu batériu aj oči.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Využite %s naplno.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header">Na tomto telefóne ste prihlásení do iného Firefoxu.</string>
+    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Prihlásiť sa do Firefoxu</string>
+    <!-- text for the button to stay signed into your Firefox account. -->
+    <string name="onboarding_firefox_account_stay_signed_in">Zostať prihlásený</string>
+    <!-- text for the button to sign out of your Firefox account. -->
+    <string name="onboarding_firefox_account_sign_out">Odhlásiť sa</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Chráňte sa</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s blokuje sledovacie prvky reklám, ktoré vás sledujú na internete.
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Súkromné prehliadanie</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">Vždy, keď uvidíte túto ikonu %s, súkromné prehliadanie je len o ťuknutie ďalej.
+   </string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Vaše súkromie</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">%s vám dáva kontrolu nad tým, čo zdieľate
+        na internete a čo zdieľate s nami.
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Prečítajte si naše zásady ochrany súkromia</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Začať prehliadať</string>
+
+    <!-- Onboarding theme -->
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automatická</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Prispôsobí sa nastaveniu vášho zariadenia</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tmavá téma vzhľadu</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Svetlá téma vzhľadu</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Karty boli odoslané!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Karta bola odoslaná!</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Naskenovať kód</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Otvorte Firefox na svojom počítači a navštívte stránku <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Skenovanie je pripravené</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Prihlásiť sa pomocou fotoaparátu</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Použiť radšej e-mailovú adresu</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox ukončí synchronizáciu s týmto účtom, ale neodstráni žiadnu históriu prehliadania.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Odpojiť</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
