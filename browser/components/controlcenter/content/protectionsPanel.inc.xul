@@ -275,12 +275,12 @@
         </vbox>
         <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
           <vbox class="protections-popup-sendReportView-collection-section">
-            <label>&contentBlocking.breakageReportView.collection.url.label;</label>
-            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url"/>
+            <label control="protections-popup-sendReportView-collection-url">&contentBlocking.breakageReportView.collection.url.label;</label>
+            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url" aria-label="&contentBlocking.breakageReportView.collection.url.label;"/>
           </vbox>
           <vbox class="protections-popup-sendReportView-collection-section">
-            <label>&contentBlocking.breakageReportView2.collection.comments.label;</label>
-            <html:textarea id="protections-popup-sendReportView-collection-comments"/>
+            <label control="protections-popup-sendReportView-collection-comments">&contentBlocking.breakageReportView2.collection.comments.label;</label>
+            <html:textarea id="protections-popup-sendReportView-collection-comments" aria-label="&contentBlocking.breakageReportView2.collection.comments.label;"/>
           </vbox>
         </vbox>
         <vbox id="protections-popup-sendReportView-footer"
