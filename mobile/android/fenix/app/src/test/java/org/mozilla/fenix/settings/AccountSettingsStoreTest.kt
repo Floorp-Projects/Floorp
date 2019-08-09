@@ -4,12 +4,15 @@
 
 package org.mozilla.fenix.settings
 
+import android.util.Log
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.search.SearchState
@@ -18,47 +21,35 @@ import org.mozilla.fenix.settings.account.*
 class AccountSettingsStoreTest {
 
     @Test
-    fun onSyncFailed() {
+    fun syncFailed() = runBlocking {
         val initialState = AccountSettingsState()
         val store = AccountSettingsStore(initialState)
+        val duration = 1L
 
-        .onSyncNow()
-
-        assertEquals(ranSyncNow, true)
+        store.dispatch(AccountSettingsAction.SyncFailed(duration)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(LastSyncTime.Failed(duration), store.state.lastSyncedDate)
     }
 
     @Test
-    fun onSyncEnded() {
-        val store: AccountSettingsStore = mockk(relaxed = true)
+    fun syncEnded() = runBlocking {
+        val initialState = AccountSettingsState()
+        val store = AccountSettingsStore(initialState)
+        val duration = 1L
 
-        val interactor = AccountSettingsInteractor(
-            mockk(),
-            mockk(),
-            { true },
-            store
-        )
-
-        interactor.onChangeDeviceName("New Name") {}
-
-        verify { store.dispatch(AccountSettingsAction.UpdateDeviceName("New Name")) }
+        store.dispatch(AccountSettingsAction.SyncEnded(duration)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(LastSyncTime.Success(duration), store.state.lastSyncedDate)
     }
 
     @Test
-    fun onSignOut() {
-        val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns NavDestination("").apply { id = R.id.accountSettingsFragment }
+    fun signOut() = runBlocking {
+        val initialState = AccountSettingsState()
+        val store = AccountSettingsStore(initialState)
+        val deviceName = "testing"
 
-        val interactor = AccountSettingsInteractor(
-            navController,
-            mockk(),
-            mockk(),
-            mockk()
-        )
-
-        interactor.onSignOut()
-
-        verify {
-            navController.navigate(AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment())
-        }
+        store.dispatch(AccountSettingsAction.UpdateDeviceName(deviceName)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(deviceName, store.state.deviceName)
     }
 }
