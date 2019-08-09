@@ -118,29 +118,8 @@ bool CrashReporterHost::FinalizeCrashReport() {
 
   CrashReporter::AnnotationTable annotations;
 
-  nsAutoCString type;
-  // The gecko media plugin and normal plugin processes are lumped together
-  // as a historical artifact.
-  if (mProcessType == GeckoProcessType_GMPlugin) {
-    type.AssignLiteral("plugin");
-  } else if (mProcessType == GeckoProcessType_Content) {
-    type.AssignLiteral("content");
-  } else {
-    // This check will pick up some cases that will never happen (e.g. IPDL
-    // unit tests), but that's OK.
-    switch (mProcessType) {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
-  case GeckoProcessType_##enum_name:                                   \
-    type.AssignLiteral(string_name);                                   \
-    break;
-#include "mozilla/GeckoProcessTypes.h"
-#undef GECKO_PROCESS_TYPE
-      default:
-        NS_ERROR("unknown process type");
-        break;
-    }
-  }
-  annotations[CrashReporter::Annotation::ProcessType] = type;
+  annotations[CrashReporter::Annotation::ProcessType] =
+      XRE_ChildProcessTypeToAnnotation(mProcessType);
 
   char startTime[32];
   SprintfLiteral(startTime, "%lld", static_cast<long long>(mStartTime));

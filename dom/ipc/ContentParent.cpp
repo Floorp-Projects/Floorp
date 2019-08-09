@@ -1643,6 +1643,9 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
           dumpID = mCrashReporter->MinidumpID();
         }
         props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
+      } else {
+        CrashReporter::FinalizeOrphanedMinidump(OtherPid(),
+                                                GeckoProcessType_Content);
       }
     }
     nsAutoString cpId;
