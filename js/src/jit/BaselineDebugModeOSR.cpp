@@ -31,12 +31,6 @@ struct DebugModeOSREntry {
         pcOffset(uint32_t(-1)),
         frameKind(RetAddrEntry::Kind::Invalid) {}
 
-  DebugModeOSREntry(JSScript* script, uint32_t pcOffset)
-      : script(script),
-        oldBaselineScript(script->baselineScript()),
-        pcOffset(pcOffset),
-        frameKind(RetAddrEntry::Kind::Invalid) {}
-
   DebugModeOSREntry(JSScript* script, const RetAddrEntry& retAddrEntry)
       : script(script),
         oldBaselineScript(script->baselineScript()),
@@ -116,14 +110,6 @@ static bool CollectJitStackScripts(JSContext* cx,
           // invalidated and recompiled. See also CollectInterpreterStackScripts
           // for C++ interpreter frames.
           if (!entries.append(DebugModeOSREntry(script))) {
-            return false;
-          }
-        } else if (baselineFrame->hasOverridePc()) {
-          // If the frame is not settled on a pc with a RetAddrEntry,
-          // overridePc will contain an explicit bytecode offset. We can
-          // (and must) use that.
-          uint32_t offset = script->pcToOffset(baselineFrame->overridePc());
-          if (!entries.append(DebugModeOSREntry(script, offset))) {
             return false;
           }
         } else {
@@ -222,16 +208,6 @@ static void SpewPatchBaselineFrame(const uint8_t* oldReturnAddress,
           RetAddrEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
 }
 
-static void SpewPatchBaselineFrameFromExceptionHandler(
-    uint8_t* oldReturnAddress, uint8_t* newReturnAddress, JSScript* script,
-    jsbytecode* pc) {
-  JitSpew(JitSpew_BaselineDebugModeOSR,
-          "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from exception "
-          "handler at %s",
-          oldReturnAddress, newReturnAddress, script->filename(),
-          script->lineno(), script->column(), CodeName[(JSOp)*pc]);
-}
-
 static void PatchBaselineFramesForDebugMode(
     JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
     const ActivationIterator& activation, DebugModeOSREntryVector& entries,
@@ -244,18 +220,17 @@ static void PatchBaselineFramesForDebugMode(
   // script.
   //
   // Off to On:
-  //  A. From a "can call" IC stub.
+  //  A. From a non-prologue IC (fallback stub or "can call" stub).
   //  B. From a VM call.
   //  C. From inside the interrupt handler via the prologue stack check.
   //  D. From the warmup counter in the prologue.
-  //  E. From inside HandleExceptionBaseline
   //
   // On to Off:
   //  - All the ways above.
-  //  F. From the debug trap handler.
-  //  G. From the debug prologue.
-  //  H. From the debug epilogue.
-  //  I. From a JSOP_AFTERYIELD instruction.
+  //  E. From the debug trap handler.
+  //  F. From the debug prologue.
+  //  G. From the debug epilogue.
+  //  H. From a JSOP_AFTERYIELD instruction.
   //
   // In general, we patch the return address from VM calls and ICs to the
   // corresponding entry in the recompiled BaselineScript. For entries that are
@@ -341,12 +316,12 @@ static void PatchBaselineFramesForDebugMode(
           case RetAddrEntry::Kind::DebugEpilogue:
           case RetAddrEntry::Kind::DebugTrap:
           case RetAddrEntry::Kind::DebugAfterYield: {
-            // Cases F, G, H, I above.
+            // Cases E, F, G, H above.
             //
             // Resume in the Baseline Interpreter because these callVMs are not
             // present in the new BaselineScript if we recompiled without debug
             // instrumentation.
-            frame.baselineFrame()->switchFromJitToInterpreter(pc);
+            frame.baselineFrame()->switchFromJitToInterpreter(cx, pc);
             switch (kind) {
               case RetAddrEntry::Kind::DebugTrap:
                 // DebugTrap handling is different from the ones below because
@@ -371,40 +346,13 @@ static void PatchBaselineFramesForDebugMode(
                                    pc);
             break;
           }
-          case RetAddrEntry::Kind::Invalid: {
-            // Case E above.
-            //
-            // We are recompiling a frame with an override pc.
-            // This may occur from inside the exception handler,
-            // by way of an onExceptionUnwind invocation, on a pc
-            // without a RetAddrEntry.
-            //
-            // If profiling is off, patch the resume address to nullptr,
-            // to ensure the old address is not used anywhere.
-            // If profiling is on, JSJitProfilingFrameIterator requires a
-            // valid return address.
-            MOZ_ASSERT(frame.baselineFrame()->overridePc() == pc);
-            uint8_t* retAddr;
-            if (cx->runtime()->geckoProfiler().enabled()) {
-              // Won't actually jump to this address so we can ignore the
-              // register state in the slot info.
-              PCMappingSlotInfo unused;
-              retAddr = bl->nativeCodeForPC(script, pc, &unused);
-            } else {
-              retAddr = nullptr;
-            }
-            SpewPatchBaselineFrameFromExceptionHandler(prev->returnAddress(),
-                                                       retAddr, script, pc);
-            break;
-          }
           case RetAddrEntry::Kind::PrologueIC:
           case RetAddrEntry::Kind::NonOpCallVM:
+          case RetAddrEntry::Kind::Invalid:
             // These cannot trigger BaselineDebugModeOSR.
             MOZ_CRASH("Unexpected RetAddrEntry Kind");
         }
 
-        DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(
-            cx, prev->returnAddress(), retAddr);
         prev->setReturnAddress(retAddr);
         entryIndex++;
         break;
@@ -608,17 +556,4 @@ bool jit::RecompileOnStackBaselineScriptsForDebugMode(
   MOZ_ASSERT(processed == entries.length());
 
   return true;
-}
-
-/* static */
-void DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(JSContext* cx,
-                                                            uint8_t* oldAddr,
-                                                            uint8_t* newAddr) {
-  DebugModeOSRVolatileJitFrameIter* iter;
-  for (iter = cx->liveVolatileJitFrameIter_; iter; iter = iter->prev) {
-    if (iter->isWasm()) {
-      continue;
-    }
-    iter->asJSJit().exchangeReturnAddressIfMatch(oldAddr, newAddr);
-  }
 }
