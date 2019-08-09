@@ -34,11 +34,7 @@ registerLayout('fallback-sab', class {
   *layout(children, edges, constraints, styleMap) {
     const childFragments = yield children.map(child => child.layoutNextFragment());
 
-    if (typeof SharedArrayBuffer !== 'undefined') {
-      return {autoBlockSize: 0, childFragments, data: {sab: new SharedArrayBuffer(4) }};
-    } else {
-      throw Error();
-    }
+    return {autoBlockSize: 0, childFragments, data: {sab: new SharedArrayBuffer(4) }};
   }
 });
 </script>

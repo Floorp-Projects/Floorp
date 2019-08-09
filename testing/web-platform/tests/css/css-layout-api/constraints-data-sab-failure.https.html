@@ -35,14 +35,9 @@ registerLayout('parent', class {
     let childFragment = null;
 
     try {
-      // We need SABs to be enabled to properly run this test.
-      if (typeof SharedArrayBuffer !== 'undefined') {
-        childFragment = yield child.layoutNextFragment({
-          data: { sab: new SharedArrayBuffer(4) }
-        });
-      } else {
-        throw Error();
-      }
+      childFragment = yield child.layoutNextFragment({
+        data: { sab: new SharedArrayBuffer(4) }
+      });
     } catch(e) {
       // Success! The structured cloning algorithm should have thrown an error.
       childFragment = yield child.layoutNextFragment({});
