@@ -4438,30 +4438,6 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
   }
 }
 
-void Zone::addSizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf, size_t* typePool, size_t* regexpZone,
-    size_t* jitZone, size_t* baselineStubsOptimized, size_t* cachedCFG,
-    size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
-    size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
-    size_t* compartmentsPrivateData) {
-  *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
-  *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
-  if (jitZone_) {
-    jitZone_->addSizeOfIncludingThis(mallocSizeOf, jitZone,
-                                     baselineStubsOptimized, cachedCFG);
-  }
-  *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
-  *shapeCaches += baseShapes().sizeOfExcludingThis(mallocSizeOf) +
-                  initialShapes().sizeOfExcludingThis(mallocSizeOf);
-  *atomsMarkBitmaps += markedAtoms().sizeOfExcludingThis(mallocSizeOf);
-
-  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
-    comp->addSizeOfIncludingThis(mallocSizeOf, compartmentObjects,
-                                 crossCompartmentWrappersTables,
-                                 compartmentsPrivateData);
-  }
-}
-
 TypeZone::TypeZone(Zone* zone)
     : zone_(zone),
       typeLifoAlloc_(zone, (size_t)TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),

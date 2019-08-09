@@ -2987,7 +2987,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::COMPACT_UPDATE);
   MovingTracer trc(rt);
 
-  Compartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
+  Zone::fixupAllCrossCompartmentWrappersAfterMovingGC(&trc);
 
   rt->geckoProfiler().fixupStringsMapAfterMovingGC();
 
@@ -5013,8 +5013,8 @@ static void DropStringWrappers(JSRuntime* rt) {
    * us to sweep the wrappers in all compartments every time we sweep a
    * compartment group.
    */
-  for (CompartmentsIter c(rt); !c.done(); c.next()) {
-    c->dropStringWrappersOnGC();
+  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    zone->dropStringWrappersOnGC();
   }
 }
 
@@ -5583,8 +5583,8 @@ static void UpdateAtomsBitmap(JSRuntime* runtime) {
 static void SweepCCWrappers(GCParallelTask* task) {
   AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
-  for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next()) {
-    c->sweepCrossCompartmentWrappers();
+  for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
+    zone->sweepAllCrossCompartmentWrappers();
   }
 }
 
@@ -8636,6 +8636,7 @@ void js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt) {
     zone->checkUniqueIdTableAfterMovingGC();
     zone->checkInitialShapesTableAfterMovingGC();
     zone->checkBaseShapeTableAfterMovingGC();
+    zone->checkAllCrossCompartmentWrappersAfterMovingGC();
 
     JS::AutoCheckCannotGC nogc;
     for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
@@ -8646,8 +8647,6 @@ void js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt) {
   }
 
   for (CompartmentsIter c(rt); !c.done(); c.next()) {
-    c->checkWrapperMapAfterMovingGC();
-
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
       r->checkObjectGroupTablesAfterMovingGC();
       r->dtoaCache.checkCacheAfterMovingGC();
