@@ -196,10 +196,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
 toolkit/library/target-shared: widget/gtk/mozgtk/gtk3/target-shared
 endif
-ifdef MOZ_LDAP_XPCOM
-ldap/target: security/target-shared mozglue/build/target-shared
-toolkit/library/target-shared: ldap/target
-endif
 endif
 # Most things are built during compile (target/host), but some things happen during export
 # Those need to depend on config/export for system wrappers.
