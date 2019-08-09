@@ -1158,6 +1158,10 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--components', default=None,
                      help='Comma-separated list of Bugzilla components.'
                           ' eg. Testing::General,Core::WebVR')
+    @CommandArgument('--flavor',
+                     help='Limit results to tests of the specified flavor (eg. "xpcshell").')
+    @CommandArgument('--subsuite',
+                     help='Limit results to tests of the specified subsuite (eg. "devtools").')
     @CommandArgument('paths', nargs=argparse.REMAINDER,
                      help='File system paths of interest.')
     @CommandArgument('--show-manifests', action='store_true',
@@ -1173,7 +1177,8 @@ class TestInfoCommand(MachCommandBase):
                           'for filter-values.')
     @CommandArgument('--output-file',
                      help='Path to report file.')
-    def test_report(self, components, paths, show_manifests, show_tests,
+    def test_report(self, components, flavor, subsuite, paths,
+                    show_manifests, show_tests,
                     filter_values, filter_keys, output_file):
         import mozpack.path as mozpath
         from moztest.resolve import TestResolver
@@ -1208,7 +1213,8 @@ class TestInfoCommand(MachCommandBase):
 
         print("Finding tests...")
         resolver = self._spawn(TestResolver)
-        tests = list(resolver.resolve_tests(paths=paths))
+        tests = list(resolver.resolve_tests(paths=paths, flavor=flavor,
+                                            subsuite=subsuite))
         if show_manifests:
             by_component['manifests'] = {}
             manifest_paths = set()
