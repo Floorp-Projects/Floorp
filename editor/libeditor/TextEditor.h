@@ -477,6 +477,15 @@ class TextEditor : public EditorBase,
                                     int32_t& aCaretStyle);
 
   /**
+   * MaybeDoAutoPasswordMasking() may mask password if we're doing auto-masking.
+   */
+  void MaybeDoAutoPasswordMasking() {
+    if (IsPasswordEditor() && IsMaskingPassword()) {
+      MaskAllCharacters();
+    }
+  }
+
+  /**
    * SetUnmaskRange() is available only when the instance is a password
    * editor.  This just updates unmask range.  I.e., caller needs to
    * guarantee to update the layout.

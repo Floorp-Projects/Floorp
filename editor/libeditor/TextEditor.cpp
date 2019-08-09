@@ -1980,10 +1980,7 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext);
 
-  // XXX This WillDoAction() usage is hacky.  If it returns as handled,
-  //     this method cannot work as expected.  So, this should have specific
-  //     sub-action rather than using eInsertElement.
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertQuotedText);
   bool cancel, handled;
   rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1993,11 +1990,9 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
     return NS_OK;  // Rules canceled the operation.
   }
   MOZ_ASSERT(!handled, "WillDoAction() shouldn't handle in this case");
-  if (!handled) {
-    rv = InsertTextAsSubAction(quotedStuff);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  rv = InsertTextAsSubAction(quotedStuff);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   // XXX Why don't we call TextEditRules::DidDoAction()?
   return NS_OK;

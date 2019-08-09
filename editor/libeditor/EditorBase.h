@@ -693,6 +693,7 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eCreateOrChangeDefinitionList:
         case EditSubAction::eInsertElement:
         case EditSubAction::eInsertQuotation:
+        case EditSubAction::eInsertQuotedText:
         case EditSubAction::ePasteHTMLContent:
         case EditSubAction::eInsertHTMLSource:
         case EditSubAction::eSetPositionToAbsolute:
@@ -1465,6 +1466,13 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
+
+  /**
+   * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
+   * for empty editor if there is.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureNoPaddingBRElementForEmptyEditor();
 
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
