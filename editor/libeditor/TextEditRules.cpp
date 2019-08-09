@@ -329,10 +329,22 @@ nsresult TextEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eComputeTextToOutput:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
                             aCancel, aHandled);
+    case EditSubAction::eInsertQuotedText: {
+      CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+      // XXX Do we need to support paste-as-quotation in password editor (and
+      //     also in single line editor)?
+      TextEditorRef().MaybeDoAutoPasswordMasking();
+
+      nsresult rv = MOZ_KnownLive(TextEditorRef())
+                        .EnsureNoPaddingBRElementForEmptyEditor();
+      NS_WARNING_ASSERTION(NS_FAILED(rv),
+                           "Failed to remove padding <br> element");
+      return rv;
+    }
     case EditSubAction::eInsertElement:
-      // i had thought this would be html rules only.  but we put pre elements
-      // into plaintext mail when doing quoting for reply!  doh!
-      return WillInsert(aCancel);
+      MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
+      return NS_ERROR_UNEXPECTED;
     default:
       return NS_ERROR_FAILURE;
   }
@@ -372,45 +384,6 @@ bool TextEditRules::DocumentIsEmpty() const {
   return retVal;
 }
 
-nsresult TextEditRules::WillInsert(bool* aCancel) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (IsReadonly() || IsDisabled()) {
-    if (aCancel) {
-      *aCancel = true;
-    }
-    return NS_OK;
-  }
-
-  // initialize out param
-  if (aCancel) {
-    *aCancel = false;
-  }
-
-  if (IsPasswordEditor() && IsMaskingPassword()) {
-    TextEditorRef().MaskAllCharacters();
-  }
-
-  // check for the magic content node and delete it if it exists
-  if (!TextEditorRef().mPaddingBRElementForEmptyEditor) {
-    return NS_OK;
-  }
-
-  // A mutation event listener may recreate padding <br> element for empty
-  // editor again during the call of DeleteNodeWithTransaction().  So, move
-  // it first.
-  RefPtr<HTMLBRElement> paddingBRElement(
-      std::move(TextEditorRef().mPaddingBRElementForEmptyEditor));
-  DebugOnly<nsresult> rv = MOZ_KnownLive(TextEditorRef())
-                               .DeleteNodeWithTransaction(*paddingBRElement);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Failed to remove the padding <br> element");
-  return NS_OK;
-}
-
 EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(!IsSingleLineEditor());
@@ -443,7 +416,7 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
     }
   }
 
-  rv = WillInsert();
+  rv = MOZ_KnownLive(TextEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
@@ -745,7 +718,12 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     }
   }
 
-  rv = WillInsert(aCancel);
+  // XXX Why do we set `aCancel` here, but ignore it?
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+  TextEditorRef().MaybeDoAutoPasswordMasking();
+
+  rv = MOZ_KnownLive(TextEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -877,6 +855,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   MOZ_ASSERT(aString);
   MOZ_ASSERT(aString->FindChar(static_cast<char16_t>('\r')) == kNotFound);
 
+  // XXX If we're setting value, shouldn't we keep setting the new value here?
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
   *aHandled = false;
@@ -891,7 +870,10 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     return NS_OK;
   }
 
-  nsresult rv = WillInsert(aCancel);
+  TextEditorRef().MaybeDoAutoPasswordMasking();
+
+  nsresult rv =
+      MOZ_KnownLive(TextEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -908,8 +890,8 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     // If we're a single line text editor, i.e., <input>, there is only padding
     // <br> element.  Otherwise, there should be only one text node.  But note
     // that even if there is a padding <br> element for empty editor, it's
-    // already been removed by WillInsert().  So, at here, there should be only
-    // one text node or no children.
+    // already been removed by `EnsureNoPaddingBRElementForEmptyEditor()`.  So,
+    // at here, there should be only one text node or no children.
     if (firstChild &&
         (!EditorBase::IsTextNode(firstChild) || firstChild->GetNextSibling())) {
       return NS_OK;

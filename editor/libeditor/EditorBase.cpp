@@ -4033,6 +4033,25 @@ EditorDOMPoint EditorBase::JoinNodesDeepWithTransaction(
   return ret;
 }
 
+nsresult EditorBase::EnsureNoPaddingBRElementForEmptyEditor() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mPaddingBRElementForEmptyEditor) {
+    return NS_OK;
+  }
+
+  // If we're an HTML editor, a mutation event listener may recreate padding
+  // <br> element for empty editor again during the call of
+  // DeleteNodeWithTransaction().  So, move it first.
+  RefPtr<HTMLBRElement> paddingBRElement(
+      std::move(mPaddingBRElementForEmptyEditor));
+  nsresult rv = DeleteNodeWithTransaction(*paddingBRElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  return rv;
+}
+
 void EditorBase::BeginUpdateViewBatch() {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mUpdateCount >= 0, "bad state");

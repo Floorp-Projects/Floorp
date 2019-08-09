@@ -185,16 +185,6 @@ class TextEditRules {
                                     int32_t aMaxLength);
 
   /**
-   * Called before inserting something into the editor.
-   * This method may removes mBougsNode if there is.  Therefore, this method
-   * might cause destroying the editor.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   *                            This can be nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
-
-  /**
    * Called before deleting selected content.
    * This method may actually remove the selected content with
    * DeleteSelectionWithTransaction().  So, this might cause destroying the
