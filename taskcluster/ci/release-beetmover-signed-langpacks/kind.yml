@@ -10,12 +10,16 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - release-push-langpacks
+    - build-signing
+    - nightly-l10n-signing
 
 only-for-attributes:
-    # - nightly
-    # - shippable
-    - no_jobs  # Temporarily stop beetmoving with this patch to ease diffs
+    - nightly
+    - shippable
+
+only-for-build-platforms:
+    - linux64-shippable/opt
+    - linux64-devedition-nightly/opt
 
 job-template:
     description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
@@ -26,4 +30,7 @@ job-template:
     run-on-projects: []
     shipping-phase: promote
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/firefox_candidates.yml
+        artifact_map:
+            by-release-type:
+                beta|release.*|esr.*: taskcluster/taskgraph/manifests/firefox_candidates.yml
+                default: taskcluster/taskgraph/manifests/firefox_nightly.yml
