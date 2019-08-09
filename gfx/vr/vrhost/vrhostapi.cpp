@@ -177,12 +177,36 @@ void CreateVRWindow(char* firefoxFolderPath, char* firefoxProfilePath,
 
 // Sends a message to the VR window to close.
 void CloseVRWindow(uint32_t nVRWindowID, bool waitForTerminate) {
-  ::SendMessage(VRWindowManager::GetManager()->GetHWND(nVRWindowID), WM_CLOSE,
-                0, 0);
+  HWND hwnd = VRWindowManager::GetManager()->GetHWND(nVRWindowID);
+  if (hwnd != nullptr) {
+    ::SendMessage(hwnd, WM_CLOSE, 0, 0);
 
-  if (waitForTerminate) {
-    // Wait for Firefox main process to exit
-    ::WaitForSingleObject(VRWindowManager::GetManager()->GetProc(nVRWindowID),
-                          INFINITE);
+    if (waitForTerminate) {
+      // Wait for Firefox main process to exit
+      ::WaitForSingleObject(VRWindowManager::GetManager()->GetProc(nVRWindowID),
+                            INFINITE);
+    }
+  }
+}
+
+// Forwards Win32 UI window messages to the Firefox widget/window associated
+// with nVRWindowID. Note that not all message type is supported (only those
+// allowed in the switch block below).
+void SendUIMessageToVRWindow(uint32_t nVRWindowID, uint32_t msg,
+                             uint64_t wparam, uint64_t lparam) {
+  HWND hwnd = VRWindowManager::GetManager()->GetHWND(nVRWindowID);
+  if (hwnd != nullptr) {
+    switch (msg) {
+      case WM_MOUSEMOVE:
+      case WM_LBUTTONDOWN:
+      case WM_LBUTTONUP:
+      case WM_MOUSEWHEEL:
+      case WM_CHAR:
+        ::PostMessage(hwnd, msg, wparam, lparam);
+        break;
+
+      default:
+        break;
+    }
   }
 }
