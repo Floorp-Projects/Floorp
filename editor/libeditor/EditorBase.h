@@ -100,6 +100,7 @@ class DataTransfer;
 class DragEvent;
 class Element;
 class EventTarget;
+class HTMLBRElement;
 }  // namespace dom
 
 namespace widget {
@@ -2296,6 +2297,11 @@ class EditorBase : public nsIEditor,
   RefPtr<TransactionManager> mTransactionManager;
   // Cached root node.
   RefPtr<Element> mRootElement;
+
+  // mPaddingBRElementForEmptyEditor should be used for placing caret
+  // at proper position when editor is empty.
+  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
+
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   RefPtr<EditorEventListener> mEventListener;
