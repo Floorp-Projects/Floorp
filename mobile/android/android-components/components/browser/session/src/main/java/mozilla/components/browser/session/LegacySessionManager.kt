@@ -22,6 +22,8 @@ class LegacySessionManager(
     val engine: Engine,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
+    // It's important that any access to `values` is synchronized;
+    @GuardedBy("values")
     private val values = mutableListOf<Session>()
 
     @GuardedBy("values")
@@ -522,7 +524,9 @@ class LegacySessionManager(
      * Finds and returns the session with the given id. Returns null if no matching session could be
      * found.
      */
-    fun findSessionById(id: String): Session? = values.find { session -> session.id == id }
+    fun findSessionById(id: String): Session? = synchronized(values) {
+        values.find { session -> session.id == id }
+    }
 
     /**
      * Informs this [SessionManager] that the OS is in low memory condition so it
