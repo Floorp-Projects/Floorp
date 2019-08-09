@@ -18,6 +18,24 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "ContentProcessConnector",
+  "devtools/server/connectors/content-process-connector",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "FrameConnector",
+  "devtools/server/connectors/frame-connector",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "WorkerConnector",
+  "devtools/server/connectors/worker-connector",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "Authentication",
   "devtools/shared/security/auth"
 );
@@ -36,12 +54,6 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "WorkerThreadWorkerDebuggerTransport",
-  "devtools/shared/transport/worker-transport",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "MainThreadWorkerDebuggerTransport",
   "devtools/shared/transport/worker-transport",
   true
 );
@@ -80,8 +92,6 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 var DebuggerServer = {
   _listeners: [],
   _initialized: false,
-  // Flag to check if the content process server startup script was already loaded.
-  _contentProcessServerStartupScriptLoaded: false,
   // Map of global actor names to actor constructors.
   globalActorFactories: {},
   // Map of target-scoped actor names to actor constructors.
@@ -340,244 +350,25 @@ var DebuggerServer = {
   },
 
   /**
-   * Start a DevTools server in a content process (representing the entire process, not
-   * just a single frame) and add it as a child server for an active connection.
+   * See ContentProcessConnector.startServer.
    */
   connectToContentProcess(connection, mm, onDestroy) {
-    return new Promise(resolve => {
-      const prefix = connection.allocID("content-process");
-      let actor, childTransport;
-
-      mm.addMessageListener("debug:content-process-actor", function listener(
-        msg
-      ) {
-        // Arbitrarily choose the first content process to reply
-        // XXX: This code needs to be updated if we use more than one content process
-        mm.removeMessageListener("debug:content-process-actor", listener);
-
-        // Pipe Debugger message from/to parent/child via the message manager
-        childTransport = new ChildDebuggerTransport(mm, prefix);
-        childTransport.hooks = {
-          onPacket: connection.send.bind(connection),
-          onClosed() {},
-        };
-        childTransport.ready();
-
-        connection.setForwarding(prefix, childTransport);
-
-        dumpn(`Start forwarding for process with prefix ${prefix}`);
-
-        actor = msg.json.actor;
-
-        resolve(actor);
-      });
-
-      // Load the content process server startup script only once.
-      if (!this._contentProcessServerStartupScriptLoaded) {
-        // Load the process script that will receive the debug:init-content-server message
-        Services.ppmm.loadProcessScript(
-          CONTENT_PROCESS_SERVER_STARTUP_SCRIPT,
-          true
-        );
-        this._contentProcessServerStartupScriptLoaded = true;
-      }
-
-      // Send a message to the content process server startup script to forward it the
-      // prefix.
-      mm.sendAsyncMessage("debug:init-content-server", {
-        prefix: prefix,
-      });
-
-      function onClose() {
-        Services.obs.removeObserver(
-          onMessageManagerClose,
-          "message-manager-close"
-        );
-        EventEmitter.off(connection, "closed", onClose);
-        if (childTransport) {
-          // If we have a child transport, the actor has already
-          // been created. We need to stop using this message manager.
-          childTransport.close();
-          childTransport = null;
-          connection.cancelForwarding(prefix);
-
-          // ... and notify the child process to clean the target-scoped actors.
-          try {
-            mm.sendAsyncMessage("debug:content-process-destroy");
-          } catch (e) {
-            // Nothing to do
-          }
-        }
-
-        if (onDestroy) {
-          onDestroy(mm);
-        }
-      }
-
-      const onMessageManagerClose = DevToolsUtils.makeInfallible(
-        (subject, topic, data) => {
-          if (subject == mm) {
-            onClose();
-            connection.send({ from: actor.actor, type: "tabDetached" });
-          }
-        }
-      );
-      Services.obs.addObserver(onMessageManagerClose, "message-manager-close");
-
-      EventEmitter.on(connection, "closed", onClose);
-    });
+    return ContentProcessConnector.startServer(connection, mm, onDestroy);
   },
 
   /**
-   * Start a DevTools server in a worker and add it as a child server for an active
-   * connection.
+   * See WorkerConnector.startServer.
    */
   connectToWorker(connection, dbg, id, options) {
-    return new Promise((resolve, reject) => {
-      // Step 1: Ensure the worker debugger is initialized.
-      if (!dbg.isInitialized) {
-        dbg.initialize("resource://devtools/server/startup/worker.js");
+    return WorkerConnector.startServer(connection, dbg, id, options);
+  },
 
-        // Create a listener for rpc requests from the worker debugger. Only do
-        // this once, when the worker debugger is first initialized, rather than
-        // for each connection.
-        const listener = {
-          onClose: () => {
-            dbg.removeListener(listener);
-          },
-
-          onMessage: message => {
-            message = JSON.parse(message);
-            if (message.type !== "rpc") {
-              if (message.type == "attached") {
-                // The thread actor has finished attaching and can hit installed
-                // breakpoints. Allow content to begin executing in the worker.
-                dbg.setDebuggerReady(true);
-              }
-              return;
-            }
-
-            Promise.resolve()
-              .then(() => {
-                const method = {
-                  fetch: DevToolsUtils.fetch,
-                }[message.method];
-                if (!method) {
-                  throw Error("Unknown method: " + message.method);
-                }
-
-                return method.apply(undefined, message.params);
-              })
-              .then(
-                value => {
-                  dbg.postMessage(
-                    JSON.stringify({
-                      type: "rpc",
-                      result: value,
-                      error: null,
-                      id: message.id,
-                    })
-                  );
-                },
-                reason => {
-                  dbg.postMessage(
-                    JSON.stringify({
-                      type: "rpc",
-                      result: null,
-                      error: reason,
-                      id: message.id,
-                    })
-                  );
-                }
-              );
-          },
-        };
-
-        dbg.addListener(listener);
-      }
-
-      // Step 2: Send a connect request to the worker debugger.
-      dbg.postMessage(
-        JSON.stringify({
-          type: "connect",
-          id,
-          options,
-        })
-      );
-
-      // Steps 3-5 are performed on the worker thread (see worker.js).
-
-      // Step 6: Wait for a connection response from the worker debugger.
-      const listener = {
-        onClose: () => {
-          dbg.removeListener(listener);
-
-          reject("closed");
-        },
-
-        onMessage: message => {
-          message = JSON.parse(message);
-          if (message.type !== "connected" || message.id !== id) {
-            return;
-          }
-
-          // The initial connection message has been received, don't
-          // need to listen any longer
-          dbg.removeListener(listener);
-
-          // Step 7: Create a transport for the connection to the worker.
-          const transport = new MainThreadWorkerDebuggerTransport(dbg, id);
-          transport.ready();
-          transport.hooks = {
-            onClosed: () => {
-              if (!dbg.isClosed) {
-                // If the worker happens to be shutting down while we are trying
-                // to close the connection, there is a small interval during
-                // which no more runnables can be dispatched to the worker, but
-                // the worker debugger has not yet been closed. In that case,
-                // the call to postMessage below will fail. The onClosed hook on
-                // DebuggerTransport is not supposed to throw exceptions, so we
-                // need to make sure to catch these early.
-                try {
-                  dbg.postMessage(
-                    JSON.stringify({
-                      type: "disconnect",
-                      id,
-                    })
-                  );
-                } catch (e) {
-                  // We can safely ignore these exceptions. The only time the
-                  // call to postMessage can fail is if the worker is either
-                  // shutting down, or has finished shutting down. In both
-                  // cases, there is nothing to clean up, so we don't care
-                  // whether this message arrives or not.
-                }
-              }
-
-              connection.cancelForwarding(id);
-            },
-
-            onPacket: packet => {
-              // Ensure that any packets received from the server on the worker
-              // thread are forwarded to the client on the main thread, as if
-              // they had been sent by the server on the main thread.
-              connection.send(packet);
-            },
-          };
-
-          // Ensure that any packets received from the client on the main thread
-          // to actors on the worker thread are forwarded to the server on the
-          // worker thread.
-          connection.setForwarding(id, transport);
-
-          resolve({
-            threadActor: message.threadActor,
-            consoleActor: message.consoleActor,
-            transport: transport,
-          });
-        },
-      };
-      dbg.addListener(listener);
+  /**
+   * See FrameConnector.startServer.
+   */
+  connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
+    return FrameConnector.startServer(connection, frame, onDestroy, {
+      addonId,
     });
   },
 
@@ -651,285 +442,6 @@ var DebuggerServer = {
    * Live list of all currenctly attached child's message managers.
    */
   _childMessageManagers: new Set(),
-
-  /**
-   * Start a DevTools server in a remote frame's process and add it as a child server for
-   * an active connection.
-   *
-   * @param object connection
-   *        The debugger server connection to use.
-   * @param Element frame
-   *        The frame element with remote content to connect to.
-   * @param function [onDestroy]
-   *        Optional function to invoke when the child process closes or the connection
-   *        shuts down. (Need to forget about the related target actor.)
-   * @return object
-   *         A promise object that is resolved once the connection is established.
-   */
-  connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
-    return new Promise(resolve => {
-      // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
-      // or else fallback to asking the frameLoader itself.
-      let mm = frame.messageManager || frame.frameLoader.messageManager;
-      mm.loadFrameScript("resource://devtools/server/startup/frame.js", false);
-
-      const trackMessageManager = () => {
-        frame.addEventListener("DevTools:BrowserSwap", onBrowserSwap);
-        mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
-        mm.addMessageListener(
-          "debug:spawn-actor-in-parent",
-          onSpawnActorInParent
-        );
-        if (!actor) {
-          mm.addMessageListener("debug:actor", onActorCreated);
-        }
-        DebuggerServer._childMessageManagers.add(mm);
-      };
-
-      const untrackMessageManager = () => {
-        frame.removeEventListener("DevTools:BrowserSwap", onBrowserSwap);
-        mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
-        mm.removeMessageListener(
-          "debug:spawn-actor-in-parent",
-          onSpawnActorInParent
-        );
-        if (!actor) {
-          mm.removeMessageListener("debug:actor", onActorCreated);
-        }
-        DebuggerServer._childMessageManagers.delete(mm);
-      };
-
-      let actor, childTransport;
-      const prefix = connection.allocID("child");
-      // Compute the same prefix that's used by DebuggerServerConnection
-      const connPrefix = prefix + "/";
-
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      const parentModules = [];
-      const onSetupInParent = function(msg) {
-        // We may have multiple connectToFrame instance running for the same frame and
-        // need to filter the messages.
-        if (msg.json.prefix != connPrefix) {
-          return false;
-        }
-
-        const { module, setupParent } = msg.json;
-        let m;
-
-        try {
-          m = require(module);
-
-          if (!(setupParent in m)) {
-            dumpn(`ERROR: module '${module}' does not export '${setupParent}'`);
-            return false;
-          }
-
-          parentModules.push(m[setupParent]({ mm, prefix: connPrefix }));
-
-          return true;
-        } catch (e) {
-          const errorMessage =
-            "Exception during actor module setup running in the parent process: ";
-          DevToolsUtils.reportException(errorMessage + e);
-          dumpn(
-            `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-              `setupParent: '${setupParent}'\n${DevToolsUtils.safeErrorString(
-                e
-              )}`
-          );
-          return false;
-        }
-      };
-
-      const parentActors = [];
-      const onSpawnActorInParent = function(msg) {
-        // We may have multiple connectToFrame instance running for the same tab
-        // and need to filter the messages.
-        if (msg.json.prefix != connPrefix) {
-          return;
-        }
-
-        const { module, constructor, args, spawnedByActorID } = msg.json;
-        let m;
-
-        try {
-          m = require(module);
-
-          if (!(constructor in m)) {
-            dump(`ERROR: module '${module}' does not export '${constructor}'`);
-            return;
-          }
-
-          const Constructor = m[constructor];
-          // Bind the actor to parent process connection so that these actors
-          // directly communicates with the client as regular actors instanciated from
-          // parent process
-          const instance = new Constructor(connection, ...args, mm);
-          instance.conn = connection;
-          instance.parentID = spawnedByActorID;
-
-          // Manually set the actor ID in order to insert parent actorID as prefix
-          // in order to help identifying actor hiearchy via actor IDs.
-          // Remove `/` as it may confuse message forwarding between processes.
-          const contentPrefix = spawnedByActorID
-            .replace(connection.prefix, "")
-            .replace("/", "-");
-          instance.actorID = connection.allocID(
-            contentPrefix + "/" + instance.typeName
-          );
-          connection.addActor(instance);
-
-          mm.sendAsyncMessage("debug:spawn-actor-in-parent:actor", {
-            prefix: connPrefix,
-            actorID: instance.actorID,
-          });
-
-          parentActors.push(instance);
-        } catch (e) {
-          const errorMessage =
-            "Exception during actor module setup running in the parent process: ";
-          DevToolsUtils.reportException(errorMessage + e + "\n" + e.stack);
-          dumpn(
-            `ERROR: ${errorMessage}\n\t module: '${module}'\n\t ` +
-              `constructor: '${constructor}'\n${DevToolsUtils.safeErrorString(
-                e
-              )}`
-          );
-        }
-      };
-
-      const onActorCreated = DevToolsUtils.makeInfallible(function(msg) {
-        if (msg.json.prefix != prefix) {
-          return;
-        }
-        mm.removeMessageListener("debug:actor", onActorCreated);
-
-        // Pipe Debugger message from/to parent/child via the message manager
-        childTransport = new ChildDebuggerTransport(mm, prefix);
-        childTransport.hooks = {
-          // Pipe all the messages from content process actors back to the client
-          // through the parent process connection.
-          onPacket: connection.send.bind(connection),
-          onClosed() {},
-        };
-        childTransport.ready();
-
-        connection.setForwarding(prefix, childTransport);
-
-        dumpn(`Start forwarding for frame with prefix ${prefix}`);
-
-        actor = msg.json.actor;
-        resolve(actor);
-      }).bind(this);
-
-      // Listen for browser frame swap
-      const onBrowserSwap = ({ detail: newFrame }) => {
-        // Remove listeners from old frame and mm
-        untrackMessageManager();
-        // Update frame and mm to point to the new browser frame
-        frame = newFrame;
-        // Get messageManager from XUL browser (which might be a specialized tunnel for
-        // RDM) or else fallback to asking the frameLoader itself.
-        mm = frame.messageManager || frame.frameLoader.messageManager;
-        // Add listeners to new frame and mm
-        trackMessageManager();
-
-        // provides hook to actor modules that need to exchange messages
-        // between e10s parent and child processes
-        parentModules.forEach(mod => {
-          if (mod.onBrowserSwap) {
-            mod.onBrowserSwap(mm);
-          }
-        });
-
-        // Also notify actors spawned in the parent process about the new message manager.
-        parentActors.forEach(parentActor => {
-          if (parentActor.onBrowserSwap) {
-            parentActor.onBrowserSwap(mm);
-          }
-        });
-
-        if (childTransport) {
-          childTransport.swapBrowser(mm);
-        }
-      };
-
-      const destroy = DevToolsUtils.makeInfallible(function() {
-        EventEmitter.off(connection, "closed", destroy);
-        Services.obs.removeObserver(
-          onMessageManagerClose,
-          "message-manager-close"
-        );
-
-        // provides hook to actor modules that need to exchange messages
-        // between e10s parent and child processes
-        parentModules.forEach(mod => {
-          if (mod.onDisconnected) {
-            mod.onDisconnected();
-          }
-        });
-        // TODO: Remove this deprecated path once it's no longer needed by add-ons.
-        DebuggerServer.emit("disconnected-from-child:" + connPrefix, {
-          mm,
-          prefix: connPrefix,
-        });
-
-        if (childTransport) {
-          // If we have a child transport, the actor has already
-          // been created. We need to stop using this message manager.
-          childTransport.close();
-          childTransport = null;
-          connection.cancelForwarding(prefix);
-
-          // ... and notify the child process to clean the target-scoped actors.
-          try {
-            // Bug 1169643: Ignore any exception as the child process
-            // may already be destroyed by now.
-            mm.sendAsyncMessage("debug:disconnect", { prefix });
-          } catch (e) {
-            // Nothing to do
-          }
-        } else {
-          // Otherwise, the frame has been closed before the actor
-          // had a chance to be created, so we are not able to create
-          // the actor.
-          resolve(null);
-        }
-        if (actor) {
-          // The FrameTargetActor within the child process doesn't necessary
-          // have time to uninitialize itself when the frame is closed/killed.
-          // So ensure telling the client that the related actor is detached.
-          connection.send({ from: actor.actor, type: "tabDetached" });
-          actor = null;
-        }
-
-        if (onDestroy) {
-          onDestroy(mm);
-        }
-
-        // Cleanup all listeners
-        untrackMessageManager();
-      });
-
-      // Listen for various messages and frame events
-      trackMessageManager();
-
-      // Listen for app process exit
-      const onMessageManagerClose = function(subject, topic, data) {
-        if (subject == mm) {
-          destroy();
-        }
-      };
-      Services.obs.addObserver(onMessageManagerClose, "message-manager-close");
-
-      // Listen for connection close to cleanup things
-      // when user unplug the device or we lose the connection somehow.
-      EventEmitter.on(connection, "closed", destroy);
-
-      mm.sendAsyncMessage("debug:connect", { prefix, addonId });
-    });
-  },
 
   /**
    * Create a new debugger connection for the given transport. Called after
