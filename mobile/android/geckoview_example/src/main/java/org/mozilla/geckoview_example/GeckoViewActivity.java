@@ -19,6 +19,7 @@ import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebRequestError;
+import org.mozilla.geckoview.RuntimeTelemetry;
 
 import android.Manifest;
 import android.app.Activity;
@@ -152,7 +153,8 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .contentBlocking(new ContentBlocking.Settings.Builder()
                         .categories(ContentBlocking.AT_DEFAULT)
                         .build())
-                    .crashHandler(ExampleCrashHandler.class);
+                    .crashHandler(ExampleCrashHandler.class)
+                    .telemetryDelegate(new ExampleTelemetryDelegate());
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
 
@@ -1143,6 +1145,14 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .setCategory(NotificationCompat.CATEGORY_SERVICE);
 
             notificationManager.notify(mNotificationId, builder.build());
+        }
+    }
+
+    private final class ExampleTelemetryDelegate
+            implements RuntimeTelemetry.Delegate {
+        @Override
+        public void onTelemetryReceived(final @NonNull RuntimeTelemetry.Metric metric) {
+            Log.d(LOGTAG, "onTelemetryReceived " + metric);
         }
     }
 }
