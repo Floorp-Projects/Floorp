@@ -1019,6 +1019,13 @@ var PanelMultiView = class extends AssociatedToNode {
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
+
+    // If we're going to show the main view, we can remove the
+    // min-height property on the view container.
+    if (viewNode.getAttribute("mainview")) {
+      this._viewContainer.style.removeProperty("min-height");
+    }
+
     this._viewStack.style.transform =
       "translateX(" + (moveToLeft ? "" : "-") + deltaX + "px)";
 
