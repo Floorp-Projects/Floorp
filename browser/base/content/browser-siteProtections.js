@@ -1532,8 +1532,13 @@ var gProtectionsHandler = {
 
     // Don't deal with about:, file: etc.
     if (!ContentBlockingAllowList.canHandle(gBrowser.selectedBrowser)) {
+      // We hide the icon and thus avoid showing the doorhanger, since
+      // the information contained there would mostly be broken and/or
+      // irrelevant anyway.
+      gIdentityHandler._trackingProtectionIconContainer.hidden = true;
       return;
     }
+    gIdentityHandler._trackingProtectionIconContainer.hidden = false;
 
     // Check whether the user has added an exception for this site.
     let hasException = ContentBlockingAllowList.includes(
