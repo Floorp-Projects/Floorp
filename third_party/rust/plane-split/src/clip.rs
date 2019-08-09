@@ -4,7 +4,7 @@ use euclid::{Trig, Rect, Scale, Transform3D, Vector3D};
 use euclid::approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
 
-use std::{fmt, mem, ops};
+use std::{fmt, iter, mem, ops};
 
 
 /// A helper object to clip polygons by a number of planes.
@@ -104,18 +104,27 @@ impl<
             mem::swap(&mut self.results, &mut self.temp);
 
             for mut poly in self.temp.drain(..) {
-                if let Intersection::Inside(line) = poly.intersect_plane(clip) {
-                    let (res1, res2) = poly.split_with_normal(&line, &clip.normal);
-                    self.results.extend(
-                        res1
-                            .into_iter()
-                            .chain(res2)
-                            .filter(|p| clip.signed_distance_sum_to(p) > T::zero())
-                    );
-                }
-                // Note: if the intersection has happened, the `poly` will now
-                // contain the remainder of the original polygon.
-                if clip.signed_distance_sum_to(&poly) > T::zero() {
+                let dist = match poly.intersect_plane(clip) {
+                    Intersection::Inside(line) => {
+                        let (res1, res2) = poly.split_with_normal(&line, &clip.normal);
+                        self.results.extend(
+                            iter::once(poly)
+                                .chain(res1)
+                                .chain(res2)
+                                .filter(|p| clip.signed_distance_sum_to(p) > T::zero())
+                        );
+                        continue
+                    }
+                    Intersection::Coplanar => {
+                        let ndot = poly.plane.normal.dot(clip.normal);
+                        clip.offset - ndot * poly.plane.offset
+                    }
+                    Intersection::Outside => {
+                        clip.signed_distance_sum_to(&poly)
+                    }
+                };
+
+                if dist > T::zero() {
                     self.results.push(poly);
                 }
             }
