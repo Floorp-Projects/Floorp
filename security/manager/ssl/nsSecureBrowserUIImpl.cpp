@@ -258,15 +258,7 @@ static nsresult URICanBeConsideredSecure(
   MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
           ("  innermost URI is '%s'", innermostURI->GetSpecOrDefault().get()));
 
-  bool isHttps;
-  nsresult rv = innermostURI->SchemeIs("https", &isHttps);
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-            ("  nsIURI->SchemeIs failed"));
-    return rv;
-  }
-
-  canBeConsideredSecure = isHttps;
+  canBeConsideredSecure = innermostURI->SchemeIs("https");
 
   return NS_OK;
 }
