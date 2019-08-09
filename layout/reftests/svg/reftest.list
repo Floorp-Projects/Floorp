@@ -587,4 +587,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrende
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR
 
 == mask-resource.html mask-resource-ref.html
-!= mask-resource.html about:blank
+fails-if(Android) != mask-resource.html about:blank # The image the test uses is not on Android
