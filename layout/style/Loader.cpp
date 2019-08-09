@@ -2227,9 +2227,7 @@ nsresult Loader::PostLoadEvent(nsIURI* aURI, StyleSheet* aSheet,
       aURI, aSheet, false, aElement, aWasAlternate, aMediaMatched, aObserver,
       nullptr, aReferrerInfo, mDocument);
 
-  if (!mPostedEvents.AppendElement(evt)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mPostedEvents.AppendElement(evt);
 
   nsresult rv;
   RefPtr<SheetLoadData> runnable(evt);
