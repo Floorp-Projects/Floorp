@@ -405,7 +405,6 @@ struct PrefsSizes {
       : mHashTable(0),
         mPrefValues(0),
         mStringValues(0),
-        mCacheData(0),
         mRootBranches(0),
         mPrefNameArena(0),
         mCallbacksObjects(0),
@@ -415,7 +414,6 @@ struct PrefsSizes {
   size_t mHashTable;
   size_t mPrefValues;
   size_t mStringValues;
-  size_t mCacheData;
   size_t mRootBranches;
   size_t mPrefNameArena;
   size_t mCallbacksObjects;
@@ -3100,93 +3098,6 @@ class PWRunnable : public Runnable {
   nsCOMPtr<nsIFile> mFile;
 };
 
-struct CacheData {
-  CacheData(void* aCacheLocation, bool aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueBool(aValue) {}
-  CacheData(void* aCacheLocation, int32_t aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueInt(aValue) {}
-  CacheData(void* aCacheLocation, uint32_t aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueUint(aValue) {}
-  CacheData(void* aCacheLocation, float aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueFloat(aValue) {}
-
-  template <typename T>
-  T GetDefault() const;
-
-  void* const mCacheLocation;
-
- private:
-  union {
-    const bool mDefaultValueBool;
-    const int32_t mDefaultValueInt;
-    const uint32_t mDefaultValueUint;
-    const float mDefaultValueFloat;
-  };
-};
-
-// We specialise the CacheData::GetDefault() here, as somehow you can't do it
-// inline within CacheData definition.
-template <>
-bool CacheData::GetDefault() const {
-  return mDefaultValueBool;
-}
-template <>
-int32_t CacheData::GetDefault() const {
-  return mDefaultValueInt;
-}
-template <>
-uint32_t CacheData::GetDefault() const {
-  return mDefaultValueUint;
-}
-template <>
-float CacheData::GetDefault() const {
-  return mDefaultValueFloat;
-}
-
-// gCacheDataDesc holds information about prefs startup. It's being used for
-// diagnosing prefs startup problems in bug 1276488.
-static const char* gCacheDataDesc = "untouched";
-
-// gCacheData holds the CacheData objects used for VarCache prefs. It owns
-// those objects, and also is used to detect if multiple VarCaches get tied to
-// a single global variable.
-static nsTArray<nsAutoPtr<CacheData>>* gCacheData = nullptr;
-
-#ifdef DEBUG
-static bool HaveExistingCacheFor(void* aPtr) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (gCacheData) {
-    for (size_t i = 0, count = gCacheData->Length(); i < count; ++i) {
-      if ((*gCacheData)[i]->mCacheLocation == aPtr) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-#endif
-
-static void AssertNotAlreadyCached(const char* aPrefType, const char* aPref,
-                                   void* aPtr) {
-#ifdef DEBUG
-  MOZ_ASSERT(aPtr);
-  if (HaveExistingCacheFor(aPtr)) {
-    fprintf_stderr(
-        stderr,
-        "Attempt to add a %s pref cache for preference '%s' at address '%p'"
-        "was made. However, a pref was already cached at this address.\n",
-        aPrefType, aPref, aPtr);
-    MOZ_ASSERT(false,
-               "Should not have an existing pref cache for this address");
-  }
-#endif
-}
-
-static void AssertNotAlreadyCached(const char* aPrefType,
-                                   const nsACString& aPref, void* aPtr) {
-  AssertNotAlreadyCached(aPrefType, PromiseFlatCString(aPref).get(), aPtr);
-}
-
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
 /* static */
@@ -3238,13 +3149,6 @@ PreferenceServiceReporter::CollectReports(
     }
   }
 
-  if (gCacheData) {
-    sizes.mCacheData += gCacheData->ShallowSizeOfIncludingThis(mallocSizeOf);
-    for (uint32_t i = 0, count = gCacheData->Length(); i < count; ++i) {
-      sizes.mCacheData += mallocSizeOf((*gCacheData)[i]);
-    }
-  }
-
   sizes.mPrefNameArena += gPrefNameArena.SizeOfExcludingThis(mallocSizeOf);
 
   for (CallbackNode* node = gFirstCallback; node; node = node->Next()) {
@@ -3265,9 +3169,6 @@ PreferenceServiceReporter::CollectReports(
   MOZ_COLLECT_REPORT("explicit/preferences/string-values", KIND_HEAP,
                      UNITS_BYTES, sizes.mStringValues,
                      "Memory used by libpref's string pref values.");
-
-  MOZ_COLLECT_REPORT("explicit/preferences/cache-data", KIND_HEAP, UNITS_BYTES,
-                     sizes.mCacheData, "Memory used by libpref's VarCaches.");
 
   MOZ_COLLECT_REPORT("explicit/preferences/root-branches", KIND_HEAP,
                      UNITS_BYTES, sizes.mRootBranches,
@@ -3493,7 +3394,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
   }
 
   if (sShutdown) {
-    gCacheDataDesc = "shutting down in GetInstanceForService()";
     return nullptr;
   }
 
@@ -3516,13 +3416,9 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
   gAccessCounts = new AccessCountsHashTable();
 #endif
 
-  gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
-  gCacheDataDesc = "set by GetInstanceForService() (1)";
-
-  Result<Ok, const char*> res = InitInitialObjects(/* isStartup */ true);
-  if (res.isErr()) {
+  nsresult rv = InitInitialObjects(/* isStartup */ true);
+  if (NS_FAILED(rv)) {
     sPreferences = nullptr;
-    gCacheDataDesc = res.unwrapErr();
     return nullptr;
   }
 
@@ -3555,7 +3451,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
         services::GetObserverService();
     if (!observerService) {
       sPreferences = nullptr;
-      gCacheDataDesc = "GetObserverService() failed (1)";
       return nullptr;
     }
 
@@ -3569,7 +3464,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
 
     if (NS_FAILED(rv)) {
       sPreferences = nullptr;
-      gCacheDataDesc = "AddObserver(\"profile-before-change\") failed";
       return nullptr;
     }
   }
@@ -3578,8 +3472,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
   if (defaultPrefs) {
     parsePrefData(nsCString(defaultPrefs), PrefValueKind::Default);
   }
-
-  gCacheDataDesc = "set by GetInstanceForService() (2)";
 
   // Preferences::GetInstanceForService() can be called from GetService(), and
   // RegisterStrongMemoryReporter calls GetService(nsIMemoryReporter).  To
@@ -3626,9 +3518,6 @@ Preferences::Preferences()
 
 Preferences::~Preferences() {
   MOZ_ASSERT(!sPreferences);
-
-  delete gCacheData;
-  gCacheData = nullptr;
 
   MOZ_ASSERT(!gCallbacksInProgress);
 
@@ -3860,8 +3749,7 @@ Preferences::ResetPrefs() {
 
   gPrefNameArena.Clear();
 
-  return InitInitialObjects(/* isStartup */ false).isOk() ? NS_OK
-                                                          : NS_ERROR_FAILURE;
+  return InitInitialObjects(/* isStartup */ false);
 }
 
 NS_IMETHODIMP
@@ -4470,12 +4358,11 @@ struct Internals {
   }
 
   template <typename T>
-  static void VarChanged(const char* aPref, void* aClosure) {
-    CacheData* cache = static_cast<CacheData*>(aClosure);
+  static void UpdateMirror(const char* aPref, void* aMirror) {
     StripAtomic<T> value;
     nsresult rv = GetPrefValue(aPref, &value, PrefValueKind::User);
     if (NS_SUCCEEDED(rv)) {
-      *static_cast<T*>(cache->mCacheLocation) = value;
+      *static_cast<T*>(aMirror) = value;
     } else {
       // GetPrefValue() can fail if the update is caused by the pref being
       // deleted. In that case the mirror variable will be untouched, thus
@@ -4494,9 +4381,8 @@ struct Internals {
   }
 
   template <typename T>
-  static nsresult RegisterCallback(CacheData* aCacheData,
-                                   const nsACString& aPref) {
-    return Preferences::RegisterCallback(VarChanged<T>, aPref, aCacheData,
+  static nsresult RegisterCallback(void* aMirror, const nsACString& aPref) {
+    return Preferences::RegisterCallback(UpdateMirror<T>, aPref, aMirror,
                                          Preferences::ExactMatch,
                                          /* isPriority */ true);
   }
@@ -4505,7 +4391,7 @@ struct Internals {
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
 /* static */
-Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
+nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Initialize static prefs before prefs from data files so that the latter
@@ -4514,7 +4400,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
 
   if (!XRE_IsParentProcess()) {
     MOZ_DIAGNOSTIC_ASSERT(gSharedMap);
-    return Ok();
+    return NS_OK;
   }
 
   // In the omni.jar case, we load the following prefs:
@@ -4572,28 +4458,27 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
     // Load jar:$gre/omni.jar!/greprefs.js.
     rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
 #endif
-    NS_ENSURE_SUCCESS(rv, Err("pref_ReadPrefFromJar() failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Load jar:$gre/omni.jar!/defaults/pref/*.js.
     rv = pref_ReadDefaultPrefs(jarReader, "defaults/pref/*.js$");
-    NS_ENSURE_SUCCESS(rv, Err("pref_ReadDefaultPrefs() failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_WIDGET_ANDROID
     // Load jar:$gre/omni.jar!/defaults/pref/$MOZ_ANDROID_CPU_ABI/*.js.
     nsAutoCString path;
     path.AppendPrintf("jar:$gre/omni.jar!/defaults/pref/%s/*.js$", abi);
     pref_ReadDefaultPrefs(jarReader, path.get());
-    NS_ENSURE_SUCCESS(
-        rv, Err("architecture-specific pref_ReadDefaultPrefs() failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
   } else {
     // Load $gre/greprefs.js.
     nsCOMPtr<nsIFile> greprefsFile;
     rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
-    NS_ENSURE_SUCCESS(rv, Err("NS_GetSpecialDirectory(NS_GRE_DIR) failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
-    NS_ENSURE_SUCCESS(rv, Err("greprefsFile->AppendNative() failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = openPrefFile(greprefsFile, PrefValueKind::Default);
     if (NS_FAILED(rv)) {
@@ -4607,8 +4492,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
   nsCOMPtr<nsIFile> defaultPrefDir;
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR,
                               getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(
-      rv, Err("NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR) failed"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // These pref file names should not be used: we process them after all other
   // application pref files for backwards compatibility.
@@ -4646,7 +4530,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
 
   if (appJarReader) {
     rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
-    NS_ENSURE_SUCCESS(rv, Err("appJarReader->FindInit() failed"));
+    NS_ENSURE_SUCCESS(rv, rv);
     find = findPtr;
     prefEntries.Clear();
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
@@ -4663,8 +4547,7 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
 
   nsCOMPtr<nsIProperties> dirSvc(
       do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(
-      rv, Err("do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID) failed"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISimpleEnumerator> list;
   dirSvc->Get(NS_APP_PREFS_DEFAULTS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator),
@@ -4696,12 +4579,12 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
                                 NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  NS_ENSURE_SUCCESS(rv, Err("GetObserverService() failed (2)"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   observerService->NotifyObservers(nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                    nullptr);
 
-  return Ok();
+  return NS_OK;
 }
 
 /* static */
@@ -5186,35 +5069,24 @@ nsresult Preferences::UnregisterCallbacks(PrefChangedFunc aCallback,
   return UnregisterCallbackImpl(aCallback, aPrefs, aData, aMatchKind);
 }
 
-static void CacheDataAppendElement(CacheData* aData) {
-  if (!gCacheData) {
-    MOZ_CRASH_UNSAFE_PRINTF("!gCacheData: %s", gCacheDataDesc);
-  }
-  gCacheData->AppendElement(aData);
-}
-
 template <typename T>
-static void AddVarCacheNoAssignment(T* aCache, const nsACString& aPref,
-                                    StripAtomic<T> aDefault) {
+static void AddMirrorCallback(T* aMirror, const nsACString& aPref) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  CacheData* data = new CacheData(aCache, aDefault);
-  CacheDataAppendElement(data);
-  Internals::RegisterCallback<T>(data, aPref);
+  Internals::RegisterCallback<T>(aMirror, aPref);
 }
 
 template <typename T>
-static void AddVarCache(T* aCache, const nsACString& aPref,
-                        StripAtomic<T> aDefault) {
-  *aCache = Internals::GetPref(PromiseFlatCString(aPref).get(), aDefault);
-  AddVarCacheNoAssignment(aCache, aPref, aDefault);
+static void AddMirror(T* aMirror, const nsACString& aPref,
+                      StripAtomic<T> aDefault) {
+  *aMirror = Internals::GetPref(PromiseFlatCString(aPref).get(), aDefault);
+  AddMirrorCallback(aMirror, aPref);
 }
 
 /* static */
 void Preferences::AddBoolVarCache(bool* aCache, const nsACString& aPref,
                                   bool aDefault) {
-  AssertNotAlreadyCached("bool", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
@@ -5222,15 +5094,13 @@ template <MemoryOrdering Order>
 void Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                         const nsACString& aPref,
                                         bool aDefault) {
-  AssertNotAlreadyCached("bool", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 /* static */
 void Preferences::AddIntVarCache(int32_t* aCache, const nsACString& aPref,
                                  int32_t aDefault) {
-  AssertNotAlreadyCached("int", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
@@ -5238,15 +5108,13 @@ template <MemoryOrdering Order>
 void Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                        const nsACString& aPref,
                                        int32_t aDefault) {
-  AssertNotAlreadyCached("int", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 /* static */
 void Preferences::AddUintVarCache(uint32_t* aCache, const nsACString& aPref,
                                   uint32_t aDefault) {
-  AssertNotAlreadyCached("uint", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
@@ -5254,8 +5122,7 @@ template <MemoryOrdering Order>
 void Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                         const nsACString& aPref,
                                         uint32_t aDefault) {
-  AssertNotAlreadyCached("uint", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 // Since the definition of template functions is not in a header file, we
@@ -5285,16 +5152,14 @@ template void Preferences::AddAtomicUintVarCache(
 /* static */
 void Preferences::AddFloatVarCache(float* aCache, const nsACString& aPref,
                                    float aDefault) {
-  AssertNotAlreadyCached("float", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 /* static */
 void Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
                                          const nsACString& aPref,
                                          float aDefault) {
-  AssertNotAlreadyCached("float", aPref, aCache);
-  AddVarCache(aCache, aPref, aDefault);
+  AddMirror(aCache, aPref, aDefault);
 }
 
 // The InitPref_*() functions below end in a `_<type>` suffix because they are
@@ -5376,7 +5241,7 @@ static void InitAlwaysPref(const nsACString& aName, T* aCache,
 
   // At startup, setup the callback for the `always` mirror (if there is one).
   if (MOZ_LIKELY(aIsStartup)) {
-    AddVarCacheNoAssignment(aCache, aName, aDefaultValue);
+    AddMirrorCallback(aCache, aName);
   }
 }
 
