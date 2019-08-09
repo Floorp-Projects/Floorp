@@ -447,16 +447,12 @@ class JS::Compartment {
                                const js::CrossCompartmentKey& wrapped,
                                const js::Value& wrapper);
 
-  js::WrapperMap::Ptr lookupWrapper(const js::CrossCompartmentKey& key) const {
-    return crossCompartmentWrappers.lookup(key);
-  }
-
-  js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) const {
-    return lookupWrapper(js::CrossCompartmentKey(wrapped));
-  }
-
   js::WrapperMap::Ptr lookupWrapper(JSObject* obj) const {
-    return lookupWrapper(js::CrossCompartmentKey(obj));
+    return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(obj));
+  }
+
+  js::WrapperMap::Ptr lookupWrapper(JSString* str) const {
+    return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(str));
   }
 
   void removeWrapper(js::WrapperMap::Ptr p) {
