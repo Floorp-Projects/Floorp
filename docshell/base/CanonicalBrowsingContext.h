@@ -83,15 +83,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // and propogate the action to other browsing contexts in content processes.
   void UpdateMediaAction(MediaControlActions aAction);
 
-  // Validate that the given process is allowed to perform the given
-  // transaction. aSource is |nullptr| if set in the parent process.
-  bool ValidateTransaction(const Transaction& aTransaction,
-                           ContentParent* aSource);
-
-  void SetFieldEpochsForChild(ContentParent* aChild,
-                              const FieldEpochs& aEpochs);
-  const FieldEpochs& GetFieldEpochsForChild(ContentParent* aChild);
-
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
@@ -113,10 +104,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   nsTHashtable<nsRefPtrHashKey<WindowGlobalParent>> mWindowGlobals;
   RefPtr<WindowGlobalParent> mCurrentWindowGlobal;
   RefPtr<WindowGlobalParent> mEmbedderWindowGlobal;
-
-  // Generation information for each content process which has interacted with
-  // this CanonicalBrowsingContext, by ChildID.
-  nsDataHashtable<nsUint64HashKey, FieldEpochs> mChildFieldEpochs;
 };
 
 }  // namespace dom
