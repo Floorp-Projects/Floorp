@@ -2165,6 +2165,49 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
   return NS_OK;
 }
 
+nsresult TextEditor::MaybeChangePaddingBRElementForEmptyEditor() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!AsHTMLEditor());
+
+  // If there is padding <br> element for empty editor, we have no work to do.
+  if (mPaddingBRElementForEmptyEditor) {
+    return NS_OK;
+  }
+
+  // Likewise, nothing to be done if we could never have inserted a trailing
+  // <br> element.
+  // XXX Why don't we use same path for <textarea> and <input>?
+  if (IsSingleLineEditor()) {
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!mRootElement)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mRootElement->GetChildCount() > 1) {
+    // The trailing br is redundant if it is the only remaining child node
+    return NS_OK;
+  }
+
+  RefPtr<HTMLBRElement> brElement =
+      HTMLBRElement::FromNodeOrNull(mRootElement->GetFirstChild());
+  if (!brElement ||
+      !EditorBase::IsPaddingBRElementForEmptyLastLine(*brElement)) {
+    // XXX Why don't we create new padding <br> element when there is no
+    //     children?
+    return NS_OK;
+  }
+
+  // Rather than deleting this node from the DOM tree we should instead
+  // morph this <br> element into the padding <br> element for editor.
+  mPaddingBRElementForEmptyEditor = std::move(brElement);
+  mPaddingBRElementForEmptyEditor->UnsetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+  mPaddingBRElementForEmptyEditor->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+
+  return NS_OK;
+}
+
 nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
                                             uint32_t aTimeout, bool aNotify,
                                             bool aForceStartMasking) {

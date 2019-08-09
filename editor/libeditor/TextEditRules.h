@@ -236,11 +236,6 @@ class TextEditRules {
                           uint32_t aFlags, bool* aOutCancel, bool* aHandled);
 
   /**
-   * Check for and replace a redundant trailing break.
-   */
-  MOZ_MUST_USE nsresult RemoveRedundantTrailingBR();
-
-  /**
    * Creates a trailing break in the text doc if there is not one already.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
