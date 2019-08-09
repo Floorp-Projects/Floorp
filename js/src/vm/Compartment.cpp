@@ -41,13 +41,14 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
     : zone_(zone),
       runtime_(zone->runtimeFromAnyThread()),
       invisibleToDebugger_(invisibleToDebugger),
-      crossCompartmentWrappers(zone, 0),
+      crossCompartmentObjectWrappers(zone, 0),
+      crossCompartmentStringWrappers(zone),
       realms_(zone) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
-template <typename Entry>
-static inline void CheckWrapperMapEntry(const WrapperMap& map, Entry& entry) {
+template <typename Map, typename Entry>
+static inline void CheckWrapperMapEntry(const Map& map, Entry& entry) {
   /*
    * Assert that the postbarriers have worked and that nothing is left in
    * wrapperMap that points into the nursery, and that the hash table entries
@@ -57,31 +58,44 @@ static inline void CheckWrapperMapEntry(const WrapperMap& map, Entry& entry) {
   key.applyToWrapped([&](auto tp) {
     CheckGCThingAfterMovingGC(*tp);
 
-    WrapperMap::Ptr ptr = map.lookup(CrossCompartmentKey(*tp));
+    auto ptr = map.lookup(CrossCompartmentKey(*tp));
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &entry.front());
   });
 }
 
 void Compartment::checkWrapperMapAfterMovingGC() {
   for (StringWrapperEnum e(this); !e.empty(); e.popFront()) {
-    CheckWrapperMapEntry(crossCompartmentWrappers, e);
+    CheckWrapperMapEntry(crossCompartmentStringWrappers, e);
   }
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    CheckWrapperMapEntry(crossCompartmentWrappers, e);
+    CheckWrapperMapEntry(crossCompartmentObjectWrappers, e);
   }
 }
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-bool Compartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
+bool Compartment::putWrapper(JSContext* cx, JSObject* obj,
                              const js::Value& wrapper) {
-  MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
-  MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
-  MOZ_ASSERT(!wrapper.isObject() || !js::IsProxy(&wrapper.toObject()) ||
+  CrossCompartmentKey wrapped(obj);
+  MOZ_ASSERT(wrapper.isObject());
+  MOZ_ASSERT(!js::IsProxy(&wrapper.toObject()) ||
              js::GetProxyHandler(&wrapper.toObject())->family() !=
                  js::GetDOMRemoteProxyHandlerFamily());
 
-  if (!crossCompartmentWrappers.put(wrapped, wrapper)) {
+  if (!crossCompartmentObjectWrappers.put(wrapped, wrapper)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
+bool Compartment::putWrapper(JSContext* cx, JSString* str,
+                             const js::Value& wrapper) {
+  CrossCompartmentKey wrapped(str);
+  MOZ_ASSERT(wrapper.isString());
+
+  if (!crossCompartmentStringWrappers.put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -161,7 +175,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
   }
 
   /* Check the cache. */
-  if (WrapperMap::Ptr p = lookupWrapper(str)) {
+  if (StringWrapperMap::Ptr p = lookupWrapper(str)) {
     strp.set(p->value().get().toString());
     return true;
   }
@@ -286,7 +300,7 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
 bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
                                      MutableHandleObject obj) {
   // If we already have a wrapper for this value, use it.
-  if (WrapperMap::Ptr p = lookupWrapper(obj)) {
+  if (ObjectWrapperMap::Ptr p = lookupWrapper(obj)) {
     obj.set(&p->value().get().toObject());
     MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
     return true;
@@ -456,7 +470,8 @@ void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
 }
 
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {
-  crossCompartmentWrappers.sweepAfterMinorGC(trc);
+  crossCompartmentObjectWrappers.sweepAfterMinorGC(trc);
+  crossCompartmentStringWrappers.sweepAfterMinorGC(trc);
 
   for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
     r->sweepAfterMinorGC();
@@ -469,7 +484,8 @@ void Compartment::sweepAfterMinorGC(JSTracer* trc) {
  * markCrossCompartmentWrappers.
  */
 void Compartment::sweepCrossCompartmentWrappers() {
-  crossCompartmentWrappers.sweep();
+  crossCompartmentObjectWrappers.sweep();
+  crossCompartmentStringWrappers.sweep();
 }
 
 void CrossCompartmentKey::trace(JSTracer* trc) {
@@ -514,7 +530,9 @@ void Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                          size_t* compartmentsPrivateData) {
   *compartmentObjects += mallocSizeOf(this);
   *crossCompartmentWrappersTables +=
-      crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
+      crossCompartmentObjectWrappers.sizeOfExcludingThis(mallocSizeOf);
+  *crossCompartmentWrappersTables +=
+      crossCompartmentStringWrappers.sizeOfExcludingThis(mallocSizeOf);
 
   if (auto callback = runtime_->sizeOfIncludingThisCompartmentCallback) {
     *compartmentsPrivateData += callback(mallocSizeOf, this);
