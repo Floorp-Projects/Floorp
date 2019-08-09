@@ -84,7 +84,7 @@ inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
   JS::AssertValueIsNotGray(vp);
   JS::RootedObject cacheResult(cx);
 #endif
-  if (js::WrapperMap::Ptr p = lookupWrapper(&vp.toObject())) {
+  if (js::ObjectWrapperMap::Ptr p = lookupWrapper(&vp.toObject())) {
 #ifdef DEBUG
     cacheResult = &p->value().get().toObject();
 #else

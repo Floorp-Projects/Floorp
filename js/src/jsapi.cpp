@@ -687,7 +687,7 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     AutoRealm ar(cx, origobj);
     JSObject::swap(cx, origobj, target);
     newIdentity = origobj;
-  } else if (WrapperMap::Ptr p = destination->lookupWrapper(origobj)) {
+  } else if (ObjectWrapperMap::Ptr p = destination->lookupWrapper(origobj)) {
     // There might already be a wrapper for the original object in
     // the new compartment. If there is, we use its identity and swap
     // in the contents of |target|.

@@ -122,10 +122,10 @@ class CrossCompartmentKey {
   WrappedType wrapped;
 };
 
-// The data structure for storing CCWs, which has a map per target compartment
-// so we can access them easily. Note string CCWs are stored separately from the
-// others because they have target compartment nullptr.
-class WrapperMap {
+// The data structure for storing JSObject CCWs, which has a map per target
+// compartment so we can access them easily. String CCWs are stored in a
+// separate map.
+class ObjectWrapperMap {
   static const size_t InitialInnerMapSize = 4;
 
   using InnerMap =
@@ -139,10 +139,6 @@ class WrapperMap {
 
  public:
   class Enum {
-   public:
-    enum SkipStrings : bool { WithStrings = false, WithoutStrings = true };
-
-   private:
     Enum(const Enum&) = delete;
     void operator=(const Enum&) = delete;
 
@@ -152,11 +148,7 @@ class WrapperMap {
       }
       for (; !outer->empty(); outer->popFront()) {
         JS::Compartment* c = outer->front().key();
-        // Need to skip string at first, because the filter may not be
-        // happy with a nullptr.
-        if (!c && skipStrings) {
-          continue;
-        }
+        MOZ_ASSERT(c);
         if (filter && !filter->match(c)) {
           continue;
         }
@@ -175,22 +167,19 @@ class WrapperMap {
     mozilla::Maybe<OuterMap::Enum> outer;
     mozilla::Maybe<InnerMap::Enum> inner;
     const CompartmentFilter* filter;
-    SkipStrings skipStrings;
 
    public:
-    explicit Enum(WrapperMap& m, SkipStrings s)
-        : filter(nullptr), skipStrings(s) {
+    explicit Enum(ObjectWrapperMap& m) : filter(nullptr) {
       outer.emplace(m.map);
       goToNext();
     }
 
-    Enum(WrapperMap& m, const CompartmentFilter& f, SkipStrings s)
-        : filter(&f), skipStrings(s) {
+    Enum(ObjectWrapperMap& m, const CompartmentFilter& f) : filter(&f) {
       outer.emplace(m.map);
       goToNext();
     }
 
-    Enum(WrapperMap& m, JS::Compartment* target) {
+    Enum(ObjectWrapperMap& m, JS::Compartment* target) {
       // Leave the outer map as nothing and only iterate the inner map we
       // find here.
       auto p = m.map.lookup(target);
@@ -227,7 +216,7 @@ class WrapperMap {
   };
 
   class Ptr : public InnerMap::Ptr {
-    friend class WrapperMap;
+    friend class ObjectWrapperMap;
 
     InnerMap* map;
 
@@ -235,8 +224,8 @@ class WrapperMap {
     Ptr(const InnerMap::Ptr& p, InnerMap& m) : InnerMap::Ptr(p), map(&m) {}
   };
 
-  explicit WrapperMap(Zone* zone) : map(zone), zone(zone) {}
-  WrapperMap(Zone* zone, size_t aLen) : map(zone, aLen), zone(zone) {}
+  explicit ObjectWrapperMap(Zone* zone) : map(zone), zone(zone) {}
+  ObjectWrapperMap(Zone* zone, size_t aLen) : map(zone, aLen), zone(zone) {}
 
   bool empty() {
     if (map.empty()) {
@@ -251,6 +240,7 @@ class WrapperMap {
   }
 
   Ptr lookup(const CrossCompartmentKey& k) const {
+    MOZ_ASSERT(k.is<JSObject*>());
     auto op = map.lookup(const_cast<CrossCompartmentKey&>(k).compartment());
     if (op) {
       auto ip = op->value().lookup(k);
@@ -268,8 +258,9 @@ class WrapperMap {
   }
 
   MOZ_MUST_USE bool put(const CrossCompartmentKey& k, const JS::Value& v) {
+    MOZ_ASSERT(k.is<JSObject*>());
     JS::Compartment* c = const_cast<CrossCompartmentKey&>(k).compartment();
-    MOZ_ASSERT(k.is<JSString*>() == !c);
+    MOZ_ASSERT(c);
     auto p = map.lookupForAdd(c);
     if (!p) {
       InnerMap m(zone, InitialInnerMapSize);
@@ -330,6 +321,11 @@ class WrapperMap {
   }
 };
 
+using StringWrapperMap =
+    js::NurseryAwareHashMap<js::CrossCompartmentKey, JS::Value,
+                            js::CrossCompartmentKey::Hasher,
+                            js::ZoneAllocPolicy>;
+
 }  // namespace js
 
 class JS::Compartment {
@@ -337,7 +333,8 @@ class JS::Compartment {
   JSRuntime* runtime_;
   bool invisibleToDebugger_;
 
-  js::WrapperMap crossCompartmentWrappers;
+  js::ObjectWrapperMap crossCompartmentObjectWrappers;
+  js::StringWrapperMap crossCompartmentStringWrappers;
 
   using RealmVector = js::Vector<JS::Realm*, 1, js::ZoneAllocPolicy>;
   RealmVector realms_;
@@ -407,7 +404,8 @@ class JS::Compartment {
   js::GlobalObject& globalForNewCCW() const { return firstGlobal(); }
 
   void assertNoCrossCompartmentWrappers() {
-    MOZ_ASSERT(crossCompartmentWrappers.empty());
+    MOZ_ASSERT(crossCompartmentObjectWrappers.empty());
+    MOZ_ASSERT(crossCompartmentStringWrappers.empty());
   }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -425,10 +423,6 @@ class JS::Compartment {
                                                 js::MutableHandleObject obj);
   bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing,
                           js::MutableHandleObject obj);
-
-  MOZ_MUST_USE bool putWrapper(JSContext* cx,
-                               const js::CrossCompartmentKey& wrapped,
-                               const js::Value& wrapper);
 
  public:
   explicit Compartment(JS::Zone* zone, bool invisibleToDebugger);
@@ -448,47 +442,43 @@ class JS::Compartment {
                            JS::HandleObject existing);
 
   MOZ_MUST_USE bool putWrapper(JSContext* cx, JSObject* wrapped,
-                               const js::Value& wrapper) {
-    return putWrapper(cx, js::CrossCompartmentKey(wrapped), wrapper);
-  }
+                               const js::Value& wrapper);
 
   MOZ_MUST_USE bool putWrapper(JSContext* cx, JSString* wrapped,
-                               const js::Value& wrapper) {
-    return putWrapper(cx, js::CrossCompartmentKey(wrapped), wrapper);
+                               const js::Value& wrapper);
+
+  js::ObjectWrapperMap::Ptr lookupWrapper(JSObject* obj) const {
+    return crossCompartmentObjectWrappers.lookup(js::CrossCompartmentKey(obj));
   }
 
-  js::WrapperMap::Ptr lookupWrapper(JSObject* obj) const {
-    return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(obj));
+  js::StringWrapperMap::Ptr lookupWrapper(JSString* str) const {
+    return crossCompartmentStringWrappers.lookup(js::CrossCompartmentKey(str));
   }
 
-  js::WrapperMap::Ptr lookupWrapper(JSString* str) const {
-    return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(str));
+  void removeWrapper(js::ObjectWrapperMap::Ptr p) {
+    crossCompartmentObjectWrappers.remove(p);
   }
 
-  void removeWrapper(js::WrapperMap::Ptr p) {
-    crossCompartmentWrappers.remove(p);
+  bool hasNurseryAllocatedObjectWrapperEntries(const js::CompartmentFilter& f) {
+    return crossCompartmentObjectWrappers.hasNurseryAllocatedWrapperEntries(f);
   }
 
-  bool hasNurseryAllocatedWrapperEntries(const js::CompartmentFilter& f) {
-    return crossCompartmentWrappers.hasNurseryAllocatedWrapperEntries(f);
-  }
-
-  struct ObjectWrapperEnum : public js::WrapperMap::Enum {
+  struct ObjectWrapperEnum : public js::ObjectWrapperMap::Enum {
     explicit ObjectWrapperEnum(JS::Compartment* c)
-        : js::WrapperMap::Enum(c->crossCompartmentWrappers, WithoutStrings) {}
+        : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers) {}
     explicit ObjectWrapperEnum(JS::Compartment* c,
                                const js::CompartmentFilter& f)
-        : js::WrapperMap::Enum(c->crossCompartmentWrappers, f, WithoutStrings) {
-    }
+        : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers, f) {}
     explicit ObjectWrapperEnum(JS::Compartment* c, JS::Compartment* target)
-        : js::WrapperMap::Enum(c->crossCompartmentWrappers, target) {
+        : js::ObjectWrapperMap::Enum(c->crossCompartmentObjectWrappers,
+                                     target) {
       MOZ_ASSERT(target);
     }
   };
 
-  struct StringWrapperEnum : public js::WrapperMap::Enum {
+  struct StringWrapperEnum : public js::StringWrapperMap::Enum {
     explicit StringWrapperEnum(JS::Compartment* c)
-        : js::WrapperMap::Enum(c->crossCompartmentWrappers, nullptr) {}
+        : js::StringWrapperMap::Enum(c->crossCompartmentStringWrappers) {}
   };
 
   /*
@@ -559,10 +549,10 @@ struct WrapperValue {
    * wrapper is in use, the AutoWrapper rooter will ensure the wrapper gets
    * marked.
    */
-  explicit WrapperValue(const WrapperMap::Ptr& ptr)
+  explicit WrapperValue(const ObjectWrapperMap::Ptr& ptr)
       : value(*ptr->value().unsafeGet()) {}
 
-  explicit WrapperValue(const WrapperMap::Enum& e)
+  explicit WrapperValue(const ObjectWrapperMap::Enum& e)
       : value(*e.front().value().unsafeGet()) {}
 
   Value& get() { return value; }
