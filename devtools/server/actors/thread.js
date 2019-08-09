@@ -1997,6 +1997,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       breakpoints: this.breakpointActorMap.listKeys(),
     };
   },
+
+  logLocation: function(prefix, frame) {
+    const loc = this.sources.getFrameLocation(frame);
+    dump(`${prefix} (${loc.line}, ${loc.column})\n`);
+  },
 });
 
 Object.assign(ThreadActor.prototype.requestTypes, {
