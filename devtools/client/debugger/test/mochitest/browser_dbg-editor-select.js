@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests that the editor highlights the correct location when the
 // debugger pauses
@@ -12,7 +13,7 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
   const simple1 = findSource(dbg, "simple1.js");
   const simple2 = findSource(dbg, "simple2.js");
@@ -26,7 +27,6 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "simple1");
   assertPausedLocation(dbg);
-
   // Step through to another file and make sure it's paused in the
   // right place.
   await stepOver(dbg);
@@ -34,15 +34,14 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "simple2");
   assertPausedLocation(dbg);
 
-  // Step back out to the initial file.
-  await stepOut(dbg);
+  info("Step back out to the initial file.");
   await stepOut(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
 
   // Make sure that we can set a breakpoint on a line out of the
   // viewport, and that pausing there scrolls the editor to it.
-  let longSrc = findSource(dbg, "long.js");
+  const longSrc = findSource(dbg, "long.js");
   await selectSource(dbg, "long.js");
   await addBreakpoint(dbg, longSrc, 66);
 

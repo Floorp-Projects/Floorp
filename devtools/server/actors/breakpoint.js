@@ -208,7 +208,7 @@ BreakpointActor.prototype = {
       return undefined;
     }
 
-    if (!this.threadActor.hasMoved(location, "breakpoint")) {
+    if (!this.threadActor.hasMoved(frame, "breakpoint")) {
       return undefined;
     }
 

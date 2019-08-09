@@ -416,6 +416,11 @@ TabSources.prototype = {
     return !!range;
   },
 
+  isFrameBlackBoxed: function(frame) {
+    const location = this.getFrameLocation(frame);
+    return this.isBlackBoxed(location.url);
+  },
+
   /**
    * Add the given source URL to the set of sources that are black boxed.
    *
