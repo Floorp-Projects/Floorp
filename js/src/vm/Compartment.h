@@ -233,7 +233,6 @@ class JS::Compartment {
   bool invisibleToDebugger_;
 
   js::ObjectWrapperMap crossCompartmentObjectWrappers;
-  js::StringWrapperMap crossCompartmentStringWrappers;
 
   using RealmVector = js::Vector<JS::Realm*, 1, js::ZoneAllocPolicy>;
   RealmVector realms_;
@@ -304,7 +303,6 @@ class JS::Compartment {
 
   void assertNoCrossCompartmentWrappers() {
     MOZ_ASSERT(crossCompartmentObjectWrappers.empty());
-    MOZ_ASSERT(crossCompartmentStringWrappers.empty());
   }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -313,7 +311,7 @@ class JS::Compartment {
                               size_t* compartmentsPrivateData);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
-  void checkWrapperMapAfterMovingGC();
+  void checkObjectWrappersAfterMovingGC();
 #endif
 
  private:
@@ -350,9 +348,7 @@ class JS::Compartment {
     return crossCompartmentObjectWrappers.lookup(obj);
   }
 
-  js::StringWrapperMap::Ptr lookupWrapper(JSString* str) const {
-    return crossCompartmentStringWrappers.lookup(str);
-  }
+  inline js::StringWrapperMap::Ptr lookupWrapper(JSString* str) const;
 
   void removeWrapper(js::ObjectWrapperMap::Ptr p) {
     crossCompartmentObjectWrappers.remove(p);
@@ -375,11 +371,6 @@ class JS::Compartment {
     }
   };
 
-  struct StringWrapperEnum : public js::StringWrapperMap::Enum {
-    explicit StringWrapperEnum(JS::Compartment* c)
-        : js::StringWrapperMap::Enum(c->crossCompartmentStringWrappers) {}
-  };
-
   /*
    * These methods mark pointers that cross compartment boundaries. They are
    * called in per-zone GCs to prevent the wrappers' outgoing edges from
@@ -388,14 +379,13 @@ class JS::Compartment {
    */
   void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
   static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
-  void dropStringWrappersOnGC();
 
   void sweepRealms(js::FreeOp* fop, bool keepAtleastOne,
                    bool destroyingRuntime);
   void sweepAfterMinorGC(JSTracer* trc);
-  void sweepCrossCompartmentWrappers();
+  void sweepCrossCompartmentObjectWrappers();
 
-  static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
+  void fixupCrossCompartmentObjectWrappersAfterMovingGC(JSTracer* trc);
   void fixupAfterMovingGC(JSTracer* trc);
 
   MOZ_MUST_USE bool findSweepGroupEdges();
