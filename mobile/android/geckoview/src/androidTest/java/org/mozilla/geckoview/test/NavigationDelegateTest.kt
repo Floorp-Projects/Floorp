@@ -197,8 +197,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Test fun trackingProtection() {
-        val category = ContentBlocking.AT_TEST
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        val category = ContentBlocking.AntiTracking.TEST
+        sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
@@ -207,10 +207,14 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {
                 assertThat("Category should be set",
-                           event.categories,
+                           event.antiTrackingCategory,
                            equalTo(category))
                 assertThat("URI should not be null", event.uri, notNullValue())
                 assertThat("URI should match", event.uri, endsWith("tracker.js"))
+            }
+
+            @AssertCalled(false)
+            override fun onContentLoaded(session: GeckoSession, event: ContentBlocking.BlockEvent) {
             }
         })
 
@@ -224,6 +228,15 @@ class NavigationDelegateTest : BaseSessionTest() {
             @AssertCalled(false)
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {
+            }
+
+            @AssertCalled(count = 3)
+            override fun onContentLoaded(session: GeckoSession, event: ContentBlocking.BlockEvent) {
+                assertThat("Category should be set",
+                           event.antiTrackingCategory,
+                           equalTo(category))
+                assertThat("URI should not be null", event.uri, notNullValue())
+                assertThat("URI should match", event.uri, endsWith("tracker.js"))
             }
         })
     }
@@ -291,9 +304,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun bypassClassifier() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
-        val category = ContentBlocking.SB_PHISHING
+        val category = ContentBlocking.SafeBrowsing.PHISHING
 
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
         sessionRule.session.loadUri(phishingUri + "?bypass=true",
                                     GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
@@ -311,17 +324,16 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun safebrowsingPhishing() {
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
-        val category = ContentBlocking.SB_PHISHING
+        val category = ContentBlocking.SafeBrowsing.PHISHING
 
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
         // Add query string to avoid bypassing classifier check because of cache.
         testLoadExpectError(phishingUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_PHISHING_URI)
 
-        sessionRule.runtime.settings.contentBlocking.categories =
-            ContentBlocking.NONE
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
         sessionRule.session.loadUri(phishingUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -338,16 +350,15 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun safebrowsingMalware() {
         val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
-        val category = ContentBlocking.SB_MALWARE
+        val category = ContentBlocking.SafeBrowsing.MALWARE
 
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
         testLoadExpectError(malwareUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_MALWARE_URI)
 
-        sessionRule.runtime.settings.contentBlocking.categories =
-            ContentBlocking.NONE
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
         sessionRule.session.loadUri(malwareUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -364,16 +375,15 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun safebrowsingUnwanted() {
         val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
-        val category = ContentBlocking.SB_UNWANTED
+        val category = ContentBlocking.SafeBrowsing.UNWANTED
 
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
         testLoadExpectError(unwantedUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_UNWANTED_URI)
 
-        sessionRule.runtime.settings.contentBlocking.categories =
-            ContentBlocking.NONE
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
         sessionRule.session.loadUri(unwantedUri + "?block=false")
         sessionRule.session.waitForPageStop()
@@ -390,16 +400,15 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun safebrowsingHarmful() {
         val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
-        val category = ContentBlocking.SB_HARMFUL
+        val category = ContentBlocking.SafeBrowsing.HARMFUL
 
-        sessionRule.runtime.settings.contentBlocking.categories = category
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
         testLoadExpectError(harmfulUri + "?block=true",
                         WebRequestError.ERROR_CATEGORY_SAFEBROWSING,
                         WebRequestError.ERROR_SAFEBROWSING_HARMFUL_URI)
 
-        sessionRule.runtime.settings.contentBlocking.categories =
-            ContentBlocking.NONE
+        sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
         sessionRule.session.loadUri(harmfulUri + "?block=false")
         sessionRule.session.waitForPageStop()
