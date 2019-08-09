@@ -36,7 +36,7 @@
 #define TYPED_ARRAY_CLASP(TYPE) (&TypedArrayObject::classes[Scalar::TYPE])
 #define ERROR_CLASP(TYPE) (&ErrorObject::classes[TYPE])
 
-#ifdef EXPOSE_INTL_API
+#ifdef ENABLE_INTL_API
 #  define IF_INTL(REAL, IMAGINARY) REAL
 #else
 #  define IF_INTL(REAL, IMAGINARY) IMAGINARY

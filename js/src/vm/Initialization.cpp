@@ -157,7 +157,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   RETURN_IF_FAIL(js::jit::AtomicOperations::Initialize());
 
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
 #  if !MOZ_SYSTEM_ICU
   // Explicitly set the data directory to its default value, but only when we're
   // sure that we use our in-tree ICU copy. See bug 1527879 and ICU bug
@@ -170,7 +170,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   if (U_FAILURE(err)) {
     return "u_init() failed";
   }
-#endif  // EXPOSE_INTL_API
+#endif  // ENABLE_INTL_API
 
   RETURN_IF_FAIL(js::CreateHelperThreadsState());
   RETURN_IF_FAIL(FutexThread::initialize());
@@ -236,9 +236,9 @@ JS_PUBLIC_API void JS_ShutDown(void) {
   // to do it only when PRMJ_Now is eventually called.
   PRMJ_NowShutdown();
 
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
   u_cleanup();
-#endif  // EXPOSE_INTL_API
+#endif  // ENABLE_INTL_API
 
 #ifdef MOZ_VTUNE
   js::vtune::Shutdown();
@@ -263,7 +263,7 @@ JS_PUBLIC_API bool JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
              "must call JS_SetICUMemoryFunctions before any other JSAPI "
              "operation (including JS_Init)");
 
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
   UErrorCode status = U_ZERO_ERROR;
   u_setMemoryFunctions(/* context = */ nullptr, allocFn, reallocFn, freeFn,
                        &status);
