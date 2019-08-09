@@ -2,7 +2,7 @@
 <html class=reftest-wait>
 <link rel="help" href="https://drafts.css-houdini.org/css-layout-api/#invoke-a-layout-callback">
 <link rel="match" href="fallback-ref.html">
-<meta name="assert" content="This test checks that a layout() class with a throwing layout function will fallback to block layout." />
+<meta name="assert" content="This test checks that a layout() class with a layout function that doesn't return a promise will fallback to block layout." />
 <style>
 .test {
   background: red;
@@ -10,20 +10,13 @@
   width: 100px;
 }
 
-.float {
-  float: left;
-  width: 50%;
+.child {
   height: 100px;
 }
 
-.fc {
-  display: flow-root;
-  height: 100px;
-}
-
-@supports (display: layout(throwing-layout)) {
+@supports (display: layout(unresolved-promise)) {
   .test {
-    display: layout(throwing-layout);
+    display: layout(unresolved-promise);
     background: green;
   }
 }
@@ -31,16 +24,14 @@
 <script src="/common/reftest-wait.js"></script>
 <script src="/common/worklet-reftest.js"></script>
 
-<!-- This tests that when the "layout()" layout function fails, it will fallback to block layout. -->
 <div class="test">
-  <div class="float"></div>
-  <div class="fc"></div>
+  <div class="child"></div>
 </div>
 
 <script id="code" type="text/worklet">
-registerLayout('throwing-layout', class {
+registerLayout('unresolved-promise', class {
   async intrinsicSizes() {}
-  async layout() { throw Error('fail!'); }
+  layout() { return new Promise(() => { /* never resolves */ }); }
 });
 </script>
 
