@@ -137,6 +137,7 @@ add_task(async function checkTelemetryClickEvents() {
     }
 
     const syncLink = await ContentTaskUtils.waitForCondition(() => {
+      // Opens an extra tab
       return content.document.getElementById("turn-on-sync");
     }, "syncLink exists");
 
@@ -154,6 +155,7 @@ add_task(async function checkTelemetryClickEvents() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     const openAboutLogins = await ContentTaskUtils.waitForCondition(() => {
+      // Opens an extra tab
       return content.document.getElementById("open-about-logins-button");
     }, "openAboutLogins exists");
 
@@ -208,6 +210,7 @@ add_task(async function checkTelemetryClickEvents() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     let openLockwise = await ContentTaskUtils.waitForCondition(() => {
+      // Opens an extra tab
       return content.document.getElementById("lockwise-link");
     }, "openLockwise exists");
 
@@ -279,7 +282,11 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for mtr_signup_button`);
 
   await BrowserTestUtils.removeTab(tab);
-  // We open two extra tabs with the click events.
+  // We open three extra tabs with the click events.
+  // 1. Monitor's "Viewed Saved Logins" link (goes to about:logins)
+  // 2. Lockwise's "Turn on sync..." link (goes to about:preferences#sync)
+  // 3. Lockwise's "Open Nightly" button (goes to about:logins)
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
