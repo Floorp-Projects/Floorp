@@ -1941,7 +1941,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return obj;
     }, {});
 
-    this._updateMutationBreakpointState(rawNode, {
+    this._updateMutationBreakpointState("api", rawNode, {
       ...this.getMutationBreakpoints(node),
       ...bpsForNode,
     });
@@ -1953,7 +1953,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {Node} rawNode The DOM node.
    * @param {Object} bpsForNode The state of each mutation bp type we support.
    */
-  _updateMutationBreakpointState(rawNode, bpsForNode) {
+  _updateMutationBreakpointState(mutationReason, rawNode, bpsForNode) {
     const rawDoc = rawNode.ownerDocument || rawNode;
 
     const docMutationBreakpoints = this._mutationBreakpointsForDoc(
@@ -2000,6 +2000,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         target: actor.actorID,
         type: "mutationBreakpoint",
         mutationBreakpoints: this.getMutationBreakpoints(actor),
+        mutationReason,
       });
     }
   },
@@ -2145,7 +2146,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     const walker = this.getDocumentWalker(targetNode);
     do {
-      this._updateMutationBreakpointState(walker.currentNode, null);
+      this._updateMutationBreakpointState("detach", walker.currentNode, null);
     } while (walker.nextNode());
   },
 
@@ -2499,7 +2500,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const mutationBps = this._mutationBreakpointsForDoc(doc);
     const nodes = mutationBps ? Array.from(mutationBps.nodes.keys()) : [];
     for (const node of nodes) {
-      this._updateMutationBreakpointState(node, null);
+      this._updateMutationBreakpointState("unload", node, null);
     }
 
     if (this.rootDoc === doc) {
