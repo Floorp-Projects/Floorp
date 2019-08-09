@@ -54,20 +54,12 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define RFP_TIMER_VALUE_PREF \
   "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
-#define RFP_TIMER_VALUE_DEFAULT 1000
 #define RFP_JITTER_VALUE_PREF \
   "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
-#define RFP_JITTER_VALUE_DEFAULT true
-#define RFP_SPOOFED_FRAMES_PER_SEC_PREF \
-  "privacy.resistFingerprinting.video_frames_per_sec"
-#define RFP_SPOOFED_DROPPED_RATIO_PREF \
-  "privacy.resistFingerprinting.video_dropped_ratio"
-#define RFP_TARGET_VIDEO_RES_PREF \
-  "privacy.resistFingerprinting.target_video_res"
-#define RFP_SPOOFED_FRAMES_PER_SEC_DEFAULT 30
-#define RFP_SPOOFED_DROPPED_RATIO_DEFAULT 5
-#define RFP_TARGET_VIDEO_RES_DEFAULT 480
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
+
+static constexpr uint32_t kVideoFramesPerSec = 30;
+static constexpr uint32_t kVideoDroppedRatio = 5;
 
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
@@ -76,9 +68,6 @@ NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
-static uint32_t sVideoFramesPerSec;
-static uint32_t sVideoDroppedRatio;
-static uint32_t sTargetVideoRes;
 nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>*
     nsRFPService::sSpoofingKeyboardCodes = nullptr;
 static mozilla::StaticMutex sLock;
@@ -618,13 +607,14 @@ uint32_t nsRFPService::GetSpoofedTotalFrames(double aTime) {
   double precision = TimerResolution() / 1000 / 1000;
   double time = floor(aTime / precision) * precision;
 
-  return NSToIntFloor(time * sVideoFramesPerSec);
+  return NSToIntFloor(time * kVideoFramesPerSec);
 }
 
 /* static */
 uint32_t nsRFPService::GetSpoofedDroppedFrames(double aTime, uint32_t aWidth,
                                                uint32_t aHeight) {
-  uint32_t targetRes = CalculateTargetVideoResolution(sTargetVideoRes);
+  uint32_t targetRes = CalculateTargetVideoResolution(
+      StaticPrefs::privacy_resistFingerprinting_target_video_res());
 
   // The video resolution is less than or equal to the target resolution, we
   // report a zero dropped rate for this case.
@@ -635,16 +625,17 @@ uint32_t nsRFPService::GetSpoofedDroppedFrames(double aTime, uint32_t aWidth,
   double precision = TimerResolution() / 1000 / 1000;
   double time = floor(aTime / precision) * precision;
   // Bound the dropped ratio from 0 to 100.
-  uint32_t boundedDroppedRatio = min(sVideoDroppedRatio, 100u);
+  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100u);
 
-  return NSToIntFloor(time * sVideoFramesPerSec *
+  return NSToIntFloor(time * kVideoFramesPerSec *
                       (boundedDroppedRatio / 100.0));
 }
 
 /* static */
 uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
                                                  uint32_t aHeight) {
-  uint32_t targetRes = CalculateTargetVideoResolution(sTargetVideoRes);
+  uint32_t targetRes = CalculateTargetVideoResolution(
+      StaticPrefs::privacy_resistFingerprinting_target_video_res());
 
   // The target resolution is greater than the current resolution. For this
   // case, there will be no dropped frames, so we report total frames directly.
@@ -655,9 +646,9 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
   double precision = TimerResolution() / 1000 / 1000;
   double time = floor(aTime / precision) * precision;
   // Bound the dropped ratio from 0 to 100.
-  uint32_t boundedDroppedRatio = min(sVideoDroppedRatio, 100u);
+  uint32_t boundedDroppedRatio = min(kVideoDroppedRatio, 100u);
 
-  return NSToIntFloor(time * sVideoFramesPerSec *
+  return NSToIntFloor(time * kVideoFramesPerSec *
                       ((100 - boundedDroppedRatio) / 100.0));
 }
 
@@ -737,15 +728,6 @@ nsresult nsRFPService::Init() {
 
   Preferences::RegisterCallbacks(PREF_CHANGE_METHOD(nsRFPService::PrefChanged),
                                  gCallbackPrefs, this);
-
-  Preferences::AddUintVarCache(&sVideoFramesPerSec,
-                               RFP_SPOOFED_FRAMES_PER_SEC_PREF,
-                               RFP_SPOOFED_FRAMES_PER_SEC_DEFAULT);
-  Preferences::AddUintVarCache(&sVideoDroppedRatio,
-                               RFP_SPOOFED_DROPPED_RATIO_PREF,
-                               RFP_SPOOFED_DROPPED_RATIO_DEFAULT);
-  Preferences::AddUintVarCache(&sTargetVideoRes, RFP_TARGET_VIDEO_RES_PREF,
-                               RFP_TARGET_VIDEO_RES_DEFAULT);
 
   // We backup the original TZ value here.
   const char* tzValue = PR_GetEnv("TZ");

@@ -5947,6 +5947,11 @@
   value: 1000
   mirror: always
 
+- name: privacy.resistFingerprinting.target_video_res
+  type: uint32_t
+  value: 480
+  mirror: always
+
 # Anti-tracking permission expiration.
 - name: privacy.restrict3rdpartystorage.expiration
   type: uint32_t
