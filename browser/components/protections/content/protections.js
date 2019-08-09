@@ -124,6 +124,7 @@ document.addEventListener("DOMContentLoaded", e => {
             div.className = `${type}-bar inner-bar`;
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
+            div.setAttribute("data-l10n-id", `bar-tooltip-${type}`);
             weekTypeCounts[type] += content[type];
             innerBar.appendChild(div);
           }
