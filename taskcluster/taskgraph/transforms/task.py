@@ -1196,7 +1196,7 @@ def build_ship_it_shipped_payload(config, task, task_def):
     }
 
 
-@payload_builder('push-addons', schema={
+@payload_builder('sign-and-push-addons', schema={
     Required('channel'): Any('listed', 'unlisted'),
     Required('upstream-artifacts'): [{
         Required('taskId'): taskref_or_string,
@@ -1204,7 +1204,7 @@ def build_ship_it_shipped_payload(config, task, task_def):
         Required('paths'): [basestring],
     }],
 })
-def build_push_addons_payload(config, task, task_def):
+def build_sign_and_push_addons_payload(config, task, task_def):
     worker = task['worker']
 
     task_def['payload'] = {
