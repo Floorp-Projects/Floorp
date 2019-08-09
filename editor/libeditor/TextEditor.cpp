@@ -1514,6 +1514,10 @@ TextEditor::SetNewlineHandling(int32_t aNewlineHandling) {
 }
 
 nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
+  if (aCount == 0 || IsReadonly() || IsDisabled()) {
+    return NS_OK;
+  }
+
   // If we don't have transaction in the undo stack, we shouldn't notify
   // anybody of trying to undo since it's not useful notification but we
   // need to pay some runtime cost.
@@ -1534,9 +1538,6 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying.
-  RefPtr<TextEditRules> rules(mRules);
-
   AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
@@ -1544,26 +1545,36 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   {
     AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
         *this, EditSubAction::eUndo, nsIEditor::eNone);
 
-    EditSubActionInfo subActionInfo(EditSubAction::eUndo);
-    bool cancel, handled;
-    rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-    if (!cancel && NS_SUCCEEDED(rv)) {
-      RefPtr<TransactionManager> transactionManager(mTransactionManager);
-      for (uint32_t i = 0; i < aCount; ++i) {
-        rv = transactionManager->Undo();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          break;
-        }
-        DoAfterUndoTransaction();
+    RefPtr<TransactionManager> transactionManager(mTransactionManager);
+    for (uint32_t i = 0; i < aCount; ++i) {
+      if (NS_WARN_IF(NS_FAILED(transactionManager->Undo()))) {
+        break;
       }
-      rv = rules->DidDoAction(subActionInfo, rv);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "TextEditRules::DidDoAction() failed");
+      DoAfterUndoTransaction();
+    }
+
+    if (NS_WARN_IF(!mRootElement)) {
+      rv = NS_ERROR_FAILURE;
+    } else {
+      // The idea here is to see if the magic empty node has suddenly
+      // reappeared as the result of the undo.  If it has, set our state
+      // so we remember it.  There is a tradeoff between doing here and
+      // at redo, or doing it everywhere else that might care.  Since undo
+      // and redo are relatively rare, it makes sense to take the (small)
+      // performance hit here.
+      nsIContent* leftMostChild = GetLeftmostChild(mRootElement);
+      if (leftMostChild &&
+          EditorBase::IsPaddingBRElementForEmptyEditor(*leftMostChild)) {
+        mPaddingBRElementForEmptyEditor =
+            static_cast<HTMLBRElement*>(leftMostChild);
+      } else {
+        mPaddingBRElementForEmptyEditor = nullptr;
+      }
     }
   }
 
@@ -1575,6 +1586,10 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 }
 
 nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
+  if (aCount == 0 || IsReadonly() || IsDisabled()) {
+    return NS_OK;
+  }
+
   // If we don't have transaction in the redo stack, we shouldn't notify
   // anybody of trying to redo since it's not useful notification but we
   // need to pay some runtime cost.
@@ -1595,9 +1610,6 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  // Protect the edit rules object from dying.
-  RefPtr<TextEditRules> rules(mRules);
-
   AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
@@ -1605,26 +1617,38 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   {
     AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
         *this, EditSubAction::eRedo, nsIEditor::eNone);
 
-    EditSubActionInfo subActionInfo(EditSubAction::eRedo);
-    bool cancel, handled;
-    rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
-    if (!cancel && NS_SUCCEEDED(rv)) {
-      RefPtr<TransactionManager> transactionManager(mTransactionManager);
-      for (uint32_t i = 0; i < aCount; ++i) {
-        nsresult rv = transactionManager->Redo();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          break;
-        }
-        DoAfterRedoTransaction();
+    RefPtr<TransactionManager> transactionManager(mTransactionManager);
+    for (uint32_t i = 0; i < aCount; ++i) {
+      if (NS_WARN_IF(NS_FAILED(transactionManager->Redo()))) {
+        break;
       }
-      rv = rules->DidDoAction(subActionInfo, rv);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "TextEditRules::DidDoAction() failed");
+      DoAfterRedoTransaction();
+    }
+
+    if (NS_WARN_IF(!mRootElement)) {
+      rv = NS_ERROR_FAILURE;
+    } else {
+      // We may take empty <br> element for empty editor back with this redo.
+      // We need to store it again.
+      // XXX Looks like that this is too slow if there are a lot of nodes.
+      //     Shouldn't we just scan children in the root?
+      nsCOMPtr<nsIHTMLCollection> nodeList =
+          mRootElement->GetElementsByTagName(NS_LITERAL_STRING("br"));
+      MOZ_ASSERT(nodeList);
+      Element* brElement =
+          nodeList->Length() == 1 ? nodeList->Item(0) : nullptr;
+      if (brElement &&
+          EditorBase::IsPaddingBRElementForEmptyEditor(*brElement)) {
+        mPaddingBRElementForEmptyEditor =
+            static_cast<HTMLBRElement*>(brElement);
+      } else {
+        mPaddingBRElementForEmptyEditor = nullptr;
+      }
     }
   }
 

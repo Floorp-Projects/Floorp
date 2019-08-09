@@ -224,12 +224,6 @@ class TextEditRules {
 
   nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
 
-  nsresult WillUndo(bool* aCancel, bool* aHandled);
-  nsresult DidUndo(nsresult aResult);
-
-  nsresult WillRedo(bool* aCancel, bool* aHandled);
-  nsresult DidRedo(nsresult aResult);
-
   /**
    * Called prior to nsIEditor::OutputToString.
    *
