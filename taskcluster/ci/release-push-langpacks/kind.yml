@@ -21,13 +21,13 @@ only-for-build-platforms:
 
 
 job-template:
-    description: Signs {locales} XPIs for platform via addons.mozilla.org and pushes them
+    description: Sends {locales} XPIs for platform to addons.mozilla.org
     worker-type:
         by-release-level:
             production: scriptworker-prov-v1/addon-v1
             staging: scriptworker-prov-v1/addon-dev
     worker:
-        implementation: sign-and-push-addons
+        implementation: push-addons
         channel:
             by-project:
                 mozilla-release:

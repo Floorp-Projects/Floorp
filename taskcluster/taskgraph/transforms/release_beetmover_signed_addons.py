@@ -61,7 +61,7 @@ beetmover_description_schema = schema.extend({
 def set_label(config, jobs):
     for job in jobs:
         job['label'] = job['primary-dependency'].label.replace(
-            'sign-and-push-langpacks', 'beetmover-signed-langpacks'
+            'push-langpacks', 'beetmover-signed-langpacks'
         )
 
         yield job
@@ -120,7 +120,7 @@ def make_task_description(config, jobs):
 def make_task_worker(config, jobs):
     for job in jobs:
         signing_task_ref = get_upstream_task_ref(
-            job, expected_kinds=('release-sign-and-push-langpacks',)
+            job, expected_kinds=('release-push-langpacks',)
         )
 
         platform = job["attributes"]["build_platform"]
