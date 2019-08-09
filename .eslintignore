@@ -275,7 +275,6 @@ services/fxaccounts/FxAccountsPairingChannel.js
 
 # Uses `#filter substitution`
 services/sync/modules/constants.js
-services/sync/services-sync.js
 
 # Servo is imported.
 servo/**

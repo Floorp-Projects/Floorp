@@ -304,9 +304,6 @@
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
 
-; Services (gre) prefs
-@RESPATH@/defaults/pref/services-sync.js
-
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine.
 @RESPATH@/res/EditorOverride.css
