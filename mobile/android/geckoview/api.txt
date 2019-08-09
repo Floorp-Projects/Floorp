@@ -329,6 +329,7 @@ package org.mozilla.geckoview {
     method public boolean getRemoteDebuggingEnabled();
     method @Nullable public GeckoRuntime getRuntime();
     method @Nullable public Rect getScreenSizeOverride();
+    method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
     method public boolean getUseContentProcessHint();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
@@ -376,6 +377,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder preferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
+    method @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
     method @NonNull public GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
@@ -1071,6 +1073,16 @@ package org.mozilla.geckoview {
 
   public final class RuntimeTelemetry {
     method @AnyThread @NonNull public GeckoResult<JSONObject> getSnapshots(boolean);
+  }
+
+  public static interface RuntimeTelemetry.Delegate {
+    method @AnyThread default public void onTelemetryReceived(@NonNull RuntimeTelemetry.Metric);
+  }
+
+  public static class RuntimeTelemetry.Metric {
+    ctor protected Metric();
+    field @NonNull public final String name;
+    field @NonNull public final long[] values;
   }
 
   public class ScreenLength {
