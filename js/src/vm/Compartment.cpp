@@ -46,18 +46,28 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
-void Compartment::checkWrapperMapAfterMovingGC() {
+template <typename Entry>
+static inline void CheckWrapperMapEntry(const WrapperMap& map, Entry& entry) {
   /*
    * Assert that the postbarriers have worked and that nothing is left in
    * wrapperMap that points into the nursery, and that the hash table entries
    * are discoverable.
    */
-  for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-    auto checkGCThing = [](auto tp) { CheckGCThingAfterMovingGC(*tp); };
-    e.front().mutableKey().applyToWrapped(checkGCThing);
+  auto& key = entry.front().mutableKey();
+  key.applyToWrapped([&](auto tp) {
+    CheckGCThingAfterMovingGC(*tp);
 
-    WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(e.front().key());
-    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
+    WrapperMap::Ptr ptr = map.lookup(CrossCompartmentKey(*tp));
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &entry.front());
+  });
+}
+
+void Compartment::checkWrapperMapAfterMovingGC() {
+  for (StringWrapperEnum e(this); !e.empty(); e.popFront()) {
+    CheckWrapperMapEntry(crossCompartmentWrappers, e);
+  }
+  for (NonStringWrapperEnum e(this); !e.empty(); e.popFront()) {
+    CheckWrapperMapEntry(crossCompartmentWrappers, e);
   }
 }
 
@@ -152,8 +162,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleString strp) {
 
   /* Check the cache. */
   RootedValue key(cx, StringValue(str));
-  if (WrapperMap::Ptr p =
-          crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {
+  if (WrapperMap::Ptr p = lookupWrapper(str)) {
     strp.set(p->value().get().toString());
     return true;
   }
@@ -279,8 +288,7 @@ bool Compartment::getOrCreateWrapper(JSContext* cx, HandleObject existing,
                                      MutableHandleObject obj) {
   // If we already have a wrapper for this value, use it.
   RootedValue key(cx, ObjectValue(*obj));
-  if (WrapperMap::Ptr p =
-          crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {
+  if (WrapperMap::Ptr p = lookupWrapper(obj)) {
     obj.set(&p->value().get().toObject());
     MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
     return true;
