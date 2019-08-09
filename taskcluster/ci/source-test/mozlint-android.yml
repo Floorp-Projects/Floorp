@@ -28,7 +28,7 @@ lints:
             MOZ_OBJDIR: obj-firefox
             PERFHERDER_EXTRA_OPTIONS: android-lints
             TINDERBOX_OUTPUT: '1'
-        max-run-time: 1800
+        max-run-time: 3600
         artifacts:
             - type: file
               name: public/code-review/mozlint.json
