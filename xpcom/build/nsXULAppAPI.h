@@ -385,6 +385,8 @@ static_assert(MOZ_ARRAY_LENGTH(kGeckoProcessTypeString) == GeckoProcessType_End,
 
 XRE_API(const char*, XRE_ChildProcessTypeToString,
         (GeckoProcessType aProcessType))
+XRE_API(const char*, XRE_ChildProcessTypeToAnnotation,
+        (GeckoProcessType aProcessType))
 
 #if defined(MOZ_WIDGET_ANDROID)
 struct XRE_AndroidChildFds {

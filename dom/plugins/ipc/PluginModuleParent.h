@@ -420,7 +420,7 @@ class PluginModuleChromeParent : public PluginModuleParent,
   virtual bool ShouldContinueFromReplyTimeout() override;
 
   void ProcessFirstMinidump();
-  void WriteExtraDataForMinidump();
+  void AddCrashAnnotations();
 
   PluginProcessParent* Process() const { return mSubprocess; }
   base::ProcessHandle ChildProcessHandle() {
