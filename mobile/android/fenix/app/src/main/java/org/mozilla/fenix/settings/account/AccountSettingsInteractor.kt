@@ -20,7 +20,7 @@ interface AccountSettingsUserActions {
      * @param newDeviceName the device name to change to
      * @return Boolean indicating whether the new device name has been accepted or not
      */
-    fun onChangeDeviceName(newDeviceName: String): Boolean
+    fun onChangeDeviceName(newDeviceName: String, invalidNameResponse: () -> Unit): Boolean
 
     /**
      * Called whenever the "Sign out" button is tapped
@@ -31,8 +31,7 @@ interface AccountSettingsUserActions {
 class AccountSettingsInteractor(
     private val navController: NavController,
     private val syncNow: () -> Unit,
-    private val checkValidName: (String) -> Boolean,
-    private val setDeviceName: (String) -> Unit,
+    private val syncDeviceName: (String) -> Boolean,
     private val store: AccountSettingsStore
 ) : AccountSettingsUserActions {
 
@@ -40,9 +39,9 @@ class AccountSettingsInteractor(
         syncNow.invoke()
     }
 
-    override fun onChangeDeviceName(newDeviceName: String): Boolean {
-        val isValidName = checkValidName.invoke(newDeviceName)
-        if (!isValidName) {
+    override fun onChangeDeviceName(newDeviceName: String, invalidNameResponse: () -> Unit): Boolean {
+        if (!syncDeviceName(newDeviceName)) {
+            invalidNameResponse.invoke()
             return false
         }
         // Our "change the device name on the server" operation may fail.
@@ -53,7 +52,6 @@ class AccountSettingsInteractor(
         // So, when user presses "sync now", we'll fetch the old value, and reset the UI.
         store.dispatch(AccountSettingsAction.UpdateDeviceName(newDeviceName))
 
-        setDeviceName.invoke(newDeviceName)
         return true
     }
 

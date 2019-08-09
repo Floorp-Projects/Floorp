@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.account
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.format.DateUtils
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -72,6 +73,22 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         requireComponents.analytics.metrics.track(Event.SyncAccountClosed)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        consumeFrom(accountSettingsStore) {
+            updateLastSyncTimePref(it)
+            updateDeviceName(it)
+        }
+
+        accountSettingsInteractor = AccountSettingsInteractor(
+            findNavController(),
+            ::syncNow,
+            ::syncDeviceName,
+            accountSettingsStore
+        )
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 
@@ -79,30 +96,17 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             AccountSettingsStore(
                 AccountSettingsState(
                     lastSyncedDate =
-                        if (getLastSynced(requireContext()) == 0L)
-                            LastSyncTime.Never
-                        else
-                            LastSyncTime.Success(getLastSynced(requireContext())),
+                    if (getLastSynced(requireContext()) == 0L)
+                        LastSyncTime.Never
+                    else
+                        LastSyncTime.Success(getLastSynced(requireContext())),
                     deviceName = requireComponents.backgroundServices.defaultDeviceName(requireContext())
                 )
             )
         }
 
-        consumeFrom(accountSettingsStore) {
-            updateLastSyncTimePref(it)
-            updateDeviceName(it)
-        }
-
         accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
-
-        accountSettingsInteractor = AccountSettingsInteractor(
-            findNavController(),
-            ::syncNow,
-            ::checkValidName,
-            ::syncDeviceName,
-            accountSettingsStore
-        )
 
         // Sign out
         val signOut = context!!.getPreferenceKey(R.string.pref_key_sign_out)
@@ -161,18 +165,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun checkValidName(newValue: String): Boolean {
-        // The network request requires a nonempty string, so don't persist any changes if the user inputs one.
+    private fun syncDeviceName(newValue: String): Boolean {
         if (newValue.trim().isEmpty()) {
-            FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
-                .setText(getString(R.string.empty_device_name_error))
-                .show()
             return false
         }
-        return true
-    }
-
-    private fun syncDeviceName(newValue: String) {
         // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
         lifecycleScope.launch(Main) {
             accountManager.authenticatedAccount()
@@ -180,6 +176,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 ?.setDeviceNameAsync(newValue)
                 ?.await()
         }
+        return true
     }
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
@@ -198,7 +195,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
     private fun getChangeListenerForDeviceName(): Preference.OnPreferenceChangeListener {
         return Preference.OnPreferenceChangeListener { _, newValue ->
-            accountSettingsInteractor.onChangeDeviceName(newValue as String)
+            accountSettingsInteractor.onChangeDeviceName(newValue as String) {
+                FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
+                .setText(getString(R.string.empty_device_name_error))
+                .show()
+            }
         }
     }
 
