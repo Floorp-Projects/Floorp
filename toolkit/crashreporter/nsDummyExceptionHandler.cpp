@@ -211,6 +211,10 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   return false;
 }
 
+bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType) {
+  return false;
+}
+
 ThreadId CurrentThreadId() { return -1; }
 
 bool TakeMinidump(nsIFile** aResult, bool aMoveToPending) { return false; }
