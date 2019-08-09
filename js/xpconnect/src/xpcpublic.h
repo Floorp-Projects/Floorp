@@ -679,15 +679,13 @@ inline bool AreNonLocalConnectionsDisabled() {
   return disabledForTest;
 }
 
+void CacheAutomationPref(bool* aPref);
+
 inline bool IsInAutomation() {
-  static bool sAutomationPrefIsSet;
+  static bool sAutomationPrefIsSet = false;
   static bool sPrefCacheAdded = false;
   if (!sPrefCacheAdded) {
-    mozilla::Preferences::AddBoolVarCache(
-        &sAutomationPrefIsSet,
-        "security.turn_off_all_security_so_that_viruses_can_take_over_this_"
-        "computer",
-        false);
+    CacheAutomationPref(&sAutomationPrefIsSet);
     sPrefCacheAdded = true;
   }
   return sAutomationPrefIsSet && AreNonLocalConnectionsDisabled();
