@@ -13,8 +13,9 @@ kind-dependencies:
     - release-push-langpacks
 
 only-for-attributes:
-    - nightly
-    - shippable
+    # - nightly
+    # - shippable
+    - no_jobs  # Temporarily stop beetmoving with this patch to ease diffs
 
 job-template:
     description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
