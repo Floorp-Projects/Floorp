@@ -15360,6 +15360,20 @@
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
+  "AUTOPLAY_DEFAULT_SETTING_CHANGE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "nohlmeier@mozilla.com"
+    ],
+    "expires_in_version": "74",
+    "kind": "categorical",
+    "labels": ["allow", "blockAudible", "blockAll"],
+    "bug_numbers": [1567302],
+    "description": "counts the number of times a user changed the default autoplay behavior to each setting during a subsession.",
+    "releaseChannelCollection": "opt-out"
+  },
   "WEB_AUDIO_AUTOPLAY": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

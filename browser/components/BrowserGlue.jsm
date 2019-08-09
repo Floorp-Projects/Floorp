@@ -1691,8 +1691,14 @@ BrowserGlue.prototype = {
   },
 
   _updateAutoplayPref() {
-    let blocked = Services.prefs.getIntPref("media.autoplay.default", 1);
-    Services.telemetry.scalarSet("media.autoplay_default_blocked", blocked);
+    const blocked = Services.prefs.getIntPref("media.autoplay.default", 1);
+    const telemetry = Services.telemetry.getHistogramById(
+      "AUTOPLAY_DEFAULT_SETTING_CHANGE"
+    );
+    const labels = { 0: "allow", 1: "blockAudible", 5: "blockAll" };
+    if (blocked in labels) {
+      telemetry.add(labels[blocked]);
+    }
   },
 
   _setPrefExpectations() {
