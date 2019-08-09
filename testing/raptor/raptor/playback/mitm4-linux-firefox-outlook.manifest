@@ -1,10 +1,10 @@
 [
-  {
-    "size": 10091794,
-    "visibility": "public",
-    "digest": "4ab0e3defec98b227f1685f97246848d7662897cb6a1e83ae657f82b1ca17de7c69ac2e764def36f3dcf4f4c372b5a0410f1bb9d55e55ec046b6f96c183db42a",
-    "algorithm": "sha512",
-    "filename": "firefox-outlook.zip",
-    "unpack": true
-  }
+    {
+        "algorithm": "sha512",
+        "visibility": "public",
+        "filename": "mitm4-linux-firefox-live.zip",
+        "unpack": true,
+        "digest": "85a7664be168bbc16a5affcd6597b896154244712f143bc4c3ac8eda82e2275991bfd13cb09ecc6689db33fdb7947b911ff2441c5d1e9c038586947a9d8cb27d",
+        "size": 22873466
+    }
 ]
