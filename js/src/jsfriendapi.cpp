@@ -536,7 +536,7 @@ JS_FRIEND_API void js::VisitGrayWrapperTargets(Zone* zone,
                                                GCThingCallback callback,
                                                void* closure) {
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-    for (Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
+    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
       e.front().mutableKey().applyToWrapped([callback, closure](auto tp) {
         if ((*tp)->isMarkedGray()) {
           callback(closure, JS::GCCellPtr(*tp));

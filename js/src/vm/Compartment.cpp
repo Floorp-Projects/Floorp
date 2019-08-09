@@ -66,7 +66,7 @@ void Compartment::checkWrapperMapAfterMovingGC() {
   for (StringWrapperEnum e(this); !e.empty(); e.popFront()) {
     CheckWrapperMapEntry(crossCompartmentWrappers, e);
   }
-  for (NonStringWrapperEnum e(this); !e.empty(); e.popFront()) {
+  for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
     CheckWrapperMapEntry(crossCompartmentWrappers, e);
   }
 }
@@ -428,7 +428,7 @@ void Compartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc) {
   MOZ_ASSERT(!zone()->isCollectingFromAnyThread() ||
              trc->runtime()->gc.isHeapCompacting());
 
-  for (NonStringWrapperEnum e(this); !e.empty(); e.popFront()) {
+  for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
     if (e.front().key().is<JSObject*>()) {
       Value v = e.front().value().unbarrieredGet();
       ProxyObject* wrapper = &v.toObject().as<ProxyObject>();
