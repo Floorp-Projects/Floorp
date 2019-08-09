@@ -978,6 +978,11 @@
 # Prefs starting with "content."
 #---------------------------------------------------------------------------
 
+- name: content.cors.disable
+  type: bool
+  value: false
+  mirror: always
+
 # Back off timer notification after count.
 # -1 means never.
 - name: content.notify.backoffcount

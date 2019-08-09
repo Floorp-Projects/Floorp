@@ -6,6 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/StaticPrefs_content.h"
 
 #include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
@@ -52,7 +53,6 @@ using namespace mozilla::net;
 
 #define PREFLIGHT_CACHE_SIZE 100
 
-static bool gDisableCORS = false;
 static bool gDisableCORSPrivateData = false;
 
 static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
@@ -380,7 +380,6 @@ NS_IMPL_ISUPPORTS(nsCORSListenerProxy, nsIStreamListener, nsIRequestObserver,
 
 /* static */
 void nsCORSListenerProxy::Startup() {
-  Preferences::AddBoolVarCache(&gDisableCORS, "content.cors.disable");
   Preferences::AddBoolVarCache(&gDisableCORSPrivateData,
                                "content.cors.no_private_data");
 }
@@ -516,7 +515,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   nsCOMPtr<nsIHttpChannel> topChannel;
   topChannel.swap(mHttpChannel);
 
-  if (gDisableCORS) {
+  if (StaticPrefs::content_cors_disable()) {
     LogBlockedRequest(aRequest, "CORSDisabled", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSDISABLED, topChannel);
     return NS_ERROR_DOM_BAD_URI;
@@ -1425,7 +1424,7 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
     nsTArray<nsCString>& aUnsafeHeaders, nsIChannel** aPreflightChannel) {
   *aPreflightChannel = nullptr;
 
-  if (gDisableCORS) {
+  if (StaticPrefs::content_cors_disable()) {
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequestChannel);
     LogBlockedRequest(aRequestChannel, "CORSDisabled", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSDISABLED, http);
