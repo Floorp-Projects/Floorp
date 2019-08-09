@@ -346,12 +346,13 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
         android_link_flags = "-fuse-ld=lld"
 
         for target, cfg in android_targets.items():
-            sysroot_dir = cfg["ndk_sysroot"]
-            android_gcc_dir = cfg["ndk_toolchain"]
+            sysroot_dir = cfg["ndk_sysroot"].format(**os.environ)
+            android_gcc_dir = cfg["ndk_toolchain"].format(**os.environ)
             android_include_dirs = cfg["ndk_includes"]
             api_level = cfg["api_level"]
 
-            android_flags = ["-isystem %s" % d for d in android_include_dirs]
+            android_flags = ["-isystem %s" % d.format(**os.environ)
+                             for d in android_include_dirs]
             android_flags += ["--gcc-toolchain=%s" % android_gcc_dir]
             android_flags += ["-D__ANDROID_API__=%s" % api_level]
 
@@ -439,7 +440,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
 def get_tool(config, key):
     f = None
     if key in config:
-        f = config[key]
+        f = config[key].format(**os.environ)
         if os.path.isabs(f):
             if not os.path.exists(f):
                 raise ValueError("%s must point to an existing path" % key)
@@ -626,7 +627,7 @@ if __name__ == "__main__":
     python_path = config["python_path"]
     gcc_dir = None
     if "gcc_dir" in config:
-        gcc_dir = config["gcc_dir"]
+        gcc_dir = config["gcc_dir"].format(**os.environ)
         if not os.path.exists(gcc_dir):
             raise ValueError("gcc_dir must point to an existing path")
     ndk_dir = None
