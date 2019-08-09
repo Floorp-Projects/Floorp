@@ -1,15 +1,15 @@
 TOOLTOOL_DIR=${topsrcdir}
 export MAKECAB=$TOOLTOOL_DIR/makecab.exe
-export LLVM_CONFIG="${TOOLTOOL_DIR}/clang/bin/llvm-config"
+export LLVM_CONFIG="${MOZ_FETCHES_DIR}/clang/bin/llvm-config"
 
-RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
-CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
-RUSTDOC="${TOOLTOOL_DIR}/rustc/bin/rustdoc"
-RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
-CBINDGEN="${TOOLTOOL_DIR}/cbindgen/cbindgen"
+RUSTC="${MOZ_FETCHES_DIR}/rustc/bin/rustc"
+CARGO="${MOZ_FETCHES_DIR}/rustc/bin/cargo"
+RUSTDOC="${MOZ_FETCHES_DIR}/rustc/bin/rustdoc"
+RUSTFMT="${MOZ_FETCHES_DIR}/rustc/bin/rustfmt"
+CBINDGEN="${MOZ_FETCHES_DIR}/cbindgen/cbindgen"
 
-NASM="${TOOLTOOL_DIR}/nasm/nasm.exe"
-NODEJS="${TOOLTOOL_DIR}/node/node.exe"
+NASM="${MOZ_FETCHES_DIR}/nasm/nasm.exe"
+NODEJS="${MOZ_FETCHES_DIR}/node/node.exe"
 
 ac_add_options --target=x86_64-pc-mingw32
 

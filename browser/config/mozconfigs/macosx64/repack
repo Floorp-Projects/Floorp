@@ -1,8 +1,8 @@
 # This mozconfig is responsible merely for getting the cross tools setup
 # for repacking a .tar into a .dmg as returned from signing.
 
-export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
-export DMG_TOOL=$topsrcdir/dmg/dmg
-export HFS_TOOL=$topsrcdir/dmg/hfsplus
-export NODEJS=$topsrcdir/node/bin/node
+export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
+export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
+export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
+export NODEJS=$MOZ_FETCHES_DIR/node/bin/node
 ac_add_options --disable-compile-environment

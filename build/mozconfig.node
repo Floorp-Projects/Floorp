@@ -4,9 +4,9 @@
 
 case "$(uname -s)" in
 MINGW*)
-    export NODEJS=$topsrcdir/node/node.exe
+    export NODEJS=$MOZ_FETCHES_DIR/node/node.exe
     ;;
 *)
-    export NODEJS=$topsrcdir/node/bin/node
+    export NODEJS=$MOZ_FETCHES_DIR/node/bin/node
     ;;
 esac
