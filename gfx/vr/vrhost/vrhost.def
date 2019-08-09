@@ -10,3 +10,4 @@ LIBRARY        vrhost.dll
 EXPORTS
                CreateVRWindow       PRIVATE
                CloseVRWindow        PRIVATE
+               SendUIMessageToVRWindow  PRIVATE
