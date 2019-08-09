@@ -26,7 +26,7 @@ object Versions {
     const val disklrucache = "2.0.2"
     const val leakcanary = "1.6.3"
 
-    const val mozilla_appservices = "0.36.0"
+    const val mozilla_appservices = "0.37.0"
     const val servo = "0.0.1.20181017.aa95911"
 
     const val material = "1.0.0"
