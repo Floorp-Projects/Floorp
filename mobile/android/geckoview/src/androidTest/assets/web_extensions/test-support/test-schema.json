@@ -72,6 +72,22 @@
         "async": true,
         "description": "Gets the requested locales.",
         "parameters": []
+      },
+      {
+        "name": "addHistogram",
+        "type": "function",
+        "async": true,
+        "description": "Add a sample with the given value to the histogram with the given id.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id"
+          },
+          {
+            "type": "any",
+            "name": "value"
+          }
+        ]
       }
     ]
   }

@@ -52,6 +52,17 @@ port.onMessage.addListener(async message => {
         sendResponse(id, browser.test.getRequestedLocales());
       }
       break;
+
+    case "AddHistogram":
+      {
+        const {
+          id,
+          args: { id: histogramId, value },
+        } = message;
+        browser.test.addHistogram(histogramId, value);
+        sendResponse(id, null);
+      }
+      break;
   }
 });
 
