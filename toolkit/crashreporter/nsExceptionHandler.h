@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "nsError.h"
 #include "nsString.h"
+#include "nsXULAppAPI.h"
 #include "prio.h"
 
 #if defined(XP_WIN)
@@ -171,6 +172,18 @@ bool TakeMinidump(nsIFile** aResult, bool aMoveToPending = false);
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
                           AnnotationTable& aAnnotations,
                           uint32_t* aSequence = nullptr);
+
+/**
+ * If a dump was found for |childPid| then write a minimal .extra file to
+ * complete it and remove it from the list of pending crash dumps. It's
+ * required to call this method after a non-main process crash if the crash
+ * report could not be finalized via the CrashReporterHost (for example because
+ * it wasn't instanced yet).
+ *
+ * @param aChildPid The pid of the crashed child process
+ * @param aType The type of the crashed process
+ */
+bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType);
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;
