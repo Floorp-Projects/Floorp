@@ -23,8 +23,6 @@ from distutils.dir_util import copy_tree
 
 from shutil import which
 
-URL_REPO = "https://github.com/llvm/llvm-project"
-
 
 def symlink(source, link_name):
     os_symlink = getattr(os, "symlink", None)
