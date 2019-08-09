@@ -475,8 +475,12 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   background-repeat: no-repeat;
   background-position-x: 3px;
   background-position-y: 5px;
-  padding: 4px 4px 4px 24px;
-  display: inline;
+  padding: 4px;
+  padding-inline-start: 24px;
+}
+
+[dir="rtl"] .inline-text-icon {
+  background-position-x: 100%;
 }
 
 .lockwise-mobile-app-icon {
@@ -485,6 +489,11 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   background: url("chrome://browser/content/logos/lockwise-mobile-app.svg") no-repeat center/cover;
   width: 38px;
   height: 35px;
+}
+
+.passwords-stored-text,
+.synced-devices-text {
+  width: max-content;
 }
 
 .passwords-stored-text {
@@ -591,6 +600,10 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   flex-wrap: wrap;
 }
 
+.monitor-icon {
+  margin-inline-end: 3px;
+}
+
 .monitor-stat .monitor-icon {
   background-size: 24px 24px;
   background-repeat: no-repeat;
@@ -601,7 +614,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   height: 24px;
   display: block;
   padding: 5px;
-  background-position-y: center;
+  background-position: center;
 }
 
 .info-text {
