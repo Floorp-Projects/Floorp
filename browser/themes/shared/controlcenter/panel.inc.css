@@ -211,10 +211,16 @@
 }
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+  transition-property: fill;
+  transition-timing-function: var(--animation-easing-function);
+  transition-duration: var(--panelui-subview-transition-duration);
+}
+
+#protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
   fill: #0A51BF;
 }
 
-:root[lwt-popup-brighttext] #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+:root[lwt-popup-brighttext] #protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
   fill: #0CB0F5;
 }
 
