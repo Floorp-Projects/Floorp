@@ -426,6 +426,10 @@ class JS::Compartment {
   bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing,
                           js::MutableHandleObject obj);
 
+  MOZ_MUST_USE bool putWrapper(JSContext* cx,
+                               const js::CrossCompartmentKey& wrapped,
+                               const js::Value& wrapper);
+
  public:
   explicit Compartment(JS::Zone* zone, bool invisibleToDebugger);
 
@@ -443,9 +447,15 @@ class JS::Compartment {
   MOZ_MUST_USE bool rewrap(JSContext* cx, JS::MutableHandleObject obj,
                            JS::HandleObject existing);
 
-  MOZ_MUST_USE bool putWrapper(JSContext* cx,
-                               const js::CrossCompartmentKey& wrapped,
-                               const js::Value& wrapper);
+  MOZ_MUST_USE bool putWrapper(JSContext* cx, JSObject* wrapped,
+                               const js::Value& wrapper) {
+    return putWrapper(cx, js::CrossCompartmentKey(wrapped), wrapper);
+  }
+
+  MOZ_MUST_USE bool putWrapper(JSContext* cx, JSString* wrapped,
+                               const js::Value& wrapper) {
+    return putWrapper(cx, js::CrossCompartmentKey(wrapped), wrapper);
+  }
 
   js::WrapperMap::Ptr lookupWrapper(JSObject* obj) const {
     return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(obj));
