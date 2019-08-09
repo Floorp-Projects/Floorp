@@ -23,8 +23,11 @@ promise_test(async t => {
     assert_true(event.hostCandidate.includes(":"), "hostCandidate");
     assert_true(event.url.includes("123"), "url");
   });
-  const offerOptions = {offerToReceiveAudio: 1};
-  await pc.setLocalDescription(await pc.createOffer(offerOptions));
+  const stream = await getNoiseStream({audio:true});
+  t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+  pc.addTrack(stream.getAudioTracks()[0], stream);
+
+  await pc.setLocalDescription(await pc.createOffer());
   await onErrorPromise;
 }, 'Surfacing onicecandidateerror');
 
