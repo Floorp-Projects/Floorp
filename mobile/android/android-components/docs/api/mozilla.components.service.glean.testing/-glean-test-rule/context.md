@@ -2,4 +2,7 @@
 
 # context
 
-`val context: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L31)
+`val context: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L34)
+
+the application context
+

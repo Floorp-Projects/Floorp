@@ -2,7 +2,7 @@
 
 # typeface
 
-`var typeface: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L296)
+`var typeface: <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L297)
 
 Sets the typeface of the text for the URL/search term displayed in the toolbar.
 

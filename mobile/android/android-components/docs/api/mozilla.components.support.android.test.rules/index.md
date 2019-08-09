@@ -1,6 +1,6 @@
-[android-components](../index.md) / [mozilla.components.support.test.rules](./index.md)
+[android-components](../index.md) / [mozilla.components.support.android.test.rules](./index.md)
 
-## Package mozilla.components.support.test.rules
+## Package mozilla.components.support.android.test.rules
 
 ### Types
 

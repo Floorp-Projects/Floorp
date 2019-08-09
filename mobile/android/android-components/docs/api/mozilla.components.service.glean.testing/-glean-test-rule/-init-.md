@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`GleanTestRule(context: <ERROR CLASS>)`
+`GleanTestRule(context: <ERROR CLASS>, configToUse: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)` = Configuration())`
 
 This implements a JUnit rule for writing tests for Glean SDK metrics.
 
@@ -17,3 +17,8 @@ Example usage:
 val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 ```
 
+### Parameters
+
+`context` - the application context
+
+`configToUse` - an optional [Configuration](../../mozilla.components.service.glean.config/-configuration/index.md) to initialize the Glean SDK with

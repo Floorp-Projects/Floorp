@@ -2,7 +2,7 @@
 
 # GleanTestRule
 
-`class GleanTestRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L30)
+`class GleanTestRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L33)
 
 This implements a JUnit rule for writing tests for Glean SDK metrics.
 
@@ -17,17 +17,24 @@ Example usage:
 val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 ```
 
+### Parameters
+
+`context` - the application context
+
+`configToUse` - an optional [Configuration](../../mozilla.components.service.glean.config/-configuration/index.md) to initialize the Glean SDK with
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `GleanTestRule(context: <ERROR CLASS>)`<br>This implements a JUnit rule for writing tests for Glean SDK metrics. |
+| [&lt;init&gt;](-init-.md) | `GleanTestRule(context: <ERROR CLASS>, configToUse: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)` = Configuration())`<br>This implements a JUnit rule for writing tests for Glean SDK metrics. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
-| [context](context.md) | `val context: <ERROR CLASS>` |
+| [configToUse](config-to-use.md) | `val configToUse: `[`Configuration`](../../mozilla.components.service.glean.config/-configuration/index.md)<br>an optional [Configuration](../../mozilla.components.service.glean.config/-configuration/index.md) to initialize the Glean SDK with |
+| [context](context.md) | `val context: <ERROR CLASS>`<br>the application context |
 
 ### Functions
 

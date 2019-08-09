@@ -107,6 +107,7 @@ mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
+mozilla.components.browser.toolbar.display
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.content.blocking
@@ -211,6 +212,7 @@ mozilla.components.support.android.test
 mozilla.components.support.android.test.espresso
 mozilla.components.support.android.test.espresso.matcher
 mozilla.components.support.android.test.leaks
+mozilla.components.support.android.test.rules
 mozilla.components.support.base.android
 mozilla.components.support.base.android.view
 mozilla.components.support.base.facts
@@ -239,7 +241,6 @@ mozilla.components.support.test
 mozilla.components.support.test.ext
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
-mozilla.components.support.test.rules
 mozilla.components.support.utils
 mozilla.components.tooling.fetch.tests
 mozilla.components.tooling.lint

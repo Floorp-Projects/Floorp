@@ -2,7 +2,7 @@
 
 # PushType
 
-`enum class PushType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L277)
+`enum class PushType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L287)
 
 The different kind of message types that a [EncryptedPushMessage](../../mozilla.components.concept.push/-encrypted-push-message/index.md) can be:
 

@@ -1,8 +1,8 @@
-[android-components](../../index.md) / [mozilla.components.support.test.rules](../index.md) / [WebserverRule](./index.md)
+[android-components](../../index.md) / [mozilla.components.support.android.test.rules](../index.md) / [WebserverRule](./index.md)
 
 # WebserverRule
 
-`class WebserverRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/test/src/main/java/mozilla/components/support/test/rules/WebserverRule.kt#L21)
+`class WebserverRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/android-test/src/main/java/mozilla/components/support/android/test/rules/WebserverRule.kt#L21)
 
 A [TestWatcher](#) junit rule that will serve content from assets in the test package.
 

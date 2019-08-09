@@ -2,7 +2,7 @@
 
 # Button
 
-`class Button : `[`ActionButton`](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L693)
+`class Button : `[`ActionButton`](../../../mozilla.components.concept.toolbar/-toolbar/-action-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L704)
 
 An action button to be added to the toolbar.
 

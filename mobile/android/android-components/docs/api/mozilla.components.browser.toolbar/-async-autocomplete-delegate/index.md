@@ -2,7 +2,7 @@
 
 # AsyncAutocompleteDelegate
 
-`class AsyncAutocompleteDelegate : `[`AutocompleteDelegate`](../../mozilla.components.concept.toolbar/-autocomplete-delegate/index.md)`, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L814)
+`class AsyncAutocompleteDelegate : `[`AutocompleteDelegate`](../../mozilla.components.concept.toolbar/-autocomplete-delegate/index.md)`, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L825)
 
 An autocomplete delegate which is aware of its parent scope (to check for cancellations).
 Responsible for processing autocompletion results and discarding stale results when [urlView](#) moved on.
