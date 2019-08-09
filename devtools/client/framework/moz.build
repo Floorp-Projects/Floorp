@@ -17,6 +17,8 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 DIRS += [
     'components',
+    'actions',
+    'reducers',
 ]
 
 DevToolsModules(
@@ -28,6 +30,8 @@ DevToolsModules(
     'selection.js',
     'sidebar.js',
     'source-map-url-service.js',
+    'store-provider.js',
+    'store.js',
     'target-from-url.js',
     'target.js',
     'toolbox-context-menu.js',

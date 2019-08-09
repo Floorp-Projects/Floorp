@@ -101,7 +101,7 @@ export async function onConnect(
     client: client.clientCommands,
   });
 
-  bootstrapApp(store);
+  bootstrapApp(store, panel);
   await connected;
   return { store, actions, selectors, client: commands };
 }

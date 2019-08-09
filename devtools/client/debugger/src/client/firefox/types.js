@@ -382,4 +382,5 @@ export type Panel = {|
   openConsoleAndEvaluate: (input: string) => void,
   highlightDomElement: (grip: Object) => void,
   unHighlightDomElement: (grip: Object) => void,
+  getToolboxStore: () => any,
 |};
