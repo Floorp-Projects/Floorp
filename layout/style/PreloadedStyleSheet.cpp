@@ -19,19 +19,6 @@ PreloadedStyleSheet::PreloadedStyleSheet(nsIURI* aURI,
                                          css::SheetParsingMode aParsingMode)
     : mLoaded(false), mURI(aURI), mParsingMode(aParsingMode) {}
 
-/* static */
-nsresult PreloadedStyleSheet::Create(nsIURI* aURI,
-                                     css::SheetParsingMode aParsingMode,
-                                     PreloadedStyleSheet** aResult) {
-  *aResult = nullptr;
-
-  RefPtr<PreloadedStyleSheet> preloadedSheet =
-      new PreloadedStyleSheet(aURI, aParsingMode);
-
-  preloadedSheet.forget(aResult);
-  return NS_OK;
-}
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PreloadedStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIPreloadedStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
