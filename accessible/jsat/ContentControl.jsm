@@ -197,7 +197,6 @@ this.ContentControl.prototype = {
     if (!forwarded) {
       this._contentScope.get().sendAsyncMessage("AccessFu:CursorCleared");
     }
-    this.document.activeElement.blur();
   },
 
   handleAutoMove: function cc_handleAutoMove(aMessage) {

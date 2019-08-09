@@ -142,6 +142,9 @@ public class SessionAccessibility {
 
             switch (action) {
                 case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
+                    if (mAccessibilityFocusedNode == virtualViewId) {
+                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClearCursor", null);
+                    }
                     sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_UNKNOWN, null);
                     return true;
                 case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:

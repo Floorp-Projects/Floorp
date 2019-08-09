@@ -29,6 +29,7 @@ const GECKOVIEW_MESSAGE = {
   SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
   SET_SELECTION: "GeckoView:AccessibilitySetSelection",
   VIEW_FOCUSED: "GeckoView:AccessibilityViewFocused",
+  CLEAR_CURSOR: "GeckoView:AccessibilityClearCursor",
 };
 
 const ACCESSFU_MESSAGE = {
@@ -200,6 +201,8 @@ var AccessFu = {
       case GECKOVIEW_MESSAGE.CLIPBOARD:
         this.Input.clipboard(data, win);
         break;
+      case GECKOVIEW_MESSAGE.CLEAR_CURSOR:
+        this.Input.clearCursor(win);
     }
   },
 
@@ -342,6 +345,11 @@ var Input = {
       0,
       0
     );
+  },
+
+  clearCursor: function clearCursor(aWindow) {
+    const mm = Utils.getCurrentMessageManager(aWindow);
+    mm.sendAsyncMessage("AccessFu:ClearCursor");
   },
 };
 AccessFu.Input = Input;
