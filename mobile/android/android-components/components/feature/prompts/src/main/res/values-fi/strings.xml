@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">OK</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Peruuta</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Estä tätä sivua luomasta lisäikkunoita</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">Kirjaudu sisään</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">Käyttäjätunnus</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Salasana</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Valitse väri</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Salli</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Estä</string>
+</resources>

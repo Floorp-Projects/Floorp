@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">ਠੀਕ ਹੈ</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">ਰੱਦ ਕਰੋ</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">ਇਸ ਸਫ਼ੇ ਨੂੰ ਹੋਰ ਡਾਈਲਾਗ ਬਣਾਉਣ ਤੋਂ ਰੋਕੋ</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">ਨਿਯਤ ਕਰੋ</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">ਸਾਫ਼ ਕਰੋ</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">ਸਾਈਨ ਇਨ</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">ਵਰਤੋਂਕਾਰ ਨਾਂ</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">ਪਾਸਵਰਡ</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">ਲਿਖਤ ਦਰਜ ਕਰਨ ਲਈ ਖੇਤਰ ਲਈ ਲੇਬਲ</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">ਰੰਗ ਚੁਣੋ</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">ਆਗਿਆ ਦਿਓ</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">ਇਨਕਾਰ ਕਰੋ</string>
+</resources>

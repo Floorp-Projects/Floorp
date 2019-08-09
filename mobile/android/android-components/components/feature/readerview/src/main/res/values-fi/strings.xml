@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Tumma</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Tumma väriteema</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Seepia</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Seepiamainen väriteema</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Vaalea</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Vaalea väriteema</string>
+</resources>

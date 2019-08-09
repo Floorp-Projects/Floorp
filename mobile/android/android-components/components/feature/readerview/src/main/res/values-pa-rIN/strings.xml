@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">ਸਨਜ ਸੈਰੀਫ਼</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">ਸਨਜ ਸੈਰੀਫ਼ ਫ਼ੋਂਟ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ਸੈਰੀਫ਼</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ਸੈਰੀਫ਼ ਫ਼ੋਂਟ</string>
+
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ਗੂੜ੍ਹਾ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ਹਲਕਾ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ਹਲਕੀ ਰੰਗ ਸਕੀਮ</string>
+</resources>

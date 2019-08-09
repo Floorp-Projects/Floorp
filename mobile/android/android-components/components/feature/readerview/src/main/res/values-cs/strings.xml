@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Bezpatkové</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Bezpatkové písmo</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Patkové</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Patkové písmo</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Zmenšení velikost písma</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Zvětšení velikost písma</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Tmavé</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Tmavé barvy</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Sépie</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Sépiové barvy</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Světlé</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Světlé barvy</string>
+</resources>

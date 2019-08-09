@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">Nabídka</string>
+    <string name="mozac_clear_button_description">Vymazat</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">Načítání</string>
+</resources>

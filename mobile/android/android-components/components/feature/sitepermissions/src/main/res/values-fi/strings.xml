@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">Mikrofoni 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Takakamera</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">Etukamera</string>
+    <!-- Text for a positive button in a permission request dialog, this button will give
+        access to this permission-->
+    <string name="mozac_feature_sitepermissions_allow">Salli</string>
+    <!-- Text for a negative button in a permission request dialog, this button will do not give
+    access to this permission-->
+    <string name="mozac_feature_sitepermissions_not_allow">Älä salli</string>
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Muista valinta tälle sivustolle</string>
+    <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_always_allow">Aina</string>
+    <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_never_allow">Ei koskaan</string>
+</resources>

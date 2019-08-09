@@ -42,6 +42,15 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Konexioa eten egin da</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Nabigatzaileak konexioa ondo sortu du, baina datuak jasotzen ari zela transferentzia eten egin da.  Mesedez, saiatu berriro.</p>
+      <ul>
+        <li>Gunea une batez desgaituta edo oso lanpetuta egon daiteke. Saiatu berriro minutu batzuen buruan.</li>
+        <li>Ezin baduzu beste orririk kargatu, egiaztatu zure gailuaren datu- edo WiFi-konexioa.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Konexioaren denbora-muga gainditu da</string>
 
@@ -107,6 +116,15 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Konexioa berrezarri egin da</string>
 
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Sareko lotura eten egin da konexioa negoziatzerakoan. Mesedez saiatu berriro.</p>
+      <ul>
+        <li>Gunea une batez desgaituta edo oso lanpetuta egon daiteke. Saiatu berriro minutu batzuen buruan.</li>
+        <li>Ezin baduzu beste orririk kargatu, egiaztatu zure gailuaren datu- edo WiFi-konexioa.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Fitxategi mota ez-segurua</string>
 
@@ -127,6 +145,8 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Edukiak huts egin du</string>
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Ikusten saiatzen ari zaren orria ezin da erakutsi errore bat detektatu delako datu-transmisioan.</p>
       <ul>
@@ -146,6 +166,15 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Helbidea ez da aurkitu</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Nabigatzaileak ezin du ostalariko zerbitzaria aurkitu emandako helbidean.</p>
+      <ul>
+        <li>Helbidea ondo begiratu mota honetako erroreak ekiditeko: <strong>ww</strong>.adibidea.eus <strong>www</strong>.adibidea.eus-en ordez.</li>
+        <li>Ezin baduzu inolako orririk kargatu, begiratu zure gailuaren datu- edo WiFi-konexioa.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Helbide baliogabea</string>

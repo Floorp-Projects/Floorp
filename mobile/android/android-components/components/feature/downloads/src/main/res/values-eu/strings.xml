@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Deskargak</string>
+    <!-- Text shown on the first row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_title">Deskargatzen</string>
+    <!-- Text shown on the second row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_text">Deskargatzen ari da</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. -->
+    <string name="mozac_feature_downloads_dialog_title">Deskargatu fitxategia</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Deskargatu</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Utzi</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s(e)k ezin du fitxategi mota hau deskargatu</string>
+</resources>

@@ -39,6 +39,15 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Pripojenie bolo prerušené</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Prehliadač sa úspešne pripojil k serveru, ale spojenie bolo v priebehu prenosu údajov prerušené. Prosím, skúste to znova.</p>
+      <ul>
+        <li>Stránka môže byť dočasne nedostupná alebo zaneprázdnená. Skúste to znova neskôr.</li>
+        <li>Ak sa vám nedarí načítať žiadnu stránku, skontrolujte pripojenie svojho zariadenia na internet.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Čas pripojenia vypršal</string>
     <!-- The error message shown when a website took long to load. -->
@@ -85,11 +94,34 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Režim offline</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Prehliadač je momentálne v režime offline a nemôže sa pripojiť na požadovaný server.</p>
+      <ul>
+        <li>Je počítač pripojený k aktívnej sieti?</li>
+        <li>Kliknutím na tlačidlo „Skúsiť znova“ prejdete do režimu online a opätovne načítate obsah stránky.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Bezpečnostné obmedzenie prístupu na port</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Zadaná adresa (URL) špecifikovala port (napr. <q>mozilla.org:80</q> je port 80 na mozilla.org), ktorý je normálne určený na <em>iné</em> služby ako prehliadanie webu. Prehliadač požiadavku kvôli vašej ochrane a bezpečnosti neakceptoval.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Výpadok pripojenia</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Spojenie bolo v priebehu otvárania komunikačného kanála so serverom nečakane prerušené. Skúste to znova</p>
+      <ul>
+        <li>Stránka môže byť dočasne nedostupná alebo zaneprázdnená. Svoj pokus opakujte neskôr.</li>
+        <li>Ak sa nedá načítať žiadna stránka, skontrolujte pripojenie svojho zariadenia k internetu.</li>
+      </ul>
+      ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Nebezpečný typ obsahu</string>
@@ -104,33 +136,144 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Poškodený obsah stránky</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Táto stránka nemohla byť zobrazená kvôli chybe pri prenose údajov.</p>
+      <ul>
+        <li>Kontaktujte prevádzkovateľa webovej stránky a informujte ho o tomto probléme.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Obsah zlyhal</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Táto stránka nemohla byť zobrazená kvôli chybe pri prenose údajov.</p>
+      <ul>
+        <li>Kontaktujte prevádzkovateľa webovej stránky a informujte ho o probléme.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Chyba kódovania obsahu</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Stránka nemôže byť zobrazená, pretože používa neplatné alebo nepodporované formátovanie.</p>
+      <ul>
+        <li>Prosím, kontaktujte majiteľov stránky a informujte ich o tomto probléme.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Adresa sa nenašla</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>URL adresa nezodpovedá žiadnemu serveru a nie je možné ju načítať.</p>
+      <ul>
+        <li>Skontrolujte, či ste adresu napísali správne (napr. že neobsahuje
+          <strong>ww</strong>.example.com namiesto
+          <strong>www</strong>.example.com).</li>
+        <li>Ak nemôžete načítať žiadnu stránku, skontrolujte pripojenie svojho zariadenia k internetu.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Neplatná adresa</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Adresa (URL) nie je platná a nemožno ju načítať. Prosím, skontrolujte text v paneli s adresou a skúste to znova.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa nie je platná</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Webové adresy sú zvyčajne zadávané v tvare <strong>http://www.example.com/</strong></li>
+        <li>Skontrolujte, či používate správne lomky (t.j. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Neznámy protokol</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Adresa sa začína protokolom, ktorý prehliadač nepozná. Protokol je reťazec na začiatku adresy, ako napríklad https: alebo ftp:, ktorý hovorí prehliadaču, ako sa má pripojiť ku serveru..</p>
+      <ul>
+        <li>Chcete sa pripojiť k multimédiám alebo iným netextovým službám?</li>
+        <li>Niektoré protokoly vyžadujú softvér tretích strán alebo doplnky.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Súbor nebol nájdený</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Je možné, že bol odstránený, premenovaný alebo premiestnený?</li>
+        <li>Skontrolujte, či má adresa správny formát a či neobsahuje chyby.</li>
+        <li>Máte príslušné povolenia na zobrazenie daného súboru?</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Prístup k súboru bol zamietnutý</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Mohol byť odstránený, premiestnený alebo vám v prístupe bránia oprávnenia.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxy server odmietol spojenie</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Prehliadač je nakonfigurovaný na používanie proxy servera, no tento odmietol pripojenie.</p>
+      <ul>
+        <li>Skontrolujte nastavenia proxy servera v prehliadači a skúste to znova.</li>
+        <li>Má služba proxy povolený prístup k sieti?</li>
+        <li>Ak problémy pretrvávajú, kontaktujte, prosím, svojho správcu siete alebo poskytovateľa internetu.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxy server nenájdený</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Prehliadač je nakonfigurovaný na používanie proxy servera, no tento odmietol pripojenie.</p>
+      <ul>
+        <li>Skontrolujte nastavenia proxy servera v prehliadači a skúste to znova.</li>
+        <li>Je zariadenie pripojené k aktívnej sieti?</li>
+        <li>Ak problémy pretrvávajú, kontaktujte, prosím, svojho správcu siete alebo poskytovateľa internetu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Stránka so škodlivým softvérom</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Stránka %1$s bola označená ako nebezpečná a na základe nastavení zabezpečenia bola zablokovaná.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Nežiadúca webová stránka</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Stránka %1$s bola označená ako ponúkajúca nevyžiadaný softvér a na základe nastavení zabezpečenia bola zablokovaná.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Škodlivá stránka</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Stránka %1$s bola označená ako nebezpečná a na základe nastavení zabezpečenia bola zablokovaná.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Podvodná stránka</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Stránka %1$s bola označená ako podvodná a na základe nastavení zabezpečenia bola zablokovaná.</p>
+    ]]></string>
+</resources>

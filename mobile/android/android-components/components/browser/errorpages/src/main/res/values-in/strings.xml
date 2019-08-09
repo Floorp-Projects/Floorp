@@ -32,14 +32,34 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Sambungan Aman Gagal</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Mungkin terjadi masalah dengan konfigurasi server, atau bisa saja seseorang berusaha menyamar menjadi server.</li>
+        <li>Jika Anda pernah tersambung dengan baik, kesalahan ini mungkin hanya sementara dan Anda dapat mencoba lagi nanti.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Sambungan terputus</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Peramban terhubung dengan sukses, namun koneksi terganggu saat mentransfer informasi. Silakan coba lagi.</p>
+      <ul>
+        <li>Situs ini mungkin sementara tidak sedia atau sedang sibuk. Coba lagi dalam beberapa saat.</li>
+        <li>Jika Anda tidak dapat memuat laman apapun, periksa koneksi data atau Wi-Fi pada perangkat Anda.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Tenggang waktu tersambung habis</string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Tidak dapat tersambung</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Respon tidak terduga dari server</string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Laman tidak teralihkan dengan benar</string>
@@ -66,6 +86,9 @@
         <li>Silakan hubungi pemilik situs web mengenai masalah ini.</li>
       </ul>
     ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Konten macet</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kesalahan Pengodean Isi (Content Encoding)</string>
@@ -104,6 +127,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Masalah situs malware</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Masalah situs yang tidak diinginkan</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Masalah situs berbahaya</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Masalah situs tipuan</string>

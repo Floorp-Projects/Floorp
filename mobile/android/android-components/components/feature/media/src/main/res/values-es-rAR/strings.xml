@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_media_notification_channel">Medios</string>
+
+    <!-- Title of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera">La cámara está encendida</string>
+    <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone">El micrófono está encendido</string>
+    <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone">La cámara y el micrófono están encendidos</string>
+</resources>
