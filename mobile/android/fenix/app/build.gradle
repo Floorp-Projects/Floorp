@@ -120,6 +120,10 @@ android {
     packagingOptions {
         exclude 'META-INF/atomicfu.kotlin_module'
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 android.applicationVariants.all { variant ->

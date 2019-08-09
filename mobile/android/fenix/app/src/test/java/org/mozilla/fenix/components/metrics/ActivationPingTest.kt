@@ -19,12 +19,14 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import java.io.IOException
 
 internal class ActivationPingTest {
+    @Ignore("This test has side-effects that cause it to fail other unrelated tests.")
     @Test
     fun `getAdvertisingID() returns null if the API throws`() {
         mockkStatic(AdvertisingIdClient::class)
