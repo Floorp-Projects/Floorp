@@ -124,11 +124,8 @@ class JSJitFrameIter {
   JSJitFrameIter(const JitActivation* activation, FrameType frameType,
                  uint8_t* fp);
 
-  // Used only by DebugModeOSRVolatileJitFrameIter.
-  void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
-    if (resumePCinCurrentFrame_ == oldAddr) {
-      resumePCinCurrentFrame_ = newAddr;
-    }
+  void setResumePCInCurrentFrame(uint8_t* newAddr) {
+    resumePCinCurrentFrame_ = newAddr;
   }
 
   // Current frame information.
@@ -280,7 +277,6 @@ class JSJitProfilingFrameIterator {
   MOZ_MUST_USE bool tryInitWithPC(void* pc);
   MOZ_MUST_USE bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
                                      bool forLastCallSite);
-  void fixBaselineReturnAddress();
 
   void moveToCppEntryFrame();
   void moveToWasmFrame(CommonFrameLayout* frame);

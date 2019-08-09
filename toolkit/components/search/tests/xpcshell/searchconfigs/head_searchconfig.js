@@ -3,13 +3,23 @@
 
 "use strict";
 
+// This is intended for development-only. Setting it to true restricts the
+// set of locales and regions that are covered, to provide tests that are
+// quicker to run.
+// Turning it on will generate one error at the end of the test, as a reminder
+// that it needs to be changed back before shipping.
+const TEST_DEBUG = false;
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  SearchEngine: "resource://gre/modules/SearchEngine.jsm",
+  SearchEngineSelector: "resource://testing-common/SearchEngineSelector.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -26,6 +36,8 @@ const SUBMISSION_PURPOSES = [
   "homepage",
   "newtab",
 ];
+
+const engineSelector = new SearchEngineSelector();
 
 /**
  * This class implements the test harness for search configuration tests.
@@ -73,13 +85,6 @@ class SearchConfigTest {
    */
   constructor(config = {}) {
     this._config = config;
-
-    // This is intended for development-only. Setting it to true restricts the
-    // set of locales and regions that are covered, to provide tests that are
-    // quicker to run.
-    // Turning it on will generate one error at the end of the test, as a reminder
-    // that it needs to be changed back before shipping.
-    this._testDebug = false;
   }
 
   /**
@@ -93,6 +98,8 @@ class SearchConfigTest {
       "42",
       "42"
     );
+
+    await engineSelector.init();
 
     // Disable region checks.
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
@@ -118,8 +125,11 @@ class SearchConfigTest {
 
   /**
    * Runs the test.
+   * @param {boolean} useEngineSelector
+   *   Flag to run the tests against the SearchEngineSelector or use
+   *   existing list.json.
    */
-  async run() {
+  async run(useEngineSelector = false) {
     const locales = await this._getLocales();
     const regions = this._regions;
 
@@ -127,10 +137,15 @@ class SearchConfigTest {
     // when updating the requested/available locales.
     for (let region of regions) {
       for (let locale of locales) {
-        await this._reinit(region, locale);
-
-        this._assertDefaultEngines(region, locale);
-        const engines = await Services.search.getVisibleEngines();
+        if (!useEngineSelector) {
+          await this._reinit(region, locale);
+        }
+        const engines = await this._getEngines(
+          useEngineSelector,
+          region,
+          locale
+        );
+        this._assertEngineRules([engines[0]], region, locale, "default");
         const isPresent = this._assertAvailableEngines(region, locale, engines);
         if (isPresent) {
           this._assertEngineDetails(region, locale, engines);
@@ -139,9 +154,68 @@ class SearchConfigTest {
     }
 
     this.assertOk(
-      !this._testDebug,
+      !TEST_DEBUG,
       "Should not have test debug turned on in production"
     );
+  }
+
+  async _getEngines(useEngineSelector, region, locale) {
+    if (useEngineSelector) {
+      let engines = [];
+      let configs = await engineSelector.fetchEngineConfiguration(
+        region,
+        locale
+      );
+      for (let config of configs.engines) {
+        let engine = await this._getExtensionEngine(config);
+        engines.push(engine);
+      }
+      return engines;
+    }
+    return Services.search.getVisibleEngines();
+  }
+
+  async _getExtensionEngine(config) {
+    let id = config.webExtensionId;
+    let policy = WebExtensionPolicy.getByID(id);
+    if (!policy) {
+      let idPrefix = id.split("@")[0];
+      let path = `resource://search-extensions/${idPrefix}/`;
+      await AddonManager.installBuiltinAddon(path);
+      policy = WebExtensionPolicy.getByID(id);
+    }
+    let params = {
+      code: config.searchUrlGetExtraCodes,
+    };
+
+    let locale = config.webExtensionLocale || "default";
+    // On startup the extension may have not finished parsing the
+    // manifest, wait for that here.
+    await policy.readyPromise;
+
+    let manifest = policy.extension.manifest;
+    if (locale != "default") {
+      manifest = await policy.extension.getLocalizedManifest(locale);
+    }
+
+    let engineParams = await Services.search.getEngineParams(
+      policy.extension,
+      manifest,
+      locale,
+      params
+    );
+
+    let engine = new SearchEngine({
+      name: engineParams.name,
+      readOnly: engineParams.isBuiltin,
+      sanitizeName: true,
+    });
+    engine._initFromMetadata(engineParams.name, engineParams);
+    engine._loadPath = "[other]addEngineWithDetails";
+    if (engineParams.extensionID) {
+      engine._loadPath += ":" + engineParams.extensionID;
+    }
+    return engine;
   }
 
   /**
@@ -172,7 +246,7 @@ class SearchConfigTest {
    * @returns {Set} the list of regions for the tests to run with.
    */
   get _regions() {
-    if (this._testDebug) {
+    if (TEST_DEBUG) {
       return new Set(["by", "cn", "kz", "us", "ru", "tr"]);
     }
     const chunk =
@@ -187,8 +261,8 @@ class SearchConfigTest {
    * @returns {array} the list of locales for the tests to run with.
    */
   async _getLocales() {
-    if (this._testDebug) {
-      return ["be", "en-US", "kk", "tr", "ru", "zh-CN"];
+    if (TEST_DEBUG) {
+      return ["be", "en-US", "kk", "tr", "ru", "zh-CN", "ach"];
     }
     const data = await OS.File.read(do_get_file("all-locales").path, {
       encoding: "utf-8",
@@ -542,13 +616,13 @@ class SearchConfigTest {
    */
 
   assertOk(value, message) {
-    if (!value || this._testDebug) {
+    if (!value || TEST_DEBUG) {
       Assert.ok(value, message);
     }
   }
 
   assertEqual(actual, expected, message) {
-    if (actual != expected || this._testDebug) {
+    if (actual != expected || TEST_DEBUG) {
       Assert.equal(actual, expected, message);
     }
   }

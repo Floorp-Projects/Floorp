@@ -9,55 +9,59 @@
  */
 
 add_task(
-  threadFrontTest(({ threadFront, debuggee, client }) => {
-    return new Promise(resolve => {
-      // Debugger statement
-      threadFront.once("paused", async function(packet) {
-        const source = await getSourceById(
-          threadFront,
-          packet.frame.where.actor
-        );
-        const location = {
-          sourceUrl: source.url,
-          line: debuggee.line0 + 1,
-          column: 55,
-        };
-        let timesBreakpointHit = 0;
+  threadFrontTest(async ({ threadFront, client, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+    const location = {
+      sourceUrl: source.url,
+      line: debuggee.line0 + 1,
+      column: 55,
+    };
 
-        threadFront.setBreakpoint(location, {});
+    let timesBreakpointHit = 0;
+    threadFront.setBreakpoint(location, {});
 
-        threadFront.on("paused", function onPaused(packet) {
-          Assert.equal(packet.why.type, "breakpoint");
-          Assert.equal(packet.frame.where.actor, source.actor);
-          Assert.equal(packet.frame.where.line, location.line);
-          Assert.equal(packet.frame.where.column, location.column);
+    while (timesBreakpointHit < 3) {
+      await resume(threadFront);
+      const packet = await waitForPause(threadFront);
+      testAssertions(packet, debuggee, source, location, timesBreakpointHit);
 
-          Assert.equal(debuggee.acc, timesBreakpointHit);
-          Assert.equal(
-            packet.frame.environment.bindings.variables.i.value,
-            timesBreakpointHit
-          );
+      timesBreakpointHit++;
+    }
 
-          if (++timesBreakpointHit === 3) {
-            threadFront.off("paused", onPaused);
-            threadFront.removeBreakpoint(location);
-            threadFront.resume().then(resolve);
-          } else {
-            threadFront.resume();
-          }
-        });
+    threadFront.removeBreakpoint(location);
+    await threadFront.resume();
+  })
+);
 
-        // Continue until the breakpoint is hit.
-        threadFront.resume();
-      });
-
-      /* eslint-disable */
+function evaluateTestCode(debuggee) {
+  /* eslint-disable */
       Cu.evalInSandbox(
         "var line0 = Error().lineNumber;\n" +
         "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
         debuggee
       );
       /* eslint-enable */
-    });
-  })
-);
+}
+
+function testAssertions(
+  packet,
+  debuggee,
+  source,
+  location,
+  timesBreakpointHit
+) {
+  Assert.equal(packet.why.type, "breakpoint");
+  Assert.equal(packet.frame.where.actor, source.actor);
+  Assert.equal(packet.frame.where.line, location.line);
+  Assert.equal(packet.frame.where.column, location.column);
+
+  Assert.equal(debuggee.acc, timesBreakpointHit);
+  Assert.equal(
+    packet.frame.environment.bindings.variables.i.value,
+    timesBreakpointHit
+  );
+}

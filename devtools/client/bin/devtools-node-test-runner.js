@@ -46,7 +46,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   webconsole: {
-    path: "../webconsole/test",
+    path: "../webconsole/test/node",
     type: TEST_TYPES.MOCHA,
   },
 };

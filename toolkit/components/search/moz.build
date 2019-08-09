@@ -43,6 +43,7 @@ XPCOM_MANIFESTS += [
 ]
 
 TESTING_JS_MODULES += [
+    'SearchEngineSelector.jsm',
     'tests/SearchTestUtils.jsm',
 ]
 

@@ -604,8 +604,7 @@ class Preferences final : public nsIPrefService,
 
  private:
   static void SetupTelemetryPref();
-  static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
-      bool aIsStartup);
+  static nsresult InitInitialObjects(bool aIsStartup);
 
   friend struct Internals;
 

@@ -138,9 +138,9 @@ BEGIN_TEST(testTracingIncomingCCWs) {
 }
 END_TEST(testTracingIncomingCCWs)
 
-static size_t countWrappers(JS::Compartment* comp) {
+static size_t countObjectWrappers(JS::Compartment* comp) {
   size_t count = 0;
-  for (JS::Compartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
+  for (JS::Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
     ++count;
   }
   return count;
@@ -167,9 +167,9 @@ BEGIN_TEST(testDeadNurseryCCW) {
   wrappee = wrapper = nullptr;
 
   // Now a GC should clear the CCW.
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
   cx->runtime()->gc.evictNursery();
-  CHECK(countWrappers(global1->compartment()) == 0);
+  CHECK(countObjectWrappers(global1->compartment()) == 0);
 
   // Check for corruption of the CCW table by doing a full GC to force sweeping.
   JS_GC(cx);
@@ -196,9 +196,9 @@ BEGIN_TEST(testLiveNurseryCCW) {
   CHECK(js::gc::IsInsideNursery(wrapper));
 
   // Now a GC should not kill the CCW.
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
   cx->runtime()->gc.evictNursery();
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
 
   CHECK(!js::gc::IsInsideNursery(wrappee));
   CHECK(!js::gc::IsInsideNursery(wrapper));
@@ -234,9 +234,9 @@ BEGIN_TEST(testLiveNurseryWrapperCCW) {
   wrappee = nullptr;
 
   // Now a GC should not kill the CCW.
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
   cx->runtime()->gc.evictNursery();
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
 
   CHECK(!js::gc::IsInsideNursery(wrapper));
 
@@ -269,9 +269,9 @@ BEGIN_TEST(testLiveNurseryWrappeeCCW) {
   wrapper = nullptr;
 
   // Now a GC should not kill the CCW.
-  CHECK(countWrappers(global1->compartment()) == 1);
+  CHECK(countObjectWrappers(global1->compartment()) == 1);
   cx->runtime()->gc.evictNursery();
-  CHECK(countWrappers(global1->compartment()) == 0);
+  CHECK(countObjectWrappers(global1->compartment()) == 0);
 
   CHECK(!js::gc::IsInsideNursery(wrappee));
 

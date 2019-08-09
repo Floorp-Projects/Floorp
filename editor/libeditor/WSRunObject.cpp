@@ -58,10 +58,12 @@ template void WSRunObject::NextVisibleNode(const EditorRawDOMPoint& aPoint,
                                            WSType* outType) const;
 template void WSRunObject::GetASCIIWhitespacesBounds(
     int16_t aDir, const EditorDOMPoint& aPoint, dom::Text** outStartNode,
-    int32_t* outStartOffset, dom::Text** outEndNode, int32_t* outEndOffset);
+    int32_t* outStartOffset, dom::Text** outEndNode,
+    int32_t* outEndOffset) const;
 template void WSRunObject::GetASCIIWhitespacesBounds(
     int16_t aDir, const EditorRawDOMPoint& aPoint, dom::Text** outStartNode,
-    int32_t* outStartOffset, dom::Text** outEndNode, int32_t* outEndOffset);
+    int32_t* outStartOffset, dom::Text** outEndNode,
+    int32_t* outEndOffset) const;
 
 template <typename PT, typename CT>
 WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
@@ -635,7 +637,7 @@ nsresult WSRunObject::AdjustWhitespace() {
 //   protected methods
 //--------------------------------------------------------------------------------------------
 
-nsINode* WSRunObject::GetWSBoundingParent() {
+nsINode* WSRunObject::GetWSBoundingParent() const {
   if (NS_WARN_IF(!mScanStartPoint.IsSet())) {
     return nullptr;
   }
@@ -1026,7 +1028,7 @@ void WSRunObject::MakeSingleWSRun(WSType aType) {
 }
 
 nsIContent* WSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
-                                                nsINode* aBlockParent) {
+                                                nsINode* aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we have
   // special needs here.  Need to step into inline containers but not block
   // containers.
@@ -1072,7 +1074,7 @@ nsIContent* WSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
 }
 
 nsIContent* WSRunObject::GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                           nsINode* aBlockParent) {
+                                           nsINode* aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we
   // have special needs here.  Need to step into inline containers but
   // not block containers.
@@ -1120,7 +1122,7 @@ nsIContent* WSRunObject::GetPreviousWSNode(const EditorDOMPoint& aPoint,
 }
 
 nsIContent* WSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
-                                            nsINode* aBlockParent) {
+                                            nsINode* aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we have
   // special needs here.  Need to step into inline containers but not block
   // containers.
@@ -1166,7 +1168,7 @@ nsIContent* WSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
 }
 
 nsIContent* WSRunObject::GetNextWSNode(const EditorDOMPoint& aPoint,
-                                       nsINode* aBlockParent) {
+                                       nsINode* aBlockParent) const {
   // Can't really recycle various getnext/prior routines because we have
   // special needs here.  Need to step into inline containers but not block
   // containers.
@@ -1566,7 +1568,7 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
 template <typename PT, typename CT>
 void WSRunObject::GetASCIIWhitespacesBounds(
     int16_t aDir, const EditorDOMPointBase<PT, CT>& aPoint, Text** outStartNode,
-    int32_t* outStartOffset, Text** outEndNode, int32_t* outEndOffset) {
+    int32_t* outStartOffset, Text** outEndNode, int32_t* outEndOffset) const {
   MOZ_ASSERT(aPoint.IsSet());
   MOZ_ASSERT(outStartNode);
   MOZ_ASSERT(outStartOffset);

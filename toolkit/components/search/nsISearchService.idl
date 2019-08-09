@@ -342,6 +342,16 @@ interface nsISearchService : nsISupports
   Promise addEnginesFromExtension(in jsval extension);
 
   /**
+   * Returns an engine object given a search WebExtension.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  Promise getEngineParams(in jsval extension,
+                          in jsval manifest,
+                          in AString locale,
+                          in jsval params);
+
+  /**
    * Un-hides all engines in the set of engines returned by getDefaultEngines.
    */
   void restoreDefaultEngines();

@@ -134,7 +134,7 @@ textarea {
   user-select: text;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-clip-box: padding-box content-box;
+  overflow-clip-box: content-box;
   /* A few properties that we don't want to inherit by default: */
   text-align: initial;
   text-indent: initial;

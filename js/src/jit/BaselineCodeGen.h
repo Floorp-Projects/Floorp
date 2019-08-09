@@ -411,6 +411,8 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitEnterGeneratorCode(Register script,
                                            Register resumeIndex,
                                            Register scratch);
+  MOZ_MUST_USE bool emitGeneratorThrowOrReturnCallVM();
+
   void emitInterpJumpToResumeEntry(Register script, Register resumeIndex,
                                    Register scratch);
   void emitJumpToInterpretOpLabel();
@@ -692,6 +694,10 @@ class BaselineInterpreterHandler {
   // Offsets of some callVMs for BaselineDebugModeOSR.
   BaselineInterpreter::CallVMOffsets callVMOffsets_;
 
+  // Offset of the GeneratorThrowOrReturn callVM. See also
+  // emitGeneratorThrowOrReturnCallVM.
+  uint32_t generatorThrowOrReturnCallOffset_ = 0;
+
   // The current JSOp we are emitting interpreter code for.
   mozilla::Maybe<JSOp> currentOp_;
 
@@ -715,6 +721,13 @@ class BaselineInterpreterHandler {
 
   BaselineInterpreter::ICReturnOffsetVector& icReturnOffsets() {
     return icReturnOffsets_;
+  }
+
+  uint32_t generatorThrowOrReturnCallOffset() const {
+    return generatorThrowOrReturnCallOffset_;
+  }
+  void setGeneratorThrowOrReturnCallOffset(uint32_t offset) {
+    generatorThrowOrReturnCallOffset_ = offset;
   }
 
   void setCurrentOp(JSOp op) { currentOp_.emplace(op); }

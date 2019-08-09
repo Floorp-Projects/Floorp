@@ -18,8 +18,17 @@
 %extensionsDTD;
 ]>
 
+<!-- @CSP: Soon, about:addons will not be implemented using XUL anymore (see Bug 1558982).
+   - Until then we have to whitelist the following things:
+   - *) the 'oncommand' handler for cmd_focusSearch within extensions.xul, using
+   -    sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==
+   - *) the 'onclick' handler for the searchButtonIcon within the file search-textbox.js, using
+   -    sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g==
+   - *) the extensions.webservice.discoverURL using data:, http:, and https:
+   -->
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+      csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==' 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g==';"
       id="addons-page" data-l10n-id="addons-window"
       role="application" windowtype="Addons:Manager">
 
@@ -54,9 +63,7 @@
            norolluponanchor="true"
            nomaxresults="true" />
 
-    <menupopup id="contentAreaContextMenu"
-               onpopupshowing="Cu.reportError('This dummy menupopup is not supposed to be shown');
-                               return false">
+    <menupopup id="contentAreaContextMenu">
       <!-- a dummy element used to forward the context menu related to the extension's
            options page XUL browsers to the context menu defined in the parent chrome window -->
     </menupopup>
@@ -66,6 +73,8 @@
        in some other way -->
   <commandset id="globalCommandSet">
     <!-- XXXsw remove useless oncommand attribute once bug 371900 is fixed -->
+    <!-- If you remove/update the oncommand handler for cmd_focusSearch please
+         also remove/update the sha512 hash in the CSP above -->
     <command id="cmd_focusSearch" oncommand=";"/>
     <command id="cmd_findAllUpdates"/>
     <command id="cmd_goToDiscoverPane"/>

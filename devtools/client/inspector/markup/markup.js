@@ -23,6 +23,18 @@ const RootContainer = require("devtools/client/inspector/markup/views/root-conta
 
 loader.lazyRequireGetter(
   this,
+  "createDOMMutationBreakpoint",
+  "devtools/client/framework/actions/index",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "deleteDOMMutationBreakpoint",
+  "devtools/client/framework/actions/index",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "MarkupContextMenu",
   "devtools/client/inspector/markup/markup-context-menu"
 );
@@ -1270,11 +1282,14 @@ MarkupView.prototype = {
       return;
     }
 
+    const toolboxStore = this.inspector.toolbox.store;
     const nodeFront = this.inspector.selection.nodeFront;
-    const mutationBreakpoints = nodeFront.mutationBreakpoints;
-    await this.walker.setMutationBreakpoints(nodeFront, {
-      [name]: !mutationBreakpoints[name],
-    });
+
+    if (nodeFront.mutationBreakpoints[name]) {
+      toolboxStore.dispatch(deleteDOMMutationBreakpoint(nodeFront, name));
+    } else {
+      toolboxStore.dispatch(createDOMMutationBreakpoint(nodeFront, name));
+    }
   },
 
   /**

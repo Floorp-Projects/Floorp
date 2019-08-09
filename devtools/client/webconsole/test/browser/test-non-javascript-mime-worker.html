@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Web Console test for script with non-JavaScript MIME type</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script>
+      "use strict";
+
+      // Test new Worker
+      new Worker("http://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js");
+
+      // Test importScripts
+      const source = `importScripts("http://example.com/browser/devtools/client/webconsole/" +
+                                      "test/browser/" +
+                                      "test-non-javascript-mime.js");`;
+      const url = URL.createObjectURL(new Blob([source], {type: "application/javascript"}));
+      new Worker(url);
+    </script>
+  </head>
+  <body>
+    <p>Web Console test for Worker and importScripts() inside Worker with non-JavaScript MIME type.</p>
+  </body>
+</html>

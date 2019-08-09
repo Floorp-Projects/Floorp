@@ -34,6 +34,10 @@ loader.lazyGetter(this, "NetworkDetailsPanel", function() {
   return createFactory(require("./NetworkDetailsPanel"));
 });
 
+loader.lazyGetter(this, "SearchPanel", function() {
+  return createFactory(require("./search/SearchPanel"));
+});
+
 // MediaQueryList object responsible for switching sidebar splitter
 // between landscape and portrait mode (depending on browser window size).
 const MediaQueryVert = window.matchMedia("(min-width: 700px)");
@@ -62,6 +66,7 @@ class MonitorPanel extends Component {
       sourceMapService: PropTypes.object,
       openLink: PropTypes.func,
       updateRequest: PropTypes.func.isRequired,
+      panelOpen: PropTypes.bool.isRequired,
     };
   }
 
@@ -80,6 +85,8 @@ class MonitorPanel extends Component {
   componentDidMount() {
     MediaQuerySingleRow.addListener(this.onLayoutChange);
     MediaQueryVert.addListener(this.onLayoutChange);
+    this.persistDetailsPanelSize();
+    this.persistSearchPanelSize();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -96,7 +103,11 @@ class MonitorPanel extends Component {
   componentWillUnmount() {
     MediaQuerySingleRow.removeListener(this.onLayoutChange);
     MediaQueryVert.removeListener(this.onLayoutChange);
+    this.persistDetailsPanelSize();
+    this.persistSearchPanelSize();
+  }
 
+  persistDetailsPanelSize() {
     const { clientWidth, clientHeight } = findDOMNode(this.refs.endPanel) || {};
 
     if (this.state.isVerticalSpliter && clientWidth) {
@@ -108,6 +119,23 @@ class MonitorPanel extends Component {
     if (!this.state.isVerticalSpliter && clientHeight) {
       Services.prefs.setIntPref(
         "devtools.netmonitor.panes-network-details-height",
+        clientHeight
+      );
+    }
+  }
+
+  persistSearchPanelSize() {
+    const { clientWidth, clientHeight } =
+      findDOMNode(this.refs.searchPanel) || {};
+    if (clientWidth) {
+      Services.prefs.setIntPref(
+        "devtools.netmonitor.panes-search-width",
+        clientWidth
+      );
+    }
+    if (clientHeight) {
+      Services.prefs.setIntPref(
+        "devtools.netmonitor.panes-search-height",
         clientHeight
       );
     }
@@ -130,6 +158,32 @@ class MonitorPanel extends Component {
     );
   }
 
+  renderSearchPanel(connector) {
+    const { isEmpty } = this.props;
+    const initialWidth = Services.prefs.getIntPref(
+      "devtools.netmonitor.panes-search-width"
+    );
+    const initialHeight = Services.prefs.getIntPref(
+      "devtools.netmonitor.panes-search-height"
+    );
+    return SplitBox({
+      className: "devtools-responsive-container",
+      initialWidth,
+      initialHeight,
+      minSize: "50px",
+      maxSize: "80%",
+      splitterSize: 1,
+      startPanel: SearchPanel({
+        ref: "searchPanel",
+        connector,
+      }),
+      endPanel: RequestList({ isEmpty, connector }),
+      endPanelControl: false,
+      vert: true,
+      onControlledPanelResized: () => {},
+    });
+  }
+
   render() {
     const {
       actions,
@@ -139,14 +193,20 @@ class MonitorPanel extends Component {
       openLink,
       openSplitConsole,
       sourceMapService,
+      panelOpen,
     } = this.props;
 
     const initialWidth = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-network-details-width"
     );
+
     const initialHeight = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-network-details-height"
     );
+
+    const startPanel = panelOpen
+      ? this.renderSearchPanel(connector)
+      : RequestList({ isEmpty, connector });
 
     return div(
       { className: "monitor-panel" },
@@ -163,7 +223,7 @@ class MonitorPanel extends Component {
         minSize: "50px",
         maxSize: "80%",
         splitterSize: networkDetailsOpen ? 1 : 0,
-        startPanel: RequestList({ isEmpty, connector }),
+        startPanel,
         endPanel:
           networkDetailsOpen &&
           NetworkDetailsPanel({
@@ -185,6 +245,7 @@ module.exports = connect(
   state => ({
     isEmpty: state.requests.requests.size == 0,
     networkDetailsOpen: state.ui.networkDetailsOpen,
+    panelOpen: state.search.panelOpen,
     request: getSelectedRequest(state),
     selectedRequestVisible: isSelectedRequestVisible(state),
   }),

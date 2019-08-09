@@ -1724,9 +1724,7 @@ class alignas(uintptr_t) PrivateScriptData final {
   const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
 
   // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
-  // The size of allocation is returned as an out parameter.
-  static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings,
-                                 uint32_t* dataSize);
+  static PrivateScriptData* new_(JSContext* cx, uint32_t ngcthings);
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
@@ -1743,6 +1741,8 @@ class alignas(uintptr_t) PrivateScriptData final {
                               js::frontend::BytecodeEmitter* bce);
 
   void trace(JSTracer* trc);
+
+  size_t allocationSize() const;
 
   // PrivateScriptData has trailing data so isn't copyable or movable.
   PrivateScriptData(const PrivateScriptData&) = delete;
@@ -2167,9 +2167,6 @@ class JSScript : public js::BaseScript {
   js::LazyScript* lazyScript = nullptr;
 
   // 32-bit fields.
-
-  /* Size of the used part of the data array. */
-  uint32_t dataSize_ = 0;
 
   // Number of times the script has been called or has had backedges taken.
   // When running in ion, also increased for any inlined scripts. Reset if
@@ -2899,8 +2896,6 @@ class JSScript : public js::BaseScript {
   void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                           size_t* sizeOfJitScript,
                           size_t* sizeOfBaselineFallbackStubs) const;
-
-  size_t dataSize() const { return dataSize_; }
 
   mozilla::Span<const JS::GCCellPtr> gcthings() const {
     return data_->gcthings();

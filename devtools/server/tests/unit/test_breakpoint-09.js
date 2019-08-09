@@ -8,46 +8,54 @@
  * Check that removing a breakpoint works.
  */
 
+let done = false;
+
 add_task(
-  threadFrontTest(({ threadFront, client, debuggee }) => {
-    return new Promise(resolve => {
-      let done = false;
-      threadFront.once("paused", async function(packet) {
-        const source = await getSourceById(
-          threadFront,
-          packet.frame.where.actor
-        );
-        const location = { sourceUrl: source.url, line: debuggee.line0 + 2 };
+  threadFrontTest(async ({ threadFront, client, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evaluateTestCode(debuggee),
+      threadFront
+    );
 
-        threadFront.setBreakpoint(location, {});
-        await client.waitForRequestsToSettle();
-        threadFront.once("paused", async function(packet) {
-          // Check the return value.
-          Assert.equal(packet.frame.where.actor, source.actorID);
-          Assert.equal(packet.frame.where.line, location.line);
-          Assert.equal(packet.why.type, "breakpoint");
-          // Check that the breakpoint worked.
-          Assert.equal(debuggee.a, undefined);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+    const location = { sourceUrl: source.url, line: debuggee.line0 + 2 };
 
-          // Remove the breakpoint.
-          threadFront.removeBreakpoint(location);
-          await client.waitForRequestsToSettle();
-          done = true;
-          threadFront.once("paused", function(packet) {
-            // The breakpoint should not be hit again.
-            threadFront.resume().then(function() {
-              Assert.ok(false);
-            });
-          });
-          await threadFront.resume();
-          resolve();
-        });
+    //Pause at debugger statement.
+    Assert.equal(packet.frame.where.line, debuggee.line0 + 7);
+    Assert.equal(packet.why.type, "debuggerStatement");
 
-        // Continue until the breakpoint is hit.
-        await threadFront.resume();
+    threadFront.setBreakpoint(location, {});
+    await client.waitForRequestsToSettle();
+
+    await resume(threadFront);
+
+    const packet2 = await waitForPause(threadFront);
+
+    // Check the return value.
+    Assert.equal(packet2.frame.where.actor, source.actorID);
+    Assert.equal(packet2.frame.where.line, location.line);
+    Assert.equal(packet2.why.type, "breakpoint");
+    // Check that the breakpoint worked.
+    Assert.equal(debuggee.a, undefined);
+
+    // Remove the breakpoint.
+    threadFront.removeBreakpoint(location);
+    await client.waitForRequestsToSettle();
+
+    done = true;
+    threadFront.once("paused", function(packet) {
+      // The breakpoint should not be hit again.
+      threadFront.resume().then(function() {
+        Assert.ok(false);
       });
+    });
 
-      /* eslint-disable */
+    await resume(threadFront);
+  })
+);
+
+function evaluateTestCode(debuggee) {
+  /* eslint-disable */
       Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
                        "function foo(stop) {\n" + // line0 + 1
                        "  this.a = 1;\n" +        // line0 + 2
@@ -59,9 +67,7 @@ add_task(
                        "foo();\n",                // line1 + 8
                        debuggee);
       /* eslint-enable */
-      if (!done) {
-        Assert.ok(false);
-      }
-    });
-  })
-);
+  if (!done) {
+    Assert.ok(false);
+  }
+}

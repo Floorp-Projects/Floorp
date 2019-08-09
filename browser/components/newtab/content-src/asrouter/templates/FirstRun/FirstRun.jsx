@@ -7,6 +7,9 @@ import { Interrupt } from "./Interrupt";
 import { Triplets } from "./Triplets";
 import { BASE_PARAMS } from "./addUtmParams";
 
+// Note: should match the transition time on .trailheadCards in _Trailhead.scss
+const TRANSITION_LENGTH = 500;
+
 export const FLUENT_FILES = [
   "branding/brand.ftl",
   "browser/branding/brandings.ftl",
@@ -140,10 +143,11 @@ export class FirstRun extends React.PureComponent {
 
   closeTriplets() {
     this.setState({ isTripletsContainerVisible: false });
-    // TODO: Needs to block ALL extended triplets as well
-    if (this.props.message.template === "extended_triplets") {
-      this.props.onBlock();
-    }
+
+    // Closing triplets should prevent any future extended triplets from showing up
+    setTimeout(() => {
+      this.props.onBlockById("EXTENDED_TRIPLETS_1");
+    }, TRANSITION_LENGTH);
   }
 
   render() {
@@ -175,6 +179,7 @@ export class FirstRun extends React.PureComponent {
             onNextScene={this.closeInterrupt}
             UTMTerm={UTMTerm}
             sendUserActionTelemetry={sendUserActionTelemetry}
+            executeAction={executeAction}
             dispatch={dispatch}
             flowParams={flowParams}
             onDismiss={this.closeInterrupt}

@@ -31,6 +31,7 @@ exclude: true
 - Complete rewrite of [`PromptDelegate`][70.11].
 - Added [`RuntimeTelemetry.Delegate`][70.12] that receives streaming telemetry
   data from GeckoView.
+- Updated [`ContentBlocking`][70.13] to better report blocked and allowed ETP events.
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -44,6 +45,7 @@ exclude: true
 [70.10]: {{javadoc_uri}}/GeckoView.html#setSession-org.mozilla.geckoview.GeckoSession-
 [70.11]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html
 [70.12]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html
+[70.13]: {{javadoc_uri}}/ContentBlocking.html
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -296,4 +298,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 00e5a05a0d16a0992b2044090e585031b80093c4
+[api-version]: 1929f5739623cec70ce9bad19837a4f21604488e

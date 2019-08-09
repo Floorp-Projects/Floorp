@@ -101,6 +101,7 @@ const ONBOARDING_MESSAGES = () => [
   {
     id: "EXTENDED_TRIPLETS_1",
     template: "extended_triplets",
+    campaign: "firstrun_triplets",
     targeting:
       "trailheadTriplet && ((currentDate|date - profileAgeCreated) / 86400000) < 7",
     includeBundle: {

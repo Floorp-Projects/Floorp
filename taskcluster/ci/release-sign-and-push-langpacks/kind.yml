@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+    - taskgraph.transforms.release_sign_and_push_langpacks:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build
+    - nightly-l10n
+
+
+only-for-build-platforms:
+    - linux64-shippable/opt  # addons.mozilla.org only support 1 platform per locale. That's why we use linux64
+    - linux64-devedition-nightly/opt
+    - macosx64-shippable/opt  # Although, we need the special locale "ja-JP-Mac" from this platform
+    - macosx64-devedition-nightly/opt
+
+
+job-template:
+    description: Signs {locales} XPIs for platform via addons.mozilla.org and pushes them
+    worker-type:
+        by-release-level:
+            production: scriptworker-prov-v1/addon-v1
+            staging: scriptworker-prov-v1/addon-dev
+    worker:
+        implementation: sign-and-push-addons
+        channel:
+            by-project:
+                mozilla-release:
+                    by-platform:
+                        # ja-JP-mac is only langpack on mac, and is unlisted always
+                        macosx64.*: unlisted
+                        default: listed
+                mozilla-beta:
+                    by-platform:
+                        # ja-JP-mac is only langpack on mac, and is unlisted always
+                        macosx64-nightly.*: unlisted
+                        macosx64-shippable.*: unlisted
+                        macosx64-devedition.*: unlisted
+                        linux.*-devedition.*: unlisted
+                        default: listed
+                default: unlisted
+        upstream-artifacts:  # See transforms
+    run-on-projects: []
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:addons.mozilla.org:server:production
+            staging:
+                - project:releng:addons.mozilla.org:server:staging
+    shipping-phase: promote

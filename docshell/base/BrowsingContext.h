@@ -68,8 +68,10 @@ class BrowsingContextBase {
   type m##name;                                                     \
                                                                     \
   /* shadow to validate fields. aSource is setter process or null*/ \
-  void WillSet##name(type const& aValue, ContentParent* aSource) {} \
-  void DidSet##name(ContentParent* aSource) {}
+  bool MaySet##name(type const& aValue, ContentParent* aSource) {   \
+    return true;                                                    \
+  }                                                                 \
+  void DidSet##name() {}
 #include "mozilla/dom/BrowsingContextFieldList.h"
 };
 
@@ -292,53 +294,42 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   void StartDelayedAutoplayMediaComponents();
 
   /**
-   * Each synced racy field in a BrowsingContext needs to have a epoch value
-   * which is used to resolve race conflicts by ensuring that only the last
-   * message received in the parent process wins.
-   */
-  struct FieldEpochs {
-#define MOZ_BC_FIELD(...) /* nothing */
-#define MOZ_BC_FIELD_RACY(name, ...) uint64_t m##name = 0;
-#include "mozilla/dom/BrowsingContextFieldList.h"
-  };
-
-  /**
    * Transaction object. This object is used to specify and then commit
    * modifications to synchronized fields in BrowsingContexts.
    */
   class Transaction {
    public:
     // Apply the changes from this transaction to the specified BrowsingContext
-    // in all processes. This method will call the correct `WillSet` and
+    // in all processes. This method will call the correct `MaySet` and
     // `DidSet` methods, as well as move the value.
     //
     // NOTE: This method mutates `this`, resetting all members to `Nothing()`
     void Commit(BrowsingContext* aOwner);
 
-    // You probably don't want to directly call this method - instead call
-    // `Commit`, which will perform the necessary synchronization.
+    // This method should be called before invoking `Apply` on this transaction
+    // object.
     //
     // |aSource| is the ContentParent which is performing the mutation in the
     // parent process.
-    void Apply(BrowsingContext* aOwner, ContentParent* aSource,
-               const FieldEpochs* aEpochs = nullptr);
+    MOZ_MUST_USE bool Validate(BrowsingContext* aOwner, ContentParent* aSource,
+                               uint64_t aEpoch);
+    MOZ_MUST_USE bool Validate(BrowsingContext* aOwner, ContentParent* aSource);
 
-    bool HasNonRacyField() const {
-#define MOZ_BC_FIELD(name, ...) \
-  if (m##name.isSome()) {       \
-    return true;                \
-  }
-#define MOZ_BC_FIELD_RACY(...) /* nothing */
-#include "mozilla/dom/BrowsingContextFieldList.h"
-
-      return false;
-    }
+    // You probably don't want to directly call this method - instead call
+    // `Commit`, which will perform the necessary synchronization.
+    //
+    // `Validate` must be called before calling this method.
+    void Apply(BrowsingContext* aOwner);
 
 #define MOZ_BC_FIELD(name, type) mozilla::Maybe<type> m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
 
    private:
     friend struct mozilla::ipc::IPDLParamTraits<Transaction>;
+
+    // Has `Validate` been called on this method yet?
+    // NOTE: This field is not synced, and must be called in every process.
+    bool mValidated = false;
   };
 
 #define MOZ_BC_FIELD(name, type)                        \
@@ -449,15 +440,16 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   };
 
   // Ensure that opener is in the same BrowsingContextGroup.
-  void WillSetOpener(const uint64_t& aValue, ContentParent* aSource) {
+  bool MaySetOpener(const uint64_t& aValue, ContentParent* aSource) {
     if (aValue != 0) {
       RefPtr<BrowsingContext> opener = Get(aValue);
-      MOZ_RELEASE_ASSERT(opener && opener->Group() == Group());
+      return opener && opener->Group() == Group();
     }
+    return true;
   }
 
   // Ensure that we only set the flag on the top level browsing context.
-  void DidSetIsActivatedByUserGesture(ContentParent* aSource);
+  void DidSetIsActivatedByUserGesture();
 
   // Type of BrowsingContent
   const Type mType;
@@ -479,7 +471,17 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
 
-  FieldEpochs mFieldEpochs;
+  // Whenever a `Transaction` is committed, it is associated with a new
+  // "Browsing Context Epoch". The epoch is associated with a specific content
+  // process. This `mEpochs` field tracks the epoch of the most recent comitted
+  // transaction in this process, and is used to resolve races between processes
+  // and ensure browsing context field consistency.
+  //
+  // This field is only used by content processes.
+  struct {
+#define MOZ_BC_FIELD(name, ...) uint64_t name = 0;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  } mEpochs;
 
   // Is the most recent Document in this BrowsingContext loaded within this
   // process? This may be true with a null mDocShell after the Window has been
@@ -509,7 +511,6 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::MutableHandle<JSObject*> aRetVal);
 
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
-typedef BrowsingContext::FieldEpochs BrowsingContextFieldEpochs;
 typedef BrowsingContext::IPCInitializer BrowsingContextInitializer;
 typedef BrowsingContext::Children BrowsingContextChildren;
 
@@ -533,16 +534,6 @@ struct IPDLParamTraits<dom::BrowsingContext::Transaction> {
   static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
                    IProtocol* aActor,
                    dom::BrowsingContext::Transaction* aTransaction);
-};
-
-template <>
-struct IPDLParamTraits<dom::BrowsingContext::FieldEpochs> {
-  static void Write(IPC::Message* aMessage, IProtocol* aActor,
-                    const dom::BrowsingContext::FieldEpochs& aEpochs);
-
-  static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
-                   IProtocol* aActor,
-                   dom::BrowsingContext::FieldEpochs* aEpochs);
 };
 
 template <>

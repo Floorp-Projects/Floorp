@@ -117,8 +117,8 @@ devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools generated code
 devtools/shared/css/generated/properties-db.js
-devtools/client/webconsole/test/fixtures/stubs/*.js
-!devtools/client/webconsole/test/fixtures/stubs/index.js
+devtools/client/webconsole/test/node/fixtures/stubs/*.js
+!devtools/client/webconsole/test/node/fixtures/stubs/index.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
@@ -146,8 +146,8 @@ devtools/client/debugger/test/mochitest/code_*.js
 devtools/client/framework/test/code_*
 devtools/client/inspector/markup/test/events_bundle.js
 devtools/client/netmonitor/test/xhr_bundle.js
-devtools/client/webconsole/test/mochitest/code_bundle_nosource.js
-devtools/client/webconsole/test/mochitest/code_bundle_invalidmap.js
+devtools/client/webconsole/test/browser/code_bundle_nosource.js
+devtools/client/webconsole/test/browser/code_bundle_invalidmap.js
 devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
 devtools/server/tests/unit/sourcemapped.js
@@ -275,7 +275,6 @@ services/fxaccounts/FxAccountsPairingChannel.js
 
 # Uses `#filter substitution`
 services/sync/modules/constants.js
-services/sync/services-sync.js
 
 # Servo is imported.
 servo/**

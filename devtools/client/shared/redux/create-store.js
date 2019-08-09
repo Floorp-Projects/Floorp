@@ -4,6 +4,7 @@
 "use strict";
 
 const {
+  combineReducers,
   createStore,
   applyMiddleware,
 } = require("devtools/client/shared/vendor/redux");
@@ -11,6 +12,7 @@ const { thunk } = require("./middleware/thunk");
 const { waitUntilService } = require("./middleware/wait-service");
 const { task } = require("./middleware/task");
 const { promise } = require("./middleware/promise");
+const flags = require("devtools/shared/flags");
 
 loader.lazyRequireGetter(
   this,
@@ -36,7 +38,7 @@ loader.lazyRequireGetter(
  *                   used in tests.
  *        - middleware: array of middleware to be included in the redux store
  */
-module.exports = (opts = {}) => {
+const createStoreWithMiddleware = (opts = {}) => {
   const middleware = [
     task,
     thunk,
@@ -62,4 +64,31 @@ module.exports = (opts = {}) => {
   }
 
   return applyMiddleware(...middleware)(createStore);
+};
+
+module.exports = (
+  reducers,
+  { shouldLog = false, initialState = undefined } = {}
+) => {
+  const reducer =
+    typeof reducers === "function" ? reducers : combineReducers(reducers);
+
+  let historyEntries;
+
+  // If testing, store the action history in an array
+  // we'll later attach to the store
+  if (flags.testing) {
+    historyEntries = [];
+  }
+
+  const store = createStoreWithMiddleware({
+    log: flags.testing && shouldLog,
+    history: historyEntries,
+  })(reducer, initialState);
+
+  if (history) {
+    store.history = historyEntries;
+  }
+
+  return store;
 };

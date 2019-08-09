@@ -363,9 +363,9 @@ release-secondary-final-verify
 ------------------------------
 Verifies the contents and package of release update MARs for RC releases.
 
-release-push-langpacks
+release-sign-and-push-langpacks
 -------------------------------
-Publishes language packs onto addons.mozilla.org.
+Sign a langpack XPI and publishes it onto addons.mozilla.org.
 
 release-beetmover-signed-langpacks
 ----------------------------------

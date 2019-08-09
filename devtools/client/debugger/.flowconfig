@@ -18,3 +18,4 @@
 
 [options]
 suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe

@@ -1,0 +1,32 @@
+{
+  "name": "webconsole-tests",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "scripts": {
+    "//": [
+      "Here's the script to run tests with `npm test`. Here's what it does: ",
+      " * Run mocha on components, middleware, store and utils folders, on .test.js files.",
+      "   We need to specify them so we don't run unwanted tests (e.g. in node_modules).",
+      " * We require jsdom-global to inject `document` and `window` objects which are",
+      "   not in nodejs natively.",
+      " * Finally we require mocha-test-setup where we configure Enzyme and",
+      "   intercept require() calls with require-hacker and modify them if needed."
+    ],
+    "test": "mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js",
+    "test-ci": "mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js --reporter json"
+  },
+  "dependencies": {
+    "devtools-modules": "0.0.37",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
+    "expect": "^1.16.0",
+    "jsdom": "^9.4.1",
+    "jsdom-global": "^2.0.0",
+    "mocha": "^5.0.1",
+    "mock-local-storage": "^1.0.5",
+    "require-hacker": "^2.1.4",
+    "sinon": "^1.17.5"
+  }
+}

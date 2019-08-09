@@ -539,6 +539,10 @@ var PanelMultiView = class extends AssociatedToNode {
       try {
         canCancel = false;
         this._panel.openPopup(anchor, options, ...args);
+        // Set an attribute on the popup to let consumers style popup elements -
+        // for example, the anchor arrow is styled to match the color of the header
+        // in the Protections Panel main view.
+        this._panel.setAttribute("mainviewshowing", true);
 
         // On Windows, if another popup is hiding while we call openPopup, the
         // call won't fail but the popup won't open. In this case, we have to
@@ -1019,6 +1023,17 @@ var PanelMultiView = class extends AssociatedToNode {
 
     // Kick off the transition!
     details.phase = TRANSITION_PHASES.TRANSITION;
+
+    // If we're going to show the main view, we can remove the
+    // min-height property on the view container. It's also time
+    // to set the mainviewshowing attribute on the popup.
+    if (viewNode.getAttribute("mainview")) {
+      this._viewContainer.style.removeProperty("min-height");
+      this._panel.setAttribute("mainviewshowing", true);
+    } else {
+      this._panel.removeAttribute("mainviewshowing");
+    }
+
     this._viewStack.style.transform =
       "translateX(" + (moveToLeft ? "" : "-") + deltaX + "px)";
 

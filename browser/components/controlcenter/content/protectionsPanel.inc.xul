@@ -15,14 +15,17 @@
   <panelmultiview id="protections-popup-multiView"
                   mainViewId="protections-popup-mainView">
     <panelview id="protections-popup-mainView"
+               role="document"
                descriptionheightworkaround="true">
       <hbox id="protections-popup-mainView-panel-header"
             flex="1"
             onclick="gProtectionsHandler.onHeaderClicked(event);">
-        <label id="protections-popup-main-header-label" flex="1">
+        <label id="protections-popup-main-header-label" flex="1"
+               role="heading" aria-level="1">
           <html:span id="protections-popup-mainView-panel-header-span"/>
         </label>
-        <toolbarbutton id="protections-popup-info-button" class="panel-info-button">
+        <toolbarbutton id="protections-popup-info-button" class="panel-info-button"
+                       aria-label="&protections.etpMoreInfo.label;">
           <image/>
         </toolbarbutton>
         <description id="protections-popup-toast-panel-tp-on-desc">&protections.etpON.header;</description>
@@ -35,8 +38,12 @@
 
       <hbox id="protections-popup-tp-switch-section" class="protections-popup-section">
         <vbox class="protections-popup-tp-switch-label-box" flex="1">
-          <label class="protections-popup-tp-switch-on-header">&protections.etpON.header;</label>
-          <label class="protections-popup-tp-switch-off-header">&protections.etpOFF.header;</label>
+          <label class="protections-popup-tp-switch-on-header"
+                 role="heading"
+                 aria-level="2">&protections.etpON.header;</label>
+          <label class="protections-popup-tp-switch-off-header"
+                 role="heading"
+                 aria-level="2">&protections.etpOFF.header;</label>
           <label id="protections-popup-tp-switch-breakage-link"
                  class="text-link"
                  onclick="gProtectionsHandler.showSiteNotWorkingView();">&protections.siteNotWorking.label;</label>
@@ -56,7 +63,10 @@
         <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff.tooltip;</tooltip>
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
-            <description id="protections-popup-blocking-section-header" hidden="true">&protections.blocking.label;</description>
+            <description id="protections-popup-blocking-section-header"
+                         hidden="true"
+                         role="heading"
+                         aria-level="2">&protections.blocking.label;</description>
             <hbox id="protections-popup-not-blocking-section-header" hidden="true">
               <description id="protections-popup-not-blocking-section-description">&protections.notBlocking.label;</description>
               <label id="protections-popup-not-blocking-section-why"
@@ -133,13 +143,18 @@
 
     <!-- Site Not Working? SubView -->
     <panelview id="protections-popup-siteNotWorkingView"
+               role="document"
                title="&protections.siteNotWorkingView.title;"
                descriptionheightworkaround="true"
                flex="1">
         <hbox id="protections-popup-siteNotWorkingView-header">
           <vbox class="protections-popup-tp-switch-label-box" flex="1">
-            <label class="protections-popup-tp-switch-on-header">&protections.etpON.header;</label>
-            <label class="protections-popup-tp-switch-off-header">&protections.etpOFF.header;</label>
+            <label class="protections-popup-tp-switch-on-header"
+                   role="heading"
+                   aria-level="1">&protections.etpON.header;</label>
+            <label class="protections-popup-tp-switch-off-header"
+                   role="heading"
+                   aria-level="1">&protections.etpOFF.header;</label>
           </vbox>
           <vbox class="protections-popup-tp-switch-box">
             <toolbarbutton id="protections-popup-siteNotWorking-tp-switch"
@@ -149,7 +164,7 @@
           </vbox>
         </hbox>
         <vbox id="protections-popup-siteNotWorkingView-body">
-          <label>&protections.siteNotWorkingView.header;</label>
+          <label role="heading" aria-level="2">&protections.siteNotWorkingView.header;</label>
           <label>
             <html:ul id="protections-popup-siteNotWorkingView-body-issue-list">
               <html:li>&protections.siteNotWorkingView.issueList.logInFields;</html:li>
@@ -261,12 +276,12 @@
         </vbox>
         <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
           <vbox class="protections-popup-sendReportView-collection-section">
-            <label>&contentBlocking.breakageReportView.collection.url.label;</label>
-            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url"/>
+            <label control="protections-popup-sendReportView-collection-url">&contentBlocking.breakageReportView.collection.url.label;</label>
+            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url" aria-label="&contentBlocking.breakageReportView.collection.url.label;"/>
           </vbox>
           <vbox class="protections-popup-sendReportView-collection-section">
-            <label>&contentBlocking.breakageReportView2.collection.comments.label;</label>
-            <html:textarea id="protections-popup-sendReportView-collection-comments"/>
+            <label control="protections-popup-sendReportView-collection-comments">&contentBlocking.breakageReportView2.collection.comments.label;</label>
+            <html:textarea id="protections-popup-sendReportView-collection-comments" aria-label="&contentBlocking.breakageReportView2.collection.comments.label;"/>
           </vbox>
         </vbox>
         <vbox id="protections-popup-sendReportView-footer"

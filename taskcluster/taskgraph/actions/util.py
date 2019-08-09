@@ -34,6 +34,10 @@ from taskgraph.util.taskgraph import (
 logger = logging.getLogger(__name__)
 
 
+def get_parameters(decision_task_id):
+    return get_artifact(decision_task_id, "public/parameters.yml")
+
+
 def fetch_graph_and_labels(parameters, graph_config):
     decision_task_id = find_decision_task(parameters, graph_config)
 

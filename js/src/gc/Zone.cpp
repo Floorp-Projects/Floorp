@@ -95,6 +95,7 @@ JS::Zone::Zone(JSRuntime* rt)
       types(this),
       gcWeakMapList_(this),
       compartments_(),
+      crossZoneStringWrappers_(this),
       gcGrayRoots_(this),
       weakCaches_(this),
       gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
@@ -212,7 +213,12 @@ static void SweepWeakEntryVectorWhileMinorSweeping(
   });
 }
 
-void Zone::sweepAfterMinorGC() {
+void Zone::sweepAfterMinorGC(JSTracer* trc) {
+  sweepWeakKeysAfterMinorGC();
+  crossZoneStringWrappers().sweepAfterMinorGC(trc);
+}
+
+void Zone::sweepWeakKeysAfterMinorGC() {
   for (WeakKeyTable::Range r = gcNurseryWeakKeys().all(); !r.empty();
        r.popFront()) {
     // Sweep gcNurseryWeakKeys to move live (forwarded) keys to gcWeakKeys,
@@ -280,6 +286,57 @@ void Zone::sweepAfterMinorGC() {
     oomUnsafe.crash("OOM while clearing gcNurseryWeakKeys.");
   }
 }
+
+void Zone::sweepAllCrossCompartmentWrappers() {
+  crossZoneStringWrappers().sweep();
+  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+    comp->sweepCrossCompartmentObjectWrappers();
+  }
+}
+
+/* static */
+void Zone::fixupAllCrossCompartmentWrappersAfterMovingGC(JSTracer* trc) {
+  MOZ_ASSERT(trc->runtime()->gc.isHeapCompacting());
+
+  for (ZonesIter zone(trc->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    // Sweep the wrapper map to update keys (wrapped values) in other
+    // compartments that may have been moved.
+    zone->crossZoneStringWrappers().sweep();
+
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+      comp->fixupCrossCompartmentObjectWrappersAfterMovingGC(trc);
+    }
+  }
+}
+
+void Zone::dropStringWrappersOnGC() {
+  MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
+  crossZoneStringWrappers().clear();
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
+void Zone::checkAllCrossCompartmentWrappersAfterMovingGC() {
+  checkStringWrappersAfterMovingGC();
+  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+    comp->checkObjectWrappersAfterMovingGC();
+  }
+}
+
+void Zone::checkStringWrappersAfterMovingGC() {
+  for (StringWrapperMap::Enum e(crossZoneStringWrappers()); !e.empty();
+       e.popFront()) {
+    // Assert that the postbarriers have worked and that nothing is left in the
+    // wrapper map that points into the nursery, and that the hash table entries
+    // are discoverable.
+    auto key = e.front().key();
+    CheckGCThingAfterMovingGC(key);
+
+    auto ptr = crossZoneStringWrappers().lookup(key);
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
+  }
+}
+#endif
 
 void Zone::sweepWeakMaps() {
   /* Finalize unreachable (key,value) pairs in all weak maps. */
@@ -540,6 +597,32 @@ void Zone::traceAtomCache(JSTracer* trc) {
     JSAtom* atom = r.front().asPtrUnbarriered();
     TraceRoot(trc, &atom, "kept atom");
     MOZ_ASSERT(r.front().asPtrUnbarriered() == atom);
+  }
+}
+
+void Zone::addSizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf, size_t* typePool, size_t* regexpZone,
+    size_t* jitZone, size_t* baselineStubsOptimized, size_t* cachedCFG,
+    size_t* uniqueIdMap, size_t* shapeCaches, size_t* atomsMarkBitmaps,
+    size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
+    size_t* compartmentsPrivateData) {
+  *typePool += types.typeLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+  *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
+  if (jitZone_) {
+    jitZone_->addSizeOfIncludingThis(mallocSizeOf, jitZone,
+                                     baselineStubsOptimized, cachedCFG);
+  }
+  *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
+  *shapeCaches += baseShapes().sizeOfExcludingThis(mallocSizeOf) +
+                  initialShapes().sizeOfExcludingThis(mallocSizeOf);
+  *atomsMarkBitmaps += markedAtoms().sizeOfExcludingThis(mallocSizeOf);
+  *crossCompartmentWrappersTables +=
+      crossZoneStringWrappers().sizeOfExcludingThis(mallocSizeOf);
+
+  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+    comp->addSizeOfIncludingThis(mallocSizeOf, compartmentObjects,
+                                 crossCompartmentWrappersTables,
+                                 compartmentsPrivateData);
   }
 }
 

@@ -48,6 +48,12 @@ function autoplayBlockedIcon() {
   );
 }
 
+function permissionListBlockedIcons() {
+  return document.querySelectorAll(
+    "image.identity-popup-permission-icon.blocked-permission-icon"
+  );
+}
+
 function sleep(ms) {
   /* eslint-disable mozilla/no-arbitrary-setTimeout */
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -250,6 +256,12 @@ add_task(async function testBlockedAll() {
     await blockedIconShown();
 
     await openIdentityPopup();
+
+    Assert.equal(
+      permissionListBlockedIcons().length,
+      1,
+      "Blocked icon is shown"
+    );
 
     let menulist = document.getElementById("identity-popup-popup-menulist");
     await EventUtils.synthesizeMouseAtCenter(menulist, { type: "mousedown" });
