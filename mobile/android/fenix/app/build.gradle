@@ -5,6 +5,7 @@ plugins {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'jacoco'
 apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
@@ -443,6 +444,42 @@ dependencies {
 
 if (project.hasProperty("raptor")) {
     android.defaultConfig.manifestPlaceholders.isRaptorEnabled = "true"
+}
+
+if (project.hasProperty("coverage")) {
+    tasks.withType(Test) {
+        jacoco.includeNoLocationClasses = true
+    }
+
+    android.applicationVariants.all { variant ->
+        task "jacoco${variant.name.capitalize()}TestReport"(type: JacocoReport, dependsOn: "test${variant.name.capitalize()}UnitTest") {
+            reports {
+                xml.enabled = true
+                html.enabled = true
+            }
+
+            def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                              '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+            def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
+            def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/${variant.flavorName}/${variant.buildType.name}",
+                    excludes: fileFilter)
+            def mainSrc = "$project.projectDir/src/main/java"
+
+            sourceDirectories = files([mainSrc])
+            classDirectories = files([kotlinDebugTree, javaDebugTree])
+            executionData = fileTree(dir: project.buildDir, includes: [
+                    "jacoco/test${variant.name.capitalize()}UnitTest.exec", 'outputs/code-coverage/connected/*coverage.ec'
+            ])
+        }
+    }
+
+    android {
+        buildTypes {
+            debug {
+                testCoverageEnabled true
+            }
+        }
+    }
 }
 
 // -------------------------------------------------------------------------------------------------

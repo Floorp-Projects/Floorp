@@ -63,8 +63,8 @@ def pr():
 
     for variant in get_variants_for_build_type('debug'):
         assemble_task_id = taskcluster.slugId()
-        build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
-        build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
+        build_tasks[assemble_task_id] = BUILDER.craft_assemble_pr_task(variant)
+        build_tasks[taskcluster.slugId()] = BUILDER.craft_test_pr_task(variant, True)
 
     for craft_function in (
         BUILDER.craft_detekt_task,

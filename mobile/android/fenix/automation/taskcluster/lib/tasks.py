@@ -134,11 +134,13 @@ class TaskBuilder(object):
             },
         )
 
-    def craft_assemble_task(self, variant):
+    def craft_assemble_pr_task(self, variant):
+        assemble_gradle_command = 'assemble{}'.format(variant.for_gradle_command)
+
         return self._craft_clean_gradle_task(
             name='assemble: {}'.format(variant.raw),
             description='Building and testing variant {}'.format(variant.raw),
-            gradle_task='assemble{}'.format(variant.for_gradle_command),
+            gradle_task=assemble_gradle_command,
             artifacts=_craft_artifacts_from_variant(variant),
             treeherder={
                 'groupSymbol': variant.build_type,
@@ -148,14 +150,29 @@ class TaskBuilder(object):
                 },
                 'symbol': 'A',
                 'tier': 1,
-            },
+            }
         )
 
-    def craft_test_task(self, variant):
+    def craft_test_pr_task(self, variant, run_coverage=False):
+        test_gradle_command = '-Pcoverage jacoco{}TestReport'.format(variant.for_gradle_command) \
+            if (run_coverage and variant.abi == 'aarch64') \
+            else 'test{}UnitTest'.format(variant.for_gradle_command)
+        post_gradle_command = ('automation/taskcluster/upload_coverage_report.sh' if run_coverage else '',)
+
+        if variant.abi == 'aarch64':
+            command = ' && '.join(
+                cmd
+                for commands in ((test_gradle_command,), post_gradle_command)
+                for cmd in commands
+                if cmd
+            )
+        else:
+            command = test_gradle_command
+
         return self._craft_clean_gradle_task(
             name='test: {}'.format(variant.raw),
             description='Building and testing variant {}'.format(variant.raw),
-            gradle_task='test{}UnitTest'.format(variant.for_gradle_command),
+            gradle_task=command,
             treeherder={
                 'groupSymbol': variant.build_type,
                 'jobKind': 'test',
@@ -165,6 +182,9 @@ class TaskBuilder(object):
                 'symbol': 'T',
                 'tier': 1,
             },
+            scopes=[
+                'secrets:get:project/mobile/fenix/pr'
+            ]
         )
    
     def craft_ui_tests_task(self):
@@ -304,7 +324,7 @@ class TaskBuilder(object):
         )
 
     def _craft_clean_gradle_task(
-        self, name, description, gradle_task, artifacts=None, routes=None, treeherder=None
+        self, name, description, gradle_task, artifacts=None, routes=None, treeherder=None, scopes=None
     ):
         return self._craft_build_ish_task(
             name=name,
@@ -313,6 +333,7 @@ class TaskBuilder(object):
             artifacts=artifacts,
             routes=routes,
             treeherder=treeherder,
+            scopes=scopes,
         )
 
     def craft_compare_locales_task(self):
@@ -334,8 +355,8 @@ class TaskBuilder(object):
         )
 
     def _craft_build_ish_task(
-        self, name, description, command, dependencies=None, artifacts=None, scopes=None,
-        routes=None, treeherder=None, env_vars=None,
+        self, name, description, command, dependencies=None, artifacts=None,
+        routes=None, treeherder=None, env_vars=None, scopes=None
     ):
         dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
