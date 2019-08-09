@@ -15,7 +15,7 @@ class BytecodeIterator {
   BytecodeLocation current_;
 
  public:
-  explicit BytecodeIterator(const JSScript* script);
+  inline explicit BytecodeIterator(const JSScript* script);
 
   explicit BytecodeIterator(BytecodeLocation loc) : current_(loc) {}
 

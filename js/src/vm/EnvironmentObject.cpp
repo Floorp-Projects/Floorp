@@ -19,12 +19,22 @@
 #include "vm/Xdr.h"
 #include "wasm/WasmInstance.h"
 
+#ifdef DEBUG
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
+#endif
+
 #include "gc/Marking-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/TypeInference-inl.h"
+
+#ifdef DEBUG
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
+#endif
 
 using namespace js;
 
@@ -3771,22 +3781,22 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
   //   these names and putting eval in an inner script is bad news if you
   //   care about entraining variables unnecessarily.
 
-  for (jsbytecode* pc = script->code(); pc != script->codeEnd();
-       pc += GetBytecodeLength(pc)) {
+  AllBytecodesIterable iter(script);
+  for (BytecodeLocation loc : iter) {
     PropertyName* name;
 
-    switch (JSOp(*pc)) {
+    switch (loc.getOp()) {
       case JSOP_GETNAME:
       case JSOP_SETNAME:
       case JSOP_STRICTSETNAME:
-        name = script->getName(pc);
+        name = script->getName(loc.toRawBytecode());
         break;
 
       case JSOP_GETGNAME:
       case JSOP_SETGNAME:
       case JSOP_STRICTSETGNAME:
         if (script->hasNonSyntacticScope()) {
-          name = script->getName(pc);
+          name = script->getName(loc.toRawBytecode());
         } else {
           name = nullptr;
         }
@@ -3794,7 +3804,7 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
 
       case JSOP_GETALIASEDVAR:
       case JSOP_SETALIASEDVAR:
-        name = EnvironmentCoordinateNameSlow(script, pc);
+        name = EnvironmentCoordinateNameSlow(script, loc.toRawBytecode());
         break;
 
       default:
