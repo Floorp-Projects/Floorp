@@ -375,6 +375,21 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mGlMsaaLevel.set(level);
             return this;
         }
+
+        /**
+         * Add a {@link RuntimeTelemetry.Delegate} instance to this
+         * GeckoRuntime.  This delegate can be used by the app to receive
+         * streaming telemetry data from GeckoView.
+         *
+         * @param delegate the delegate that will handle telemetry
+         * @return The builder instance.
+         */
+        public @NonNull Builder telemetryDelegate(
+                final @NonNull RuntimeTelemetry.Delegate delegate) {
+            getSettings().mTelemetryProxy = new RuntimeTelemetry.Proxy(delegate);
+            getSettings().mTelemetryEnabled.set(true);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -411,6 +426,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "apz.allow_double_tap_zooming", true);
     /* package */ final Pref<Integer> mGlMsaaLevel = new Pref<>(
             "gl.msaa-level", 0);
+    /* package */ final Pref<Boolean> mTelemetryEnabled = new Pref<>(
+            "toolkit.telemetry.geckoview.streaming", false);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -420,6 +437,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /* package */ int mScreenHeightOverride;
     /* package */ Class<? extends Service> mCrashHandler;
     /* package */ String[] mRequestedLocales;
+    /* package */ RuntimeTelemetry.Proxy mTelemetryProxy;
 
     /**
      * Attach and commit the settings to the given runtime.
@@ -471,6 +489,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         mCrashHandler = settings.mCrashHandler;
         mRequestedLocales = settings.mRequestedLocales;
         mConfigFilePath = settings.mConfigFilePath;
+        mTelemetryProxy = settings.mTelemetryProxy;
     }
 
     /* package */ void commit() {
@@ -977,6 +996,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     public @NonNull GeckoRuntimeSettings setGlMsaaLevel(final int level) {
         mGlMsaaLevel.commit(level);
         return this;
+    }
+
+    public @Nullable RuntimeTelemetry.Delegate getTelemetryDelegate() {
+        return mTelemetryProxy.getDelegate();
     }
 
     @Override // Parcelable

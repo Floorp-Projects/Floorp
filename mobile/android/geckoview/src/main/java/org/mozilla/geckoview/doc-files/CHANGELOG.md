@@ -29,6 +29,8 @@ exclude: true
   a link and then opening that in a new `GeckoSession`.
 - Added capture parameter to [`onFilePrompt`][70.9] and corresponding [`CAPTURE_TYPE_*`][70.7] constants.
 - Complete rewrite of [`PromptDelegate`][70.11].
+- Added [`RuntimeTelemetry.Delegate`][70.12] that receives streaming telemetry
+  data from GeckoView.
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -41,6 +43,7 @@ exclude: true
 [70.9]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onFilePrompt-org.mozilla.geckoview.GeckoSession-java.lang.String-int-java.lang.String:A-int-org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback-
 [70.10]: {{javadoc_uri}}/GeckoView.html#setSession-org.mozilla.geckoview.GeckoSession-
 [70.11]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html
+[70.12]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -293,4 +296,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4550b507a55bdf91d21960209b66f893f4b5b317
+[api-version]: 00e5a05a0d16a0992b2044090e585031b80093c4
