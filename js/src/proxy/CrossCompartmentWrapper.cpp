@@ -439,8 +439,8 @@ JS_FRIEND_API bool js::NukeCrossCompartmentWrappers(
     // |nukeAll| is true. The string wrappers that we're not interested in
     // won't be iterated, we can exclude them easily because they have
     // compartment nullptr. Use Maybe to avoid copying from conditionally
-    // initializing NonStringWrapperEnum.
-    mozilla::Maybe<Compartment::NonStringWrapperEnum> e;
+    // initializing ObjectWrapperEnum.
+    mozilla::Maybe<Compartment::ObjectWrapperEnum> e;
     if (MOZ_LIKELY(!nukeAll)) {
       e.emplace(c, target->compartment());
     } else {
@@ -642,7 +642,7 @@ JS_FRIEND_API bool js::RecomputeWrappers(
     }
 
     // Iterate over the wrappers, filtering appropriately.
-    for (Compartment::NonStringWrapperEnum e(c, targetFilter); !e.empty();
+    for (Compartment::ObjectWrapperEnum e(c, targetFilter); !e.empty();
          e.popFront()) {
       // Filter out non-objects.
       CrossCompartmentKey& k = e.front().mutableKey();

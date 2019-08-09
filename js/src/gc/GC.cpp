@@ -4613,7 +4613,7 @@ void GCRuntime::markCompartments() {
 
   while (!workList.empty()) {
     Compartment* comp = workList.popCopy();
-    for (Compartment::NonStringWrapperEnum e(comp); !e.empty(); e.popFront()) {
+    for (Compartment::ObjectWrapperEnum e(comp); !e.empty(); e.popFront()) {
       Compartment* dest = e.front().mutableKey().compartment();
       if (dest && !dest->gcState.maybeAlive) {
         dest->gcState.maybeAlive = true;
@@ -5040,9 +5040,8 @@ static void DropStringWrappers(JSRuntime* rt) {
 
 bool Compartment::findSweepGroupEdges() {
   Zone* source = zone();
-  for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
+  for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
     CrossCompartmentKey& key = e.front().mutableKey();
-    MOZ_ASSERT(!key.is<JSString*>());
 
     Zone* target = key.zone();
     if (!target->isGCMarking()) {
@@ -5053,8 +5052,7 @@ bool Compartment::findSweepGroupEdges() {
     // is not still being marked when we start sweeping the wrapped zone. As an
     // optimization, if the wrapped object is already marked black there is no
     // danger of later marking and we can skip this.
-    if (key.is<JSObject*>() &&
-        key.as<JSObject*>()->asTenured().isMarkedBlack()) {
+    if (key.as<JSObject*>()->asTenured().isMarkedBlack()) {
       continue;
     }
 
@@ -5267,7 +5265,7 @@ static void AssertNoWrappersInGrayList(JSRuntime* rt) {
 #ifdef DEBUG
   for (CompartmentsIter c(rt); !c.done(); c.next()) {
     MOZ_ASSERT(!c->gcIncomingGrayPointers);
-    for (Compartment::NonStringWrapperEnum e(c); !e.empty(); e.popFront()) {
+    for (Compartment::ObjectWrapperEnum e(c); !e.empty(); e.popFront()) {
       AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
     }
   }

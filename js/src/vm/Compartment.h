@@ -178,13 +178,13 @@ class WrapperMap {
     SkipStrings skipStrings;
 
    public:
-    explicit Enum(WrapperMap& m, SkipStrings s = WithStrings)
+    explicit Enum(WrapperMap& m, SkipStrings s)
         : filter(nullptr), skipStrings(s) {
       outer.emplace(m.map);
       goToNext();
     }
 
-    Enum(WrapperMap& m, const CompartmentFilter& f, SkipStrings s = WithStrings)
+    Enum(WrapperMap& m, const CompartmentFilter& f, SkipStrings s)
         : filter(&f), skipStrings(s) {
       outer.emplace(m.map);
       goToNext();
@@ -473,19 +473,14 @@ class JS::Compartment {
     return crossCompartmentWrappers.hasNurseryAllocatedWrapperEntries(f);
   }
 
-  struct WrapperEnum : public js::WrapperMap::Enum {
-    explicit WrapperEnum(JS::Compartment* c)
-        : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
-  };
-
-  struct NonStringWrapperEnum : public js::WrapperMap::Enum {
-    explicit NonStringWrapperEnum(JS::Compartment* c)
+  struct ObjectWrapperEnum : public js::WrapperMap::Enum {
+    explicit ObjectWrapperEnum(JS::Compartment* c)
         : js::WrapperMap::Enum(c->crossCompartmentWrappers, WithoutStrings) {}
-    explicit NonStringWrapperEnum(JS::Compartment* c,
-                                  const js::CompartmentFilter& f)
+    explicit ObjectWrapperEnum(JS::Compartment* c,
+                               const js::CompartmentFilter& f)
         : js::WrapperMap::Enum(c->crossCompartmentWrappers, f, WithoutStrings) {
     }
-    explicit NonStringWrapperEnum(JS::Compartment* c, JS::Compartment* target)
+    explicit ObjectWrapperEnum(JS::Compartment* c, JS::Compartment* target)
         : js::WrapperMap::Enum(c->crossCompartmentWrappers, target) {
       MOZ_ASSERT(target);
     }
