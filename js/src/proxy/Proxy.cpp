@@ -687,7 +687,7 @@ void ProxyObject::trace(JSTracer* trc, JSObject* obj) {
        * Assert that this proxy is tracked in the wrapper map. We maintain
        * the invariant that the wrapped object is the key in the wrapper map.
        */
-      WrapperMap::Ptr p = proxy->compartment()->lookupWrapper(referent);
+      ObjectWrapperMap::Ptr p = proxy->compartment()->lookupWrapper(referent);
       MOZ_ASSERT(p);
       MOZ_ASSERT(*p->value().unsafeGet() == ObjectValue(*proxy));
     }
