@@ -385,18 +385,9 @@ nsresult imgRequest::GetFinalURI(nsIURI** aURI) {
   return NS_ERROR_FAILURE;
 }
 
-bool imgRequest::IsScheme(const char* aScheme) const {
-  MOZ_ASSERT(aScheme);
-  bool isScheme = false;
-  if (NS_WARN_IF(NS_FAILED(mURI->SchemeIs(aScheme, &isScheme)))) {
-    return false;
-  }
-  return isScheme;
-}
+bool imgRequest::IsChrome() const { return mURI->SchemeIs("chrome"); }
 
-bool imgRequest::IsChrome() const { return IsScheme("chrome"); }
-
-bool imgRequest::IsData() const { return IsScheme("data"); }
+bool imgRequest::IsData() const { return mURI->SchemeIs("data"); }
 
 nsresult imgRequest::GetImageErrorCode() { return mImageErrorCode; }
 
@@ -1189,15 +1180,12 @@ imgRequest::OnRedirectVerifyCallback(nsresult result) {
   // If the previous URI is a non-HTTPS URI, record that fact for later use by
   // security code, which needs to know whether there is an insecure load at any
   // point in the redirect chain.
-  bool isHttps = false;
-  bool isChrome = false;
   bool schemeLocal = false;
-  if (NS_FAILED(mFinalURI->SchemeIs("https", &isHttps)) ||
-      NS_FAILED(mFinalURI->SchemeIs("chrome", &isChrome)) ||
-      NS_FAILED(NS_URIChainHasFlags(mFinalURI,
+  if (NS_FAILED(NS_URIChainHasFlags(mFinalURI,
                                     nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                     &schemeLocal)) ||
-      (!isHttps && !isChrome && !schemeLocal)) {
+      (!mFinalURI->SchemeIs("https") && !mFinalURI->SchemeIs("chrome") &&
+       !schemeLocal)) {
     MutexAutoLock lock(mMutex);
 
     // The csp directive upgrade-insecure-requests performs an internal redirect

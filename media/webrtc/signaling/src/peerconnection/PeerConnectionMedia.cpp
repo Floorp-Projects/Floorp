@@ -354,9 +354,7 @@ nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool isFileScheme;
-  doc->GetDocumentURI()->SchemeIs("file", &isFileScheme);
-  if (!isFileScheme) {
+  if (!doc->GetDocumentURI()->SchemeIs("file")) {
     nsIChannel* channel = doc->GetChannel();
     if (!channel) {
       NS_WARNING("Unable to get channel from document");
