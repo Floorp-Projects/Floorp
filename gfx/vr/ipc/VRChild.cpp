@@ -94,6 +94,8 @@ void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
     if (mCrashReporter) {
       mCrashReporter->GenerateCrashReport(OtherPid());
       mCrashReporter = nullptr;
+    } else {
+      CrashReporter::FinalizeOrphanedMinidump(OtherPid(), GeckoProcessType_VR);
     }
 
     Telemetry::Accumulate(
