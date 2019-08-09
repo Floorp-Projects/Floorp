@@ -100,7 +100,7 @@ JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
       prev_(CurrentJitContext()),
       realm_(realm),
 #ifdef DEBUG
-      isCompilingWasm_(!realm),
+      isCompilingWasm_(false),
       oom_(false),
 #endif
       assemblerCount_(0) {
@@ -122,9 +122,20 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
 }
 
 JitContext::JitContext(TempAllocator* temp)
-    : JitContext(nullptr, nullptr, temp) {}
+    : cx(nullptr),
+      temp(temp),
+      runtime(nullptr),
+      prev_(CurrentJitContext()),
+      realm_(nullptr),
+#ifdef DEBUG
+      isCompilingWasm_(true),
+      oom_(false),
+#endif
+      assemblerCount_(0) {
+  SetJitContext(this);
+}
 
-JitContext::JitContext() : JitContext(nullptr, nullptr, nullptr) {}
+JitContext::JitContext() : JitContext(nullptr) {}
 
 JitContext::~JitContext() { SetJitContext(prev_); }
 

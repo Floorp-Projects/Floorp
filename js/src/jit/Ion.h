@@ -54,10 +54,16 @@ static_assert(sizeof(AbortReasonOr<bool>) <= sizeof(uintptr_t),
 
 class JitContext {
  public:
+  // Constructor for compilations happening on the main thread.
   JitContext(JSContext* cx, TempAllocator* temp);
+
+  // Constructor for off-thread Ion compilations.
   JitContext(CompileRuntime* rt, CompileRealm* realm, TempAllocator* temp);
+
+  // Constructors for Wasm compilation.
   explicit JitContext(TempAllocator* temp);
   JitContext();
+
   ~JitContext();
 
   // Running context when executing on the main thread. Not available during
