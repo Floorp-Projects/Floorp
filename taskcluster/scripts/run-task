@@ -838,7 +838,9 @@ def main(args):
     try:
         for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR'):
             if k in os.environ:
-                os.environ[k] = os.path.abspath(os.environ[k])
+                # Normalize paths to use forward slashes. Some shell scripts
+                # tolerate that better on Windows.
+                os.environ[k] = os.path.abspath(os.environ[k]).replace(os.sep, '/')
                 print_line(b'setup', b'%s is %s\n' % (
                     k.encode('utf-8'),
                     os.environ[k].encode('utf-8')))
