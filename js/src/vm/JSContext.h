@@ -698,11 +698,6 @@ struct JSContext : public JS::RootingContext,
   // debug mode.
   js::ContextData<bool> propagatingForcedReturn_;
 
-  // A stack of live iterators that need to be updated in case of debug mode
-  // OSR.
-  js::ContextData<js::jit::DebugModeOSRVolatileJitFrameIter*>
-      liveVolatileJitFrameIter_;
-
  public:
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
 

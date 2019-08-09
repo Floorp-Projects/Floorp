@@ -1503,6 +1503,16 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
     return QueueSuspended;
   }
 
+  // If the queue wants to be gray marking, but we've pushed a black object
+  // since set-color-gray was processed, then we can't switch to gray and must
+  // again wait until gray marking is possible.
+  //
+  // Remove this code if the restriction against marking gray during black is
+  // relaxed.
+  if (queueMarkColor == mozilla::Some(MarkColor::Gray) && hasBlackEntries()) {
+    return QueueSuspended;
+  }
+
   // If the queue wants to be marking a particular color, switch to that color.
   // In any case, restore the mark color to whatever it was when we entered
   // this function.

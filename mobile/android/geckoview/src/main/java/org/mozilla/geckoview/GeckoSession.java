@@ -704,7 +704,7 @@ public class GeckoSession implements Parcelable {
     private final GeckoSessionHandler<ContentBlocking.Delegate> mContentBlockingHandler =
         new GeckoSessionHandler<ContentBlocking.Delegate>(
             "GeckoViewContentBlocking", this,
-            new String[]{ "GeckoView:ContentBlocked" }
+            new String[]{ "GeckoView:ContentBlockingEvent" }
         ) {
             @Override
             public void handleMessage(final ContentBlocking.Delegate delegate,
@@ -712,9 +712,14 @@ public class GeckoSession implements Parcelable {
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
-                if ("GeckoView:ContentBlocked".equals(event)) {
-                    delegate.onContentBlocked(GeckoSession.this,
-                        ContentBlocking.BlockEvent.fromBundle(message));
+                if ("GeckoView:ContentBlockingEvent".equals(event)) {
+                    final ContentBlocking.BlockEvent be =
+                        ContentBlocking.BlockEvent.fromBundle(message);
+                    if (be.isBlocking()) {
+                        delegate.onContentBlocked(GeckoSession.this, be);
+                    } else {
+                        delegate.onContentLoaded(GeckoSession.this, be);
+                    }
                 }
             }
         };

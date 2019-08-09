@@ -4126,6 +4126,9 @@ a.firstrun-link {
   overflow: hidden;
   text-align: center;
   transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
+  @media (min-width: 610px) {
+    .trailheadCards {
+      max-height: 1000px; } }
   .trailheadCards.collapsed {
     max-height: 0; }
   .trailheadCards h1 {

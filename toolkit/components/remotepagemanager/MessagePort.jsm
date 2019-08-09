@@ -67,6 +67,15 @@ let RPMAccessManager = {
         "browser.contentblocking.report.lockwise.url",
         "browser.contentblocking.report.monitor.url",
       ],
+      getFormatURLPref: [
+        "browser.contentblocking.report.monitor.how_it_works.url",
+        "browser.contentblocking.report.lockwise.how_it_works.url",
+        "browser.contentblocking.report.social.url",
+        "browser.contentblocking.report.cookie.url",
+        "browser.contentblocking.report.tracker.url",
+        "browser.contentblocking.report.fingerprinter.url",
+        "browser.contentblocking.report.cryptominer.url",
+      ],
       recordTelemetryEvent: ["yes"],
     },
     "about:newinstall": {

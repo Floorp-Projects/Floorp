@@ -174,6 +174,11 @@ class NurseryAwareHashMap {
     map.sweep();
   }
 
+  void clear() {
+    map.clear();
+    nurseryEntries.clear();
+  }
+
   bool hasNurseryEntries() const { return !nurseryEntries.empty(); }
 };
 

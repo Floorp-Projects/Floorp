@@ -71,6 +71,10 @@ DebuggerPanel.prototype = {
     return this._store.getState();
   },
 
+  getToolboxStore: function() {
+    return this.toolbox.store;
+  },
+
   openLink: function(url) {
     openContentLink(url);
   },

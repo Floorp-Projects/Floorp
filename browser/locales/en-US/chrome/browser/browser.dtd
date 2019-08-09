@@ -741,6 +741,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY protections.etpON.header "Enhanced Tracking Protection is ON for this site">
 <!ENTITY protections.etpOFF.header "Enhanced Tracking Protection is OFF for this site">
+<!-- LOCALIZATION NOTE:
+     protections.etpMoreInfo.label: The text a screen reader speaks when focused on the info button. -->
+<!ENTITY protections.etpMoreInfo.label "More information about Enhanced Tracking Protection">
 <!ENTITY protections.settings.label "Protection Settings">
 <!ENTITY protections.report.label "Show Full Report">
 <!-- LOCALIZATION NOTE:

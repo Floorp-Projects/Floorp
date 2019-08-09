@@ -2,8 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+## These messages are used as headings in the recommendation doorhanger
+
 cfr-doorhanger-extension-heading = Recommended Extension
+cfr-doorhanger-feature-heading = Recommended Feature
 cfr-doorhanger-pintab-heading = Try This: Pin Tab
+##
 
 cfr-doorhanger-extension-sumo-link =
   .tooltiptext = Why am I seeing this
@@ -81,3 +85,25 @@ cfr-whatsnew-button =
   .tooltiptext = What’s New
 
 cfr-whatsnew-panel-header = What’s New
+
+## Bookmark Sync
+
+cfr-doorhanger-sync-bookmarks-header = Get this bookmark on your phone
+cfr-doorhanger-sync-bookmarks-body = Take your bookmarks, passwords, history and more everywhere you’re signed into { -brand-product-name }.
+cfr-doorhanger-sync-bookmarks-ok-button = Turn on { -sync-brand-short-name }
+  .accesskey = T
+
+## Send Tab
+
+cfr-doorhanger-send-tab-header = Read this on the go
+cfr-doorhanger-send-tab-recipe-header = Take this recipe to the kitchen
+cfr-doorhanger-send-tab-body = Send Tab lets you easily share this link to your phone or anywhere you’re signed in to { -brand-product-name }.
+cfr-doorhanger-send-tab-ok-button = Try Send Tab
+  .accesskey = T
+
+## Firefox Send
+
+cfr-doorhanger-firefox-send-header = Share this PDF securely
+cfr-doorhanger-firefox-send-body = Keep your sensitive documents safe from prying eyes with end-to-end encryption and a link that disappears when you’re done.
+cfr-doorhanger-firefox-send-ok-button = Try { -send-brand-name }
+  .accesskey = T

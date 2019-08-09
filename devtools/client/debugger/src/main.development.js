@@ -30,5 +30,8 @@ bootstrap(React, ReactDOM).then(connection => {
       console.log("highlighting dom element"),
     unHighlightDomElement: (grip: Object) =>
       console.log("unhighlighting dom element"),
+    getToolboxStore: () => {
+      throw new Error("Cannot connect to Toolbox store when running Launchpad");
+    },
   });
 });

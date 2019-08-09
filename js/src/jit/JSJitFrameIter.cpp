@@ -122,14 +122,6 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
 
   MOZ_ASSERT(pcRes);
 
-  // Use the frame's override pc, if we have one. This should only happen
-  // when we're in FinishBailoutToBaseline, handling an exception or toggling
-  // debug mode.
-  if (jsbytecode* overridePc = baselineFrame()->maybeOverridePc()) {
-    *pcRes = overridePc;
-    return;
-  }
-
   // The Baseline Interpreter stores the bytecode pc in the frame.
   if (baselineFrame()->runningInInterpreter()) {
     MOZ_ASSERT(baselineFrame()->interpreterScript() == script);
@@ -137,8 +129,8 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
     return;
   }
 
-  // Else, there must be a BaselineScript with a VMCallEntry for the current
-  // return address.
+  // There must be a BaselineScript with a RetAddrEntry for the current return
+  // address.
   uint8_t* retAddr = resumePCinCurrentFrame();
   RetAddrEntry& entry =
       script->baselineScript()->retAddrEntryFromReturnAddress(retAddr);
@@ -627,37 +619,6 @@ bool JSJitProfilingFrameIterator::tryInitWithTable(JitcodeGlobalTable* table,
   return false;
 }
 
-void JSJitProfilingFrameIterator::fixBaselineReturnAddress() {
-  MOZ_ASSERT(type_ == FrameType::BaselineJS);
-  BaselineFrame* bl = (BaselineFrame*)(fp_ - BaselineFrame::FramePointerOffset -
-                                       BaselineFrame::Size());
-
-  // Certain exception handling cases such as debug OSR or resuming a generator
-  // with .throw() will use BaselineFrame::setOverridePc() to indicate the
-  // effective |pc|. We translate the effective-pc into a Baseline code
-  // address.
-  if (jsbytecode* overridePC = bl->maybeOverridePc()) {
-    JSScript* script = bl->script();
-    if (bl->runningInInterpreter()) {
-      // The return address won't be used for pc mapping when running in the
-      // Baseline interpreter, but JitCodeMap expects a non-null return address
-      // for the entry lookup so use the interpret-op address.
-      JitRuntime* jrt = script->runtimeFromAnyThread()->jitRuntime();
-      resumePCinCurrentFrame_ =
-          jrt->baselineInterpreter().interpretOpAddr().value;
-    } else {
-      PCMappingSlotInfo slotInfo;
-      BaselineScript* blScript = script->baselineScript();
-      resumePCinCurrentFrame_ =
-          blScript->nativeCodeForPC(script, overridePC, &slotInfo);
-      // NOTE: The stack may not be synced at this PC. For the purpose of
-      // profiler sampling this is fine.
-    }
-
-    return;
-  }
-}
-
 const char* JSJitProfilingFrameIterator::baselineInterpreterLabel() const {
   MOZ_ASSERT(type_ == FrameType::BaselineJS);
   return frameScript()->jitScript()->profileString();
@@ -752,7 +713,6 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     resumePCinCurrentFrame_ = frame->returnAddress();
     fp_ = GetPreviousRawFrame<uint8_t*>(frame);
     type_ = FrameType::BaselineJS;
-    fixBaselineReturnAddress();
     return;
   }
 
@@ -765,7 +725,6 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     fp_ = ((uint8_t*)stubFrame->reverseSavedFramePtr()) +
           jit::BaselineFrame::FramePointerOffset;
     type_ = FrameType::BaselineJS;
-    fixBaselineReturnAddress();
     return;
   }
 
@@ -788,7 +747,6 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
       fp_ = ((uint8_t*)stubFrame->reverseSavedFramePtr()) +
             jit::BaselineFrame::FramePointerOffset;
       type_ = FrameType::BaselineJS;
-      fixBaselineReturnAddress();
       return;
     }
 

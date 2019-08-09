@@ -844,8 +844,8 @@ JSObject* WrapObjectPure(JSContext* cx, JSObject* obj) {
 
   // Try to Lookup an existing wrapper for this object. We assume that
   // if we can find such a wrapper, not calling preWrap is correct.
-  if (WrapperMap::Ptr p = cx->compartment()->lookupWrapper(obj)) {
-    JSObject* wrapped = &p->value().get().toObject();
+  if (ObjectWrapperMap::Ptr p = cx->compartment()->lookupWrapper(obj)) {
+    JSObject* wrapped = p->value().get();
 
     // Ensure the wrapper is still exposed.
     JS::ExposeObjectToActiveJS(wrapped);
