@@ -744,7 +744,7 @@ open class FxaAccountManager(
     }
 
     private suspend fun doAuthenticate(): Event? {
-        val url = account.beginOAuthFlowAsync(scopes).await()
+        val url = account.beginOAuthFlowAsync(scopes, true).await()
         if (url == null) {
             oauthObservers.notifyObservers { onError() }
             return Event.FailedToAuthenticate

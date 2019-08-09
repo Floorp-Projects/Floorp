@@ -103,12 +103,13 @@ class FirefoxAccount internal constructor(
      * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
      *
      * @param scopes List of OAuth scopes for which the client wants access
+     * @param wantsKeys Fetch keys for end-to-end encryption of data from Mozilla-hosted services
      * @return Deferred<String> that resolves to the flow URL when complete
      */
-    override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<String?> {
+    override fun beginOAuthFlowAsync(scopes: Set<String>, wantsKeys: Boolean): Deferred<String?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth flow", { null }) {
-                inner.beginOAuthFlow(scopes.toTypedArray())
+                inner.beginOAuthFlow(scopes.toTypedArray(), wantsKeys)
             }
         }
     }

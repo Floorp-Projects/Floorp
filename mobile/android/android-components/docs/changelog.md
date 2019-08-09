@@ -35,11 +35,6 @@ permalink: /changelog/
   )
   ```
 
-* **concept-sync**, **service-firefox-account**
-  * ⚠️ **This is a breaking change**
-  * In `OAuthAccount` (and by extension, `FirefoxAccount`) `beginOAuthFlowAsync` no longer need to specify `wantsKeys` parameter; it's automatically inferred from the requested `scopes`.
-  * Three new device types now available: `tablet`, `tv`, `vr`.
-
 # 7.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.2...v7.0.0)

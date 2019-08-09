@@ -73,9 +73,6 @@ fun Device.Type.into(): mozilla.components.concept.sync.DeviceType {
     return when (this) {
         Device.Type.DESKTOP -> DeviceType.DESKTOP
         Device.Type.MOBILE -> DeviceType.MOBILE
-        Device.Type.TABLET -> DeviceType.TABLET
-        Device.Type.TV -> DeviceType.TV
-        Device.Type.VR -> DeviceType.VR
         Device.Type.UNKNOWN -> DeviceType.UNKNOWN
     }
 }
@@ -84,9 +81,6 @@ fun mozilla.components.concept.sync.DeviceType.into(): Device.Type {
     return when (this) {
         DeviceType.DESKTOP -> Device.Type.DESKTOP
         DeviceType.MOBILE -> Device.Type.MOBILE
-        DeviceType.TABLET -> Device.Type.TABLET
-        DeviceType.TV -> Device.Type.TV
-        DeviceType.VR -> Device.Type.VR
         DeviceType.UNKNOWN -> Device.Type.UNKNOWN
     }
 }

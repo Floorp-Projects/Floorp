@@ -43,9 +43,6 @@ class DeviceRecyclerViewAdapter(
         holder.typeView.text = when (item.deviceType) {
             DeviceType.DESKTOP -> "Desktop"
             DeviceType.MOBILE -> "Mobile"
-            DeviceType.TABLET -> "Tablet"
-            DeviceType.TV -> "TV"
-            DeviceType.VR -> "VR"
             DeviceType.UNKNOWN -> "Unknown"
         }
 

@@ -36,6 +36,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private var scopesWithoutKeys: Set<String> = setOf("profile")
     private var scopesWithKeys: Set<String> = setOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private var scopes: Set<String> = scopesWithoutKeys
+    private var wantsKeys: Boolean = false
 
     private lateinit var qrFeature: QrFeature
 
@@ -89,7 +90,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes).await()?.let {
+                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
                     openTab(it)
                 }
             }
@@ -97,7 +98,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                account.beginOAuthFlowAsync(scopes).await()?.let {
+                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
                     openWebView(it)
                 }
             }
@@ -114,6 +115,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         }
 
         findViewById<CheckBox>(R.id.checkboxKeys).setOnCheckedChangeListener { _, isChecked ->
+            wantsKeys = isChecked
             scopes = if (isChecked) scopesWithKeys else scopesWithoutKeys
         }
     }

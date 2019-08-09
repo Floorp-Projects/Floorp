@@ -127,9 +127,6 @@ interface DeviceConstellationObserver {
 enum class DeviceType {
     DESKTOP,
     MOBILE,
-    TABLET,
-    TV,
-    VR,
     UNKNOWN
 }
 
