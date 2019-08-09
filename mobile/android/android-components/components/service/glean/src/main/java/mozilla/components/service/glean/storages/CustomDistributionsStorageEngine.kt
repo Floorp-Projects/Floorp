@@ -309,7 +309,7 @@ data class CustomDistributionData(
             val bucketMax = values.keys.max()!!
             val contiguousValues = mutableMapOf<String, Long>()
             for (bucketMin in buckets) {
-                contiguousValues["$bucketMin"] = values.getOrDefault(bucketMin, 0)
+                contiguousValues["$bucketMin"] = values.getOrElse(bucketMin) { 0L }
                 if (bucketMin > bucketMax) {
                     break
                 }
