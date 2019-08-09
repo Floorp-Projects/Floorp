@@ -863,7 +863,7 @@ this.LoginManagerParent = {
       prompter.promptToChangePassword(
         loginToChange,
         formLogin,
-        true, // dimissed prompt
+        true, // dismissed prompt
         autoSaveLogin // notifySaved
       );
       return;
@@ -871,7 +871,7 @@ this.LoginManagerParent = {
     log("_onGeneratedPasswordFilledOrEdited: no matching login to save/update");
     prompter.promptToSavePassword(
       formLogin,
-      true, // dimissed prompt
+      true, // dismissed prompt
       autoSaveLogin // notifySaved
     );
   },
