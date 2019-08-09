@@ -17,7 +17,7 @@ add_task(async function test() {
       let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
       return id == args.innerWindowId;
     });
-    content.location = "http://example.org/";
+    content.location = "http://mochi.test:8888/";
     await promise;
     return Cu.isDeadWrapper(doc);
   });
