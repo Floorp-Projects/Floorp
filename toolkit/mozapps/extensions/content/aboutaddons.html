@@ -5,6 +5,8 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <!-- Bug 1571346 Remove 'unsafe-inline' from style-src within about:addons -->
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome:; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:">
     <link rel="stylesheet" href="chrome://global/content/tabprompts.css">
     <link rel="stylesheet" href="chrome://global/skin/tabprompts.css">
 

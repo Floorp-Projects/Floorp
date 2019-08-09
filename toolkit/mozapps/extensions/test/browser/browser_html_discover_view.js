@@ -773,3 +773,49 @@ add_task(async function discopane_interaction_telemetry() {
   await closeView(win);
   await SpecialPowers.popPrefEnv();
 });
+
+// The CSP of about:addons whitelists http:, but not data:, hence we are
+// loading a little red data: image which gets blocked by the CSP.
+add_task(async function csp_img_src() {
+  const RED_DATA_IMAGE =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAA" +
+    "AHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+
+  // Minimal API response to get the image in recommended-addon-card to render.
+  const DUMMY_EXTENSION_ID = "dummy-csp@extensionid";
+  const apiResponse = {
+    results: [
+      {
+        addon: {
+          guid: DUMMY_EXTENSION_ID,
+          type: "extension",
+          authors: [
+            {
+              name: "Some CSP author",
+            },
+          ],
+          url: `http://${AMO_TEST_HOST}/dummy`,
+          icon_url: RED_DATA_IMAGE,
+        },
+      },
+    ],
+  };
+
+  let apiHandler = new DiscoveryAPIHandler(JSON.stringify(apiResponse));
+  apiHandler.blockNextResponses();
+  let win = await loadInitialView("discover");
+
+  let cspPromise = new Promise(resolve => {
+    win.addEventListener("securitypolicyviolation", e => {
+      // non http(s) loads only report the scheme
+      is(e.blockedURI, "data", "CSP: blocked URI");
+      is(e.violatedDirective, "img-src", "CSP: violated directive");
+      resolve();
+    });
+  });
+
+  apiHandler.unblockResponses();
+  await cspPromise;
+
+  await closeView(win);
+});

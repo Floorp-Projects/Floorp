@@ -106,6 +106,14 @@ function initialize(event) {
   }
   document.removeEventListener("load", initialize, true);
 
+  let contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  contentAreaContextMenu.addEventListener("popupshowing", function(event) {
+    Cu.reportError("This dummy menupopup is not supposed to be shown");
+    return false;
+  });
+
   let globalCommandSet = document.getElementById("globalCommandSet");
   globalCommandSet.addEventListener("command", function(event) {
     gViewController.doCommand(event.target.id);
