@@ -1326,9 +1326,12 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
 
     nsIFrame* frame = acc->GetFrame();
 
-    // Accessible has no frame and its not display:contents. Remove it.
+    // Accessible has no frame and it's not display:contents. Remove it.
+    // As well as removing the a11y subtree, we must also remove Accessibles
+    // for DOM descendants, since some of these might be relocated Accessibles
+    // and their DOM nodes are now hidden as well.
     if (!frame && !nsCoreUtils::IsDisplayContents(aRoot)) {
-      ContentRemoved(acc);
+      ContentRemoved(aRoot);
       return false;
     }
 
