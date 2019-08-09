@@ -26,7 +26,7 @@ window.onload = async function() {
     const { createFactory, createElement } =
       browserRequire("devtools/client/shared/vendor/react");
     const { Provider } = require("devtools/client/shared/vendor/react-redux");
-    const createStore = require("devtools/client/shared/redux/create-store")();
+    const createStore = require("devtools/client/shared/redux/create-store");
     const { Simulate } =
       browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
     const Accessible = createFactory(
@@ -49,7 +49,7 @@ window.onload = async function() {
     };
 
     const mockStore = createStore((state, action) =>
-      action ? { ...state, ...action } : state, mockState);
+      action ? { ...state, ...action } : state, { initialState: mockState });
     const provider = createElement(Provider, { store: mockStore }, a);
     const accessible = ReactDOM.render(provider, window.document.body);
     ok(accessible, "Should be able to mount Accessible instances");
