@@ -264,9 +264,7 @@ nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
   nsresult rv = GetParsingMode(aSheetType, &parsingMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<PreloadedStyleSheet> sheet;
-  rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
-                                   getter_AddRefs(sheet));
+  auto sheet = MakeRefPtr<PreloadedStyleSheet>(aSheetURI, parsingMode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = sheet->Preload();
@@ -295,11 +293,7 @@ nsStyleSheetService::PreloadSheetAsync(nsIURI* aSheetURI, uint32_t aSheetType,
     return errv.StealNSResult();
   }
 
-  RefPtr<PreloadedStyleSheet> sheet;
-  rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
-                                   getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  auto sheet = MakeRefPtr<PreloadedStyleSheet>(aSheetURI, parsingMode);
   sheet->PreloadAsync(WrapNotNull(promise));
 
   if (!ToJSValue(aCx, promise, aRval)) {
