@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - release-sign-and-push-langpacks
+    - release-push-langpacks
 
 only-for-attributes:
     - nightly
