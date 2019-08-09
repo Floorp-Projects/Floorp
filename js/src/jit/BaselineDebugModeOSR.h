@@ -20,33 +20,6 @@ namespace jit {
 // on-stack recompilation. This is to be distinguished from ordinary
 // Baseline->Ion OSR, which is used to jump into compiled loops.
 
-//
-// A frame iterator that updates internal JSJitFrameIter in case of
-// recompilation of an on-stack baseline script.
-//
-
-class DebugModeOSRVolatileJitFrameIter : public JitFrameIter {
-  DebugModeOSRVolatileJitFrameIter** stack;
-  DebugModeOSRVolatileJitFrameIter* prev;
-
- public:
-  explicit DebugModeOSRVolatileJitFrameIter(JSContext* cx)
-      : JitFrameIter(cx->activation()->asJit(),
-                     /* mustUnwindActivation */ true) {
-    stack = &cx->liveVolatileJitFrameIter_.ref();
-    prev = *stack;
-    *stack = this;
-  }
-
-  ~DebugModeOSRVolatileJitFrameIter() {
-    MOZ_ASSERT(*stack == this);
-    *stack = prev;
-  }
-
-  static void forwardLiveIterators(JSContext* cx, uint8_t* oldAddr,
-                                   uint8_t* newAddr);
-};
-
 MOZ_MUST_USE bool RecompileOnStackBaselineScriptsForDebugMode(
     JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
     DebugAPI::IsObserving observing);
