@@ -98,6 +98,7 @@ LOCAL_INCLUDES += [
     '/layout/painting',
     '/netwerk/base',
     '/netwerk/cache',
+    '/toolkit/components/telemetry',
     '/widget',
     '/xpcom/threads',
 ]
