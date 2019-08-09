@@ -32,7 +32,7 @@ class ObjectWrapperMap {
   static const size_t InitialInnerMapSize = 4;
 
   using InnerMap =
-      NurseryAwareHashMap<JSObject*, JS::Value, DefaultHasher<JSObject*>,
+      NurseryAwareHashMap<JSObject*, JSObject*, DefaultHasher<JSObject*>,
                           ZoneAllocPolicy>;
   using OuterMap = GCHashMap<JS::Compartment*, InnerMap,
                              DefaultHasher<JS::Compartment*>, ZoneAllocPolicy>;
@@ -159,16 +159,16 @@ class ObjectWrapperMap {
     }
   }
 
-  MOZ_MUST_USE bool put(JSObject* obj, const JS::Value& v) {
-    JS::Compartment* c = obj->compartment();
-    auto p = map.lookupForAdd(c);
-    if (!p) {
+  MOZ_MUST_USE bool put(JSObject* key, JSObject* value) {
+    JS::Compartment* comp = key->compartment();
+    auto ptr = map.lookupForAdd(comp);
+    if (!ptr) {
       InnerMap m(zone, InitialInnerMapSize);
-      if (!map.add(p, c, std::move(m))) {
+      if (!map.add(ptr, comp, std::move(m))) {
         return false;
       }
     }
-    return p->value().put(obj, v);
+    return ptr->value().put(key, value);
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
@@ -222,7 +222,7 @@ class ObjectWrapperMap {
 };
 
 using StringWrapperMap =
-    NurseryAwareHashMap<JSString*, JS::Value, DefaultHasher<JSString*>,
+    NurseryAwareHashMap<JSString*, JSString*, DefaultHasher<JSString*>,
                         ZoneAllocPolicy>;
 
 }  // namespace js
@@ -341,10 +341,10 @@ class JS::Compartment {
                            JS::HandleObject existing);
 
   MOZ_MUST_USE bool putWrapper(JSContext* cx, JSObject* wrapped,
-                               const js::Value& wrapper);
+                               JSObject* wrapper);
 
   MOZ_MUST_USE bool putWrapper(JSContext* cx, JSString* wrapped,
-                               const js::Value& wrapper);
+                               JSString* wrapper);
 
   js::ObjectWrapperMap::Ptr lookupWrapper(JSObject* obj) const {
     return crossCompartmentObjectWrappers.lookup(obj);
@@ -455,13 +455,12 @@ struct WrapperValue {
   explicit WrapperValue(const ObjectWrapperMap::Enum& e)
       : value(*e.front().value().unsafeGet()) {}
 
-  Value& get() { return value; }
-  Value get() const { return value; }
-  operator const Value&() const { return value; }
-  JSObject& toObject() const { return value.toObject(); }
+  JSObject*& get() { return value; }
+  JSObject* get() const { return value; }
+  operator JSObject*() const { return value; }
 
  private:
-  Value value;
+  JSObject* value;
 };
 
 class MOZ_RAII AutoWrapperVector : public JS::GCVector<WrapperValue, 8>,
@@ -486,7 +485,7 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
-  operator JSObject*() const { return value.get().toObjectOrNull(); }
+  operator JSObject*() const { return value; }
 
   friend void JS::AutoGCRooter::trace(JSTracer* trc);
 

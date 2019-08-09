@@ -388,7 +388,7 @@ JS_FRIEND_API void js::NukeCrossCompartmentWrapperIfExists(
   MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
   auto ptr = source->lookupWrapper(target);
   if (ptr) {
-    JSObject* wrapper = &ptr->value().get().toObject();
+    JSObject* wrapper = ptr->value().get();
     NukeCrossCompartmentWrapper(cx, wrapper);
   }
 }
@@ -541,7 +541,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   // The old value should still be in the cross-compartment wrapper map, and
   // the lookup should return wobj.
   ObjectWrapperMap::Ptr p = wcompartment->lookupWrapper(origTarget);
-  MOZ_ASSERT(&p->value().unsafeGet()->toObject() == wobj);
+  MOZ_ASSERT(*p->value().unsafeGet() == wobj);
   wcompartment->removeWrapper(p);
 
   // When we remove origv from the wrapper map, its wrapper, wobj, must
@@ -585,7 +585,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
 
   // Update the entry in the compartment's wrapper map to point to the old
   // wrapper, which has now been updated (via reuse or swap).
-  if (!wcompartment->putWrapper(cx, newTarget, ObjectValue(*wobj))) {
+  if (!wcompartment->putWrapper(cx, newTarget, wobj)) {
     oomUnsafe.crash("js::RemapWrapper");
   }
 }
@@ -610,7 +610,7 @@ JS_FRIEND_API bool js::RemapAllWrappersForObject(JSContext* cx,
   }
 
   for (const WrapperValue& v : toTransplant) {
-    RemapWrapper(cx, &v.toObject(), newTarget);
+    RemapWrapper(cx, v, newTarget);
   }
 
   return true;
@@ -645,8 +645,7 @@ JS_FRIEND_API bool js::RecomputeWrappers(
   }
 
   // Recompute all the wrappers in the list.
-  for (const WrapperValue& v : toRecompute) {
-    JSObject* wrapper = &v.toObject();
+  for (const WrapperValue& wrapper : toRecompute) {
     JSObject* wrapped = Wrapper::wrappedObject(wrapper);
     RemapWrapper(cx, wrapper, wrapped);
   }
