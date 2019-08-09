@@ -17,8 +17,8 @@ add_task(async function() {
   const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
   await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
+  await waitForSelectedLocation(dbg, 21);
   await reverseStepOverToLine(threadFront, 20);
-  await reverseStepOverToLine(threadFront, 12);
   await reverseStepOverToLine(threadFront, 12);
 
   // After reverse-stepping out of the topmost frame we should rewind to the
