@@ -853,9 +853,8 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
       }
 
       if (!pc || pc == curPC) {
-        bool enabled =
-            DebugAPI::stepModeEnabled(script) ||
-            DebugAPI::hasBreakpointsAt(script, curPC);
+        bool enabled = DebugAPI::stepModeEnabled(script) ||
+                       DebugAPI::hasBreakpointsAt(script, curPC);
 
         // Patch the trap.
         CodeLocationLabel label(method(), CodeOffset(nativeOffset));
@@ -1115,6 +1114,7 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t interpretOpNoDebugTrapOffset,
                                uint32_t bailoutPrologueOffset,
+                               uint32_t generatorThrowOrReturnCallOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                CodeOffsetVector&& debugInstrumentationOffsets,
@@ -1126,6 +1126,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   interpretOpOffset_ = interpretOpOffset;
   interpretOpNoDebugTrapOffset_ = interpretOpNoDebugTrapOffset;
   bailoutPrologueOffset_ = bailoutPrologueOffset;
+  generatorThrowOrReturnCallOffset_ = generatorThrowOrReturnCallOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debugInstrumentationOffsets_ = std::move(debugInstrumentationOffsets);
