@@ -353,16 +353,8 @@ inline const URLExtraData& StyleComputedUrl::ExtraData() const {
 inline StyleLoadData& StyleComputedUrl::LoadData() const {
   return _0.LoadData();
 }
-inline CORSMode StyleComputedUrl::CorsMode() const {
-  switch (_0._0->cors_mode) {
-    case StyleCorsMode::Anonymous:
-      return CORSMode::CORS_ANONYMOUS;
-    case StyleCorsMode::None:
-      return CORSMode::CORS_NONE;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown cors-mode from style?");
-      return CORSMode::CORS_NONE;
-  }
+inline StyleCorsMode StyleComputedUrl::CorsMode() const {
+  return _0._0->cors_mode;
 }
 inline nsIURI* StyleComputedUrl::GetURI() const { return _0.GetURI(); }
 
