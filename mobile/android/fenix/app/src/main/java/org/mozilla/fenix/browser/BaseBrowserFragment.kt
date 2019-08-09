@@ -16,6 +16,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -101,7 +102,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     private var browserInitialized: Boolean = false
     private var initUIJob: Job? = null
 
-    val viewModel: CreateCollectionViewModel by activityViewModels()
+    val viewModel: CreateCollectionViewModel by activityViewModels {
+        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+    }
 
     @CallSuper
     override fun onCreateView(

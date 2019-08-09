@@ -364,7 +364,6 @@ dependencies {
     implementation Deps.androidx_recyclerview
     implementation Deps.androidx_lifecycle_runtime
     implementation Deps.androidx_lifecycle_viewmodel
-    implementation Deps.androidx_lifecycle_viewmodel_ss
     implementation Deps.androidx_core
     implementation Deps.androidx_core_ktx
     implementation Deps.androidx_transition
