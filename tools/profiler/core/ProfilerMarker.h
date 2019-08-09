@@ -133,6 +133,16 @@ class ProfilerSignalSafeLinkedList {
       abort();
     }
 
+    reset();
+  }
+
+  // Reset the list of pending signals in this list.
+  // We assume that this is called at a time when it is
+  // guaranteed that no more than a single user (the caller)
+  // is accessing the list. In particular, it is only
+  // called from within the RacyRegisteredThread::ReinitializeOnResume
+  // method.
+  void reset() {
     while (mList.peek()) {
       delete mList.popHead();
     }
