@@ -151,7 +151,9 @@ public class GeckoViewActivity extends AppCompatActivity {
                     .remoteDebuggingEnabled(mEnableRemoteDebugging)
                     .consoleOutput(true)
                     .contentBlocking(new ContentBlocking.Settings.Builder()
-                        .categories(ContentBlocking.AT_DEFAULT)
+                        .antiTracking(ContentBlocking.AntiTracking.DEFAULT)
+                        .safeBrowsing(ContentBlocking.SafeBrowsing.DEFAULT)
+                        .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
                         .build())
                     .crashHandler(ExampleCrashHandler.class)
                     .telemetryDelegate(new ExampleTelemetryDelegate());
@@ -1063,23 +1065,41 @@ public class GeckoViewActivity extends AppCompatActivity {
         @Override
         public void onContentBlocked(final GeckoSession session,
                                      final ContentBlocking.BlockEvent event) {
-            Log.d(LOGTAG, "onContentBlocked " + event.categories +
-                  " (" + event.uri + ")");
-            if ((event.categories & ContentBlocking.AT_TEST) != 0) {
+            Log.d(LOGTAG, "onContentBlocked" +
+                  " AT: " + event.getAntiTrackingCategory() +
+                  " SB: " + event.getSafeBrowsingCategory() +
+                  " CB: " + event.getCookieBehaviorCategory() +
+                  " URI: " + event.uri);
+            if ((event.getAntiTrackingCategory() &
+                  ContentBlocking.AntiTracking.TEST) != 0) {
                 mBlockedTest++;
             }
-            if ((event.categories & ContentBlocking.AT_AD) != 0) {
+            if ((event.getAntiTrackingCategory() &
+                  ContentBlocking.AntiTracking.AD) != 0) {
                 mBlockedAds++;
             }
-            if ((event.categories & ContentBlocking.AT_ANALYTIC) != 0) {
+            if ((event.getAntiTrackingCategory() &
+                  ContentBlocking.AntiTracking.ANALYTIC) != 0) {
                 mBlockedAnalytics++;
             }
-            if ((event.categories & ContentBlocking.AT_SOCIAL) != 0) {
+            if ((event.getAntiTrackingCategory() &
+                  ContentBlocking.AntiTracking.SOCIAL) != 0) {
                 mBlockedSocial++;
             }
-            if ((event.categories & ContentBlocking.AT_CONTENT) != 0) {
+            if ((event.getAntiTrackingCategory() &
+                  ContentBlocking.AntiTracking.CONTENT) != 0) {
                 mBlockedContent++;
             }
+        }
+
+        @Override
+        public void onContentLoaded(final GeckoSession session,
+                                    final ContentBlocking.BlockEvent event) {
+            Log.d(LOGTAG, "onContentLoaded" +
+                  " AT: " + event.getAntiTrackingCategory() +
+                  " SB: " + event.getSafeBrowsingCategory() +
+                  " CB: " + event.getCookieBehaviorCategory() +
+                  " URI: " + event.uri);
         }
     }
 
