@@ -6022,29 +6022,33 @@ void ContentParent::OnBrowsingContextGroupUnsubscribe(
 
 mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
     BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction,
-    BrowsingContext::FieldEpochs&& aEpochs) {
+    uint64_t aEpoch) {
+  // Record the new BrowsingContextFieldEpoch associated with this transaction.
+  // This should be done unconditionally, so that we're always in-sync.
+  //
+  // The order the parent process receives transactions is considered the
+  // "canonical" ordering, so we don't need to worry about doing any
+  // epoch-related validation.
+  MOZ_ASSERT(aEpoch == mBrowsingContextFieldEpoch + 1,
+             "Child process skipped an epoch?");
+  mBrowsingContextFieldEpoch = aEpoch;
+
   if (!aContext || aContext->IsDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to run transaction on missing context."));
     return IPC_OK();
   }
 
-  // Check if the transaction is valid.
-  if (!aContext->Canonical()->ValidateTransaction(aTransaction, this)) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Error,
-            ("ParentIPC: Trying to run invalid transaction."));
-    return IPC_FAIL_NO_REASON(this);
+  if (!aTransaction.Validate(aContext, this)) {
+    return IPC_FAIL(this, "Invalid BrowsingContext transaction from Child");
   }
 
   aContext->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
     Unused << aParent->SendCommitBrowsingContextTransaction(
-        aContext, aTransaction,
-        aContext->Canonical()->GetFieldEpochsForChild(aParent));
+        aContext, aTransaction, aParent->GetBrowsingContextFieldEpoch());
   });
 
-  aTransaction.Apply(aContext, this);
-  aContext->Canonical()->SetFieldEpochsForChild(this, aEpochs);
-
+  aTransaction.Apply(aContext);
   return IPC_OK();
 }
 }  // namespace dom
