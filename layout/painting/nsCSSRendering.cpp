@@ -3765,8 +3765,10 @@ static void GetPositioning(
     lowerLine = upperLine + aRect.Height();
   }
 
-  // set up the bounds, add in a little padding on both ends
-  Float linePadding = 0.75f;
+  // set up the bounds, add in a little padding to the thickness of the line
+  // (unless the line is <= 1px thick)
+  Float linePadding =
+      aParams.lineSize.height > 1 ? 0.25f * aParams.lineSize.height : 0;
   aBounds[0] = upperLine - linePadding;
   aBounds[1] = lowerLine + linePadding;
 }
