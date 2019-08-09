@@ -244,7 +244,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteTestRoot = posixpath.join(self.device.test_root, "xpc")
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
-        mozinfo.info['android_version'] = self.device.version
+        mozinfo.info['android_version'] = str(self.device.version)
 
         self.localBin = options['localBin']
         self.pathMapping = []
