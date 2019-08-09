@@ -32,7 +32,7 @@
  *  whether they allow installation of addons from insecure options (both of
  *  which are themselves influenced by the "extensions." pref branch)
  *
- * See the documentation in services-sync.js for the behavior of these prefs.
+ * See the documentation in all.js for the behavior of these prefs.
  */
 "use strict";
 
