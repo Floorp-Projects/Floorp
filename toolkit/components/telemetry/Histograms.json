@@ -15616,7 +15616,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["gachen@mozilla.com"],
-    "bug_numbers": [1533363, 1546796, 1546906, 1550756],
+    "bug_numbers": [1533363, 1546796, 1546906, 1550756, 1572666],
     "expires_in_version": "73",
     "kind": "categorical",
     "n_values": 50,
@@ -15651,6 +15651,7 @@
       "Connection",
       "Transaction"
     ],
+    "releaseChannelCollection": "opt-out",
     "description": "Numbers of HTTP transactions and connections by type. There are some categories separated by labels based on 5 parameters: 1. normal browsing or private browsing 2. system principal or not 3. first party or third party 4. class of service (Leader/Background/Others) 5. tracking classification (Basic/Content/FingerprintingContent)."
   },
   "THREAD_WAKEUP": {
