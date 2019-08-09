@@ -130,58 +130,80 @@ package org.mozilla.geckoview {
 
   @AnyThread public class ContentBlocking {
     ctor public ContentBlocking();
-    field public static final int AT_AD = 2;
-    field public static final int AT_ANALYTIC = 4;
-    field public static final int AT_CONTENT = 16;
-    field public static final int AT_CRYPTOMINING = 64;
-    field public static final int AT_DEFAULT = 46;
-    field public static final int AT_FINGERPRINTING = 128;
-    field public static final int AT_SOCIAL = 8;
-    field public static final int AT_STRICT = 254;
-    field public static final int AT_TEST = 32;
-    field public static final int CB_DEFAULT = 15406;
-    field public static final int CB_STRICT = 15614;
-    field public static final int COOKIE_ACCEPT_ALL = 0;
-    field public static final int COOKIE_ACCEPT_FIRST_PARTY = 1;
-    field public static final int COOKIE_ACCEPT_NONE = 2;
-    field public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
-    field public static final int COOKIE_ACCEPT_VISITED = 3;
-    field public static final int COOKIE_LIFETIME_DAYS = 3;
-    field public static final int COOKIE_LIFETIME_NORMAL = 0;
-    field public static final int COOKIE_LIFETIME_RUNTIME = 2;
+  }
+
+  public static class ContentBlocking.AntiTracking {
+    ctor protected AntiTracking();
+    field public static final int AD = 2;
+    field public static final int ANALYTIC = 4;
+    field public static final int CONTENT = 16;
+    field public static final int CRYPTOMINING = 64;
+    field public static final int DEFAULT = 46;
+    field public static final int FINGERPRINTING = 128;
     field public static final int NONE = 0;
-    field public static final int SB_ALL = 15360;
-    field public static final int SB_HARMFUL = 4096;
-    field public static final int SB_MALWARE = 1024;
-    field public static final int SB_PHISHING = 8192;
-    field public static final int SB_UNWANTED = 2048;
+    field public static final int SOCIAL = 8;
+    field public static final int STRICT = 254;
+    field public static final int TEST = 32;
   }
 
   public static class ContentBlocking.BlockEvent {
-    ctor public BlockEvent(@NonNull String, int);
-    field public final int categories;
+    ctor public BlockEvent(@NonNull String, int, int, int, boolean);
+    method @UiThread public int getAntiTrackingCategory();
+    method @UiThread public int getCookieBehaviorCategory();
+    method @UiThread public int getSafeBrowsingCategory();
+    method @UiThread public boolean isBlocking();
     field @NonNull public final String uri;
+  }
+
+  public static class ContentBlocking.CookieBehavior {
+    ctor protected CookieBehavior();
+    field public static final int ACCEPT_ALL = 0;
+    field public static final int ACCEPT_FIRST_PARTY = 1;
+    field public static final int ACCEPT_NONE = 2;
+    field public static final int ACCEPT_NON_TRACKERS = 4;
+    field public static final int ACCEPT_VISITED = 3;
+  }
+
+  public static class ContentBlocking.CookieLifetime {
+    ctor protected CookieLifetime();
+    field public static final int DAYS = 3;
+    field public static final int NORMAL = 0;
+    field public static final int RUNTIME = 2;
   }
 
   public static interface ContentBlocking.Delegate {
     method @UiThread default public void onContentBlocked(@NonNull GeckoSession, @NonNull ContentBlocking.BlockEvent);
+    method @UiThread default public void onContentLoaded(@NonNull GeckoSession, @NonNull ContentBlocking.BlockEvent);
+  }
+
+  public static class ContentBlocking.SafeBrowsing {
+    ctor protected SafeBrowsing();
+    field public static final int DEFAULT = 15360;
+    field public static final int HARMFUL = 4096;
+    field public static final int MALWARE = 1024;
+    field public static final int NONE = 0;
+    field public static final int PHISHING = 8192;
+    field public static final int UNWANTED = 2048;
   }
 
   @AnyThread public static class ContentBlocking.Settings extends RuntimeSettings {
-    method public int getCategories();
+    method public int getAntiTrackingCategories();
     method public int getCookieBehavior();
     method public int getCookieLifetime();
-    method @NonNull public ContentBlocking.Settings setCategories(int);
+    method public int getSafeBrowsingCategories();
+    method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieLifetime(int);
+    method @NonNull public ContentBlocking.Settings setSafeBrowsing(int);
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
   }
 
   @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder {
     ctor public Builder();
-    method @NonNull public ContentBlocking.Settings.Builder categories(int);
+    method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieLifetime(int);
+    method @NonNull public ContentBlocking.Settings.Builder safeBrowsing(int);
     method @NonNull protected ContentBlocking.Settings newSettings(@Nullable ContentBlocking.Settings);
   }
 
