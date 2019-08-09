@@ -15,4 +15,3 @@ fuzzy-if(skiaContent,0-1,0-1) == rtl.html rtl-dynamic-style.html
 fuzzy-if(skiaContent,0-1,0-3) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-4168) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html # Bug 1392106
 == various-cols.html various-cols-ref.html
-!= padding-text-overflow.html padding-text-overflow-notref.html
