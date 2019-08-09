@@ -45,7 +45,7 @@ const tests = [
   {
     desc: "Run an audit from a11y panel toolbar by activating a filter.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleFilter(doc, 1);
     },
     expected: {
       tree: [

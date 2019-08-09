@@ -10,9 +10,7 @@ const Provider = createFactory(
   require("devtools/client/shared/vendor/react-redux").Provider
 );
 
-const {
-  ToggleButton,
-} = require("devtools/client/accessibility/components/Button");
+const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
 const ConnectedAccessibilityTreeFilterClass = require("devtools/client/accessibility/components/AccessibilityTreeFilter");
 const AccessibilityTreeFilterClass =
   ConnectedAccessibilityTreeFilterClass.WrappedComponent;
@@ -29,69 +27,85 @@ const {
   FILTERS,
   FILTER_TOGGLE,
 } = require("devtools/client/accessibility/constants");
-const {
-  accessibility: { AUDIT_TYPE },
-} = require("devtools/shared/constants");
 
-function checkFilter(button, expectedText) {
-  expect(button.is("button")).toBe(true);
-  expect(button.hasClass("badge")).toBe(true);
-  expect(button.hasClass("toggle-button")).toBe(true);
-  expect(button.hasClass("audit-badge")).toBe(false);
-  expect(button.prop("aria-pressed")).toBe(false);
-  expect(button.text()).toBe(expectedText);
+function checkFilterCheckbox(filter, checked, expectedText, disabled) {
+  expect(filter.tagName).toBe("BUTTON");
+  expect(filter.getAttribute("role")).toBe("menuitemcheckbox");
+  expect(filter.hasAttribute("aria-checked")).toBe(checked);
+  if (checked) {
+    expect(filter.getAttribute("aria-checked")).toBe("true");
+  }
+
+  if (disabled) {
+    expect(filter.hasAttribute("disabled")).toBe(true);
+  }
+
+  if (expectedText) {
+    expect(filter.textContent).toBe(expectedText);
+  }
 }
 
-function checkToggleFilter(wrapper, filter) {
+function checkToggleFilterCheckbox(wrapper, filter) {
   const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();
   filterInstance.toggleFilter = jest.fn();
-  filter.simulate("keydown", { key: " " });
+  filter instanceof Node ? filter.click() : filter.simulate("click");
   expect(filterInstance.toggleFilter.mock.calls.length).toBe(1);
-
-  filter.simulate("keydown", { key: "Enter" });
-  expect(filterInstance.toggleFilter.mock.calls.length).toBe(2);
-
-  filter.simulate("click", { clientX: 1 });
-  expect(filterInstance.toggleFilter.mock.calls.length).toBe(3);
 }
 
-function checkFiltersState(wrapper, expected) {
-  const filters = wrapper.find(AccessibilityTreeFilterClass);
-  const filterButtons = filters.find(ToggleButton);
+function getFilters(wrapper) {
+  const menuButton = wrapper.find(MenuButton);
+  // Focusing on the menu button will trigger rendering of the HTMLTooltip with
+  // the menu list.
+  menuButton
+    .childAt(0)
+    .getDOMNode()
+    .focus();
 
-  for (let i = 0; i < filterButtons.length; i++) {
-    const filter = filterButtons.at(i).childAt(0);
-    expect(filter.prop("aria-pressed")).toBe(expected[i].active);
-    expect(filter.prop("aria-busy")).toBe(expected[i].busy);
+  return menuButton
+    .instance()
+    .tooltip.panel.querySelectorAll(".menuitem .filter");
+}
+
+function checkToolbarState(wrapper, expected) {
+  const filters = getFilters(wrapper);
+  for (let i = 0; i < filters.length; i++) {
+    checkFilterCheckbox(
+      filters[i],
+      expected[i].active,
+      expected[i].text,
+      expected[i].disabled
+    );
   }
+}
+
+function renderAccTreeFilterToolbar(store) {
+  const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+  const filters = getFilters(wrapper);
+  return { filters, wrapper };
 }
 
 describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
     const store = setupStore();
+    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const accTreeFilter = wrapper.find(AccessibilityTreeFilterClass);
+    const toolbar = accTreeFilter.childAt(0);
 
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
-
-    const filters = wrapper.find(AccessibilityTreeFilterClass);
-    expect(filters.children().length).toBe(1);
-
-    const toolbar = filters.childAt(0);
+    expect(accTreeFilter.children().length).toBe(1);
     expect(toolbar.is("div")).toBe(true);
-    expect(toolbar.prop("role")).toBe("toolbar");
+    expect(toolbar.prop("role")).toBe("group");
 
-    const filterButtons = filters.find(ToggleButton);
-    expect(filterButtons.length).toBe(3);
-
-    const expectedText = [
-      "accessibility.filter.all",
-      "accessibility.badge.contrast",
-      "accessibility.badge.textLabel",
-    ];
-
-    for (let i = 0; i < filterButtons.length; i++) {
-      checkFilter(filterButtons.at(i).childAt(0), expectedText[i]);
-    }
+    checkToolbarState(wrapper, [
+      { active: true, disabled: false, text: "accessibility.filter.none" },
+      { active: false, disabled: false, text: "accessibility.filter.all2" },
+      { active: false, disabled: false, text: "accessibility.filter.contrast" },
+      {
+        active: false,
+        disabled: false,
+        text: "accessibility.filter.textLabel",
+      },
+    ]);
   });
 
   it("audit filters filtered", () => {
@@ -107,84 +121,117 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const { wrapper } = renderAccTreeFilterToolbar(store);
     expect(wrapper.html()).toMatchSnapshot();
-
-    const buttons = wrapper.find("button");
-    for (let i = 0; i < buttons.length; i++) {
-      const button = buttons.at(i);
-      expect(button.prop("aria-pressed")).toBe(true);
-      expect(button.hasClass("checked")).toBe(true);
-    }
+    checkToolbarState(wrapper, [
+      { active: false, disabled: false },
+      { active: true, disabled: false },
+      { active: true, disabled: false },
+      { active: true, disabled: false },
+    ]);
   });
 
-  it("audit filter not filtered auditing", () => {
+  it("audit all filter not filtered auditing", () => {
     const store = setupStore({
       preloadedState: {
         audit: {
           filters: {
+            [FILTERS.ALL]: false,
+          },
+          auditing: [FILTERS.ALL],
+        },
+      },
+    });
+    const { wrapper } = renderAccTreeFilterToolbar(store);
+    expect(wrapper.html()).toMatchSnapshot();
+    checkToolbarState(wrapper, [
+      { active: true, disabled: false, text: "accessibility.filter.none" },
+      { active: false, disabled: true, text: "accessibility.filter.all2" },
+    ]);
+  });
+
+  it("audit other filter not filtered auditing", () => {
+    const store = setupStore({
+      preloadedState: {
+        audit: {
+          filters: {
+            [FILTERS.ALL]: false,
             [FILTERS.CONTRAST]: false,
+            [FILTERS.TEXT_LABEL]: false,
           },
-          auditing: [AUDIT_TYPE.CONTRAST],
+          auditing: [FILTERS.CONTRAST],
         },
       },
     });
-
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const { wrapper } = renderAccTreeFilterToolbar(store);
     expect(wrapper.html()).toMatchSnapshot();
-
-    const button = wrapper.find("button");
-    expect(button.prop("aria-pressed")).toBe(false);
-    expect(button.hasClass("checked")).toBe(false);
-    expect(button.prop("aria-busy")).toBe(true);
-    expect(button.hasClass("devtools-throbber")).toBe(true);
+    checkToolbarState(wrapper, [
+      { active: true, disabled: true },
+      { active: false, disabled: false },
+      { active: false, disabled: true },
+      { active: false, disabled: false },
+    ]);
   });
 
-  it("audit filter filtered auditing", () => {
+  it("audit all filter filtered auditing", () => {
     const store = setupStore({
       preloadedState: {
         audit: {
           filters: {
-            [FILTERS.CONTRAST]: true,
+            [FILTERS.ALL]: true,
           },
-          auditing: [AUDIT_TYPE.CONTRAST],
+          auditing: [FILTERS.ALL],
         },
       },
     });
-
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const { filters, wrapper } = renderAccTreeFilterToolbar(store);
     expect(wrapper.html()).toMatchSnapshot();
+    checkFilterCheckbox(filters[1], true, null, true);
+  });
 
-    const button = wrapper.find("button");
-    expect(button.prop("aria-pressed")).toBe(true);
-    expect(button.hasClass("checked")).toBe(true);
-    expect(button.prop("aria-busy")).toBe(true);
-    expect(button.hasClass("devtools-throbber")).toBe(true);
+  it("audit other filter filtered auditing", () => {
+    const store = setupStore({
+      preloadedState: {
+        audit: {
+          filters: {
+            [FILTERS.ALL]: false,
+            [FILTERS.CONTRAST]: true,
+            [FILTERS.TEXT_LABEL]: false,
+          },
+          auditing: [FILTERS.CONTRAST],
+        },
+      },
+    });
+    const { wrapper } = renderAccTreeFilterToolbar(store);
+    expect(wrapper.html()).toMatchSnapshot();
+    checkToolbarState(wrapper, [
+      { active: false, disabled: true },
+      { active: false, disabled: false },
+      { active: true, disabled: true },
+      { active: false, disabled: false },
+    ]);
   });
 
   it("toggle filter", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
-    expect(wrapper.html()).toMatchSnapshot();
+    const { filters, wrapper } = renderAccTreeFilterToolbar(store);
 
-    const filters = wrapper.find("button.toggle-button.badge");
-    for (let i = 0; i < filters.length; i++) {
-      const filter = filters.at(i);
-      checkToggleFilter(wrapper, filter);
+    expect(wrapper.html()).toMatchSnapshot();
+    for (const filter of filters) {
+      checkToggleFilterCheckbox(wrapper, filter);
     }
   });
 
   it("render filters after state changes", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
-
+    const { wrapper } = renderAccTreeFilterToolbar(store);
     const tests = [
       {
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: false, busy: false },
+          { active: true, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
         ],
       },
       {
@@ -193,9 +240,10 @@ describe("AccessibilityTreeFilter component:", () => {
           auditing: Object.values(FILTERS),
         },
         expected: [
-          { active: false, busy: true },
-          { active: false, busy: true },
-          { active: false, busy: true },
+          { active: true, disabled: true },
+          { active: false, disabled: true },
+          { active: false, disabled: true },
+          { active: false, disabled: true },
         ],
       },
       {
@@ -204,9 +252,10 @@ describe("AccessibilityTreeFilter component:", () => {
           response: [],
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: false, busy: false },
+          { active: true, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
         ],
       },
       {
@@ -215,9 +264,10 @@ describe("AccessibilityTreeFilter component:", () => {
           filter: FILTERS.ALL,
         },
         expected: [
-          { active: true, busy: false },
-          { active: true, busy: false },
-          { active: true, busy: false },
+          { active: false, disabled: false },
+          { active: true, disabled: false },
+          { active: true, disabled: false },
+          { active: true, disabled: false },
         ],
       },
       {
@@ -226,9 +276,10 @@ describe("AccessibilityTreeFilter component:", () => {
           filter: FILTERS.CONTRAST,
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: true, busy: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: true, disabled: false },
         ],
       },
       {
@@ -237,9 +288,10 @@ describe("AccessibilityTreeFilter component:", () => {
           auditing: [FILTERS.CONTRAST],
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: true },
-          { active: true, busy: false },
+          { active: false, disabled: true },
+          { active: false, disabled: false },
+          { active: false, disabled: true },
+          { active: true, disabled: false },
         ],
       },
       {
@@ -248,9 +300,10 @@ describe("AccessibilityTreeFilter component:", () => {
           response: [],
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: true, busy: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: true, disabled: false },
         ],
       },
       {
@@ -259,20 +312,22 @@ describe("AccessibilityTreeFilter component:", () => {
           filter: FILTERS.CONTRAST,
         },
         expected: [
-          { active: true, busy: false },
-          { active: true, busy: false },
-          { active: true, busy: false },
+          { active: false, disabled: false },
+          { active: true, disabled: false },
+          { active: true, disabled: false },
+          { active: true, disabled: false },
         ],
       },
       {
         action: {
           type: FILTER_TOGGLE,
-          filter: FILTERS.ALL,
+          filter: FILTERS.NONE,
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: false, busy: false },
+          { active: true, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
         ],
       },
       {
@@ -281,9 +336,10 @@ describe("AccessibilityTreeFilter component:", () => {
           auditing: [FILTERS.TEXT_LABEL],
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: false, busy: true },
+          { active: true, disabled: true },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: true },
         ],
       },
       {
@@ -292,9 +348,10 @@ describe("AccessibilityTreeFilter component:", () => {
           response: [],
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: false, busy: false },
+          { active: true, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
         ],
       },
       {
@@ -303,9 +360,10 @@ describe("AccessibilityTreeFilter component:", () => {
           filter: FILTERS.TEXT_LABEL,
         },
         expected: [
-          { active: false, busy: false },
-          { active: false, busy: false },
-          { active: true, busy: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: false, disabled: false },
+          { active: true, disabled: false },
         ],
       },
     ];
@@ -318,7 +376,7 @@ describe("AccessibilityTreeFilter component:", () => {
       }
 
       expect(wrapper.html()).toMatchSnapshot();
-      checkFiltersState(wrapper, expected);
+      checkToolbarState(wrapper, expected);
     }
   });
 });

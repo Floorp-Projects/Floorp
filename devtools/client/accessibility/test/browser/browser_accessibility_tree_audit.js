@@ -63,9 +63,9 @@ const tests = [
     },
   },
   {
-    desc: "Click on the contrast filter.",
+    desc: "Click on the all filter.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleFilter(doc, 1);
     },
     expected: {
       tree: [
@@ -86,9 +86,9 @@ const tests = [
     },
   },
   {
-    desc: "Click on the contrast filter again.",
+    desc: "Click on the all filter again.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleFilter(doc, 1);
     },
     expected: {
       tree: [
