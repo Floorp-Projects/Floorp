@@ -68,7 +68,7 @@ using JSLocaleToUnicode = bool (*)(JSContext* cx, const char* src,
  * used to implement locale-sensitive behaviors (such as those performed by
  * the various toLocaleString and toLocale{Date,Time}String functions).
  *
- * If SpiderMonkey is compiled --with-intl-api, then #if EXPOSE_INTL_API.  In
+ * If SpiderMonkey is compiled --with-intl-api, then #if ENABLE_INTL_API.  In
  * this case, SpiderMonkey itself will implement ECMA-402-compliant behavior by
  * calling on ICU, and none of the fields in this struct will ever be used.
  * (You'll still be able to call the get/set-callbacks functions; they just
