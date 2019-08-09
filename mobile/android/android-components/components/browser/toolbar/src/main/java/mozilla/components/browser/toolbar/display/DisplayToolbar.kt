@@ -614,9 +614,12 @@ internal class DisplayToolbar(
         }
     }
 
-    private fun shouldTrackingProtectionViewBeVisible() =
-        displayTrackingProtectionIcon && (siteTrackingProtection == ON_NO_TRACKERS_BLOCKED ||
-            siteTrackingProtection == ON_TRACKERS_BLOCKED)
+    private fun shouldTrackingProtectionViewBeVisible(): Boolean {
+        val visibleStates = arrayOf(ON_NO_TRACKERS_BLOCKED, ON_TRACKERS_BLOCKED, OFF_FOR_A_SITE)
+        val isAVisibleSate = visibleStates.any { it == siteTrackingProtection }
+
+        return displayTrackingProtectionIcon && isAVisibleSate
+    }
 
     companion object {
         internal const val MEASURED_HEIGHT_THIRD_DENOMINATOR = 3
