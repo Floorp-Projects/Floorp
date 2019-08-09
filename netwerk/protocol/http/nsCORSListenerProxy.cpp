@@ -53,8 +53,6 @@ using namespace mozilla::net;
 
 #define PREFLIGHT_CACHE_SIZE 100
 
-static bool gDisableCORSPrivateData = false;
-
 static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
                               const char16_t* aParam, uint32_t aBlockingReason,
                               nsIHttpChannel* aCreatingChannel) {
@@ -379,12 +377,6 @@ NS_IMPL_ISUPPORTS(nsCORSListenerProxy, nsIStreamListener, nsIRequestObserver,
                   nsIThreadRetargetableStreamListener)
 
 /* static */
-void nsCORSListenerProxy::Startup() {
-  Preferences::AddBoolVarCache(&gDisableCORSPrivateData,
-                               "content.cors.no_private_data");
-}
-
-/* static */
 void nsCORSListenerProxy::Shutdown() {
   delete sPreflightCache;
   sPreflightCache = nullptr;
@@ -396,7 +388,7 @@ nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
     : mOuterListener(aOuter),
       mRequestingPrincipal(aRequestingPrincipal),
       mOriginHeaderPrincipal(aRequestingPrincipal),
-      mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
+      mWithCredentials(aWithCredentials),
       mRequestApproved(false),
       mHasBeenCrossSite(false),
 #ifdef DEBUG
