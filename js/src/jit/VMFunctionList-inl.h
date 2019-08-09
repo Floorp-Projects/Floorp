@@ -109,6 +109,7 @@ namespace jit {
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
+  _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn)                   \
   _(GetAndClearException, js::GetAndClearException)                            \
   _(GetElementOperation, js::GetElementOperation)                              \
   _(GetFirstDollarIndexRaw, js::GetFirstDollarIndexRaw)                        \
@@ -282,8 +283,7 @@ namespace jit {
   _(DoToBoolFallback, js::jit::DoToBoolFallback, 0)             \
   _(DoTypeMonitorFallback, js::jit::DoTypeMonitorFallback, 0)   \
   _(DoTypeOfFallback, js::jit::DoTypeOfFallback, 0)             \
-  _(DoUnaryArithFallback, js::jit::DoUnaryArithFallback, 1)     \
-  _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn, 0)
+  _(DoUnaryArithFallback, js::jit::DoUnaryArithFallback, 1)
 
 #define DEF_ID(name, ...) name,
 enum class VMFunctionId { VMFUNCTION_LIST(DEF_ID) Count };
