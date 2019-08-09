@@ -758,12 +758,12 @@ HTMLTooltip.prototype = {
       return;
     }
 
-    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     if (!this.isVisible()) {
       this.emit("hidden");
       return;
     }
 
+    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     // If the tooltip is hidden from a mouseup event, wait for a potential click event
     // to be consumed before removing event listeners.
     if (fromMouseup) {

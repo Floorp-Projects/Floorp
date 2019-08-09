@@ -40,13 +40,13 @@ const tests = [
           selected: true,
         },
       ],
-      toolbar: [false, false, false],
+      toolbar: [true, false, false, false],
     },
   },
   {
     desc: "Run an audit (all) from a11y panel toolbar by activating a filter.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleFilter(doc, 1);
     },
     expected: {
       tree: [
@@ -62,13 +62,13 @@ const tests = [
           badges: ["contrast"],
         },
       ],
-      toolbar: [true, true, true],
+      toolbar: [false, true, true, true],
     },
   },
   {
     desc: "Click on the filter again.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleFilter(doc, 1);
     },
     expected: {
       tree: [
@@ -96,7 +96,7 @@ const tests = [
           badges: ["contrast"],
         },
       ],
-      toolbar: [false, false, false],
+      toolbar: [true, false, false, false],
     },
   },
 ];
