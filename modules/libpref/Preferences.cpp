@@ -4472,8 +4472,25 @@ struct Internals {
   template <typename T>
   static void VarChanged(const char* aPref, void* aClosure) {
     CacheData* cache = static_cast<CacheData*>(aClosure);
-    *static_cast<T*>(cache->mCacheLocation) =
-        GetPref(aPref, cache->GetDefault<StripAtomic<T>>());
+    StripAtomic<T> value;
+    nsresult rv = GetPrefValue(aPref, &value, PrefValueKind::User);
+    if (NS_SUCCEEDED(rv)) {
+      *static_cast<T*>(cache->mCacheLocation) = value;
+    } else {
+      // GetPrefValue() can fail if the update is caused by the pref being
+      // deleted. In that case the mirror variable will be untouched, thus
+      // keeping the value it had prior to the deletion. (Note that this case
+      // won't happen for a deletion via DeleteBranch() unless bug 343600 is
+      // fixed, but it will happen for a deletion via ClearUserPref().)
+      //
+      // This is a case we want to avoid in general because it's a bit unclear
+      // what value the mirror variable should take; hence the assertion
+      // failure. Once all VarCache prefs are removed in favour of static prefs
+      // (bug 1448219) the plan is to mark static prefs as undeletable and this
+      // case will become impossible.
+      NS_WARNING(nsPrintfCString("VarChanged failure: %s\n", aPref).get());
+      MOZ_ASSERT(false);
+    }
   }
 
   template <typename T>
