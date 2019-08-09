@@ -7,9 +7,6 @@
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
-// By defualt, synced fields may only be set by the currently active process,
-// however a field can be marked as `MOZ_BC_FIELD_RACY` to relax this
-// restriction, and allow it to be set from any process.
 //
 // Process restrictions on racy fields may be added in `WillSet{name}`
 // validators.
