@@ -7,10 +7,10 @@ MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
 # cctools for ld, ar, and other related tools ; dsymutil for rust.
-mk_add_options "export PATH=$topsrcdir/cctools/bin:$topsrcdir/binutils/bin:$topsrcdir/llvm-dsymutil/bin:$PATH"
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/cctools/bin:$MOZ_FETCHES_DIR/binutils/bin:$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
 
 # dsymutil needs a libstdc++ more recent than what's on the system.
-mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
+mk_add_options "export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib"
 
 # This SDK was copied from a local XCode install and uploaded to tooltool.
 # Generate the tarball by running this command with the proper SDK version:
@@ -21,17 +21,17 @@ mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
 CROSS_SYSROOT=$topsrcdir/MacOSX10.11.sdk
 CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
 
-export CC="$topsrcdir/clang/bin/clang"
-export CXX="$topsrcdir/clang/bin/clang++"
+export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
 export CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 export CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
-export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
+export LLVMCONFIG=$MOZ_FETCHES_DIR/clang/bin/llvm-config
 export BINDGEN_CFLAGS="-isysroot $CROSS_SYSROOT"
 export DSYMUTIL=$topsrcdir/build/macosx/llvm-dsymutil
-mk_add_options "export REAL_DSYMUTIL=$topsrcdir/llvm-dsymutil/bin/dsymutil"
-export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
-export DMG_TOOL=$topsrcdir/dmg/dmg
-export HFS_TOOL=$topsrcdir/dmg/hfsplus
+mk_add_options "export REAL_DSYMUTIL=$MOZ_FETCHES_DIR/llvm-dsymutil/bin/dsymutil"
+export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
+export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
+export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
 
 export HOST_CFLAGS="-g"
 export HOST_CXXFLAGS="-g"

@@ -6,7 +6,7 @@ MOZ_AUTOMATION_UPLOAD=0
 MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-export TUP=${TOOLTOOL_DIR}/tup/tup
+export TUP=${MOZ_FETCHES_DIR}/tup/tup
 
 . "$topsrcdir/browser/config/mozconfigs/linux64/common-opt"
 . "$topsrcdir/build/mozconfig.common.override"

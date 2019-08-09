@@ -4,9 +4,9 @@
 
 case "$(uname -s)" in
 MINGW*)
-    export NASM=$topsrcdir/nasm/nasm.exe
+    export NASM=$MOZ_FETCHES_DIR/nasm/nasm.exe
     ;;
 *)
-    export NASM=$topsrcdir/nasm/nasm
+    export NASM=$MOZ_FETCHES_DIR/nasm/nasm
     ;;
 esac
