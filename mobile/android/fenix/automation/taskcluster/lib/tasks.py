@@ -621,7 +621,7 @@ class TaskBuilder(object):
             description='Raptor YouTube Playback on Fenix',
             test_name='raptor-youtube-playback',
             job_symbol='ytp',
-            group_symbol='Rap-fenix',
+            group_symbol='Rap',
             force_run_on_64_bit_device=force_run_on_64_bit_device,
         )
 
@@ -667,7 +667,7 @@ class TaskBuilder(object):
             "--download-symbols=ondemand",
         ]]
         # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
-        if variant.abi == 'arm':
+        if variant.abi == 'arm' and test_name == 'raptor-youtube-playback':
             params_query = '&'.join(ARM_RAPTOR_URL_PARAMS)
             add_extra_params_option = "--test-url-params={}".format(params_query)
             command[0].append(add_extra_params_option)
