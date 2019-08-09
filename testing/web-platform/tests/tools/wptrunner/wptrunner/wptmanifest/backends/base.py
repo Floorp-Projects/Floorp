@@ -169,7 +169,7 @@ class ManifestItem(object):
 
     def remove(self):
         if self.parent:
-            self.parent.children.remove(child)
+            self.parent.children.remove(self)
             self.parent = None
 
     def iterchildren(self, name=None):
