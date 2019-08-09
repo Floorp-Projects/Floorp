@@ -19,7 +19,6 @@ from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          should_use_artifact_map)
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.transforms.release_sign_and_push_langpacks import get_upstream_task_ref
 from voluptuous import Required, Optional
 
 import logging
@@ -57,16 +56,6 @@ beetmover_description_schema = schema.extend({
 })
 
 
-@transforms.add
-def set_label(config, jobs):
-    for job in jobs:
-        job['label'] = job['primary-dependency'].label.replace(
-            'push-langpacks', 'beetmover-signed-langpacks'
-        )
-
-        yield job
-
-
 transforms.add_validate(beetmover_description_schema)
 
 
@@ -94,7 +83,7 @@ def make_task_description(config, jobs):
         treeherder.setdefault('symbol', 'langpack(BM{})'.format(attributes.get('l10n_chunk', '')))
 
         job['attributes'].update(copy_attributes_from_dependent_job(dep_job))
-        job['attributes']['chunk_locales'] = dep_job.attributes['chunk_locales']
+        job['attributes']['chunk_locales'] = dep_job.attributes.get('chunk_locales', ['en-us'])
 
         job['description'] = job['description'].format(
             locales='/'.join(job['attributes']['chunk_locales']),
@@ -106,11 +95,13 @@ def make_task_description(config, jobs):
             get_beetmover_action_scope(config),
         ]
 
-        job['dependencies'] = {dep_job.kind: dep_job.label}
+        job['dependencies'] = {'langpack-copy': dep_job.label}
 
-        job['run-on-projects'] = dep_job.attributes['run_on_projects']
+        job['run-on-projects'] = job.get('run_on_projects',
+                                         dep_job.attributes['run_on_projects'])
         job['treeherder'] = treeherder
-        job['shipping-phase'] = dep_job.attributes['shipping_phase']
+        job['shipping-phase'] = job.get('shipping-phase',
+                                        dep_job.attributes['shipping_phase'])
         job['shipping-product'] = dep_job.attributes['shipping_product']
 
         yield job
@@ -119,9 +110,7 @@ def make_task_description(config, jobs):
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        signing_task_ref = get_upstream_task_ref(
-            job, expected_kinds=('release-push-langpacks',)
-        )
+        signing_task_ref = 'langpack-copy'
 
         platform = job["attributes"]["build_platform"]
         locale = job["attributes"]["chunk_locales"]
@@ -170,23 +159,21 @@ def strip_unused_data(config, jobs):
 def yield_all_platform_jobs(config, jobs):
     # Even though langpacks are now platform independent, we keep beetmoving them at old
     # platform-specific locations. That's why this transform exist
+    # The linux64 and mac specific ja-JP-mac are beetmoved along with the signing beetmover
+    # So while the dependent jobs are linux here, we only yield jobs for other platforms
     for job in jobs:
-        if 'ja-JP-mac' in job['label']:
-            # This locale must not be copied on any other platform than macos
-            yield job
-        else:
-            platforms = ('linux', 'linux64', 'macosx64', 'win32', 'win64')
-            if 'devedition' in job['attributes']['build_platform']:
-                platforms = ('{}-devedition'.format(plat) for plat in platforms)
-            for platform in platforms:
-                platform_job = copy.deepcopy(job)
-                if 'ja' in platform_job['attributes']['chunk_locales'] and \
-                        platform in ('macosx64', 'macosx64-devedition'):
-                    platform_job = _strip_ja_data_from_linux_job(platform_job)
+        platforms = ('linux', 'macosx64', 'win32', 'win64')
+        if 'devedition' in job['attributes']['build_platform']:
+            platforms = ('{}-devedition'.format(plat) for plat in platforms)
+        for platform in platforms:
+            platform_job = copy.deepcopy(job)
+            if 'ja' in platform_job['attributes']['chunk_locales'] and \
+                    platform in ('macosx64', 'macosx64-devedition'):
+                platform_job = _strip_ja_data_from_linux_job(platform_job)
 
-                platform_job = _change_platform_data(config, platform_job, platform)
+            platform_job = _change_platform_data(config, platform_job, platform)
 
-                yield platform_job
+            yield platform_job
 
 
 def _strip_ja_data_from_linux_job(platform_job):
