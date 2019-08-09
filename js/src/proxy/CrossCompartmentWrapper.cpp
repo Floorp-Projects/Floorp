@@ -593,8 +593,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
 
   // Update the entry in the compartment's wrapper map to point to the old
   // wrapper, which has now been updated (via reuse or swap).
-  if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget),
-                                ObjectValue(*wobj))) {
+  if (!wcompartment->putWrapper(cx, newTarget, ObjectValue(*wobj))) {
     oomUnsafe.crash("js::RemapWrapper");
   }
 }
