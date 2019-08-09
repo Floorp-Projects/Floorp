@@ -1960,7 +1960,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     );
     const originalBpsForNode = this._breakpointInfoForNode(rawNode) || {};
 
-    docMutationBreakpoints.nodes.set(rawNode, bpsForNode);
+    if (Object.values(bpsForNode).some(Boolean)) {
+      docMutationBreakpoints.nodes.set(rawNode, bpsForNode);
+    } else {
+      docMutationBreakpoints.nodes.delete(rawNode);
+    }
     if (originalBpsForNode.subtree && !bpsForNode.subtree) {
       docMutationBreakpoints.counts.subtree -= 1;
     } else if (!originalBpsForNode.subtree && bpsForNode.subtree) {
@@ -1999,7 +2003,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    */
   _updateNodeMutationListeners(rawNode) {
     const bpInfo = this._breakpointInfoForNode(rawNode);
-    if (bpInfo.subtree || bpInfo.removal || bpInfo.attribute) {
+    if (bpInfo && (bpInfo.subtree || bpInfo.removal || bpInfo.attribute)) {
       eventListenerService.addSystemEventListener(
         rawNode,
         "DOMNodeRemovedFromDocument",
@@ -2093,7 +2097,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           removal: 0,
           attribute: 0,
         },
-        nodes: new WeakMap(),
+        nodes: new Map(),
       };
       this._mutationBreakpoints.set(rawDoc, docMutationBreakpoints);
     }
@@ -2492,6 +2496,18 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     const documentActor = this.getNode(doc);
     if (!documentActor) {
       return;
+    }
+
+    // Removing a frame also removes any mutation breakpoints set on that
+    // document so that clients can clear their set of active breakpoints.
+    const mutationBps = this._mutationBreakpointsForDoc(doc);
+    const nodes = mutationBps ? Array.from(mutationBps.nodes.keys()) : [];
+    for (const node of nodes) {
+      this._updateMutationBreakpointState(node, {
+        subtree: false,
+        removal: false,
+        attribute: false,
+      });
     }
 
     if (this.rootDoc === doc) {
