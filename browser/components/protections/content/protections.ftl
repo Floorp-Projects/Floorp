@@ -133,3 +133,14 @@ go-to-privacy-settings = Go to Privacy Settings
 
 # This is the title attribute describing the Lockwise card's link to about:logins
 go-to-saved-logins = Go to Saved Logins
+
+bar-tooltip-social =
+  .title = Social Media Trackers
+bar-tooltip-cookie =
+  .title = Cross-Site Tracking Cookies
+bar-tooltip-tracker =
+  .title = Tracking Content
+bar-tooltip-fingerprinter =
+  .title = Fingerprinters
+bar-tooltip-cryptominer =
+  .title = Cryptominers
