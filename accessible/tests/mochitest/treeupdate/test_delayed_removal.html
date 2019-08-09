@@ -157,6 +157,32 @@
       ] });
     }
 
+    // Test to ensure that relocated accessibles are removed when a DOM
+    // ancestor is hidden.
+    async function removeRelocatedWhenDomAncestorHidden() {
+      info("removeRelocatedWhenDomAncestorHidden");
+
+      testAccessibleTree("c8",{ SECTION: [
+        { EDITCOMBOBOX: [ // c8_owner
+          { COMBOBOX_LIST: [] }, // c8_owned
+        ]},
+        { SECTION: [] }, // c8_owned_container
+      ] });
+
+      let events = waitForOrderedEvents([
+        [EVENT_HIDE, "c8_owned_container"],
+        [EVENT_HIDE, "c8_owned"],
+        [EVENT_REORDER, "c8"],
+      ], "removeRelocatedWhenDomAncestorHidden");
+      document.body.offsetTop; // Flush layout.
+      getNode("c8_owned_container").hidden = true;
+      await events;
+
+      testAccessibleTree("c8",{ SECTION: [
+        { EDITCOMBOBOX: [] }, // c8_owner
+      ] });
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -171,6 +197,8 @@
       await intermediateNonAccessibleContainers();
 
       await intermediateNonAccessibleContainerBecomesAccessible();
+
+      await removeRelocatedWhenDomAncestorHidden();
 
       SimpleTest.finish();
     }
@@ -211,6 +239,13 @@
   <div id="c7">
     <div style="display: inline;" class="intermediate">
       <button id="b3">Hello</button>
+    </div>
+  </div>
+
+  <div id="c8">
+    <div id="c8_owner" role="combobox" aria-owns="c8_owned"></div>
+    <div id="c8_owned_container">
+      <div id="c8_owned" role="listbox"></div>
     </div>
   </div>
 
