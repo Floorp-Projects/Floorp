@@ -44,6 +44,7 @@ tasktype_map:
     repackage: repackage
     repackage-signing: repackage
     repackage-signing-msi: repackage
+    langpack-copy: signing
 platform_names:
     filename_platform:
         by-platform:
@@ -191,7 +192,8 @@ mapping:
         all_locales: true
         description: "Localized repack that grabs a packaged en-US Firefox and repackages it as locale-specific Firefox"
         from:
-            - build
+            - langpack-copy
+            - signing
         only_for_platforms:
             - linux-shippable
             - linux64-shippable
