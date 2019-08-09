@@ -185,7 +185,7 @@
 
 - name: apz.allow_immediate_handoff
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: apz.allow_zooming
