@@ -429,8 +429,9 @@ impl AlphaBatchContainer {
 
             match batch_index {
                 Some(batch_index) => {
-                    self.alpha_batches[batch_index + min_batch_index].merge(other_batch);
-                    min_batch_index = batch_index;
+                    let index = batch_index + min_batch_index;
+                    self.alpha_batches[index].merge(other_batch);
+                    min_batch_index = index;
                 }
                 None => {
                     self.alpha_batches.push(other_batch);
