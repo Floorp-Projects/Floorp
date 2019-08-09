@@ -24,9 +24,9 @@
   display: none;
 }
 
-:host(:not([data-editing])) input[type="password"],
-:host(:not([data-editing])) input[type="text"],
-:host(:not([data-editing])) input[type="url"] {
+input[type="password"][readOnly],
+input[type="text"][readOnly],
+input[type="url"][readOnly] {
   all: unset;
   font-size: 1.1em;
   display: inline-block;
@@ -78,17 +78,17 @@
   padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
 }
 
-:host(:not([data-editing])) input[type="url"] {
+input[type="url"][readOnly] {
   color: var(--in-content-link-color) !important;
   cursor: pointer;
 }
 
-:host(:not([data-editing])) input[type="url"]:hover {
+input[type="url"][readOnly]:hover {
   color: var(--in-content-link-color-hover) !important;
   text-decoration: underline;
 }
 
-:host(:not([data-editing])) input[type="url"]:hover:active {
+input[type="url"][readOnly]:hover:active {
   color: var(--in-content-link-color-active) !important;
 }
 
