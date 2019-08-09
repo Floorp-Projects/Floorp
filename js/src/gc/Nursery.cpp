@@ -1224,7 +1224,7 @@ void js::Nursery::sweep(JSTracer* trc) {
   }
 
   for (ZonesIter zone(trc->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-    zone->sweepAfterMinorGC();
+    zone->sweepAfterMinorGC(trc);
   }
 
   sweepDictionaryModeObjects();

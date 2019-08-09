@@ -15,6 +15,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
+#include "gc/Zone.h"
 #include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
@@ -42,31 +43,20 @@ Compartment::Compartment(Zone* zone, bool invisibleToDebugger)
       runtime_(zone->runtimeFromAnyThread()),
       invisibleToDebugger_(invisibleToDebugger),
       crossCompartmentObjectWrappers(zone, 0),
-      crossCompartmentStringWrappers(zone),
       realms_(zone) {}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
-template <typename Map, typename Entry>
-static inline void CheckWrapperMapEntry(const Map& map, Entry& entry) {
-  /*
-   * Assert that the postbarriers have worked and that nothing is left in
-   * wrapperMap that points into the nursery, and that the hash table entries
-   * are discoverable.
-   */
-  auto key = entry.front().key();
-  CheckGCThingAfterMovingGC(key);
-
-  auto ptr = map.lookup(key);
-  MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &entry.front());
-}
-
-void Compartment::checkWrapperMapAfterMovingGC() {
-  for (StringWrapperEnum e(this); !e.empty(); e.popFront()) {
-    CheckWrapperMapEntry(crossCompartmentStringWrappers, e);
-  }
+void Compartment::checkObjectWrappersAfterMovingGC() {
   for (ObjectWrapperEnum e(this); !e.empty(); e.popFront()) {
-    CheckWrapperMapEntry(crossCompartmentObjectWrappers, e);
+    // Assert that the postbarriers have worked and that nothing is left in the
+    // wrapper map that points into the nursery, and that the hash table entries
+    // are discoverable.
+    auto key = e.front().key();
+    CheckGCThingAfterMovingGC(key);
+
+    auto ptr = crossCompartmentObjectWrappers.lookup(key);
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
   }
 }
 
@@ -87,7 +77,7 @@ bool Compartment::putWrapper(JSContext* cx, JSObject* wrapped,
 
 bool Compartment::putWrapper(JSContext* cx, JSString* wrapped,
                              JSString* wrapper) {
-  if (!crossCompartmentStringWrappers.put(wrapped, wrapper)) {
+  if (!zone()->crossZoneStringWrappers().put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -459,14 +449,8 @@ void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
   DebugAPI::traceCrossCompartmentEdges(trc);
 }
 
-void Compartment::dropStringWrappersOnGC() {
-  MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
-  crossCompartmentStringWrappers.clear();
-}
-
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {
   crossCompartmentObjectWrappers.sweepAfterMinorGC(trc);
-  crossCompartmentStringWrappers.sweepAfterMinorGC(trc);
 
   for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
     r->sweepAfterMinorGC();
@@ -478,23 +462,21 @@ void Compartment::sweepAfterMinorGC(JSTracer* trc) {
  * string entries in the crossCompartmentWrappers table are not marked during
  * markCrossCompartmentWrappers.
  */
-void Compartment::sweepCrossCompartmentWrappers() {
+void Compartment::sweepCrossCompartmentObjectWrappers() {
   crossCompartmentObjectWrappers.sweep();
-  crossCompartmentStringWrappers.sweep();
 }
 
-/* static */
-void Compartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc) {
+void Compartment::fixupCrossCompartmentObjectWrappersAfterMovingGC(
+    JSTracer* trc) {
   MOZ_ASSERT(trc->runtime()->gc.isHeapCompacting());
 
-  for (CompartmentsIter comp(trc->runtime()); !comp.done(); comp.next()) {
-    // Sweep the wrapper map to update keys (wrapped values) in other
-    // compartments that may have been moved.
-    comp->sweepCrossCompartmentWrappers();
-    // Trace the wrappers in the map to update their cross-compartment edges
-    // to wrapped values in other compartments that may have been moved.
-    comp->traceOutgoingCrossCompartmentWrappers(trc);
-  }
+  // Sweep the wrapper map to update keys (wrapped values) in other
+  // compartments that may have been moved.
+  sweepCrossCompartmentObjectWrappers();
+
+  // Trace the wrappers in the map to update their cross-compartment edges
+  // to wrapped values in other compartments that may have been moved.
+  traceOutgoingCrossCompartmentWrappers(trc);
 }
 
 void Compartment::fixupAfterMovingGC(JSTracer* trc) {
@@ -506,7 +488,7 @@ void Compartment::fixupAfterMovingGC(JSTracer* trc) {
 
   // Sweep the wrapper map to update values (wrapper objects) in this
   // compartment that may have been moved.
-  sweepCrossCompartmentWrappers();
+  sweepCrossCompartmentObjectWrappers();
 }
 
 void Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -516,8 +498,6 @@ void Compartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   *compartmentObjects += mallocSizeOf(this);
   *crossCompartmentWrappersTables +=
       crossCompartmentObjectWrappers.sizeOfExcludingThis(mallocSizeOf);
-  *crossCompartmentWrappersTables +=
-      crossCompartmentStringWrappers.sizeOfExcludingThis(mallocSizeOf);
 
   if (auto callback = runtime_->sizeOfIncludingThisCompartmentCallback) {
     *compartmentsPrivateData += callback(mallocSizeOf, this);

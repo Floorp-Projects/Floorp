@@ -23,6 +23,11 @@
 
 #include "vm/JSContext-inl.h"
 
+inline js::StringWrapperMap::Ptr JS::Compartment::lookupWrapper(
+    JSString* str) const {
+  return zone()->crossZoneStringWrappers().lookup(str);
+}
+
 inline bool JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp) {
   /* Only GC things have to be wrapped or copied. */
   if (!vp.isGCThing()) {
