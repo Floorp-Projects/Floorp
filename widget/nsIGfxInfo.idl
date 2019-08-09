@@ -145,8 +145,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DX_NV12 = 25;
   const long FEATURE_DX_P010 = 26;
   const long FEATURE_DX_P016 = 27;
+  /* Whether OpenGL swizzle configuration of texture units is supported, starting in 70 */
+  const long FEATURE_GL_SWIZZLE = 28;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_DX_P016;
+  const long FEATURE_MAX_VALUE = FEATURE_GL_SWIZZLE;
 
   /*
    * A set of return values from GetFeatureStatus

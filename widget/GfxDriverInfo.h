@@ -105,6 +105,7 @@ enum DeviceFamily {
   IntelHDGraphicsToSandyBridge,
   IntelHDGraphicsToHaswell,
   IntelHD3000,
+  IntelHDGraphicsIvyBridge,
   IntelMobileHDGraphics,
   NvidiaBlockD3D9Layers,
   RadeonX1000,
