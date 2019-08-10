@@ -618,19 +618,6 @@ class BaselineCompilerHandler {
 using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
 
 class BaselineCompiler final : private BaselineCompilerCodeGen {
-  // Stores the native code offset for a bytecode pc.
-  struct PCMappingEntry {
-    uint32_t pcOffset;
-    uint32_t nativeOffset;
-    PCMappingSlotInfo slotInfo;
-
-    // If set, insert a PCMappingIndexEntry before encoding the
-    // current entry.
-    bool addIndexEntry;
-  };
-
-  js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
-
   // Native code offsets for bytecode ops in the script's resume offsets list.
   ResumeOffsetEntryVector resumeOffsetEntries_;
 
@@ -658,29 +645,9 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
   }
 
  private:
-  PCMappingSlotInfo getStackTopSlotInfo() {
-    MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
-    switch (frame.numUnsyncedSlots()) {
-      case 0:
-        return PCMappingSlotInfo::MakeSlotInfo();
-      case 1: {
-        PCMappingSlotInfo::SlotLocation loc = frame.stackValueSlotLocation(-1);
-        return PCMappingSlotInfo::MakeSlotInfo(loc);
-      }
-      case 2:
-      default: {
-        PCMappingSlotInfo::SlotLocation loc1 = frame.stackValueSlotLocation(-1);
-        PCMappingSlotInfo::SlotLocation loc2 = frame.stackValueSlotLocation(-2);
-        return PCMappingSlotInfo::MakeSlotInfo(loc1, loc2);
-      }
-    }
-  }
-
   MethodStatus emitBody();
 
   MOZ_MUST_USE bool emitDebugTrap();
-
-  MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
 };
 
 // Interface used by BaselineCodeGen for BaselineInterpreterGenerator.

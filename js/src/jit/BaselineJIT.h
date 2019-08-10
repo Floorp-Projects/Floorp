@@ -27,69 +27,6 @@ class ICEntry;
 class ICStub;
 class ReturnAddressEntry;
 
-class PCMappingSlotInfo {
-  uint8_t slotInfo_;
-
- public:
-  // SlotInfo encoding:
-  //  Bits 0 & 1: number of slots at top of stack which are unsynced.
-  //  Bits 2 & 3: SlotLocation of top slot value (only relevant if
-  //              numUnsynced > 0).
-  //  Bits 3 & 4: SlotLocation of next slot value (only relevant if
-  //              numUnsynced > 1).
-  enum SlotLocation { SlotInR0 = 0, SlotInR1 = 1, SlotIgnore = 3 };
-
-  PCMappingSlotInfo() : slotInfo_(0) {}
-
-  explicit PCMappingSlotInfo(uint8_t slotInfo) : slotInfo_(slotInfo) {}
-
-  static inline bool ValidSlotLocation(SlotLocation loc) {
-    return (loc == SlotInR0) || (loc == SlotInR1) || (loc == SlotIgnore);
-  }
-
-  inline static PCMappingSlotInfo MakeSlotInfo() {
-    return PCMappingSlotInfo(0);
-  }
-
-  inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc) {
-    MOZ_ASSERT(ValidSlotLocation(topSlotLoc));
-    return PCMappingSlotInfo(1 | (topSlotLoc << 2));
-  }
-
-  inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc,
-                                               SlotLocation nextSlotLoc) {
-    MOZ_ASSERT(ValidSlotLocation(topSlotLoc));
-    MOZ_ASSERT(ValidSlotLocation(nextSlotLoc));
-    return PCMappingSlotInfo(2 | (topSlotLoc << 2) | (nextSlotLoc) << 4);
-  }
-
-  inline bool isStackSynced() const { return numUnsynced() == 0; }
-  inline unsigned numUnsynced() const { return slotInfo_ & 0x3; }
-  inline SlotLocation topSlotLocation() const {
-    return static_cast<SlotLocation>((slotInfo_ >> 2) & 0x3);
-  }
-  inline SlotLocation nextSlotLocation() const {
-    return static_cast<SlotLocation>((slotInfo_ >> 4) & 0x3);
-  }
-  inline uint8_t toByte() const { return slotInfo_; }
-};
-
-// A CompactBuffer is used to store native code offsets (relative to the
-// previous pc) and PCMappingSlotInfo bytes. To allow binary search into this
-// table, we maintain a second table of "index" entries. Every X ops, the
-// compiler will add an index entry, so that from the index entry to the
-// actual native code offset, we have to iterate at most X times.
-struct PCMappingIndexEntry {
-  // jsbytecode offset.
-  uint32_t pcOffset;
-
-  // Native code offset.
-  uint32_t nativeOffset;
-
-  // Offset in the CompactBuffer where data for pcOffset starts.
-  uint32_t bufferOffset;
-};
-
 // Base class for entries mapping a pc offset to a native code offset.
 class BasePCToNativeEntry {
   uint32_t pcOffset_;
@@ -254,12 +191,6 @@ struct BaselineScript final {
   uint32_t debugTrapEntriesOffset_ = 0;
   uint32_t debugTrapEntries_ = 0;
 
-  uint32_t pcMappingIndexOffset_ = 0;
-  uint32_t pcMappingIndexEntries_ = 0;
-
-  uint32_t pcMappingOffset_ = 0;
-  uint32_t pcMappingSize_ = 0;
-
   // We store the native code address corresponding to each bytecode offset in
   // the script's resumeOffsets list.
   uint32_t resumeEntriesOffset_ = 0;
@@ -349,12 +280,13 @@ struct BaselineScript final {
   }
 
  public:
-  static BaselineScript* New(
-      JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
-      uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-      size_t retAddrEntries, size_t osrEntries, size_t debugTrapEntries,
-      size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
-      size_t traceLoggerToggleOffsetEntries);
+  static BaselineScript* New(JSScript* jsscript,
+                             uint32_t warmUpCheckPrologueOffset,
+                             uint32_t profilerEnterToggleOffset,
+                             uint32_t profilerExitToggleOffset,
+                             size_t retAddrEntries, size_t osrEntries,
+                             size_t debugTrapEntries, size_t resumeEntries,
+                             size_t traceLoggerToggleOffsetEntries);
 
   static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(FreeOp* fop, BaselineScript* script);
@@ -375,14 +307,6 @@ struct BaselineScript final {
 
   uint8_t* warmUpCheckPrologueAddr() const {
     return method_->raw() + warmUpCheckPrologueOffset_;
-  }
-
-  PCMappingIndexEntry* pcMappingIndexEntryList() {
-    return (PCMappingIndexEntry*)(reinterpret_cast<uint8_t*>(this) +
-                                  pcMappingIndexOffset_);
-  }
-  uint8_t* pcMappingData() {
-    return reinterpret_cast<uint8_t*>(this) + pcMappingOffset_;
   }
 
   JitCode* method() const { return method_; }
@@ -414,25 +338,6 @@ struct BaselineScript final {
   // to native addresses in the Baseline code based on |entries|.
   void computeResumeNativeOffsets(JSScript* script,
                                   const ResumeOffsetEntryVector& entries);
-
-  PCMappingIndexEntry& pcMappingIndexEntry(size_t index);
-  CompactBufferReader pcMappingReader(size_t indexEntry);
-
-  size_t numPCMappingIndexEntries() const { return pcMappingIndexEntries_; }
-
-  void copyPCMappingIndexEntries(const PCMappingIndexEntry* entries);
-  void copyPCMappingEntries(const CompactBufferWriter& entries);
-
-  // Baseline JIT may not generate code for unreachable bytecode which
-  // results in mapping returning nullptr.
-  uint8_t* maybeNativeCodeForPC(JSScript* script, jsbytecode* pc,
-                                PCMappingSlotInfo* slotInfo);
-  uint8_t* nativeCodeForPC(JSScript* script, jsbytecode* pc,
-                           PCMappingSlotInfo* slotInfo) {
-    uint8_t* native = maybeNativeCodeForPC(script, pc, slotInfo);
-    MOZ_ASSERT(native);
-    return native;
-  }
 
   // Return the bytecode offset for a given native code address. Be careful
   // when using this method: it's an approximation and not guaranteed to be the
