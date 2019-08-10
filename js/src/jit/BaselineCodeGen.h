@@ -631,6 +631,9 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 
   js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
 
+  // Native code offsets for bytecode ops in the script's resume offsets list.
+  ResumeOffsetEntryVector resumeOffsetEntries_;
+
   CodeOffset profilerPushToggleOffset_;
 
   CodeOffset traceLoggerScriptTextIdOffset_;

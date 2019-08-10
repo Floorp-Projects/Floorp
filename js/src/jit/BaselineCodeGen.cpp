@@ -334,8 +334,8 @@ MethodStatus BaselineCompiler::compile() {
   }
 #endif
 
-  // Compute yield/await native resume addresses.
-  baselineScript->computeResumeNativeOffsets(script);
+  // Compute native resume addresses for the script's resume offsets.
+  baselineScript->computeResumeNativeOffsets(script, resumeOffsetEntries_);
 
   if (compileDebugInstrumentation()) {
     baselineScript->setHasDebugInstrumentation();
@@ -6893,6 +6893,18 @@ MethodStatus BaselineCompiler::emitBody() {
     if (MOZ_UNLIKELY(!addPCMappingEntry(addIndexEntry))) {
       ReportOutOfMemory(cx);
       return Method_Error;
+    }
+
+    // If the script has a resume offset for this pc we need to keep track of
+    // the native code offset.
+    if (info->hasResumeOffset) {
+      frame.assertSyncedStack();
+      uint32_t pcOffset = script->pcToOffset(handler.pc());
+      uint32_t nativeOffset = masm.currentOffset();
+      if (!resumeOffsetEntries_.emplaceBack(pcOffset, nativeOffset)) {
+        ReportOutOfMemory(cx);
+        return Method_Error;
+      }
     }
 
     // Emit traps for breakpoints and step mode.
