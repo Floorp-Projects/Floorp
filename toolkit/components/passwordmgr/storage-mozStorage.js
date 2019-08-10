@@ -439,7 +439,9 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
   /**
-   * Returns an array of nsILoginInfo.
+   * Returns an array of nsILoginInfo. If decryption of a login
+   * fails due to a corrupt entry, the login is not included in
+   * the resulting array.
    *
    * @resolve {nsILoginInfo[]}
    */
@@ -457,6 +459,29 @@ LoginManagerStorage_mozStorage.prototype = {
 
     let result = [];
     for (let i = 0; i < logins.length; i++) {
+      if (!usernames[i] || !passwords[i]) {
+        // If the username or password is blank it means that decryption may have
+        // failed during decryptMany but we can't differentiate an empty string
+        // value from a failure so we attempt to decrypt again and check the
+        // result.
+        let login = logins[i];
+        try {
+          this._crypto.decrypt(login.username);
+          this._crypto.decrypt(login.password);
+        } catch (e) {
+          // If decryption failed (corrupt entry?), just skip it.
+          // Rethrow other errors (like canceling entry of a master pw)
+          if (e.result == Cr.NS_ERROR_FAILURE) {
+            this.log(
+              "Could not decrypt login:",
+              login.QueryInterface(Ci.nsILoginMetaInfo).guid
+            );
+            continue;
+          }
+          throw e;
+        }
+      }
+
       logins[i].username = usernames[i];
       logins[i].password = passwords[i];
       result.push(logins[i]);
