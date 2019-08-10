@@ -421,8 +421,8 @@ struct BaselineScript final {
   }
 
   // Return the bytecode offset for a given native code address. Be careful
-  // when using this method: we don't emit code for some bytecode ops, so
-  // the result may not be accurate.
+  // when using this method: it's an approximation and not guaranteed to be the
+  // correct pc.
   jsbytecode* approximatePcForNativeAddress(JSScript* script,
                                             uint8_t* nativeAddress);
 
