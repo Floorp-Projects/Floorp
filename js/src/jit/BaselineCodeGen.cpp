@@ -297,8 +297,9 @@ MethodStatus BaselineCompiler::compile() {
           profilerEnterFrameToggleOffset_.offset(),
           profilerExitFrameToggleOffset_.offset(),
           handler.retAddrEntries().length(), handler.osrEntries().length(),
-          pcMappingIndexEntries.length(), pcEntries.length(),
-          script->resumeOffsets().size(), traceLoggerToggleOffsets_.length()),
+          debugTrapEntries_.length(), pcMappingIndexEntries.length(),
+          pcEntries.length(), script->resumeOffsets().size(),
+          traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -320,6 +321,7 @@ MethodStatus BaselineCompiler::compile() {
 
   baselineScript->copyRetAddrEntries(handler.retAddrEntries().begin());
   baselineScript->copyOSREntries(handler.osrEntries().begin());
+  baselineScript->copyDebugTrapEntries(debugTrapEntries_.begin());
 
   // If profiler instrumentation is enabled, toggle instrumentation on.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
@@ -1548,28 +1550,20 @@ bool BaselineCompiler::emitDebugTrap() {
   bool enabled = DebugAPI::stepModeEnabled(script) ||
                  DebugAPI::hasBreakpointsAt(script, handler.pc());
 
-#if defined(JS_CODEGEN_ARM64)
-  // Flush any pending constant pools to prevent incorrect
-  // PCMappingEntry offsets. See Bug 1446819.
-  masm.flush();
-  // Fix up the PCMappingEntry to avoid any constant pool.
-  pcMappingEntries_.back().nativeOffset = masm.currentOffset();
-#endif
-
   // Emit patchable call to debug trap handler.
   JitCode* handlerCode = cx->runtime()->jitRuntime()->debugTrapHandler(
       cx, DebugTrapHandlerKind::Compiler);
   if (!handlerCode) {
     return false;
   }
-  mozilla::DebugOnly<CodeOffset> offset =
-      masm.toggledCall(handlerCode, enabled);
 
-#ifdef DEBUG
-  // Patchable call offset has to match the pc mapping offset.
-  PCMappingEntry& entry = pcMappingEntries_.back();
-  MOZ_ASSERT((&offset)->offset() == entry.nativeOffset);
-#endif
+  CodeOffset nativeOffset = masm.toggledCall(handlerCode, enabled);
+
+  uint32_t pcOffset = script->pcToOffset(handler.pc());
+  if (!debugTrapEntries_.emplaceBack(pcOffset, nativeOffset.offset())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
   // Add a RetAddrEntry for the return offset -> pc mapping.
   return handler.recordCallRetAddr(cx, RetAddrEntry::Kind::DebugTrap,

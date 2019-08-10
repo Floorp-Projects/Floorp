@@ -432,18 +432,18 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
   MOZ_CRASH("Unexpected status");
 }
 
-BaselineScript* BaselineScript::New(JSScript* jsscript,
-                                    uint32_t warmUpCheckPrologueOffset,
-                                    uint32_t profilerEnterToggleOffset,
-                                    uint32_t profilerExitToggleOffset,
-                                    size_t retAddrEntries, size_t osrEntries,
-                                    size_t pcMappingIndexEntries,
-                                    size_t pcMappingSize, size_t resumeEntries,
-                                    size_t traceLoggerToggleOffsetEntries) {
+BaselineScript* BaselineScript::New(
+    JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
+    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
+    size_t retAddrEntries, size_t osrEntries, size_t debugTrapEntries,
+    size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
+    size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
   size_t osrEntriesSize = osrEntries * sizeof(BaselineScript::OSREntry);
+  size_t debugTrapEntriesSize =
+      debugTrapEntries * sizeof(BaselineScript::DebugTrapEntry);
   size_t pcMappingIndexEntriesSize =
       pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
   size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
@@ -452,6 +452,8 @@ BaselineScript* BaselineScript::New(JSScript* jsscript,
   size_t paddedRetAddrEntriesSize =
       AlignBytes(retAddrEntriesSize, DataAlignment);
   size_t paddedOSREntriesSize = AlignBytes(osrEntriesSize, DataAlignment);
+  size_t paddedDebugTrapEntriesSize =
+      AlignBytes(debugTrapEntriesSize, DataAlignment);
   size_t paddedPCMappingIndexEntriesSize =
       AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
   size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
@@ -459,6 +461,7 @@ BaselineScript* BaselineScript::New(JSScript* jsscript,
   size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
   size_t allocBytes = paddedRetAddrEntriesSize + paddedOSREntriesSize +
+                      paddedDebugTrapEntriesSize +
                       paddedPCMappingIndexEntriesSize + paddedPCMappingSize +
                       paddedResumeEntriesSize + paddedTLEntriesSize;
 
@@ -482,6 +485,10 @@ BaselineScript* BaselineScript::New(JSScript* jsscript,
   script->osrEntriesOffset_ = offsetCursor;
   script->osrEntries_ = osrEntries;
   offsetCursor += paddedOSREntriesSize;
+
+  script->debugTrapEntriesOffset_ = offsetCursor;
+  script->debugTrapEntries_ = debugTrapEntries;
+  offsetCursor += paddedDebugTrapEntriesSize;
 
   script->pcMappingIndexOffset_ = offsetCursor;
   script->pcMappingIndexEntries_ = pcMappingIndexEntries;
@@ -710,6 +717,10 @@ void BaselineScript::copyOSREntries(const OSREntry* entries) {
   std::copy_n(entries, osrEntries().size(), osrEntries().data());
 }
 
+void BaselineScript::copyDebugTrapEntries(const DebugTrapEntry* entries) {
+  std::copy_n(entries, debugTrapEntries().size(), debugTrapEntries().data());
+}
+
 void BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries) {
   MOZ_ASSERT(entries.length() > 0);
   MOZ_ASSERT(entries.length() == pcMappingSize_);
@@ -808,32 +819,20 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
 
   AutoWritableJitCode awjc(method());
 
-  for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
-    PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
+  for (const DebugTrapEntry& entry : debugTrapEntries()) {
+    jsbytecode* entryPC = script->offsetToPC(entry.pcOffset());
 
-    CompactBufferReader reader(pcMappingReader(i));
-    jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-    uint32_t nativeOffset = entry.nativeOffset;
-
-    MOZ_ASSERT(script->containsPC(curPC));
-
-    while (reader.more()) {
-      uint8_t b = reader.readByte();
-      if (b & 0x80) {
-        nativeOffset += reader.readUnsigned();
-      }
-
-      if (!pc || pc == curPC) {
-        bool enabled = DebugAPI::stepModeEnabled(script) ||
-                       DebugAPI::hasBreakpointsAt(script, curPC);
-
-        // Patch the trap.
-        CodeLocationLabel label(method(), CodeOffset(nativeOffset));
-        Assembler::ToggleCall(label, enabled);
-      }
-
-      curPC += GetBytecodeLength(curPC);
+    // If the |pc| argument is non-null we can skip all other bytecode ops.
+    if (pc && pc != entryPC) {
+      continue;
     }
+
+    bool enabled = DebugAPI::stepModeEnabled(script) ||
+                   DebugAPI::hasBreakpointsAt(script, entryPC);
+
+    // Patch the trap.
+    CodeLocationLabel label(method(), CodeOffset(entry.nativeOffset()));
+    Assembler::ToggleCall(label, enabled);
   }
 }
 
