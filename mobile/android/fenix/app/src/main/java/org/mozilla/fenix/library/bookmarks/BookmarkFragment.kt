@@ -237,7 +237,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     }
 
     private suspend fun refreshBookmarks() {
-        context?.bookmarkStorage()?.getTree(bookmarkStore.state.tree!!.guid, false).withOptionalDesktopFolders(context)
+        // The bookmark tree in our 'state' can be null - meaning, no bookmark tree has been selected.
+        // If that's the case, we don't know what node to refresh, and so we bail out.
+        // See https://github.com/mozilla-mobile/fenix/issues/4671
+        val currentGuid = bookmarkStore.state.tree?.guid ?: return
+        context?.bookmarkStorage()?.getTree(currentGuid, false).withOptionalDesktopFolders(context)
             ?.let { node ->
                 var rootNode = node
                 pendingBookmarksToDelete.forEach {
