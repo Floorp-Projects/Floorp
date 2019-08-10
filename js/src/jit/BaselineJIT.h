@@ -226,6 +226,9 @@ struct BaselineScript final {
   uint32_t retAddrEntriesOffset_ = 0;
   uint32_t retAddrEntries_ = 0;
 
+  uint32_t osrEntriesOffset_ = 0;
+  uint32_t osrEntries_ = 0;
+
   uint32_t pcMappingIndexOffset_ = 0;
   uint32_t pcMappingIndexEntries_ = 0;
 
@@ -252,6 +255,19 @@ struct BaselineScript final {
 
     // Flag is set if this script has profiling instrumentation turned on.
     PROFILER_INSTRUMENTATION_ON = 1 << 1,
+  };
+
+  // Native code offset for OSR from Baseline Interpreter into Baseline JIT at
+  // JSOP_LOOPENTRY ops.
+  class OSREntry {
+    uint32_t pcOffset_;
+    uint32_t nativeOffset_;
+
+   public:
+    OSREntry(uint32_t pcOffset, uint32_t nativeOffset)
+        : pcOffset_(pcOffset), nativeOffset_(nativeOffset) {}
+    uint32_t pcOffset() const { return pcOffset_; }
+    uint32_t nativeOffset() const { return nativeOffset_; }
   };
 
  private:
@@ -281,6 +297,10 @@ struct BaselineScript final {
     return mozilla::MakeSpan(
         offsetToPointer<RetAddrEntry>(retAddrEntriesOffset_), retAddrEntries_);
   }
+  mozilla::Span<OSREntry> osrEntries() const {
+    return mozilla::MakeSpan(offsetToPointer<OSREntry>(osrEntriesOffset_),
+                             osrEntries_);
+  }
 
 #ifdef JS_TRACE_LOGGING
   mozilla::Span<uint32_t> traceLoggerToggleOffsets() const {
@@ -298,11 +318,14 @@ struct BaselineScript final {
   }
 
  public:
-  static BaselineScript* New(
-      JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
-      uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-      size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-      size_t resumeEntries, size_t traceLoggerToggleOffsetEntries);
+  static BaselineScript* New(JSScript* jsscript,
+                             uint32_t warmUpCheckPrologueOffset,
+                             uint32_t profilerEnterToggleOffset,
+                             uint32_t profilerExitToggleOffset,
+                             size_t retAddrEntries, size_t osrEntries,
+                             size_t pcMappingIndexEntries, size_t pcMappingSize,
+                             size_t resumeEntries,
+                             size_t traceLoggerToggleOffsetEntries);
 
   static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(FreeOp* fop, BaselineScript* script);
@@ -352,7 +375,10 @@ struct BaselineScript final {
   const RetAddrEntry& retAddrEntryFromReturnOffset(CodeOffset returnOffset);
   const RetAddrEntry& retAddrEntryFromReturnAddress(uint8_t* returnAddr);
 
+  uint8_t* nativeCodeForOSREntry(uint32_t pcOffset);
+
   void copyRetAddrEntries(const RetAddrEntry* entries);
+  void copyOSREntries(const OSREntry* entries);
 
   // Copy resumeOffsets list from |script| and convert the pcOffsets
   // to native addresses in the Baseline code.
