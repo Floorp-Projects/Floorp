@@ -1175,11 +1175,14 @@ class TestInfoCommand(MachCommandBase):
                      help='Comma-separated list of test keys to filter on, '
                           'like "skip-if"; only these fields will be searched '
                           'for filter-values.')
+    @CommandArgument('--no-component-report', action='store_false',
+                     dest="show_components", default=True,
+                     help='Do not categorize by bugzilla component.')
     @CommandArgument('--output-file',
                      help='Path to report file.')
     def test_report(self, components, flavor, subsuite, paths,
                     show_manifests, show_tests,
-                    filter_values, filter_keys, output_file):
+                    filter_values, filter_keys, show_components, output_file):
         import mozpack.path as mozpath
         from moztest.resolve import TestResolver
 
@@ -1239,10 +1242,11 @@ class TestInfoCommand(MachCommandBase):
                             'tests': 0,
                             'skipped': 0
                         }
-                        if key in by_component['manifests']:
-                            by_component['manifests'][key].append(manifest_info)
+                        rkey = key if show_components else 'all'
+                        if rkey in by_component['manifests']:
+                            by_component['manifests'][rkey].append(manifest_info)
                         else:
-                            by_component['manifests'][key] = [manifest_info]
+                            by_component['manifests'][rkey] = [manifest_info]
                         break
                 if manifest_info:
                     for t in tests:
@@ -1269,10 +1273,11 @@ class TestInfoCommand(MachCommandBase):
                             value = t.get(test_key)
                             if value:
                                 test_info[test_key] = value
-                        if key in by_component['tests']:
-                            by_component['tests'][key].append(test_info)
+                        rkey = key if show_components else 'all'
+                        if rkey in by_component['tests']:
+                            by_component['tests'][rkey].append(test_info)
                         else:
-                            by_component['tests'][key] = [test_info]
+                            by_component['tests'][rkey] = [test_info]
                         break
             for key in by_component['tests']:
                 by_component['tests'][key].sort()
