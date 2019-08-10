@@ -9,6 +9,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Span.h"
 
 #include "ds/LifoAlloc.h"
 #include "jit/Bailouts.h"
@@ -268,6 +269,34 @@ struct BaselineScript final {
         profilerEnterToggleOffset_(profilerEnterToggleOffset),
         profilerExitToggleOffset_(profilerExitToggleOffset) {}
 
+  // Translate an offset into a concrete pointer.
+  template <typename T>
+  T* offsetToPointer(size_t offset) const {
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    uintptr_t elem = base + offset;
+    return reinterpret_cast<T*>(elem);
+  }
+
+  mozilla::Span<RetAddrEntry> retAddrEntries() const {
+    return mozilla::MakeSpan(
+        offsetToPointer<RetAddrEntry>(retAddrEntriesOffset_), retAddrEntries_);
+  }
+
+#ifdef JS_TRACE_LOGGING
+  mozilla::Span<uint32_t> traceLoggerToggleOffsets() const {
+    MOZ_ASSERT(traceLoggerToggleOffsetsOffset_);
+    return mozilla::MakeSpan(
+        offsetToPointer<uint32_t>(traceLoggerToggleOffsetsOffset_),
+        numTraceLoggerToggleOffsets_);
+  }
+#endif
+
+  // Note: this doesn't return a Span<> because BaselineScript does not store
+  // the number of entries.
+  uint8_t** resumeEntryList() const {
+    return offsetToPointer<uint8_t*>(resumeEntriesOffset_);
+  }
+
  public:
   static BaselineScript* New(
       JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
@@ -296,13 +325,6 @@ struct BaselineScript final {
     return method_->raw() + warmUpCheckPrologueOffset_;
   }
 
-  RetAddrEntry* retAddrEntryList() {
-    return (RetAddrEntry*)(reinterpret_cast<uint8_t*>(this) +
-                           retAddrEntriesOffset_);
-  }
-  uint8_t** resumeEntryList() {
-    return (uint8_t**)(reinterpret_cast<uint8_t*>(this) + resumeEntriesOffset_);
-  }
   PCMappingIndexEntry* pcMappingIndexEntryList() {
     return (PCMappingIndexEntry*)(reinterpret_cast<uint8_t*>(this) +
                                   pcMappingIndexOffset_);
@@ -324,16 +346,13 @@ struct BaselineScript final {
 
   uint8_t* returnAddressForEntry(const RetAddrEntry& ent);
 
-  RetAddrEntry& retAddrEntry(size_t index);
-  RetAddrEntry& retAddrEntryFromPCOffset(uint32_t pcOffset,
-                                         RetAddrEntry::Kind kind);
-  RetAddrEntry& prologueRetAddrEntry(RetAddrEntry::Kind kind);
-  RetAddrEntry& retAddrEntryFromReturnOffset(CodeOffset returnOffset);
-  RetAddrEntry& retAddrEntryFromReturnAddress(uint8_t* returnAddr);
+  const RetAddrEntry& retAddrEntryFromPCOffset(uint32_t pcOffset,
+                                               RetAddrEntry::Kind kind);
+  const RetAddrEntry& prologueRetAddrEntry(RetAddrEntry::Kind kind);
+  const RetAddrEntry& retAddrEntryFromReturnOffset(CodeOffset returnOffset);
+  const RetAddrEntry& retAddrEntryFromReturnAddress(uint8_t* returnAddr);
 
-  size_t numRetAddrEntries() const { return retAddrEntries_; }
-
-  void copyRetAddrEntries(JSScript* script, const RetAddrEntry* entries);
+  void copyRetAddrEntries(const RetAddrEntry* entries);
 
   // Copy resumeOffsets list from |script| and convert the pcOffsets
   // to native addresses in the Baseline code.
@@ -381,12 +400,6 @@ struct BaselineScript final {
 
   static size_t offsetOfTraceLoggerScriptEvent() {
     return offsetof(BaselineScript, traceLoggerScriptEvent_);
-  }
-
-  uint32_t* traceLoggerToggleOffsets() {
-    MOZ_ASSERT(traceLoggerToggleOffsetsOffset_);
-    return reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(this) +
-                                       traceLoggerToggleOffsetsOffset_);
   }
 #endif
 

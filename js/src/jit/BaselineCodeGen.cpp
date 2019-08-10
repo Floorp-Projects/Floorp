@@ -318,11 +318,7 @@ MethodStatus BaselineCompiler::compile() {
   MOZ_ASSERT(pcEntries.length() > 0);
   baselineScript->copyPCMappingEntries(pcEntries);
 
-  // Copy RetAddrEntries.
-  if (handler.retAddrEntries().length() > 0) {
-    baselineScript->copyRetAddrEntries(script,
-                                       handler.retAddrEntries().begin());
-  }
+  baselineScript->copyRetAddrEntries(handler.retAddrEntries().begin());
 
   // If profiler instrumentation is enabled, toggle instrumentation on.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
