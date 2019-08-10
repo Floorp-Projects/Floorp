@@ -19,19 +19,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829872
       go();
   }
 
-  function check(elem, desc) {
+  async function check(elem, desc) {
     is(elem.contentDocument, null, "null cross-origin contentDocument for " + desc);
-    ok(SpecialPowers.wrap(elem).contentWindow.eval('frameElement === null;'),
+    ok(await SpecialPowers.spawn(elem, [], () => this.content.eval('frameElement === null;')),
        "null cross-origin frameElement for " + desc);
     if (!(elem instanceof HTMLFrameElement))
       is(elem.getSVGDocument(), null, "null cross-origin getSVGDocument() for " + desc);
   }
 
-  function go() {
+  async function go() {
     ok(true, "Starting test");
-    check($('ifr'), "iframe element");
-    check($('obj'), "object element");
-    check($('framesetholder').contentDocument.getElementById('fr'), "frameset frame");
+    await check($('ifr'), "iframe element");
+    await check($('obj'), "object element");
+    await check($('framesetholder').contentDocument.getElementById('fr'), "frameset frame");
     SimpleTest.finish();
   }
 

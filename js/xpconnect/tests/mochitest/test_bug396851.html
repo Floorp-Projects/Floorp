@@ -9,18 +9,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396851
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  function throws(func, pattern, msg) {
+    try {
+      func();
+      ok(false, msg);
+    } catch (e) {
+      ok(pattern.test(e), `${msg}: Expect exception mathing ${pattern}`);
+    }
+  }
+
   function go() {
     var iframe = $("ifr");
     var win = iframe.contentWindow;
-    try {
-      var doc = win.document;
-      fail("Allowed cross-origin access to the document");
-    } catch (e) {
-      ok(e.toString().match("Permission denied") != null, "Weird exception thrown");
-    }
+    throws(() => win.document,
+           /Permission denied/,
+           "Unprivileged code should not be able to access cross-origin document");
 
-    doc = SpecialPowers.wrap(win).document;
-    ok(doc != null, "Able to access the cross-origin document");
+    if (SpecialPowers.useRemoteSubframes) {
+      throws(() => win.document,
+             /Permission denied/,
+             "Privileged code should not be able to access cross-process document");
+    } else {
+      ok(SpecialPowers.wrap(win).document != null,
+         "Able to access the cross-origin document");
+    }
     SimpleTest.finish();
   }
   </script>
