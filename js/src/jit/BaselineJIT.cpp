@@ -436,16 +436,13 @@ BaselineScript* BaselineScript::New(
     JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
     uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
     size_t retAddrEntries, size_t osrEntries, size_t debugTrapEntries,
-    size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
-    size_t traceLoggerToggleOffsetEntries) {
+    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
   size_t osrEntriesSize = osrEntries * sizeof(BaselineScript::OSREntry);
   size_t debugTrapEntriesSize =
       debugTrapEntries * sizeof(BaselineScript::DebugTrapEntry);
-  size_t pcMappingIndexEntriesSize =
-      pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
   size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
   size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
@@ -454,16 +451,12 @@ BaselineScript* BaselineScript::New(
   size_t paddedOSREntriesSize = AlignBytes(osrEntriesSize, DataAlignment);
   size_t paddedDebugTrapEntriesSize =
       AlignBytes(debugTrapEntriesSize, DataAlignment);
-  size_t paddedPCMappingIndexEntriesSize =
-      AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
-  size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
   size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
   size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
   size_t allocBytes = paddedRetAddrEntriesSize + paddedOSREntriesSize +
-                      paddedDebugTrapEntriesSize +
-                      paddedPCMappingIndexEntriesSize + paddedPCMappingSize +
-                      paddedResumeEntriesSize + paddedTLEntriesSize;
+                      paddedDebugTrapEntriesSize + paddedResumeEntriesSize +
+                      paddedTLEntriesSize;
 
   BaselineScript* script =
       jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(
@@ -489,14 +482,6 @@ BaselineScript* BaselineScript::New(
   script->debugTrapEntriesOffset_ = offsetCursor;
   script->debugTrapEntries_ = debugTrapEntries;
   offsetCursor += paddedDebugTrapEntriesSize;
-
-  script->pcMappingIndexOffset_ = offsetCursor;
-  script->pcMappingIndexEntries_ = pcMappingIndexEntries;
-  offsetCursor += paddedPCMappingIndexEntriesSize;
-
-  script->pcMappingOffset_ = offsetCursor;
-  script->pcMappingSize_ = pcMappingSize;
-  offsetCursor += paddedPCMappingSize;
 
   script->resumeEntriesOffset_ = resumeEntries ? offsetCursor : 0;
   offsetCursor += paddedResumeEntriesSize;
@@ -538,23 +523,6 @@ void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
     const js::jit::BaselineScript* script) {
   BaselineScript::Destroy(rt_->defaultFreeOp(),
                           const_cast<BaselineScript*>(script));
-}
-
-PCMappingIndexEntry& BaselineScript::pcMappingIndexEntry(size_t index) {
-  MOZ_ASSERT(index < numPCMappingIndexEntries());
-  return pcMappingIndexEntryList()[index];
-}
-
-CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(indexEntry);
-
-  uint8_t* dataStart = pcMappingData() + entry.bufferOffset;
-  uint8_t* dataEnd =
-      (indexEntry == numPCMappingIndexEntries() - 1)
-          ? pcMappingData() + pcMappingSize_
-          : pcMappingData() + pcMappingIndexEntry(indexEntry + 1).bufferOffset;
-
-  return CompactBufferReader(dataStart, dataEnd);
 }
 
 const RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
@@ -719,68 +687,6 @@ void BaselineScript::copyOSREntries(const OSREntry* entries) {
 
 void BaselineScript::copyDebugTrapEntries(const DebugTrapEntry* entries) {
   std::copy_n(entries, debugTrapEntries().size(), debugTrapEntries().data());
-}
-
-void BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries) {
-  MOZ_ASSERT(entries.length() > 0);
-  MOZ_ASSERT(entries.length() == pcMappingSize_);
-
-  memcpy(pcMappingData(), entries.buffer(), entries.length());
-}
-
-void BaselineScript::copyPCMappingIndexEntries(
-    const PCMappingIndexEntry* entries) {
-  for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
-    pcMappingIndexEntry(i) = entries[i];
-  }
-}
-
-uint8_t* BaselineScript::maybeNativeCodeForPC(JSScript* script, jsbytecode* pc,
-                                              PCMappingSlotInfo* slotInfo) {
-  MOZ_ASSERT_IF(script->hasBaselineScript(), script->baselineScript() == this);
-
-  uint32_t pcOffset = script->pcToOffset(pc);
-
-  // Find PCMappingIndexEntry containing pc. They are in ascedending order
-  // with the start of one entry being the end of the previous entry. Find
-  // first entry where pcOffset < endOffset.
-  uint32_t i = 0;
-  for (; (i + 1) < numPCMappingIndexEntries(); i++) {
-    uint32_t endOffset = pcMappingIndexEntry(i + 1).pcOffset;
-    if (pcOffset < endOffset) {
-      break;
-    }
-  }
-
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
-  MOZ_ASSERT(pcOffset >= entry.pcOffset);
-
-  CompactBufferReader reader(pcMappingReader(i));
-  MOZ_ASSERT(reader.more());
-
-  jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-  uint32_t curNativeOffset = entry.nativeOffset;
-  MOZ_ASSERT(script->containsPC(curPC));
-
-  while (reader.more()) {
-    // If the high bit is set, the native offset relative to the
-    // previous pc != 0 and comes next.
-    uint8_t b = reader.readByte();
-    if (b & 0x80) {
-      curNativeOffset += reader.readUnsigned();
-    }
-
-    if (curPC == pc) {
-      *slotInfo = PCMappingSlotInfo(b & 0x7F);
-      return method_->raw() + curNativeOffset;
-    }
-
-    curPC += GetBytecodeLength(curPC);
-  }
-
-  // Code was not generated for this PC because BaselineCompiler believes it
-  // is unreachable.
-  return nullptr;
 }
 
 jsbytecode* BaselineScript::approximatePcForNativeAddress(
