@@ -187,3 +187,37 @@ add_task(async function testAsyncDecryptStrings() {
     );
   }
 });
+
+add_task(async function testAsyncDecryptInvalidStrings() {
+  let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
+    Ci.nsISecretDecoderRing
+  );
+
+  // Test invalid inputs for sdr.asyncDecryptStrings
+  let testCases = [
+    "~bmV0cGxheQ==", // invalid base64 encoding
+    "https://www.example.com", // website address from erroneous migration
+  ];
+
+  let decrypteds = await sdr.asyncDecryptStrings(testCases);
+  equal(
+    testCases.length,
+    decrypteds.length,
+    "each testcase should still return a response"
+  );
+  for (let i = 0; i < decrypteds.length; i++) {
+    let decrypted = decrypteds[i];
+
+    equal(
+      decrypted,
+      "",
+      "decrypted string should be empty when trying to decrypt an invalid input with asyncDecryptStrings"
+    );
+
+    Assert.throws(
+      () => sdr.decryptString(testCases[i]),
+      /NS_ERROR_ILLEGAL_VALUE/,
+      `Check testcase would have thrown: ${testCases[i]}`
+    );
+  }
+});
