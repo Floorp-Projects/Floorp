@@ -48,7 +48,6 @@
 #include "nsContentUtils.h"
 #include "nsWebShellWindow.h"  // get rid of this one, too...
 #include "nsGlobalWindow.h"
-#include "XULDocument.h"
 #include "nsXULTooltipListener.h"
 
 #include "prenv.h"
@@ -1644,7 +1643,7 @@ nsresult nsXULWindow::SetPersistentValue(const nsAtom* aAttr,
 
   nsAutoString windowElementId;
   docShellElement->GetId(windowElementId);
-  // Match the behavior of XULDocument and only persist values if the element
+  // Match the behavior of XULPersist and only persist values if the element
   // has an ID.
   if (windowElementId.IsEmpty()) {
     return NS_OK;

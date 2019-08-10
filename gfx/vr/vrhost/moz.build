@@ -9,10 +9,15 @@ SOURCES += [
   'vrhostapi.cpp'
 ]
 
+# Since .def files do not support preprocessing, switch which file is used
+# to declare exports. See comments in the files for more info.
 if CONFIG['NIGHTLY_BUILD']:
+  DEFFILE = 'vrhostnightly.def'
   SOURCES += [
     'vrhosttest.cpp'
   ]
+else:
+  DEFFILE = 'vrhost.def'
 
 LOCAL_INCLUDES += [
   '/gfx/vr',
@@ -25,7 +30,7 @@ EXPORTS.vrhost = [
   'vrhostex.h'
 ]
 
-DEFFILE = 'vrhost.def'
+
 
 DIRS += [
   'testhost'

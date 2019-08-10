@@ -82,7 +82,6 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
     : BaselineCodeGen(cx, /* HandlerArgs = */ alloc, script),
-      pcMappingEntries_(),
       profilerPushToggleOffset_(),
       traceLoggerScriptTextIdOffset_() {
 #ifdef JS_CODEGEN_NONE
@@ -172,23 +171,6 @@ bool BaselineInterpreterHandler::recordCallRetAddr(JSContext* cx,
   return true;
 }
 
-bool BaselineCompiler::addPCMappingEntry(bool addIndexEntry) {
-  // Don't add multiple entries for a single pc.
-  size_t nentries = pcMappingEntries_.length();
-  uint32_t pcOffset = handler.script()->pcToOffset(handler.pc());
-  if (nentries > 0 && pcMappingEntries_[nentries - 1].pcOffset == pcOffset) {
-    return true;
-  }
-
-  PCMappingEntry entry;
-  entry.pcOffset = pcOffset;
-  entry.nativeOffset = masm.currentOffset();
-  entry.slotInfo = getStackTopSlotInfo();
-  entry.addIndexEntry = addIndexEntry;
-
-  return pcMappingEntries_.append(entry);
-}
-
 MethodStatus BaselineCompiler::compile() {
   JSScript* script = handler.script();
   JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
@@ -249,56 +231,14 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  // Encode the pc mapping table. See PCMappingIndexEntry for
-  // more information.
-  Vector<PCMappingIndexEntry> pcMappingIndexEntries(cx);
-  CompactBufferWriter pcEntries;
-  uint32_t previousOffset = 0;
-
-  for (size_t i = 0; i < pcMappingEntries_.length(); i++) {
-    PCMappingEntry& entry = pcMappingEntries_[i];
-
-    if (entry.addIndexEntry) {
-      PCMappingIndexEntry indexEntry;
-      indexEntry.pcOffset = entry.pcOffset;
-      indexEntry.nativeOffset = entry.nativeOffset;
-      indexEntry.bufferOffset = pcEntries.length();
-      if (!pcMappingIndexEntries.append(indexEntry)) {
-        ReportOutOfMemory(cx);
-        return Method_Error;
-      }
-      previousOffset = entry.nativeOffset;
-    }
-
-    // Use the high bit of the SlotInfo byte to indicate the
-    // native code offset (relative to the previous op) > 0 and
-    // comes next in the buffer.
-    MOZ_ASSERT((entry.slotInfo.toByte() & 0x80) == 0);
-
-    if (entry.nativeOffset == previousOffset) {
-      pcEntries.writeByte(entry.slotInfo.toByte());
-    } else {
-      MOZ_ASSERT(entry.nativeOffset > previousOffset);
-      pcEntries.writeByte(0x80 | entry.slotInfo.toByte());
-      pcEntries.writeUnsigned(entry.nativeOffset - previousOffset);
-    }
-
-    previousOffset = entry.nativeOffset;
-  }
-
-  if (pcEntries.oom()) {
-    ReportOutOfMemory(cx);
-    return Method_Error;
-  }
-
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(script, warmUpCheckPrologueOffset_.offset(),
-                          profilerEnterFrameToggleOffset_.offset(),
-                          profilerExitFrameToggleOffset_.offset(),
-                          handler.retAddrEntries().length(),
-                          pcMappingIndexEntries.length(), pcEntries.length(),
-                          script->resumeOffsets().size(),
-                          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(
+          script, warmUpCheckPrologueOffset_.offset(),
+          profilerEnterFrameToggleOffset_.offset(),
+          profilerExitFrameToggleOffset_.offset(),
+          handler.retAddrEntries().length(), handler.osrEntries().length(),
+          debugTrapEntries_.length(), script->resumeOffsets().size(),
+          traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -312,17 +252,9 @@ MethodStatus BaselineCompiler::compile() {
           (void*)baselineScript.get(), (void*)code->raw(), script->filename(),
           script->lineno(), script->column());
 
-  MOZ_ASSERT(pcMappingIndexEntries.length() > 0);
-  baselineScript->copyPCMappingIndexEntries(&pcMappingIndexEntries[0]);
-
-  MOZ_ASSERT(pcEntries.length() > 0);
-  baselineScript->copyPCMappingEntries(pcEntries);
-
-  // Copy RetAddrEntries.
-  if (handler.retAddrEntries().length() > 0) {
-    baselineScript->copyRetAddrEntries(script,
-                                       handler.retAddrEntries().begin());
-  }
+  baselineScript->copyRetAddrEntries(handler.retAddrEntries().begin());
+  baselineScript->copyOSREntries(handler.osrEntries().begin());
+  baselineScript->copyDebugTrapEntries(debugTrapEntries_.begin());
 
   // If profiler instrumentation is enabled, toggle instrumentation on.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
@@ -337,8 +269,8 @@ MethodStatus BaselineCompiler::compile() {
   }
 #endif
 
-  // Compute yield/await native resume addresses.
-  baselineScript->computeResumeNativeOffsets(script);
+  // Compute native resume addresses for the script's resume offsets.
+  baselineScript->computeResumeNativeOffsets(script, resumeOffsetEntries_);
 
   if (compileDebugInstrumentation()) {
     baselineScript->setHasDebugInstrumentation();
@@ -704,7 +636,7 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
 }
 
 static uint32_t GetVMFunctionArgSize(const VMFunctionData& fun) {
-  // Note that this include the size of the frame pointer pushed by
+  // Note that this includes the size of the frame pointer pushed by
   // prepareVMCall.
   return fun.explicitStackSlots() * sizeof(void*) + sizeof(void*);
 }
@@ -1325,26 +1257,38 @@ bool BaselineCodeGen<Handler>::emitInterruptCheck() {
 
 template <>
 bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
-  // Emit no warm-up counter increments or bailouts if Ion is not
-  // enabled, or if the script will never be Ion-compileable
+  frame.assertSyncedStack();
 
+  // Record native code offset for OSR from Baseline Interpreter into Baseline
+  // JIT code. This is right before the warm-up check in the Baseline JIT code,
+  // to make sure we can immediately enter Ion if the script is warm enough or
+  // if --ion-eager is used.
+  JSScript* script = handler.script();
+  jsbytecode* pc = handler.pc();
+  if (JSOp(*pc) == JSOP_LOOPENTRY) {
+    uint32_t pcOffset = script->pcToOffset(pc);
+    uint32_t nativeOffset = masm.currentOffset();
+    if (!handler.osrEntries().emplaceBack(pcOffset, nativeOffset)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  // Emit no warm-up counter increments if Ion is not enabled or if the script
+  // will never be Ion-compileable.
   if (!handler.maybeIonCompileable()) {
     return true;
   }
-
-  frame.assertSyncedStack();
 
   Register scriptReg = R2.scratchReg();
   Register countReg = R0.scratchReg();
   Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
 
-  JSScript* script = handler.script();
   masm.movePtr(ImmGCPtr(script), scriptReg);
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  jsbytecode* pc = handler.pc();
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
@@ -1539,28 +1483,20 @@ bool BaselineCompiler::emitDebugTrap() {
   bool enabled = DebugAPI::stepModeEnabled(script) ||
                  DebugAPI::hasBreakpointsAt(script, handler.pc());
 
-#if defined(JS_CODEGEN_ARM64)
-  // Flush any pending constant pools to prevent incorrect
-  // PCMappingEntry offsets. See Bug 1446819.
-  masm.flush();
-  // Fix up the PCMappingEntry to avoid any constant pool.
-  pcMappingEntries_.back().nativeOffset = masm.currentOffset();
-#endif
-
   // Emit patchable call to debug trap handler.
   JitCode* handlerCode = cx->runtime()->jitRuntime()->debugTrapHandler(
       cx, DebugTrapHandlerKind::Compiler);
   if (!handlerCode) {
     return false;
   }
-  mozilla::DebugOnly<CodeOffset> offset =
-      masm.toggledCall(handlerCode, enabled);
 
-#ifdef DEBUG
-  // Patchable call offset has to match the pc mapping offset.
-  PCMappingEntry& entry = pcMappingEntries_.back();
-  MOZ_ASSERT((&offset)->offset() == entry.nativeOffset);
-#endif
+  CodeOffset nativeOffset = masm.toggledCall(handlerCode, enabled);
+
+  uint32_t pcOffset = script->pcToOffset(handler.pc());
+  if (!debugTrapEntries_.emplaceBack(pcOffset, nativeOffset.offset())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
 
   // Add a RetAddrEntry for the return offset -> pc mapping.
   return handler.recordCallRetAddr(cx, RetAddrEntry::Kind::DebugTrap,
@@ -6830,8 +6766,6 @@ MethodStatus BaselineCompiler::emitBody() {
   JSScript* script = handler.script();
   MOZ_ASSERT(handler.pc() == script->code());
 
-  bool lastOpUnreachable = false;
-  uint32_t emittedOps = 0;
   mozilla::DebugOnly<jsbytecode*> prevpc = handler.pc();
 
   while (true) {
@@ -6849,7 +6783,6 @@ MethodStatus BaselineCompiler::emitBody() {
         break;
       }
 
-      lastOpUnreachable = true;
       prevpc = handler.pc();
       continue;
     }
@@ -6872,18 +6805,16 @@ MethodStatus BaselineCompiler::emitBody() {
 
     frame.assertValidState(*info);
 
-    // Add a PC -> native mapping entry for the current op. These entries are
-    // used when we need the native code address for a given pc, for instance
-    // for bailouts from Ion, the debugger and exception handling. See
-    // PCMappingIndexEntry for more information.
-    bool addIndexEntry = (handler.pc() == script->code() || lastOpUnreachable ||
-                          emittedOps > 100);
-    if (addIndexEntry) {
-      emittedOps = 0;
-    }
-    if (MOZ_UNLIKELY(!addPCMappingEntry(addIndexEntry))) {
-      ReportOutOfMemory(cx);
-      return Method_Error;
+    // If the script has a resume offset for this pc we need to keep track of
+    // the native code offset.
+    if (info->hasResumeOffset) {
+      frame.assertSyncedStack();
+      uint32_t pcOffset = script->pcToOffset(handler.pc());
+      uint32_t nativeOffset = masm.currentOffset();
+      if (!resumeOffsetEntries_.emplaceBack(pcOffset, nativeOffset)) {
+        ReportOutOfMemory(cx);
+        return Method_Error;
+      }
     }
 
     // Emit traps for breakpoints and step mode.
@@ -6915,8 +6846,6 @@ MethodStatus BaselineCompiler::emitBody() {
       break;
     }
 
-    emittedOps++;
-    lastOpUnreachable = false;
 #ifdef DEBUG
     prevpc = handler.pc();
 #endif

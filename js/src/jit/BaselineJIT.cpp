@@ -418,16 +418,9 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 
     case Method_Compiled: {
       if (*pc == JSOP_LOOPENTRY) {
-        PCMappingSlotInfo slotInfo;
         BaselineScript* baselineScript = script->baselineScript();
-        *res = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
-        MOZ_ASSERT(slotInfo.isStackSynced());
-        if (frame->isDebuggee()) {
-          // Skip the debug trap emitted by emitInterpreterLoop because the
-          // Baseline Interpreter already handled it for the current op.
-          MOZ_RELEASE_ASSERT(baselineScript->hasDebugInstrumentation());
-          *res += MacroAssembler::ToggledCallSize(*res);
-        }
+        uint32_t pcOffset = script->pcToOffset(pc);
+        *res = baselineScript->nativeCodeForOSREntry(pcOffset);
       } else {
         *res = script->baselineScript()->warmUpCheckPrologueAddr();
       }
@@ -442,27 +435,28 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 BaselineScript* BaselineScript::New(
     JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
     uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-    size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
+    size_t retAddrEntries, size_t osrEntries, size_t debugTrapEntries,
     size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
-  size_t pcMappingIndexEntriesSize =
-      pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
+  size_t osrEntriesSize = osrEntries * sizeof(BaselineScript::OSREntry);
+  size_t debugTrapEntriesSize =
+      debugTrapEntries * sizeof(BaselineScript::DebugTrapEntry);
   size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
   size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
   size_t paddedRetAddrEntriesSize =
       AlignBytes(retAddrEntriesSize, DataAlignment);
-  size_t paddedPCMappingIndexEntriesSize =
-      AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
-  size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
+  size_t paddedOSREntriesSize = AlignBytes(osrEntriesSize, DataAlignment);
+  size_t paddedDebugTrapEntriesSize =
+      AlignBytes(debugTrapEntriesSize, DataAlignment);
   size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
   size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
-  size_t allocBytes = paddedRetAddrEntriesSize +
-                      paddedPCMappingIndexEntriesSize + paddedPCMappingSize +
-                      paddedResumeEntriesSize + paddedTLEntriesSize;
+  size_t allocBytes = paddedRetAddrEntriesSize + paddedOSREntriesSize +
+                      paddedDebugTrapEntriesSize + paddedResumeEntriesSize +
+                      paddedTLEntriesSize;
 
   BaselineScript* script =
       jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(
@@ -481,13 +475,13 @@ BaselineScript* BaselineScript::New(
   script->retAddrEntries_ = retAddrEntries;
   offsetCursor += paddedRetAddrEntriesSize;
 
-  script->pcMappingIndexOffset_ = offsetCursor;
-  script->pcMappingIndexEntries_ = pcMappingIndexEntries;
-  offsetCursor += paddedPCMappingIndexEntriesSize;
+  script->osrEntriesOffset_ = offsetCursor;
+  script->osrEntries_ = osrEntries;
+  offsetCursor += paddedOSREntriesSize;
 
-  script->pcMappingOffset_ = offsetCursor;
-  script->pcMappingSize_ = pcMappingSize;
-  offsetCursor += paddedPCMappingSize;
+  script->debugTrapEntriesOffset_ = offsetCursor;
+  script->debugTrapEntries_ = debugTrapEntries;
+  offsetCursor += paddedDebugTrapEntriesSize;
 
   script->resumeEntriesOffset_ = resumeEntries ? offsetCursor : 0;
   offsetCursor += paddedResumeEntriesSize;
@@ -531,47 +525,15 @@ void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
                           const_cast<BaselineScript*>(script));
 }
 
-RetAddrEntry& BaselineScript::retAddrEntry(size_t index) {
-  MOZ_ASSERT(index < numRetAddrEntries());
-  return retAddrEntryList()[index];
-}
-
-PCMappingIndexEntry& BaselineScript::pcMappingIndexEntry(size_t index) {
-  MOZ_ASSERT(index < numPCMappingIndexEntries());
-  return pcMappingIndexEntryList()[index];
-}
-
-CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(indexEntry);
-
-  uint8_t* dataStart = pcMappingData() + entry.bufferOffset;
-  uint8_t* dataEnd =
-      (indexEntry == numPCMappingIndexEntries() - 1)
-          ? pcMappingData() + pcMappingSize_
-          : pcMappingData() + pcMappingIndexEntry(indexEntry + 1).bufferOffset;
-
-  return CompactBufferReader(dataStart, dataEnd);
-}
-
-struct RetAddrEntries {
-  BaselineScript* const baseline_;
-
-  explicit RetAddrEntries(BaselineScript* baseline) : baseline_(baseline) {}
-
-  size_t numEntries() const { return baseline_->numRetAddrEntries(); }
-  RetAddrEntry& operator[](size_t index) const {
-    return baseline_->retAddrEntry(index);
-  }
-};
-
-RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
+const RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
     CodeOffset returnOffset) {
+  mozilla::Span<RetAddrEntry> entries = retAddrEntries();
   size_t loc;
 #ifdef DEBUG
   bool found =
 #endif
       BinarySearchIf(
-          RetAddrEntries(this), 0, numRetAddrEntries(),
+          entries.data(), 0, entries.size(),
           [&returnOffset](const RetAddrEntry& entry) {
             size_t roffset = returnOffset.offset();
             size_t entryRoffset = entry.returnOffset().offset();
@@ -586,17 +548,16 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
           &loc);
 
   MOZ_ASSERT(found);
-  MOZ_ASSERT(loc < numRetAddrEntries());
-  MOZ_ASSERT(retAddrEntry(loc).returnOffset().offset() ==
-             returnOffset.offset());
-  return retAddrEntry(loc);
+  MOZ_ASSERT(entries[loc].returnOffset().offset() == returnOffset.offset());
+  return entries[loc];
 }
 
-static bool ComputeBinarySearchMid(RetAddrEntries entries, uint32_t pcOffset,
-                                   size_t* loc) {
+template <typename Entry>
+static bool ComputeBinarySearchMid(mozilla::Span<Entry> entries,
+                                   uint32_t pcOffset, size_t* loc) {
   return BinarySearchIf(
-      entries, 0, entries.numEntries(),
-      [pcOffset](const RetAddrEntry& entry) {
+      entries.data(), 0, entries.size(),
+      [pcOffset](const Entry& entry) {
         uint32_t entryOffset = entry.pcOffset();
         if (pcOffset < entryOffset) {
           return -1;
@@ -613,31 +574,32 @@ uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
   return method()->raw() + ent.returnOffset().offset();
 }
 
-RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
+const RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     uint32_t pcOffset, RetAddrEntry::Kind kind) {
+  mozilla::Span<RetAddrEntry> entries = retAddrEntries();
   size_t mid;
-  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(RetAddrEntries(this), pcOffset, &mid));
-  MOZ_ASSERT(mid < numRetAddrEntries());
+  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(entries, pcOffset, &mid));
+  MOZ_ASSERT(mid < entries.size());
 
   // Search for the first entry for this pc.
   size_t first = mid;
-  while (first > 0 && retAddrEntry(first - 1).pcOffset() == pcOffset) {
+  while (first > 0 && entries[first - 1].pcOffset() == pcOffset) {
     first--;
   }
 
   // Search for the last entry for this pc.
   size_t last = mid;
-  while (last + 1 < numRetAddrEntries() &&
-         retAddrEntry(last + 1).pcOffset() == pcOffset) {
+  while (last + 1 < entries.size() &&
+         entries[last + 1].pcOffset() == pcOffset) {
     last++;
   }
 
   MOZ_ASSERT(first <= last);
-  MOZ_ASSERT(retAddrEntry(first).pcOffset() == pcOffset);
-  MOZ_ASSERT(retAddrEntry(last).pcOffset() == pcOffset);
+  MOZ_ASSERT(entries[first].pcOffset() == pcOffset);
+  MOZ_ASSERT(entries[last].pcOffset() == pcOffset);
 
   for (size_t i = first; i <= last; i++) {
-    RetAddrEntry& entry = retAddrEntry(i);
+    const RetAddrEntry& entry = entries[i];
     if (entry.kind() != kind) {
       continue;
     }
@@ -646,7 +608,7 @@ RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     // There must be a unique entry for this pcOffset and Kind to ensure our
     // return value is well-defined.
     for (size_t j = i + 1; j <= last; j++) {
-      MOZ_ASSERT(retAddrEntry(j).kind() != kind);
+      MOZ_ASSERT(entries[j].kind() != kind);
     }
 #endif
 
@@ -656,24 +618,25 @@ RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
   MOZ_CRASH("Didn't find RetAddrEntry.");
 }
 
-RetAddrEntry& BaselineScript::prologueRetAddrEntry(RetAddrEntry::Kind kind) {
+const RetAddrEntry& BaselineScript::prologueRetAddrEntry(
+    RetAddrEntry::Kind kind) {
   MOZ_ASSERT(kind == RetAddrEntry::Kind::StackCheck ||
              kind == RetAddrEntry::Kind::WarmupCounter);
 
   // The prologue entries will always be at a very low offset, so just do a
   // linear search from the beginning.
-  for (size_t i = 0; i < numRetAddrEntries(); i++) {
-    if (retAddrEntry(i).pcOffset() != 0) {
+  for (const RetAddrEntry& entry : retAddrEntries()) {
+    if (entry.pcOffset() != 0) {
       break;
     }
-    if (retAddrEntry(i).kind() == kind) {
-      return retAddrEntry(i);
+    if (entry.kind() == kind) {
+      return entry;
     }
   }
   MOZ_CRASH("Didn't find prologue RetAddrEntry.");
 }
 
-RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
+const RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
     uint8_t* returnAddr) {
   MOZ_ASSERT(returnAddr > method_->raw());
   MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
@@ -681,16 +644,31 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
   return retAddrEntryFromReturnOffset(offset);
 }
 
-void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
+uint8_t* BaselineScript::nativeCodeForOSREntry(uint32_t pcOffset) {
+  mozilla::Span<OSREntry> entries = osrEntries();
+  size_t mid;
+  if (!ComputeBinarySearchMid(entries, pcOffset, &mid)) {
+    return nullptr;
+  }
+
+  uint32_t nativeOffset = entries[mid].nativeOffset();
+  return method_->raw() + nativeOffset;
+}
+
+void BaselineScript::computeResumeNativeOffsets(
+    JSScript* script, const ResumeOffsetEntryVector& entries) {
   // Translate pcOffset to BaselineScript native address. This may return
   // nullptr if compiler decided code was unreachable.
-  auto computeNative = [this, script](uint32_t pcOffset) {
-    PCMappingSlotInfo slotInfo;
-    uint8_t* nativeCode =
-        maybeNativeCodeForPC(script, script->offsetToPC(pcOffset), &slotInfo);
-    MOZ_ASSERT(slotInfo.isStackSynced());
+  auto computeNative = [this, &entries](uint32_t pcOffset) -> uint8_t* {
+    mozilla::Span<const ResumeOffsetEntry> entriesSpan =
+        mozilla::MakeSpan(entries.begin(), entries.length());
+    size_t mid;
+    if (!ComputeBinarySearchMid(entriesSpan, pcOffset, &mid)) {
+      return nullptr;
+    }
 
-    return nativeCode;
+    uint32_t nativeOffset = entries[mid].nativeOffset();
+    return method_->raw() + nativeOffset;
   };
 
   mozilla::Span<const uint32_t> pcOffsets = script->resumeOffsets();
@@ -699,73 +677,16 @@ void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
                  computeNative);
 }
 
-void BaselineScript::copyRetAddrEntries(JSScript* script,
-                                        const RetAddrEntry* entries) {
-  for (uint32_t i = 0; i < numRetAddrEntries(); i++) {
-    retAddrEntry(i) = entries[i];
-  }
+void BaselineScript::copyRetAddrEntries(const RetAddrEntry* entries) {
+  std::copy_n(entries, retAddrEntries().size(), retAddrEntries().data());
 }
 
-void BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries) {
-  MOZ_ASSERT(entries.length() > 0);
-  MOZ_ASSERT(entries.length() == pcMappingSize_);
-
-  memcpy(pcMappingData(), entries.buffer(), entries.length());
+void BaselineScript::copyOSREntries(const OSREntry* entries) {
+  std::copy_n(entries, osrEntries().size(), osrEntries().data());
 }
 
-void BaselineScript::copyPCMappingIndexEntries(
-    const PCMappingIndexEntry* entries) {
-  for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
-    pcMappingIndexEntry(i) = entries[i];
-  }
-}
-
-uint8_t* BaselineScript::maybeNativeCodeForPC(JSScript* script, jsbytecode* pc,
-                                              PCMappingSlotInfo* slotInfo) {
-  MOZ_ASSERT_IF(script->hasBaselineScript(), script->baselineScript() == this);
-
-  uint32_t pcOffset = script->pcToOffset(pc);
-
-  // Find PCMappingIndexEntry containing pc. They are in ascedending order
-  // with the start of one entry being the end of the previous entry. Find
-  // first entry where pcOffset < endOffset.
-  uint32_t i = 0;
-  for (; (i + 1) < numPCMappingIndexEntries(); i++) {
-    uint32_t endOffset = pcMappingIndexEntry(i + 1).pcOffset;
-    if (pcOffset < endOffset) {
-      break;
-    }
-  }
-
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
-  MOZ_ASSERT(pcOffset >= entry.pcOffset);
-
-  CompactBufferReader reader(pcMappingReader(i));
-  MOZ_ASSERT(reader.more());
-
-  jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-  uint32_t curNativeOffset = entry.nativeOffset;
-  MOZ_ASSERT(script->containsPC(curPC));
-
-  while (reader.more()) {
-    // If the high bit is set, the native offset relative to the
-    // previous pc != 0 and comes next.
-    uint8_t b = reader.readByte();
-    if (b & 0x80) {
-      curNativeOffset += reader.readUnsigned();
-    }
-
-    if (curPC == pc) {
-      *slotInfo = PCMappingSlotInfo(b & 0x7F);
-      return method_->raw() + curNativeOffset;
-    }
-
-    curPC += GetBytecodeLength(curPC);
-  }
-
-  // Code was not generated for this PC because BaselineCompiler believes it
-  // is unreachable.
-  return nullptr;
+void BaselineScript::copyDebugTrapEntries(const DebugTrapEntry* entries) {
+  std::copy_n(entries, debugTrapEntries().size(), debugTrapEntries().data());
 }
 
 jsbytecode* BaselineScript::approximatePcForNativeAddress(
@@ -775,56 +696,23 @@ jsbytecode* BaselineScript::approximatePcForNativeAddress(
 
   uint32_t nativeOffset = nativeAddress - method_->raw();
 
-  // The native code address can occur before the start of ops. Associate
-  // those with start of bytecode.
-  if (nativeOffset < pcMappingIndexEntry(0).nativeOffset) {
-    return script->code();
-  }
+  // Use the RetAddrEntry list (sorted on pc and return address) to look for the
+  // first pc that has a return address >= nativeOffset. This isn't perfect but
+  // it's a reasonable approximation for the profiler because most non-trivial
+  // bytecode ops have a RetAddrEntry.
 
-  // Find corresponding PCMappingIndexEntry for native offset. They are in
-  // ascedending order with the start of one entry being the end of the
-  // previous entry. Find first entry where nativeOffset < endOffset.
-  uint32_t i = 0;
-  for (; (i + 1) < numPCMappingIndexEntries(); i++) {
-    uint32_t endOffset = pcMappingIndexEntry(i + 1).nativeOffset;
-    if (nativeOffset < endOffset) {
-      break;
+  for (const RetAddrEntry& entry : retAddrEntries()) {
+    uint32_t retOffset = entry.returnOffset().offset();
+    if (retOffset >= nativeOffset) {
+      return script->offsetToPC(entry.pcOffset());
     }
   }
 
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
-  MOZ_ASSERT(nativeOffset >= entry.nativeOffset);
-
-  CompactBufferReader reader(pcMappingReader(i));
-  MOZ_ASSERT(reader.more());
-
-  jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-  uint32_t curNativeOffset = entry.nativeOffset;
-  MOZ_ASSERT(script->containsPC(curPC));
-
-  jsbytecode* lastPC = curPC;
-  while (reader.more()) {
-    // If the high bit is set, the native offset relative to the
-    // previous pc != 0 and comes next.
-    uint8_t b = reader.readByte();
-    if (b & 0x80) {
-      curNativeOffset += reader.readUnsigned();
-    }
-
-    // Return the last PC that matched nativeOffset. Some bytecode
-    // generate no native code (e.g., constant-pushing bytecode like
-    // JSOP_INT8), and so their entries share the same nativeOffset as the
-    // next op that does generate code.
-    if (curNativeOffset > nativeOffset) {
-      return lastPC;
-    }
-
-    lastPC = curPC;
-    curPC += GetBytecodeLength(curPC);
-  }
-
-  // Associate all addresses at end of PCMappingIndexEntry with lastPC.
-  return lastPC;
+  // Return the last entry's pc. Every BaselineScript has at least one
+  // RetAddrEntry for the prologue stack overflow check.
+  MOZ_ASSERT(retAddrEntries().size() > 0);
+  const RetAddrEntry& lastEntry = retAddrEntries()[retAddrEntries().size() - 1];
+  return script->offsetToPC(lastEntry.pcOffset());
 }
 
 void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
@@ -837,32 +725,20 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
 
   AutoWritableJitCode awjc(method());
 
-  for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
-    PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
+  for (const DebugTrapEntry& entry : debugTrapEntries()) {
+    jsbytecode* entryPC = script->offsetToPC(entry.pcOffset());
 
-    CompactBufferReader reader(pcMappingReader(i));
-    jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-    uint32_t nativeOffset = entry.nativeOffset;
-
-    MOZ_ASSERT(script->containsPC(curPC));
-
-    while (reader.more()) {
-      uint8_t b = reader.readByte();
-      if (b & 0x80) {
-        nativeOffset += reader.readUnsigned();
-      }
-
-      if (!pc || pc == curPC) {
-        bool enabled = DebugAPI::stepModeEnabled(script) ||
-                       DebugAPI::hasBreakpointsAt(script, curPC);
-
-        // Patch the trap.
-        CodeLocationLabel label(method(), CodeOffset(nativeOffset));
-        Assembler::ToggleCall(label, enabled);
-      }
-
-      curPC += GetBytecodeLength(curPC);
+    // If the |pc| argument is non-null we can skip all other bytecode ops.
+    if (pc && pc != entryPC) {
+      continue;
     }
+
+    bool enabled = DebugAPI::stepModeEnabled(script) ||
+                   DebugAPI::hasBreakpointsAt(script, entryPC);
+
+    // Patch the trap.
+    CodeLocationLabel label(method(), CodeOffset(entry.nativeOffset()));
+    Assembler::ToggleCall(label, enabled);
   }
 }
 
@@ -874,17 +750,19 @@ void BaselineScript::initTraceLogger(JSScript* script,
   traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
 #  endif
 
-  MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
+  mozilla::Span<uint32_t> scriptOffsets = traceLoggerToggleOffsets();
+
+  MOZ_ASSERT(offsets.length() == scriptOffsets.size());
+
   for (size_t i = 0; i < offsets.length(); i++) {
-    traceLoggerToggleOffsets()[i] = offsets[i].offset();
+    scriptOffsets[i] = offsets[i].offset();
   }
 
   if (TraceLogTextIdEnabled(TraceLogger_Engine) ||
       TraceLogTextIdEnabled(TraceLogger_Scripts)) {
     traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
-    for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
-      CodeLocationLabel label(method_,
-                              CodeOffset(traceLoggerToggleOffsets()[i]));
+    for (uint32_t offset : scriptOffsets) {
+      CodeLocationLabel label(method_, CodeOffset(offset));
       Assembler::ToggleToCmp(label);
     }
   }
@@ -904,8 +782,8 @@ void BaselineScript::toggleTraceLoggerScripts(JSScript* script, bool enable) {
   AutoWritableJitCode awjc(method());
 
   // Enable/Disable the traceLogger.
-  for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
-    CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
+  for (uint32_t offset : traceLoggerToggleOffsets()) {
+    CodeLocationLabel label(method_, CodeOffset(offset));
     if (enable) {
       Assembler::ToggleToCmp(label);
     } else {

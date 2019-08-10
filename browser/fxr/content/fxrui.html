@@ -13,15 +13,22 @@
       font-family: sans-serif;
       font-size: xx-large;
       width: 800px;
-      height: 800px;
+      height: 400px;
     }
 
     div:hover {
       background-color: dodgerblue;
     }
   </style>
+  <script>
+    function clickedcheck() {
+      document.getElementById('clicked').textContent = "Clicked on " + new Date();
+    }
+  </script>
 </head>
-<body>
+
+<body onclick="clickedcheck()">
   <div>Hello World!</div>
+  <div id="clicked"></div>
 </body>
 </html>

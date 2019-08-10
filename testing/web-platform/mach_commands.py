@@ -252,6 +252,10 @@ def create_parser_metadata_summary():
     return metasummary.create_parser()
 
 
+def create_parser_metadata_merge():
+    import metamerge
+    return metamerge.get_parser()
+
 def create_parser_serve():
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                     "tests", "tools")))
@@ -364,6 +368,15 @@ class MachCommands(MachCommandBase):
         import metasummary
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
+
+    @Command("wpt-metadata-merge",
+             category="testing",
+             parser=create_parser_metadata_merge)
+    def wpt_meta_merge(self, **params):
+        import metamerge
+        if params["dest"] is None:
+            params["dest"] = params["current"]
+        return metamerge.run(**params)
 
     @Command("wpt-unittest",
              category="testing",

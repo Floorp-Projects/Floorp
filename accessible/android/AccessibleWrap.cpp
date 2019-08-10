@@ -117,6 +117,10 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
     case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
       AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+      if (!vcEvent->IsFromUserInput()) {
+        break;
+      }
+
       RefPtr<AccessibleWrap> newPosition =
           static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
       auto oldPosition = static_cast<AccessibleWrap*>(vcEvent->OldAccessible());

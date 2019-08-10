@@ -477,6 +477,7 @@ export default class LoginList extends HTMLElement {
     this.classList.toggle("create-login-selected", !listItem.dataset.guid);
     listItem.classList.add("selected");
     listItem.setAttribute("aria-selected", "true");
+    listItem.scrollIntoView();
     this._list.setAttribute("aria-activedescendant", listItem.id);
     this._selectedGuid = listItem.dataset.guid;
   }

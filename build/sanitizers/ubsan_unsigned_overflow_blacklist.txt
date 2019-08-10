@@ -78,7 +78,6 @@ fun:*nsTArray_base*ShiftData*
 # makes sense to increase runtime performance.
 #
 src:*/netwerk/base/nsSocketTransportService2.cpp
-src:*/dom/xul/XULDocument.cpp
 src:*/nsCharTraits.h
 # Code in xpcom/base/CycleCollectedJSContext.cpp
 fun:*CycleCollectedJSContext*ProcessMetastableStateQueue*

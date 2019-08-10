@@ -1285,7 +1285,7 @@ class HiddenXULWindow {
   }
 
   /**
-   * Private helper that create a XULDocument in a windowless browser.
+   * Private helper that create a HTMLDocument in a windowless browser.
    *
    * @returns {Promise<void>}
    *          A promise which resolves when the windowless browser is ready.

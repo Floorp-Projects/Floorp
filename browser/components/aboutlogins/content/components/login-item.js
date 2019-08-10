@@ -275,7 +275,7 @@ export default class LoginItem extends HTMLElement {
         }
         if (
           classList.contains("open-site-button") ||
-          (classList.contains("origin-input") && !this.dataset.editing)
+          (classList.contains("origin-input") && !this.readOnly)
         ) {
           document.dispatchEvent(
             new CustomEvent("AboutLoginsOpenSite", {
@@ -532,7 +532,7 @@ export default class LoginItem extends HTMLElement {
     this._deleteButton.disabled = this.dataset.isNewLogin;
     this._editButton.disabled = shouldEdit;
     let inputTabIndex = !shouldEdit ? -1 : 0;
-    this._originInput.readOnly = !shouldEdit;
+    this._originInput.readOnly = !this.dataset.isNewLogin;
     this._originInput.tabIndex = inputTabIndex;
     this._usernameInput.readOnly = !shouldEdit;
     this._usernameInput.tabIndex = inputTabIndex;

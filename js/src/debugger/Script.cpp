@@ -6,13 +6,51 @@
 
 #include "debugger/Script-inl.h"
 
-#include "debugger/Debugger.h"
-#include "debugger/DebugScript.h"
-#include "wasm/WasmInstance.h"
+#include "mozilla/Maybe.h"   // for Some, Maybe
+#include "mozilla/Span.h"    // for Span
+#include "mozilla/Vector.h"  // for Vector
 
-#include "vm/BytecodeUtil-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
+#include <stddef.h>  // for ptrdiff_t
+#include <stdint.h>  // for uint32_t, SIZE_MAX, int32_t
+
+#include "jsapi.h"             // for CallArgs, Rooted, CallArgsFromVp
+#include "jsfriendapi.h"       // for GetErrorMessage
+#include "jsnum.h"             // for ToNumber
+#include "NamespaceImports.h"  // for CallArgs, RootedValue
+
+#include "builtin/Array.h"         // for NewDenseEmptyArray
+#include "debugger/Debugger.h"     // for DebuggerScriptReferent, Debugger
+#include "debugger/DebugScript.h"  // for DebugScript
+#include "debugger/Source.h"       // for DebuggerSource
+#include "gc/Barrier.h"            // for ImmutablePropertyNamePtr
+#include "gc/GC.h"                 // for MemoryUse, MemoryUse::Breakpoint
+#include "gc/Rooting.h"            // for RootedDebuggerScript
+#include "gc/Tracer.h"         // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "gc/Zone.h"           // for Zone
+#include "gc/ZoneAllocator.h"  // for AddCellMemory
+#include "js/HeapAPI.h"        // for GCCellPtr
+#include "js/Wrapper.h"        // for UncheckedUnwrap
+#include "vm/ArrayObject.h"    // for ArrayObject
+#include "vm/BytecodeUtil.h"   // for GET_JUMP_OFFSET
+#include "vm/GlobalObject.h"   // for GlobalObject
+#include "vm/JSContext.h"      // for JSContext, ReportValueError
+#include "vm/JSFunction.h"     // for JSFunction
+#include "vm/JSObject.h"       // for RequireObject, JSObject
+#include "vm/ObjectGroup.h"    // for TenuredObject
+#include "vm/ObjectOperations.h"  // for DefineDataProperty, HasOwnProperty
+#include "vm/Realm.h"             // for AutoRealm
+#include "vm/Runtime.h"           // for JSAtomState, JSRuntime
+#include "vm/StringType.h"        // for NameToId, PropertyName, JSAtom
+#include "wasm/WasmDebug.h"       // for ExprLoc, DebugState
+#include "wasm/WasmInstance.h"    // for Instance
+#include "wasm/WasmTypes.h"       // for Bytes
+
+#include "vm/BytecodeUtil-inl.h"      // for BytecodeRangeWithPosition
+#include "vm/JSAtom-inl.h"            // for ValueToId
+#include "vm/JSObject-inl.h"          // for NewBuiltinClassInstance
+#include "vm/JSScript-inl.h"          // for LazyScript::functionDelazifying
+#include "vm/ObjectOperations-inl.h"  // for GetProperty
+#include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 
 using namespace js;
 
@@ -392,7 +430,7 @@ class DebuggerScript::GetSourceMatcher {
  public:
   GetSourceMatcher(JSContext* cx, Debugger* dbg) : cx_(cx), dbg_(dbg) {}
 
-  using ReturnType = JSObject*;
+  using ReturnType = DebuggerSource*;
 
   ReturnType match(HandleScript script) {
     // JSScript holds the refefence to possibly wrapped ScriptSourceObject.
@@ -419,7 +457,7 @@ bool DebuggerScript::getSource(JSContext* cx, unsigned argc, Value* vp) {
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   GetSourceMatcher matcher(cx, dbg);
-  RootedObject sourceObject(cx, referent.match(matcher));
+  RootedDebuggerSource sourceObject(cx, referent.match(matcher));
   if (!sourceObject) {
     return false;
   }

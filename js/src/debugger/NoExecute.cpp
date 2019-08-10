@@ -5,9 +5,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "debugger/NoExecute.h"
-#include "mozilla/Sprintf.h"
 
-#include "vm/Realm-inl.h"
+#include "mozilla/Sprintf.h"  // for SprintfLiteral
+
+#include <stdio.h>  // for fprintf, stdout
+
+#include "jsapi.h"        // for Handle
+#include "jsfriendapi.h"  // for DumpBacktrace, GetErrorMessage
+
+#include "debugger/Debugger.h"  // for Debugger
+#include "gc/Barrier.h"         // for GCPtrNativeObject
+#include "js/Promise.h"         // for AutoDebuggerJobQueueInterruption
+#include "vm/JSContext.h"       // for ProtectedDataContextArg, JSContext
+#include "vm/JSScript.h"        // for JSScript
+#include "vm/Realm.h"           // for AutoRealm, Realm
+
+#include "vm/Realm-inl.h"  // for AutoRealm::AutoRealm
 
 using namespace js;
 

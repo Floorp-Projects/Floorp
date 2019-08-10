@@ -23,6 +23,7 @@ interface URI;
 interface nsIDocShell;
 interface nsILoadGroup;
 interface nsIReferrerInfo;
+interface XULCommandDispatcher;
 
 enum VisibilityState { "hidden", "visible" };
 

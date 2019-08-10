@@ -12,6 +12,8 @@
 #  include "nsIXULStore.h"
 #endif
 
+#include "nsIXULWindow.h"
+
 namespace mozilla {
 namespace dom {
 

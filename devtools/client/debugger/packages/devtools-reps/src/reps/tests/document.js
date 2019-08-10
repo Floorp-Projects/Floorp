@@ -39,23 +39,3 @@ describe("Document", () => {
     expect(renderedComponent.text()).toEqual("HTMLDocument");
   });
 });
-
-describe("XULDocument", () => {
-  const stub = stubs.get("XULDocument");
-  it("correctly selects Document Rep", () => {
-    expect(getRep(stub)).toBe(Document.rep);
-  });
-
-  it("renders with expected text content", () => {
-    const renderedComponent = shallow(
-      Document.rep({
-        object: stub,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual(
-      "XULDocument chrome://browser/content/browser.xhtml"
-    );
-    expectActorAttribute(renderedComponent, stub.actor);
-  });
-});

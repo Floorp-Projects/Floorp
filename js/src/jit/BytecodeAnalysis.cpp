@@ -194,6 +194,14 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
     }
   }
 
+  // Flag (reachable) resume offset instructions.
+  for (uint32_t offset : script_->resumeOffsets()) {
+    BytecodeInfo& info = infos_[offset];
+    if (info.initialized) {
+      info.hasResumeOffset = true;
+    }
+  }
+
   return true;
 }
 

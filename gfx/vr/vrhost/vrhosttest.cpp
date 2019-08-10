@@ -232,6 +232,9 @@ void TestCreateVRWindow() {
   PFN_CLOSEVRWINDOW fnClose =
       (PFN_CLOSEVRWINDOW)::GetProcAddress(hVRHost, "CloseVRWindow");
 
+  PFN_SENDUIMSG fnSendMsg =
+      (PFN_SENDUIMSG)::GetProcAddress(hVRHost, "SendUIMessageToVRWindow");
+
   // Create the VR Window and store data from creation
   char currentDir[MAX_PATH] = {0};
   char currentDirProfile[MAX_PATH] = {0};
@@ -250,6 +253,27 @@ void TestCreateVRWindow() {
     UINT height;
     fnCreate(currentDir, currentDirProfile, 0, 100, 200, &windowId, &hTex,
              &width, &height);
+
+    // Wait for Fx to finish launch
+    ::Sleep(5000);
+
+    printf(
+        "Now, should see window contents turn from orange to blue with onclick "
+        "event output...\n");
+
+    // Simulate a click, then moving the mouse across the screen
+    POINT pt;
+    pt.x = 200;
+    pt.y = 200;
+    fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
+    fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
+    for (int i = 0; i < 100; ++i) {
+      pt.x++;
+      fnSendMsg(windowId, WM_MOUSEMOVE, 0, POINTTOPOINTS(pt));
+      ::Sleep(5);
+    }
+
+    ::Sleep(2000);
 
     // Close the Firefox VR Window
     fnClose(windowId, true);

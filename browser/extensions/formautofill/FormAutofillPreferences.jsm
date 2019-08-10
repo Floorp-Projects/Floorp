@@ -52,7 +52,7 @@ FormAutofillPreferences.prototype = {
   /**
    * Create the Form Autofill preference group.
    *
-   * @param   {XULDocument} document
+   * @param   {HTMLDocument} document
    * @returns {XULElement}
    */
   init(document) {
@@ -73,7 +73,7 @@ FormAutofillPreferences.prototype = {
   /**
    * Create Form Autofill preference group
    *
-   * @param  {XULDocument} document
+   * @param  {HTMLDocument} document
    */
   createPreferenceGroup(document) {
     let learnMoreURL =

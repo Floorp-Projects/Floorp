@@ -7,30 +7,75 @@
 #ifndef debugger_Debugger_h
 #define debugger_Debugger_h
 
-#include "mozilla/DoublyLinkedList.h"
-#include "mozilla/GuardObjects.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/Range.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Vector.h"
+#include "mozilla/Assertions.h"        // for MOZ_ASSERT_HELPER1
+#include "mozilla/Attributes.h"        // for MOZ_MUST_USE, MOZ_RAII
+#include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
+#include "mozilla/HashTable.h"         // for HashSet, DefaultHasher (ptr only)
+#include "mozilla/LinkedList.h"        // for LinkedList (ptr only)
+#include "mozilla/Maybe.h"             // for Maybe, Nothing
+#include "mozilla/Move.h"              // for std::move
+#include "mozilla/Range.h"             // for Range
+#include "mozilla/Result.h"            // for Result
+#include "mozilla/TimeStamp.h"         // for TimeStamp
+#include "mozilla/Variant.h"           // for Variant
 
-#include "debugger/DebugAPI.h"
-#include "ds/TraceableFifo.h"
-#include "gc/Barrier.h"
-#include "gc/WeakMap.h"
-#include "js/Debug.h"
-#include "js/GCVariant.h"
-#include "js/HashTable.h"
-#include "js/Promise.h"
-#include "js/Result.h"
-#include "js/RootingAPI.h"
-#include "js/Utility.h"
-#include "js/Wrapper.h"
-#include "proxy/DeadObjectProxy.h"
-#include "vm/GeneratorObject.h"
-#include "vm/Realm.h"
-#include "vm/SavedStacks.h"
-#include "vm/Stack.h"
+#include <stddef.h>  // for size_t
+#include <stdint.h>  // for uint32_t, uint64_t, uintptr_t
+
+#include "jsapi.h"    // for Handle, UnsafeTraceRoot
+#include "jstypes.h"  // for JS_GC_ZEAL
+
+#include "NamespaceImports.h"       // for Value, HandleObject
+#include "debugger/DebugAPI.h"      // for DebugAPI
+#include "debugger/Object.h"        // for DebuggerObject
+#include "ds/TraceableFifo.h"       // for TraceableFifo
+#include "gc/Barrier.h"             // for WeakHeapPtrGlobalObject, HeapPtr
+#include "gc/Marking.h"             // for IsAboutToBeFinalized, ToMarkable
+#include "gc/Rooting.h"             // for HandleSavedFrame, HandleAtom
+#include "gc/Tracer.h"              // for TraceNullableEdge, TraceEdge
+#include "gc/WeakMap.h"             // for WeakMap
+#include "gc/ZoneAllocator.h"       // for ZoneAllocPolicy
+#include "js/GCAPI.h"               // for GarbageCollectionEvent
+#include "js/Proxy.h"               // for PropertyDescriptor
+#include "js/Wrapper.h"             // for UncheckedUnwrap
+#include "proxy/DeadObjectProxy.h"  // for IsDeadProxyObject
+#include "vm/GeneratorObject.h"     // for AbstractGeneratorObject
+#include "vm/GlobalObject.h"        // for GlobalObject
+#include "vm/JSContext.h"           // for JSContext
+#include "vm/JSObject.h"            // for JSObject
+#include "vm/JSScript.h"            // for JSScript, ScriptSourceObject
+#include "vm/NativeObject.h"        // for NativeObject
+#include "vm/Runtime.h"             // for JSRuntime
+#include "vm/SavedFrame.h"          // for SavedFrame
+#include "vm/Stack.h"               // for AbstractFramePtr, FrameIter
+#include "vm/StringType.h"          // for JSAtom
+#include "wasm/WasmJS.h"            // for WasmInstanceObject
+
+class JSFunction;
+
+namespace JS {
+class AutoStableStringChars;
+class Compartment;
+class Realm;
+class Zone;
+} /* namespace JS */
+
+namespace js {
+class AutoRealm;
+class CrossCompartmentKey;
+class Debugger;
+class DebuggerEnvironment;
+class FreeOp;
+class PromiseObject;
+namespace gc {
+struct Cell;
+}
+namespace wasm {
+class Instance;
+}
+template <typename T>
+struct GCManagedDeletePolicy;
+} /* namespace js */
 
 /*
  * Windows 3.x used a cooperative multitasking model, with a Yield macro that
@@ -44,10 +89,10 @@ namespace js {
 class Breakpoint;
 class DebuggerFrame;
 class DebuggerScript;
+class DebuggerSource;
 class DebuggerMemory;
 class ScriptedOnStepHandler;
 class ScriptedOnPopHandler;
-class WasmInstanceObject;
 
 /**
  * A completion value, describing how some sort of JavaScript evaluation
@@ -260,12 +305,11 @@ extern void CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * objects are killed when debugging is disabled for their compartment, and if
  * it's re-enabled later, new Frame objects are created.)
  */
-template <class UnbarrieredKey, bool InvisibleKeysOk = false>
-class DebuggerWeakMap
-    : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObject*>> {
+template <class Referent, class Wrapper, bool InvisibleKeysOk = false>
+class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
  private:
-  typedef HeapPtr<UnbarrieredKey> Key;
-  typedef HeapPtr<JSObject*> Value;
+  typedef HeapPtr<Referent*> Key;
+  typedef HeapPtr<Wrapper*> Value;
 
   typedef HashMap<JS::Zone*, uintptr_t, DefaultHasher<JS::Zone*>,
                   ZoneAllocPolicy>
@@ -275,6 +319,8 @@ class DebuggerWeakMap
 
  public:
   typedef WeakMap<Key, Value> Base;
+  using ReferentType = Referent;
+  using WrapperType = Wrapper;
 
   explicit DebuggerWeakMap(JSContext* cx)
       : Base(cx), compartment(cx->compartment()) {}
@@ -632,38 +678,44 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * An entry in this table exists if and only if the Debugger.Frame's
    * GENERATOR_INFO_SLOT is set.
    */
-  typedef DebuggerWeakMap<JSObject*> GeneratorWeakMap;
+  typedef DebuggerWeakMap<AbstractGeneratorObject, DebuggerFrame>
+      GeneratorWeakMap;
   GeneratorWeakMap generatorFrames;
 
   /* An ephemeral map from JSScript* to Debugger.Script instances. */
-  typedef DebuggerWeakMap<JSScript*> ScriptWeakMap;
+  typedef DebuggerWeakMap<JSScript, DebuggerScript> ScriptWeakMap;
   ScriptWeakMap scripts;
 
-  using LazyScriptWeakMap = DebuggerWeakMap<LazyScript*>;
+  using LazyScriptWeakMap = DebuggerWeakMap<LazyScript, DebuggerScript>;
   LazyScriptWeakMap lazyScripts;
 
   using LazyScriptVector = JS::GCVector<LazyScript*>;
 
   // The map from debuggee source script objects to their Debugger.Source
   // instances.
-  typedef DebuggerWeakMap<JSObject*, true> SourceWeakMap;
+  typedef DebuggerWeakMap<ScriptSourceObject, DebuggerSource, true>
+      SourceWeakMap;
   SourceWeakMap sources;
 
   // The map from debuggee objects to their Debugger.Object instances.
-  typedef DebuggerWeakMap<JSObject*> ObjectWeakMap;
+  typedef DebuggerWeakMap<JSObject, DebuggerObject> ObjectWeakMap;
   ObjectWeakMap objects;
 
   // The map from debuggee Envs to Debugger.Environment instances.
-  ObjectWeakMap environments;
+  typedef DebuggerWeakMap<JSObject, DebuggerEnvironment> EnvironmentWeakMap;
+  EnvironmentWeakMap environments;
 
   // The map from WasmInstanceObjects to synthesized Debugger.Script
   // instances.
-  typedef DebuggerWeakMap<WasmInstanceObject*> WasmInstanceWeakMap;
-  WasmInstanceWeakMap wasmInstanceScripts;
+  typedef DebuggerWeakMap<WasmInstanceObject, DebuggerScript>
+      WasmInstanceScriptWeakMap;
+  WasmInstanceScriptWeakMap wasmInstanceScripts;
 
   // The map from WasmInstanceObjects to synthesized Debugger.Source
   // instances.
-  WasmInstanceWeakMap wasmInstanceSources;
+  typedef DebuggerWeakMap<WasmInstanceObject, DebuggerSource>
+      WasmInstanceSourceWeakMap;
+  WasmInstanceSourceWeakMap wasmInstanceSources;
 
   // Keep track of tracelogger last drained identifiers to know if there are
   // lost events.
@@ -930,8 +982,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                     Handle<DebuggerScriptReferent> referent) {
     return newDebuggerScript(cx, referent);
   }
-  NativeObject* newVariantWrapper(JSContext* cx,
-                                  Handle<DebuggerSourceReferent> referent) {
+  DebuggerSource* newVariantWrapper(JSContext* cx,
+                                    Handle<DebuggerSourceReferent> referent) {
     return newDebuggerSource(cx, referent);
   }
 
@@ -943,14 +995,14 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Prefer using wrapScript, wrapWasmScript, wrapSource, and wrapWasmSource
    * whenever possible.
    */
-  template <typename Wrapper, typename ReferentVariant, typename Referent,
-            typename Map>
-  Wrapper* wrapVariantReferent(JSContext* cx, Map& map,
-                               Handle<ReferentVariant> referent);
+  template <typename Map>
+  typename Map::WrapperType* wrapVariantReferent(
+      JSContext* cx, Map& map,
+      Handle<typename Map::WrapperType::ReferentVariant> referent);
   DebuggerScript* wrapVariantReferent(JSContext* cx,
                                       Handle<DebuggerScriptReferent> referent);
-  JSObject* wrapVariantReferent(JSContext* cx,
-                                Handle<DebuggerSourceReferent> referent);
+  DebuggerSource* wrapVariantReferent(JSContext* cx,
+                                      Handle<DebuggerSourceReferent> referent);
 
   /*
    * Allocate and initialize a Debugger.Script instance whose referent is
@@ -963,8 +1015,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * Allocate and initialize a Debugger.Source instance whose referent is
    * |referent|.
    */
-  NativeObject* newDebuggerSource(JSContext* cx,
-                                  Handle<DebuggerSourceReferent> referent);
+  DebuggerSource* newDebuggerSource(JSContext* cx,
+                                    Handle<DebuggerSourceReferent> referent);
 
   /*
    * Receive a "new script" event from the engine. A new script was compiled
@@ -1128,7 +1180,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * needed. The context |cx| must be in the debugger compartment; |source|
    * must be a script source object in a debuggee realm.
    */
-  JSObject* wrapSource(JSContext* cx, js::HandleScriptSourceObject source);
+  DebuggerSource* wrapSource(JSContext* cx,
+                             js::HandleScriptSourceObject source);
 
   /*
    * Return the Debugger.Source object for |wasmInstance| (the entire module),
@@ -1136,8 +1189,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * debugger compartment; |wasmInstance| must be a WasmInstanceObject in the
    * debuggee realm.
    */
-  JSObject* wrapWasmSource(JSContext* cx,
-                           Handle<WasmInstanceObject*> wasmInstance);
+  DebuggerSource* wrapWasmSource(JSContext* cx,
+                                 Handle<WasmInstanceObject*> wasmInstance);
 
  private:
   Debugger(const Debugger&) = delete;

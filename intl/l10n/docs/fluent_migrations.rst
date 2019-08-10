@@ -93,8 +93,6 @@ This is how the migration recipe looks:
 
 .. code-block:: python
 
-  # coding=utf8
-
   # Any copyright is dedicated to the Public Domain.
   # http://creativecommons.org/publicdomain/zero/1.0/
 
