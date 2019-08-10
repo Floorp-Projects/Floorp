@@ -418,16 +418,9 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 
     case Method_Compiled: {
       if (*pc == JSOP_LOOPENTRY) {
-        PCMappingSlotInfo slotInfo;
         BaselineScript* baselineScript = script->baselineScript();
-        *res = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
-        MOZ_ASSERT(slotInfo.isStackSynced());
-        if (frame->isDebuggee()) {
-          // Skip the debug trap emitted by emitInterpreterLoop because the
-          // Baseline Interpreter already handled it for the current op.
-          MOZ_RELEASE_ASSERT(baselineScript->hasDebugInstrumentation());
-          *res += MacroAssembler::ToggledCallSize(*res);
-        }
+        uint32_t pcOffset = script->pcToOffset(pc);
+        *res = baselineScript->nativeCodeForOSREntry(pcOffset);
       } else {
         *res = script->baselineScript()->warmUpCheckPrologueAddr();
       }
@@ -439,14 +432,18 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
   MOZ_CRASH("Unexpected status");
 }
 
-BaselineScript* BaselineScript::New(
-    JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
-    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-    size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
+BaselineScript* BaselineScript::New(JSScript* jsscript,
+                                    uint32_t warmUpCheckPrologueOffset,
+                                    uint32_t profilerEnterToggleOffset,
+                                    uint32_t profilerExitToggleOffset,
+                                    size_t retAddrEntries, size_t osrEntries,
+                                    size_t pcMappingIndexEntries,
+                                    size_t pcMappingSize, size_t resumeEntries,
+                                    size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
+  size_t osrEntriesSize = osrEntries * sizeof(BaselineScript::OSREntry);
   size_t pcMappingIndexEntriesSize =
       pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
   size_t resumeEntriesSize = resumeEntries * sizeof(uintptr_t);
@@ -454,13 +451,14 @@ BaselineScript* BaselineScript::New(
 
   size_t paddedRetAddrEntriesSize =
       AlignBytes(retAddrEntriesSize, DataAlignment);
+  size_t paddedOSREntriesSize = AlignBytes(osrEntriesSize, DataAlignment);
   size_t paddedPCMappingIndexEntriesSize =
       AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
   size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
   size_t paddedResumeEntriesSize = AlignBytes(resumeEntriesSize, DataAlignment);
   size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
-  size_t allocBytes = paddedRetAddrEntriesSize +
+  size_t allocBytes = paddedRetAddrEntriesSize + paddedOSREntriesSize +
                       paddedPCMappingIndexEntriesSize + paddedPCMappingSize +
                       paddedResumeEntriesSize + paddedTLEntriesSize;
 
@@ -480,6 +478,10 @@ BaselineScript* BaselineScript::New(
   script->retAddrEntriesOffset_ = offsetCursor;
   script->retAddrEntries_ = retAddrEntries;
   offsetCursor += paddedRetAddrEntriesSize;
+
+  script->osrEntriesOffset_ = offsetCursor;
+  script->osrEntries_ = osrEntries;
+  offsetCursor += paddedOSREntriesSize;
 
   script->pcMappingIndexOffset_ = offsetCursor;
   script->pcMappingIndexEntries_ = pcMappingIndexEntries;
@@ -575,11 +577,12 @@ const RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
   return entries[loc];
 }
 
-static bool ComputeBinarySearchMid(mozilla::Span<RetAddrEntry> entries,
+template <typename Entry>
+static bool ComputeBinarySearchMid(mozilla::Span<Entry> entries,
                                    uint32_t pcOffset, size_t* loc) {
   return BinarySearchIf(
       entries.data(), 0, entries.size(),
-      [pcOffset](const RetAddrEntry& entry) {
+      [pcOffset](const Entry& entry) {
         uint32_t entryOffset = entry.pcOffset();
         if (pcOffset < entryOffset) {
           return -1;
@@ -666,6 +669,17 @@ const RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
   return retAddrEntryFromReturnOffset(offset);
 }
 
+uint8_t* BaselineScript::nativeCodeForOSREntry(uint32_t pcOffset) {
+  mozilla::Span<OSREntry> entries = osrEntries();
+  size_t mid;
+  if (!ComputeBinarySearchMid(entries, pcOffset, &mid)) {
+    return nullptr;
+  }
+
+  uint32_t nativeOffset = entries[mid].nativeOffset();
+  return method_->raw() + nativeOffset;
+}
+
 void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
   // Translate pcOffset to BaselineScript native address. This may return
   // nullptr if compiler decided code was unreachable.
@@ -686,6 +700,10 @@ void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
 
 void BaselineScript::copyRetAddrEntries(const RetAddrEntry* entries) {
   std::copy_n(entries, retAddrEntries().size(), retAddrEntries().data());
+}
+
+void BaselineScript::copyOSREntries(const OSREntry* entries) {
+  std::copy_n(entries, osrEntries().size(), osrEntries().data());
 }
 
 void BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries) {
