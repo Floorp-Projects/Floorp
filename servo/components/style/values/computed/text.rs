@@ -194,21 +194,22 @@ impl TextDecorationsInEffect {
     }
 }
 
-/// Computed value for the text-emphasis-style property
-///
-/// cbindgen:derive-tagged-enum-copy-constructor=true
+/// computed value for the text-emphasis-style property
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
-#[allow(missing_docs)]
-#[repr(C, u8)]
 pub enum TextEmphasisStyle {
-    /// [ <fill> || <shape> ]
-    Keyword {
-        #[css(skip_if = "TextEmphasisFillMode::is_filled")]
-        fill: TextEmphasisFillMode,
-        shape: TextEmphasisShapeKeyword,
-    },
+    /// Keyword value for the text-emphasis-style property (`filled` `open`)
+    Keyword(TextEmphasisKeywordValue),
     /// `none`
     None,
-    /// `<string>` (of which only the first grapheme cluster will be used).
-    String(crate::OwnedStr),
+    /// String (will be used only first grapheme cluster) for the text-emphasis-style property
+    String(String),
+}
+
+/// Keyword value for the text-emphasis-style property
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+pub struct TextEmphasisKeywordValue {
+    /// fill for the text-emphasis-style property
+    pub fill: TextEmphasisFillMode,
+    /// shape for the text-emphasis-style property
+    pub shape: TextEmphasisShapeKeyword,
 }

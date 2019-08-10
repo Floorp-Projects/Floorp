@@ -2161,7 +2161,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
         lastComputedStyle->IsTextCombined()) {
       anyTextTransformStyle = true;
     }
-    if (textStyle->HasEffectiveTextEmphasis()) {
+    if (textStyle->HasTextEmphasis()) {
       anyTextEmphasis = true;
     }
     flags |= GetSpacingFlags(f);
@@ -5233,38 +5233,10 @@ struct EmphasisMarkInfo {
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
-static void ComputeTextEmphasisStyleString(const StyleTextEmphasisStyle& aStyle,
-                                           nsAString& aOut) {
-  MOZ_ASSERT(!aStyle.IsNone());
-  if (aStyle.IsString()) {
-    nsDependentCSubstring string = aStyle.AsString().AsString();
-    AppendUTF8toUTF16(string, aOut);
-    return;
-  }
-  const auto& keyword = aStyle.AsKeyword();
-  const bool fill = keyword.fill == StyleTextEmphasisFillMode::Filled;
-  switch (keyword.shape) {
-    case StyleTextEmphasisShapeKeyword::Dot:
-      return aOut.AppendLiteral(fill ? u"\u2022" : u"\u25e6");
-    case StyleTextEmphasisShapeKeyword::Circle:
-      return aOut.AppendLiteral(fill ? u"\u25cf" : u"\u25cb");
-    case StyleTextEmphasisShapeKeyword::DoubleCircle:
-      return aOut.AppendLiteral(fill ? u"\u25c9" : u"\u25ce");
-    case StyleTextEmphasisShapeKeyword::Triangle:
-      return aOut.AppendLiteral(fill ? u"\u25b2" : u"\u25b3");
-    case StyleTextEmphasisShapeKeyword::Sesame:
-      return aOut.AppendLiteral(fill ? u"\ufe45" : u"\ufe46");
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown emphasis style shape");
-  }
-}
-
 static already_AddRefed<gfxTextRun> GenerateTextRunForEmphasisMarks(
     nsTextFrame* aFrame, gfxFontGroup* aFontGroup,
     ComputedStyle* aComputedStyle, const nsStyleText* aStyleText) {
-  nsAutoString string;
-  ComputeTextEmphasisStyleString(aStyleText->mTextEmphasisStyle, string);
-
+  const nsString& emphasisString = aStyleText->mTextEmphasisStyleString;
   RefPtr<DrawTarget> dt = CreateReferenceDrawTarget(aFrame);
   auto appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
   gfx::ShapedTextFlags flags =
@@ -5273,9 +5245,9 @@ static already_AddRefed<gfxTextRun> GenerateTextRunForEmphasisMarks(
     // The emphasis marks should always be rendered upright per spec.
     flags = gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
   }
-  return aFontGroup->MakeTextRun<char16_t>(string.get(), string.Length(), dt,
-                                           appUnitsPerDevUnit, flags,
-                                           nsTextFrameUtils::Flags(), nullptr);
+  return aFontGroup->MakeTextRun<char16_t>(
+      emphasisString.get(), emphasisString.Length(), dt, appUnitsPerDevUnit,
+      flags, nsTextFrameUtils::Flags(), nullptr);
 }
 
 static nsRubyFrame* FindFurthestInlineRubyAncestor(nsTextFrame* aFrame) {
@@ -5293,7 +5265,7 @@ static nsRubyFrame* FindFurthestInlineRubyAncestor(nsTextFrame* aFrame) {
 nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
                                        PropertyProvider& aProvider) {
   const nsStyleText* styleText = StyleText();
-  if (!styleText->HasEffectiveTextEmphasis()) {
+  if (!styleText->HasTextEmphasis()) {
     DeleteProperty(EmphasisMarkProperty());
     return nsRect();
   }
@@ -7145,8 +7117,7 @@ void nsTextFrame::DrawText(Range aRange, const gfx::Point& aTextBaselinePt,
   // Hide text decorations if we're currently hiding @font-face fallback text
   const bool drawDecorations =
       !aParams.provider->GetFontGroup()->ShouldSkipDrawing() &&
-      (decorations.HasDecorationLines() ||
-       StyleText()->HasEffectiveTextEmphasis());
+      (decorations.HasDecorationLines() || StyleText()->HasTextEmphasis());
   if (drawDecorations) {
     DrawTextRunAndDecorations(aRange, aTextBaselinePt, aParams, decorations);
   } else {
