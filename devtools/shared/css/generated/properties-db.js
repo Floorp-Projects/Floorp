@@ -6299,7 +6299,8 @@ exports.CSS_PROPERTIES = {
       "x-large",
       "x-small",
       "xx-large",
-      "xx-small"
+      "xx-small",
+      "xxx-large"
     ]
   },
   "font-family": {
@@ -6393,7 +6394,8 @@ exports.CSS_PROPERTIES = {
       "x-large",
       "x-small",
       "xx-large",
-      "xx-small"
+      "xx-small",
+      "xxx-large"
     ]
   },
   "font-size-adjust": {
