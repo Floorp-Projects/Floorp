@@ -5697,6 +5697,7 @@ var gCSSProperties = {
       "2em",
       "50%",
       "xx-small",
+      "xxx-large",
       "36pt",
       "8px",
       "larger",
