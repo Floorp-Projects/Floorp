@@ -636,7 +636,8 @@ void ClassifierDummyChannel::SetHasSandboxedAuxiliaryNavigations(
     bool aHasSandboxedAuxiliaryNavigations) {}
 
 NS_IMETHODIMP ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
-    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+    nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
+    nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
