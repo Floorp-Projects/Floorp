@@ -3371,7 +3371,6 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE),
       mControlCharacterVisibility(
           nsLayoutUtils::ControlCharVisibilityDefault()),
-      mTextEmphasisStyle(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE),
       mTextRendering(StyleTextRendering::Auto),
       mTextEmphasisColor(StyleColor::CurrentColor()),
       mWebkitTextFillColor(StyleColor::CurrentColor()),
@@ -3384,7 +3383,8 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTextIndent(LengthPercentage::Zero()),
       mTextUnderlineOffset(LengthOrAuto::Auto()),
       mTextDecorationSkipInk(StyleTextDecorationSkipInk::Auto),
-      mWebkitTextStrokeWidth(0) {
+      mWebkitTextStrokeWidth(0),
+      mTextEmphasisStyle(StyleTextEmphasisStyle::None()) {
   MOZ_COUNT_CTOR(nsStyleText);
   RefPtr<nsAtom> language = aDocument.GetContentLanguageAsAtomForStyle();
   mTextEmphasisPosition =
@@ -3410,7 +3410,6 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextCombineUpright(aSource.mTextCombineUpright),
       mControlCharacterVisibility(aSource.mControlCharacterVisibility),
       mTextEmphasisPosition(aSource.mTextEmphasisPosition),
-      mTextEmphasisStyle(aSource.mTextEmphasisStyle),
       mTextRendering(aSource.mTextRendering),
       mTextEmphasisColor(aSource.mTextEmphasisColor),
       mWebkitTextFillColor(aSource.mWebkitTextFillColor),
@@ -3424,7 +3423,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextDecorationSkipInk(aSource.mTextDecorationSkipInk),
       mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
       mTextShadow(aSource.mTextShadow),
-      mTextEmphasisStyleString(aSource.mTextEmphasisStyleString) {
+      mTextEmphasisStyle(aSource.mTextEmphasisStyle) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
@@ -3463,8 +3462,8 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
     return NS_STYLE_HINT_REFLOW;
   }
 
-  if (HasTextEmphasis() != aNewData.HasTextEmphasis() ||
-      (HasTextEmphasis() &&
+  if (HasEffectiveTextEmphasis() != aNewData.HasEffectiveTextEmphasis() ||
+      (HasEffectiveTextEmphasis() &&
        mTextEmphasisPosition != aNewData.mTextEmphasisPosition)) {
     // Text emphasis position change could affect line height calculation.
     return nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
@@ -3482,7 +3481,6 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
 
   if (mTextShadow != aNewData.mTextShadow ||
       mTextEmphasisStyle != aNewData.mTextEmphasisStyle ||
-      mTextEmphasisStyleString != aNewData.mTextEmphasisStyleString ||
       mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth) {
     hint |= nsChangeHint_UpdateSubtreeOverflow | nsChangeHint_SchedulePaint |
             nsChangeHint_RepaintFrame;

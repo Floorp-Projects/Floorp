@@ -1146,7 +1146,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   uint8_t
       mControlCharacterVisibility;  // NS_STYLE_CONTROL_CHARACTER_VISIBILITY_*
   uint8_t mTextEmphasisPosition;    // NS_STYLE_TEXT_EMPHASIS_POSITION_*
-  uint8_t mTextEmphasisStyle;       // NS_STYLE_TEXT_EMPHASIS_STYLE_*
   mozilla::StyleTextRendering mTextRendering;
   mozilla::StyleColor mTextEmphasisColor;
   mozilla::StyleColor mWebkitTextFillColor;
@@ -1164,8 +1163,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   nscoord mWebkitTextStrokeWidth;  // coord
 
   mozilla::StyleArcSlice<mozilla::StyleSimpleShadow> mTextShadow;
-
-  nsString mTextEmphasisStyleString;
+  mozilla::StyleTextEmphasisStyle mTextEmphasisStyle;
 
   mozilla::StyleWordBreak EffectiveWordBreak() const {
     if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
@@ -1225,7 +1223,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
            owrap == mozilla::StyleOverflowWrap::Anywhere;
   }
 
-  bool HasTextEmphasis() const { return !mTextEmphasisStyleString.IsEmpty(); }
+  bool HasEffectiveTextEmphasis() const {
+    if (mTextEmphasisStyle.IsNone()) {
+      return false;
+    }
+    if (mTextEmphasisStyle.IsString() &&
+        mTextEmphasisStyle.AsString().AsString().IsEmpty()) {
+      return false;
+    }
+    return true;
+  }
 
   bool HasWebkitTextStroke() const { return mWebkitTextStrokeWidth > 0; }
 
