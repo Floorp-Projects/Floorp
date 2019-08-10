@@ -680,16 +680,20 @@ uint8_t* BaselineScript::nativeCodeForOSREntry(uint32_t pcOffset) {
   return method_->raw() + nativeOffset;
 }
 
-void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
+void BaselineScript::computeResumeNativeOffsets(
+    JSScript* script, const ResumeOffsetEntryVector& entries) {
   // Translate pcOffset to BaselineScript native address. This may return
   // nullptr if compiler decided code was unreachable.
-  auto computeNative = [this, script](uint32_t pcOffset) {
-    PCMappingSlotInfo slotInfo;
-    uint8_t* nativeCode =
-        maybeNativeCodeForPC(script, script->offsetToPC(pcOffset), &slotInfo);
-    MOZ_ASSERT(slotInfo.isStackSynced());
+  auto computeNative = [this, &entries](uint32_t pcOffset) -> uint8_t* {
+    mozilla::Span<const ResumeOffsetEntry> entriesSpan =
+        mozilla::MakeSpan(entries.begin(), entries.length());
+    size_t mid;
+    if (!ComputeBinarySearchMid(entriesSpan, pcOffset, &mid)) {
+      return nullptr;
+    }
 
-    return nativeCode;
+    uint32_t nativeOffset = entries[mid].nativeOffset();
+    return method_->raw() + nativeOffset;
   };
 
   mozilla::Span<const uint32_t> pcOffsets = script->resumeOffsets();
