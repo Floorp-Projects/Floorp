@@ -379,8 +379,7 @@ interface nsIHttpChannelInternal : nsISupports
     void setIPv6Disabled();
 
     [noscript]
-    nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy(
-        in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
+    nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy();
 
     [notxpcom, nostdcall] attribute boolean hasSandboxedAuxiliaryNavigations;
 };
