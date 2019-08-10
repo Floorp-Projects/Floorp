@@ -11,12 +11,6 @@ exclude: true
 # GeckoView API Changelog.
 
 ## v70
-
-- Add GeckoSession.LOAD_FLAGS_REPLACE_HISTORY
-
-- Removed the obsolete `success` parameter from
-  [`CrashReporter#sendCrashReport(Context, File, File, String)`][70.3] and
-  [`CrashReporter#sendCrashReport(Context, File, Map, String)`][70.4].
 - Added API for session context assignment
   [`GeckoSessionSettings.Builder.contextId`][70.1] and deletion of data
   related to a session context
@@ -28,6 +22,10 @@ exclude: true
   when the URI we're loading originates from another page. A common example of this would be long pressing
   a link and then opening that in a new `GeckoSession`.
 - Added capture parameter to [`onFilePrompt`][70.9] and corresponding [`CAPTURE_TYPE_*`][70.7] constants.
+- Removed the obsolete `success` parameter from
+  [`CrashReporter#sendCrashReport(Context, File, File, String)`][70.3] and
+  [`CrashReporter#sendCrashReport(Context, File, Map, String)`][70.4].
+- Add GeckoSession.LOAD_FLAGS_REPLACE_HISTORY
 - Complete rewrite of [`PromptDelegate`][70.11].
 - Added [`RuntimeTelemetry.Delegate`][70.12] that receives streaming telemetry
   data from GeckoView.
