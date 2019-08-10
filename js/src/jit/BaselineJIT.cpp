@@ -531,11 +531,6 @@ void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
                           const_cast<BaselineScript*>(script));
 }
 
-RetAddrEntry& BaselineScript::retAddrEntry(size_t index) {
-  MOZ_ASSERT(index < numRetAddrEntries());
-  return retAddrEntryList()[index];
-}
-
 PCMappingIndexEntry& BaselineScript::pcMappingIndexEntry(size_t index) {
   MOZ_ASSERT(index < numPCMappingIndexEntries());
   return pcMappingIndexEntryList()[index];
@@ -553,25 +548,15 @@ CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
   return CompactBufferReader(dataStart, dataEnd);
 }
 
-struct RetAddrEntries {
-  BaselineScript* const baseline_;
-
-  explicit RetAddrEntries(BaselineScript* baseline) : baseline_(baseline) {}
-
-  size_t numEntries() const { return baseline_->numRetAddrEntries(); }
-  RetAddrEntry& operator[](size_t index) const {
-    return baseline_->retAddrEntry(index);
-  }
-};
-
-RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
+const RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
     CodeOffset returnOffset) {
+  mozilla::Span<RetAddrEntry> entries = retAddrEntries();
   size_t loc;
 #ifdef DEBUG
   bool found =
 #endif
       BinarySearchIf(
-          RetAddrEntries(this), 0, numRetAddrEntries(),
+          entries.data(), 0, entries.size(),
           [&returnOffset](const RetAddrEntry& entry) {
             size_t roffset = returnOffset.offset();
             size_t entryRoffset = entry.returnOffset().offset();
@@ -586,16 +571,14 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
           &loc);
 
   MOZ_ASSERT(found);
-  MOZ_ASSERT(loc < numRetAddrEntries());
-  MOZ_ASSERT(retAddrEntry(loc).returnOffset().offset() ==
-             returnOffset.offset());
-  return retAddrEntry(loc);
+  MOZ_ASSERT(entries[loc].returnOffset().offset() == returnOffset.offset());
+  return entries[loc];
 }
 
-static bool ComputeBinarySearchMid(RetAddrEntries entries, uint32_t pcOffset,
-                                   size_t* loc) {
+static bool ComputeBinarySearchMid(mozilla::Span<RetAddrEntry> entries,
+                                   uint32_t pcOffset, size_t* loc) {
   return BinarySearchIf(
-      entries, 0, entries.numEntries(),
+      entries.data(), 0, entries.size(),
       [pcOffset](const RetAddrEntry& entry) {
         uint32_t entryOffset = entry.pcOffset();
         if (pcOffset < entryOffset) {
@@ -613,31 +596,32 @@ uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
   return method()->raw() + ent.returnOffset().offset();
 }
 
-RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
+const RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     uint32_t pcOffset, RetAddrEntry::Kind kind) {
+  mozilla::Span<RetAddrEntry> entries = retAddrEntries();
   size_t mid;
-  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(RetAddrEntries(this), pcOffset, &mid));
-  MOZ_ASSERT(mid < numRetAddrEntries());
+  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(entries, pcOffset, &mid));
+  MOZ_ASSERT(mid < entries.size());
 
   // Search for the first entry for this pc.
   size_t first = mid;
-  while (first > 0 && retAddrEntry(first - 1).pcOffset() == pcOffset) {
+  while (first > 0 && entries[first - 1].pcOffset() == pcOffset) {
     first--;
   }
 
   // Search for the last entry for this pc.
   size_t last = mid;
-  while (last + 1 < numRetAddrEntries() &&
-         retAddrEntry(last + 1).pcOffset() == pcOffset) {
+  while (last + 1 < entries.size() &&
+         entries[last + 1].pcOffset() == pcOffset) {
     last++;
   }
 
   MOZ_ASSERT(first <= last);
-  MOZ_ASSERT(retAddrEntry(first).pcOffset() == pcOffset);
-  MOZ_ASSERT(retAddrEntry(last).pcOffset() == pcOffset);
+  MOZ_ASSERT(entries[first].pcOffset() == pcOffset);
+  MOZ_ASSERT(entries[last].pcOffset() == pcOffset);
 
   for (size_t i = first; i <= last; i++) {
-    RetAddrEntry& entry = retAddrEntry(i);
+    const RetAddrEntry& entry = entries[i];
     if (entry.kind() != kind) {
       continue;
     }
@@ -646,7 +630,7 @@ RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     // There must be a unique entry for this pcOffset and Kind to ensure our
     // return value is well-defined.
     for (size_t j = i + 1; j <= last; j++) {
-      MOZ_ASSERT(retAddrEntry(j).kind() != kind);
+      MOZ_ASSERT(entries[j].kind() != kind);
     }
 #endif
 
@@ -656,24 +640,25 @@ RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
   MOZ_CRASH("Didn't find RetAddrEntry.");
 }
 
-RetAddrEntry& BaselineScript::prologueRetAddrEntry(RetAddrEntry::Kind kind) {
+const RetAddrEntry& BaselineScript::prologueRetAddrEntry(
+    RetAddrEntry::Kind kind) {
   MOZ_ASSERT(kind == RetAddrEntry::Kind::StackCheck ||
              kind == RetAddrEntry::Kind::WarmupCounter);
 
   // The prologue entries will always be at a very low offset, so just do a
   // linear search from the beginning.
-  for (size_t i = 0; i < numRetAddrEntries(); i++) {
-    if (retAddrEntry(i).pcOffset() != 0) {
+  for (const RetAddrEntry& entry : retAddrEntries()) {
+    if (entry.pcOffset() != 0) {
       break;
     }
-    if (retAddrEntry(i).kind() == kind) {
-      return retAddrEntry(i);
+    if (entry.kind() == kind) {
+      return entry;
     }
   }
   MOZ_CRASH("Didn't find prologue RetAddrEntry.");
 }
 
-RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
+const RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
     uint8_t* returnAddr) {
   MOZ_ASSERT(returnAddr > method_->raw());
   MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
@@ -699,11 +684,8 @@ void BaselineScript::computeResumeNativeOffsets(JSScript* script) {
                  computeNative);
 }
 
-void BaselineScript::copyRetAddrEntries(JSScript* script,
-                                        const RetAddrEntry* entries) {
-  for (uint32_t i = 0; i < numRetAddrEntries(); i++) {
-    retAddrEntry(i) = entries[i];
-  }
+void BaselineScript::copyRetAddrEntries(const RetAddrEntry* entries) {
+  std::copy_n(entries, retAddrEntries().size(), retAddrEntries().data());
 }
 
 void BaselineScript::copyPCMappingEntries(const CompactBufferWriter& entries) {
@@ -874,17 +856,19 @@ void BaselineScript::initTraceLogger(JSScript* script,
   traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
 #  endif
 
-  MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
+  mozilla::Span<uint32_t> scriptOffsets = traceLoggerToggleOffsets();
+
+  MOZ_ASSERT(offsets.length() == scriptOffsets.size());
+
   for (size_t i = 0; i < offsets.length(); i++) {
-    traceLoggerToggleOffsets()[i] = offsets[i].offset();
+    scriptOffsets[i] = offsets[i].offset();
   }
 
   if (TraceLogTextIdEnabled(TraceLogger_Engine) ||
       TraceLogTextIdEnabled(TraceLogger_Scripts)) {
     traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
-    for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
-      CodeLocationLabel label(method_,
-                              CodeOffset(traceLoggerToggleOffsets()[i]));
+    for (uint32_t offset : scriptOffsets) {
+      CodeLocationLabel label(method_, CodeOffset(offset));
       Assembler::ToggleToCmp(label);
     }
   }
@@ -904,8 +888,8 @@ void BaselineScript::toggleTraceLoggerScripts(JSScript* script, bool enable) {
   AutoWritableJitCode awjc(method());
 
   // Enable/Disable the traceLogger.
-  for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
-    CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
+  for (uint32_t offset : traceLoggerToggleOffsets()) {
+    CodeLocationLabel label(method_, CodeOffset(offset));
     if (enable) {
       Assembler::ToggleToCmp(label);
     } else {
