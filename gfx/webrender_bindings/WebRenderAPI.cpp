@@ -70,13 +70,14 @@ class NewRenderer : public RendererEvent {
     *mUseDComp = compositor->UseDComp();
     *mUseTripleBuffering = compositor->UseTripleBuffering();
 
+    bool allow_texture_swizzling = gfx::gfxVars::UseGLSwizzle();
     bool isMainWindow = true;  // TODO!
     bool supportLowPriorityTransactions = isMainWindow;
     bool supportPictureCaching = isMainWindow;
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
-            supportLowPriorityTransactions,
+            supportLowPriorityTransactions, allow_texture_swizzling,
             StaticPrefs::gfx_webrender_picture_caching() &&
                 supportPictureCaching,
             StaticPrefs::gfx_webrender_start_debug_server(), compositor->gl(),

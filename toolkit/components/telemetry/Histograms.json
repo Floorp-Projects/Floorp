@@ -9348,88 +9348,85 @@
     "n_buckets": 202,
     "description": "Size (in bytes) of the compressed crash store JSON file."
   },
-  "PDF_VIEWER_USED": {
+  "PDF_VIEWER_DOCUMENT_VERSION_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "How many times PDF Viewer was used"
-  },
-  "PDF_VIEWER_FALLBACK_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "How many times PDF Viewer fallback bar was shown"
-  },
-  "PDF_VIEWER_PRINT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "How many times PDF Viewer print functionality was used"
-  },
-  "PDF_VIEWER_DOCUMENT_VERSION": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "enumerated",
-    "n_values": 20,
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["other", "v1_0", "v1_1", "v1_2", "v1_3", "v1_4", "v1_5", "v1_6", "v1_7", "v1_8", "v1_9", "v2_0", "v2_1", "v2_2", "v2_3"],
     "description": "The PDF document version (1.1, 1.2, etc.)"
   },
-  "PDF_VIEWER_DOCUMENT_GENERATOR": {
+  "PDF_VIEWER_DOCUMENT_GENERATOR_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "enumerated",
-    "n_values": 30,
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["acrobat_distiller", "acrobat_pdfwriter", "adobe_livecycle", "adobe_pdf_library", "adobe_photoshop", "ghostscript", "tcpdf", "cairo", "dvipdfm", "dvips", "pdftex", "pdfkit", "itext", "prince", "quarkxpress", "mac_os_x", "microsoft", "openoffice", "oracle", "luradocument", "pdf_xchange", "antenna_house", "aspose_cells", "fpdf"],
     "description": "The PDF document generator"
   },
   "PDF_VIEWER_DOCUMENT_SIZE_KB": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
     "kind": "exponential",
     "low": 2,
     "high": 65536,
     "n_buckets": 20,
     "description": "The PDF document size (KB)"
   },
-  "PDF_VIEWER_FONT_TYPES": {
+  "PDF_VIEWER_FONT_TYPES_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 19,
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["UNKNOWN", "TYPE1", "TYPE1C", "CIDFONTTYPE0", "CIDFONTTYPE0C", "TRUETYPE", "CIDFONTTYPE2", "TYPE3", "OPENTYPE", "TYPE0", "MMTYPE1"],
     "description": "The PDF document font types used"
   },
-  "PDF_VIEWER_EMBED": {
+  "PDF_VIEWER_EMBED_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "A PDF document was embedded: true using OBJECT/EMBED and false using IFRAME"
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["object_embed", "iframe"],
+    "description": "A PDF document was embedded using OBJECT/EMBED and or an IFRAME"
   },
-  "PDF_VIEWER_FORM": {
+  "PDF_VIEWER_FORM_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "A PDF form expected: true for AcroForm and false for XFA"
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["acroform", "xfa"],
+    "description": "If a form was used, its type."
   },
-  "PDF_VIEWER_STREAM_TYPES": {
+  "PDF_VIEWER_STREAM_TYPES_2": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 19,
+    "products": ["firefox"],
+    "expires_in_version": "75",
+    "alert_emails": ["bdahl@mozilla.com"],
+    "bug_numbers": [1566882],
+    "kind": "categorical",
+    "labels": ["UNKNOWN", "FLATE", "LZW", "DCT", "JPX", "JBIG", "A85", "AHX", "CCF", "RLX"],
     "description": "The PDF document compression stream types used"
   },
   "PDF_VIEWER_TIME_TO_VIEW_MS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "bug_numbers": [1566882],
     "kind": "exponential",
+    "alert_emails": ["bdahl@mozilla.com"],
     "high": 10000,
     "n_buckets": 50,
     "description": "Time spent to display first page in PDF Viewer (ms)"
@@ -15361,6 +15358,20 @@
     "n_buckets": 10,
     "bug_numbers": [1490074],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "AUTOPLAY_DEFAULT_SETTING_CHANGE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": [
+      "alwu@mozilla.com",
+      "nohlmeier@mozilla.com"
+    ],
+    "expires_in_version": "74",
+    "kind": "categorical",
+    "labels": ["allow", "blockAudible", "blockAll"],
+    "bug_numbers": [1567302],
+    "description": "counts the number of times a user changed the default autoplay behavior to each setting during a subsession.",
     "releaseChannelCollection": "opt-out"
   },
   "WEB_AUDIO_AUTOPLAY": {

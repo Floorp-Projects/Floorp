@@ -359,6 +359,14 @@ toolbarpaletteitem {
   transition: 0.8s margin-top ease-out;
 }
 
+/* Rule for hiding urlbar's contextual tip and its children */
+
+#urlbar-contextual-tip.hidden,
+#urlbar-contextual-tip-button.hidden,
+#urlbar-contextual-tip-link.hidden {
+  display: none;
+}
+
 /* Rules to help integrate WebExtension buttons */
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {

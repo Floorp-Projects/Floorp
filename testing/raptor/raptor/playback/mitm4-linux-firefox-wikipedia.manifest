@@ -1,10 +1,10 @@
 [
-  {
-    "size": 1336433,
-    "visibility": "public",
-    "digest": "c574a872a93278b99bc8012a127b91acdcad300172b22699074a0d68180d7f134b7f4963d7f8a54d95cd034aad634a8f5de2bbeb12d8963d93089364cded77eb",
-    "algorithm": "sha512",
-    "filename": "firefox-wikipedia.zip",
-    "unpack": true
-  }
+    {
+        "algorithm": "sha512",
+        "visibility": "public",
+        "filename": "mitm4-linux-firefox-wikipedia.zip",
+        "unpack": true,
+        "digest": "9d975e449ccf646bee9ab4026a555673a5e1c4b55c2e47446e6c147e811f4caf71f436537977bee18b729c203231984c758706df9696bc4589a1fffc866db295",
+        "size": 4223312
+    }
 ]

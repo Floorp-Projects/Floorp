@@ -1691,8 +1691,14 @@ BrowserGlue.prototype = {
   },
 
   _updateAutoplayPref() {
-    let blocked = Services.prefs.getIntPref("media.autoplay.default", 1);
-    Services.telemetry.scalarSet("media.autoplay_default_blocked", blocked);
+    const blocked = Services.prefs.getIntPref("media.autoplay.default", 1);
+    const telemetry = Services.telemetry.getHistogramById(
+      "AUTOPLAY_DEFAULT_SETTING_CHANGE"
+    );
+    const labels = { 0: "allow", 1: "blockAudible", 5: "blockAll" };
+    if (blocked in labels) {
+      telemetry.add(labels[blocked]);
+    }
   },
 
   _setPrefExpectations() {
@@ -3619,6 +3625,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.cookie.cookieBehavior": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
+        "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
       },
@@ -3626,6 +3633,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.cookie.cookieBehavior": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
+        "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
       },
@@ -3674,6 +3682,16 @@ var ContentBlockingCategoriesPrefs = {
         case "-cm":
           this.CATEGORY_PREFS[type][
             "privacy.trackingprotection.cryptomining.enabled"
+          ] = false;
+          break;
+        case "stp":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.socialtracking.enabled"
+          ] = true;
+          break;
+        case "-stp":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.socialtracking.enabled"
           ] = false;
           break;
         case "cookieBehavior0":

@@ -194,6 +194,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
       // We don't provide prefs for these features as these are
       // not handling downloadable blocklist.
       break;
+    case nsIGfxInfo::FEATURE_GL_SWIZZLE:
+      name = BLACKLIST_PREF_BRANCH "gl.swizzle";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -365,6 +368,8 @@ static int32_t BlacklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_DX_NV12;
   // We do not support FEATURE_VP8_HW_DECODE and FEATURE_VP9_HW_DECODE
   // in downloadable blocklist.
+  else if (aFeature.EqualsLiteral("GL_SWIZZLE"))
+    return nsIGfxInfo::FEATURE_GL_SWIZZLE;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -1024,6 +1029,7 @@ void GfxInfoBase::EvaluateDownloadedBlacklist(
                         nsIGfxInfo::FEATURE_DX_NV12,
                         nsIGfxInfo::FEATURE_DX_P010,
                         nsIGfxInfo::FEATURE_DX_P016,
+                        nsIGfxInfo::FEATURE_GL_SWIZZLE,
                         0};
 
   // For every feature we know about, we evaluate whether this blacklist has a

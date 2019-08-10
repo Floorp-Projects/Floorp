@@ -7,7 +7,12 @@
 #ifndef debugger_Debugger_inl_h
 #define debugger_Debugger_inl_h
 
-#include "debugger/Debugger.h"
+#include "debugger/Debugger.h"  // for Debugger, ResumeMode
+
+#include "mozilla/Assertions.h"  // for AssertionConditionType
+
+#include "vm/JSObject.h"      // for JSObject
+#include "vm/NativeObject.h"  // for NativeObject, JSObject::is
 
 /* static */ inline js::Debugger* js::Debugger::fromJSObject(
     const JSObject* obj) {

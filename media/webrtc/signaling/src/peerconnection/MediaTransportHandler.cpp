@@ -265,11 +265,10 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
   RefPtr<nsIURI> url;
   nsresult rv = NS_NewURI(getter_AddRefs(url), aIceUrl);
   NS_ENSURE_SUCCESS(rv, rv);
-  bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
-  url->SchemeIs("stun", &isStun);
-  url->SchemeIs("stuns", &isStuns);
-  url->SchemeIs("turn", &isTurn);
-  url->SchemeIs("turns", &isTurns);
+  bool isStun = url->SchemeIs("stun");
+  bool isStuns = url->SchemeIs("stuns");
+  bool isTurn = url->SchemeIs("turn");
+  bool isTurns = url->SchemeIs("turns");
   if (!(isStun || isStuns || isTurn || isTurns)) {
     return NS_ERROR_FAILURE;
   }

@@ -32,7 +32,6 @@
 #include "nsPIWindowRoot.h"
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
-#include "XULDocument.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"

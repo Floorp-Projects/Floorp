@@ -4,10 +4,10 @@
 
 LIBRARY        vrhost.dll
 
-EXPORTS        SampleExport         PRIVATE
-               TestTheManager       PRIVATE
-               TestTheService       PRIVATE
-               TestCreateVRWindow   PRIVATE
-
+;+= Note: this file defines exports that are only available in Beta and
+;+= Release builds so that test exports are not exposed.
+;+= Please ensure that these exports are also declared in vrhostnightly.def.
+EXPORTS
                CreateVRWindow       PRIVATE
                CloseVRWindow        PRIVATE
+               SendUIMessageToVRWindow  PRIVATE

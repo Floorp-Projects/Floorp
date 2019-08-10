@@ -487,7 +487,7 @@ element.findByPartialLinkText = function(startNode, linkText) {
 /**
  * Find anonymous nodes of <var>node</var>.
  *
- * @param {XULDocument} document
+ * @param {HTMLDocument} document
  *     Root node of the document.
  * @param {XULElement} node
  *     Where in the DOM hierarchy to begin searching.

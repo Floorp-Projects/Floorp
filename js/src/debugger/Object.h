@@ -7,27 +7,30 @@
 #ifndef debugger_Object_h
 #define debugger_Object_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
+#include "mozilla/Assertions.h"  // for AssertionConditionType, MOZ_ASSERT
+#include "mozilla/Attributes.h"  // for MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // for Maybe
+#include "mozilla/Range.h"       // for Range
+#include "mozilla/Result.h"      // for Result
 
-#include "jsapi.h"
+#include "jsapi.h"             // for JSContext
+#include "NamespaceImports.h"  // for Value, MutableHandleValue, HandleId
 
-#include "builtin/Promise.h"
-#include "debugger/Debugger.h"
-#include "gc/Rooting.h"
-#include "js/Class.h"
-#include "js/Promise.h"
-#include "js/PropertySpec.h"
-#include "js/Result.h"
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
-#include "vm/GlobalObject.h"
-#include "vm/JSContext.h"
-#include "vm/NativeObject.h"
+#include "gc/Rooting.h"       // for HandleDebuggerObject
+#include "js/Promise.h"       // for PromiseState
+#include "js/Proxy.h"         // for PropertyDescriptor
+#include "vm/JSObject.h"      // for JSObject (ptr only)
+#include "vm/NativeObject.h"  // for NativeObject
+
+class JSAtom;
 
 namespace js {
+
+class Completion;
+class Debugger;
+class EvalOptions;
+class GlobalObject;
+class PromiseObject;
 
 enum { JSSLOT_DEBUGOBJECT_OWNER, JSSLOT_DEBUGOBJECT_COUNT };
 

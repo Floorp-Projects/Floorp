@@ -535,6 +535,12 @@ class BaselineCompilerHandler {
 #endif
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
+
+  // Native code offsets for OSR at JSOP_LOOPENTRY ops.
+  using OSREntryVector =
+      Vector<BaselineScript::OSREntry, 16, SystemAllocPolicy>;
+  OSREntryVector osrEntries_;
+
   JSScript* script_;
   jsbytecode* pc_;
 
@@ -594,6 +600,7 @@ class BaselineCompilerHandler {
   BytecodeAnalysis& analysis() { return analysis_; }
 
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
+  OSREntryVector& osrEntries() { return osrEntries_; }
 
   MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
                                       uint32_t retOffset);
@@ -611,18 +618,14 @@ class BaselineCompilerHandler {
 using BaselineCompilerCodeGen = BaselineCodeGen<BaselineCompilerHandler>;
 
 class BaselineCompiler final : private BaselineCompilerCodeGen {
-  // Stores the native code offset for a bytecode pc.
-  struct PCMappingEntry {
-    uint32_t pcOffset;
-    uint32_t nativeOffset;
-    PCMappingSlotInfo slotInfo;
+  // Native code offsets for bytecode ops in the script's resume offsets list.
+  ResumeOffsetEntryVector resumeOffsetEntries_;
 
-    // If set, insert a PCMappingIndexEntry before encoding the
-    // current entry.
-    bool addIndexEntry;
-  };
-
-  js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;
+  // Native code offsets for debug traps if the script is compiled with debug
+  // instrumentation.
+  using DebugTrapEntryVector =
+      Vector<BaselineScript::DebugTrapEntry, 0, SystemAllocPolicy>;
+  DebugTrapEntryVector debugTrapEntries_;
 
   CodeOffset profilerPushToggleOffset_;
 
@@ -642,29 +645,9 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
   }
 
  private:
-  PCMappingSlotInfo getStackTopSlotInfo() {
-    MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
-    switch (frame.numUnsyncedSlots()) {
-      case 0:
-        return PCMappingSlotInfo::MakeSlotInfo();
-      case 1: {
-        PCMappingSlotInfo::SlotLocation loc = frame.stackValueSlotLocation(-1);
-        return PCMappingSlotInfo::MakeSlotInfo(loc);
-      }
-      case 2:
-      default: {
-        PCMappingSlotInfo::SlotLocation loc1 = frame.stackValueSlotLocation(-1);
-        PCMappingSlotInfo::SlotLocation loc2 = frame.stackValueSlotLocation(-2);
-        return PCMappingSlotInfo::MakeSlotInfo(loc1, loc2);
-      }
-    }
-  }
-
   MethodStatus emitBody();
 
   MOZ_MUST_USE bool emitDebugTrap();
-
-  MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
 };
 
 // Interface used by BaselineCodeGen for BaselineInterpreterGenerator.
