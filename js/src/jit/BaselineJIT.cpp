@@ -779,56 +779,23 @@ jsbytecode* BaselineScript::approximatePcForNativeAddress(
 
   uint32_t nativeOffset = nativeAddress - method_->raw();
 
-  // The native code address can occur before the start of ops. Associate
-  // those with start of bytecode.
-  if (nativeOffset < pcMappingIndexEntry(0).nativeOffset) {
-    return script->code();
-  }
+  // Use the RetAddrEntry list (sorted on pc and return address) to look for the
+  // first pc that has a return address >= nativeOffset. This isn't perfect but
+  // it's a reasonable approximation for the profiler because most non-trivial
+  // bytecode ops have a RetAddrEntry.
 
-  // Find corresponding PCMappingIndexEntry for native offset. They are in
-  // ascedending order with the start of one entry being the end of the
-  // previous entry. Find first entry where nativeOffset < endOffset.
-  uint32_t i = 0;
-  for (; (i + 1) < numPCMappingIndexEntries(); i++) {
-    uint32_t endOffset = pcMappingIndexEntry(i + 1).nativeOffset;
-    if (nativeOffset < endOffset) {
-      break;
+  for (const RetAddrEntry& entry : retAddrEntries()) {
+    uint32_t retOffset = entry.returnOffset().offset();
+    if (retOffset >= nativeOffset) {
+      return script->offsetToPC(entry.pcOffset());
     }
   }
 
-  PCMappingIndexEntry& entry = pcMappingIndexEntry(i);
-  MOZ_ASSERT(nativeOffset >= entry.nativeOffset);
-
-  CompactBufferReader reader(pcMappingReader(i));
-  MOZ_ASSERT(reader.more());
-
-  jsbytecode* curPC = script->offsetToPC(entry.pcOffset);
-  uint32_t curNativeOffset = entry.nativeOffset;
-  MOZ_ASSERT(script->containsPC(curPC));
-
-  jsbytecode* lastPC = curPC;
-  while (reader.more()) {
-    // If the high bit is set, the native offset relative to the
-    // previous pc != 0 and comes next.
-    uint8_t b = reader.readByte();
-    if (b & 0x80) {
-      curNativeOffset += reader.readUnsigned();
-    }
-
-    // Return the last PC that matched nativeOffset. Some bytecode
-    // generate no native code (e.g., constant-pushing bytecode like
-    // JSOP_INT8), and so their entries share the same nativeOffset as the
-    // next op that does generate code.
-    if (curNativeOffset > nativeOffset) {
-      return lastPC;
-    }
-
-    lastPC = curPC;
-    curPC += GetBytecodeLength(curPC);
-  }
-
-  // Associate all addresses at end of PCMappingIndexEntry with lastPC.
-  return lastPC;
+  // Return the last entry's pc. Every BaselineScript has at least one
+  // RetAddrEntry for the prologue stack overflow check.
+  MOZ_ASSERT(retAddrEntries().size() > 0);
+  const RetAddrEntry& lastEntry = retAddrEntries()[retAddrEntries().size() - 1];
+  return script->offsetToPC(lastEntry.pcOffset());
 }
 
 void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
