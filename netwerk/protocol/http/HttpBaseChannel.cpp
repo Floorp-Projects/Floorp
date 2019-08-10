@@ -4338,6 +4338,11 @@ NS_IMETHODIMP HttpBaseChannel::GetCrossOriginOpenerPolicy(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // A document delivered over insecure HTTP will always lack COOP.
+  if (!mURI->SchemeIs("https")) {
+    return NS_OK;
+  }
+
   nsAutoCString openerPolicy;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
                                      openerPolicy);
