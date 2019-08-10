@@ -1672,7 +1672,7 @@ void nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
     requiredStartLeading += leadings.mStart;
     requiredEndLeading += leadings.mEnd;
   }
-  if (aStyleText->HasTextEmphasis()) {
+  if (aStyleText->HasEffectiveTextEmphasis()) {
     nscoord bsize = GetBSizeOfEmphasisMarks(spanFrame, aInflation);
     LogicalSide side = aStyleText->TextEmphasisSide(mRootSpan->mWritingMode);
     if (side == eLogicalSideBStart) {
@@ -2279,7 +2279,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
             fm, minimumLineBSize, lineWM.IsLineInverted());
         nscoord blockEnd = blockStart + minimumLineBSize;
 
-        if (mStyleText->HasTextEmphasis()) {
+        if (mStyleText->HasEffectiveTextEmphasis()) {
           nscoord fontMaxHeight = fm->MaxHeight();
           nscoord emphasisHeight =
               GetBSizeOfEmphasisMarks(spanFrame, inflation);
@@ -3303,7 +3303,7 @@ void nsLineLayout::RelativePositionFrames(PerSpanData* psd,
         // (4) When there are text strokes
         if (pfd->mRecomputeOverflow ||
             frame->Style()->HasTextDecorationLines() ||
-            frame->StyleText()->HasTextEmphasis() ||
+            frame->StyleText()->HasEffectiveTextEmphasis() ||
             frame->StyleText()->HasWebkitTextStroke()) {
           nsTextFrame* f = static_cast<nsTextFrame*>(frame);
           r = f->RecomputeOverflow(mBlockReflowInput->mFrame);
