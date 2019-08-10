@@ -1296,6 +1296,10 @@ class SpecialPowersAPI extends JSWindowActorChild {
     return this._os;
   }
 
+  get useRemoteSubframes() {
+    return this.docShell.nsILoadContext.useRemoteSubframes;
+  }
+
   addSystemEventListener(target, type, listener, useCapture) {
     Services.els.addSystemEventListener(target, type, listener, useCapture);
   }
