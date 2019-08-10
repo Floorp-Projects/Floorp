@@ -535,6 +535,12 @@ class BaselineCompilerHandler {
 #endif
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
+
+  // Native code offsets for OSR at JSOP_LOOPENTRY ops.
+  using OSREntryVector =
+      Vector<BaselineScript::OSREntry, 16, SystemAllocPolicy>;
+  OSREntryVector osrEntries_;
+
   JSScript* script_;
   jsbytecode* pc_;
 
@@ -594,6 +600,7 @@ class BaselineCompilerHandler {
   BytecodeAnalysis& analysis() { return analysis_; }
 
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
+  OSREntryVector& osrEntries() { return osrEntries_; }
 
   MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
                                       uint32_t retOffset);

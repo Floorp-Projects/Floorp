@@ -292,13 +292,13 @@ MethodStatus BaselineCompiler::compile() {
   }
 
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(script, warmUpCheckPrologueOffset_.offset(),
-                          profilerEnterFrameToggleOffset_.offset(),
-                          profilerExitFrameToggleOffset_.offset(),
-                          handler.retAddrEntries().length(),
-                          pcMappingIndexEntries.length(), pcEntries.length(),
-                          script->resumeOffsets().size(),
-                          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(
+          script, warmUpCheckPrologueOffset_.offset(),
+          profilerEnterFrameToggleOffset_.offset(),
+          profilerExitFrameToggleOffset_.offset(),
+          handler.retAddrEntries().length(), handler.osrEntries().length(),
+          pcMappingIndexEntries.length(), pcEntries.length(),
+          script->resumeOffsets().size(), traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -319,6 +319,7 @@ MethodStatus BaselineCompiler::compile() {
   baselineScript->copyPCMappingEntries(pcEntries);
 
   baselineScript->copyRetAddrEntries(handler.retAddrEntries().begin());
+  baselineScript->copyOSREntries(handler.osrEntries().begin());
 
   // If profiler instrumentation is enabled, toggle instrumentation on.
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
@@ -1321,26 +1322,38 @@ bool BaselineCodeGen<Handler>::emitInterruptCheck() {
 
 template <>
 bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
-  // Emit no warm-up counter increments or bailouts if Ion is not
-  // enabled, or if the script will never be Ion-compileable
+  frame.assertSyncedStack();
 
+  // Record native code offset for OSR from Baseline Interpreter into Baseline
+  // JIT code. This is right before the warm-up check in the Baseline JIT code,
+  // to make sure we can immediately enter Ion if the script is warm enough or
+  // if --ion-eager is used.
+  JSScript* script = handler.script();
+  jsbytecode* pc = handler.pc();
+  if (JSOp(*pc) == JSOP_LOOPENTRY) {
+    uint32_t pcOffset = script->pcToOffset(pc);
+    uint32_t nativeOffset = masm.currentOffset();
+    if (!handler.osrEntries().emplaceBack(pcOffset, nativeOffset)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  }
+
+  // Emit no warm-up counter increments if Ion is not enabled or if the script
+  // will never be Ion-compileable.
   if (!handler.maybeIonCompileable()) {
     return true;
   }
-
-  frame.assertSyncedStack();
 
   Register scriptReg = R2.scratchReg();
   Register countReg = R0.scratchReg();
   Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
 
-  JSScript* script = handler.script();
   masm.movePtr(ImmGCPtr(script), scriptReg);
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  jsbytecode* pc = handler.pc();
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
