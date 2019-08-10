@@ -1250,8 +1250,8 @@ let PDFViewerApplication = {
         this.fallback(_pdfjsLib.UNSUPPORTED_FEATURES.forms);
       }
 
-      let versionId = String(info.PDFFormatVersion).slice(-1) | 0;
-      let generatorId = 0;
+      const versionId = `v${info.PDFFormatVersion.replace('.', '_')}`;
+      let generatorId = 'other';
       const KNOWN_GENERATORS = ['acrobat distiller', 'acrobat pdfwriter', 'adobe livecycle', 'adobe pdf library', 'adobe photoshop', 'ghostscript', 'tcpdf', 'cairo', 'dvipdfm', 'dvips', 'pdftex', 'pdfkit', 'itext', 'prince', 'quarkxpress', 'mac os x', 'microsoft', 'openoffice', 'oracle', 'luradocument', 'pdf-xchange', 'antenna house', 'aspose.cells', 'fpdf'];
 
       if (info.Producer) {
@@ -1260,7 +1260,7 @@ let PDFViewerApplication = {
             return false;
           }
 
-          generatorId = i + 1;
+          generatorId = s.replace(/[ .\-]/g, '_');
           return true;
         }.bind(null, info.Producer.toLowerCase()));
       }
@@ -1688,7 +1688,8 @@ function webViewerPageRendered(evt) {
   }
 
   PDFViewerApplication.externalServices.reportTelemetry({
-    type: 'pageInfo'
+    type: 'pageInfo',
+    timestamp: evt.timestamp
   });
   PDFViewerApplication.pdfDocument.getStats().then(function (stats) {
     PDFViewerApplication.externalServices.reportTelemetry({
@@ -6688,12 +6689,12 @@ class PDFLinkService {
       return;
     }
 
-    let refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+    const refStr = pageRef.gen === 0 ? `${pageRef.num}R` : `${pageRef.num}R${pageRef.gen}`;
     this._pagesRefCache[refStr] = pageNum;
   }
 
   _cachedPageNumber(pageRef) {
-    let refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+    const refStr = pageRef.gen === 0 ? `${pageRef.num}R` : `${pageRef.num}R${pageRef.gen}`;
     return this._pagesRefCache && this._pagesRefCache[refStr] || null;
   }
 
@@ -10910,6 +10911,8 @@ class Toolbar {
     this.pageScale = _ui_utils.DEFAULT_SCALE;
 
     this._updateUIState(true);
+
+    this.updateLoadingIndicatorState();
   }
 
   _bindListeners() {

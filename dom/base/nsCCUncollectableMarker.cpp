@@ -10,7 +10,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIContentViewer.h"
 #include "mozilla/dom/Document.h"
-#include "XULDocument.h"
 #include "InProcessBrowserChildMessageManager.h"
 #include "nsIWindowMediator.h"
 #include "nsPIDOMWindow.h"

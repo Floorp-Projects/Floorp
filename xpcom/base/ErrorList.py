@@ -882,7 +882,7 @@ with modules["CONTENT"]:
     errors["NS_ERROR_BUILDID_MISMATCH"] = FAILURE(17)
 
     errors["NS_PROPTABLE_PROP_OVERWRITTEN"] = SUCCESS(11)
-    # Error codes for FindBroadcaster in XULDocument.cpp
+    # Error codes for FindBroadcaster in XULBroadcastManager.cpp
     errors["NS_FINDBROADCASTER_NOT_FOUND"] = SUCCESS(12)
     errors["NS_FINDBROADCASTER_FOUND"] = SUCCESS(13)
 

@@ -24,6 +24,7 @@ browser.jar:
         content/browser/logos/monitor.svg             (content/logos/monitor.svg)
         content/browser/logos/send.svg                (content/logos/send.svg)
         content/browser/logos/tracking-protection.svg (content/logos/tracking-protection.svg)
+        content/browser/logos/tracking-protection-dark-theme.svg (content/logos/tracking-protection-dark-theme.svg)
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)

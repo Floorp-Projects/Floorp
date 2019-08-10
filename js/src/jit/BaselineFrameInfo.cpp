@@ -241,19 +241,3 @@ void CompilerFrameInfo::assertValidState(const BytecodeInfo& info) {
   }
 }
 #endif
-
-PCMappingSlotInfo::SlotLocation CompilerFrameInfo::stackValueSlotLocation(
-    int32_t depth) {
-  const StackValue* stackVal = peek(depth);
-
-  if (stackVal->kind() == StackValue::Register) {
-    if (stackVal->reg() == R0) {
-      return PCMappingSlotInfo::SlotInR0;
-    }
-    MOZ_ASSERT(stackVal->reg() == R1);
-    return PCMappingSlotInfo::SlotInR1;
-  }
-
-  MOZ_ASSERT(stackVal->kind() != StackValue::Stack);
-  return PCMappingSlotInfo::SlotIgnore;
-}

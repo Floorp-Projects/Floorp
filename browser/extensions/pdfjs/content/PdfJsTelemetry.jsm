@@ -22,14 +22,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var PdfJsTelemetry = {
   onViewerIsUsed() {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_USED");
-    histogram.add(true);
+    Services.telemetry.scalarAdd("pdf.viewer.used", 1);
   },
   onFallback() {
-    let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_FALLBACK_SHOWN"
-    );
-    histogram.add(true);
+    Services.telemetry.scalarAdd("pdf.viewer.fallback_shown", 1);
   },
   onDocumentSize(size) {
     let histogram = Services.telemetry.getHistogramById(
@@ -39,37 +35,36 @@ var PdfJsTelemetry = {
   },
   onDocumentVersion(versionId) {
     let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_DOCUMENT_VERSION"
+      "PDF_VIEWER_DOCUMENT_VERSION_2"
     );
     histogram.add(versionId);
   },
   onDocumentGenerator(generatorId) {
     let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_DOCUMENT_GENERATOR"
+      "PDF_VIEWER_DOCUMENT_GENERATOR_2"
     );
     histogram.add(generatorId);
   },
   onEmbed(isObject) {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_EMBED");
-    histogram.add(isObject);
+    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_EMBED_2");
+    histogram.add(isObject ? "object_embed" : "iframe");
   },
   onFontType(fontTypeId) {
     let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_FONT_TYPES"
+      "PDF_VIEWER_FONT_TYPES_2"
     );
     histogram.add(fontTypeId);
   },
-  onForm(isAcroform) {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_FORM");
-    histogram.add(isAcroform);
+  onForm(formType) {
+    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_FORM_2");
+    histogram.add(formType);
   },
   onPrint() {
-    let histogram = Services.telemetry.getHistogramById("PDF_VIEWER_PRINT");
-    histogram.add(true);
+    Services.telemetry.scalarAdd("pdf.viewer.print", 1);
   },
   onStreamType(streamTypeId) {
     let histogram = Services.telemetry.getHistogramById(
-      "PDF_VIEWER_STREAM_TYPES"
+      "PDF_VIEWER_STREAM_TYPES_2"
     );
     histogram.add(streamTypeId);
   },

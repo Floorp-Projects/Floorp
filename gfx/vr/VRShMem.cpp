@@ -308,14 +308,7 @@ void VRShMem::CloseShMem() {
 // Callers to JoinShMem should call LeaveShMem for cleanup
 bool VRShMem::JoinShMem() {
 #if defined(XP_WIN)
-  // Adding `!XRE_IsParentProcess()` to avoid Win 7 32-bit WebVR tests
-  // to OpenMutex when there is no GPU process to create
-  // VRSystemManagerExternal and its mutex.
   if (!mMutex && mRequiresMutex) {
-#  ifdef MOZILLA_INTERNAL_API
-    MOZ_ASSERT(!XRE_IsParentProcess());
-#  endif
-
     // Check that there are no errors before making system calls
     MOZ_ASSERT(GetLastError() == 0);
 

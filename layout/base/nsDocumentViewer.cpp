@@ -1072,15 +1072,14 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     restoring =
         (mDocument->GetReadyStateEnum() == Document::READYSTATE_COMPLETE);
     if (!restoring) {
-      NS_ASSERTION(mDocument->IsXULDocument() ||  // readyState for XUL is bogus
-                       mDocument->GetReadyStateEnum() ==
-                           Document::READYSTATE_INTERACTIVE ||
-                       // test_stricttransportsecurity.html has old-style
-                       // docshell-generated about:blank docs reach this code!
-                       (mDocument->GetReadyStateEnum() ==
-                            Document::READYSTATE_UNINITIALIZED &&
-                        NS_IsAboutBlank(mDocument->GetDocumentURI())),
-                   "Bad readystate");
+      NS_ASSERTION(
+          mDocument->GetReadyStateEnum() == Document::READYSTATE_INTERACTIVE ||
+              // test_stricttransportsecurity.html has old-style
+              // docshell-generated about:blank docs reach this code!
+              (mDocument->GetReadyStateEnum() ==
+                   Document::READYSTATE_UNINITIALIZED &&
+               NS_IsAboutBlank(mDocument->GetDocumentURI())),
+          "Bad readystate");
 #ifdef DEBUG
       bool docShellThinksWeAreRestoring;
       docShell->GetRestoringDocument(&docShellThinksWeAreRestoring);
@@ -3456,11 +3455,6 @@ nsresult nsDocViewerFocusListener::Init(nsDocumentViewer* aDocViewer) {
 NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
                         nsIWebProgressListener* aWebProgressListener) {
-  // Printing XUL documents is not supported.
-  if (mDocument && mDocument->IsXULDocument()) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!mContainer) {
     PR_PL(("Container was destroyed yet we are still trying to use it!"));
     return NS_ERROR_FAILURE;
@@ -3562,12 +3556,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   nsresult rv = NS_OK;
 
   if (GetIsPrinting()) {
-    nsPrintJob::CloseProgressDialog(aWebProgressListener);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Printing XUL documents is not supported.
-  if (mDocument && mDocument->IsXULDocument()) {
     nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }

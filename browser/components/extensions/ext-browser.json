@@ -211,7 +211,8 @@
     "schema": "chrome://browser/content/schemas/urlbar.json",
     "scopes": ["addon_parent"],
     "paths": [
-      ["urlbar"]
+      ["urlbar"],
+      ["urlbar", "contextualTip"]
     ]
   },
   "urlOverrides": {

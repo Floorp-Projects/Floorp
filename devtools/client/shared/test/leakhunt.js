@@ -78,7 +78,6 @@ leakHunt.noRecurse = [
   /^undefined/,
   /^Window$/,
   /^Document$/,
-  /^XULDocument$/,
   /^XULElement$/,
   /^DOMWindow$/,
   /^HTMLDocument$/,

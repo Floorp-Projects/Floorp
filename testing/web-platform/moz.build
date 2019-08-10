@@ -16,6 +16,8 @@ TEST_HARNESS_FILES['web-platform'].prefs += [
     '/build/sanitizers/lsan_suppressions.txt',
 ]
 
+PYTHON_UNITTEST_MANIFESTS += ['python.ini']
+
 with Files("**"):
     SCHEDULES.exclusive = [
         'web-platform-tests',

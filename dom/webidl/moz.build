@@ -955,7 +955,6 @@ WEBIDL_FILES = [
     'XPathResult.webidl',
     'XSLTProcessor.webidl',
     'XULCommandEvent.webidl',
-    'XULDocument.webidl',
     'XULElement.webidl',
     'XULPopupElement.webidl',
 ]

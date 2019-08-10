@@ -65,14 +65,14 @@ async function setBreakpoint(threadFront, expectedFile, lineno, options = {}) {
 function resumeThenPauseAtLineFunctionFactory(method) {
   return async function(threadFront, lineno) {
     threadFront[method]();
-    await threadFront.once("paused", async function(packet) {
-      const { frames } = await threadFront.getFrames(0, 1);
-      const frameLine = frames[0] ? frames[0].where.line : undefined;
-      ok(
-        frameLine == lineno,
-        "Paused at line " + frameLine + " expected " + lineno
-      );
-    });
+    await threadFront.once("paused");
+
+    const { frames } = await threadFront.getFrames(0, 1);
+    const frameLine = frames[0] ? frames[0].where.line : undefined;
+    ok(
+      frameLine == lineno,
+      "Paused at line " + frameLine + " expected " + lineno
+    );
   };
 }
 

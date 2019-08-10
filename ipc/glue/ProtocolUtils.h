@@ -667,15 +667,6 @@ MOZ_NEVER_INLINE void SentinelReadError(const char* aElementName);
 
 struct PrivateIPDLInterface {};
 
-nsresult Bridge(const PrivateIPDLInterface&, MessageChannel*, base::ProcessId,
-                MessageChannel*, base::ProcessId, ProtocolId, ProtocolId);
-
-bool Open(const PrivateIPDLInterface&, MessageChannel*, base::ProcessId,
-          Transport::Mode, ProtocolId, ProtocolId);
-
-bool UnpackChannelOpened(const PrivateIPDLInterface&, const IPC::Message&,
-                         TransportDescriptor*, base::ProcessId*, ProtocolId*);
-
 #if defined(XP_WIN)
 // This is a restricted version of Windows' DuplicateHandle() function
 // that works inside the sandbox and can send handles but not retrieve

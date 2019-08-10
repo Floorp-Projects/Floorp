@@ -7,9 +7,14 @@
 #ifndef debugger_Environment_inl_h
 #define debugger_Environment_inl_h
 
-#include "debugger/Environment.h"
+#include "debugger/Environment.h"  // for DebuggerEnvironment
 
-#include "debugger/Debugger-inl.h"
+#include "NamespaceImports.h"   // for Value
+#include "debugger/Debugger.h"  // for Debugger
+
+#include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
+
+class JSObject;
 
 inline js::Debugger* js::DebuggerEnvironment::owner() const {
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();

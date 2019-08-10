@@ -7,25 +7,23 @@
 #ifndef debugger_Script_h
 #define debugger_Script_h
 
-#include "mozilla/Variant.h"
+#include "jsapi.h"  // for Handle, JSFunctionSpec, JSPropertySpec
 
-#include "jsapi.h"
+#include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
+#include "debugger/Debugger.h"  // for DebuggerScriptReferent
+#include "gc/Rooting.h"         // for HandleNativeObject
+#include "vm/NativeObject.h"    // for NativeObject
 
-#include "debugger/Debugger.h"
-#include "gc/Cell.h"
-#include "gc/Rooting.h"
-#include "js/CallArgs.h"
-#include "js/Class.h"
-#include "js/PropertySpec.h"
-#include "js/RootingAPI.h"
-#include "js/TracingAPI.h"
-#include "js/TypeDecls.h"
-#include "vm/GlobalObject.h"
-#include "vm/JSScript.h"
-#include "vm/NativeObject.h"
-#include "wasm/WasmJS.h"
+class JSObject;
 
 namespace js {
+
+class BaseScript;
+class GlobalObject;
+
+namespace gc {
+struct Cell;
+}
 
 class DebuggerScript : public NativeObject {
  public:
@@ -47,6 +45,8 @@ class DebuggerScript : public NativeObject {
                                 HandleNativeObject debugger);
 
   static void trace(JSTracer* trc, JSObject* obj);
+
+  using ReferentVariant = DebuggerScriptReferent;
 
   inline gc::Cell* getReferentCell() const;
   inline js::BaseScript* getReferentScript() const;

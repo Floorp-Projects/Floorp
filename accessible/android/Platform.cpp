@@ -119,7 +119,7 @@ void a11y::ProxyVirtualCursorChangeEvent(
     ProxyAccessible* aNewPosition, int32_t aNewStartOffset,
     int32_t aNewEndOffset, int16_t aReason, int16_t aBoundaryType,
     bool aFromUser) {
-  if (!aNewPosition) {
+  if (!aNewPosition || !aFromUser) {
     return;
   }
 

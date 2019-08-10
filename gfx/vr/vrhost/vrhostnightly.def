@@ -1,0 +1,20 @@
+;+# This Source Code Form is subject to the terms of the Mozilla Public
+;+# License, v. 2.0. If a copy of the MPL was not distributed with this
+;+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LIBRARY        vrhost.dll
+
+;+= Note: this file defines exports that are only available in Nightly builds
+;+= so that test exports are not exposed in Beta and Release builds.
+;+= Please ensure that the Public Export APIs in the first section below are
+;+= also declared in vrhost.def.
+EXPORTS
+;+= Public Export APIs for vrhost
+               CreateVRWindow       PRIVATE
+               CloseVRWindow        PRIVATE
+
+;+= Exports only available in Nightlies for testing
+               SampleExport         PRIVATE
+               TestTheManager       PRIVATE
+               TestTheService       PRIVATE
+               TestCreateVRWindow   PRIVATE
