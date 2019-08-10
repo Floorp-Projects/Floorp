@@ -74,8 +74,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   nsCOMPtr<nsIHttpChannelInternal> chan =
       do_QueryInterface(aWindow->GetDocument()->GetChannel());
   nsILoadInfo::CrossOriginOpenerPolicy policy;
-  if (chan && NS_SUCCEEDED(chan->GetCrossOriginOpenerPolicy(
-                  nsILoadInfo::OPENER_POLICY_NULL, &policy))) {
+  if (chan && NS_SUCCEEDED(chan->GetCrossOriginOpenerPolicy(&policy))) {
     bc->SetOpenerPolicy(policy);
   }
 
