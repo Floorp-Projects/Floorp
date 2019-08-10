@@ -519,7 +519,6 @@ cbindgen-types = [
     { gecko = "StyleGenericTrackListValue", servo = "values::generics::grid::TrackListValue" },
     { gecko = "StyleGenericTrackList", servo = "values::generics::grid::TrackList" },
     { gecko = "StyleGenericGridTemplateComponent", servo = "values::generics::grid::GridTemplateComponent" },
-    { gecko = "StyleTextEmphasisStyle", servo = "values::computed::text::TextEmphasisStyle" },
 ]
 
 mapped-generic-types = [
