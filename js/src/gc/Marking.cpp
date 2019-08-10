@@ -1559,7 +1559,14 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
 
       // Process just the one object that is now on top of the mark stack,
       // possibly pushing more stuff onto the stack.
-      MOZ_ASSERT(!isMarkStackEmpty());
+      if (isMarkStackEmpty()) {
+        MOZ_ASSERT(obj->asTenured().arena()->onDelayedMarkingList());
+        // If we overflow the stack here and delay marking, then we won't be
+        // testing what we think we're testing.
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        oomUnsafe.crash("Overflowed stack while marking test queue");
+      }
+
       SliceBudget unlimited = SliceBudget::unlimited();
       processMarkStackTop(unlimited);
     } else if (val.isString()) {
