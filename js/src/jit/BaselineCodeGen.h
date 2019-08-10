@@ -634,6 +634,12 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
   // Native code offsets for bytecode ops in the script's resume offsets list.
   ResumeOffsetEntryVector resumeOffsetEntries_;
 
+  // Native code offsets for debug traps if the script is compiled with debug
+  // instrumentation.
+  using DebugTrapEntryVector =
+      Vector<BaselineScript::DebugTrapEntry, 0, SystemAllocPolicy>;
+  DebugTrapEntryVector debugTrapEntries_;
+
   CodeOffset profilerPushToggleOffset_;
 
   CodeOffset traceLoggerScriptTextIdOffset_;
