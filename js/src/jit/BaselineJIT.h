@@ -90,6 +90,28 @@ struct PCMappingIndexEntry {
   uint32_t bufferOffset;
 };
 
+// Base class for entries mapping a pc offset to a native code offset.
+class BasePCToNativeEntry {
+  uint32_t pcOffset_;
+  uint32_t nativeOffset_;
+
+ public:
+  BasePCToNativeEntry(uint32_t pcOffset, uint32_t nativeOffset)
+      : pcOffset_(pcOffset), nativeOffset_(nativeOffset) {}
+  uint32_t pcOffset() const { return pcOffset_; }
+  uint32_t nativeOffset() const { return nativeOffset_; }
+};
+
+// Class used during Baseline compilation to store the native code offset for
+// resume offset ops.
+class ResumeOffsetEntry : public BasePCToNativeEntry {
+ public:
+  using BasePCToNativeEntry::BasePCToNativeEntry;
+};
+
+using ResumeOffsetEntryVector =
+    Vector<ResumeOffsetEntry, 16, SystemAllocPolicy>;
+
 // Largest script that the baseline compiler will attempt to compile.
 #if defined(JS_CODEGEN_ARM)
 // ARM branches can only reach 32MB, and the macroassembler doesn't mitigate
@@ -259,15 +281,9 @@ struct BaselineScript final {
 
   // Native code offset for OSR from Baseline Interpreter into Baseline JIT at
   // JSOP_LOOPENTRY ops.
-  class OSREntry {
-    uint32_t pcOffset_;
-    uint32_t nativeOffset_;
-
+  class OSREntry : public BasePCToNativeEntry {
    public:
-    OSREntry(uint32_t pcOffset, uint32_t nativeOffset)
-        : pcOffset_(pcOffset), nativeOffset_(nativeOffset) {}
-    uint32_t pcOffset() const { return pcOffset_; }
-    uint32_t nativeOffset() const { return nativeOffset_; }
+    using BasePCToNativeEntry::BasePCToNativeEntry;
   };
 
  private:
@@ -381,8 +397,9 @@ struct BaselineScript final {
   void copyOSREntries(const OSREntry* entries);
 
   // Copy resumeOffsets list from |script| and convert the pcOffsets
-  // to native addresses in the Baseline code.
-  void computeResumeNativeOffsets(JSScript* script);
+  // to native addresses in the Baseline code based on |entries|.
+  void computeResumeNativeOffsets(JSScript* script,
+                                  const ResumeOffsetEntryVector& entries);
 
   PCMappingIndexEntry& pcMappingIndexEntry(size_t index);
   CompactBufferReader pcMappingReader(size_t indexEntry);
