@@ -69,8 +69,7 @@ add_task(async function test() {
     () =>
       (notification = gBrowser
         .getNotificationBox()
-        .getNotificationWithValue("master-password-login-required")),
-    "waiting for master-password-login-required notification"
+        .getNotificationWithValue("master-password-login-required"))
   );
 
   ok(
