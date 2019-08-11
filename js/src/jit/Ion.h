@@ -58,6 +58,15 @@ class JitContext {
   int assemblerCount_ = 0;
 
 #ifdef DEBUG
+  // Whether this thread is actively Ion compiling (does not include Wasm or
+  // IonBuilder).
+  bool inIonBackend_ = false;
+
+  // Whether this thread is actively Ion compiling in a context where a minor
+  // GC could happen simultaneously. If this is true, this thread cannot use
+  // any pointers into the nursery.
+  bool inIonBackendSafeForMinorGC_ = false;
+
   bool isCompilingWasm_ = false;
   bool oom_ = false;
 #endif
@@ -98,6 +107,24 @@ class JitContext {
   bool isCompilingWasm() { return isCompilingWasm_; }
   bool hasOOM() { return oom_; }
   void setOOM() { oom_ = true; }
+
+  bool inIonBackend() const { return inIonBackend_; }
+
+  bool inIonBackendSafeForMinorGC() const {
+    return inIonBackendSafeForMinorGC_;
+  }
+
+  void enterIonBackend(bool safeForMinorGC) {
+    MOZ_ASSERT(!inIonBackend_);
+    MOZ_ASSERT(!inIonBackendSafeForMinorGC_);
+    inIonBackend_ = true;
+    inIonBackendSafeForMinorGC_ = safeForMinorGC;
+  }
+  void leaveIonBackend() {
+    MOZ_ASSERT(inIonBackend_);
+    inIonBackend_ = false;
+    inIonBackendSafeForMinorGC_ = false;
+  }
 #endif
 };
 
@@ -197,6 +224,30 @@ inline size_t NumLocalsAndArgs(JSScript* script) {
   }
   return num;
 }
+
+// Debugging RAII class which marks the current thread as performing an Ion
+// backend compilation.
+class MOZ_RAII AutoEnterIonBackend {
+ public:
+  explicit AutoEnterIonBackend(
+      bool safeForMinorGC MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+#ifdef DEBUG
+    JitContext* jcx = GetJitContext();
+    jcx->enterIonBackend(safeForMinorGC);
+#endif
+  }
+
+#ifdef DEBUG
+  ~AutoEnterIonBackend() {
+    JitContext* jcx = GetJitContext();
+    jcx->leaveIonBackend();
+  }
+#endif
+
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 bool OffThreadCompilationAvailable(JSContext* cx);
 
