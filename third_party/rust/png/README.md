@@ -1,11 +1,26 @@
 # PNG Decoder/Encoder
-[![Build Status](https://travis-ci.org/PistonDevelopers/image-png.svg?branch=master)](https://travis-ci.org/PistonDevelopers/image-png)
-[![Crates.io](https://docs.rs/png/badge.svg)](https://docs.rs/png)
+[![Build Status](https://travis-ci.org/image-rs/image-png.svg?branch=master)](https://travis-ci.org/image-rs/image-png)
+[![Documentation](https://docs.rs/png/badge.svg)](https://docs.rs/png)
 [![Crates.io](https://img.shields.io/crates/v/png.svg)](https://crates.io/crates/png)
-![Lines of Code](https://tokei.rs/b1/github/PistonDevelopers/image-png)
-[![License](https://img.shields.io/crates/l/png.svg)](https://github.com/PistonDevelopers/image-png)
+![Lines of Code](https://tokei.rs/b1/github/image-rs/image-png)
+[![License](https://img.shields.io/crates/l/png.svg)](https://github.com/image-rs/image-png)
 
-PNG decoder/encoder in pure Rust. Currently `pngcheck` is the most usable part. Build with `cargo build --release --example pngcheck`.
+PNG decoder/encoder in pure Rust.
+
+It contains all features required to handle the entirety of [the PngSuite by
+Willem van Schack][PngSuite].
+
+[PngSuite]: http://www.schaik.com/pngsuite2011/pngsuite.html
+
+## pngcheck
+
+The `pngcheck` utility is a small demonstration binary that checks and prints
+metadata on every `.png` image provided via parameter. You can run it (for
+example on the test directories) with
+
+```bash
+cargo run --release --example pngcheck ./tests/pngsuite/*
+```
 
 ## License
 

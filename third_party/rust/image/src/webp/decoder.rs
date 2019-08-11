@@ -1,7 +1,8 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::default::Default;
-use std::io;
-use std::io::{Cursor, Read};
+use std::io::{self, Cursor, Read};
+use std::marker::PhantomData;
+use std::mem;
 
 use image;
 use image::ImageDecoder;
@@ -12,7 +13,8 @@ use color;
 use super::vp8::Frame;
 use super::vp8::VP8Decoder;
 
-/// A Representation of a Webp Image format decoder.
+/// Webp Image format decoder. Currently only supportes the luma channel (meaning that decoded
+/// images will be grayscale).
 pub struct WebpDecoder<R> {
     r: R,
     frame: Frame,
@@ -36,10 +38,10 @@ impl<R: Read> WebpDecoder<R> {
 
     fn read_riff_header(&mut self) -> ImageResult<u32> {
         let mut riff = Vec::with_capacity(4);
-        try!(self.r.by_ref().take(4).read_to_end(&mut riff));
-        let size = try!(self.r.read_u32::<LittleEndian>());
+        self.r.by_ref().take(4).read_to_end(&mut riff)?;
+        let size = self.r.read_u32::<LittleEndian>()?;
         let mut webp = Vec::with_capacity(4);
-        try!(self.r.by_ref().take(4).read_to_end(&mut webp));
+        self.r.by_ref().take(4).read_to_end(&mut webp)?;
 
         if &*riff != b"RIFF" {
             return Err(image::ImageError::FormatError(
@@ -58,7 +60,7 @@ impl<R: Read> WebpDecoder<R> {
 
     fn read_vp8_header(&mut self) -> ImageResult<()> {
         let mut vp8 = Vec::with_capacity(4);
-        try!(self.r.by_ref().take(4).read_to_end(&mut vp8));
+        self.r.by_ref().take(4).read_to_end(&mut vp8)?;
 
         if &*vp8 != b"VP8 " {
             return Err(image::ImageError::FormatError(
@@ -66,18 +68,18 @@ impl<R: Read> WebpDecoder<R> {
             ));
         }
 
-        let _len = try!(self.r.read_u32::<LittleEndian>());
+        let _len = self.r.read_u32::<LittleEndian>()?;
 
         Ok(())
     }
 
     fn read_frame(&mut self) -> ImageResult<()> {
         let mut framedata = Vec::new();
-        try!(self.r.read_to_end(&mut framedata));
+        self.r.read_to_end(&mut framedata)?;
         let m = io::Cursor::new(framedata);
 
         let mut v = VP8Decoder::new(m);
-        let frame = try!(v.decode_frame());
+        let frame = v.decode_frame()?;
 
         self.frame = frame.clone();
 
@@ -86,9 +88,9 @@ impl<R: Read> WebpDecoder<R> {
 
     fn read_metadata(&mut self) -> ImageResult<()> {
         if !self.have_frame {
-            try!(self.read_riff_header());
-            try!(self.read_vp8_header());
-            try!(self.read_frame());
+            self.read_riff_header()?;
+            self.read_vp8_header()?;
+            self.read_frame()?;
 
             self.have_frame = true;
         }
@@ -97,8 +99,24 @@ impl<R: Read> WebpDecoder<R> {
     }
 }
 
-impl<R: Read> ImageDecoder for WebpDecoder<R> {
-    type Reader = Cursor<Vec<u8>>;
+/// Wrapper struct around a `Cursor<Vec<u8>>`
+pub struct WebpReader<R>(Cursor<Vec<u8>>, PhantomData<R>);
+impl<R> Read for WebpReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
+    }
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        if self.0.position() == 0 && buf.is_empty() {
+            mem::swap(buf, self.0.get_mut());
+            Ok(buf.len())
+        } else {
+            self.0.read_to_end(buf)
+        }
+    }
+}
+
+impl<'a, R: 'a + Read> ImageDecoder<'a> for WebpDecoder<R> {
+    type Reader = WebpReader<R>;
 
     fn dimensions(&self) -> (u64, u64) {
         (self.frame.width as u64, self.frame.height as u64)
@@ -109,7 +127,7 @@ impl<R: Read> ImageDecoder for WebpDecoder<R> {
     }
 
     fn into_reader(self) -> ImageResult<Self::Reader> {
-        Ok(Cursor::new(self.frame.ybuf))
+        Ok(WebpReader(Cursor::new(self.frame.ybuf), PhantomData))
     }
 
     fn read_image(self) -> ImageResult<Vec<u8>> {
