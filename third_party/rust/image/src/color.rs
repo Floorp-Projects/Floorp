@@ -68,40 +68,31 @@ $( // START Structure definitions
 #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
 #[repr(C)]
 #[allow(missing_docs)]
-pub struct $ident<T: Primitive> { pub data: [T; $channels] }
-#[allow(non_snake_case, missing_docs)]
-pub fn $ident<T: Primitive>(data: [T; $channels]) -> $ident<T> {
-    $ident {
-        data: data
-    }
-}
+pub struct $ident<T: Primitive> (pub [T; $channels]);
 
 impl<T: Primitive + 'static> Pixel for $ident<T> {
 
     type Subpixel = T;
 
-    fn channel_count() -> u8 {
-        $channels
-    }
-    fn color_model() -> &'static str {
-        $interpretation
-    }
-    fn color_type() -> ColorType {
-        ColorType::$color_type(mem::size_of::<T>() as u8 * 8)
-    }
+    const CHANNEL_COUNT: u8 = $channels;
+
+    const COLOR_MODEL: &'static str = $interpretation;
+
+    const COLOR_TYPE: ColorType = ColorType::$color_type(mem::size_of::<T>() as u8 * 8); 
+
     #[inline(always)]
     fn channels(&self) -> &[T] {
-        &self.data
+        &self.0
     }
     #[inline(always)]
     fn channels_mut(&mut self) -> &mut [T] {
-        &mut self.data
+        &mut self.0
     }
 
     #[allow(trivial_casts)]
     fn channels4(&self) -> (T, T, T, T) {
         let mut channels = [T::max_value(); 4];
-        channels[0..$channels].copy_from_slice(&self.data);
+        channels[0..$channels].copy_from_slice(&self.0);
         (channels[0], channels[1], channels[2], channels[3])
     }
 
@@ -119,37 +110,37 @@ impl<T: Primitive + 'static> Pixel for $ident<T> {
     }
 
     fn to_rgb(&self) -> Rgb<T> {
-        let mut pix = Rgb {data: [Zero::zero(), Zero::zero(), Zero::zero()]};
+        let mut pix = Rgb([Zero::zero(), Zero::zero(), Zero::zero()]);
         pix.from_color(self);
         pix
     }
 
     fn to_bgr(&self) -> Bgr<T> {
-        let mut pix = Bgr {data: [Zero::zero(), Zero::zero(), Zero::zero()]};
+        let mut pix = Bgr([Zero::zero(), Zero::zero(), Zero::zero()]);
         pix.from_color(self);
         pix
     }
 
     fn to_rgba(&self) -> Rgba<T> {
-        let mut pix = Rgba {data: [Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero()]};
+        let mut pix = Rgba([Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero()]);
         pix.from_color(self);
         pix
     }
 
     fn to_bgra(&self) -> Bgra<T> {
-        let mut pix = Bgra {data: [Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero()]};
+        let mut pix = Bgra([Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero()]);
         pix.from_color(self);
         pix
     }
 
     fn to_luma(&self) -> Luma<T> {
-        let mut pix = Luma {data: [Zero::zero()]};
+        let mut pix = Luma([Zero::zero()]);
         pix.from_color(self);
         pix
     }
 
     fn to_luma_alpha(&self) -> LumaA<T> {
-        let mut pix = LumaA {data: [Zero::zero(), Zero::zero()]};
+        let mut pix = LumaA([Zero::zero(), Zero::zero()]);
         pix.from_color(self);
         pix
     }
@@ -161,7 +152,7 @@ impl<T: Primitive + 'static> Pixel for $ident<T> {
     }
 
     fn apply<F>(&mut self, mut f: F) where F: FnMut(T) -> T {
-        for v in &mut self.data {
+        for v in &mut self.0 {
             *v = f(*v)
         }
     }
@@ -174,11 +165,11 @@ impl<T: Primitive + 'static> Pixel for $ident<T> {
 
     #[allow(trivial_casts)]
     fn apply_with_alpha<F, G>(&mut self, mut f: F, mut g: G) where F: FnMut(T) -> T, G: FnMut(T) -> T {
-        for v in self.data[..$channels as usize-$alphas as usize].iter_mut() {
+        for v in self.0[..$channels as usize-$alphas as usize].iter_mut() {
             *v = f(*v)
         }
         if $alphas as usize != 0 {
-            let v = &mut self.data[$channels as usize-$alphas as usize];
+            let v = &mut self.0[$channels as usize-$alphas as usize];
             *v = g(*v)
         }
     }
@@ -190,7 +181,7 @@ impl<T: Primitive + 'static> Pixel for $ident<T> {
     }
 
     fn apply2<F>(&mut self, other: &$ident<T>, mut f: F) where F: FnMut(T, T) -> T {
-        for (a, &b) in self.data.iter_mut().zip(other.data.iter()) {
+        for (a, &b) in self.0.iter_mut().zip(other.0.iter()) {
             *a = f(*a, b)
         }
     }
@@ -208,14 +199,14 @@ impl<T: Primitive> Index<usize> for $ident<T> {
     type Output = T;
     #[inline(always)]
     fn index(&self, _index: usize) -> &T {
-        &self.data[_index]
+        &self.0[_index]
     }
 }
 
 impl<T: Primitive> IndexMut<usize> for $ident<T> {
     #[inline(always)]
     fn index_mut(&mut self, _index: usize) -> &mut T {
-        &mut self.data[_index]
+        &mut self.0[_index]
     }
 }
 
@@ -589,8 +580,8 @@ impl<T: Primitive> Blend for LumaA<T> {
     fn blend(&mut self, other: &LumaA<T>) {
         let max_t = T::max_value();
         let max_t = max_t.to_f32().unwrap();
-        let (bg_luma, bg_a) = (self.data[0], self.data[1]);
-        let (fg_luma, fg_a) = (other.data[0], other.data[1]);
+        let (bg_luma, bg_a) = (self.0[0], self.0[1]);
+        let (fg_luma, fg_a) = (other.0[0], other.0[1]);
 
         let (bg_luma, bg_a) = (
             bg_luma.to_f32().unwrap() / max_t,
@@ -631,8 +622,8 @@ impl<T: Primitive> Blend for Rgba<T> {
         // First, as we don't know what type our pixel is, we have to convert to floats between 0.0 and 1.0
         let max_t = T::max_value();
         let max_t = max_t.to_f32().unwrap();
-        let (bg_r, bg_g, bg_b, bg_a) = (self.data[0], self.data[1], self.data[2], self.data[3]);
-        let (fg_r, fg_g, fg_b, fg_a) = (other.data[0], other.data[1], other.data[2], other.data[3]);
+        let (bg_r, bg_g, bg_b, bg_a) = (self.0[0], self.0[1], self.0[2], self.0[3]);
+        let (fg_r, fg_g, fg_b, fg_a) = (other.0[0], other.0[1], other.0[2], other.0[3]);
         let (bg_r, bg_g, bg_b, bg_a) = (
             bg_r.to_f32().unwrap() / max_t,
             bg_g.to_f32().unwrap() / max_t,
@@ -689,8 +680,8 @@ impl<T: Primitive> Blend for Bgra<T> {
         // First, as we don't know what type our pixel is, we have to convert to floats between 0.0 and 1.0
         let max_t = T::max_value();
         let max_t = max_t.to_f32().unwrap();
-        let (bg_r, bg_g, bg_b, bg_a) = (self.data[2], self.data[1], self.data[0], self.data[3]);
-        let (fg_r, fg_g, fg_b, fg_a) = (other.data[2], other.data[1], other.data[0], other.data[3]);
+        let (bg_r, bg_g, bg_b, bg_a) = (self.0[2], self.0[1], self.0[0], self.0[3]);
+        let (fg_r, fg_g, fg_b, fg_a) = (other.0[2], other.0[1], other.0[0], other.0[3]);
         let (bg_r, bg_g, bg_b, bg_a) = (
             bg_r.to_f32().unwrap() / max_t,
             bg_g.to_f32().unwrap() / max_t,
@@ -759,7 +750,7 @@ pub trait Invert {
 
 impl<T: Primitive> Invert for LumaA<T> {
     fn invert(&mut self) {
-        let l = self.data;
+        let l = self.0;
         let max = T::max_value();
 
         *self = LumaA([max - l[0], l[1]])
@@ -768,18 +759,18 @@ impl<T: Primitive> Invert for LumaA<T> {
 
 impl<T: Primitive> Invert for Luma<T> {
     fn invert(&mut self) {
-        let l = self.data;
+        let l = self.0;
 
         let max = T::max_value();
         let l1 = max - l[0];
 
-        *self = Luma { data: [l1] }
+        *self = Luma([l1])
     }
 }
 
 impl<T: Primitive> Invert for Rgba<T> {
     fn invert(&mut self) {
-        let rgba = self.data;
+        let rgba = self.0;
 
         let max = T::max_value();
 
@@ -790,7 +781,7 @@ impl<T: Primitive> Invert for Rgba<T> {
 
 impl<T: Primitive> Invert for Bgra<T> {
     fn invert(&mut self) {
-        let bgra = self.data;
+        let bgra = self.0;
 
         let max = T::max_value();
 
@@ -801,7 +792,7 @@ impl<T: Primitive> Invert for Bgra<T> {
 
 impl<T: Primitive> Invert for Rgb<T> {
     fn invert(&mut self) {
-        let rgb = self.data;
+        let rgb = self.0;
 
         let max = T::max_value();
 
@@ -815,7 +806,7 @@ impl<T: Primitive> Invert for Rgb<T> {
 
 impl<T: Primitive> Invert for Bgr<T> {
     fn invert(&mut self) {
-        let bgr = self.data;
+        let bgr = self.0;
 
         let max = T::max_value();
 
@@ -833,157 +824,157 @@ mod tests {
 
     #[test]
     fn test_apply_with_alpha_rgba() {
-        let mut rgba = Rgba { data: [0, 0, 0, 0] };
+        let mut rgba = Rgba([0, 0, 0, 0]);
         rgba.apply_with_alpha(|s| s, |_| 0xFF);
-        assert_eq!(
-            rgba,
-            Rgba {
-                data: [0, 0, 0, 0xFF]
-            }
-        );
+        assert_eq!(rgba, Rgba([0, 0, 0, 0xFF]));
     }
 
     #[test]
     fn test_apply_with_alpha_bgra() {
-        let mut bgra = Bgra { data: [0, 0, 0, 0] };
+        let mut bgra = Bgra([0, 0, 0, 0]);
         bgra.apply_with_alpha(|s| s, |_| 0xFF);
-        assert_eq!(
-            bgra,
-            Bgra {
-                data: [0, 0, 0, 0xFF]
-            }
-        );
+        assert_eq!(bgra, Bgra([0, 0, 0, 0xFF]));
     }
 
     #[test]
     fn test_apply_with_alpha_rgb() {
-        let mut rgb = Rgb { data: [0, 0, 0] };
+        let mut rgb = Rgb([0, 0, 0]);
         rgb.apply_with_alpha(|s| s, |_| panic!("bug"));
-        assert_eq!(rgb, Rgb { data: [0, 0, 0] });
+        assert_eq!(rgb, Rgb([0, 0, 0]));
     }
 
     #[test]
     fn test_apply_with_alpha_bgr() {
-        let mut bgr = Bgr { data: [0, 0, 0] };
+        let mut bgr = Bgr([0, 0, 0]);
         bgr.apply_with_alpha(|s| s, |_| panic!("bug"));
-        assert_eq!(bgr, Bgr { data: [0, 0, 0] });
+        assert_eq!(bgr, Bgr([0, 0, 0]));
     }
 
 
     #[test]
     fn test_map_with_alpha_rgba() {
-        let rgba = Rgba { data: [0, 0, 0, 0] }.map_with_alpha(|s| s, |_| 0xFF);
-        assert_eq!(
-            rgba,
-            Rgba {
-                data: [0, 0, 0, 0xFF]
-            }
-        );
+        let rgba = Rgba([0, 0, 0, 0]).map_with_alpha(|s| s, |_| 0xFF);
+        assert_eq!(rgba, Rgba([0, 0, 0, 0xFF]));
     }
 
     #[test]
     fn test_map_with_alpha_rgb() {
-        let rgb = Rgb { data: [0, 0, 0] }.map_with_alpha(|s| s, |_| panic!("bug"));
-        assert_eq!(rgb, Rgb { data: [0, 0, 0] });
+        let rgb = Rgb([0, 0, 0]).map_with_alpha(|s| s, |_| panic!("bug"));
+        assert_eq!(rgb, Rgb([0, 0, 0]));
     }
 
     #[test]
     fn test_map_with_alpha_bgr() {
-        let bgr = Bgr { data: [0, 0, 0] }.map_with_alpha(|s| s, |_| panic!("bug"));
-        assert_eq!(bgr, Bgr { data: [0, 0, 0] });
+        let bgr = Bgr([0, 0, 0]).map_with_alpha(|s| s, |_| panic!("bug"));
+        assert_eq!(bgr, Bgr([0, 0, 0]));
     }
 
 
     #[test]
     fn test_map_with_alpha_bgra() {
-        let bgra = Bgra { data: [0, 0, 0, 0] }.map_with_alpha(|s| s, |_| 0xFF);
-        assert_eq!(
-            bgra,
-            Bgra {
-                data: [0, 0, 0, 0xFF]
-            }
-        );
+        let bgra = Bgra([0, 0, 0, 0]).map_with_alpha(|s| s, |_| 0xFF);
+        assert_eq!(bgra, Bgra([0, 0, 0, 0xFF]));
     }
 
     #[test]
     fn test_blend_luma_alpha() {
-        let ref mut a = LumaA {
-            data: [255 as u8, 255],
-        };
-        let b = LumaA {
-            data: [255 as u8, 255],
-        };
+        let ref mut a = LumaA([255 as u8, 255]);
+        let b = LumaA([255 as u8, 255]);
         a.blend(&b);
-        assert_eq!(a.data[0], 255);
-        assert_eq!(a.data[1], 255);
+        assert_eq!(a.0[0], 255);
+        assert_eq!(a.0[1], 255);
 
-        let ref mut a = LumaA {
-            data: [255 as u8, 0],
-        };
-        let b = LumaA {
-            data: [255 as u8, 255],
-        };
+        let ref mut a = LumaA([255 as u8, 0]);
+        let b = LumaA([255 as u8, 255]);
         a.blend(&b);
-        assert_eq!(a.data[0], 255);
-        assert_eq!(a.data[1], 255);
+        assert_eq!(a.0[0], 255);
+        assert_eq!(a.0[1], 255);
 
-        let ref mut a = LumaA {
-            data: [255 as u8, 255],
-        };
-        let b = LumaA {
-            data: [255 as u8, 0],
-        };
+        let ref mut a = LumaA([255 as u8, 255]);
+        let b = LumaA([255 as u8, 0]);
         a.blend(&b);
-        assert_eq!(a.data[0], 255);
-        assert_eq!(a.data[1], 255);
+        assert_eq!(a.0[0], 255);
+        assert_eq!(a.0[1], 255);
 
-        let ref mut a = LumaA {
-            data: [255 as u8, 0],
-        };
-        let b = LumaA {
-            data: [255 as u8, 0],
-        };
+        let ref mut a = LumaA([255 as u8, 0]);
+        let b = LumaA([255 as u8, 0]);
         a.blend(&b);
-        assert_eq!(a.data[0], 255);
-        assert_eq!(a.data[1], 0);
+        assert_eq!(a.0[0], 255);
+        assert_eq!(a.0[1], 0);
     }
 
     #[test]
     fn test_blend_rgba() {
-        let ref mut a = Rgba {
-            data: [255 as u8, 255, 255, 255],
-        };
-        let b = Rgba {
-            data: [255 as u8, 255, 255, 255],
-        };
+        let ref mut a = Rgba([255 as u8, 255, 255, 255]);
+        let b = Rgba([255 as u8, 255, 255, 255]);
         a.blend(&b);
-        assert_eq!(a.data, [255, 255, 255, 255]);
+        assert_eq!(a.0, [255, 255, 255, 255]);
 
-        let ref mut a = Rgba {
-            data: [255 as u8, 255, 255, 0],
-        };
-        let b = Rgba {
-            data: [255 as u8, 255, 255, 255],
-        };
+        let ref mut a = Rgba([255 as u8, 255, 255, 0]);
+        let b = Rgba([255 as u8, 255, 255, 255]);
         a.blend(&b);
-        assert_eq!(a.data, [255, 255, 255, 255]);
+        assert_eq!(a.0, [255, 255, 255, 255]);
 
-        let ref mut a = Rgba {
-            data: [255 as u8, 255, 255, 255],
-        };
-        let b = Rgba {
-            data: [255 as u8, 255, 255, 0],
-        };
+        let ref mut a = Rgba([255 as u8, 255, 255, 255]);
+        let b = Rgba([255 as u8, 255, 255, 0]);
         a.blend(&b);
-        assert_eq!(a.data, [255, 255, 255, 255]);
+        assert_eq!(a.0, [255, 255, 255, 255]);
 
-        let ref mut a = Rgba {
-            data: [255 as u8, 255, 255, 0],
-        };
-        let b = Rgba {
-            data: [255 as u8, 255, 255, 0],
-        };
+        let ref mut a = Rgba([255 as u8, 255, 255, 0]);
+        let b = Rgba([255 as u8, 255, 255, 0]);
         a.blend(&b);
-        assert_eq!(a.data, [255, 255, 255, 0]);
+        assert_eq!(a.0, [255, 255, 255, 0]);
+    }    
+
+    #[test]
+    fn test_apply_without_alpha_rgba() {
+        let mut rgba = Rgba([0, 0, 0, 0]);
+        rgba.apply_without_alpha(|s| s + 1);
+        assert_eq!(rgba, Rgba([1, 1, 1, 0]));
+    }
+
+    #[test]
+    fn test_apply_without_alpha_bgra() {
+        let mut bgra = Bgra([0, 0, 0, 0]);
+        bgra.apply_without_alpha(|s| s + 1);
+        assert_eq!(bgra, Bgra([1, 1, 1, 0]));
+    }
+
+    #[test]
+    fn test_apply_without_alpha_rgb() {
+        let mut rgb = Rgb([0, 0, 0]);
+        rgb.apply_without_alpha(|s| s + 1);
+        assert_eq!(rgb, Rgb([1, 1, 1]));
+    }
+
+    #[test]
+    fn test_apply_without_alpha_bgr() {
+        let mut bgr = Bgr([0, 0, 0]);
+        bgr.apply_without_alpha(|s| s + 1);
+        assert_eq!(bgr, Bgr([1, 1, 1]));
+    }
+
+    #[test]
+    fn test_map_without_alpha_rgba() {
+        let rgba = Rgba([0, 0, 0, 0]).map_without_alpha(|s| s + 1);
+        assert_eq!(rgba, Rgba([1, 1, 1, 0]));
+    }
+
+    #[test]
+    fn test_map_without_alpha_rgb() {
+        let rgb = Rgb([0, 0, 0]).map_without_alpha(|s| s + 1);
+        assert_eq!(rgb, Rgb([1, 1, 1]));
+    }
+
+    #[test]
+    fn test_map_without_alpha_bgr() {
+        let bgr = Bgr([0, 0, 0]).map_without_alpha(|s| s + 1);
+        assert_eq!(bgr, Bgr([1, 1, 1]));
+    }
+
+    #[test]
+    fn test_map_without_alpha_bgra() {
+        let bgra = Bgra([0, 0, 0, 0]).map_without_alpha(|s| s + 1);
+        assert_eq!(bgra, Bgra([1, 1, 1, 0]));
     }
 }

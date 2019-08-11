@@ -1,6 +1,8 @@
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 use std::str::{self, FromStr};
 use std::fmt::Display;
+use std::marker::PhantomData;
+use std::mem;
 
 use super::{ArbitraryHeader, ArbitraryTuplType, BitmapHeader, GraymapHeader, PixmapHeader};
 use super::{HeaderRecord, PNMHeader, PNMSubtype, SampleEncoding};
@@ -27,7 +29,7 @@ trait Sample {
     fn from_bytes(bytes: &[u8], width: u32, height: u32, samples: u32)
         -> ImageResult<Vec<u8>>;
 
-    fn from_ascii(reader: &mut Read, width: u32, height: u32, samples: u32)
+    fn from_ascii(reader: &mut dyn Read, width: u32, height: u32, samples: u32)
         -> ImageResult<Vec<u8>>;
 }
 
@@ -406,8 +408,24 @@ trait HeaderReader: BufRead {
 
 impl<R: Read> HeaderReader for BufReader<R> {}
 
-impl<R: Read> ImageDecoder for PNMDecoder<R> {
-    type Reader = Cursor<Vec<u8>>;
+/// Wrapper struct around a `Cursor<Vec<u8>>`
+pub struct PnmReader<R>(Cursor<Vec<u8>>, PhantomData<R>);
+impl<R> Read for PnmReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
+    }
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        if self.0.position() == 0 && buf.is_empty() {
+            mem::swap(buf, self.0.get_mut());
+            Ok(buf.len())
+        } else {
+            self.0.read_to_end(buf)
+        }
+    }
+}
+
+impl<'a, R: 'a + Read> ImageDecoder<'a> for PNMDecoder<R> {
+    type Reader = PnmReader<R>;
 
     fn dimensions(&self) -> (u64, u64) {
         (self.header.width() as u64, self.header.height() as u64)
@@ -418,7 +436,7 @@ impl<R: Read> ImageDecoder for PNMDecoder<R> {
     }
 
     fn into_reader(self) -> ImageResult<Self::Reader> {
-        Ok(Cursor::new(self.read_image()?))
+        Ok(PnmReader(Cursor::new(self.read_image()?), PhantomData))
     }
 
     fn read_image(mut self) -> ImageResult<Vec<u8>> {
@@ -482,7 +500,7 @@ impl TupleType {
     }
 }
 
-fn read_separated_ascii<T: FromStr>(reader: &mut Read) -> ImageResult<T>
+fn read_separated_ascii<T: FromStr>(reader: &mut dyn Read) -> ImageResult<T>
     where T::Err: Display
 {
     let is_separator = |v: &u8| match *v {
@@ -529,7 +547,7 @@ impl Sample for U8 {
     }
 
     fn from_ascii(
-        reader: &mut Read,
+        reader: &mut dyn Read,
         width: u32,
         height: u32,
         samples: u32,
@@ -562,7 +580,7 @@ impl Sample for U16 {
     }
 
     fn from_ascii(
-        reader: &mut Read,
+        reader: &mut dyn Read,
         width: u32,
         height: u32,
         samples: u32,
@@ -596,7 +614,7 @@ impl Sample for PbmBit {
     }
 
     fn from_ascii(
-        reader: &mut Read,
+        reader: &mut dyn Read,
         width: u32,
         height: u32,
         samples: u32,
@@ -650,7 +668,7 @@ impl Sample for BWBit {
     }
 
     fn from_ascii(
-        _reader: &mut Read,
+        _reader: &mut dyn Read,
         _width: u32,
         _height: u32,
         _samples: u32,
