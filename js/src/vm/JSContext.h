@@ -551,14 +551,6 @@ struct JSContext : public JS::RootingContext,
   js::ContextData<bool> gcSweeping;
 
 #ifdef DEBUG
-  // Whether this thread is actively Ion compiling.
-  js::ContextData<bool> ionCompiling;
-
-  // Whether this thread is actively Ion compiling in a context where a minor
-  // GC could happen simultaneously. If this is true, this thread cannot use
-  // any pointers into the nursery.
-  js::ContextData<bool> ionCompilingSafeForMinorGC;
-
   // Whether this thread is currently manipulating possibly-gray GC things.
   js::ContextData<size_t> isTouchingGrayThings;
 
@@ -1249,35 +1241,6 @@ class MOZ_RAII AutoKeepAtoms {
  public:
   explicit inline AutoKeepAtoms(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   inline ~AutoKeepAtoms();
-};
-
-// Debugging RAII class which marks the current thread as performing an Ion
-// compilation, for use by CurrentThreadCan{Read,Write}CompilationData
-class MOZ_RAII AutoEnterIonCompilation {
- public:
-  explicit AutoEnterIonCompilation(
-      bool safeForMinorGC MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-#ifdef DEBUG
-    JSContext* cx = TlsContext.get();
-    MOZ_ASSERT(!cx->ionCompiling);
-    MOZ_ASSERT(!cx->ionCompilingSafeForMinorGC);
-    cx->ionCompiling = true;
-    cx->ionCompilingSafeForMinorGC = safeForMinorGC;
-#endif
-  }
-
-  ~AutoEnterIonCompilation() {
-#ifdef DEBUG
-    JSContext* cx = TlsContext.get();
-    MOZ_ASSERT(cx->ionCompiling);
-    cx->ionCompiling = false;
-    cx->ionCompilingSafeForMinorGC = false;
-#endif
-  }
-
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 enum UnsafeABIStrictness {

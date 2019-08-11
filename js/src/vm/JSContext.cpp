@@ -1249,8 +1249,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       suppressGC(this, 0),
       gcSweeping(this, false),
 #ifdef DEBUG
-      ionCompiling(this, false),
-      ionCompilingSafeForMinorGC(this, false),
       isTouchingGrayThings(this, false),
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),
