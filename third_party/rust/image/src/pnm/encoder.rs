@@ -170,10 +170,10 @@ impl<W: Write> PNMEncoder<W> {
         let (maxval, tupltype) = match color {
             ColorType::Gray(1) => (1, ArbitraryTuplType::BlackAndWhite),
             ColorType::GrayA(1) => (1, ArbitraryTuplType::BlackAndWhiteAlpha),
-            ColorType::Gray(n @ 1..=16) => ((1 << n) - 1, ArbitraryTuplType::Grayscale),
-            ColorType::GrayA(n @ 1..=16) => ((1 << n) - 1, ArbitraryTuplType::GrayscaleAlpha),
-            ColorType::RGB(n @ 1..=16) => ((1 << n) - 1, ArbitraryTuplType::RGB),
-            ColorType::RGBA(n @ 1..=16) => ((1 << n) - 1, ArbitraryTuplType::RGBAlpha),
+            ColorType::Gray(n @ 1...16) => ((1 << n) - 1, ArbitraryTuplType::Grayscale),
+            ColorType::GrayA(n @ 1...16) => ((1 << n) - 1, ArbitraryTuplType::GrayscaleAlpha),
+            ColorType::RGB(n @ 1...16) => ((1 << n) - 1, ArbitraryTuplType::RGB),
+            ColorType::RGBA(n @ 1...16) => ((1 << n) - 1, ArbitraryTuplType::RGBAlpha),
             _ => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
@@ -251,7 +251,7 @@ impl<W: Write> PNMEncoder<W> {
     ///
     /// Returns how the body should be written if successful.
     fn write_with_header(
-        writer: &mut dyn Write,
+        writer: &mut Write,
         header: &PNMHeader,
         image: FlatSamples,
         width: u32,
@@ -472,7 +472,7 @@ impl<'a> CheckedHeaderColor<'a> {
 }
 
 impl<'a> CheckedHeader<'a> {
-    fn write_header(self, writer: &mut dyn Write) -> io::Result<TupleEncoding<'a>> {
+    fn write_header(self, writer: &mut Write) -> io::Result<TupleEncoding<'a>> {
         self.header().write(writer)?;
         Ok(self.encoding)
     }
@@ -482,7 +482,7 @@ impl<'a> CheckedHeader<'a> {
     }
 }
 
-struct SampleWriter<'a>(&'a mut dyn Write);
+struct SampleWriter<'a>(&'a mut Write);
 
 impl<'a> SampleWriter<'a> {
     fn write_samples_ascii<V>(self, samples: V) -> io::Result<()>
@@ -596,7 +596,7 @@ impl<'a> From<&'a [u16]> for FlatSamples<'a> {
 }
 
 impl<'a> TupleEncoding<'a> {
-    fn write_image(&self, writer: &mut dyn Write) -> io::Result<()> {
+    fn write_image(&self, writer: &mut Write) -> io::Result<()> {
         match *self {
             TupleEncoding::PbmBits {
                 samples: FlatSamples::U8(samples),

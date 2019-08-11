@@ -1,14 +1,31 @@
-# Image [![crates.io](https://img.shields.io/crates/v/image.svg)](https://crates.io/crates/image) [![Build Status](https://travis-ci.org/image-rs/image.svg?branch=master)](https://travis-ci.org/image-rs/image) [![Gitter](https://badges.gitter.im/image-rs/image.svg)](https://gitter.im/image-rs/image?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+# Image [![Build Status](https://travis-ci.org/PistonDevelopers/image.svg?branch=master)](https://travis-ci.org/PistonDevelopers/image)
 
 Maintainers: @nwin, @ccgn
 
-[How to contribute](https://github.com/image-rs/organization/blob/master/CONTRIBUTING.md)
+[How to contribute](https://github.com/PistonDevelopers/piston/blob/master/CONTRIBUTING.md)
 
 ## An Image Processing Library
 
 This crate provides basic imaging processing functions and methods for converting to and from image formats.
 
 All image processing functions provided operate on types that implement the ```GenericImage``` trait and return an ```ImageBuffer```.
+
+### Usage
+
+Add the following to the Cargo.toml in your project:
+
+```toml
+[dependencies]
+image = "*"
+```
+
+and import using ```extern crate```:
+
+```rust
+extern crate image;
+
+// use image::
+```
 
 ## 1. Documentation
 
@@ -25,7 +42,7 @@ https://docs.rs/image
 | GIF    | Yes | Yes |
 | BMP    | Yes | RGB(8), RGBA(8), Gray(8), GrayA(8) |
 | ICO    | Yes | Yes |
-| TIFF   | Baseline(no fax support) + LZW + PackBits | RGB(8), RGBA(8), Gray(8) |
+| TIFF   | Baseline(no fax support) + LZW + PackBits | No |
 | Webp   | Lossy(Luma channel only) | No |
 | PNM    | PBM, PGM, PPM, standard PAM | Yes |
 
@@ -52,7 +69,6 @@ All pixels are parameterised by their component type.
 A trait that provides functions for manipulating images, parameterised over the image's pixel type.
 
 ```rust
-# use image::{Pixel, Pixels};
 pub trait GenericImage {
     /// The pixel type.
     type Pixel: Pixel;
@@ -85,13 +101,13 @@ An image parameterised by its Pixel types, represented by a width and height and
 ```rust
 extern crate image;
 
-use image::{GenericImage, GenericImageView, ImageBuffer, RgbImage};
+use image::{GenericImage, ImageBuffer};
 
-// Construct a new RGB ImageBuffer with the specified width and height.
-let img: RgbImage = ImageBuffer::new(512, 512);
+// Construct a new ImageBuffer with the specified width and height.
+let img = ImageBuffer::new(512, 512);
 
 // Construct a new by repeated calls to the supplied closure.
-let mut img = ImageBuffer::from_fn(512, 512, |x, y| {
+let img = ImageBuffer::from_fn(512, 512, |x, y| {
     if x % 2 == 0 {
         image::Luma([0u8])
     } else {
@@ -106,7 +122,7 @@ let (width, height) = img.dimensions();
 let pixel = img[(100, 100)];
 
 // Or use the ```get_pixel``` method from the ```GenericImage``` trait.
-let pixel = *img.get_pixel(100, 100);
+let pixel = img.get_pixel(100, 100);
 
 // Put a pixel at coordinate (100, 100).
 img.put_pixel(100, 100, pixel);
@@ -131,10 +147,10 @@ This is used to perform image processing functions on a subregion of an image.
 ```rust
 extern crate image;
 
-use image::{GenericImageView, ImageBuffer, RgbImage, imageops};
+use image::{GenericImage, ImageBuffer, imageops};
 
-let mut img: RgbImage = ImageBuffer::new(512, 512);
-let subimg = imageops::crop(&mut img, 0, 0, 100, 100);
+let ref mut img = ImageBuffer::new(512, 512);
+let subimg = imageops::crop(img, 0, 0, 100, 100);
 
 assert!(subimg.dimensions() == (100, 100));
 ```
@@ -164,7 +180,7 @@ These are the functions defined in the ```imageops``` module. All functions oper
 
 The image format is determined from the path's file extension.
 
-```rust,no_run
+```rust
 extern crate image;
 
 use image::GenericImageView;
@@ -172,7 +188,7 @@ use image::GenericImageView;
 fn main() {
     // Use the open function to load an image from a Path.
     // ```open``` returns a `DynamicImage` on success.
-    let img = image::open("tests/images/jpg/progressive/cat.jpg").unwrap();
+    let img = image::open("test.jpg").unwrap();
 
     // The dimensions method returns the images width and height.
     println!("dimensions {:?}", img.dimensions());
@@ -186,7 +202,7 @@ fn main() {
 ```
 
 ### 6.2 Generating Fractals
-```rust,no_run
+```rust
 //! An example of generating julia fractals.
 extern crate image;
 extern crate num_complex;
@@ -224,7 +240,7 @@ fn main() {
             }
 
             let pixel = imgbuf.get_pixel_mut(x, y);
-            let image::Rgb(data) = *pixel;
+            let data = (*pixel as image::Rgb<u8>).data;
             *pixel = image::Rgb([data[0], i as u8, data[2]]);
         }
     }
@@ -241,12 +257,12 @@ Example output:
 ### 6.3 Writing raw buffers
 If the high level interface is not needed because the image was obtained by other means, `image` provides the function `save_buffer` to save a buffer to a file.
 
-```rust,no_run
+```rust
 extern crate image;
 
 fn main() {
 
-    let buffer: &[u8] = unimplemented!(); // Generate the image data
+    let buffer: &[u8] = ...; // Generate the image data
 
     // Save the buffer as "image.png"
     image::save_buffer("image.png", buffer, 800, 600, image::RGB(8)).unwrap()

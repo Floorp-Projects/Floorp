@@ -1,5 +1,19 @@
 use std::io;
 
+/// Configuration parameter trait
+pub trait Parameter<Object> {
+    fn set_param(self, &mut Object);
+}
+
+/// Object has parameters
+pub trait HasParameters: Sized {
+    fn set<T: Parameter<Self>>(&mut self, value: T) -> &mut Self {
+        value.set_param(self);
+        self
+    }
+}
+
+
 // Will be replaced by stdlib solution
 fn read_all<R: io::Read + ?Sized>(this: &mut R, buf: &mut [u8]) -> io::Result<()> {
     let mut total = 0;
@@ -25,7 +39,7 @@ pub trait ReadBytesExt<T>: io::Read {
 /// Write extension to write big endian data
 pub trait WriteBytesExt<T>: io::Write {
     /// Writes `T` to a bytes stream. Most significant byte first.
-    fn write_be(&mut self, _: T) -> io::Result<()>;
+    fn write_be(&mut self, T) -> io::Result<()>;
 
 }
 
@@ -33,7 +47,7 @@ impl<W: io::Read + ?Sized> ReadBytesExt<u8> for W {
 	#[inline]
 	fn read_be(&mut self) -> io::Result<u8> {
         let mut byte = [0];
-		read_all(self, &mut byte)?;
+		try!(read_all(self, &mut byte));
         Ok(byte[0])
 	}
 }
@@ -41,7 +55,7 @@ impl<W: io::Read + ?Sized> ReadBytesExt<u16> for W {
 	#[inline]
 	fn read_be(&mut self) -> io::Result<u16> {
         let mut bytes = [0, 0];
-		read_all(self, &mut bytes)?;
+		try!(read_all(self, &mut bytes));
         Ok((bytes[0] as u16) << 8 | bytes[1] as u16)
 	}
 }
@@ -50,7 +64,7 @@ impl<W: io::Read + ?Sized> ReadBytesExt<u32> for W {
 	#[inline]
 	fn read_be(&mut self) -> io::Result<u32> {
         let mut bytes = [0, 0, 0, 0];
-		read_all(self, &mut bytes)?;
+		try!(read_all(self, &mut bytes));
         Ok(  (bytes[0] as u32) << 24 
            | (bytes[1] as u32) << 16
            | (bytes[2] as u32) << 8

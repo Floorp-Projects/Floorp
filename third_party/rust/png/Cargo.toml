@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g. crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,27 +11,25 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-edition = "2018"
 name = "png"
-version = "0.15.0"
+version = "0.14.0"
 authors = ["nwin <nwin@users.noreply.github.com>"]
 exclude = ["tests/*"]
 description = "PNG decoding and encoding library in pure Rust"
-categories = ["multimedia::images"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/image-rs/image-png.git"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/PistonDevelopers/image-png.git"
 [dependencies.bitflags]
 version = "1.0"
 
-[dependencies.crc32fast]
-version = "1.2.0"
-
 [dependencies.deflate]
-version = "0.7.12"
+version = "0.7.2"
 optional = true
 
 [dependencies.inflate]
 version = "0.4.2"
+
+[dependencies.num-iter]
+version = "0.1.32"
 [dev-dependencies.getopts]
 version = "0.2.14"
 
@@ -41,7 +39,7 @@ features = ["glutin"]
 default-features = false
 
 [dev-dependencies.glob]
-version = "0.3"
+version = "0.2.11"
 
 [dev-dependencies.rand]
 version = "0.5.5"
@@ -50,7 +48,6 @@ version = "0.5.5"
 version = "0.4"
 
 [features]
-benchmarks = []
 default = ["png-encoding"]
 png-encoding = ["deflate"]
 unstable = []
