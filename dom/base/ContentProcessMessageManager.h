@@ -72,7 +72,7 @@ class ContentProcessMessageManager : public nsIMessageSender,
                              JS::MutableHandle<JS::Value> aInitialProcessData,
                              ErrorResult& aError) {
     if (!mMessageManager) {
-      aError.Throw(NS_ERROR_NULL_POINTER);
+      aError.Throw(NS_ERROR_NOT_INITIALIZED);
       return;
     }
     mMessageManager->GetInitialProcessData(aCx, aInitialProcessData, aError);

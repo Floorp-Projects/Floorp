@@ -345,6 +345,17 @@ var gIdentityHandler = {
     return this._useGrayLockIcon;
   },
 
+  get _showExtendedValidation() {
+    delete this._showExtendedValidation;
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_showExtendedValidation",
+      "security.identityblock.show_extended_validation",
+      false
+    );
+    return this._showExtendedValidation;
+  },
+
   /**
    * Handles clicks on the "Clear Cookies and Site Data" button.
    */
@@ -641,7 +652,7 @@ var gIdentityHandler = {
    */
   get pointerlockFsWarningClassName() {
     // Note that the fullscreen warning does not handle _isSecureInternalUI.
-    if (this._uriHasHost && this._isEV) {
+    if (this._uriHasHost && this._isEV && this._showExtendedValidation) {
       return "verifiedIdentity";
     }
     if (this._uriHasHost && this._isSecureConnection) {
@@ -706,7 +717,7 @@ var gIdentityHandler = {
       this._identityBox.className = "chromeUI";
       let brandBundle = document.getElementById("bundle_brand");
       icon_label = brandBundle.getString("brandShorterName");
-    } else if (this._uriHasHost && this._isEV) {
+    } else if (this._uriHasHost && this._isEV && this._showExtendedValidation) {
       // This is a secure connection with EV.
       this._identityBox.className = "verifiedIdentity";
       if (this._isMixedActiveContentBlocked) {
