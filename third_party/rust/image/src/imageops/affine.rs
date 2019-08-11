@@ -4,13 +4,10 @@ use buffer::{ImageBuffer, Pixel};
 use image::GenericImageView;
 
 /// Rotate an image 90 degrees clockwise.
-// TODO: Is the 'static bound on `I` really required? Can we avoid it?
-pub fn rotate90<I: GenericImageView + 'static>(
+pub fn rotate90<I: GenericImageView>(
     image: &I,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
-where
-    I::Pixel: 'static,
-    <I::Pixel as Pixel>::Subpixel: 'static,
+    where I::Pixel: 'static,
 {
     let (width, height) = image.dimensions();
     let mut out = ImageBuffer::new(height, width);
@@ -26,13 +23,10 @@ where
 }
 
 /// Rotate an image 180 degrees clockwise.
-// TODO: Is the 'static bound on `I` really required? Can we avoid it?
-pub fn rotate180<I: GenericImageView + 'static>(
+pub fn rotate180<I: GenericImageView>(
     image: &I,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
-where
-    I::Pixel: 'static,
-    <I::Pixel as Pixel>::Subpixel: 'static,
+    where I::Pixel: 'static,
 {
     let (width, height) = image.dimensions();
     let mut out = ImageBuffer::new(width, height);
@@ -48,13 +42,10 @@ where
 }
 
 /// Rotate an image 270 degrees clockwise.
-// TODO: Is the 'static bound on `I` really required? Can we avoid it?
-pub fn rotate270<I: GenericImageView + 'static>(
+pub fn rotate270<I: GenericImageView>(
     image: &I,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
-where
-    I::Pixel: 'static,
-    <I::Pixel as Pixel>::Subpixel: 'static,
+    where I::Pixel: 'static,
 {
     let (width, height) = image.dimensions();
     let mut out = ImageBuffer::new(height, width);
@@ -70,13 +61,10 @@ where
 }
 
 /// Flip an image horizontally
-// TODO: Is the 'static bound on `I` really required? Can we avoid it?
-pub fn flip_horizontal<I: GenericImageView + 'static>(
+pub fn flip_horizontal<I: GenericImageView>(
     image: &I,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
-where
-    I::Pixel: 'static,
-    <I::Pixel as Pixel>::Subpixel: 'static,
+    where I::Pixel: 'static,
 {
     let (width, height) = image.dimensions();
     let mut out = ImageBuffer::new(width, height);
@@ -92,13 +80,10 @@ where
 }
 
 /// Flip an image vertically
-// TODO: Is the 'static bound on `I` really required? Can we avoid it?
-pub fn flip_vertical<I: GenericImageView + 'static>(
+pub fn flip_vertical<I: GenericImageView>(
     image: &I,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
-where
-    I::Pixel: 'static,
-    <I::Pixel as Pixel>::Subpixel: 'static,
+    where I::Pixel: 'static,
 {
     let (width, height) = image.dimensions();
     let mut out = ImageBuffer::new(width, height);

@@ -101,20 +101,20 @@ impl Header {
     }
 
     /// Load the header with values from the reader
-    fn from_reader(r: &mut Read) -> ImageResult<Header> {
+    fn from_reader(r: &mut dyn Read) -> ImageResult<Header> {
         Ok(Header {
-            id_length: try!(r.read_u8()),
-            map_type: try!(r.read_u8()),
-            image_type: try!(r.read_u8()),
-            map_origin: try!(r.read_u16::<LittleEndian>()),
-            map_length: try!(r.read_u16::<LittleEndian>()),
-            map_entry_size: try!(r.read_u8()),
-            x_origin: try!(r.read_u16::<LittleEndian>()),
-            y_origin: try!(r.read_u16::<LittleEndian>()),
-            image_width: try!(r.read_u16::<LittleEndian>()),
-            image_height: try!(r.read_u16::<LittleEndian>()),
-            pixel_depth: try!(r.read_u8()),
-            image_desc: try!(r.read_u8()),
+            id_length: r.read_u8()?,
+            map_type: r.read_u8()?,
+            image_type: r.read_u8()?,
+            map_origin: r.read_u16::<LittleEndian>()?,
+            map_length: r.read_u16::<LittleEndian>()?,
+            map_entry_size: r.read_u8()?,
+            x_origin: r.read_u16::<LittleEndian>()?,
+            y_origin: r.read_u16::<LittleEndian>()?,
+            image_width: r.read_u16::<LittleEndian>()?,
+            image_height: r.read_u16::<LittleEndian>()?,
+            pixel_depth: r.read_u8()?,
+            image_desc: r.read_u8()?,
         })
     }
 }
@@ -128,7 +128,7 @@ struct ColorMap {
 
 impl ColorMap {
     pub fn from_reader(
-        r: &mut Read,
+        r: &mut dyn Read,
         start_offset: u16,
         num_entries: u16,
         bits_per_entry: u8,
@@ -136,7 +136,7 @@ impl ColorMap {
         let bytes_per_entry = (bits_per_entry as usize + 7) / 8;
 
         let mut bytes = vec![0; bytes_per_entry * num_entries as usize];
-        try!(r.read_exact(&mut bytes));
+        r.read_exact(&mut bytes)?;
 
         Ok(ColorMap {
             entry_size: bytes_per_entry,
@@ -197,7 +197,7 @@ impl<R: Read + Seek> TGADecoder<R> {
     }
 
     fn read_header(&mut self) -> ImageResult<()> {
-        self.header = try!(Header::from_reader(&mut self.r));
+        self.header = Header::from_reader(&mut self.r)?;
         self.image_type = ImageType::new(self.header.image_type);
         self.width = self.header.image_width as usize;
         self.height = self.header.image_height as usize;
@@ -207,10 +207,10 @@ impl<R: Read + Seek> TGADecoder<R> {
 
     fn read_metadata(&mut self) -> ImageResult<()> {
         if !self.has_loaded_metadata {
-            try!(self.read_header());
-            try!(self.read_image_id());
-            try!(self.read_color_map());
-            try!(self.read_color_information());
+            self.read_header()?;
+            self.read_image_id()?;
+            self.read_color_map()?;
+            self.read_color_information()?;
             self.has_loaded_metadata = true;
         }
         Ok(())
@@ -326,7 +326,7 @@ impl<R: Read + Seek> TGADecoder<R> {
         } else {
             let num_raw_bytes = self.width * self.height * self.bytes_per_pixel;
             let mut buf = vec![0; num_raw_bytes];
-            try!(self.r.by_ref().read_exact(&mut buf));
+            self.r.by_ref().read_exact(&mut buf)?;
             buf
         };
 
@@ -347,7 +347,7 @@ impl<R: Read + Seek> TGADecoder<R> {
         let mut pixel_data = Vec::with_capacity(num_bytes);
 
         while pixel_data.len() < num_bytes {
-            let run_packet = try!(self.r.read_u8());
+            let run_packet = self.r.read_u8()?;
             // If the highest bit in `run_packet` is set, then we repeat pixels
             //
             // Note: the TGA format adds 1 to both counts because having a count
@@ -498,7 +498,7 @@ impl<R: Read + Seek> TGADecoder<R> {
     }
 }
 
-impl<R: Read + Seek> ImageDecoder for TGADecoder<R> {
+impl<'a, R: 'a + Read + Seek> ImageDecoder<'a> for TGADecoder<R> {
     type Reader = TGAReader<R>;
 
     fn dimensions(&self) -> (u64, u64) {
