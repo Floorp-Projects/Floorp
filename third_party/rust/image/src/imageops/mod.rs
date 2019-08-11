@@ -117,11 +117,7 @@ pub fn overlay_bounds(
 }
 
 /// Overlay an image at a given coordinate (x, y)
-pub fn overlay<I, J>(bottom: &mut I, top: &J, x: u32, y: u32)
-where
-    I: GenericImage,
-    J: GenericImageView<Pixel = I::Pixel>,
-{
+pub fn overlay<I: GenericImage>(bottom: &mut I, top: &I, x: u32, y: u32) {
     let bottom_dims = bottom.dimensions();
     let top_dims = top.dimensions();
 
@@ -140,11 +136,7 @@ where
 }
 
 /// Replace the contents of an image at a given coordinate (x, y)
-pub fn replace<I, J>(bottom: &mut I, top: &J, x: u32, y: u32)
-where
-    I: GenericImage,
-    J: GenericImageView<Pixel = I::Pixel>,
-{
+pub fn replace<I: GenericImage>(bottom: &mut I, top: &I, x: u32, y: u32) {
     let bottom_dims = bottom.dimensions();
     let top_dims = top.dimensions();
 

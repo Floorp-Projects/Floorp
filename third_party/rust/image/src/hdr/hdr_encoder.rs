@@ -18,15 +18,15 @@ impl<W: Write> HDREncoder<W> {
     pub fn encode(mut self, data: &[Rgb<f32>], width: usize, height: usize) -> Result<()> {
         assert!(data.len() >= width * height);
         let w = &mut self.w;
-        w.write_all(SIGNATURE)?;
-        w.write_all(b"\n")?;
-        w.write_all(b"# Rust HDR encoder\n")?;
-        w.write_all(b"FORMAT=32-bit_rle_rgbe\n\n")?;
-        w.write_all(format!("-Y {} +X {}\n", height, width).as_bytes())?;
+        try!(w.write_all(SIGNATURE));
+        try!(w.write_all(b"\n"));
+        try!(w.write_all(b"# Rust HDR encoder\n"));
+        try!(w.write_all(b"FORMAT=32-bit_rle_rgbe\n\n"));
+        try!(w.write_all(format!("-Y {} +X {}\n", height, width).as_bytes()));
 
         if width < 8 || width > 32_768 {
             for &pix in data {
-                write_rgbe8(w, to_rgbe8(pix))?;
+                try!(write_rgbe8(w, to_rgbe8(pix)));
             }
         } else {
             // new RLE marker contains scanline width
@@ -54,19 +54,19 @@ impl<W: Write> HDREncoder<W> {
                     *b = cp.c[2];
                     *e = cp.e;
                 }
-                write_rgbe8(w, marker)?; // New RLE encoding marker
+                try!(write_rgbe8(w, marker)); // New RLE encoding marker
                 rle_buf.clear();
                 rle_compress(&bufr[..], &mut rle_buf);
-                w.write_all(&rle_buf[..])?;
+                try!(w.write_all(&rle_buf[..]));
                 rle_buf.clear();
                 rle_compress(&bufg[..], &mut rle_buf);
-                w.write_all(&rle_buf[..])?;
+                try!(w.write_all(&rle_buf[..]));
                 rle_buf.clear();
                 rle_compress(&bufb[..], &mut rle_buf);
-                w.write_all(&rle_buf[..])?;
+                try!(w.write_all(&rle_buf[..]));
                 rle_buf.clear();
                 rle_compress(&bufe[..], &mut rle_buf);
-                w.write_all(&rle_buf[..])?;
+                try!(w.write_all(&rle_buf[..]));
             }
         }
         Ok(())
@@ -226,7 +226,7 @@ fn write_rgbe8<W: Write>(w: &mut W, v: RGBE8Pixel) -> Result<()> {
 
 /// Converts ```Rgb<f32>``` into ```RGBE8Pixel```
 pub fn to_rgbe8(pix: Rgb<f32>) -> RGBE8Pixel {
-    let pix = pix.0;
+    let pix = pix.data;
     let mx = f32::max(pix[0], f32::max(pix[1], pix[2]));
     if mx <= 0.0 {
         RGBE8Pixel { c: [0, 0, 0], e: 0 }
@@ -274,13 +274,13 @@ fn to_rgbe8_test() {
     }
     fn relative_dist(a: Rgb<f32>, b: Rgb<f32>) -> f32 {
         // maximal difference divided by maximal value
-        let max_diff = a.0
+        let max_diff = a.data
             .iter()
-            .zip(b.0.iter())
+            .zip(b.data.iter())
             .fold(0.0, |diff, (&a, &b)| f32::max(diff, (a - b).abs()));
-        let max_val = a.0
+        let max_val = a.data
             .iter()
-            .chain(b.0.iter())
+            .chain(b.data.iter())
             .fold(0.0, |maxv, &a| f32::max(maxv, a));
         if max_val == 0.0 {
             0.0

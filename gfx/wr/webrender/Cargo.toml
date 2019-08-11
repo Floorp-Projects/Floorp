@@ -32,7 +32,7 @@ cstr = "0.1.2"
 euclid = { version = "0.20.0", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.6.17"
-image_loader = { optional = true, version = "0.22", package = "image", default-features = false, features = ["png_codec"] }
+image_loader = { optional = true, version = "0.21", package = "image", default-features = false, features = ["png_codec"] }
 lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"

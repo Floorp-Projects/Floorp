@@ -8,8 +8,10 @@
 //!  * <http://www.graphics.cornell.edu/~bjw/rgbe/rgbe.c>
 //!
 
-mod decoder;
-mod encoder;
+extern crate scoped_threadpool;
 
-pub use self::decoder::*;
-pub use self::encoder::*;
+mod hdr_decoder;
+mod hdr_encoder;
+
+pub use self::hdr_decoder::*;
+pub use self::hdr_encoder::*;

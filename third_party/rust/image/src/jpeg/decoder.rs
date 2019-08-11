@@ -1,8 +1,6 @@
 extern crate jpeg_decoder;
 
-use std::io::{self, Cursor, Read};
-use std::marker::PhantomData;
-use std::mem;
+use std::io::{Cursor, Read};
 
 use color::ColorType;
 use image::{ImageDecoder, ImageError, ImageResult};
@@ -33,24 +31,8 @@ impl<R: Read> JPEGDecoder<R> {
     }
 }
 
-/// Wrapper struct around a `Cursor<Vec<u8>>`
-pub struct JpegReader<R>(Cursor<Vec<u8>>, PhantomData<R>);
-impl<R> Read for JpegReader<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(buf)
-    }
-    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        if self.0.position() == 0 && buf.is_empty() {
-            mem::swap(buf, self.0.get_mut());
-            Ok(buf.len())
-        } else {
-            self.0.read_to_end(buf)
-        }
-    }
-}
-
-impl<'a, R: 'a + Read> ImageDecoder<'a> for JPEGDecoder<R> {
-    type Reader = JpegReader<R>;
+impl<R: Read> ImageDecoder for JPEGDecoder<R> {
+    type Reader = Cursor<Vec<u8>>;
 
     fn dimensions(&self) -> (u64, u64) {
         (self.metadata.width as u64, self.metadata.height as u64)
@@ -61,7 +43,7 @@ impl<'a, R: 'a + Read> ImageDecoder<'a> for JPEGDecoder<R> {
     }
 
     fn into_reader(self) -> ImageResult<Self::Reader> {
-        Ok(JpegReader(Cursor::new(self.read_image()?), PhantomData))
+        Ok(Cursor::new(self.read_image()?))
     }
 
     fn read_image(mut self) -> ImageResult<Vec<u8>> {
