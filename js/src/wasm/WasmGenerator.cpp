@@ -1259,10 +1259,7 @@ bool ModuleGenerator::finishTier2(const Module& module) {
   return module.finishTier2(*linkData_, std::move(codeTier));
 }
 
-void CompileTask::runTask() {
-  AutoSetHelperThreadContext needsContext;
-  ExecuteCompileTaskFromHelperThread(this);
-}
+void CompileTask::runTask() { ExecuteCompileTaskFromHelperThread(this); }
 
 size_t CompiledCode::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
