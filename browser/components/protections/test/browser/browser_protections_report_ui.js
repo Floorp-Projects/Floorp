@@ -49,12 +49,17 @@ add_task(async function test_graph_display() {
   });
   await db.execute(SQL.insertCustomTimeEvent, {
     type: TrackingDBService.FINGERPRINTERS_ID,
-    count: 3,
+    count: 2,
     timestamp: date,
   });
   await db.execute(SQL.insertCustomTimeEvent, {
     type: TrackingDBService.TRACKING_COOKIES_ID,
     count: 4,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
     timestamp: date,
   });
 
@@ -74,6 +79,11 @@ add_task(async function test_graph_display() {
     count: 2,
     timestamp: date,
   });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
+    timestamp: date,
+  });
 
   date = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
   await db.execute(SQL.insertCustomTimeEvent, {
@@ -88,6 +98,11 @@ add_task(async function test_graph_display() {
   });
   await db.execute(SQL.insertCustomTimeEvent, {
     type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
     count: 1,
     timestamp: date,
   });
@@ -108,6 +123,11 @@ add_task(async function test_graph_display() {
     count: 1,
     timestamp: date,
   });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
+    timestamp: date,
+  });
 
   date = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
   await db.execute(SQL.insertCustomTimeEvent, {
@@ -122,6 +142,11 @@ add_task(async function test_graph_display() {
   });
   await db.execute(SQL.insertCustomTimeEvent, {
     type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
     count: 1,
     timestamp: date,
   });
@@ -153,7 +178,13 @@ add_task(async function test_graph_display() {
     gBrowser,
   });
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    const DATA_TYPES = ["cryptominer", "fingerprinter", "tracker", "cookie"];
+    const DATA_TYPES = [
+      "cryptominer",
+      "fingerprinter",
+      "tracker",
+      "cookie",
+      "social",
+    ];
     let allBars = null;
     await ContentTaskUtils.waitForCondition(() => {
       allBars = content.document.querySelectorAll(".graph-bar");
@@ -186,13 +217,18 @@ add_task(async function test_graph_display() {
     );
     is(
       allBars[6].querySelector(".fingerprinter-bar").style.height,
-      "30%",
-      "fingerprinters take 30%"
+      "20%",
+      "fingerprinters take 20%"
     );
     is(
       allBars[6].querySelector(".cookie-bar").style.height,
       "40%",
       "cross site tracking cookies take 40%"
+    );
+    is(
+      allBars[6].querySelector(".social-bar").style.height,
+      "10%",
+      "social trackers take 10%"
     );
 
     is(
@@ -235,7 +271,15 @@ add_task(async function test_graph_display() {
       "there is no tracker section 1 day ago."
     );
 
-    // TODO test for social missing
+    is(
+      allBars[1].querySelectorAll(".inner-bar").length,
+      DATA_TYPES.length - 1,
+      "5 days ago is missing one type"
+    );
+    ok(
+      !allBars[1].querySelector(".social-bar"),
+      "there is no social section 1 day ago."
+    );
 
     is(
       allBars[0].querySelectorAll(".inner-bar").length,
