@@ -31,7 +31,6 @@ modules/libpref/test/unit/extdata/testExt.js
 remote/pref/remote.js
 services/sync/tests/unit/prefs_test_prefs_store.js
 testing/marionette/prefs/marionette.js
-toolkit/components/telemetry/healthreport-prefs.js
 
 # Ignore testing pref files which aren't parsed normally.
 testing/profiles/**/user.js

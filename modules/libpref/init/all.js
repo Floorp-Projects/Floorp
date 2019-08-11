@@ -5665,6 +5665,15 @@ pref("datareporting.policy.minimumPolicyVersion.channel-beta", 2);
 pref("datareporting.policy.firstRunURL", "https://www.mozilla.org/privacy/firefox/");
 #endif
 
+#ifdef MOZ_SERVICES_HEALTHREPORT
+#if !defined(ANDROID)
+pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
+
+// Health Report is enabled by default on all channels.
+pref("datareporting.healthreport.uploadEnabled", true);
+#endif
+#endif
+
 pref("services.common.log.logger.rest.request", "Debug");
 pref("services.common.log.logger.rest.response", "Debug");
 pref("services.common.log.logger.tokenserverclient", "Debug");
