@@ -8,6 +8,7 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
+#include "jit/Ion.h"
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/BigIntType.h"  // JS::BigInt
@@ -59,10 +60,14 @@ void HeapSlot::assertPreconditionForWriteBarrierPost(
   AssertTargetIsNotGray(obj);
 }
 
-bool CurrentThreadIsIonCompiling() { return TlsContext.get()->ionCompiling; }
+bool CurrentThreadIsIonCompiling() {
+  jit::JitContext* jcx = jit::MaybeGetJitContext();
+  return jcx && jcx->inIonBackend();
+}
 
 bool CurrentThreadIsIonCompilingSafeForMinorGC() {
-  return TlsContext.get()->ionCompilingSafeForMinorGC;
+  jit::JitContext* jcx = jit::MaybeGetJitContext();
+  return jcx && jcx->inIonBackendSafeForMinorGC();
 }
 
 bool CurrentThreadIsGCSweeping() { return TlsContext.get()->gcSweeping; }

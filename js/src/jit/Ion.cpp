@@ -1628,7 +1628,7 @@ CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir) {
 
 CodeGenerator* CompileBackEnd(MIRGenerator* mir) {
   // Everything in CompileBackEnd can potentially run on a helper thread.
-  AutoEnterIonCompilation enter(mir->safeForMinorGC());
+  AutoEnterIonBackend enter(mir->safeForMinorGC());
   AutoSpewEndFunction spewEndFunction(mir);
 
   if (!OptimizeMIR(mir)) {
