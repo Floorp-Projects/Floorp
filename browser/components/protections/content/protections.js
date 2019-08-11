@@ -166,12 +166,32 @@ document.addEventListener("DOMContentLoaded", e => {
     // Hide the trackers tab if the user is in standard and
     // has no recorded trackers blocked.
     if (weekTypeCounts.tracker == 0 && cbCategory == "standard") {
-      legend.style.gridTemplateAreas =
-        "'social cookie fingerprinter cryptominer'";
+      legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
+        "tracker",
+        ""
+      );
       let radio = document.getElementById("tab-tracker");
       radio.setAttribute("disabled", true);
       document.querySelector("#tab-tracker ~ label").style.display = "none";
     }
+    let socialEnabled = RPMGetBoolPref(
+      "privacy.socialtracking.block_cookies.enabled",
+      false
+    );
+
+    if (weekTypeCounts.social == 0 && !socialEnabled) {
+      legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
+        "social",
+        ""
+      );
+      let radio = document.getElementById("tab-social");
+      radio.setAttribute("disabled", true);
+      document.querySelector("#tab-social ~ label").style.display = "none";
+    }
+
+    let firstRadio = document.querySelector("input:not(:disabled)");
+    firstRadio.checked = true;
+    document.body.setAttribute("focuseddatatype", firstRadio.dataset.type);
 
     addListeners();
   };

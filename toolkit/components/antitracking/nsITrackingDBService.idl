@@ -60,4 +60,5 @@ interface nsITrackingDBService : nsISupports
   const unsigned long TRACKING_COOKIES_ID = 2;
   const unsigned long CRYPTOMINERS_ID = 3;
   const unsigned long FINGERPRINTERS_ID = 4;
+  const unsigned long SOCIAL_ID = 5;
 };
