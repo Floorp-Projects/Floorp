@@ -1144,7 +1144,6 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
 void IonBuilder::runTask() {
   // This is the entry point when ion compiles are run offthread.
   JSRuntime* rt = script()->runtimeFromAnyThread();
-  AutoSetHelperThreadContext usesContext;
 
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   TraceLoggerEvent event(TraceLogger_AnnotateScripts, script());

@@ -1249,8 +1249,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       suppressGC(this, 0),
       gcSweeping(this, false),
 #ifdef DEBUG
-      ionCompiling(this, false),
-      ionCompilingSafeForMinorGC(this, false),
       isTouchingGrayThings(this, false),
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),
@@ -1492,7 +1490,13 @@ void AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason) {
 
 #ifdef DEBUG
 AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
-    : cx_(TlsContext.get()), nested_(cx_->hasAutoUnsafeCallWithABI), nogc(cx_) {
+    : cx_(TlsContext.get()),
+      nested_(cx_ ? cx_->hasAutoUnsafeCallWithABI : false),
+      nogc(cx_) {
+  if (!cx_) {
+    // This is a helper thread doing Ion or Wasm compilation - nothing to do.
+    return;
+  }
   switch (strictness) {
     case UnsafeABIStrictness::NoExceptions:
       MOZ_ASSERT(!JS_IsExceptionPending(cx_));
@@ -1510,6 +1514,9 @@ AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
 }
 
 AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
+  if (!cx_) {
+    return;
+  }
   MOZ_ASSERT(cx_->hasAutoUnsafeCallWithABI);
   if (!nested_) {
     cx_->hasAutoUnsafeCallWithABI = false;
