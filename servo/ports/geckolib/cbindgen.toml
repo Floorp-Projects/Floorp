@@ -165,6 +165,7 @@ include = [
   "SVGPaint",
   "SVGPaintKind",
   "GridTemplateComponent",
+  "TextEmphasisStyle",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -676,4 +677,13 @@ renaming_overrides_prefixing = true
   inline bool HasRepeatAuto() const;
   inline Span<const StyleOwnedSlice<StyleCustomIdent>> LineNameLists(bool aIsSubgrid) const;
   inline Span<const StyleGenericTrackListValue<L, I>> TrackListValues() const;
+"""
+
+"TextEmphasisStyle" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleTextEmphasisStyle() {}
+ public:
 """
