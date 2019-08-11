@@ -62,7 +62,6 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
   void cancel() override { cancelled_ = true; }
 
   void runTask() override {
-    AutoSetHelperThreadContext usesContext;
     CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
   }
   ThreadType threadType() override {
