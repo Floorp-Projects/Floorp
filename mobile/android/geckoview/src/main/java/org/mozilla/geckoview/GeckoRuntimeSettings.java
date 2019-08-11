@@ -369,7 +369,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * Sets the WebGL MSAA level.
          *
          * @param level number of MSAA samples, 0 if MSAA should be disabled.
-         * @return This GeckoRuntimeSettings instance.
+         * @return This Builder instance.
          */
         public @NonNull Builder glMsaaLevel(final int level) {
             getSettings().mGlMsaaLevel.set(level);

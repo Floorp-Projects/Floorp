@@ -15,7 +15,4 @@ export PATH="$MOZ_FETCHES_DIR/mingw64/bin:$PATH"
 . taskcluster/scripts/misc/tooltool-download.sh
 . taskcluster/scripts/misc/build-gn-common.sh
 
-# Building with MSVC spawns a mspdbsrv process that keeps a dll open in the MSVC directory.
-# This prevents the taskcluster worker from unmounting cleanly, and fails the build.
-# So we kill it.
-taskkill -f -im mspdbsrv.exe || true
+. $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

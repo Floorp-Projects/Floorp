@@ -564,7 +564,7 @@ void LayerManagerComposite::UpdateAndRender() {
         mRoot, changed, nullptr);
 
     if (overflowed) {
-      changed = mTarget ? mTargetBounds : mRenderBounds;
+      changed = mRenderBounds;
     }
 
     mInvalidRegion.Or(mInvalidRegion, changed);
