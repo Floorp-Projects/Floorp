@@ -514,12 +514,9 @@ void nsContentSecurityManager::AssertEvalNotRestricted(
 /* static */
 nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
     nsIChannel* aChannel) {
-  // We dissallow using FTP resources as a subresource almost everywhere.
+  // We dissallow using FTP resources as a subresource everywhere.
   // The only valid way to use FTP resources is loading it as
   // a top level document.
-  if (!mozilla::net::nsIOService::BlockFTPSubresources()) {
-    return NS_OK;
-  }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
@@ -547,13 +544,6 @@ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
 
   bool isFtpURI = uri->SchemeIs("ftp");
   if (!isFtpURI) {
-    return NS_OK;
-  }
-
-  // Allow loading FTP subresources in FTP documents, like XML.
-  nsCOMPtr<nsIURI> triggeringURI;
-  triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
-  if (triggeringURI && nsContentUtils::SchemeIs(triggeringURI, "ftp")) {
     return NS_OK;
   }
 
