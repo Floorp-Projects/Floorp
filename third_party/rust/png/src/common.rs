@@ -1,9 +1,7 @@
 //! Common types shared between the encoder and decoder
-use crate::filter;
+extern crate deflate;
+use filter;
 
-use std::fmt;
-
-/// Describes the layout of samples in a pixel
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum ColorType {
@@ -94,74 +92,8 @@ impl Unit {
     }
 }
 
-/// How to reset buffer of an animated png (APNG) at the end of a frame.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum DisposeOp {
-    /// Leave the buffer unchanged.
-    None       = 0,
-    /// Clear buffer with the background color.
-    Background = 1,
-    /// Reset the buffer to the state before the current frame.
-    Previous   = 2,
-}
-
-impl DisposeOp {
-    /// u8 -> Self. Using enum_primitive or transmute is probably the right thing but this will do for now.
-    pub fn from_u8(n: u8) -> Option<DisposeOp> {
-        match n {
-            0 => Some(DisposeOp::None),
-            1 => Some(DisposeOp::Background),
-            2 => Some(DisposeOp::Previous),
-            _ => None
-        }
-    }
-}
-
-impl fmt::Display for DisposeOp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match *self {
-            DisposeOp::None => "DISPOSE_OP_NONE",
-            DisposeOp::Background => "DISPOSE_OP_BACKGROUND",
-            DisposeOp::Previous => "DISPOSE_OP_PREVIOUS",
-        };
-        write!(f, "{}", name)
-    }
-}
-
-/// How pixels are written into the buffer.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum BlendOp {
-    /// Pixels overwrite the value at their position.
-    Source = 0,
-    /// The new pixels are blended into the current state based on alpha.
-    Over   = 1,
-}
-
-impl BlendOp {
-    /// u8 -> Self. Using enum_primitive or transmute is probably the right thing but this will do for now.
-    pub fn from_u8(n: u8) -> Option<BlendOp> {
-        match n {
-            0 => Some(BlendOp::Source),
-            1 => Some(BlendOp::Over),
-            _ => None
-        }
-    }
-}
-
-impl fmt::Display for BlendOp {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match *self {
-            BlendOp::Source => "BLEND_OP_SOURCE",
-            BlendOp::Over => "BLEND_OP_OVER",
-        };
-        write!(f, "{}", name)
-    }
-}
-
 /// Frame control information
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct FrameControl {
     /// Sequence number of the animation chunk, starting from 0
     pub sequence_number: u32,
@@ -178,36 +110,9 @@ pub struct FrameControl {
     /// Frame delay fraction denominator
     pub delay_den: u16,
     /// Type of frame area disposal to be done after rendering this frame
-    pub dispose_op: DisposeOp,
+    pub dispose_op: u8,
     /// Type of frame area rendering for this frame
-    pub blend_op: BlendOp,
-}
-
-impl Default for FrameControl {
-    fn default() -> FrameControl {
-        FrameControl {
-            sequence_number: 0,
-            width: 0,
-            height: 0,
-            x_offset: 0,
-            y_offset: 0,
-            delay_num: 1,
-            delay_den: 30,
-            dispose_op: DisposeOp::None,
-            blend_op: BlendOp::Source,
-        }
-    }
-}
-
-impl FrameControl {
-    pub fn set_seq_num(&mut self, s: u32) {
-        self.sequence_number = s;
-    }
-
-    pub fn inc_seq_num(&mut self, i: u32) {
-        self.sequence_number += i;
-    }
-
+    pub blend_op: u8,
 }
 
 /// Animation control information
@@ -219,7 +124,6 @@ pub struct AnimationControl {
     pub num_plays: u32,
 }
 
-/// The type and strength of applied compression.
 #[derive(Debug, Clone)]
 pub enum Compression {
     /// Default level  
@@ -234,6 +138,28 @@ pub enum Compression {
     Best,
     Huffman,
     Rle,
+}
+
+impl From<deflate::Compression> for Compression {
+    fn from(c: deflate::Compression) -> Self {
+        match c {
+            deflate::Compression::Default => Compression::Default,
+            deflate::Compression::Fast => Compression::Fast,
+            deflate::Compression::Best => Compression::Best,
+        }
+    }
+}
+
+impl From<Compression> for deflate::CompressionOptions {
+    fn from(c: Compression) -> Self {
+        match c {
+            Compression::Default => deflate::CompressionOptions::default(),
+            Compression::Fast => deflate::CompressionOptions::fast(),
+            Compression::Best => deflate::CompressionOptions::high(),
+            Compression::Huffman => deflate::CompressionOptions::huffman_only(),
+            Compression::Rle => deflate::CompressionOptions::rle(),
+        }
+    }
 }
 
 /// PNG info struct
@@ -268,7 +194,7 @@ impl Default for Info {
             animation_control: None,
             // Default to `deflate::Compresion::Fast` and `filter::FilterType::Sub` 
             // to maintain backward compatible output. 
-            compression: Compression::Fast,
+            compression: deflate::Compression::Fast.into(),
             filter: filter::FilterType::Sub,
         }
     }
@@ -367,38 +293,6 @@ bitflags! {
         const GRAY_TO_RGB         = 0x2000; // read only */
         const EXPAND_16           = 0x4000; // read only */
         const SCALE_16            = 0x8000; // read only */
-    }
-}
-
-/// Mod to encapsulate the converters depending on the `deflate` crate.
-///
-/// Since this only contains trait impls, there is no need to make this public, they are simply
-/// available when the mod is compiled as well.
-#[cfg(feature = "png-encoding")]
-mod deflate_convert {
-    extern crate deflate;
-    use super::Compression;
-
-    impl From<deflate::Compression> for Compression {
-        fn from(c: deflate::Compression) -> Self {
-            match c {
-                deflate::Compression::Default => Compression::Default,
-                deflate::Compression::Fast => Compression::Fast,
-                deflate::Compression::Best => Compression::Best,
-            }
-        }
-    }
-
-    impl From<Compression> for deflate::CompressionOptions {
-        fn from(c: Compression) -> Self {
-            match c {
-                Compression::Default => deflate::CompressionOptions::default(),
-                Compression::Fast => deflate::CompressionOptions::fast(),
-                Compression::Best => deflate::CompressionOptions::high(),
-                Compression::Huffman => deflate::CompressionOptions::huffman_only(),
-                Compression::Rle => deflate::CompressionOptions::rle(),
-            }
-        }
     }
 }
 

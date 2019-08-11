@@ -8,41 +8,6 @@ Rust image aims to be a pure-Rust implementation of various popular image format
 
 ## Changes
 
-### Version 0.22
-
-- The required Rust version is now `1.34.2`.
-- Note the website and blog: [image-rs.org][1] and [blog.image-rs.org][2]
-- `PixelMut` now only on `ImageBuffer` and removed from `GenericImage`
-  interface. Prefer iterating manually in the generic case.
-- Replaced an unsafe interface in the hdr decoder with a safe variant.
-- Support loading 2-bit BMP images
-- Add method to save an `ImageBuffer`/`DynamicImage` with specified format
-- Update tiff to `0.3` with a writer
-- Update png to `0.15`, fixes reading of interlaced sub-byte pixels
-- Always use custom struct for `ImageDecoder::Reader`
-- Added `apply_without_alpha` and `map_without_alpha` to `Pixel` trait
-- Pixel information now with associated constants instead of static methods
-- Changed color structs to tuple types with single component. Improves
-  ergonomics of destructuring assignment and construction.
-- Add lifetime parameter on `ImageDecoder` trait.
-- Remove unecessary `'static` bounds on affine operations
-- Add function to retrieve image dimensions without loading full image
-- Allow different image types in overlay and replace
-- Iterators over rows of `ImageBuffer`, mutable variants
-
-[1]: https://www.image-rs.org
-[2]: https://blog.image-rs.org
-
-### Version 0.21.2
-
-- Fixed a variety of crashes and opaque errors in webp
-- Updated the png limits to be less restrictive
-- Reworked even more `unsafe` operations into safe alternatives
-- Derived Debug on FilterType and Deref on Pixel
-- Removed a restriction on DXT to always require power of two dimensions
-- Change the encoding of RGBA in bmp using bitfields
-- Corrected various urls
-
 ### Version 0.21.1
 
 - A fairly important bugfix backport

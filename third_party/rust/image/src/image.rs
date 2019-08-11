@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fmt;
 use std::io;
 use std::io::Read;
+use std::mem;
 use std::ops::{Deref, DerefMut};
 
 use buffer::{ImageBuffer, Pixel};
@@ -89,7 +90,7 @@ impl Error for ImageError {
         }
     }
 
-    fn cause(&self) -> Option<&dyn Error> {
+    fn cause(&self) -> Option<&Error> {
         match *self {
             ImageError::IoError(ref e) => Some(e),
             _ => None,
@@ -263,12 +264,12 @@ impl ImageReadBuffer {
 
 /// Decodes a specific region of the image, represented by the rectangle
 /// starting from ```x``` and ```y``` and having ```length``` and ```width```
-pub(crate) fn load_rect<'a, D, F, F1, F2>(x: u64, y: u64, width: u64, height: u64, buf: &mut [u8],
-                                          progress_callback: F,
-                                          decoder: &mut D,
-                                          mut seek_scanline: F1,
-                                          mut read_scanline: F2) -> ImageResult<()>
-    where D: ImageDecoder<'a>,
+pub(crate) fn load_rect<D, F, F1, F2>(x: u64, y: u64, width: u64, height: u64, buf: &mut [u8],
+                                      progress_callback: F,
+                                      decoder: &mut D,
+                                      mut seek_scanline: F1,
+                                      mut read_scanline: F2) -> ImageResult<()>
+    where D: ImageDecoder,
           F: Fn(Progress),
           F1: FnMut(&mut D, u64) -> io::Result<()>,
           F2: FnMut(&mut D, &mut [u8]) -> io::Result<usize>
@@ -358,9 +359,9 @@ pub struct Progress {
 }
 
 /// The trait that all decoders implement
-pub trait ImageDecoder<'a>: Sized {
+pub trait ImageDecoder: Sized {
     /// The type of reader produced by `into_reader`.
-    type Reader: Read + 'a;
+    type Reader: Read;
 
     /// Returns a tuple containing the width and height of the image
     fn dimensions(&self) -> (u64, u64);
@@ -434,7 +435,7 @@ pub trait ImageDecoder<'a>: Sized {
 }
 
 /// ImageDecoderExt trait
-pub trait ImageDecoderExt<'a>: ImageDecoder<'a> + Sized {
+pub trait ImageDecoderExt: ImageDecoder + Sized {
     /// Read a rectangular section of the image.
     fn read_rect(
         &mut self,
@@ -496,6 +497,48 @@ impl<'a, I: GenericImageView> Iterator for Pixels<'a, I> {
     }
 }
 
+/// Mutable pixel iterator
+///
+/// DEPRECATED: It is currently not possible to create a safe iterator for this in Rust. You have to use an iterator over the image buffer instead.
+pub struct MutPixels<'a, I: ?Sized + 'a> {
+    image: &'a mut I,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+}
+
+impl<'a, I: GenericImage + 'a> Iterator for MutPixels<'a, I>
+where
+    I::Pixel: 'a,
+    <I::Pixel as Pixel>::Subpixel: 'a,
+{
+    type Item = (u32, u32, &'a mut I::Pixel);
+
+    fn next(&mut self) -> Option<(u32, u32, &'a mut I::Pixel)> {
+        if self.x >= self.width {
+            self.x = 0;
+            self.y += 1;
+        }
+
+        if self.y >= self.height {
+            None
+        } else {
+            let tmp = self.image.get_pixel_mut(self.x, self.y);
+
+            // NOTE: This is potentially dangerous. It would require the signature fn next(&'a mut self) to be safe.
+            // error: lifetime of `self` is too short to guarantee its contents can be safely reborrowed...
+            let ptr = unsafe { mem::transmute(tmp) };
+
+            let p = (self.x, self.y, ptr);
+
+            self.x += 1;
+
+            Some(p)
+        }
+    }
+}
+
 /// Trait to inspect an image.
 pub trait GenericImageView {
     /// The type of pixel.
@@ -542,7 +585,6 @@ pub trait GenericImageView {
     /// Returns the pixel located at (x, y)
     ///
     /// This function can be implemented in a way that ignores bounds checking.
-    #[deprecated = "Generally offers little advantage over get_pixel. If you must, prefer dedicated methods or other realizations on the specific image type instead."]
     unsafe fn unsafe_get_pixel(&self, x: u32, y: u32) -> Self::Pixel {
         self.get_pixel(x, y)
     }
@@ -595,7 +637,6 @@ pub trait GenericImage: GenericImageView {
     /// Puts a pixel at location (x, y)
     ///
     /// This function can be implemented in a way that ignores bounds checking.
-    #[deprecated = "Generally offers little advantage over put_pixel. If you must, prefer dedicated methods or other realizations on the specific image type instead."]
     unsafe fn unsafe_put_pixel(&mut self, x: u32, y: u32, pixel: Self::Pixel) {
         self.put_pixel(x, y, pixel);
     }
@@ -604,6 +645,24 @@ pub trait GenericImage: GenericImageView {
     ///
     /// DEPRECATED: This method will be removed. Blend the pixel directly instead.
     fn blend_pixel(&mut self, x: u32, y: u32, pixel: Self::Pixel);
+
+    /// Returns an Iterator over mutable pixels of this image.
+    /// The iterator yields the coordinates of each pixel
+    /// along with a mutable reference to them.
+    #[deprecated(
+        note = "This cannot be implemented safely in Rust. Please use the image buffer directly."
+    )]
+    fn pixels_mut(&mut self) -> MutPixels<Self> {
+        let (width, height) = self.dimensions();
+
+        MutPixels {
+            image: self,
+            x: 0,
+            y: 0,
+            width,
+            height,
+        }
+    }
 
     /// Copies all of the pixels from another image into this image.
     ///
@@ -627,8 +686,10 @@ pub trait GenericImage: GenericImageView {
 
         for i in 0..other.width() {
             for k in 0..other.height() {
-                let p = other.get_pixel(i, k);
-                self.put_pixel(i + x, k + y, p);
+                unsafe {
+                    let p = other.unsafe_get_pixel(i, k);
+                    self.unsafe_put_pixel(i + x, k + y, p);
+                }
             }
         }
         true
@@ -778,9 +839,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::io;
 
-    use super::{ColorType, ImageDecoder, ImageResult, GenericImage, GenericImageView, load_rect};
+    use super::{GenericImage, GenericImageView};
     use buffer::ImageBuffer;
     use color::Rgba;
 
@@ -853,9 +913,11 @@ mod tests {
 
     #[test]
     fn test_load_rect() {
+        use super::*;
+
         struct MockDecoder {scanline_number: u64, scanline_bytes: u64}
-        impl<'a> ImageDecoder<'a> for MockDecoder {
-            type Reader = Box<dyn io::Read>;
+        impl ImageDecoder for MockDecoder {
+            type Reader = Box<::std::io::Read>;
             fn dimensions(&self) -> (u64, u64) {(5, 5)}
             fn colortype(&self) -> ColorType {  ColorType::Gray(8) }
             fn into_reader(self) -> ImageResult<Self::Reader> {unimplemented!()}

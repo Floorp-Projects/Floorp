@@ -1,6 +1,3 @@
-extern crate crc32fast;
-extern crate inflate;
-
 use std::borrow::Cow;
 use std::default::Default;
 use std::error;
@@ -9,29 +6,16 @@ use std::io;
 use std::cmp::min;
 use std::convert::From;
 
-use crc32fast::Hasher as Crc32;
+extern crate inflate;
 
 use self::inflate::InflateStream;
-use crate::traits::ReadBytesExt;
-use crate::common::{BitDepth, BlendOp, ColorType, DisposeOp, Info, Unit, PixelDimensions, AnimationControl, FrameControl};
-use crate::chunk::{self, ChunkType, IHDR, IDAT, IEND};
+use crc::Crc32;
+use traits::ReadBytesExt;
+use common::{ColorType, BitDepth, Info, Unit, PixelDimensions, AnimationControl, FrameControl};
+use chunk::{self, ChunkType, IHDR, IDAT, IEND};
 
 /// TODO check if these size are reasonable
 pub const CHUNCK_BUFFER_SIZE: usize = 32*1024;
-
-/// Determines if checksum checks should be disabled globally.
-///
-/// This is used only in fuzzing. `afl` automatically adds `--cfg fuzzing` to RUSTFLAGS which can
-/// be used to detect that build.
-const CHECKSUM_DISABLED: bool = cfg!(fuzzing);
-
-fn zlib_stream() -> InflateStream {
-    if CHECKSUM_DISABLED {
-        InflateStream::from_zlib_no_checksum()
-    } else {
-        InflateStream::from_zlib()
-    }
-}
 
 #[derive(Debug)]
 enum U32Value {
@@ -85,8 +69,7 @@ pub enum DecodingError {
         chunk: ChunkType
     },
     Other(Cow<'static, str>),
-    CorruptFlateStream,
-    LimitsExceeded,
+    CorruptFlateStream
 }
 
 impl error::Error for DecodingError {
@@ -97,15 +80,14 @@ impl error::Error for DecodingError {
             Format(ref desc) | Other(ref desc) => &desc,
             InvalidSignature => "invalid signature",
             CrcMismatch { .. } => "CRC error",
-            CorruptFlateStream => "compressed data stream corrupted",
-            LimitsExceeded => "limits are exceeded"
+            CorruptFlateStream => "compressed data stream corrupted"
         }
     }
 }
 
 impl fmt::Display for DecodingError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "{}", (self as &dyn error::Error).description())
+        write!(fmt, "{}", (self as &error::Error).description())
     }
 }
 
@@ -152,7 +134,7 @@ impl StreamingDecoder {
         StreamingDecoder {
             state: Some(State::Signature(0, [0; 7])),
             current_chunk: (Crc32::new(), 0, Vec::with_capacity(CHUNCK_BUFFER_SIZE)),
-            inflater: zlib_stream(),
+            inflater: if cfg!(fuzzing) {InflateStream::from_zlib_no_checksum()} else {InflateStream::from_zlib()},
             info: None,
             current_seq_no: None,
             have_idat: false
@@ -165,7 +147,7 @@ impl StreamingDecoder {
         self.current_chunk.0 = Crc32::new();
         self.current_chunk.1 = 0;
         self.current_chunk.2.clear();
-        self.inflater = zlib_stream();
+        self.inflater = if cfg!(fuzzing) {InflateStream::from_zlib_no_checksum()} else {InflateStream::from_zlib()};
         self.info = None;
         self.current_seq_no = None;
         self.have_idat = false;
@@ -255,8 +237,7 @@ impl StreamingDecoder {
                         )
                     },
                     Crc(type_str) => {
-                        let sum = self.current_chunk.0.clone().finalize();
-                        if CHECKSUM_DISABLED || val == sum {
+                        if cfg!(fuzzing) || val == self.current_chunk.0.checksum() {
                             goto!(
                                 State::U32(U32Value::Length),
                                 emit if type_str == IEND {
@@ -269,7 +250,7 @@ impl StreamingDecoder {
                             Err(DecodingError::CrcMismatch {
                                 recover: 1,
                                 crc_val: val,
-                                crc_sum: sum,
+                                crc_sum: self.current_chunk.0.checksum(),
                                 chunk: type_str
                             })
                         }
@@ -298,7 +279,7 @@ impl StreamingDecoder {
                     chunk::fdAT => {
                         if let Some(seq_no) = self.current_seq_no {
                             let mut buf = &self.current_chunk.2[..];
-                            let next_seq_no = buf.read_be()?;
+                            let next_seq_no = try!(buf.read_be());
                             if next_seq_no != seq_no + 1 {
                                 return Err(DecodingError::Format(format!(
                                     "Sequence is not in order, expected #{} got #{}.",
@@ -319,7 +300,7 @@ impl StreamingDecoder {
                     // Handle other chunks
                     _ => {
                         if self.current_chunk.1 == 0 { // complete chunk
-                            Ok((0, self.parse_chunk(type_str)?))
+                            Ok((0, try!(self.parse_chunk(type_str))))
                         } else {
                             goto!(
                                 0, ReadChunk(type_str, true),
@@ -360,7 +341,7 @@ impl StreamingDecoder {
             }
             DecodeData(type_str, mut n) => {
                 let chunk_len = self.current_chunk.2.len();
-                let (c, data) = self.inflater.update(&self.current_chunk.2[n..])?;
+                let (c, data) = try!(self.inflater.update(&self.current_chunk.2[n..]));
                 image_data.extend_from_slice(data);
                 n += c;
                 if n == chunk_len && data.len() == 0 && c == 0 {
@@ -427,7 +408,7 @@ impl StreamingDecoder {
     fn parse_fctl(&mut self)
     -> Result<Decoded, DecodingError> {
         let mut buf = &self.current_chunk.2[..];
-        let next_seq_no = buf.read_be()?;
+        let next_seq_no = try!(buf.read_be());
 
         // Asuming that fcTL is required before *every* fdAT-sequence
         self.current_seq_no = Some(if let Some(seq_no) = self.current_seq_no {
@@ -449,23 +430,17 @@ impl StreamingDecoder {
             }
             0
         });
-        self.inflater = zlib_stream();
+        self.inflater = if cfg!(fuzzing) {InflateStream::from_zlib_no_checksum()} else {InflateStream::from_zlib()};
         let fc = FrameControl {
             sequence_number: next_seq_no,
-            width: buf.read_be()?,
-            height: buf.read_be()?,
-            x_offset: buf.read_be()?,
-            y_offset: buf.read_be()?,
-            delay_num: buf.read_be()?,
-            delay_den: buf.read_be()?,
-            dispose_op: match DisposeOp::from_u8(buf.read_be()?) {
-                Some(dispose_op) => dispose_op,
-                None => return Err(DecodingError::Format("invalid dispose operation".into()))
-            },
-            blend_op : match BlendOp::from_u8(buf.read_be()?) {
-                Some(blend_op) => blend_op,
-                None => return Err(DecodingError::Format("invalid blend operation".into()))
-            },
+            width: try!(buf.read_be()),
+            height: try!(buf.read_be()),
+            x_offset: try!(buf.read_be()),
+            y_offset: try!(buf.read_be()),
+            delay_num: try!(buf.read_be()),
+            delay_den: try!(buf.read_be()),
+            dispose_op: try!(buf.read_be()),
+            blend_op : try!(buf.read_be()),
         };
         self.info.as_mut().unwrap().frame_control = Some(fc.clone());
         Ok(Decoded::FrameControl(fc))
@@ -480,8 +455,8 @@ impl StreamingDecoder {
         } else {
             let mut buf = &self.current_chunk.2[..];
             let actl = AnimationControl {
-                num_frames: buf.read_be()?,
-                num_plays: buf.read_be()?
+                num_frames: try!(buf.read_be()),
+                num_plays: try!(buf.read_be())
             };
             self.info.as_mut().unwrap().animation_control = Some(actl);
             Ok(Decoded::AnimationControl(actl))
@@ -500,9 +475,9 @@ impl StreamingDecoder {
 
     fn parse_trns(&mut self)
     -> Result<Decoded, DecodingError> {
-        use crate::common::ColorType::*;
+        use common::ColorType::*;
         let (color_type, bit_depth) = {
-            let info = self.get_info_or_err()?;
+            let info = try!(self.get_info_or_err());
             (info.color_type, info.bit_depth as u8)
         };
         let mut vec = Vec::new();
@@ -564,9 +539,9 @@ impl StreamingDecoder {
             ))
         } else {
             let mut buf = &self.current_chunk.2[..];
-            let xppu = buf.read_be()?;
-            let yppu = buf.read_be()?;
-            let unit = buf.read_be()?;
+            let xppu = try!(buf.read_be());
+            let yppu = try!(buf.read_be());
+            let unit = try!(buf.read_be());
             let unit = match Unit::from_u8(unit) {
                 Some(unit) => unit,
                 None => return Err(DecodingError::Format(
@@ -587,35 +562,35 @@ impl StreamingDecoder {
     -> Result<Decoded, DecodingError> {
         // TODO: check if color/bit depths combination is valid
         let mut buf = &self.current_chunk.2[..];
-        let width = buf.read_be()?;
-        let height = buf.read_be()?;
-        let bit_depth = buf.read_be()?;
+        let width = try!(buf.read_be());
+        let height = try!(buf.read_be());
+        let bit_depth = try!(buf.read_be());
         let bit_depth = match BitDepth::from_u8(bit_depth) {
             Some(bits) => bits,
             None => return Err(DecodingError::Format(
                 format!("invalid bit depth ({})", bit_depth).into()
             ))
         };
-        let color_type = buf.read_be()?;
+        let color_type = try!(buf.read_be());
         let color_type = match ColorType::from_u8(color_type) {
             Some(color_type) => color_type,
             None => return Err(DecodingError::Format(
                 format!("invalid color type ({})", color_type).into()
             ))
         };
-        match buf.read_be()? { // compression method
+        match try!(buf.read_be()) { // compression method
             0u8 => (),
             n => return Err(DecodingError::Format(
                 format!("unknown compression method ({})", n).into()
             ))
         }
-        match buf.read_be()? { // filter method
+        match try!(buf.read_be()) { // filter method
             0u8 => (),
             n => return Err(DecodingError::Format(
                 format!("unknown filter method ({})", n).into()
             ))
         }
-        let interlaced = match buf.read_be()? {
+        let interlaced = match try!(buf.read_be()) {
             0u8 => false,
             1 => {
                 true

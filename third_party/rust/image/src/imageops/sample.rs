@@ -13,7 +13,7 @@ use math::utils::clamp;
 use traits::{Enlargeable, Primitive};
 
 /// Available Sampling Filters
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub enum FilterType {
     /// Nearest Neighbor
     Nearest,
@@ -34,7 +34,7 @@ pub enum FilterType {
 /// A Representation of a separable filter.
 pub struct Filter<'a> {
     /// The filter's filter function.
-    pub kernel: Box<dyn Fn(f32) -> f32 + 'a>,
+    pub kernel: Box<Fn(f32) -> f32 + 'a>,
 
     /// The window on which this filter operates.
     pub support: f32,
@@ -122,13 +122,14 @@ pub fn box_kernel(_x: f32) -> f32 {
 // The height of the image remains unchanged.
 // ```new_width``` is the desired width of the new image
 // ```filter``` is the filter to use for sampling.
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
 fn horizontal_sample<I, P, S>(
     image: &I,
     new_width: u32,
     filter: &mut Filter,
 ) -> ImageBuffer<P, Vec<S>>
 where
-    I: GenericImageView<Pixel = P>,
+    I: GenericImageView<Pixel = P> + 'static,
     P: Pixel<Subpixel = S> + 'static,
     S: Primitive + 'static,
 {
@@ -213,13 +214,14 @@ where
 // The width of the image remains unchanged.
 // ```new_height``` is the desired height of the new image
 // ```filter``` is the filter to use for sampling.
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
 fn vertical_sample<I, P, S>(
     image: &I,
     new_height: u32,
     filter: &mut Filter,
 ) -> ImageBuffer<P, Vec<S>>
 where
-    I: GenericImageView<Pixel = P>,
+    I: GenericImageView<Pixel = P> + 'static,
     P: Pixel<Subpixel = S> + 'static,
     S: Primitive + 'static,
 {
@@ -564,9 +566,10 @@ where
 
 /// Perform a 3x3 box filter on the supplied image.
 /// ```kernel``` is an array of the filter weights of length 9.
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
 pub fn filter3x3<I, P, S>(image: &I, kernel: &[f32]) -> ImageBuffer<P, Vec<S>>
 where
-    I: GenericImageView<Pixel = P>,
+    I: GenericImageView<Pixel = P> + 'static,
     P: Pixel<Subpixel = S> + 'static,
     S: Primitive + 'static,
 {
@@ -644,7 +647,8 @@ where
 /// Resize the supplied image to the specified dimensions.
 /// ```nwidth``` and ```nheight``` are the new dimensions.
 /// ```filter``` is the sampling filter to use.
-pub fn resize<I: GenericImageView>(
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
+pub fn resize<I: GenericImageView + 'static>(
     image: &I,
     nwidth: u32,
     nheight: u32,
@@ -683,12 +687,14 @@ where
 
 /// Performs a Gaussian blur on the supplied image.
 /// ```sigma``` is a measure of how much to blur by.
-pub fn blur<I: GenericImageView>(
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
+pub fn blur<I: GenericImageView + 'static>(
     image: &I,
     sigma: f32,
 ) -> ImageBuffer<I::Pixel, Vec<<I::Pixel as Pixel>::Subpixel>>
 where
     I::Pixel: 'static,
+    <I::Pixel as Pixel>::Subpixel: 'static,
 {
     let sigma = if sigma < 0.0 { 1.0 } else { sigma };
 
@@ -710,9 +716,10 @@ where
 /// ```threshold``` is the threshold for the difference between
 ///
 /// See <https://en.wikipedia.org/wiki/Unsharp_masking#Digital_unsharp_masking>
+// TODO: Do we really need the 'static bound on `I`? Can we avoid it?
 pub fn unsharpen<I, P, S>(image: &I, sigma: f32, threshold: i32) -> ImageBuffer<P, Vec<S>>
 where
-    I: GenericImageView<Pixel = P>,
+    I: GenericImageView<Pixel = P> + 'static,
     P: Pixel<Subpixel = S> + 'static,
     S: Primitive + 'static,
 {

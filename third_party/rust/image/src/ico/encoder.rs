@@ -34,9 +34,9 @@ impl<W: Write> ICOEncoder<W> {
         color: ColorType,
     ) -> io::Result<()> {
         let mut image_data: Vec<u8> = Vec::new();
-        PNGEncoder::new(&mut image_data).encode(data, width, height, color)?;
+        try!(PNGEncoder::new(&mut image_data).encode(data, width, height, color));
 
-        write_icondir(&mut self.w, 1)?;
+        try!(write_icondir(&mut self.w, 1));
         try!(write_direntry(
             &mut self.w,
             width,
@@ -45,18 +45,18 @@ impl<W: Write> ICOEncoder<W> {
             ICO_ICONDIR_SIZE + ICO_DIRENTRY_SIZE,
             image_data.len() as u32
         ));
-        self.w.write_all(&image_data)?;
+        try!(self.w.write_all(&image_data));
         Ok(())
     }
 }
 
 fn write_icondir<W: Write>(w: &mut W, num_images: u16) -> io::Result<()> {
     // Reserved field (must be zero):
-    w.write_u16::<LittleEndian>(0)?;
+    try!(w.write_u16::<LittleEndian>(0));
     // Image type (ICO or CUR):
-    w.write_u16::<LittleEndian>(ICO_IMAGE_TYPE)?;
+    try!(w.write_u16::<LittleEndian>(ICO_IMAGE_TYPE));
     // Number of images in the file:
-    w.write_u16::<LittleEndian>(num_images)?;
+    try!(w.write_u16::<LittleEndian>(num_images));
     Ok(())
 }
 
@@ -69,20 +69,20 @@ fn write_direntry<W: Write>(
     data_size: u32,
 ) -> io::Result<()> {
     // Image dimensions:
-    write_width_or_height(w, width)?;
-    write_width_or_height(w, height)?;
+    try!(write_width_or_height(w, width));
+    try!(write_width_or_height(w, height));
     // Number of colors in palette (or zero for no palette):
-    w.write_u8(0)?;
+    try!(w.write_u8(0));
     // Reserved field (must be zero):
-    w.write_u8(0)?;
+    try!(w.write_u8(0));
     // Color planes:
-    w.write_u16::<LittleEndian>(0)?;
+    try!(w.write_u16::<LittleEndian>(0));
     // Bits per pixel:
-    w.write_u16::<LittleEndian>(bits_per_pixel(color) as u16)?;
+    try!(w.write_u16::<LittleEndian>(bits_per_pixel(color) as u16));
     // Image data size, in bytes:
-    w.write_u32::<LittleEndian>(data_size)?;
+    try!(w.write_u32::<LittleEndian>(data_size));
     // Image data offset, in bytes:
-    w.write_u32::<LittleEndian>(data_start)?;
+    try!(w.write_u32::<LittleEndian>(data_start));
     Ok(())
 }
 
