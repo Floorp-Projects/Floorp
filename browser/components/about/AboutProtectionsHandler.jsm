@@ -38,6 +38,7 @@ let idToTextMap = new Map([
   [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookie"],
   [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominer"],
   [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinter"],
+  [Ci.nsITrackingDBService.SOCIAL_ID, "social"],
 ]);
 
 const MONITOR_API_ENDPOINT = "https://monitor.firefox.com/user/breach-stats";
