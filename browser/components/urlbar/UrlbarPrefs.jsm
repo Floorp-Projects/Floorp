@@ -108,9 +108,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether to open the urlbar view when the input field is focused by the user.
   ["openViewOnFocus", false],
 
-  // Whether the quantum bar is enabled.
-  ["quantumbar", false],
-
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
