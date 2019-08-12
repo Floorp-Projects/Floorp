@@ -20,8 +20,8 @@
 #include "wasm/WasmInstance.h"
 
 #ifdef DEBUG
-#include "vm/BytecodeIterator.h"
-#include "vm/BytecodeLocation.h"
+#  include "vm/BytecodeIterator.h"
+#  include "vm/BytecodeLocation.h"
 #endif
 
 #include "gc/Marking-inl.h"
@@ -32,8 +32,8 @@
 #include "vm/TypeInference-inl.h"
 
 #ifdef DEBUG
-#include "vm/BytecodeIterator-inl.h"
-#include "vm/BytecodeLocation-inl.h"
+#  include "vm/BytecodeIterator-inl.h"
+#  include "vm/BytecodeLocation-inl.h"
 #endif
 
 using namespace js;

@@ -406,7 +406,6 @@ void DebuggerFrame::clearGenerator(
     return;
   }
 
-
   // 2) generatorFrames must no longer map the AbstractGeneratorObject to the
   // DebuggerFrame.
   GeneratorInfo* info = generatorInfo();
