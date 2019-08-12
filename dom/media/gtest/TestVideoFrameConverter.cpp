@@ -132,14 +132,14 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitForNConverted(2);
-  EXPECT_GT(TimeStamp::Now(), now + TimeDuration::FromMilliseconds(1100));
+  EXPECT_GT(TimeStamp::Now() - now, TimeDuration::FromMilliseconds(1100));
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
   EXPECT_GT(frames[0].second(), future1);
   EXPECT_EQ(frames[1].first().width(), 640);
   EXPECT_EQ(frames[1].first().height(), 480);
-  EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
+  EXPECT_GT(frames[1].second() - now, TimeDuration::FromMilliseconds(1100));
   // Check that the second frame comes between 1s and 2s after the first.
   EXPECT_NEAR(frames[1].first().timestamp_us(),
               frames[0].first().timestamp_us() + ((PR_USEC_PER_SEC * 3) / 2),
@@ -175,7 +175,7 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future3), false);
   auto frames = WaitForNConverted(2);
-  EXPECT_GT(TimeStamp::Now(), now + TimeDuration::FromMilliseconds(1100));
+  EXPECT_GT(TimeStamp::Now() - now, TimeDuration::FromMilliseconds(1100));
   ASSERT_EQ(frames.size(), 2U);
   EXPECT_EQ(frames[0].first().width(), 640);
   EXPECT_EQ(frames[0].first().height(), 480);
