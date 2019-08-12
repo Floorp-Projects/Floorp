@@ -279,6 +279,13 @@ void BenchmarkPlayback::GlobalShutdown() {
 
   mFinished = true;
 
+  if (mTrackDemuxer) {
+    mTrackDemuxer->Reset();
+    mTrackDemuxer->BreakCycles();
+    mTrackDemuxer = nullptr;
+  }
+  mDemuxer = nullptr;
+
   if (mDecoder) {
     RefPtr<Benchmark> ref(mGlobalState);
     mDecoder->Flush()->Then(
@@ -294,13 +301,6 @@ void BenchmarkPlayback::GlobalShutdown() {
   } else {
     FinalizeShutdown();
   }
-
-  if (mTrackDemuxer) {
-    mTrackDemuxer->Reset();
-    mTrackDemuxer->BreakCycles();
-    mTrackDemuxer = nullptr;
-  }
-  mDemuxer = nullptr;
 }
 
 void BenchmarkPlayback::Output(MediaDataDecoder::DecodedData&& aResults) {
