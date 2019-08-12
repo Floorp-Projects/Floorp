@@ -469,7 +469,8 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage*
 }
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
-                                                       NSImage** aResult, CGFloat scaleFactor) {
+                                                       NSImage** aResult, CGFloat scaleFactor,
+                                                       bool* aIsEntirelyBlack) {
   RefPtr<SourceSurface> surface;
   int32_t width = 0, height = 0;
   aImage->GetWidth(&width);
@@ -505,7 +506,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
   CGImageRef imageRef = NULL;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &imageRef);
+  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &imageRef, aIsEntirelyBlack);
   if (NS_FAILED(rv) || !imageRef) {
     return NS_ERROR_FAILURE;
   }
@@ -520,6 +521,41 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
   NSSize size = NSMakeSize(width, height);
   [*aResult setSize:size];
   [[[*aResult representations] objectAtIndex:0] setSize:size];
+  return NS_OK;
+}
+
+nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(imgIContainer* aImage,
+                                                                         uint32_t aWhichFrame,
+                                                                         NSImage** aResult,
+                                                                         bool* aIsEntirelyBlack) {
+  int32_t width = 0, height = 0;
+  aImage->GetWidth(&width);
+  aImage->GetHeight(&height);
+  NSSize size = NSMakeSize(width, height);
+  *aResult = [[NSImage alloc] init];
+  [*aResult setSize:size];
+
+  NSImage* newRepresentation = nil;
+  nsresult rv = nsCocoaUtils::CreateNSImageFromImageContainer(
+      aImage, aWhichFrame, &newRepresentation, 1.0f, aIsEntirelyBlack);
+  if (NS_FAILED(rv) || !newRepresentation) {
+    return NS_ERROR_FAILURE;
+  }
+
+  [[[newRepresentation representations] objectAtIndex:0] setSize:size];
+  [*aResult addRepresentation:[[newRepresentation representations] objectAtIndex:0]];
+  [newRepresentation release];
+  newRepresentation = nil;
+
+  rv = nsCocoaUtils::CreateNSImageFromImageContainer(aImage, aWhichFrame, &newRepresentation, 2.0f,
+                                                     aIsEntirelyBlack);
+  if (NS_FAILED(rv) || !newRepresentation) {
+    return NS_ERROR_FAILURE;
+  }
+
+  [[[newRepresentation representations] objectAtIndex:0] setSize:size];
+  [*aResult addRepresentation:[[newRepresentation representations] objectAtIndex:0]];
+  [newRepresentation release];
   return NS_OK;
 }
 
