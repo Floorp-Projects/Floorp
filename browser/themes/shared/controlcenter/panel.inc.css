@@ -617,6 +617,7 @@ description#identity-popup-content-verifier,
 
 #protections-popup-blocking-section-header,
 #protections-popup-not-blocking-section-header {
+  font-weight: 500;
   margin: 0;
   padding: 10px calc(10px + 1em);
   color: #737373;
@@ -782,9 +783,13 @@ description#identity-popup-content-verifier,
 }
 
 #identity-popup-permissions-headline {
-  color: var(--panel-disabled-color);
-  font-weight: 600;
+  color: #737373;
+  font-weight: 500;
   margin-inline-start: 0;
+}
+
+:root[lwt-popup-brighttext] #identity-popup-permissions-headline {
+  color: #f9f9fa;
 }
 
 .protections-popup-category,
@@ -947,7 +952,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-tp-switch-on-header,
 .protections-popup-tp-switch-off-header {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .protections-popup-tp-switch {
