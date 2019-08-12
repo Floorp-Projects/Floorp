@@ -20,8 +20,6 @@ struct UPluralRules;
 
 namespace js {
 
-class FreeOp;
-
 class PluralRulesObject : public NativeObject {
  public:
   static const Class class_;

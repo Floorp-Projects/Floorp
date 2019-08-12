@@ -19,8 +19,6 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 
-struct JSFreeOp;
-
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wattributes"
