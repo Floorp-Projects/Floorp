@@ -470,7 +470,9 @@ NS_IMPL_QUERY_INTERFACE_CYCLE_COLLECTION_INHERITED(
 
 NS_IMETHODIMP
 NotificationPermissionRequest::Run() {
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+  bool isSystem = nsContentUtils::IsSystemPrincipal(mPrincipal);
+  bool blocked = false;
+  if (isSystem) {
     mPermission = NotificationPermission::Granted;
   } else {
     // File are automatically granted permission.
@@ -482,6 +484,7 @@ NotificationPermissionRequest::Run() {
     } else if (!StaticPrefs::dom_webnotifications_allowinsecure() &&
                !mWindow->IsSecureContext()) {
       mPermission = NotificationPermission::Denied;
+      blocked = true;
       nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
       if (doc) {
         nsContentUtils::ReportToConsole(
@@ -507,6 +510,22 @@ NotificationPermissionRequest::Run() {
     default:
       // ignore
       break;
+  }
+
+  // Check this after checking the prompt prefs to make sure this pref overrides
+  // those.  We rely on this for testing purposes.
+  if (!isSystem && !blocked &&
+      !StaticPrefs::dom_webnotifications_allowcrossoriginiframe() &&
+      !mPrincipal->Subsumes(mTopLevelPrincipal)) {
+    mPermission = NotificationPermission::Denied;
+    blocked = true;
+    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+    if (doc) {
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
+          nsContentUtils::eDOM_PROPERTIES,
+          "NotificationsCrossOriginIframeRequestIsForbidden");
+    }
   }
 
   if (mPermission != NotificationPermission::Default) {

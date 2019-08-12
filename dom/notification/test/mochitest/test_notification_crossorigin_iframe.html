@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests that Notification permissions are denied in cross-origin iframes.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
+-->
+<head>
+  <title>Notification permission in cross-origin iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const kBlankURL = "https://example.com/tests/dom/notification/test/mochitest/blank.html";
+
+  (async function runTest() {
+    await SpecialPowers.setBoolPref("notification.prompt.testing", true);
+    await SpecialPowers.setBoolPref("notification.prompt.testing.allow", true);
+    await SpecialPowers.setBoolPref("dom.webnotifications.allowinsecure", true);
+
+    let iframe = document.createElement("iframe");
+    iframe.src = kBlankURL;
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+    });
+
+    const Notif = SpecialPowers.wrap(iframe.contentWindow).Notification;
+    let response = await Notif.requestPermission();
+    is(response, "denied", "Denied permission in cross-origin iframe");
+
+    await SpecialPowers.pushPrefEnv({"set": [["dom.webnotifications.allowcrossoriginiframe", true]]});
+
+    response = await Notif.requestPermission();
+    is(response, "granted", "Granted permission in cross-origin iframe with pref set");
+
+    await SpecialPowers.clearUserPref("notification.prompt.testing");
+    await SpecialPowers.clearUserPref("notification.prompt.testing.allow");
+    await SpecialPowers.clearUserPref("dom.webnotifications.allowinsecure");
+
+    SimpleTest.finish();
+  })();
+  </script>
+  </pre>
+</body>
+</html>
