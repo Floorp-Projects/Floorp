@@ -28,6 +28,7 @@ import type {
   ThreadId,
   Context,
   ThreadContext,
+  Previews,
 } from "../types";
 
 export type Command =
@@ -367,13 +368,13 @@ function update(
     }
 
     case "ADD_INLINE_PREVIEW": {
-      const { frame, previewData } = action;
+      const { frame, previews } = action;
       const selectedFrameId = frame.id;
 
       return updateThreadState({
         inlinePreview: {
           ...threadState().inlinePreview,
-          [selectedFrameId]: previewData,
+          [selectedFrameId]: previews,
         },
       });
     }
@@ -619,11 +620,11 @@ export function isMapScopesEnabled(state: State) {
   return state.pause.mapScopes;
 }
 
-export function getInlinePreview(
+export function getInlinePreviews(
   state: State,
   thread: ThreadId,
   frameId: string
-) {
+): Previews {
   return getThreadPauseState(state.pause, thread).inlinePreview[
     getGeneratedFrameId(frameId)
   ];
@@ -636,10 +637,10 @@ export function getInlinePreviewExpression(
   line: number,
   expression: string
 ) {
-  const previewData = getThreadPauseState(state.pause, thread).inlinePreview[
+  const previews = getThreadPauseState(state.pause, thread).inlinePreview[
     getGeneratedFrameId(frameId)
   ];
-  return previewData && previewData[line] && previewData[line][expression];
+  return previews && previews[line] && previews[line][expression];
 }
 
 // NOTE: currently only used for chrome
