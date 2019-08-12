@@ -67,6 +67,13 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
             val httpPingUploader = HttpPingUploader()
             return Glean.pingStorageEngine.process(httpPingUploader::upload)
         }
+
+        /**
+         * Function to cancel any pending ping upload workers
+         */
+        internal fun cancel() {
+            WorkManager.getInstance().cancelUniqueWork(PING_WORKER_TAG)
+        }
     }
 
     /**

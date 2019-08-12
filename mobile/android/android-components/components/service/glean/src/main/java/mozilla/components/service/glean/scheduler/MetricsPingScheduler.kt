@@ -51,6 +51,13 @@ internal class MetricsPingScheduler(val applicationContext: Context) : Lifecycle
         const val DUE_HOUR_OF_THE_DAY = 4
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal var isInForeground = false
+
+        /**
+         * Function to cancel any pending metrics ping workers
+         */
+        internal fun cancel() {
+            WorkManager.getInstance().cancelUniqueWork(MetricsPingWorker.TAG)
+        }
     }
 
     init {
