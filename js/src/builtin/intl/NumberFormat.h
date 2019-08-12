@@ -24,7 +24,6 @@ struct UNumberFormatter;
 namespace js {
 
 class ArrayObject;
-class FreeOp;
 
 class NumberFormatObject : public NativeObject {
  public:
