@@ -95,10 +95,13 @@ class UrlbarView {
     if (this.contextualTip) {
       this.contextualTip.hide();
 
-      // If there's no results then close the popup.
-      if (this.visibleItemCount == 0) {
-        this.close();
-      }
+      // When the pending query has finished and there's 0 results then
+      // close the urlbar view.
+      this.input.lastQueryContextPromise.then(() => {
+        if (this.visibleItemCount == 0) {
+          this.close();
+        }
+      });
     }
   }
 
