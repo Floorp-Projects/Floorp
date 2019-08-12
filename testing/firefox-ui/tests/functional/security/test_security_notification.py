@@ -20,7 +20,7 @@ class TestSecurityNotification(PuppeteerMixin, MarionetteTestCase):
             # Invalid cert page
             'https://expired.badssl.com',
             # Secure page
-            'https://extended-validation.badssl.com',
+            'https://badssl.com',
             # Insecure page
             'http://http.badssl.com'
         ]
@@ -51,7 +51,7 @@ class TestSecurityNotification(PuppeteerMixin, MarionetteTestCase):
             self.marionette.navigate(self.urls[1])
 
         Wait(self.marionette).until(lambda _: (
-            self.identity_box.get_property('className') == 'verifiedIdentity')
+            self.identity_box.get_property('className') == 'verifiedDomain')
         )
 
     def test_insecure_website(self):
