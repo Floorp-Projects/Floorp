@@ -12,51 +12,45 @@
 #include "gc/ZoneAllocator.h"
 #include "js/RefCounted.h"
 
-namespace js {
-
-inline void FreeOp::free_(gc::Cell* cell, void* p, size_t nbytes,
-                          MemoryUse use) {
+inline void JSFreeOp::free_(Cell* cell, void* p, size_t nbytes, MemoryUse use) {
   if (p) {
     removeCellMemory(cell, nbytes, use);
     js_free(p);
   }
 }
 
-inline void FreeOp::freeLater(gc::Cell* cell, void* p, size_t nbytes,
-                              MemoryUse use) {
+inline void JSFreeOp::freeLater(Cell* cell, void* p, size_t nbytes,
+                                MemoryUse use) {
   if (p) {
     removeCellMemory(cell, nbytes, use);
     queueForFreeLater(p);
   }
 }
 
-inline void FreeOp::queueForFreeLater(void* p) {
-  // Default FreeOps are not constructed on the stack, and will hold onto the
+inline void JSFreeOp::queueForFreeLater(void* p) {
+  // Default JSFreeOps are not constructed on the stack, and will hold onto the
   // pointers to free indefinitely.
   MOZ_ASSERT(!isDefaultFreeOp());
 
   // It's not safe to free this allocation immediately, so we must crash if we
   // can't append to the list.
-  AutoEnterOOMUnsafeRegion oomUnsafe;
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!freeLaterList.append(p)) {
-    oomUnsafe.crash("FreeOp::freeLater");
+    oomUnsafe.crash("JSFreeOp::freeLater");
   }
 }
 
 template <class T>
-inline void FreeOp::release(gc::Cell* cell, T* p, size_t nbytes,
-                            MemoryUse use) {
+inline void JSFreeOp::release(Cell* cell, T* p, size_t nbytes, MemoryUse use) {
   if (p) {
     removeCellMemory(cell, nbytes, use);
     p->Release();
   }
 }
 
-inline void FreeOp::removeCellMemory(gc::Cell* cell, size_t nbytes,
-                                     MemoryUse use) {
+inline void JSFreeOp::removeCellMemory(Cell* cell, size_t nbytes,
+                                       MemoryUse use) {
   RemoveCellMemory(cell, nbytes, use, isCollecting());
 }
 
-}  // namespace js
-
-#endif  // gc_FreeOp_inl_h
+#endif  // gc_JSFreeOp_inl_h

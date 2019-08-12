@@ -17,8 +17,6 @@
 
 namespace js {
 
-class FreeOp;
-
 class RelativeTimeFormatObject : public NativeObject {
  public:
   static const Class class_;

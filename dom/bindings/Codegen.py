@@ -1764,7 +1764,7 @@ def finalizeHook(descriptor, hookName, freeOp, obj):
     if descriptor.wrapperCache:
         finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.isGlobal():
-        finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), %s);\n" % (freeOp, obj)
+        finalize += "mozilla::dom::FinalizeGlobal(js::CastToJSFreeOp(%s), %s);\n" % (freeOp, obj)
     finalize += fill(
         """
         if (size_t mallocBytes = BindingJSObjectMallocBytes(self)) {
