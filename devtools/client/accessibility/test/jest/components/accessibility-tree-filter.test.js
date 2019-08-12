@@ -18,6 +18,7 @@ const AccessibilityTreeFilter = createFactory(
   ConnectedAccessibilityTreeFilterClass
 );
 const {
+  checkMenuItem,
   setupStore,
 } = require("devtools/client/accessibility/test/jest/helpers");
 
@@ -28,31 +29,14 @@ const {
   FILTER_TOGGLE,
 } = require("devtools/client/accessibility/constants");
 
-function checkFilterCheckbox(filter, checked, expectedText, disabled) {
-  expect(filter.tagName).toBe("BUTTON");
-  expect(filter.getAttribute("role")).toBe("menuitemcheckbox");
-  expect(filter.hasAttribute("aria-checked")).toBe(checked);
-  if (checked) {
-    expect(filter.getAttribute("aria-checked")).toBe("true");
-  }
-
-  if (disabled) {
-    expect(filter.hasAttribute("disabled")).toBe(true);
-  }
-
-  if (expectedText) {
-    expect(filter.textContent).toBe(expectedText);
-  }
-}
-
 function checkToggleFilterCheckbox(wrapper, filter) {
   const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();
   filterInstance.toggleFilter = jest.fn();
-  filter instanceof Node ? filter.click() : filter.simulate("click");
+  filter.click();
   expect(filterInstance.toggleFilter.mock.calls.length).toBe(1);
 }
 
-function getFilters(wrapper) {
+function getMenuItems(wrapper, selector) {
   const menuButton = wrapper.find(MenuButton);
   // Focusing on the menu button will trigger rendering of the HTMLTooltip with
   // the menu list.
@@ -63,31 +47,24 @@ function getFilters(wrapper) {
 
   return menuButton
     .instance()
-    .tooltip.panel.querySelectorAll(".menuitem .filter");
+    .tooltip.panel.querySelectorAll(`.menuitem ${selector}`);
 }
 
-function checkToolbarState(wrapper, expected) {
-  const filters = getFilters(wrapper);
+function checkFiltersState(wrapper, expected) {
+  const filters = getMenuItems(wrapper, ".filter");
   for (let i = 0; i < filters.length; i++) {
-    checkFilterCheckbox(
-      filters[i],
-      expected[i].active,
-      expected[i].text,
-      expected[i].disabled
-    );
+    checkMenuItem(filters[i], {
+      checked: expected.filters[i].active,
+      label: expected.filters[i].text,
+      disabled: expected.filters[i].disabled,
+    });
   }
-}
-
-function renderAccTreeFilterToolbar(store) {
-  const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
-  const filters = getFilters(wrapper);
-  return { filters, wrapper };
 }
 
 describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
     const store = setupStore();
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     const accTreeFilter = wrapper.find(AccessibilityTreeFilterClass);
     const toolbar = accTreeFilter.childAt(0);
 
@@ -96,16 +73,22 @@ describe("AccessibilityTreeFilter component:", () => {
     expect(toolbar.is("div")).toBe(true);
     expect(toolbar.prop("role")).toBe("group");
 
-    checkToolbarState(wrapper, [
-      { active: true, disabled: false, text: "accessibility.filter.none" },
-      { active: false, disabled: false, text: "accessibility.filter.all2" },
-      { active: false, disabled: false, text: "accessibility.filter.contrast" },
-      {
-        active: false,
-        disabled: false,
-        text: "accessibility.filter.textLabel",
-      },
-    ]);
+    checkFiltersState(wrapper, {
+      filters: [
+        { active: true, disabled: false, text: "accessibility.filter.none" },
+        { active: false, disabled: false, text: "accessibility.filter.all2" },
+        {
+          active: false,
+          disabled: false,
+          text: "accessibility.filter.contrast",
+        },
+        {
+          active: false,
+          disabled: false,
+          text: "accessibility.filter.textLabel",
+        },
+      ],
+    });
   });
 
   it("audit filters filtered", () => {
@@ -121,14 +104,16 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
-    checkToolbarState(wrapper, [
-      { active: false, disabled: false },
-      { active: true, disabled: false },
-      { active: true, disabled: false },
-      { active: true, disabled: false },
-    ]);
+    checkFiltersState(wrapper, {
+      filters: [
+        { active: false, disabled: false },
+        { active: true, disabled: false },
+        { active: true, disabled: false },
+        { active: true, disabled: false },
+      ],
+    });
   });
 
   it("audit all filter not filtered auditing", () => {
@@ -142,12 +127,14 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
-    checkToolbarState(wrapper, [
-      { active: true, disabled: false, text: "accessibility.filter.none" },
-      { active: false, disabled: true, text: "accessibility.filter.all2" },
-    ]);
+    checkFiltersState(wrapper, {
+      filters: [
+        { active: true, disabled: false, text: "accessibility.filter.none" },
+        { active: false, disabled: true, text: "accessibility.filter.all2" },
+      ],
+    });
   });
 
   it("audit other filter not filtered auditing", () => {
@@ -163,14 +150,16 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
-    checkToolbarState(wrapper, [
-      { active: true, disabled: true },
-      { active: false, disabled: false },
-      { active: false, disabled: true },
-      { active: false, disabled: false },
-    ]);
+    checkFiltersState(wrapper, {
+      filters: [
+        { active: true, disabled: true },
+        { active: false, disabled: false },
+        { active: false, disabled: true },
+        { active: false, disabled: false },
+      ],
+    });
   });
 
   it("audit all filter filtered auditing", () => {
@@ -184,9 +173,10 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const { filters, wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const filters = getMenuItems(wrapper, ".filter");
     expect(wrapper.html()).toMatchSnapshot();
-    checkFilterCheckbox(filters[1], true, null, true);
+    checkMenuItem(filters[1], { checked: true, disabled: true });
   });
 
   it("audit other filter filtered auditing", () => {
@@ -202,19 +192,22 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     expect(wrapper.html()).toMatchSnapshot();
-    checkToolbarState(wrapper, [
-      { active: false, disabled: true },
-      { active: false, disabled: false },
-      { active: true, disabled: true },
-      { active: false, disabled: false },
-    ]);
+    checkFiltersState(wrapper, {
+      filters: [
+        { active: false, disabled: true },
+        { active: false, disabled: false },
+        { active: true, disabled: true },
+        { active: false, disabled: false },
+      ],
+    });
   });
 
   it("toggle filter", () => {
     const store = setupStore();
-    const { filters, wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const filters = getMenuItems(wrapper, ".filter");
 
     expect(wrapper.html()).toMatchSnapshot();
     for (const filter of filters) {
@@ -224,147 +217,171 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("render filters after state changes", () => {
     const store = setupStore();
-    const { wrapper } = renderAccTreeFilterToolbar(store);
+    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
     const tests = [
       {
-        expected: [
-          { active: true, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: AUDITING,
           auditing: Object.values(FILTERS),
         },
-        expected: [
-          { active: true, disabled: true },
-          { active: false, disabled: true },
-          { active: false, disabled: true },
-          { active: false, disabled: true },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: true },
+            { active: false, disabled: true },
+            { active: false, disabled: true },
+            { active: false, disabled: true },
+          ],
+        },
       },
       {
         action: {
           type: AUDIT,
           response: [],
         },
-        expected: [
-          { active: true, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: FILTER_TOGGLE,
           filter: FILTERS.ALL,
         },
-        expected: [
-          { active: false, disabled: false },
-          { active: true, disabled: false },
-          { active: true, disabled: false },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: false },
+            { active: true, disabled: false },
+            { active: true, disabled: false },
+            { active: true, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: FILTER_TOGGLE,
           filter: FILTERS.CONTRAST,
         },
-        expected: [
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: true, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: AUDITING,
           auditing: [FILTERS.CONTRAST],
         },
-        expected: [
-          { active: false, disabled: true },
-          { active: false, disabled: false },
-          { active: false, disabled: true },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: true },
+            { active: false, disabled: false },
+            { active: false, disabled: true },
+            { active: true, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: AUDIT,
           response: [],
         },
-        expected: [
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: true, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: FILTER_TOGGLE,
           filter: FILTERS.CONTRAST,
         },
-        expected: [
-          { active: false, disabled: false },
-          { active: true, disabled: false },
-          { active: true, disabled: false },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: false },
+            { active: true, disabled: false },
+            { active: true, disabled: false },
+            { active: true, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: FILTER_TOGGLE,
           filter: FILTERS.NONE,
         },
-        expected: [
-          { active: true, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: AUDITING,
           auditing: [FILTERS.TEXT_LABEL],
         },
-        expected: [
-          { active: true, disabled: true },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: true },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: true },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: true },
+          ],
+        },
       },
       {
         action: {
           type: AUDIT,
           response: [],
         },
-        expected: [
-          { active: true, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: true, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+          ],
+        },
       },
       {
         action: {
           type: FILTER_TOGGLE,
           filter: FILTERS.TEXT_LABEL,
         },
-        expected: [
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: false, disabled: false },
-          { active: true, disabled: false },
-        ],
+        expected: {
+          filters: [
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: false, disabled: false },
+            { active: true, disabled: false },
+          ],
+        },
       },
     ];
 
@@ -376,7 +393,7 @@ describe("AccessibilityTreeFilter component:", () => {
       }
 
       expect(wrapper.html()).toMatchSnapshot();
-      checkToolbarState(wrapper, expected);
+      checkFiltersState(wrapper, expected);
     }
   });
 });

@@ -20,14 +20,14 @@ exports.fetchChildren = accessible => dispatch =>
     .then(response => dispatch({ accessible, type: FETCH_CHILDREN, response }))
     .catch(error => dispatch({ accessible, type: FETCH_CHILDREN, error }));
 
-exports.select = (walker, accessible) => dispatch =>
-  walker
+exports.select = (accessibilityWalker, accessible) => dispatch =>
+  accessibilityWalker
     .getAncestry(accessible)
     .then(response => dispatch({ accessible, type: SELECT, response }))
     .catch(error => dispatch({ accessible, type: SELECT, error }));
 
-exports.highlight = (walker, accessible) => dispatch =>
-  walker
+exports.highlight = (accessibilityWalker, accessible) => dispatch =>
+  accessibilityWalker
     .getAncestry(accessible)
     .then(response => dispatch({ accessible, type: HIGHLIGHT, response }))
     .catch(error => dispatch({ accessible, type: HIGHLIGHT, error }));

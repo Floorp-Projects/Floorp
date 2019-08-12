@@ -57,6 +57,7 @@ exports.ENABLE = "ENABLE";
 exports.DISABLE = "DISABLE";
 exports.UPDATE_CAN_BE_DISABLED = "UPDATE_CAN_BE_DISABLED";
 exports.UPDATE_CAN_BE_ENABLED = "UPDATE_CAN_BE_ENABLED";
+exports.UPDATE_PREF = "UPDATE_PREF";
 exports.FILTER_TOGGLE = "FILTER_TOGGLE";
 exports.AUDIT = "AUDIT";
 exports.AUDITING = "AUDITING";
@@ -151,3 +152,13 @@ for (const key in A11Y_TEXT_LABEL_LINK_IDS) {
   }`;
 }
 exports.A11Y_TEXT_LABEL_LINKS = A11Y_TEXT_LABEL_LINKS;
+
+// Lists of preference names and keys.
+const PREFS = {
+  SCROLL_INTO_VIEW: "SCROLL_INTO_VIEW",
+};
+
+exports.PREFS = PREFS;
+exports.PREF_KEYS = {
+  [PREFS.SCROLL_INTO_VIEW]: "devtools.accessibility.scroll-into-view",
+};
