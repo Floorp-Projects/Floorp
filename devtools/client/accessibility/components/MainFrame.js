@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global gToolbox */
-
 // React & Redux
 const {
   Component,
@@ -44,10 +42,12 @@ class MainFrame extends Component {
     return {
       accessibility: PropTypes.object.isRequired,
       fluentBundles: PropTypes.array.isRequired,
-      walker: PropTypes.object.isRequired,
+      accessibilityWalker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
       auditing: PropTypes.array.isRequired,
+      supports: PropTypes.object,
+      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -61,7 +61,10 @@ class MainFrame extends Component {
   componentWillMount() {
     this.props.accessibility.on("init", this.resetAccessibility);
     this.props.accessibility.on("shutdown", this.resetAccessibility);
-    this.props.walker.on("document-ready", this.resetAccessibility);
+    this.props.accessibilityWalker.on(
+      "document-ready",
+      this.resetAccessibility
+    );
 
     window.addEventListener("resize", this.onPanelWindowResize, true);
   }
@@ -75,14 +78,17 @@ class MainFrame extends Component {
   componentWillUnmount() {
     this.props.accessibility.off("init", this.resetAccessibility);
     this.props.accessibility.off("shutdown", this.resetAccessibility);
-    this.props.walker.off("document-ready", this.resetAccessibility);
+    this.props.accessibilityWalker.off(
+      "document-ready",
+      this.resetAccessibility
+    );
 
     window.removeEventListener("resize", this.onPanelWindowResize, true);
   }
 
   resetAccessibility() {
-    const { dispatch, accessibility } = this.props;
-    dispatch(reset(accessibility));
+    const { dispatch, accessibility, supports } = this.props;
+    dispatch(reset(accessibility, supports));
   }
 
   get useLandscapeMode() {
@@ -106,7 +112,8 @@ class MainFrame extends Component {
   render() {
     const {
       accessibility,
-      walker,
+      accessibilityWalker,
+      getDOMWalker,
       fluentBundles,
       enabled,
       auditing,
@@ -123,7 +130,7 @@ class MainFrame extends Component {
       { bundles: fluentBundles },
       div(
         { className: "mainFrame", role: "presentation" },
-        Toolbar({ accessibility, walker }),
+        Toolbar({ accessibility, accessibilityWalker }),
         isAuditing && AuditProgressOverlay(),
         span(
           {
@@ -143,9 +150,9 @@ class MainFrame extends Component {
                 className: "main-panel",
                 role: "presentation",
               },
-              AccessibilityTree({ walker })
+              AccessibilityTree({ accessibilityWalker, getDOMWalker })
             ),
-            endPanel: RightSidebar({ walker }),
+            endPanel: RightSidebar({ accessibilityWalker, getDOMWalker }),
             vert: this.useLandscapeMode,
           })
         )
@@ -154,8 +161,12 @@ class MainFrame extends Component {
   }
 }
 
-const mapStateToProps = ({ ui, audit: { auditing } }) => ({
-  enabled: ui.enabled,
+const mapStateToProps = ({
+  ui: { enabled, supports },
+  audit: { auditing },
+}) => ({
+  enabled,
+  supports,
   auditing,
 });
 
