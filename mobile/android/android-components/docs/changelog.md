@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **service-glean**
+  * Timing distributions now use a functional bucketing algorithm that does not require fixed limits to be defined up front.
+
 * **support-test**
   * Fixed [#3893](https://github.com/mozilla-mobile/android-components/issues/3893) Moving WebserverRule to support-test.
 
