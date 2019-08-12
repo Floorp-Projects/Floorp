@@ -221,7 +221,7 @@ jobs:
         worker:
             max-run-time: 5400
             env:
-                TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/win64/webrender.manifest'
+                TOOLTOOL_MANIFEST: 'browser/config/tooltool-manifests/win64/vs2017.manifest'
         fetches:
             toolchain:
                 - win64-rust
