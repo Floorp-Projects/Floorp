@@ -674,11 +674,27 @@ class ADBDevice(ADBCommand):
         # entry on a single line and we don't want . or ..
         ls_dir = "/sdcard"
 
-        if self.is_file("/system/bin/ls", timeout=timeout):
-            self._ls = "/system/bin/ls"
-        elif self.is_file("/system/xbin/ls", timeout=timeout):
-            self._ls = "/system/xbin/ls"
-        else:
+        # Using self.is_file is problematic on emulators either
+        # using ls or test to check for their existence.
+        # Executing the command to detect its existence works around
+        # any issues with ls or test.
+        boot_completed = False
+        while not boot_completed and (time.time() - start_time) <= float(timeout):
+            try:
+                self.shell_output("/system/bin/ls", timeout=timeout)
+                boot_completed = True
+                self._ls = "/system/bin/ls"
+            except ADBError as e1:
+                self._logger.info("detect /system/bin/ls {}".format(e1))
+                try:
+                    self.shell_output("/system/xbin/ls", timeout=timeout)
+                    boot_completed = True
+                    self._ls = "/system/xbin/ls"
+                except ADBError as e2:
+                    self._logger.info("detect /system/xbin/ls : {}".format(e2))
+            if not boot_completed:
+                time.sleep(2)
+        if not boot_completed:
             raise ADBError("ADBDevice.__init__: ls could not be found")
 
         # A race condition can occur especially with emulators where
@@ -689,10 +705,11 @@ class ADBDevice(ADBCommand):
         boot_completed = False
         while not boot_completed and (time.time() - start_time) <= float(timeout):
             try:
-                self.shell_output("%s -1A {}".format(ls_dir) % self._ls, timeout=timeout)
+                self.shell_output("{} -1A {}".format(self._ls, ls_dir), timeout=timeout)
                 boot_completed = True
                 self._ls += " -1A"
             except ADBError as e:
+                self._logger.info("detect ls -1A: {}".format(e))
                 if 'No such file or directory' not in e.message:
                     boot_completed = True
                     self._ls += " -a"
