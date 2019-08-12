@@ -54,6 +54,11 @@ class MobileViewportManager final : public nsIDOMEventListener,
    */
   float ComputeIntrinsicResolution() const;
 
+  /* The only direct calls to this should be in test code.
+   * Normally, it gets called by HandleEvent().
+   */
+  void HandleDOMMetaAdded();
+
  private:
   void SetRestoreResolution(float aResolution);
 
