@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs get Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+    async background() {
+      const tab1 = await browser.tabs.create({});
+      const tab2 = await browser.tabs.create({});
+      browser.test.assertEq(tab1.id, (await browser.tabs.get(tab1.id)).id, "tabs.get should return tab with given id");
+      browser.test.assertEq(tab2.id, (await browser.tabs.get(tab2.id)).id, "tabs.get should return tab with given id");
+      await browser.tabs.remove(tab1.id);
+      await browser.tabs.remove(tab2.id);
+      browser.test.notifyPass("tabs.get");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.get");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>
