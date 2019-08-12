@@ -25,6 +25,30 @@ namespace mozilla {
 namespace fontlist {
 
 /**
+ * Data used to initialize a font family alias (a "virtual" family that refers
+ * to some or all of the faces of another family, used when alternate family
+ * names are found in the font resource for localization or for styled
+ * subfamilies). AliasData records are collected incrementally while scanning
+ * the fonts, and then used to set up the Aliases list in the shared font list.
+ */
+struct AliasData {
+  nsTArray<Pointer> mFaces;
+  uint32_t mIndex = 0;
+  bool mHidden = false;
+  bool mBundled = false;
+  bool mBadUnderline = false;
+  bool mForceClassic = false;
+
+  void InitFromFamily(const Family* aFamily) {
+    mIndex = aFamily->Index();
+    mHidden = aFamily->IsHidden();
+    mBundled = aFamily->IsBundled();
+    mBadUnderline = aFamily->IsBadUnderlineFamily();
+    mForceClassic = aFamily->IsForceClassic();
+  }
+};
+
+/**
  * The Shared Font List is a collection of data that lives in shared memory
  * so that all processes can use it, rather than maintaining their own copies,
  * and provides the metadata needed for CSS font-matching (a list of all the
@@ -93,8 +117,7 @@ class FontList {
    *
    * Only used in the parent process.
    */
-  void SetAliases(
-      nsClassHashtable<nsCStringHashKey, nsTArray<Pointer>>& aAliasTable);
+  void SetAliases(nsClassHashtable<nsCStringHashKey, AliasData>& aAliasTable);
 
   /**
    * Local names are PostScript or Full font names of individual faces, used
