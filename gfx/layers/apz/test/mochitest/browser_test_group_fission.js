@@ -53,7 +53,7 @@ add_task(async function test_main() {
     child: {
       moduleURI: getRootDirectory(gTestPath) + "FissionTestHelperChild.jsm",
       events: {
-        DOMWindowCreated: {},
+        "FissionTestHelper:Init": { capture: true, wantUntrusted: true },
       },
     },
     allFrames: true,

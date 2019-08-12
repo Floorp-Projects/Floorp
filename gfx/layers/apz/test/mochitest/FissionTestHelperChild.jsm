@@ -98,15 +98,6 @@ class FissionTestHelperChild extends JSWindowActorChild {
 
   handleEvent(evt) {
     switch (evt.type) {
-      case "DOMWindowCreated":
-        // Defer real initialization to when the FissionTestHelper:Init event
-        // is fired by the content. See comments in fission_subtest_init().
-        // Once bug 1557486 is fixed we can just register the FissionTestHelper:Init
-        // event directly instead of DOMWindowCreated.
-        this.contentWindow.addEventListener("FissionTestHelper:Init", this, {
-          wantUntrusted: true,
-        });
-        break;
       case "FissionTestHelper:Init":
         this.initialize();
         break;
