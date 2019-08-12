@@ -24,6 +24,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.Observer
 import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -677,7 +678,9 @@ class HomeFragment : Fragment(), AccountObserver {
 
         val tabs = getListOfSessions().toTabs()
 
-        val viewModel: CreateCollectionViewModel by activityViewModels()
+        val viewModel: CreateCollectionViewModel by activityViewModels {
+            ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+        }
         viewModel.tabs = tabs
         val selectedTabs =
             tabs.find { tab -> tab.sessionId == selectedTabId }
