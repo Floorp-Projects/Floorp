@@ -166,7 +166,6 @@ TestTargetActor.prototype = {
     if (!this._attached) {
       return { error: "wrongState" };
     }
-    this.threadActor.exit();
     return { type: "detached" };
   },
 

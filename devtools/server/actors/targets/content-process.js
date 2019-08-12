@@ -185,7 +185,15 @@ ContentProcessTargetActor.prototype = {
       this._workerList.onListChanged = null;
     }
   },
-});
+
+  preNest: function() {
+    // TODO: freeze windows
+    // window mediator doesn't work in child.
+    // it doesn't throw, but doesn't return any window
+  },
+
+  postNest: function() {},
+};
 
 ContentProcessTargetActor.prototype.requestTypes = {
   listWorkers: ContentProcessTargetActor.prototype.onListWorkers,

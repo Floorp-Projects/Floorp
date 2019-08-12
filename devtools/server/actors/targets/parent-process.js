@@ -157,6 +157,30 @@ parentProcessTargetPrototype._detach = function() {
   return BrowsingContextTargetActor.prototype._detach.call(this);
 };
 
+/* ThreadActor hooks. */
+
+/**
+ * Prepare to enter a nested event loop by disabling debuggee events.
+ */
+parentProcessTargetPrototype.preNest = function() {
+  // Disable events in all open windows.
+  for (const { windowUtils } of Services.wm.getEnumerator(null)) {
+    windowUtils.suppressEventHandling(true);
+    windowUtils.suspendTimeouts();
+  }
+};
+
+/**
+ * Prepare to exit a nested event loop by enabling debuggee events.
+ */
+parentProcessTargetPrototype.postNest = function(nestData) {
+  // Enable events in all open windows.
+  for (const { windowUtils } of Services.wm.getEnumerator(null)) {
+    windowUtils.resumeTimeouts();
+    windowUtils.suppressEventHandling(false);
+  }
+};
+
 exports.parentProcessTargetPrototype = parentProcessTargetPrototype;
 exports.ParentProcessTargetActor = ActorClassWithSpec(
   parentProcessTargetSpec,
