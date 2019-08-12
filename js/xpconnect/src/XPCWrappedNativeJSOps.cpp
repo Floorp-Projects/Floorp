@@ -563,7 +563,7 @@ bool XPC_WN_Shared_Enumerate(JSContext* cx, HandleObject obj) {
 
 enum WNHelperType { WN_NOHELPER, WN_HELPER };
 
-static void WrappedNativeFinalize(js::FreeOp* fop, JSObject* obj,
+static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
                                   WNHelperType helperType) {
   const js::Class* clazz = js::GetObjectClass(obj);
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
@@ -576,7 +576,7 @@ static void WrappedNativeFinalize(js::FreeOp* fop, JSObject* obj,
 
   XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
   if (helperType == WN_HELPER) {
-    wrapper->GetScriptable()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
+    wrapper->GetScriptable()->Finalize(wrapper, fop, obj);
   }
   wrapper->FlatJSObjectFinalized();
 }
@@ -592,7 +592,7 @@ static size_t WrappedNativeObjectMoved(JSObject* obj, JSObject* old) {
   return 0;
 }
 
-void XPC_WN_NoHelper_Finalize(js::FreeOp* fop, JSObject* obj) {
+void XPC_WN_NoHelper_Finalize(JSFreeOp* fop, JSObject* obj) {
   WrappedNativeFinalize(fop, obj, WN_NOHELPER);
 }
 
@@ -759,7 +759,7 @@ bool XPC_WN_Helper_HasInstance(JSContext* cx, HandleObject obj,
   POST_HELPER_STUB
 }
 
-void XPC_WN_Helper_Finalize(js::FreeOp* fop, JSObject* obj) {
+void XPC_WN_Helper_Finalize(JSFreeOp* fop, JSObject* obj) {
   WrappedNativeFinalize(fop, obj, WN_HELPER);
 }
 
@@ -1019,7 +1019,7 @@ static bool XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-static void XPC_WN_Proto_Finalize(js::FreeOp* fop, JSObject* obj) {
+static void XPC_WN_Proto_Finalize(JSFreeOp* fop, JSObject* obj) {
   // This can be null if xpc shutdown has already happened
   XPCWrappedNativeProto* p = (XPCWrappedNativeProto*)xpc_GetJSPrivate(obj);
   if (p) {
@@ -1151,7 +1151,7 @@ static bool XPC_WN_TearOff_Resolve(JSContext* cx, HandleObject obj, HandleId id,
       resolvedp);
 }
 
-static void XPC_WN_TearOff_Finalize(js::FreeOp* fop, JSObject* obj) {
+static void XPC_WN_TearOff_Finalize(JSFreeOp* fop, JSObject* obj) {
   XPCWrappedNativeTearOff* p = (XPCWrappedNativeTearOff*)xpc_GetJSPrivate(obj);
   if (!p) {
     return;
