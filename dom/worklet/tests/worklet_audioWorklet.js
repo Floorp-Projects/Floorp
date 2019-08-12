@@ -12,5 +12,5 @@ class DummyProcessWorkletProcessor extends AudioWorkletProcessor {
 // and the console.log won't be executed
 registerProcessor("sure!", DummyProcessWorkletProcessor);
 console.log(
-  this instanceof AudioWorkletGlobalScope ? "So far so good" : "error"
+  globalThis instanceof AudioWorkletGlobalScope ? "So far so good" : "error"
 );
