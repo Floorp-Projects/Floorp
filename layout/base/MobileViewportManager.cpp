@@ -417,7 +417,8 @@ void MobileViewportManager::UpdateResolution(
                "zoom factor must be positive");
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    mContext->SetResolutionAndScaleTo(resolution.scale);
+    mContext->SetResolutionAndScaleTo(
+        resolution.scale, ResolutionChangeOrigin::MainThreadRestore);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
   }
