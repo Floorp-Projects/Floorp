@@ -25,11 +25,11 @@ class AutoSetThreadIsPerformingGC;
 }  // namespace js
 
 /*
- * A FreeOp can do one thing: free memory. For convenience, it has delete_
+ * A JSFreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
  *
- * FreeOp is passed to finalizers and other sweep-phase hooks so that we do not
- * need to pass a JSContext to those hooks.
+ * JSFreeOp is passed to finalizers and other sweep-phase hooks so that we do
+ * not need to pass a JSContext to those hooks.
  */
 class JSFreeOp {
   using Cell = js::gc::Cell;
@@ -86,7 +86,7 @@ class JSFreeOp {
   void freeUntrackedLater(void* p) { queueForFreeLater(p); }
 
   // Queue memory that was associated with a GC thing using js::AddCellMemory to
-  // be freed when the FreeOp is destroyed.
+  // be freed when the JSFreeOp is destroyed.
   //
   // This should not be called on the default FreeOps returned by
   // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until

@@ -163,7 +163,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   return true;
 }
 
-void JSScript::maybeReleaseJitScript(FreeOp* fop) {
+void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
   if (!jitScript_ || zone()->types.keepJitScripts || hasBaselineScript() ||
       jitScript_->active()) {
     return;
@@ -172,7 +172,7 @@ void JSScript::maybeReleaseJitScript(FreeOp* fop) {
   releaseJitScript(fop);
 }
 
-void JSScript::releaseJitScript(FreeOp* fop) {
+void JSScript::releaseJitScript(JSFreeOp* fop) {
   MOZ_ASSERT(!hasIonScript());
 
   fop->removeCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);

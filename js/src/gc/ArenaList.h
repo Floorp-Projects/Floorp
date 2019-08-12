@@ -337,15 +337,15 @@ class ArenaLists {
   bool relocateArenas(Arena*& relocatedListOut, JS::GCReason reason,
                       js::SliceBudget& sliceBudget, gcstats::Statistics& stats);
 
-  void queueForegroundObjectsForSweep(FreeOp* fop);
+  void queueForegroundObjectsForSweep(JSFreeOp* fop);
   void queueForegroundThingsForSweep();
 
   void releaseForegroundSweptEmptyArenas();
 
-  bool foregroundFinalize(FreeOp* fop, AllocKind thingKind,
+  bool foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
                           js::SliceBudget& sliceBudget,
                           SortedArenaList& sweepList);
-  static void backgroundFinalize(FreeOp* fop, Arena* listHead, Arena** empty);
+  static void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
 
   void setParallelAllocEnabled(bool enabled);
 
@@ -353,8 +353,10 @@ class ArenaLists {
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
 
-  inline void queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase);
-  inline void queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase);
+  inline void queueForForegroundSweep(JSFreeOp* fop,
+                                      const FinalizePhase& phase);
+  inline void queueForBackgroundSweep(JSFreeOp* fop,
+                                      const FinalizePhase& phase);
   inline void queueForForegroundSweep(AllocKind thingKind);
   inline void queueForBackgroundSweep(AllocKind thingKind);
 

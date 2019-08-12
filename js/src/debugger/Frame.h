@@ -51,7 +51,7 @@ class ScriptedOnStepHandler final : public OnStepHandler {
   explicit ScriptedOnStepHandler(JSObject* object);
   virtual JSObject* object() const override;
   virtual void hold(JSObject* owner) override;
-  virtual void drop(js::FreeOp* fop, JSObject* owner) override;
+  virtual void drop(JSFreeOp* fop, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
@@ -84,7 +84,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
   explicit ScriptedOnPopHandler(JSObject* object);
   virtual JSObject* object() const override;
   virtual void hold(JSObject* owner) override;
-  virtual void drop(js::FreeOp* fop, JSObject* owner) override;
+  virtual void drop(JSFreeOp* fop, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
@@ -237,9 +237,9 @@ class DebuggerFrame : public NativeObject {
    * function will not otherwise disturb generatorFrames. Passing the enum
    * allows this function to be used while iterating over generatorFrames.
    */
-  void clearGenerator(FreeOp* fop);
+  void clearGenerator(JSFreeOp* fop);
   void clearGenerator(
-      FreeOp* fop, Debugger* owner,
+      JSFreeOp* fop, Debugger* owner,
       Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum = nullptr);
 
   /*
@@ -256,7 +256,7 @@ class DebuggerFrame : public NativeObject {
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];
 
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
 
   static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
   static MOZ_MUST_USE bool getFrameIter(JSContext* cx,
@@ -301,8 +301,8 @@ class DebuggerFrame : public NativeObject {
  public:
   FrameIter::Data* frameIterData() const;
   void setFrameIterData(FrameIter::Data*);
-  void freeFrameIterData(FreeOp* fop);
-  void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
+  void freeFrameIterData(JSFreeOp* fop);
+  void maybeDecrementFrameScriptStepperCount(JSFreeOp* fop,
                                              AbstractFramePtr frame);
 
   class GeneratorInfo;

@@ -289,7 +289,7 @@ struct BaselineScript final {
                              size_t traceLoggerToggleOffsetEntries);
 
   static void Trace(JSTracer* trc, BaselineScript* script);
-  static void Destroy(FreeOp* fop, BaselineScript* script);
+  static void Destroy(JSFreeOp* fop, BaselineScript* script);
 
   static inline size_t offsetOfMethod() {
     return offsetof(BaselineScript, method_);
@@ -423,7 +423,7 @@ bool CanBaselineInterpretScript(JSScript* script);
 bool BaselineCompileFromBaselineInterpreter(JSContext* cx, BaselineFrame* frame,
                                             uint8_t** res);
 
-void FinishDiscardBaselineScript(FreeOp* fop, JSScript* script);
+void FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script);
 
 void AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf,
                            size_t* data);
