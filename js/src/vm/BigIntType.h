@@ -87,7 +87,7 @@ class BigInt final
   void initializeDigitsToZero();
 
   void traceChildren(JSTracer* trc);
-  void finalize(js::FreeOp* fop);
+  void finalize(JSFreeOp* fop);
   js::HashNumber hash();
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

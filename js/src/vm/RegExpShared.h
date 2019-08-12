@@ -185,7 +185,7 @@ class RegExpShared : public gc::TenuredCell {
 
   void traceChildren(JSTracer* trc);
   void discardJitCode();
-  void finalize(FreeOp* fop);
+  void finalize(JSFreeOp* fop);
 
   static size_t offsetOfSource() { return offsetof(RegExpShared, source); }
 

@@ -771,7 +771,7 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
 }
 
 /* static */
-void ModuleObject::finalize(js::FreeOp* fop, JSObject* obj) {
+void ModuleObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   ModuleObject* self = &obj->as<ModuleObject>();
   if (self->hasImportBindings()) {

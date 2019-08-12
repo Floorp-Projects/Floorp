@@ -173,7 +173,7 @@ void DebugAPI::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise) {
 }
 
 /* static */
-void DebugAPI::sweepBreakpoints(FreeOp* fop, JSScript* script) {
+void DebugAPI::sweepBreakpoints(JSFreeOp* fop, JSScript* script) {
   if (script->hasDebugScript()) {
     sweepBreakpointsSlow(fop, script);
   }
