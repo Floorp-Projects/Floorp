@@ -61,7 +61,10 @@ class MockMVMContext : public MVMContext {
   }
   bool AllowZoomingForDocument() const { return true; }
 
-  void SetResolutionAndScaleTo(float aResolution) { mResolution = aResolution; }
+  void SetResolutionAndScaleTo(float aResolution,
+                               ResolutionChangeOrigin aOrigin) {
+    mResolution = aResolution;
+  }
   void Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
               ResizeEventFlag aResizeEventFlag) {
     mICBSize = aNewSize;
