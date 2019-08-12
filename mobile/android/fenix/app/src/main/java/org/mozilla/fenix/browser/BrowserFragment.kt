@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -29,6 +28,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.ThumbnailsFeature
+import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -40,8 +40,8 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.BrowserInteractor
 import org.mozilla.fenix.components.toolbar.BrowserToolbarController
+import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.QuickActionSheetAction
-import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
@@ -52,7 +52,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetSessionObserver
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
 
 /**
- * Fragment used for browsing the web within the main app and external apps.
+ * Fragment used for browsing the web within the main app.
  */
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -63,7 +63,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
-    private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,25 +91,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         val sessionManager = requireComponents.core.sessionManager
 
         return super.initializeUI(view)?.also {
-
-            quickActionSheetView =
-                QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
-
-            customTabSessionId?.let { customTabSessionId ->
-                customTabsIntegration.set(
-                    feature = CustomTabsIntegration(
-                        requireContext(),
-                        requireComponents.core.sessionManager,
-                        toolbar,
-                        customTabSessionId,
-                        activity,
-                        view.nestedScrollQuickAction,
-                        view.swipeRefresh,
-                        onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) }
-                    ),
-                    owner = this,
-                    view = view)
-            }
 
             thumbnailsFeature.set(
                 feature = ThumbnailsFeature(
@@ -181,46 +161,51 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         return readerViewFeature.onBackPressed() || super.onBackPressed()
     }
 
-    override fun removeSessionIfNeeded(): Boolean {
-        if (customTabsIntegration.onBackPressed()) return true
-
-        getSessionById()?.let { session ->
-            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(
-                session
-            )
-        }
-        return false
-    }
-
     override fun createBrowserToolbarViewInteractor(
         browserToolbarController: BrowserToolbarController,
         session: Session?
-    ) = BrowserInteractor(
-        context = context!!,
-        store = browserStore,
-        browserToolbarController = browserToolbarController,
-        quickActionSheetController = DefaultQuickActionSheetController(
+    ): BrowserToolbarViewInteractor {
+        val interactor = BrowserInteractor(
             context = context!!,
-            navController = findNavController(),
-            currentSession = getSessionById()
-                ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
-            appLinksUseCases = requireComponents.useCases.appLinksUseCases,
-            bookmarkTapped = {
-                lifecycleScope.launch { bookmarkTapped(it) }
-            }
-        ),
-        readerModeController = DefaultReaderModeController(readerViewFeature),
-        customTabSession = customTabSessionId?.let { requireComponents.core.sessionManager.findSessionById(it) }
-    )
+            store = browserStore,
+            browserToolbarController = browserToolbarController,
+            quickActionSheetController = DefaultQuickActionSheetController(
+                context = context!!,
+                navController = findNavController(),
+                currentSession = getSessionById()
+                    ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
+                appLinksUseCases = requireComponents.useCases.appLinksUseCases,
+                bookmarkTapped = {
+                    lifecycleScope.launch { bookmarkTapped(it) }
+                }
+            ),
+            readerModeController = DefaultReaderModeController(readerViewFeature),
+            currentSession = session
+        )
+
+        quickActionSheetView = QuickActionSheetView(view!!.nestedScrollQuickAction, interactor)
+
+        return interactor
+    }
+
+    override fun navToQuickSettingsSheet(session: Session, sitePermissions: SitePermissions?) {
+        val directions = BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+            sessionId = session.id,
+            url = session.url,
+            isSecured = session.securityInfo.secure,
+            isTrackingProtectionOn = session.trackerBlockingEnabled,
+            sitePermissions = sitePermissions,
+            gravity = getAppropriateLayoutGravity()
+        )
+        nav(R.id.browserFragment, directions)
+    }
 
     override fun getEngineMargins(): Pair<Int, Int> {
         val toolbarAndQASSize = resources.getDimensionPixelSize(R.dimen.toolbar_and_qab_height)
-        val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        return if (customTabSessionId != null) Pair(toolbarSize, 0) else Pair(0, toolbarAndQASSize)
+        return 0 to toolbarAndQASSize
     }
 
-    override fun getAppropriateLayoutGravity() =
-        if (customTabSessionId != null) Gravity.TOP else Gravity.BOTTOM
+    override fun getAppropriateLayoutGravity() = Gravity.BOTTOM
 
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
         listOf(

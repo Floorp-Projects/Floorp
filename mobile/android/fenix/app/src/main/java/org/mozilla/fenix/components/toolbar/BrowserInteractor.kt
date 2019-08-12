@@ -13,14 +13,9 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetController
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetViewInteractor
 
-class BrowserInteractor(
-    private val context: Context,
-    private val store: BrowserStore,
-    private val browserToolbarController: BrowserToolbarController,
-    private val quickActionSheetController: QuickActionSheetController,
-    private val readerModeController: ReaderModeController,
-    private val customTabSession: Session?
-) : BrowserToolbarViewInteractor, QuickActionSheetViewInteractor {
+open class BrowserToolbarInteractor(
+    private val browserToolbarController: BrowserToolbarController
+) : BrowserToolbarViewInteractor {
 
     override fun onBrowserToolbarClicked() {
         browserToolbarController.handleToolbarClick()
@@ -29,6 +24,16 @@ class BrowserInteractor(
     override fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item) {
         browserToolbarController.handleToolbarItemInteraction(item)
     }
+}
+
+class BrowserInteractor(
+    private val context: Context,
+    private val store: BrowserStore,
+    browserToolbarController: BrowserToolbarController,
+    private val quickActionSheetController: QuickActionSheetController,
+    private val readerModeController: ReaderModeController,
+    private val currentSession: Session?
+) : BrowserToolbarInteractor(browserToolbarController), QuickActionSheetViewInteractor {
 
     override fun onQuickActionSheetOpened() {
         context.metrics.track(Event.QuickActionSheetOpened)
@@ -52,7 +57,7 @@ class BrowserInteractor(
 
     override fun onQuickActionSheetReadPressed() {
         val enabled =
-            customTabSession?.readerMode ?: context.components.core.sessionManager.selectedSession?.readerMode ?: false
+            currentSession?.readerMode ?: context.components.core.sessionManager.selectedSession?.readerMode ?: false
 
         if (enabled) {
             context.metrics.track(Event.QuickActionSheetClosed)

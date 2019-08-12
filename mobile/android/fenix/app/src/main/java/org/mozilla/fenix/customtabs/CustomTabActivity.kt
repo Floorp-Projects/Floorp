@@ -7,10 +7,13 @@ package org.mozilla.fenix.customtabs
 import androidx.navigation.NavDestination
 import mozilla.components.browser.session.intent.getSessionId
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.browser.browsingmode.CustomTabBrowsingModeManager
-import org.mozilla.fenix.theme.CustomTabThemeManager
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.browser.browsingmode.CustomTabBrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.theme.CustomTabThemeManager
+import java.security.InvalidParameterException
 
 open class CustomTabActivity : HomeActivity() {
     final override fun getSentryBreadcrumbMessage(destination: NavDestination): String {
@@ -21,6 +24,17 @@ open class CustomTabActivity : HomeActivity() {
     final override fun getIntentSource(intent: SafeIntent) = Event.OpenedApp.Source.CUSTOM_TAB
 
     final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
+
+    override fun getNavDirections(
+        from: BrowserDirection,
+        customTabSessionId: String?
+    ) = when (from) {
+        BrowserDirection.FromGlobal ->
+            NavGraphDirections.actionGlobalExternalAppBrowser(customTabSessionId)
+        else -> throw InvalidParameterException(
+            "Tried to navigate to ExternalAppBrowserFragment from $from"
+        )
+    }
 
     final override fun createBrowsingModeManager() =
         CustomTabBrowsingModeManager()

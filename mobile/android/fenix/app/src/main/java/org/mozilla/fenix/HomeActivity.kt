@@ -200,48 +200,37 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         load(searchTermOrURL, newTab, engine, forceSearch)
     }
 
-    @Suppress("ComplexMethod")
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
 
         if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
-        val directions = when (from) {
-            BrowserDirection.FromGlobal -> {
-                NavGraphDirections.actionGlobalBrowser(customTabSessionId)
-            }
-            BrowserDirection.FromHome -> {
-                HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
-            }
-            BrowserDirection.FromSearch -> {
-                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(
-                    customTabSessionId
-                )
-            }
-            BrowserDirection.FromSettings -> {
-                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(
-                    customTabSessionId
-                )
-            }
-            BrowserDirection.FromBookmarks -> {
-                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(
-                    customTabSessionId
-                )
-            }
-            BrowserDirection.FromHistory -> {
-                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(
-                    customTabSessionId
-                )
-            }
-            BrowserDirection.FromExceptions -> {
-                ExceptionsFragmentDirections.actionExceptionsFragmentToBrowserFragment(
-                    customTabSessionId
-                )
-            }
-        }
+        val directions = getNavDirections(from, customTabSessionId)
 
         navHost.navController.nav(fragmentId, directions)
+    }
+
+    protected open fun getNavDirections(
+        from: BrowserDirection,
+        customTabSessionId: String?
+    ) = when (from) {
+        BrowserDirection.FromGlobal ->
+            NavGraphDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromHome ->
+            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromSearch ->
+            SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromSettings ->
+            SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromBookmarks ->
+            BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromHistory ->
+            HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
+        BrowserDirection.FromExceptions ->
+            ExceptionsFragmentDirections.actionExceptionsFragmentToBrowserFragment(
+                customTabSessionId
+            )
     }
 
     private fun load(

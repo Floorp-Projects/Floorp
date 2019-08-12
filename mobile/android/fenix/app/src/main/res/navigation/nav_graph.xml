@@ -12,6 +12,12 @@
         app:popUpToInclusive="true" />
 
     <action
+        android:id="@+id/action_global_external_app_browser"
+        app:destination="@id/externalAppBrowserFragment"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
+
+    <action
         android:id="@+id/action_global_search"
         app:destination="@id/searchFragment"
         app:popUpTo="@id/nav_graph"
@@ -24,6 +30,26 @@
     <action
         android:id="@+id/action_global_turn_on_sync"
         app:destination="@id/turnOnSyncFragment" />
+
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment" />
+
+    <action
+        android:id="@+id/action_global_searchEngineFragment"
+        app:destination="@id/searchEngineFragment" />
+
+    <action
+        android:id="@+id/action_global_accessibilityFragment"
+        app:destination="@id/accessibilityFragment" />
+
+    <action
+        android:id="@+id/action_global_deleteBrowsingDataFragment"
+        app:destination="@id/deleteBrowsingDataFragment" />
+
+    <action
+        android:id="@+id/action_global_homeFragment"
+        app:destination="@id/homeFragment" />
 
     <fragment
         android:id="@+id/homeFragment"
@@ -159,6 +185,22 @@
         <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
+    </fragment>
+
+    <fragment
+            android:id="@+id/externalAppBrowserFragment"
+            android:name="org.mozilla.fenix.customtabs.ExternalAppBrowserFragment"
+            tools:layout="@layout/fragment_browser">
+        <argument
+                android:name="activeSessionId"
+                app:argType="string"
+                app:nullable="true" />
+        <action
+                android:id="@+id/action_externalAppBrowserFragment_to_shareFragment"
+                app:destination="@id/shareFragment" />
+        <action
+                android:id="@+id/action_externalAppBrowserFragment_to_quickSettingsSheetDialogFragment"
+                app:destination="@id/quickSettingsSheetDialogFragment" />
     </fragment>
 
     <fragment
@@ -471,19 +513,4 @@
     <dialog
         android:id="@+id/signOutFragment"
         android:name="org.mozilla.fenix.settings.SignOutFragment" />
-    <action
-        android:id="@+id/action_global_settingsFragment"
-        app:destination="@id/settingsFragment" />
-    <action
-        android:id="@+id/action_global_searchEngineFragment"
-        app:destination="@id/searchEngineFragment" />
-    <action
-        android:id="@+id/action_global_accessibilityFragment"
-        app:destination="@id/accessibilityFragment" />
-    <action
-        android:id="@+id/action_global_deleteBrowsingDataFragment"
-        app:destination="@id/deleteBrowsingDataFragment" />
-    <action
-        android:id="@+id/action_global_homeFragment"
-        app:destination="@id/homeFragment" />
 </navigation>
