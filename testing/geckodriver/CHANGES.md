@@ -39,6 +39,11 @@ Unreleased
 
   Thanks to [Nupur Baghel] for this patch.
 
+- geckodriver now sets the `sanity-test.running` preference
+  to prevent Firefox from opening a graphic test window during
+  startup, which for some users never close, and stops
+  Marionette from initializing.
+
 ### Removed
 
 - Dropped support for legacy Selenium web element references
