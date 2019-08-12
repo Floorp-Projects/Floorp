@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebNavigation onCommitted Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation", "tabs"],
+    },
+    async background() {
+      const url = "http://mochi.test:8888/";
+      const [tab, tabDetails] = await Promise.all([
+        browser.tabs.create({url}),
+        new Promise(resolve => {
+          browser.webNavigation.onCommitted.addListener(details => {
+            if (details.url === "about:blank") {
+              // skip initial about:blank
+              return;
+            }
+            resolve(details);
+          });
+        }),
+      ]);
+
+      browser.test.assertEq(url, tabDetails.url, "webNavigation.onCommitted detects correct url");
+      browser.test.assertEq(tab.id, tabDetails.tabId, "webNavigation.onCommitted fire for proper tabId");
+      await browser.tabs.remove(tab.id);
+      browser.test.notifyPass("webNavigation.onCommitted");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("webNavigation.onCommitted");
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

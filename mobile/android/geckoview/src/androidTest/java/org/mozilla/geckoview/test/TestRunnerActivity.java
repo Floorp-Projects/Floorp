@@ -198,7 +198,7 @@ public class TestRunnerActivity extends Activity {
                 @Override
                 public GeckoResult<AllowOrDeny> onCloseTab(WebExtension source, GeckoSession session) {
                    closeSession(session);
-                   return GeckoResult.ALLOW;
+                   return GeckoResult.fromValue(AllowOrDeny.ALLOW);
                 }
             });
             sRuntime.setDelegate(() -> {
