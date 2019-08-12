@@ -53,9 +53,6 @@
         "perf-reftest-singletons": {
             "tests": ["perf_reftest_singletons"]
         },
-        "speedometer": {
-            "tests": ["speedometer", "stylebench"]
-        },
         "tp5o": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"
