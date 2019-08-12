@@ -1026,6 +1026,19 @@ detect-newline@^2.1.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-2.1.0.tgz#f41f1c10be4b00e87b5f13da680759f2c5bfd3e2"
   integrity sha1-9B8cEL5LAOh7XxPaaAdZ8sW/0+I=
 
+devtools-modules@1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-1.1.5.tgz#55e71233692b4095f0277a00e6bfe3ff374d37f1"
+  integrity sha512-JVdZeQNKhABOeED5tDF6dlQck9SIyR9mq78X13sF3rj1pM87UqP81gfY+ALUqwD3lME0aUpKb3BVIzpIwHuyjQ==
+  dependencies:
+    devtools-services "0.0.1"
+    punycode "^2.1.0"
+
+devtools-services@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/devtools-services/-/devtools-services-0.0.1.tgz#9042600c11d1f4d45cc6ca299588a86fac1fbdd5"
+  integrity sha512-1hq7u0743b5OADkSPc5j0qK6zLKilJdn6YYIt2yN/OvrTbSxeD6+CNquAoeP8q1j5oP8Psi79cTFW8SyIi0VBw==
+
 diff-sequences@^24.3.0:
   version "24.3.0"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-24.3.0.tgz#0f20e8a1df1abddaf4d9c226680952e64118b975"

@@ -341,8 +341,7 @@ class DebugAPI {
    * Get any instrumentation ID which has been associated with a script using
    * the specified debugger object.
    */
-  static bool getScriptInstrumentationId(JSContext* cx,
-                                         HandleObject dbgObject,
+  static bool getScriptInstrumentationId(JSContext* cx, HandleObject dbgObject,
                                          HandleScript script,
                                          MutableHandleValue rval);
 

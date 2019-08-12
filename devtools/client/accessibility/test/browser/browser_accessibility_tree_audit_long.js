@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* global toggleFilter */
+/* global toggleMenuItem */
 
 const header =
   '<h1 style="color:rgba(255,0,0,0.1); ' +
@@ -65,7 +65,7 @@ const tests = [
   {
     desc: "Run an audit from a11y panel toolbar by activating a filter.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleMenuItem(doc, 0, 1);
     },
     expected: {
       tree: auditInitial,
@@ -84,7 +84,7 @@ const tests = [
   {
     desc: "Click on the filter again.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleMenuItem(doc, 0, 1);
     },
     expected: {
       tree: resetAfterAudit,

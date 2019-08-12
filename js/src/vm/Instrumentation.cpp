@@ -47,33 +47,31 @@ void RealmInstrumentation::holderTrace(JSTracer* trc, JSObject* obj) {
 }
 
 static const ClassOps InstrumentationHolderClassOps = {
-  nullptr, /* addProperty */
-  nullptr, /* delProperty */
-  nullptr, /* enumerate */
-  nullptr, /* newEnumerate */
-  nullptr, /* resolve */
-  nullptr, /* mayResolve */
-  RealmInstrumentation::holderFinalize,
-  nullptr, /* call */
-  nullptr, /* hasInstance */
-  nullptr, /* construct */
-  RealmInstrumentation::holderTrace,
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    RealmInstrumentation::holderFinalize,
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    RealmInstrumentation::holderTrace,
 };
 
 static const Class InstrumentationHolderClass = {
     "Instrumentation Holder",
     JSCLASS_HAS_RESERVED_SLOTS(ReservedSlotCount) | JSCLASS_FOREGROUND_FINALIZE,
-    &InstrumentationHolderClassOps, JS_NULL_CLASS_SPEC, JS_NULL_CLASS_EXT
-  };
+    &InstrumentationHolderClassOps, JS_NULL_CLASS_SPEC, JS_NULL_CLASS_EXT};
 
 static const char* instrumentationNames[] = {
 #define DEFINE_INSTRUMENTATION_STRING(_1, String, _2) String,
-  FOR_EACH_INSTRUMENTATION_KIND(DEFINE_INSTRUMENTATION_STRING)
+    FOR_EACH_INSTRUMENTATION_KIND(DEFINE_INSTRUMENTATION_STRING)
 #undef DEFINE_INSTRUMENTATION_STRING
 };
 
-static bool StringToInstrumentationKind(JSContext* cx,
-                                        HandleString str,
+static bool StringToInstrumentationKind(JSContext* cx, HandleString str,
                                         InstrumentationKind* result) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
     bool match;
@@ -81,7 +79,7 @@ static bool StringToInstrumentationKind(JSContext* cx,
       return false;
     }
     if (match) {
-      *result = (InstrumentationKind) (1 << i);
+      *result = (InstrumentationKind)(1 << i);
       return true;
     }
   }
@@ -94,7 +92,7 @@ static bool StringToInstrumentationKind(JSContext* cx,
 JSAtom* RealmInstrumentation::getInstrumentationKindName(
     JSContext* cx, InstrumentationKind kind) {
   for (size_t i = 0; i < mozilla::ArrayLength(instrumentationNames); i++) {
-    if (kind == (InstrumentationKind) (1 << i)) {
+    if (kind == (InstrumentationKind)(1 << i)) {
       JSString* str = JS_AtomizeString(cx, instrumentationNames[i]);
       if (!str) {
         return nullptr;
@@ -134,7 +132,7 @@ bool RealmInstrumentation::install(JSContext* cx, Handle<GlobalObject*> global,
     if (!StringToInstrumentationKind(cx, str, &kind)) {
       return false;
     }
-    kinds |= (uint32_t) kind;
+    kinds |= (uint32_t)kind;
   }
 
   Rooted<UniquePtr<RealmInstrumentation>> instrumentation(
@@ -160,8 +158,7 @@ bool RealmInstrumentation::install(JSContext* cx, Handle<GlobalObject*> global,
 /* static */
 bool RealmInstrumentation::setActive(JSContext* cx,
                                      Handle<GlobalObject*> global,
-                                     Debugger* dbg,
-                                     bool active) {
+                                     Debugger* dbg, bool active) {
   MOZ_ASSERT(global == cx->global());
 
   RootedObject holder(cx, global->getInstrumentationHolder());
@@ -226,8 +223,7 @@ uint32_t RealmInstrumentation::getInstrumentationKinds(GlobalObject* global) {
 /* static */
 bool RealmInstrumentation::getScriptId(JSContext* cx,
                                        Handle<GlobalObject*> global,
-                                       HandleScript script,
-                                       int32_t* id) {
+                                       HandleScript script, int32_t* id) {
   MOZ_ASSERT(global == cx->global());
   RootedObject holder(cx, global->getInstrumentationHolder());
   RealmInstrumentation* instrumentation = GetInstrumentation(holder);
@@ -279,4 +275,4 @@ bool GlobalHasInstrumentation(JSObject* global) {
          global->as<js::GlobalObject>().getInstrumentationHolder();
 }
 
-} // namespace js
+}  // namespace js

@@ -23,18 +23,18 @@ exports.auditing = filter => dispatch => {
   return dispatch({ auditing, type: AUDITING });
 };
 
-exports.audit = (walker, filter) => dispatch =>
+exports.audit = (accessibilityWalker, filter) => dispatch =>
   new Promise(resolve => {
     const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
     const auditEventHandler = ({ type, ancestries, progress }) => {
       switch (type) {
         case "error":
-          walker.off("audit-event", auditEventHandler);
+          accessibilityWalker.off("audit-event", auditEventHandler);
           dispatch({ type: AUDIT, error: true });
           resolve();
           break;
         case "completed":
-          walker.off("audit-event", auditEventHandler);
+          accessibilityWalker.off("audit-event", auditEventHandler);
           dispatch({ type: AUDIT, response: ancestries });
           resolve();
           break;
@@ -46,6 +46,6 @@ exports.audit = (walker, filter) => dispatch =>
       }
     };
 
-    walker.on("audit-event", auditEventHandler);
-    walker.startAudit({ types });
+    accessibilityWalker.on("audit-event", auditEventHandler);
+    accessibilityWalker.startAudit({ types });
   });

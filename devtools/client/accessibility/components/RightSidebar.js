@@ -22,7 +22,8 @@ const Checks = createFactory(require("./Checks"));
 class RightSidebar extends Component {
   static get propTypes() {
     return {
-      walker: PropTypes.object.isRequired,
+      accessibilityWalker: PropTypes.object.isRequired,
+      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
@@ -33,7 +34,7 @@ class RightSidebar extends Component {
   render() {
     const propertiesHeaderID = "accessibility-properties-header";
     const checksHeaderID = "accessibility-checks-header";
-    const { walker } = this.props;
+    const { accessibilityWalker, getDOMWalker } = this.props;
     return div(
       {
         className: "right-sidebar",
@@ -50,7 +51,11 @@ class RightSidebar extends Component {
           },
           {
             className: "accessible",
-            component: Accessible({ walker, labelledby: propertiesHeaderID }),
+            component: Accessible({
+              accessibilityWalker,
+              getDOMWalker,
+              labelledby: propertiesHeaderID,
+            }),
             header: L10N.getStr("accessibility.properties"),
             labelledby: propertiesHeaderID,
             opened: true,

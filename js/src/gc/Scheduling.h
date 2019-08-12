@@ -162,8 +162,9 @@
  *      maybeGC. The reason for this is that this check is made after the
  *      allocation and we cannot GC with an uninitialized thing in the heap.
  *
- *  11) Do an incremental, zonal GC with reason TOO_MUCH_MALLOC when the total amount
- *      of malloced memory is greater than the malloc trigger limit for the zone.
+ *  11) Do an incremental, zonal GC with reason TOO_MUCH_MALLOC when the total
+ * amount of malloced memory is greater than the malloc trigger limit for the
+ * zone.
  *
  *
  * Size Limitation Triggers Explanation

@@ -955,8 +955,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   MOZ_MUST_USE bool updateObservesAllExecutionOnDebuggees(
       JSContext* cx, IsObserving observing);
-  MOZ_MUST_USE bool updateObservesCoverageOnDebuggees(
-      JSContext* cx, IsObserving observing);
+  MOZ_MUST_USE bool updateObservesCoverageOnDebuggees(JSContext* cx,
+                                                      IsObserving observing);
   void updateObservesAsmJSOnDebuggees(IsObserving observing);
 
   JSObject* getHook(Hook hook) const;

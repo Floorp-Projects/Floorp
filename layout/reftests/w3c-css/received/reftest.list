@@ -88,8 +88,8 @@ fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-co
 == css-multicol/multicol-fill-auto-001.xht css-multicol/multicol-fill-auto-001-ref.xht
 fuzzy(0-135,0-80) == css-multicol/multicol-fill-auto-002.xht css-multicol/multicol-fill-auto-002-ref.xht
 fuzzy(0-135,0-3270) == css-multicol/multicol-fill-auto-003.xht css-multicol/multicol-fill-auto-003-ref.xht
-fails == css-multicol/multicol-fill-auto-block-children-001.xht css-multicol/multicol-fill-auto-block-children-ref.xht
-fails == css-multicol/multicol-fill-auto-block-children-002.xht css-multicol/multicol-fill-auto-block-children-002-ref.xht
+pref(layout.css.column-span.enabled,true) fuzzy-if(OSX,255-255,2762-2762) == css-multicol/multicol-fill-auto-block-children-001.xht css-multicol/multicol-fill-auto-block-children-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-fill-auto-block-children-002.xht css-multicol/multicol-fill-auto-block-children-002-ref.xht
 fuzzy(0-135,0-80) == css-multicol/multicol-fill-balance-001.xht css-multicol/multicol-fill-balance-001-ref.xht
 skip == css-multicol/multicol-fill-balance-002.html reference/ref-filled-green-100px-square-only.html
 fuzzy(0-135,0-821) == css-multicol/multicol-gap-000.xht css-multicol/multicol-gap-000-ref.xht
