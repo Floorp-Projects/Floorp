@@ -1764,7 +1764,7 @@ def finalizeHook(descriptor, hookName, freeOp, obj):
     if descriptor.wrapperCache:
         finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.isGlobal():
-        finalize += "mozilla::dom::FinalizeGlobal(js::CastToJSFreeOp(%s), %s);\n" % (freeOp, obj)
+        finalize += "mozilla::dom::FinalizeGlobal(%s, %s);\n" % (freeOp, obj)
     finalize += fill(
         """
         if (size_t mallocBytes = BindingJSObjectMallocBytes(self)) {
@@ -1783,7 +1783,7 @@ class CGClassFinalizeHook(CGAbstractClassHook):
     A hook for finalize, used to release our native object.
     """
     def __init__(self, descriptor):
-        args = [Argument('js::FreeOp*', 'fop'), Argument('JSObject*', 'obj')]
+        args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'obj')]
         CGAbstractClassHook.__init__(self, descriptor, FINALIZE_HOOK_NAME,
                                      'void', args)
 
