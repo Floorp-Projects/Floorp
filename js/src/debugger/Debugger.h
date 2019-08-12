@@ -65,7 +65,6 @@ class AutoRealm;
 class CrossCompartmentKey;
 class Debugger;
 class DebuggerEnvironment;
-class FreeOp;
 class PromiseObject;
 namespace gc {
 struct Cell;
