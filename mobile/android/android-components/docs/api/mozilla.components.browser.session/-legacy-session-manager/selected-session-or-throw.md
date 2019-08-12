@@ -2,7 +2,7 @@
 
 # selectedSessionOrThrow
 
-`val selectedSessionOrThrow: `[`Session`](../-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L116)
+`val selectedSessionOrThrow: `[`Session`](../-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L118)
 
 Gets the currently selected session or throws an IllegalStateException if no session is
 selected.

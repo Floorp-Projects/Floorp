@@ -11,6 +11,7 @@ Value type that represents a media element that is present on the currently disp
 | Name | Summary |
 |---|---|
 | [Controller](-controller/index.md) | `interface Controller`<br>Controller for controlling playback of a media element. |
+| [Metadata](-metadata/index.md) | `data class Metadata`<br>Metadata associated with [Media](./index.md). |
 | [Observer](-observer/index.md) | `interface Observer`<br>Interface to be implemented by classes that want to observe a media element. |
 | [PlaybackState](-playback-state/index.md) | `enum class PlaybackState` |
 
@@ -25,6 +26,7 @@ Value type that represents a media element that is present on the currently disp
 | Name | Summary |
 |---|---|
 | [controller](controller.md) | `abstract val controller: `[`Controller`](-controller/index.md)<br>The [Controller](-controller/index.md) for controlling playback of this media element. |
+| [metadata](metadata.md) | `abstract val metadata: `[`Metadata`](-metadata/index.md)<br>The [Metadata](-metadata/index.md) |
 | [playbackState](playback-state.md) | `var playbackState: `[`PlaybackState`](-playback-state/index.md)<br>The current [PlaybackState](-playback-state/index.md) of this media element. |
 
 ### Functions
