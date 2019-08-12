@@ -39,48 +39,49 @@
             <div id="graph-wrapper">
               <div id="graph"></div>
               <div id="legend">
-                <input id="tab-social" data-type="social" type="radio" name="tabs">
+                <label id="graphLegendDescription" data-l10n-id="graph-legend-description"></label>
+                <input id="tab-social" data-type="social" type="radio" name="tabs" aria-describedby="socialTitle" checked>
                 <label for="tab-social" data-type="social"></label>
 
-                <input id="tab-cookie" data-type="cookie" type="radio" name="tabs">
+                <input id="tab-cookie" data-type="cookie" type="radio" name="tabs" aria-describedby="cookieTitle">
                 <label for="tab-cookie" data-type="cookie"></label>
 
-                <input id="tab-tracker" data-type="tracker" type="radio" name="tabs">
+                <input id="tab-tracker" data-type="tracker" type="radio" name="tabs" aria-describedby="trackerTitle">
                 <label for="tab-tracker" data-type="tracker"></label>
 
-                <input id="tab-fingerprinter" data-type="fingerprinter" type="radio" name="tabs">
+                <input id="tab-fingerprinter" data-type="fingerprinter" type="radio" name="tabs" aria-describedby="fingerprinterTitle">
                 <label for="tab-fingerprinter" data-type="fingerprinter"></label>
 
-                <input id="tab-cryptominer" data-type="cryptominer" type="radio" name="tabs">
+                <input id="tab-cryptominer" data-type="cryptominer" type="radio" name="tabs" aria-describedby="cryptominerTitle">
                 <label for="tab-cryptominer" data-type="cryptominer"></label>
                 <div id=highlight></div>
                 <div id=highlight-hover></div>
                 <div id="social" class="tab-content">
-                  <p class="content-title" data-l10n-id="social-tab-title"></p>
+                  <p id="socialTitle" class="content-title" data-l10n-id="social-tab-title"></p>
                   <p data-l10n-id="social-tab-contant">
                     <a target="_blank" id="social-link" data-l10n-name="learn-more-link"></a>
                   </p>
                 </div>
                 <div id="cookie" class="tab-content">
-                  <p class="content-title" data-l10n-id="cookie-tab-title"></p>
+                  <p id="cookieTitle" class="content-title" data-l10n-id="cookie-tab-title"></p>
                   <p data-l10n-id="cookie-tab-content">
                     <a target="_blank" id="cookie-link" data-l10n-name="learn-more-link"></a>
                   </p>
                 </div>
                 <div id="tracker" class="tab-content">
-                  <p class="content-title" data-l10n-id="tracker-tab-title"></p>
+                  <p id="trackerTitle" class="content-title" data-l10n-id="tracker-tab-title"></p>
                   <p data-l10n-id="tracker-tab-content">
                     <a target="_blank" id="tracker-link" data-l10n-name="learn-more-link"></a>
                   </p>
                 </div>
                 <div id="fingerprinter" class="tab-content">
-                  <p class="content-title" data-l10n-id="fingerprinter-tab-title"></p>
+                  <p id="fingerprinterTitle" class="content-title" data-l10n-id="fingerprinter-tab-title"></p>
                   <p data-l10n-id="fingerprinter-tab-content">
                     <a target="_blank" id="fingerprinter-link" data-l10n-name="learn-more-link"></a>
                   </p>
                 </div>
                 <div id="cryptominer" class="tab-content">
-                  <p class="content-title" data-l10n-id="cryptominer-tab-title"></p>
+                  <p id="cryptominerTitle" class="content-title" data-l10n-id="cryptominer-tab-title"></p>
                   <p data-l10n-id="cryptominer-tab-content">
                     <a target="_blank" id="cryptominer-link" data-l10n-name="learn-more-link"></a>
                   </p>
