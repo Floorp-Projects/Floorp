@@ -21,7 +21,6 @@ namespace js {
 
 class AutoLockGC;
 class AutoLockGCBgAlloc;
-class FreeOp;
 class NurseryDecommitTask;
 
 namespace gc {
