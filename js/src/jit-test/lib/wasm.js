@@ -97,6 +97,11 @@ function _augmentSrc(src, assertions) {
          i64.const ${expected}
          i64.eq`;
                     break;
+                case 'i32':
+                    newSrc += `
+         i32.const ${expected}
+         i32.eq`;
+                    break;
                 case 'i64':
                     newSrc += `
          i64.const ${expected}
