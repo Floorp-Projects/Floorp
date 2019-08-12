@@ -23,13 +23,13 @@ function createCanvas(initWithMask) {
   return canvas;
 }
 
-function getRefSnapshot(initWithMask) {
+async function getRefSnapshot(initWithMask) {
   var refCanvas = createCanvas(!initWithMask);
   var ctx = refCanvas.getContext("2d");
   ctx.rect(0, 0, 64, 64);
   ctx.fillStyle = "#00FF00";
   ctx.fill();
-  var result = snapshotWindow(window);
+  var result = await snapshotWindow(window);
   document.body.removeChild(refCanvas);
   return result;
 }
@@ -38,7 +38,7 @@ function runTest(initWithMask) {
   var htmlCanvas = createCanvas(initWithMask);
   var worker = new Worker("offscreencanvas.js");
 
-  worker.onmessage = function(evt) {
+  worker.onmessage = async function(evt) {
     var msg = evt.data || {};
     if (msg.type == "draw") {
       if (msg.count === 10) {
@@ -49,11 +49,11 @@ function runTest(initWithMask) {
           htmlCanvas.style.mask = "url('offscreencanvas_mask.svg#fade_mask_both')";
         }
       } else if (msg.count === 20) {
-        var snapshotFallback = snapshotWindow(window);
         worker.terminate();
+        var snapshotFallback = await snapshotWindow(window);
         document.body.removeChild(htmlCanvas);
 
-        var results = compareSnapshots(snapshotFallback, getRefSnapshot(initWithMask), true);
+        var results = compareSnapshots(snapshotFallback, await getRefSnapshot(initWithMask), true);
         ok(results[0], "after dynamic fallback, screenshots should be the same");
 
         if (initWithMask) {

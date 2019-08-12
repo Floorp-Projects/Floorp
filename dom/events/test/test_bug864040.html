@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
     * actually drawn on the newline.
     */
 
-    function testSelectEndOfText(elem) {
+    async function testSelectEndOfText(elem) {
       var tn = elem.tagName;
       elem.focus();
 
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
       var refoffset = result.offset;
 
       // Take a snapshot of where the caret is (on the new line)
-      referenceSnapshot = snapshotWindow(window, true /* withCaret */);
+      referenceSnapshot = await snapshotWindow(window, true /* withCaret */);
       ok(referenceSnapshot, tn + ': failed to take snapshot (1)');
 
       // Set selection to the same spot through a selection event
@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
       is(result.offset, refoffset, tn + ': caret is not at the right position');
 
       // Take a snapshot of where the new caret is (shoud still be on the new line)
-      testSnapshot = snapshotWindow(window, true /* withCaret */);
+      testSnapshot = await snapshotWindow(window, true /* withCaret */);
       ok(testSnapshot, tn + ': failed to take snapshot (2)');
 
       // Compare snapshot (should be the same)
@@ -69,12 +69,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
       }
     }
 
-    function runTests() {
+    async function runTests() {
       // we don't test regular <input> because this test is about multiline support
       // test textarea
-      testSelectEndOfText(document.getElementById('ta'));
+      await testSelectEndOfText(document.getElementById('ta'));
       // test contentEditable
-      testSelectEndOfText(document.getElementById('ce'));
+      await testSelectEndOfText(document.getElementById('ce'));
       SimpleTest.finish();
     }
 

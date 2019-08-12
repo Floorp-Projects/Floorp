@@ -26,9 +26,9 @@ async function runTest() {
     }
   }
 
-  sNoXUL = snapshotWindow(window.frames[0], false);
-  sWithXUL = snapshotWindow(window.frames[1], false);
-  sRef = snapshotWindow(window.frames[2], false);
+  let sNoXUL = await snapshotWindow(window.frames[0], false);
+  let sWithXUL = await snapshotWindow(window.frames[1], false);
+  let sRef = await snapshotWindow(window.frames[2], false);
   let res;
   ok(compareSnapshots(sNoXUL, sRef, true)[0],
      "noxul domain same as ref");
