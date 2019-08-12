@@ -45,7 +45,8 @@ NS_IMPL_ISUPPORTS(nsIconLoaderService, imgINotificationObserver)
 
 nsIconLoaderService::nsIconLoaderService(nsIContent* aContent, nsIntRect* aImageRegionRect,
                                          RefPtr<nsIconLoaderObserver> aObserver,
-                                         uint32_t aIconHeight, uint32_t aIconWidth)
+                                         uint32_t aIconHeight, uint32_t aIconWidth,
+                                         CGFloat aScaleFactor)
     : mContent(aContent),
       mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mImageRegionRect(aImageRegionRect),
@@ -53,6 +54,7 @@ nsIconLoaderService::nsIconLoaderService(nsIContent* aContent, nsIntRect* aImage
       mNativeIconImage(nil),
       mIconHeight(aIconHeight),
       mIconWidth(aIconWidth),
+      mScaleFactor(aScaleFactor),
       mCompletionHandler(aObserver) {}
 
 nsIconLoaderService::~nsIconLoaderService() { Destroy(); }
@@ -195,45 +197,46 @@ nsresult nsIconLoaderService::OnFrameComplete(imgIRequest* aRequest) {
     mImageRegionRect->SetRect(0, 0, origWidth, origHeight);
   }
 
-  RefPtr<SourceSurface> surface =
-      imageContainer->GetFrame(imgIContainer::FRAME_CURRENT, imgIContainer::FLAG_SYNC_DECODE);
-  if (!surface) {
+  bool isEntirelyBlack = false;
+  NSImage* newImage = nil;
+  nsresult rv;
+  if (mScaleFactor != 0.0f) {
+    rv = nsCocoaUtils::CreateNSImageFromImageContainer(imageContainer, imgIContainer::FRAME_CURRENT,
+                                                       &newImage, mScaleFactor, &isEntirelyBlack);
+  } else {
+    rv = nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
+        imageContainer, imgIContainer::FRAME_CURRENT, &newImage, &isEntirelyBlack);
+  }
+
+  if (NS_FAILED(rv) || !newImage) {
     mNativeIconImage = nil;
+    [newImage release];
     return NS_ERROR_FAILURE;
   }
 
-  CGImageRef origImage = NULL;
-  bool isEntirelyBlack = false;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &origImage, &isEntirelyBlack);
-  if (NS_FAILED(rv) || !origImage) {
-    mNativeIconImage = nil;
-    return NS_ERROR_FAILURE;
-  }
+  NSSize origSize = NSMakeSize(mIconWidth, mIconHeight);
 
   bool createSubImage =
       !(mImageRegionRect->x == 0 && mImageRegionRect->y == 0 &&
         mImageRegionRect->width == origWidth && mImageRegionRect->height == origHeight);
 
-  CGImageRef finalImage = origImage;
   if (createSubImage) {
-    // if mImageRegionRect is set using CSS, we need to slice a piece out of the overall
-    // image to use as the icon
-    finalImage = ::CGImageCreateWithImageInRect(
-        origImage, ::CGRectMake(mImageRegionRect->x, mImageRegionRect->y, mImageRegionRect->width,
-                                mImageRegionRect->height));
-    ::CGImageRelease(origImage);
-    if (!finalImage) {
-      mNativeIconImage = nil;
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  NSImage* newImage = nil;
-  rv = nsCocoaUtils::CreateNSImageFromCGImage(finalImage, &newImage);
-  if (NS_FAILED(rv) || !newImage) {
-    mNativeIconImage = nil;
-    ::CGImageRelease(finalImage);
-    return NS_ERROR_FAILURE;
+    // If mImageRegionRect is set using CSS, we need to slice a piece out of the overall
+    // image to use as the icon.
+    NSImage* subImage =
+        [NSImage imageWithSize:origSize
+                       flipped:NO
+                drawingHandler:^BOOL(NSRect subImageRect) {
+                  [newImage drawInRect:NSMakeRect(0, 0, mIconWidth, mIconHeight)
+                              fromRect:NSMakeRect(mImageRegionRect->x, mImageRegionRect->y,
+                                                  mImageRegionRect->width, mImageRegionRect->height)
+                             operation:NSCompositeCopy
+                              fraction:1.0f];
+                  return YES;
+                }];
+    [newImage release];
+    newImage = [subImage retain];
+    subImage = nil;
   }
 
   // If all the color channels in the image are black, treat the image as a
@@ -244,10 +247,8 @@ nsresult nsIconLoaderService::OnFrameComplete(imgIRequest* aRequest) {
   // filled with white.
   [newImage setTemplate:isEntirelyBlack];
 
-  [newImage setSize:NSMakeSize(mIconWidth, mIconHeight)];
+  [newImage setSize:origSize];
   mNativeIconImage = newImage;
-
-  ::CGImageRelease(finalImage);
 
   mLoadedIcon = true;
 
