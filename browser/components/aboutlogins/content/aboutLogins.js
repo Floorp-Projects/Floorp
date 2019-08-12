@@ -2,31 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let gElements = {};
+// The init code isn't wrapped in a DOMContentLoaded/load event listener so the
+// page works properly when restored from session restore.
+const gElements = {
+  fxAccountsButton: document.querySelector("fxaccounts-button"),
+  loginList: document.querySelector("login-list"),
+  loginIntro: document.querySelector("login-intro"),
+  loginItem: document.querySelector("login-item"),
+  loginFilter: document.querySelector("login-filter"),
+};
 let numberOfLogins = 0;
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-    gElements.fxAccountsButton = document.querySelector("fxaccounts-button");
-    gElements.loginList = document.querySelector("login-list");
-    gElements.loginIntro = document.querySelector("login-intro");
-    gElements.loginItem = document.querySelector("login-item");
-    gElements.loginFilter = document.querySelector("login-filter");
+let { searchParams } = new URL(document.location);
+if (searchParams.get("filter")) {
+  gElements.loginFilter.value = searchParams.get("filter");
+}
 
-    let { searchParams } = new URL(document.location);
-    if (searchParams.get("filter")) {
-      gElements.loginFilter.value = searchParams.get("filter");
-    }
+document.dispatchEvent(new CustomEvent("AboutLoginsInit", { bubbles: true }));
 
-    document.dispatchEvent(
-      new CustomEvent("AboutLoginsInit", { bubbles: true })
-    );
-
-    gElements.loginFilter.focus();
-  },
-  { once: true }
-);
+gElements.loginFilter.focus();
 
 function updateNoLogins() {
   document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
