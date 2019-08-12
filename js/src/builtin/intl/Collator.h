@@ -36,7 +36,7 @@ class CollatorObject : public NativeObject {
  private:
   static const ClassOps classOps_;
 
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
 extern JSObject* CreateCollatorPrototype(JSContext* cx,

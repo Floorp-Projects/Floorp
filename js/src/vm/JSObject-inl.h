@@ -49,7 +49,7 @@ js::NativeObject::dynamicSlotsCount(Shape* shape) {
                            shape->getObjectClass());
 }
 
-inline void JSObject::finalize(js::FreeOp* fop) {
+inline void JSObject::finalize(JSFreeOp* fop) {
   js::probes::FinalizeObject(this);
 
 #ifdef DEBUG

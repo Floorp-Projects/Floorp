@@ -400,7 +400,7 @@ const Class SavedFrame::protoClass_ = {
     JS_PS_END};
 
 /* static */
-void SavedFrame::finalize(FreeOp* fop, JSObject* obj) {
+void SavedFrame::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   JSPrincipals* p = obj->as<SavedFrame>().getPrincipals();
   if (p) {

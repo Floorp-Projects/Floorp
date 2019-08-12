@@ -98,16 +98,16 @@ class DebugAPI {
   static void traceAllForMovingGC(JSTracer* trc);
 
   // Sweep dying debuggers, and detach edges to dying debuggees.
-  static void sweepAll(FreeOp* fop);
+  static void sweepAll(JSFreeOp* fop);
 
   // Add sweep group edges due to the presence of any debuggers.
   static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
 
   // Sweep breakpoints in a script associated with any debugger.
-  static inline void sweepBreakpoints(FreeOp* fop, JSScript* script);
+  static inline void sweepBreakpoints(JSFreeOp* fop, JSScript* script);
 
   // Destroy the debugging information associated with a script.
-  static void destroyDebugScript(FreeOp* fop, JSScript* script);
+  static void destroyDebugScript(JSFreeOp* fop, JSScript* script);
 
   // Validate the debugging information in a script after a moving GC>
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -348,7 +348,7 @@ class DebugAPI {
  private:
   static bool stepModeEnabledSlow(JSScript* script);
   static bool hasBreakpointsAtSlow(JSScript* script, jsbytecode* pc);
-  static void sweepBreakpointsSlow(FreeOp* fop, JSScript* script);
+  static void sweepBreakpointsSlow(JSFreeOp* fop, JSScript* script);
   static void slowPathOnNewScript(JSContext* cx, HandleScript script);
   static void slowPathOnNewGlobalObject(JSContext* cx,
                                         Handle<GlobalObject*> global);

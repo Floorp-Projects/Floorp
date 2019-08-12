@@ -925,7 +925,7 @@ void RegExpShared::discardJitCode() {
   tables.clearAndFree();
 }
 
-void RegExpShared::finalize(FreeOp* fop) {
+void RegExpShared::finalize(JSFreeOp* fop) {
   for (auto& comp : compilationArray) {
     if (comp.byteCode) {
       size_t length = comp.byteCodeLength();
