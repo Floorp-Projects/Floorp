@@ -969,12 +969,13 @@
               </box>
               <moz-input-box tooltip="aHTMLTooltip"
                              class="urlbar-input-box"
-                             flex="1">
+                             flex="1"
+                             role="combobox"
+                             aria-owns="urlbarView-results">
                 <html:input id="urlbar-scheme"
                             required="required"/>
                 <html:input id="urlbar-input"
                             anonid="input"
-                            role="combobox"
                             aria-controls="urlbarView-results"
                             aria-autocomplete="both"
                             inputmode="mozAwesomebar"

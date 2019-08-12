@@ -52,7 +52,7 @@ async function runTests() {
 
   let focused = waitForEvent(
     EVENT_FOCUS,
-    event => event.accessible.role == ROLE_EDITCOMBOBOX
+    event => event.accessible.role == ROLE_ENTRY
   );
   gURLBar.focus();
   let event = await focused;
