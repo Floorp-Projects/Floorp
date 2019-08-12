@@ -32,13 +32,13 @@ cstr = "0.1.2"
 euclid = { version = "0.20.0", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.6.17"
-image_loader = { optional = true, version = "0.21", package = "image", default-features = false, features = ["png_codec"] }
+image_loader = { optional = true, version = "0.22", package = "image", default-features = false, features = ["png_codec"] }
 lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
 num-traits = "0.2"
 plane-split = "0.14.1"
-png = { optional = true, version = "0.14" }
+png = { optional = true, version = "0.15" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }

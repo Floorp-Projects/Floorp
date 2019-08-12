@@ -103,7 +103,7 @@ impl CaptureConfig {
     pub fn save_png(
         path: PathBuf, size: DeviceIntSize, format: ImageFormat, data: &[u8],
     ) {
-        use png::{BitDepth, ColorType, Encoder, HasParameters};
+        use png::{BitDepth, ColorType, Encoder};
         use std::io::BufWriter;
 
         let color_type = match format {
@@ -121,9 +121,8 @@ impl CaptureConfig {
         };
         let w = BufWriter::new(File::create(path).unwrap());
         let mut enc = Encoder::new(w, size.width as u32, size.height as u32);
-        enc
-            .set(color_type)
-            .set(BitDepth::Eight);
+        enc.set_color(color_type);
+        enc.set_depth(BitDepth::Eight);
         enc
             .write_header()
             .unwrap()
