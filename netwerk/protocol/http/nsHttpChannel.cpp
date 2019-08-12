@@ -2254,9 +2254,7 @@ void nsHttpChannel::ProcessSecurityReport(nsresult status) {
   }
 }
 
-bool nsHttpChannel::IsHTTPS() {
-  return mURI->SchemeIs("https");
-}
+bool nsHttpChannel::IsHTTPS() { return mURI->SchemeIs("https"); }
 
 void nsHttpChannel::ProcessSSLInformation() {
   // If this is HTTPS, record any use of RSA so that Key Exchange Algorithm
@@ -2895,7 +2893,8 @@ nsresult nsHttpChannel::ContinueProcessResponse4(nsresult rv) {
   bool doNotRender = DoNotRender3xxBody(rv);
 
   if (rv == NS_ERROR_DOM_BAD_URI && mRedirectURI) {
-    bool isHTTP = mRedirectURI->SchemeIs("http") || mRedirectURI->SchemeIs("https");
+    bool isHTTP =
+        mRedirectURI->SchemeIs("http") || mRedirectURI->SchemeIs("https");
     if (!isHTTP) {
       // This was a blocked attempt to redirect and subvert the system by
       // redirecting to another protocol (perhaps javascript:)
@@ -7567,7 +7566,8 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
     // Note that we treat invalid value as "cross-origin", which spec indicates.
     // We might want to make that stricter.
     if ((content.IsEmpty() && ctx &&
-        ctx->GetEmbedderPolicy() == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP)) {
+         ctx->GetEmbedderPolicy() ==
+             nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP)) {
       content = NS_LITERAL_CSTRING("same-origin");
     }
   }
@@ -9634,12 +9634,6 @@ void nsHttpChannel::MaybeWarnAboutAppCache() {
   GetCallback(warner);
   if (warner) {
     warner->IssueWarning(Document::eAppCache, false);
-    // When the page is insecure and the API is still enabled
-    // provide an additional warning for developers of removal
-    if (!IsHTTPS() &&
-        Preferences::GetBool("browser.cache.offline.insecure.enable")) {
-      warner->IssueWarning(Document::eAppCacheInsecure, true);
-    }
   }
 }
 
