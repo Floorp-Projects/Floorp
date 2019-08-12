@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar.Companion.BOTTOM_PROGRESS_BAR
-import mozilla.components.browser.toolbar.display.SiteSecurityIcons
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
@@ -114,12 +113,21 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
-     *  Set/Get the site security icons (usually a lock or globe icon). It uses a pair of drawables
-     *  which represent the insecure and secure colours respectively.
+     * Set/Get the site security icon (usually a lock and globe icon). It uses a
+     * [android.graphics.drawable.StateListDrawable] where "state_site_secure" represents the secure
+     * icon and empty state represents the insecure icon.
      */
-    var siteSecurityIcons
-        get() = displayToolbar.securityIcons
-        set(value) { displayToolbar.securityIcons = value }
+    var siteSecurityIcon
+        get() = displayToolbar.securityIcon
+        set(value) { displayToolbar.securityIcon = value }
+
+    /**
+     * Set/Get the site security icon colours. It uses a pair of color integers
+     * which represent the insecure and secure colours respectively.
+     */
+    var siteSecurityColor: Pair<Int, Int>
+        get() = displayToolbar.securityIconColor
+        set(value) { displayToolbar.securityIconColor = value }
 
     /**
      * Gets/Sets a custom view that will be drawn as behind the URL and page actions in display mode.
@@ -301,11 +309,6 @@ class BrowserToolbar @JvmOverloads constructor(
             editToolbar.urlView.typeface = value
         }
 
-    fun setSiteSecurityColor(colors: Pair<Int, Int>) {
-        displayToolbar.securityIcons =
-            displayToolbar.securityIcons.withColorFilter(colors.first, colors.second)
-    }
-
     /**
      * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
      */
@@ -474,20 +477,17 @@ class BrowserToolbar @JvmOverloads constructor(
                     R.styleable.BrowserToolbar_browserToolbarSuggestionBackgroundColor,
                     suggestionBackgroundColor
                 )
-                val inSecureIcon = getDrawable(R.styleable.BrowserToolbar_browserToolbarInsecureIcon)
-                    ?: displayToolbar.securityIcons.insecure
-                val secureIcon = getDrawable(R.styleable.BrowserToolbar_browserToolbarSecureIcon)
-                    ?: displayToolbar.securityIcons.secure
-                val inSecureColor = getColor(
+                siteSecurityIcon = getDrawable(R.styleable.BrowserToolbar_browserToolbarSecurityIcon)
+                    ?: displayToolbar.securityIcon
+                val insecureColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarInsecureColor,
                     displayToolbar.defaultColor
                 )
                 val secureColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarSecureColor,
+                    R.styleable.BrowserToolbar_browserToolbarInsecureColor,
                     displayToolbar.defaultColor
                 )
-                siteSecurityIcons = SiteSecurityIcons(inSecureIcon, secureIcon)
-                    .withColorFilter(inSecureColor, secureColor)
+                siteSecurityColor = insecureColor to secureColor
                 val fadingEdgeLength = getDimensionPixelSize(
                     R.styleable.BrowserToolbar_browserToolbarFadingEdgeSize,
                     resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_fading_edge_size)

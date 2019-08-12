@@ -8,10 +8,9 @@
     <attr name="browserToolbarHintColor" format="color"/>
     <attr name="browserToolbarTextColor" format="color"/>
     <attr name="browserToolbarTextSize" format="dimension"/>
-    <attr name="browserToolbarSecureIcon" format="reference"/>
-    <attr name="browserToolbarInsecureIcon" format="reference"/>
-    <attr name="browserToolbarSecureColor" format="color"/>
+    <attr name="browserToolbarSecurityIcon" format="reference"/>
     <attr name="browserToolbarInsecureColor" format="color"/>
+    <attr name="browserToolbarSecureColor" format="color"/>
     <attr name="browserToolbarMenuColor" format="color"/>
     <attr name="browserToolbarSuggestionBackgroundColor" format="color" />
     <attr name="browserToolbarSuggestionForegroundColor" format="color" />
@@ -28,5 +27,9 @@
     <attr name="stateOnTrackersBlocked" format="boolean"/>
     <attr name="stateOnNoTrackersBlocked" format="boolean"/>
     <attr name="stateOffForASite" format="boolean"/>
+  </declare-styleable>
+
+  <declare-styleable name="BrowserToolbarSiteSecurityState">
+    <attr name="state_site_secure" format="boolean"/>
   </declare-styleable>
 </resources>

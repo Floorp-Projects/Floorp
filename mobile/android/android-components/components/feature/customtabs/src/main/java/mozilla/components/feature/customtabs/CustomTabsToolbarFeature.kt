@@ -101,7 +101,7 @@ class CustomTabsToolbarFeature(
             toolbar.setBackgroundColor(color)
             toolbar.textColor = readableColor
             toolbar.titleColor = readableColor
-            toolbar.setSiteSecurityColor(readableColor to readableColor)
+            toolbar.siteSecurityColor = readableColor to readableColor
             toolbar.menuViewColor = readableColor
 
             window?.setStatusBarTheme(color)

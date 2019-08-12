@@ -22,8 +22,8 @@ permalink: /changelog/
   * The component now handles situations where the Android system kills the content process (without killing the main app process) in order to reclaim resources. In those situations the component will automatically recover and restore the last known state of those sessions.
 
 * **browser-toolbar**
-  * ⚠️ **This is a breaking change**: The `BrowserToolbar.siteSecurityColor` property has been replaced with the setter `BrowserToolbar.setSiteSecurityColor`.
-  * Added `BrowserToolbar.siteSecurityIcons` to use custom security icons with multiple colors in the toolbar.
+  * Changed `BrowserToolbar.siteSecurityColor` to use no icon color filter when the color is set to `Color.TRANSPARENT`.
+  * Added `BrowserToolbar.siteSecurityIcon` to use custom security icons with multiple colors in the toolbar.
 
 * **feature-sendtab**
   * Added a `SendTabFeature` that observes account device events with optional support for push notifications.

@@ -6,8 +6,6 @@ package mozilla.components.browser.toolbar
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -906,23 +904,6 @@ class BrowserToolbarTest {
 
         toolbar.displaySiteSecurityIcon = true
         assertEquals(View.VISIBLE, toolbar.displayToolbar.siteSecurityIconView.visibility)
-    }
-
-    @Test
-    fun `siteSecurityColor setter`() {
-        val toolbar = BrowserToolbar(testContext)
-
-        toolbar.setSiteSecurityColor(Color.RED to Color.BLUE)
-        assertEquals(
-            PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN),
-            toolbar.displayToolbar.siteSecurityIconView.drawable.colorFilter
-        )
-
-        toolbar.siteSecure = SiteSecurity.SECURE
-        assertEquals(
-            PorterDuffColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN),
-            toolbar.displayToolbar.siteSecurityIconView.drawable.colorFilter
-        )
     }
 
     @Test
