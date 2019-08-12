@@ -34,7 +34,7 @@
 #include "debugger/Script.h"               // for DebuggerScript
 #include "frontend/BytecodeCompilation.h"  // for CompileEvalScript
 #include "gc/Barrier.h"                    // for HeapPtr
-#include "gc/FreeOp.h"                     // for FreeOp
+#include "gc/FreeOp.h"                     // for JSFreeOp
 #include "gc/GC.h"                         // for MemoryUse
 #include "gc/Marking.h"                    // for IsAboutToBeFinalized
 #include "gc/Rooting.h"                    // for RootedDebuggerFrame
