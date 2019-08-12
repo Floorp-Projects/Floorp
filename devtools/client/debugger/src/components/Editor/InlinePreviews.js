@@ -9,7 +9,7 @@ import { connect } from "../../utils/connect";
 import {
   getSelectedFrame,
   getCurrentThread,
-  getInlinePreview,
+  getInlinePreviews,
 } from "../../selectors";
 
 import type { Frame } from "../../types";
@@ -18,30 +18,30 @@ type Props = {
   editor: Object,
   selectedFrame: Frame,
   selectedSource: Object,
-  preview: Object,
+  previews: Object,
 };
 
 class InlinePreviews extends Component<Props> {
   render() {
-    const { editor, selectedFrame, selectedSource, preview } = this.props;
+    const { editor, selectedFrame, selectedSource, previews } = this.props;
 
     // Render only if currently open file is the one where debugger is paused
     if (
       !selectedFrame ||
       selectedFrame.location.sourceId !== selectedSource.id ||
-      !preview
+      !previews
     ) {
       return null;
     }
 
     return (
       <div>
-        {Object.keys(preview).map(line => {
+        {Object.keys(previews).map(line => {
           return (
             <InlinePreviewRow
               editor={editor}
               line={parseInt(line, 10)}
-              preview={preview[line]}
+              previews={previews[line]}
             />
           );
         })}
@@ -58,7 +58,7 @@ const mapStateToProps = state => {
 
   return {
     selectedFrame,
-    preview: getInlinePreview(state, thread, selectedFrame.id),
+    previews: getInlinePreviews(state, thread, selectedFrame.id),
   };
 };
 

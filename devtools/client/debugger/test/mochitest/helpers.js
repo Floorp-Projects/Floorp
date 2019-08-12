@@ -1291,7 +1291,8 @@ const selectors = {
   threadsPaneItem: i => `.workers-pane .worker:nth-child(${i})`,
   threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)} .pause-badge`,
   CodeMirrorLines: ".CodeMirror-lines",
-  inlinePreviewWidget: ".CodeMirror-linewidget .inline-preview",
+  inlinePreviewLables: ".CodeMirror-linewidget .inline-preview-label",
+  inlinePreviewValues: ".CodeMirror-linewidget .inline-preview-value",
 };
 
 function getSelector(elementName, ...args) {

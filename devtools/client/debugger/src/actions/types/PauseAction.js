@@ -12,6 +12,7 @@ import type {
   Scope,
   Why,
   ThreadContext,
+  Previews,
 } from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
@@ -159,5 +160,5 @@ export type PauseAction =
       +type: "ADD_INLINE_PREVIEW",
       +thread: string,
       +frame: Frame,
-      +previewData: any,
+      +previews: Previews,
     |};

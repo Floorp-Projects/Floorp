@@ -491,8 +491,12 @@ export type BreakpointPositions = { [number]: BreakpointPosition[] };
 
 export type { Context, ThreadContext } from "./utils/context";
 
+export type Previews = {
+  [line: string]: Array<Preview>,
+};
+
 export type Preview = {
-  [line: string]: {
-    [variableName: string]: any,
-  },
+  name: string,
+  value: any,
+  column: number,
 };
