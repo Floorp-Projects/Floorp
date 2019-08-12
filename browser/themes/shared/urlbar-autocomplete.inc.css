@@ -145,10 +145,20 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
+#urlbar-contextual-tip-icon {
+  min-width: 24px;
+  height: 24px;
+  margin-inline-end: @urlbarViewIconMarginEnd@;
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill, fill-opacity;
+}
+
 @media (min-resolution: 2dppx) {
   .urlbarView-type-icon,
-  .urlbarView-favicon {
-    transform: translateY(-1.5px);
+  .urlbarView-favicon,
+  #urlbar-contextual-tip-icon {
+      transform: translateY(-1.5px);
   }
 }
 
