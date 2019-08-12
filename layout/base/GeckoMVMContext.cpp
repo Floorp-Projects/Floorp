@@ -126,8 +126,8 @@ bool GeckoMVMContext::AllowZoomingForDocument() const {
 
 void GeckoMVMContext::SetResolutionAndScaleTo(float aResolution) {
   MOZ_ASSERT(mPresShell);
-  mPresShell->SetResolutionAndScaleTo(aResolution,
-                                      ResolutionChangeOrigin::MainThread);
+  mPresShell->SetResolutionAndScaleTo(
+      aResolution, ResolutionChangeOrigin::MainThreadRestore);
 }
 
 void GeckoMVMContext::SetVisualViewportSize(const CSSSize& aSize) {
