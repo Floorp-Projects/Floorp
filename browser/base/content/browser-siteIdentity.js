@@ -626,6 +626,14 @@ var gIdentityHandler = {
       // Some URIs might have no hosts.
     }
 
+    if (this._uri.schemeIs("about")) {
+      // For example in about:certificate the original URL is
+      // about:certificate?cert=<large base64 encoded data>&cert=<large base64 encoded data>&cert=...
+      // So, instead of showing that large string in the identity panel header, we are just showing
+      // about:certificate now. For the other about pages we are just showing about:<page>
+      host = "about:" + this._uri.filePath;
+    }
+
     let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(
       this._uri.displaySpec
     );
