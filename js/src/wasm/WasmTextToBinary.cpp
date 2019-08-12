@@ -75,6 +75,7 @@ class WasmToken {
     Data,
     DataCount,
     DataDrop,
+    Declared,
     Drop,
     Elem,
     Else,
@@ -348,6 +349,7 @@ class WasmToken {
       case CloseParen:
       case Data:
       case DataCount:
+      case Declared:
       case Elem:
       case Else:
       case EndOfFile:
@@ -985,6 +987,9 @@ WasmToken WasmTokenStream::next() {
           return WasmToken(WasmToken::DataDrop, begin, cur_);
         }
         return WasmToken(WasmToken::Data, begin, cur_);
+      }
+      if (consume(u"declared")) {
+        return WasmToken(WasmToken::Declared, begin, cur_);
       }
       if (consume(u"drop")) {
         return WasmToken(WasmToken::Drop, begin, cur_);
@@ -4444,28 +4449,21 @@ static AstExpr* ParseInitializerConstExpression(WasmParseContext& c) {
   return initExpr;
 }
 
-static bool ParseInitializerExpressionOrPassive(WasmParseContext& c,
-                                                AstExpr** maybeInitExpr) {
-  if (c.ts.getIf(WasmToken::Passive)) {
-    *maybeInitExpr = nullptr;
-    return true;
-  }
-
+static AstExpr* ParseInitializerExpression(WasmParseContext& c) {
   if (!c.ts.match(WasmToken::OpenParen, c.error)) {
-    return false;
+    return nullptr;
   }
 
   AstExpr* initExpr = ParseExprInsideParens(c);
   if (!initExpr) {
-    return false;
+    return nullptr;
   }
 
   if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-    return false;
+    return nullptr;
   }
 
-  *maybeInitExpr = initExpr;
-  return true;
+  return initExpr;
 }
 
 static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
@@ -4473,9 +4471,12 @@ static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
     return nullptr;
   }
 
-  AstExpr* offsetIfActive;
-  if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive)) {
-    return nullptr;
+  AstExpr* offsetIfActive = nullptr;
+  if (!c.ts.getIf(WasmToken::Passive)) {
+    offsetIfActive = ParseInitializerExpression(c);
+    if (!offsetIfActive) {
+      return nullptr;
+    }
   }
 
   AstNameVector fragments(c.lifo);
@@ -4970,10 +4971,18 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
 
   AstElemVector elems(c.lifo);
 
-  AstRef elem;
-  while (c.ts.getIfRef(&elem)) {
-    if (!elems.append(AstElem(elem))) {
-      return false;
+  while (true) {
+    AstRef elem;
+    if (c.ts.getIfRef(&elem)) {
+      if (!elems.append(AstElem(elem))) {
+        return false;
+      }
+    } else if (c.ts.getIf(WasmToken::RefNull)) {
+      if (!elems.append(AstElem(AstNullValue()))) {
+        return false;
+      }
+    } else {
+      break;
     }
   }
 
@@ -4997,26 +5006,38 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     return false;
   }
 
-  AstElemSegment* segment =
-      new (c.lifo) AstElemSegment(AstRef(name), zero, std::move(elems));
+  AstElemSegment* segment = new (c.lifo) AstElemSegment(
+      AstElemSegmentKind::Active, AstRef(name), zero, std::move(elems));
   return segment && module->append(segment);
 }
 
 static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
-  // (elem table-name init-expr fnref...)
-  // (elem init-expr fnref...)
+  // (elem table-name init-expr (fnref|ref.null)...)
+  // (elem init-expr (fnref|ref.null)...)
   // (elem passive (fnref|ref.null)...)
+  // (elem declared fnref...)
 
   AstRef targetTable = AstRef(0);
   bool hasTableName = c.ts.getIfRef(&targetTable);
 
-  AstExpr* offsetIfActive;
-  if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive)) {
-    return nullptr;
+  AstElemSegmentKind kind;
+  AstExpr* offsetIfActive = nullptr;
+
+  if (c.ts.getIf(WasmToken::Passive)) {
+    kind = AstElemSegmentKind::Passive;
+  } else if (c.ts.getIf(WasmToken::Declared)) {
+    kind = AstElemSegmentKind::Declared;
+  } else {
+    kind = AstElemSegmentKind::Active;
+    offsetIfActive = ParseInitializerExpression(c);
+    if (!offsetIfActive) {
+      return nullptr;
+    }
   }
 
-  if (hasTableName && !offsetIfActive) {
-    c.ts.generateError(c.ts.peek(), "passive segment must not have a table",
+  if (hasTableName && kind != AstElemSegmentKind::Active) {
+    c.ts.generateError(c.ts.peek(),
+                       "passive or declared segment must not have a table",
                        c.error);
     return nullptr;
   }
@@ -5031,7 +5052,8 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
       }
       continue;
     }
-    if (!offsetIfActive && c.ts.getIf(WasmToken::RefNull)) {
+    if (kind != AstElemSegmentKind::Declared &&
+        c.ts.getIf(WasmToken::RefNull)) {
       if (!elems.append(AstElem(AstNullValue()))) {
         return nullptr;
       }
@@ -5041,7 +5063,7 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
   }
 
   return new (c.lifo)
-      AstElemSegment(targetTable, offsetIfActive, std::move(elems));
+      AstElemSegment(kind, targetTable, offsetIfActive, std::move(elems));
 }
 
 static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
@@ -7133,12 +7155,12 @@ static bool EncodeCodeSection(Encoder& e, Uint32Vector* offsets,
   return true;
 }
 
-static bool EncodeDestinationOffsetOrFlags(Encoder& e, uint32_t index,
-                                           AstExpr* offsetIfActive) {
+static bool EncodeDataInitializerKind(Encoder& e, uint32_t index,
+                                      AstExpr* offsetIfActive) {
   if (offsetIfActive) {
-    // In the MVP, the following VarU32 is the table or linear memory index
-    // and it must be zero.  In the bulk-mem-ops proposal, it is repurposed
-    // as a flag field, and if the index is not zero it must be present.
+    // In the MVP, the following VarU32 is the linear memory index and it must
+    // be zero.  In the bulk-mem-ops proposal, it is repurposed as a flag
+    // field, and if the index is not zero it must be present.
     if (index) {
       if (!e.writeVarU32(uint32_t(DataSegmentKind::ActiveWithIndex)) ||
           !e.writeVarU32(index)) {
@@ -7165,7 +7187,7 @@ static bool EncodeDestinationOffsetOrFlags(Encoder& e, uint32_t index,
 }
 
 static bool EncodeDataSegment(Encoder& e, const AstDataSegment& segment) {
-  if (!EncodeDestinationOffsetOrFlags(e, 0, segment.offsetIfActive())) {
+  if (!EncodeDataInitializerKind(e, 0, segment.offsetIfActive())) {
     return false;
   }
 
@@ -7235,13 +7257,70 @@ static bool EncodeDataCountSection(Encoder& e, AstModule& module) {
 }
 
 static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
-  if (!EncodeDestinationOffsetOrFlags(e, segment.targetTable().index(),
-                                      segment.offsetIfActive())) {
+  // There are three bits that control the encoding of an element segment for
+  // up to eight possible encodings. We try to select the encoding for an
+  // element segment that takes the least amount of space, which depends on
+  // whether there are null references in the segment.
+  bool hasRefNull = false;
+  for (const AstElem& elem : segment.elems()) {
+    if (elem.is<AstNullValue>()) {
+      hasRefNull = true;
+      break;
+    }
+  }
+
+  // Select the encoding that takes the least amount of space
+  ElemSegmentKind kind;
+  switch (segment.kind()) {
+    case AstElemSegmentKind::Active: {
+      kind = segment.targetTable().index() ? ElemSegmentKind::ActiveWithIndex
+                                           : ElemSegmentKind::Active;
+      break;
+    }
+    case AstElemSegmentKind::Passive: {
+      kind = ElemSegmentKind::Passive;
+      break;
+    }
+    case AstElemSegmentKind::Declared: {
+      kind = ElemSegmentKind::Declared;
+      break;
+    }
+  }
+  ElemSegmentPayload payload = hasRefNull ? ElemSegmentPayload::ElemExpression
+                                          : ElemSegmentPayload::ExternIndex;
+
+  // Write the flags field
+  if (!e.writeVarU32(ElemSegmentFlags(kind, payload).encoded())) {
     return false;
   }
 
-  if (segment.isPassive()) {
-    if (!e.writeFixedU8(uint8_t(TypeCode::FuncRef))) {
+  // Write the table index if it is not zero
+  if (kind == ElemSegmentKind::ActiveWithIndex &&
+      !e.writeVarU32(segment.targetTable().index())) {
+    return false;
+  }
+
+  if (kind == ElemSegmentKind::Active ||
+      kind == ElemSegmentKind::ActiveWithIndex) {
+    // Write the offset expression
+    if (!EncodeExpr(e, *segment.offsetIfActive())) {
+      return false;
+    }
+    if (!e.writeOp(Op::End)) {
+      return false;
+    }
+  }
+
+  // An active element segment without explicit index uses the original MVP
+  // encoding, which doesn't include an explicit type or definition kind
+  if (kind != ElemSegmentKind::Active) {
+    // Write the type or definition kind
+    if (payload == ElemSegmentPayload::ElemExpression &&
+        !e.writeFixedU8(uint8_t(TypeCode::FuncRef))) {
+      return false;
+    }
+    if (payload == ElemSegmentPayload::ExternIndex &&
+        !e.writeFixedU8(uint8_t(DefinitionKind::Function))) {
       return false;
     }
   }
@@ -7253,19 +7332,19 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   for (const AstElem& elem : segment.elems()) {
     if (elem.is<AstRef>()) {
       const AstRef& ref = elem.as<AstRef>();
-      // Passive segments have an initializer expression, for now restricted to
-      // a function index.
-      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
+      if (payload == ElemSegmentPayload::ElemExpression &&
+          !e.writeFixedU8(uint8_t(Op::RefFunc))) {
         return false;
       }
       if (!e.writeVarU32(ref.index())) {
         return false;
       }
-      if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::End))) {
+      if (payload == ElemSegmentPayload::ElemExpression &&
+          !e.writeFixedU8(uint8_t(Op::End))) {
         return false;
       }
     } else if (elem.is<AstNullValue>()) {
-      MOZ_ASSERT(segment.isPassive());
+      MOZ_ASSERT(payload == ElemSegmentPayload::ElemExpression);
       if (!e.writeFixedU8(uint8_t(Op::RefNull)) ||
           !e.writeFixedU8(uint8_t(Op::End))) {
         return false;
