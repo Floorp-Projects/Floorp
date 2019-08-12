@@ -1,0 +1,12 @@
+status = [
+  "Taskcluster (push)"
+]
+block_labels = [
+  "blocked",
+  "work in progress"
+]
+[committer]
+name = "MickeyMoz"
+email = "sebastian@mozilla.com"
+required_approvals = 1
+delete_merged_branches = true
