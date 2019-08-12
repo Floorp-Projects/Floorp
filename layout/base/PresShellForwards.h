@@ -175,7 +175,8 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderImageFlags)
 
 enum class ResolutionChangeOrigin : uint8_t {
   Apz,
-  MainThread,
+  MainThreadRestore,
+  MainThreadAdjustment,
 };
 
 // See comment at declaration of AddCanvasBackgroundColorItem() for the detail.
