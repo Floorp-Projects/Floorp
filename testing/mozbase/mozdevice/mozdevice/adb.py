@@ -1436,7 +1436,8 @@ class ADBDevice(ADBCommand):
         # Android 7 and later the exitcode of the host process does
         # match the exitcode of the Android process and we can use it
         # directly.
-        if not hasattr(self, 'version') or self.version < version_codes.N:
+        if (self._device_serial.startswith('emulator') or
+            not hasattr(self, 'version') or self.version < version_codes.N):
             cmd += "; echo adb_returncode=$?"
 
         args = [self._adb_path]
@@ -1476,7 +1477,8 @@ class ADBDevice(ADBCommand):
             adb_process.timedout = True
             adb_process.exitcode = adb_process.proc.poll()
         elif exitcode == 0:
-            if hasattr(self, 'version') and self.version >= version_codes.N:
+            if (not self._device_serial.startswith('emulator') and
+                hasattr(self, 'version') and self.version >= version_codes.N):
                 adb_process.exitcode = 0
             else:
                 adb_process.exitcode = self._get_exitcode(adb_process.stdout_file)
