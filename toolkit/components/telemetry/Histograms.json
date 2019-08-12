@@ -15177,16 +15177,6 @@
     "keyed": true,
     "description": "Permission requests (showing a permission prompt) by origin scheme (0=other,1=http,2=https)."
   },
-  "PERMISSION_REQUEST_THIRD_PARTY_ORIGIN": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["jhofmann@mozilla.com"],
-    "bug_numbers": [1345077, 1494589],
-    "expires_in_version": "70",
-    "kind": "boolean",
-    "keyed": true,
-    "description": "Permission requests (showing a permission prompt) by whether they come from a third party origin."
-  },
   "PERMISSION_REQUEST_HANDLING_USER_INPUT": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
