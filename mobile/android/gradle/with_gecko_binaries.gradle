@@ -103,9 +103,9 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
             // Configure the classpath at evaluation-time, not at
             // configuration-time: see above comment.
             doFirst {
-                classpath variant.javaCompile.classpath
+                classpath variant.javaCompileProvider.get().classpath
                 // Include android.jar.
-                classpath variant.javaCompile.options.bootstrapClasspath
+                classpath variant.javaCompileProvider.get().options.bootstrapClasspath
             }
     
             main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
@@ -152,9 +152,9 @@ ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
             // Configure the classpath at evaluation-time, not at
             // configuration-time: see above comment.
             doFirst {
-                classpath variant.javaCompile.classpath
+                classpath variant.javaCompileProvider.get().classpath
                 // Include android.jar.
-                classpath variant.javaCompile.options.bootstrapClasspath
+                classpath variant.javaCompileProvider.get().options.bootstrapClasspath
             }
         
             main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
