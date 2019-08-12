@@ -1,4 +1,8 @@
+// |jit-test| skip-if: !('gczeal' in this)
+
 // Test drainAllocationsLog() entries' inNursery flag.
+
+gczeal(0);
 
 const root = newGlobal({newCompartment: true});
 const dbg = new Debugger();
