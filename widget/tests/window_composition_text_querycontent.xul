@@ -8807,17 +8807,17 @@ async function runPasswordMaskDelayTest() {
   passwordElement.focus();
   let waitForMaskingLastInput = promiseAllPasswordMasked();
   synthesizeKey("a");
-  let unmaskedResult = snapshotWindow(passwordWindow, true);
+  let unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  let maskedResult = snapshotWindow(passwordWindow, true);
+  let maskedResult = await snapshotWindow(passwordWindow, true);
 
   inputElement.value = "a";
   inputElement.focus();
   inputElement.setSelectionRange(1, 1);
-  let unmaskedReference = snapshotWindow(inputWindow, true);
+  let unmaskedReference = await snapshotWindow(inputWindow, true);
   inputElement.value = kMask;
   inputElement.setSelectionRange(1, 1);
-  let maskedReference = snapshotWindow(inputWindow, true);
+  let maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): first inputted character should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -8829,17 +8829,17 @@ async function runPasswordMaskDelayTest() {
   passwordElement.setSelectionRange(1, 1);
   waitForMaskingLastInput = promiseAllPasswordMasked();
   synthesizeKey("b");
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
 
   inputElement.value = `${kMask}b`;
   inputElement.focus();
   inputElement.setSelectionRange(2, 2);
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   inputElement.value = `${kMask}${kMask}`;
   inputElement.setSelectionRange(2, 2);
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): second inputted character should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -8852,17 +8852,17 @@ async function runPasswordMaskDelayTest() {
   waitForMaskingLastInput = promiseAllPasswordMasked();
   synthesizeKey("c");
   synthesizeKey("d");
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
 
   inputElement.value = `${kMask}${kMask}${kMask}d`;
   inputElement.focus();
   inputElement.setSelectionRange(4, 4);
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
   inputElement.setSelectionRange(4, 4);
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): forth character input should mask the third character");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -8874,17 +8874,17 @@ async function runPasswordMaskDelayTest() {
   passwordElement.setSelectionRange(2, 2);
   waitForMaskingLastInput = promiseAllPasswordMasked();
   synthesizeKey("e");
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
 
   inputElement.value = `${kMask}${kMask}e${kMask}${kMask}`;
   inputElement.focus();
   inputElement.setSelectionRange(3, 3);
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   inputElement.value = `${kMask}${kMask}${kMask}${kMask}${kMask}`;
   inputElement.setSelectionRange(3, 3);
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): inserted character should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -8902,9 +8902,9 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
   is(getEditor(passwordElement).composing, true,
      "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #1");
   synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
@@ -8919,7 +8919,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   synthesizeCompositionChange(
     { composition:
       { string: kMask,
@@ -8927,7 +8927,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): composing character should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -8955,9 +8955,9 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
   is(getEditor(passwordElement).composing, true,
      "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #2");
   synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
@@ -8972,7 +8972,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   synthesizeCompositionChange(
     { composition:
       { string: kMask,
@@ -8980,7 +8980,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 1, length: 0 },
     });
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): updated composing character should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -9008,9 +9008,9 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 2, length: 0 },
     });
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
   is(getEditor(passwordElement).composing, true,
      "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #3");
   synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
@@ -9025,7 +9025,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 2, length: 0 },
     });
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   synthesizeCompositionChange(
     { composition:
       { string: `${kMask}${kMask}`,
@@ -9033,7 +9033,7 @@ async function runPasswordMaskDelayTest() {
       },
       caret: { start: 2, length: 0 },
     });
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): all of composing string should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
@@ -9055,17 +9055,17 @@ async function runPasswordMaskDelayTest() {
   await waitForMaskingLastInput;
   waitForMaskingLastInput = promiseAllPasswordMasked();
   synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
-  unmaskedResult = snapshotWindow(passwordWindow, true);
+  unmaskedResult = await snapshotWindow(passwordWindow, true);
   await waitForMaskingLastInput;
-  maskedResult = snapshotWindow(passwordWindow, true);
+  maskedResult = await snapshotWindow(passwordWindow, true);
 
   inputElement.value = `${kMask}cd${kMask}`;
   inputElement.focus();
   inputElement.setSelectionRange(3, 3);
-  unmaskedReference = snapshotWindow(inputWindow, true);
+  unmaskedReference = await snapshotWindow(inputWindow, true);
   inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
   inputElement.setSelectionRange(3, 3);
-  maskedReference = snapshotWindow(inputWindow, true);
+  maskedReference = await snapshotWindow(inputWindow, true);
   checkSnapshots(unmaskedResult, unmaskedReference, true,
                  "runPasswordMaskDelayTest(): committed string should be unmasked for a while");
   checkSnapshots(maskedResult, maskedReference, true,
