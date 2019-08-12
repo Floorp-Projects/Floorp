@@ -218,6 +218,8 @@
   border-inline-end: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
+  /* This is needed in order to position the blue dot indicator. */
+  position: relative;
 }
 
 #urlbar[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {
