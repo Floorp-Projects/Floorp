@@ -2658,6 +2658,7 @@ class HTMLEditor final : public TextEditor,
   friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
+  friend class WSRunScanner;
 };
 
 }  // namespace mozilla

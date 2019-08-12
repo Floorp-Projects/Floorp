@@ -2382,6 +2382,7 @@ class EditorBase : public nsIEditor,
   friend class TextEditRules;
   friend class TypeInState;
   friend class WSRunObject;
+  friend class WSRunScanner;
   friend class nsIEditor;
 };
 
