@@ -6,7 +6,7 @@ package mozilla.components.service.glean.private
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
-import mozilla.components.service.glean.storages.TimingDistributionData
+import mozilla.components.service.glean.histogram.FunctionalHistogram
 import mozilla.components.service.glean.storages.TimingDistributionsStorageEngine
 import mozilla.components.service.glean.timing.GleanTimerId
 import mozilla.components.service.glean.timing.TimingManager
@@ -32,7 +32,7 @@ data class TimingDistributionMetricType(
     override val name: String,
     override val sendInPings: List<String>,
     val timeUnit: TimeUnit
-) : CommonMetricData, HistogramBase {
+) : CommonMetricData, HistogramMetricBase {
 
     private val logger = Logger("glean/TimingDistributionMetricType")
 
@@ -146,7 +146,7 @@ data class TimingDistributionMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testGetValue(pingName: String = sendInPings.first()): TimingDistributionData {
+    fun testGetValue(pingName: String = sendInPings.first()): FunctionalHistogram {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 

@@ -8,7 +8,7 @@ package mozilla.components.service.glean.private
  * A common interface to be implemented by all the histogram-like metric types
  * supported by the Glean SDK.
  */
-interface HistogramBase {
+interface HistogramMetricBase {
     /**
      * Accumulates the provided samples in the metric.
      *

@@ -9,8 +9,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.histogram.FunctionalHistogram
 import mozilla.components.service.glean.testing.GleanTestRule
-import mozilla.components.service.glean.timing.TimingManager
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -23,166 +21,176 @@ import java.lang.NullPointerException
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
-class TimingDistributionMetricTypeTest {
+class MemoryDistributionMetricTypeTest {
 
     @get:Rule
     val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
-    @After
-    fun reset() {
-        TimingManager.testResetTimeSource()
-    }
-
     @Test
     fun `The API saves to its storage engine`() {
-        // Define a timing distribution metric which will be stored in "store1"
-        val metric = TimingDistributionMetricType(
+        // Define a memory distribution metric which will be stored in "store1"
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "timing_distribution",
+            name = "memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         // Accumulate a few values
         for (i in 1L..3L) {
-            TimingManager.getElapsedNanos = { 0 }
-            val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i }
-            metric.stopAndAccumulate(timerId)
+            metric.accumulate(i)
         }
+
+        val kb = 1024
 
         // Check that data was properly recorded.
         assertTrue(metric.testHasValue())
         val snapshot = metric.testGetValue()
         // Check the sum
-        assertEquals(6L, snapshot.sum)
+        assertEquals(1L * kb + 2L * kb + 3L * kb, snapshot.sum)
         // Check that the 1L fell into the first value bucket
-        assertEquals(1L, snapshot.values[1])
+        assertEquals(1L, snapshot.values[1024])
         // Check that the 2L fell into the second value bucket
-        assertEquals(1L, snapshot.values[2])
+        assertEquals(1L, snapshot.values[2048])
         // Check that the 3L fell into the third value bucket
-        assertEquals(1L, snapshot.values[3])
+        assertEquals(1L, snapshot.values[2896])
     }
 
     @Test
-    fun `disabled timing distributions must not record data`() {
-        // Define a timing distribution metric which will be stored in "store1"
+    fun `values are truncated to 1TB`() {
+        // Define a memory distribution metric which will be stored in "store1"
+        val metric = MemoryDistributionMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "memory_distribution",
+            sendInPings = listOf("store1"),
+            memoryUnit = MemoryUnit.Gigabyte
+        )
+
+        metric.accumulate(2048L)
+
+        // Check that data was properly recorded.
+        assertTrue(metric.testHasValue())
+        val snapshot = metric.testGetValue()
+        // Check the sum
+        assertEquals(1L shl 40, snapshot.sum)
+        // Check that the 1L fell into 1TB bucket
+        assertEquals(1L, snapshot.values[1L shl 40])
+    }
+
+    @Test
+    fun `disabled memory distributions must not record data`() {
+        // Define a memory distribution metric which will be stored in "store1"
         // It's lifetime is set to Lifetime.Ping so it should not record anything.
-        val metric = TimingDistributionMetricType(
+        val metric = MemoryDistributionMetricType(
             disabled = true,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "timing_distribution",
+            name = "memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
-        // Attempt to store the timespan using set
-        TimingManager.getElapsedNanos = { 0 }
-        val timerId = metric.start()
-        TimingManager.getElapsedNanos = { 1 }
-        metric.stopAndAccumulate(timerId)
+        metric.accumulate(1L)
 
         // Check that nothing was recorded.
-        assertFalse("TimingDistributions without a lifetime should not record data.",
+        assertFalse("MemoryDistributions without a lifetime should not record data.",
             metric.testHasValue())
     }
 
     @Test(expected = NullPointerException::class)
     fun `testGetValue() throws NullPointerException if nothing is stored`() {
-        // Define a timing distribution metric which will be stored in "store1"
-        val metric = TimingDistributionMetricType(
+        // Define a memory distribution metric which will be stored in "store1"
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "timing_distribution",
+            name = "memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
         metric.testGetValue()
     }
 
     @Test
     fun `The API saves to secondary pings`() {
-        // Define a timing distribution metric which will be stored in multiple stores
-        val metric = TimingDistributionMetricType(
+        // Define a memory distribution metric which will be stored in multiple stores
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "timing_distribution",
+            name = "memory_distribution",
             sendInPings = listOf("store1", "store2", "store3"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         // Accumulate a few values
         for (i in 1L..3L) {
-            TimingManager.getElapsedNanos = { 0 }
-            val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i }
-            metric.stopAndAccumulate(timerId)
+            metric.accumulate(i)
         }
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store2"))
         val snapshot = metric.testGetValue("store2")
         // Check the sum
-        assertEquals(6L, snapshot.sum)
+        assertEquals(6144L, snapshot.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot.values[1])
+        assertEquals(1L, snapshot.values[1024])
         // Check that the 2L fell into the second bucket
-        assertEquals(1L, snapshot.values[2])
+        assertEquals(1L, snapshot.values[2048])
         // Check that the 3L fell into the third bucket
-        assertEquals(1L, snapshot.values[3])
+        assertEquals(1L, snapshot.values[2896])
 
         // Check that data was properly recorded in the third ping.
         assertTrue(metric.testHasValue("store3"))
         val snapshot2 = metric.testGetValue("store3")
         // Check the sum
-        assertEquals(6L, snapshot2.sum)
+        assertEquals(6144L, snapshot2.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot2.values[1])
+        assertEquals(1L, snapshot2.values[1024])
         // Check that the 2L fell into the second bucket
-        assertEquals(1L, snapshot2.values[2])
+        assertEquals(1L, snapshot2.values[2048])
         // Check that the 3L fell into the third bucket
-        assertEquals(1L, snapshot2.values[3])
+        assertEquals(1L, snapshot2.values[2896])
     }
 
     @Test
-    fun `The accumulateSamples API correctly stores timing values`() {
-        // Define a timing distribution metric which will be stored in multiple stores
-        val metric = TimingDistributionMetricType(
+    fun `The accumulateSamples API correctly stores memory values`() {
+        // Define a memory distribution metric which will be stored in multiple stores
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "timing_distribution_samples",
+            name = "memory_distribution_samples",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Second
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         // Accumulate a few values
         val testSamples = (1L..3L).toList().toLongArray()
         metric.accumulateSamples(testSamples)
 
-        val secondsToNanos = 1000L * 1000L * 1000L
+        val kb = 1024L
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store1"))
         val snapshot = metric.testGetValue("store1")
         // Check the sum
-        assertEquals(6L * secondsToNanos, snapshot.sum)
+        assertEquals(6L * kb, snapshot.sum)
         // Check that the 1L fell into the first bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(1 * secondsToNanos)]
+            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(1 * kb)]
         )
         // Check that the 2L fell into the second bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(2 * secondsToNanos)]
+            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(2 * kb)]
         )
         // Check that the 3L fell into the third bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(3 * secondsToNanos)]
+            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(3 * kb)]
         )
     }
 }

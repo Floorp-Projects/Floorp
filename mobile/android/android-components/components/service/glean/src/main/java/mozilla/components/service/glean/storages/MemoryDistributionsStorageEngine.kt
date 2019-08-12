@@ -8,26 +8,26 @@ import android.content.SharedPreferences
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.histogram.FunctionalHistogram
 import mozilla.components.service.glean.private.CommonMetricData
-import mozilla.components.service.glean.private.TimeUnit
-import mozilla.components.service.glean.utils.timeToNanos
+import mozilla.components.service.glean.private.MemoryUnit
+import mozilla.components.service.glean.utils.memoryToBytes
 
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 
 /**
- * This singleton handles the in-memory storage logic for timing distributions. It is meant to be
- * used by the Timing Distribution API and the ping assembling objects.
+ * This singleton handles the in-memory storage logic for memory distributions. It is meant to be
+ * used by the Memory Distribution API and the ping assembling objects.
  */
-internal object TimingDistributionsStorageEngine : TimingDistributionsStorageEngineImplementation()
+internal object MemoryDistributionsStorageEngine : MemoryDistributionsStorageEngineImplementation()
 
-internal open class TimingDistributionsStorageEngineImplementation(
-    override val logger: Logger = Logger("glean/TimingDistributionsStorageEngine")
+internal open class MemoryDistributionsStorageEngineImplementation(
+    override val logger: Logger = Logger("glean/MemoryDistributionsStorageEngine")
 ) : GenericStorageEngine<FunctionalHistogram>() {
 
     companion object {
-        // Maximum time of 10 minutes in nanoseconds. This maximum means we
-        // retain a maximum of 313 buckets.
-        internal const val MAX_SAMPLE_TIME: Long = 1000L * 1000L * 1000L * 60L * 10L
+        // Set a maximum recordable value of 1 terabyte so the buckets aren't
+        // completely unbounded.
+        internal const val MAX_BYTES: Long = 1L shl 40
     }
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): FunctionalHistogram? {
@@ -53,25 +53,26 @@ internal open class TimingDistributionsStorageEngineImplementation(
     /**
      * Accumulate value for the provided metric.
      *
-     * Samples greater than 10 minutes in length are truncated to 10 minutes.
+     * Samples greater than 1TB are truncated to 1TB.
      *
-     * @param metricData the metric information for the timing distribution
-     * @param sample the value to accumulate, in nanoseconds
+     * @param metricData the metric information for the memory distribution
+     * @param sample the value to accumulate, in bytes
      */
     @Synchronized
     fun accumulate(
         metricData: CommonMetricData,
-        sample: Long
+        sample: Long,
+        memoryUnit: MemoryUnit
     ) {
-        accumulateSamples(metricData, longArrayOf(sample))
+        accumulateSamples(metricData, longArrayOf(sample), memoryUnit)
     }
 
     /**
      * Accumulate an array of samples for the provided metric.
      *
-     * Samples greater than 10 minutes in length are truncated to 10 minutes.
+     * Samples greater than 1TB are truncated to 1TB.
      *
-     * @param metricData the metric information for the timing distribution
+     * @param metricData the metric information for the memory distribution
      * @param samples the values to accumulate, in the given `timeUnit`
      * @param timeUnit the unit that the given samples are in, defaults to nanoseconds
      */
@@ -80,23 +81,23 @@ internal open class TimingDistributionsStorageEngineImplementation(
     fun accumulateSamples(
         metricData: CommonMetricData,
         samples: LongArray,
-        timeUnit: TimeUnit = TimeUnit.Nanosecond
+        memoryUnit: MemoryUnit
     ) {
         // Remove invalid samples, and convert to nanos
         var numTooLongSamples = 0
         var numNegativeSamples = 0
-        var factor = timeToNanos(timeUnit, 1)
+        var factor = memoryToBytes(memoryUnit, 1)
         val validSamples = samples.map { sample ->
             if (sample < 0) {
                 numNegativeSamples += 1
                 0
             } else {
-                val sampleInNanos = sample * factor
-                if (sampleInNanos > MAX_SAMPLE_TIME) {
+                val sampleInBytes = sample * factor
+                if (sampleInBytes > MAX_BYTES) {
                     numTooLongSamples += 1
-                    MAX_SAMPLE_TIME
+                    MAX_BYTES
                 } else {
-                    sampleInNanos
+                    sampleInBytes
                 }
             }
         }
@@ -117,7 +118,7 @@ internal open class TimingDistributionsStorageEngineImplementation(
             ErrorRecording.recordError(
                 metricData,
                 ErrorRecording.ErrorType.InvalidValue,
-                "Accumulate $numTooLongSamples samples longer than 10 minutes",
+                "Accumulate $numTooLongSamples samples longer than 1 terabyte",
                 logger,
                 numTooLongSamples
             )

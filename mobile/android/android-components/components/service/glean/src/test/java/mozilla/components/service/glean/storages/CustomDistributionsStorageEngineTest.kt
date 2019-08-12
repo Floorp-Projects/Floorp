@@ -12,6 +12,7 @@ import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.CustomDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
+import mozilla.components.service.glean.histogram.PrecomputedHistogram
 import mozilla.components.service.glean.private.HistogramType
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.testing.GleanTestRule
@@ -73,22 +74,7 @@ class CustomDistributionsStorageEngineTest {
 
     @Test
     fun `deserializer should correctly parse custom distributions`() {
-        // We are using the CustomDistributionData here as a way to turn the object
-        // into JSON for easy comparison
-        val metric = CustomDistributionMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "test_custom_distribution",
-            sendInPings = listOf("store1", "store2"),
-            rangeMin = 0L,
-            rangeMax = 60000L,
-            bucketCount = 100,
-            histogramType = HistogramType.Exponential
-        )
-        val td = CustomDistributionData(
-            category = metric.category,
-            name = metric.name,
+        val td = PrecomputedHistogram(
             rangeMin = 0L,
             rangeMax = 60000L,
             bucketCount = 100,
@@ -102,13 +88,12 @@ class CustomDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_td_name" to "{\"category\":\"telemetry\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
-            "store1#telemetry.invalid_td_bucket_count" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":\"not an int!\",\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
-            "store1#telemetry.invalid_td_range" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
-            "store1#telemetry.invalid_td_range2" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[\"not\",\"numeric\"],\"histogram_type\":1,\"values\":{},\"sum\":0}",
-            "store1#telemetry.invalid_td_histogram_type" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":-1,\"values\":{},\"sum\":0}",
-            "store1#telemetry.invalid_td_values" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{\"0\": \"nope\"},\"sum\":0}",
-            "store1#telemetry.invalid_td_sum" to "{\"category\":\"telemetry\",\"name\":\"test_custom_distribution\",\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":\"nope\"}",
+            "store1#telemetry.invalid_td_bucket_count" to "{\"bucket_count\":\"not an int!\",\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_range" to "{\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_range2" to "{\"bucket_count\":100,\"range\":[\"not\",\"numeric\"],\"histogram_type\":1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_histogram_type" to "{\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":-1,\"values\":{},\"sum\":0}",
+            "store1#telemetry.invalid_td_values" to "{\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_td_sum" to "{\"bucket_count\":100,\"range\":[0,60000,12],\"histogram_type\":1,\"values\":{},\"sum\":\"nope\"}",
             "store1#telemetry.test_custom_distribution" to td.toJsonObject().toString()
         )
 
@@ -175,11 +160,9 @@ class CustomDistributionsStorageEngineTest {
                 histogramType = HistogramType.Exponential
             )
 
-            // Using the CustomDistributionData object here to easily turn the object into JSON
+            // Using the PrecomputedHistogram object here to easily turn the object into JSON
             // for comparison purposes.
-            val td = CustomDistributionData(
-                category = metric.category,
-                name = metric.name,
+            val td = PrecomputedHistogram(
                 rangeMin = 0L,
                 rangeMax = 60000L,
                 bucketCount = 100,
@@ -212,9 +195,7 @@ class CustomDistributionsStorageEngineTest {
             val storageEngine = CustomDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val td = CustomDistributionData(
-                category = "telemetry",
-                name = "test_custom_distribution",
+            val td = PrecomputedHistogram(
                 rangeMin = 0L,
                 rangeMax = 60000L,
                 bucketCount = 100,
@@ -362,73 +343,6 @@ class CustomDistributionsStorageEngineTest {
     }
 
     @Test
-    fun `samples go in the correct bucket for exponential bucketing`() {
-        val td = CustomDistributionData(
-            category = "telemetry",
-            name = "test_custom_distribution",
-            rangeMin = 0L,
-            rangeMax = 60000L,
-            bucketCount = 100,
-            histogramType = HistogramType.Exponential
-        )
-
-        for (i in (0..60)) {
-            val x = i * 1000L
-            val bucket = td.findBucket(x)
-            assert(bucket <= x)
-        }
-
-        val td2 = CustomDistributionData(
-            category = "telemetry",
-            name = "test_custom_distribution",
-            rangeMin = 10000L,
-            rangeMax = 50000L,
-            bucketCount = 50,
-            histogramType = HistogramType.Exponential
-        )
-
-        for (i in (0..60)) {
-            val x = i * 1000L
-            val bucket = td2.findBucket(x)
-            assert(bucket <= x)
-        }
-    }
-
-    @Test
-    fun `validate the generated linear buckets`() {
-        val td = CustomDistributionData(
-            category = "telemetry",
-            name = "test_custom_distribution",
-            rangeMin = 0L,
-            rangeMax = 99L,
-            bucketCount = 100,
-            histogramType = HistogramType.Linear
-        )
-        assertEquals(100, td.buckets.size)
-
-        for (i in (0L until 100L)) {
-            val bucket = td.findBucket(i)
-            assert(bucket <= i)
-        }
-
-        val td2 = CustomDistributionData(
-            category = "telemetry",
-            name = "test_custom_distribution",
-            rangeMin = 50L,
-            rangeMax = 50000L,
-            bucketCount = 50,
-            histogramType = HistogramType.Linear
-        )
-        assertEquals(50, td2.buckets.size)
-
-        for (i in (0..60)) {
-            val x: Long = i * 1000L
-            val bucket = td2.findBucket(x)
-            assert(bucket <= x)
-        }
-    }
-
-    @Test
     fun `accumulate finds the correct bucket for exponential distributions`() {
         // Define a custom distribution metric, which will be stored in "store1".
         val metric = CustomDistributionMetricType(
@@ -539,71 +453,5 @@ class CustomDistributionsStorageEngineTest {
                 assertEquals(0L, payloadValues[key])
             }
         }
-    }
-
-    @Test
-    fun `toJsonObject and toJsonPayloadObject correctly converts a CustomDistributionData object`() {
-        // Define a CustomDistributionData object
-        val tdd = CustomDistributionData(
-            category = "telemetry",
-            name = "test_custom_distribution",
-            rangeMin = 0L,
-            rangeMax = 60000L,
-            bucketCount = 100,
-            histogramType = HistogramType.Exponential
-        )
-
-        // Accumulate some samples to populate sum and values properties
-        tdd.accumulate(1L)
-        tdd.accumulate(2L)
-        tdd.accumulate(3L)
-
-        // Convert to JSON object using toJsonObject()
-        val jsonTdd = tdd.toJsonObject()
-
-        // Verify properties
-        assertEquals("JSON category must match Custom Distribution category",
-            "telemetry", jsonTdd.getString("category"))
-        assertEquals("JSON name must match Custom Distribution name",
-            "test_custom_distribution", jsonTdd.getString("name"))
-        assertEquals("JSON bucket count must match Custom Distribution bucket count",
-            tdd.bucketCount, jsonTdd.getInt("bucket_count"))
-        assertEquals("JSON name must match Custom Distribution name",
-            "test_custom_distribution", jsonTdd.getString("name"))
-        val jsonRange = jsonTdd.getJSONArray("range")
-        assertEquals("JSON range minimum must match Custom Distribution range minimum",
-            tdd.rangeMin, jsonRange.getLong(0))
-        assertEquals("JSON range maximum must match Custom Distribution range maximum",
-            tdd.rangeMax, jsonRange.getLong(1))
-        assertEquals("JSON histogram type must match Custom Distribution histogram type",
-            tdd.histogramType.toString().toLowerCase(), jsonTdd.getString("histogram_type"))
-        val jsonValue = jsonTdd.getJSONObject("values")
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[1], jsonValue.getLong("1"))
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[2], jsonValue.getLong("2"))
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[3], jsonValue.getLong("3"))
-        assertEquals("JSON sum must match Custom Distribution sum",
-            tdd.sum, jsonTdd.getLong("sum"))
-
-        // Convert to JSON object using toJsonObject()
-        val jsonPayload = tdd.toJsonPayloadObject()
-
-        // Verify properties
-        assertEquals(2, jsonPayload.length())
-        val jsonPayloadValue = jsonPayload.getJSONObject("values")
-        assertEquals("JSON values must match Custom Distribution values",
-            0, jsonPayloadValue.getLong("0"))
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[1], jsonPayloadValue.getLong("1"))
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[2], jsonPayloadValue.getLong("2"))
-        assertEquals("JSON values must match Custom Distribution values",
-            tdd.values[3], jsonPayloadValue.getLong("3"))
-        assertEquals("JSON values must match Custom Distribution values",
-            0, jsonPayloadValue.getLong("4"))
-        assertEquals("JSON sum must match Custom Distribution sum",
-            tdd.sum, jsonPayload.getLong("sum"))
     }
 }

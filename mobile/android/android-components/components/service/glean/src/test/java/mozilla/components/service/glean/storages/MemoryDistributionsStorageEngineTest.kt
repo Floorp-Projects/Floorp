@@ -10,14 +10,12 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.private.Lifetime
-import mozilla.components.service.glean.private.TimeUnit
-import mozilla.components.service.glean.private.TimingDistributionMetricType
+import mozilla.components.service.glean.private.MemoryDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.histogram.FunctionalHistogram
+import mozilla.components.service.glean.private.MemoryUnit
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.testing.GleanTestRule
-import mozilla.components.service.glean.timing.TimingManager
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -29,50 +27,46 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class TimingDistributionsStorageEngineTest {
+class MemoryDistributionsStorageEngineTest {
 
     @get:Rule
     val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
-
-    @After
-    fun reset() {
-        TimingManager.testResetTimeSource()
-    }
 
     @Test
     fun `accumulate() properly updates the values in all stores`() {
         val storeNames = listOf("store1", "store2")
 
-        val metric = TimingDistributionMetricType(
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.Ping,
-            name = "test_timing_distribution",
+            name = "test_memory_distribution",
             sendInPings = storeNames,
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         // Create a sample that will fall into the underflow bucket (bucket '0') so we can easily
         // find it
         val sample = 1L
-        TimingDistributionsStorageEngine.accumulate(
+        MemoryDistributionsStorageEngine.accumulate(
             metricData = metric,
-            sample = sample
+            sample = sample,
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         // Check that the data was correctly set in each store.
         for (storeName in storeNames) {
-            val snapshot = TimingDistributionsStorageEngine.getSnapshot(
+            val snapshot = MemoryDistributionsStorageEngine.getSnapshot(
                 storeName = storeName,
                 clearStore = true
             )
             assertEquals(1, snapshot!!.size)
-            assertEquals(1L, snapshot["telemetry.test_timing_distribution"]?.values!![1])
+            assertEquals(1L, snapshot["telemetry.test_memory_distribution"]?.values!![1024])
         }
     }
 
     @Test
-    fun `deserializer should correctly parse timing distributions`() {
+    fun `deserializer should correctly parse memory distributions`() {
         val td = FunctionalHistogram()
 
         val persistedSample = mapOf(
@@ -84,10 +78,10 @@ class TimingDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
             "store1#telemetry.invalid_td_values" to "{\"values\":{\"0\": \"nope\"},\"sum\":0}",
             "store1#telemetry.invalid_td_sum" to "{\"values\":{},\"sum\":\"nope\"}",
-            "store1#telemetry.test_timing_distribution" to td.toJsonObject().toString()
+            "store1#telemetry.test_memory_distribution" to td.toJsonObject().toString()
         )
 
-        val storageEngine = TimingDistributionsStorageEngineImplementation()
+        val storageEngine = MemoryDistributionsStorageEngineImplementation()
 
         // Create a fake application context that will be used to load our data.
         val context = Mockito.mock(Context::class.java)
@@ -108,56 +102,54 @@ class TimingDistributionsStorageEngineTest {
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
         assertEquals(1, snapshot!!.size)
         assertEquals(td.toJsonObject().toString(),
-            snapshot["telemetry.test_timing_distribution"]?.toJsonObject().toString())
+            snapshot["telemetry.test_memory_distribution"]?.toJsonObject().toString())
     }
 
     @Test
-    fun `serializer should serialize timing distribution that matches schema`() {
+    fun `serializer should serialize memory distribution that matches schema`() {
         val ping1 = PingType("store1", true)
 
-        val metric = TimingDistributionMetricType(
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.User,
-            name = "test_timing_distribution",
+            name = "test_memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Kilobyte
         )
 
         runBlocking {
-            TimingManager.getElapsedNanos = { 0 }
-            val id = metric.start()
-            TimingManager.getElapsedNanos = { 1000000 }
-            metric.stopAndAccumulate(id)
+            metric.accumulate(100000L)
         }
 
         collectAndCheckPingSchema(ping1)
     }
 
     @Test
-    fun `serializer should correctly serialize timing distributions`() {
+    fun `serializer should correctly serialize memory distributions`() {
         run {
-            val storageEngine = TimingDistributionsStorageEngineImplementation()
+            val storageEngine = MemoryDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val metric = TimingDistributionMetricType(
+            val metric = MemoryDistributionMetricType(
                 disabled = false,
                 category = "telemetry",
                 lifetime = Lifetime.User,
-                name = "test_timing_distribution",
+                name = "test_memory_distribution",
                 sendInPings = listOf("store1", "store2"),
-                timeUnit = TimeUnit.Millisecond
+                memoryUnit = MemoryUnit.Kilobyte
             )
 
             // Using the FunctionalHistogram object here to easily turn the object into JSON
             // for comparison purposes.
             val td = FunctionalHistogram()
-            td.accumulate(1000000L)
+            td.accumulate(1000000L * 1024L)
 
             runBlocking {
                 storageEngine.accumulate(
                     metricData = metric,
-                    sample = 1000000L
+                    sample = 1000000L,
+                    memoryUnit = MemoryUnit.Kilobyte
                 )
             }
 
@@ -172,40 +164,36 @@ class TimingDistributionsStorageEngineTest {
         // Create a new instance of storage engine to verify serialization to storage rather than
         // to the cache
         run {
-            val storageEngine = TimingDistributionsStorageEngineImplementation()
+            val storageEngine = MemoryDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
             val td = FunctionalHistogram()
-            td.accumulate(1000000L)
+            td.accumulate(1000000L * 1024)
 
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"telemetry.test_timing_distribution\":${td.toJsonPayloadObject()}}",
+            assertEquals("{\"telemetry.test_memory_distribution\":${td.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
     }
 
     @Test
-    fun `timing distributions must not accumulate negative values`() {
-        // Define a timing distribution metric, which will be stored in "store1".
-        val metric = TimingDistributionMetricType(
+    fun `memory distributions must not accumulate negative values`() {
+        // Define a memory distribution metric, which will be stored in "store1".
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.User,
-            name = "test_timing_distribution",
+            name = "test_memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Byte
         )
 
-        // Attempt to accumulate a negative sample
-        TimingManager.getElapsedNanos = { 0 }
-        val timerId = metric.start()
-        TimingManager.getElapsedNanos = { -1 }
-        metric.stopAndAccumulate(timerId)
+        metric.accumulate(-1)
         // Check that nothing was recorded.
-        assertFalse("Timing distributions must not accumulate negative values",
+        assertFalse("Memory distributions must not accumulate negative values",
             metric.testHasValue())
 
         // Make sure that the errors have been recorded
@@ -216,23 +204,20 @@ class TimingDistributionsStorageEngineTest {
 
     @Test
     fun `overflow values accumulate in the last bucket`() {
-        // Define a timing distribution metric, which will be stored in "store1".
-        val metric = TimingDistributionMetricType(
+        // Define a memory distribution metric, which will be stored in "store1".
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.User,
-            name = "test_timing_distribution",
+            name = "test_memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Byte
         )
 
         // Attempt to accumulate an overflow sample
-        TimingManager.getElapsedNanos = { 0 }
-        val timerId = metric.start()
-        TimingManager.getElapsedNanos = { TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME * 2 }
-        metric.stopAndAccumulate(timerId)
+        metric.accumulate(1L shl 41)
 
-        // Check that timing distribution was recorded.
+        // Check that memory distribution was recorded.
         assertTrue("Accumulating overflow values records data",
             metric.testHasValue())
 
@@ -240,32 +225,29 @@ class TimingDistributionsStorageEngineTest {
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values[FunctionalHistogram.sampleToBucketMinimum(TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME)])
+            snapshot.values[FunctionalHistogram.sampleToBucketMinimum(MemoryDistributionsStorageEngineImplementation.MAX_BYTES)])
     }
 
     @Test
     fun `accumulate finds the correct bucket`() {
-        // Define a timing distribution metric, which will be stored in "store1".
-        val metric = TimingDistributionMetricType(
+        // Define a memory distribution metric, which will be stored in "store1".
+        val metric = MemoryDistributionMetricType(
             disabled = false,
             category = "telemetry",
             lifetime = Lifetime.User,
-            name = "test_timing_distribution",
+            name = "test_memory_distribution",
             sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
+            memoryUnit = MemoryUnit.Byte
         )
 
         val samples = listOf(10L, 100L, 1000L, 10000L)
 
         // Attempt to accumulate a sample to force metric to be stored
         for (i in samples) {
-            TimingManager.getElapsedNanos = { 0 }
-            val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i }
-            metric.stopAndAccumulate(timerId)
+            metric.accumulate(i)
         }
 
-        // Check that timing distribution was recorded.
+        // Check that memory distribution was recorded.
         assertTrue("Accumulating values records data", metric.testHasValue())
 
         // Make sure that the samples are in the correct buckets
