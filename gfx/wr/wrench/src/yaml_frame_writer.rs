@@ -807,9 +807,10 @@ impl YamlFrameWriter {
         );
 
         assert!(data.stride > 0);
-        let (color_type, bpp) = match data.format {
-            ImageFormat::BGRA8 => (ColorType::RGBA(8), 4),
-            ImageFormat::R8 => (ColorType::Gray(8), 1),
+        let (color_type, bpp, do_unpremultiply) = match data.format {
+            ImageFormat::RGBA8 |
+            ImageFormat::BGRA8 => (ColorType::RGBA(8), 4, true),
+            ImageFormat::R8 => (ColorType::Gray(8), 1, false),
             _ => {
                 println!(
                     "Failed to write image with format {:?}, dimensions {}x{}, stride {}",
@@ -823,7 +824,7 @@ impl YamlFrameWriter {
         };
 
         if data.stride == data.width * bpp {
-            if data.format == ImageFormat::BGRA8 {
+            if do_unpremultiply {
                 unpremultiply(bytes.as_mut_slice());
             }
             save_buffer(
@@ -842,7 +843,7 @@ impl YamlFrameWriter {
                     chunk[.. (data.width * bpp) as usize].iter().cloned()
                 })
                 .collect();
-            if data.format == ImageFormat::BGRA8 {
+            if do_unpremultiply {
                 unpremultiply(tmp.as_mut_slice());
             }
 

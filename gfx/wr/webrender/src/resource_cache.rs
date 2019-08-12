@@ -2204,7 +2204,7 @@ impl ResourceCache {
                     &self.texture_cache.picture_tile_sizes(),
                     DeviceIntSize::zero(),
                     self.texture_cache.color_formats(),
-                    self.texture_cache.bgra_swizzle(),
+                    self.texture_cache.swizzle_settings(),
                 );
             }
         }

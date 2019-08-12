@@ -8,7 +8,7 @@ use api::{MixBlendMode, TextureTarget, VoidPtrToSizeFn};
 use api::units::*;
 use euclid::default::Transform3D;
 use gleam::gl;
-use crate::internal_types::{FastHashMap, LayerIndex, RenderTargetInfo, Swizzle};
+use crate::internal_types::{FastHashMap, LayerIndex, RenderTargetInfo, Swizzle, SwizzleSettings};
 use crate::util::round_up_to_multiple;
 use crate::profiler;
 use log::Level;
@@ -940,6 +940,8 @@ pub struct Capabilities {
     /// Whether KHR_debug is supported for getting debug messages from
     /// the driver.
     pub supports_khr_debug: bool,
+    /// Whether we can configure texture units to do swizzling on sampling.
+    pub supports_texture_swizzle: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -973,6 +975,7 @@ enum TexStorageUsage {
     Always,
 }
 
+
 pub struct Device {
     gl: Rc<dyn gl::Gl>,
 
@@ -1001,8 +1004,7 @@ pub struct Device {
 
     color_formats: TextureFormatPair<ImageFormat>,
     bgra_formats: TextureFormatPair<gl::GLuint>,
-    // the swizzle required on sampling a texture with `TextureFormat::BGRA` format
-    bgra_swizzle: Swizzle,
+    swizzle_settings: SwizzleSettings,
 
     /// Map from texture dimensions to shared depth buffers for render targets.
     ///
@@ -1300,7 +1302,7 @@ impl Device {
         // GL_EXT_texture_storage and GL_EXT_texture_format_BGRA8888.
         let supports_gles_bgra = supports_extension(&extensions, "GL_EXT_texture_format_BGRA8888");
 
-        let (color_formats, bgra_formats, bgra_swizzle, texture_storage_usage) = match gl.get_type() {
+        let (color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage) = match gl.get_type() {
             // There is `glTexStorage`, use it and expect RGBA on the input.
             gl::GlType::Gl if
                 allow_texture_storage_support &&
@@ -1354,7 +1356,7 @@ impl Device {
         };
 
         info!("GL texture cache {:?}, bgra {:?} swizzle {:?}, texture storage {:?}",
-            color_formats, bgra_formats, bgra_swizzle, texture_storage_usage);
+            color_formats, bgra_formats, bgra8_sampling_swizzle, texture_storage_usage);
         let supports_copy_image_sub_data = supports_extension(&extensions, "GL_EXT_copy_image") ||
             supports_extension(&extensions, "GL_ARB_copy_image");
 
@@ -1379,6 +1381,9 @@ impl Device {
         let supports_advanced_blend_equation =
             supports_extension(&extensions, "GL_KHR_blend_equation_advanced") &&
             !renderer_name.starts_with("Adreno");
+
+        let supports_texture_swizzle = allow_texture_swizzling &&
+            (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_storage"));
 
         // On Adreno GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data in the PBO is a multiple of 256 bytes.
@@ -1405,11 +1410,14 @@ impl Device {
                 supports_pixel_local_storage,
                 supports_advanced_blend_equation,
                 supports_khr_debug,
+                supports_texture_swizzle,
             },
 
             color_formats,
             bgra_formats,
-            bgra_swizzle,
+            swizzle_settings: SwizzleSettings {
+                bgra8_sampling_swizzle,
+            },
 
             depth_targets: FastHashMap::default(),
 
@@ -1473,8 +1481,12 @@ impl Device {
         self.color_formats.clone()
     }
 
-    pub fn bgra_swizzle(&self) -> Swizzle {
-        self.bgra_swizzle
+    pub fn swizzle_settings(&self) -> Option<SwizzleSettings> {
+        if self.capabilities.supports_texture_swizzle {
+            Some(self.swizzle_settings)
+        } else {
+            None
+        }
     }
 
     pub fn get_optimal_pbo_stride(&self) -> NonZeroUsize {
@@ -1606,14 +1618,18 @@ impl Device {
             self.gl.active_texture(gl::TEXTURE0 + slot.0 as gl::GLuint);
             self.gl.bind_texture(target, id);
             if let Some(swizzle) = set_swizzle {
-                let components = match swizzle {
-                    Swizzle::Rgba => [gl::RED, gl::GREEN, gl::BLUE, gl::ALPHA],
-                    Swizzle::Bgra => [gl::BLUE, gl::GREEN, gl::RED, gl::ALPHA],
-                };
-                self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_R, components[0] as i32);
-                self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_G, components[1] as i32);
-                self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_B, components[2] as i32);
-                self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_A, components[3] as i32);
+                if self.capabilities.supports_texture_swizzle {
+                    let components = match swizzle {
+                        Swizzle::Rgba => [gl::RED, gl::GREEN, gl::BLUE, gl::ALPHA],
+                        Swizzle::Bgra => [gl::BLUE, gl::GREEN, gl::RED, gl::ALPHA],
+                    };
+                    self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_R, components[0] as i32);
+                    self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_G, components[1] as i32);
+                    self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_B, components[2] as i32);
+                    self.gl.tex_parameter_i(target, gl::TEXTURE_SWIZZLE_A, components[3] as i32);
+                } else {
+                    debug_assert_eq!(swizzle, Swizzle::default());
+                }
             }
             self.gl.active_texture(gl::TEXTURE0);
             self.bound_textures[slot.0] = id;
@@ -3393,6 +3409,7 @@ struct UploadChunk {
     layer_index: i32,
     stride: Option<i32>,
     offset: usize,
+    format_override: Option<ImageFormat>,
 }
 
 struct PixelBuffer {
@@ -3447,6 +3464,7 @@ impl<'a, T> TextureUploader<'a, T> {
         mut rect: DeviceIntRect,
         layer_index: i32,
         stride: Option<i32>,
+        format_override: Option<ImageFormat>,
         data: &[T],
     ) -> usize {
         // Textures dimensions may have been clamped by the hardware. Crop the
@@ -3538,15 +3556,21 @@ impl<'a, T> TextureUploader<'a, T> {
                 }
 
                 buffer.chunks.push(UploadChunk {
-                    rect, layer_index, stride: Some(dst_stride as i32),
+                    rect,
+                    layer_index,
+                    stride: Some(dst_stride as i32),
                     offset: buffer.size_used,
+                    format_override,
                 });
                 buffer.size_used += dst_size;
             }
             None => {
                 self.target.update_impl(UploadChunk {
-                    rect, layer_index, stride,
+                    rect,
+                    layer_index,
+                    stride,
                     offset: data.as_ptr() as _,
+                    format_override,
                 });
             }
         }
@@ -3557,7 +3581,8 @@ impl<'a, T> TextureUploader<'a, T> {
 
 impl<'a> UploadTarget<'a> {
     fn update_impl(&mut self, chunk: UploadChunk) {
-        let (gl_format, bpp, data_type) = match self.texture.format {
+        let format = chunk.format_override.unwrap_or(self.texture.format);
+        let (gl_format, bpp, data_type) = match format {
             ImageFormat::R8 => (gl::RED, 1, gl::UNSIGNED_BYTE),
             ImageFormat::R16 => (gl::RED, 2, gl::UNSIGNED_SHORT),
             ImageFormat::BGRA8 => (self.bgra_format, 4, gl::UNSIGNED_BYTE),
