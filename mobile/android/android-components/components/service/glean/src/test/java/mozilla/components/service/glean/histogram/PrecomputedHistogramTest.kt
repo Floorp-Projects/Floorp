@@ -96,23 +96,23 @@ class PrecomputedHistogramTest {
         val jsonTdd = tdd.toJsonObject()
 
         // Verify properties
-        assertEquals("JSON bucket count must match Custom Distribution bucket count",
+        assertEquals("JSON bucket count must match Precomputed Histogram bucket count",
             tdd.bucketCount, jsonTdd.getInt("bucket_count"))
         val jsonRange = jsonTdd.getJSONArray("range")
-        assertEquals("JSON range minimum must match Custom Distribution range minimum",
+        assertEquals("JSON range minimum must match Precomputed Histogram range minimum",
             tdd.rangeMin, jsonRange.getLong(0))
-        assertEquals("JSON range maximum must match Custom Distribution range maximum",
+        assertEquals("JSON range maximum must match Precomputed Histogram range maximum",
             tdd.rangeMax, jsonRange.getLong(1))
-        assertEquals("JSON histogram type must match Custom Distribution histogram type",
+        assertEquals("JSON histogram type must match Precomputed Histogram histogram type",
             tdd.histogramType.toString().toLowerCase(), jsonTdd.getString("histogram_type"))
         val jsonValue = jsonTdd.getJSONObject("values")
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[1], jsonValue.getLong("1"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[2], jsonValue.getLong("2"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[3], jsonValue.getLong("3"))
-        assertEquals("JSON sum must match Custom Distribution sum",
+        assertEquals("JSON sum must match Precomputed Histogram sum",
             tdd.sum, jsonTdd.getLong("sum"))
 
         // Convert to JSON object using toJsonObject()
@@ -121,17 +121,17 @@ class PrecomputedHistogramTest {
         // Verify properties
         assertEquals(2, jsonPayload.length())
         val jsonPayloadValue = jsonPayload.getJSONObject("values")
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             0, jsonPayloadValue.getLong("0"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[1], jsonPayloadValue.getLong("1"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[2], jsonPayloadValue.getLong("2"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             tdd.values[3], jsonPayloadValue.getLong("3"))
-        assertEquals("JSON values must match Custom Distribution values",
+        assertEquals("JSON values must match Precomputed Histogram values",
             0, jsonPayloadValue.getLong("4"))
-        assertEquals("JSON sum must match Custom Distribution sum",
+        assertEquals("JSON sum must match Precomputed Histogram sum",
             tdd.sum, jsonPayload.getLong("sum"))
     }
 }

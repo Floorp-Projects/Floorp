@@ -17,9 +17,9 @@ import org.json.JSONObject
  * to help serialize and deserialize data to the correct format for transport and
  * storage, as well as including helper functions to calculate the bucket sizes.
  *
- * @param bucketCount total number of buckets
  * @param rangeMin the minimum value that can be represented
  * @param rangeMax the maximum value that can be represented
+ * @param bucketCount total number of buckets
  * @param histogramType the [HistogramType] representing the bucket layout
  * @param values a map containing the bucket index mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the custom distribution
@@ -151,6 +151,8 @@ data class PrecomputedHistogram(
     /**
      * Helper function to build the [PrecomputedHistogram] into a JSONObject for serialization
      * purposes.
+     *
+     * @return The histogram as JSON for persistence
      */
     internal fun toJsonObject(): JSONObject {
         return JSONObject(mapOf(
@@ -168,6 +170,8 @@ data class PrecomputedHistogram(
      *
      *   - this does not include the bucketing parameters
      *   - all buckets [0, max) are inserted into values
+     *
+     * @return The histogram as JSON to send in a ping payload
      */
     internal fun toJsonPayloadObject(): JSONObject {
         // Include all buckets [0, max), where max is the maximum bucket with

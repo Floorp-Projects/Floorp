@@ -9,7 +9,7 @@ import mozilla.components.service.glean.private.MemoryUnit
 /**
  * Convenience method to convert a memory size in a different unit to bytes.
  *
- * @param memoryUnit the unit the value is in
+ * @param memoryUnit the [MemoryUnit] the value is in
  * @param value a memory size in the given unit
  *
  * @return the memory size, in bytes

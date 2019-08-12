@@ -67,7 +67,7 @@ class MemoryDistributionsStorageEngineTest {
 
     @Test
     fun `deserializer should correctly parse memory distributions`() {
-        val td = FunctionalHistogram()
+        val md = FunctionalHistogram()
 
         val persistedSample = mapOf(
             "store1#telemetry.invalid_string" to "invalid_string",
@@ -76,9 +76,9 @@ class MemoryDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_td_values" to "{\"values\":{\"0\": \"nope\"},\"sum\":0}",
-            "store1#telemetry.invalid_td_sum" to "{\"values\":{},\"sum\":\"nope\"}",
-            "store1#telemetry.test_memory_distribution" to td.toJsonObject().toString()
+            "store1#telemetry.invalid_md_values" to "{\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_md_sum" to "{\"values\":{},\"sum\":\"nope\"}",
+            "store1#telemetry.test_memory_distribution" to md.toJsonObject().toString()
         )
 
         val storageEngine = MemoryDistributionsStorageEngineImplementation()
@@ -101,7 +101,7 @@ class MemoryDistributionsStorageEngineTest {
         storageEngine.applicationContext = context
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
         assertEquals(1, snapshot!!.size)
-        assertEquals(td.toJsonObject().toString(),
+        assertEquals(md.toJsonObject().toString(),
             snapshot["telemetry.test_memory_distribution"]?.toJsonObject().toString())
     }
 
@@ -142,8 +142,8 @@ class MemoryDistributionsStorageEngineTest {
 
             // Using the FunctionalHistogram object here to easily turn the object into JSON
             // for comparison purposes.
-            val td = FunctionalHistogram()
-            td.accumulate(1000000L * 1024L)
+            val md = FunctionalHistogram()
+            md.accumulate(1000000L * 1024L)
 
             runBlocking {
                 storageEngine.accumulate(
@@ -156,7 +156,7 @@ class MemoryDistributionsStorageEngineTest {
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"${metric.identifier}\":${td.toJsonPayloadObject()}}",
+            assertEquals("{\"${metric.identifier}\":${md.toJsonPayloadObject()}}",
                 json.toString()
             )
         }
@@ -167,13 +167,13 @@ class MemoryDistributionsStorageEngineTest {
             val storageEngine = MemoryDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val td = FunctionalHistogram()
-            td.accumulate(1000000L * 1024)
+            val md = FunctionalHistogram()
+            md.accumulate(1000000L * 1024)
 
             // Get snapshot from store1
             val json = storageEngine.getSnapshotAsJSON("store1", true)
             // Check for correct JSON serialization
-            assertEquals("{\"telemetry.test_memory_distribution\":${td.toJsonPayloadObject()}}",
+            assertEquals("{\"telemetry.test_memory_distribution\":${md.toJsonPayloadObject()}}",
                 json.toString()
             )
         }

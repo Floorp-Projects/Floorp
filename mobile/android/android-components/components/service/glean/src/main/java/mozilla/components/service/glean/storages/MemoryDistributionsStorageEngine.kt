@@ -56,7 +56,8 @@ internal open class MemoryDistributionsStorageEngineImplementation(
      * Samples greater than 1TB are truncated to 1TB.
      *
      * @param metricData the metric information for the memory distribution
-     * @param sample the value to accumulate, in bytes
+     * @param sample the value to accumulate
+     * @param memoryUnit the unit of the sample
      */
     @Synchronized
     fun accumulate(
@@ -73,8 +74,8 @@ internal open class MemoryDistributionsStorageEngineImplementation(
      * Samples greater than 1TB are truncated to 1TB.
      *
      * @param metricData the metric information for the memory distribution
-     * @param samples the values to accumulate, in the given `timeUnit`
-     * @param timeUnit the unit that the given samples are in, defaults to nanoseconds
+     * @param samples the values to accumulate, in the given `memoryUnit`
+     * @param memoryUnit the unit that the given samples are in
      */
     @Suppress("ComplexMethod")
     @Synchronized
@@ -83,7 +84,7 @@ internal open class MemoryDistributionsStorageEngineImplementation(
         samples: LongArray,
         memoryUnit: MemoryUnit
     ) {
-        // Remove invalid samples, and convert to nanos
+        // Remove invalid samples, and convert to bytes
         var numTooLongSamples = 0
         var numNegativeSamples = 0
         var factor = memoryToBytes(memoryUnit, 1)
@@ -122,7 +123,7 @@ internal open class MemoryDistributionsStorageEngineImplementation(
                 logger,
                 numTooLongSamples
             )
-            // Too long samples should just be truncated, but otherwise we record and handle them
+            // Too large samples should just be truncated, but otherwise we record and handle them
         }
 
         val dummy = FunctionalHistogram()
@@ -132,9 +133,9 @@ internal open class MemoryDistributionsStorageEngineImplementation(
                     it.accumulate(sample)
                     it
                 } ?: let {
-                    val newTD = FunctionalHistogram()
-                    newTD.accumulate(sample)
-                    return@let newTD
+                    val newMD = FunctionalHistogram()
+                    newMD.accumulate(sample)
+                    return@let newMD
                 }
             }
         }

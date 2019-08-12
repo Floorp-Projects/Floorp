@@ -23,7 +23,7 @@ import kotlin.math.log
  * In other words, there are n buckets for each power of 2 magnitude.
  *
  * The value of 8 for n was determined experimentally based on existing data to have sufficient
- * resolution.
+ * resolution.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1565253
  *
  * @param values a map containing the minimum bucket value mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the histogram
@@ -49,6 +49,9 @@ data class FunctionalHistogram(
          * A "bucket index" is the consecutive integer index of each bucket, useful as a
          * mathematical concept, even though the internal representation is stored and
          * sent using the minimum value in each bucket.
+         *
+         * @param sample The data sample
+         * @return The bucket index the sample belongs in
          */
         internal fun sampleToBucketIndex(sample: Long): Long {
             return log(sample.toDouble() + 1, EXPONENT).toLong()
@@ -56,6 +59,9 @@ data class FunctionalHistogram(
 
         /**
          * Determines the minimum value of a bucket, given a bucket index.
+         *
+         * @param bucketIndex The ordinal index of a bucket
+         * @return The minimum value of the bucket
          */
         internal fun bucketIndexToBucketMinimum(bucketIndex: Long): Long {
             return pow(EXPONENT, bucketIndex.toDouble()).toLong()
@@ -63,6 +69,9 @@ data class FunctionalHistogram(
 
         /**
          * Maps a sample to the minimum value of the bucket it belongs in.
+         *
+         * @param sample The sample value
+         @ @return the minimum value of the bucket the sample belongs in
          */
         internal fun sampleToBucketMinimum(sample: Long): Long {
             return if (sample == 0L) {
@@ -131,6 +140,8 @@ data class FunctionalHistogram(
     /**
      * Helper function to build the [FunctionalHistogram] into a JSONObject for serialization
      * purposes.
+     *
+     * @return The histogram as JSON for persistence
      */
     internal fun toJsonObject(): JSONObject {
         return JSONObject(mapOf(
@@ -142,6 +153,8 @@ data class FunctionalHistogram(
     /**
      * Helper function to build the [FunctionalHistogram] into a JSONObject for sending in the
      * ping payload.
+     *
+     * @return The histogram as JSON for a ping payload
      */
     internal fun toJsonPayloadObject(): JSONObject {
         val completeValues = if (values.size != 0) {
