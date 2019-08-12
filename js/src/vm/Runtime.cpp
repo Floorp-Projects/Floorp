@@ -567,12 +567,12 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
   sharedIntlData.ref().trace(trc);
 }
 
-FreeOp::FreeOp(JSRuntime* maybeRuntime, bool isDefault)
-    : JSFreeOp(maybeRuntime), isDefault(isDefault), isCollecting_(!isDefault) {
+JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime, bool isDefault)
+    : runtime_(maybeRuntime), isDefault(isDefault), isCollecting_(!isDefault) {
   MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
 }
 
-FreeOp::~FreeOp() {
+JSFreeOp::~JSFreeOp() {
   for (size_t i = 0; i < freeLaterList.length(); i++) {
     freeUntracked(freeLaterList[i]);
   }
