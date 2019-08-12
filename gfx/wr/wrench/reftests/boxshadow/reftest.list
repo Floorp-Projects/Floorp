@@ -13,7 +13,7 @@ platform(linux,mac) == inset-neg-offset.yaml inset-neg-offset.png
 platform(linux,mac) == box-shadow-suite-no-blur.yaml box-shadow-suite-no-blur.png
 platform(linux,mac) == box-shadow-suite-blur.yaml box-shadow-suite-blur.png
 == box-shadow-large-blur-radius.yaml box-shadow-large-blur-radius-ref.yaml
-fuzzy(1,6388) == rounding.yaml rounding-ref.yaml
+skip_on(android,emulator) fuzzy(1,6388) == rounding.yaml rounding-ref.yaml
 platform(linux,mac) == box-shadow-border-radii.yaml box-shadow-border-radii.png
 skip_on(android) == box-shadow-spread.yaml box-shadow-spread.png  # Too wide for Android
 == box-shadow-spread-radii.yaml box-shadow-spread-radii-ref.yaml
