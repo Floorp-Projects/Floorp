@@ -634,15 +634,19 @@ void FontList::SetFamilyNames(const nsTArray<Family::InitData>& aFamilies) {
 }
 
 void FontList::SetAliases(
-    nsClassHashtable<nsCStringHashKey, nsTArray<Pointer>>& aAliasTable) {
+    nsClassHashtable<nsCStringHashKey, AliasData>& aAliasTable) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   Header& header = GetHeader();
 
+  // Build an array of Family::InitData records based on the entries in
+  // aAliasTable, then sort them and store into the fontlist.
   nsTArray<Family::InitData> aliasArray;
   aliasArray.SetCapacity(aAliasTable.Count());
   for (auto i = aAliasTable.Iter(); !i.Done(); i.Next()) {
-    aliasArray.AppendElement(Family::InitData(i.Key(), i.Key()));
+    aliasArray.AppendElement(Family::InitData(
+        i.Key(), i.Key(), i.Data()->mIndex, i.Data()->mHidden,
+        i.Data()->mBundled, i.Data()->mBadUnderline, i.Data()->mForceClassic));
   }
   aliasArray.Sort();
 
@@ -658,9 +662,9 @@ void FontList::SetAliases(
     (void)new (&aliases[i]) Family(this, aliasArray[i]);
     LOG_FONTLIST(("(shared-fontlist) alias family %u (%s)", (unsigned)i,
                   aliasArray[i].mName.get()));
-    aliases[i].SetFacePtrs(this, *aAliasTable.Get(aliasArray[i].mName));
+    aliases[i].SetFacePtrs(this, aAliasTable.Get(aliasArray[i].mName)->mFaces);
     if (LOG_FONTLIST_ENABLED()) {
-      const auto& faces = *aAliasTable.Get(aliasArray[i].mName);
+      const auto& faces = aAliasTable.Get(aliasArray[i].mName)->mFaces;
       for (unsigned j = 0; j < faces.Length(); j++) {
         auto face = static_cast<const fontlist::Face*>(faces[j].ToPtr(this));
         const nsCString& desc = face->mDescriptor.AsString(this);
