@@ -34,7 +34,7 @@
 #include "vm/JSContext.h"          // JSContext
 
 #include "debugger/DebugAPI-inl.h"  // js::DebugAPI
-#include "vm/JSContext-inl.h"  // JSContext::check
+#include "vm/JSContext-inl.h"       // JSContext::check
 
 using mozilla::Utf8Unit;
 
