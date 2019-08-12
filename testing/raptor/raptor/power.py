@@ -21,6 +21,10 @@ def init_android_power_test(raptor):
             "%s power test ignored; MOZ_UPLOAD_DIR unset" % raptor.config["app"]
         )
         return
+    # Disable adaptive brightness - do not restore the value since this setting
+    # should always be disabled.
+    raptor.device.shell_output("settings put system screen_brightness_mode 0")
+
     # Set the screen-off timeout to two (2) hours, since the device will be running
     # disconnected, and would otherwise turn off the screen, thereby halting
     # execution of the test. Save the current value so we can restore it later
