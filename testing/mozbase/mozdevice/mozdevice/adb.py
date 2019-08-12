@@ -1993,6 +1993,16 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
         """
+        if self._device_serial.startswith('emulator'):
+            # Bug 1572563 - work around intermittent test path failures on emulators.
+            if argument == 'f':
+                return (
+                    self.exists(path, timeout=timeout, root=root) and
+                    not self.is_dir(path, timeout=timeout, root=root))
+            if argument == 'd':
+                return self.shell_bool('ls -a {}/'.format(path), timeout=timeout, root=root)
+            if argument == 'e':
+                return self.shell_bool('ls -a {}'.format(path), timeout=timeout, root=root)
         return self.shell_bool('test -{arg} {path}'.format(arg=argument,
                                                            path=path),
                                timeout=timeout, root=root)
