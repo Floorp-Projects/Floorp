@@ -5,16 +5,14 @@
 // This test file verifies various scenarios related to the data migration
 // from the JSONFile backend to the IDB backend.
 
-AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "1",
-  "42"
+const { getTrimmedString } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionTelemetry.jsm"
 );
-
 const { ExtensionStorage } = ChromeUtils.import(
   "resource://gre/modules/ExtensionStorage.jsm"
+);
+const { ExtensionStorageIDB } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
 );
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
@@ -23,18 +21,17 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const { ExtensionStorageIDB } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageIDB.jsm"
-);
-
-const { getTrimmedString } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionTelemetry.jsm",
-  null
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
+
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
 
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
@@ -45,7 +42,7 @@ const {
 const CATEGORIES = ["success", "failure"];
 const EVENT_CATEGORY = "extensions.data";
 const EVENT_OBJECT = "storageLocal";
-const EVENT_METHODS = ["migrateResult"];
+const EVENT_METHOD = "migrateResult";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
 const LEAVE_UUID_PREF = "extensions.webextensions.keepUuidOnUninstall";
 const TELEMETRY_EVENTS_FILTER = {
@@ -92,35 +89,12 @@ function assertMigrationHistogramCount(category, expectedCount) {
   );
 }
 
-function assertTelemetryEvents(extensionId, expectedEvents) {
-  const snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-
-  ok(
-    snapshot.parent && snapshot.parent.length > 0,
-    "Got parent telemetry events in the snapshot"
-  );
-
-  const migrateEvents = snapshot.parent
-    .filter(([timestamp, category, method, object, value]) => {
-      return (
-        category === EVENT_CATEGORY &&
-        EVENT_METHODS.includes(method) &&
-        object === EVENT_OBJECT &&
-        value === extensionId
-      );
-    })
-    .map(event => {
-      return { method: event[2], extra: event[5] };
-    });
-
-  Assert.deepEqual(
-    migrateEvents,
-    expectedEvents,
-    "Got the expected telemetry events"
-  );
+function assertTelemetryEvents(expectedEvents) {
+  TelemetryTestUtils.assertEvents(expectedEvents, {
+    category: EVENT_CATEGORY,
+    method: EVENT_METHOD,
+    object: EVENT_OBJECT,
+  });
 }
 
 add_task(async function setup() {
@@ -140,6 +114,9 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     Services.telemetry.canRecordBase = oldCanRecordBase;
   });
+
+  // Clear any telemetry events collected so far.
+  Services.telemetry.clearEvents();
 });
 
 // Test that for newly installed extension the IDB backend is enabled without
@@ -360,9 +337,10 @@ add_task(async function test_storage_local_data_migration() {
   assertMigrationHistogramCount("success", 1);
   assertMigrationHistogramCount("failure", 0);
 
-  assertTelemetryEvents(EXTENSION_ID, [
+  assertTelemetryEvents([
     {
       method: "migrateResult",
+      value: EXTENSION_ID,
       extra: {
         backend: "IndexedDB",
         data_migrated: "y",
@@ -468,9 +446,10 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
     "The trimmed version of the extensionId should be 80 chars long"
   );
 
-  assertTelemetryEvents(expectedTrimmedExtensionId, [
+  assertTelemetryEvents([
     {
       method: "migrateResult",
+      value: expectedTrimmedExtensionId,
       extra: {
         backend: "IndexedDB",
         data_migrated: "y",
@@ -576,9 +555,10 @@ add_task(async function test_storage_local_corrupted_data_migration() {
   assertMigrationHistogramCount("success", 1);
   assertMigrationHistogramCount("failure", 0);
 
-  assertTelemetryEvents(EXTENSION_ID, [
+  assertTelemetryEvents([
     {
       method: "migrateResult",
+      value: EXTENSION_ID,
       extra: {
         backend: "IndexedDB",
         data_migrated: "y",
@@ -651,9 +631,10 @@ add_task(async function test_storage_local_data_migration_failure() {
 
   await extension.unload();
 
-  assertTelemetryEvents(EXTENSION_ID, [
+  assertTelemetryEvents([
     {
       method: "migrateResult",
+      value: EXTENSION_ID,
       extra: {
         backend: "JSONFile",
         data_migrated: "n",
