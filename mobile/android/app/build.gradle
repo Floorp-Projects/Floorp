@@ -366,8 +366,9 @@ android.applicationVariants.all { variant ->
     // the main sourceSet without losing the stub, so we cover all the
     // configurations here.
     android.sourceSets."${variant.name}".manifest.srcFile "${rewriteManifestPackage.destinationDir}/AndroidManifest.xml"
-    variant.preBuild.dependsOn rewriteManifestPackage
-
+    variant.preBuildProvider.configure {
+        dependsOn rewriteManifestPackage
+    }
 
     // Local (read, not 'official') builds want to reflect developer changes to
     // AndroidManifest.xml.in, strings.xml, and preprocessed Java code.  To do
@@ -430,8 +431,8 @@ android.applicationVariants.all { variant ->
                                // the issues with medium/low priority we can lower the report level here.
 
         classes = files(bundleJar)
-        source = variant.javaCompile.source
-        classpath = variant.javaCompile.classpath + files(android.bootClasspath)
+        source = variant.javaCompileProvider.get().source
+        classpath = variant.javaCompileProvider.get().classpath + files(android.bootClasspath)
 
         excludeFilter = file("findbugs-exclude.xml")
         dependsOn jarTask
@@ -456,8 +457,8 @@ android.applicationVariants.all { variant ->
                                // the issues with medium/low priority we can lower the report level here.
         
         classes = files(bundleJar)
-        source = variant.javaCompile.source
-        classpath = variant.javaCompile.classpath + files(android.bootClasspath)
+        source = variant.javaCompileProvider.get().source
+        classpath = variant.javaCompileProvider.get().classpath + files(android.bootClasspath)
 
         excludeFilter = file("findbugs-exclude.xml")
         dependsOn jarTask
