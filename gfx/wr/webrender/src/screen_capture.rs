@@ -8,6 +8,7 @@ use std::collections::HashMap;
 
 use api::{ImageFormat, TextureTarget};
 use api::units::*;
+use gleam::gl::GlType;
 
 use crate::device::{Device, PBO, DrawTarget, ReadTarget, Texture, TextureFilter};
 use crate::internal_types::RenderTargetInfo;
@@ -328,14 +329,16 @@ impl AsyncScreenshotGrabber {
             None => return false,
         };
 
+        let gl_type = device.gl().get_type();
+
         let success = if let Some(bound_pbo) = device.map_pbo_for_readback(&pbo) {
             let src_buffer = &bound_pbo.data;
             let src_stride = buffer_stride;
             let src_width =
                 screenshot_size.width as usize * image_format.bytes_per_pixel() as usize;
 
-            for (src_slice, dst_slice) in src_buffer
-                .chunks(src_stride)
+            for (src_slice, dst_slice) in self
+                .iter_src_buffer_chunked(gl_type, src_buffer, src_stride)
                 .zip(dst_buffer.chunks_mut(dst_stride))
                 .take(screenshot_size.height as usize)
             {
@@ -353,6 +356,28 @@ impl AsyncScreenshotGrabber {
         }
 
         success
+    }
+
+    fn iter_src_buffer_chunked<'a>(
+        &self,
+        gl_type: GlType,
+        src_buffer: &'a [u8],
+        src_stride: usize,
+    ) -> Box<dyn Iterator<Item = &'a [u8]> + 'a> {
+        use AsyncScreenshotGrabberMode::*;
+
+        let is_angle = cfg!(windows) && gl_type == GlType::Gles;
+
+        if self.mode == CompositionRecorder && !is_angle {
+            // This is a non-ANGLE configuration. in this case, the recorded frames were captured
+            // upside down, so we have to flip them right side up.
+            Box::new(src_buffer.chunks(src_stride).rev())
+        } else {
+            // This is either an ANGLE configuration in the `CompositionRecorder` mode or a
+            // non-ANGLE configuration in the `ProfilerScreenshots` mode. In either case, the
+            // captured frames are right-side up.
+            Box::new(src_buffer.chunks(src_stride))
+        }
     }
 }
 
