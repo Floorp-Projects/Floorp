@@ -267,6 +267,7 @@ class Query {
 
     // Check which providers should be queried.
     let providers = this.providers.filter(p => p.isActive(this.context));
+
     // Check if any of the remaining providers wants to restrict the search.
     let restrictProviders = providers.filter(p =>
       p.isRestricting(this.context)
