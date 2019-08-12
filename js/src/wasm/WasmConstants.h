@@ -136,10 +136,22 @@ enum class MemoryTableFlags {
 
 enum class MemoryMasks { AllowUnshared = 0x1, AllowShared = 0x3 };
 
-enum class InitializerKind {
+enum class DataSegmentKind {
   Active = 0x00,
   Passive = 0x01,
   ActiveWithIndex = 0x02
+};
+
+enum class ElemSegmentKind : uint32_t {
+  Active = 0x0,
+  Passive = 0x1,
+  ActiveWithIndex = 0x2,
+  Declared = 0x3,
+};
+
+enum class ElemSegmentPayload : uint32_t {
+  ExternIndex = 0x0,
+  ElemExpression = 0x4,
 };
 
 enum class Op {
