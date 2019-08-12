@@ -7,12 +7,12 @@ use image::ImageResult;
 
 /// An implementation dependent iterator, reading the frames as requested
 pub struct Frames<'a> {
-    iterator: Box<Iterator<Item = ImageResult<Frame>> + 'a>
+    iterator: Box<dyn Iterator<Item = ImageResult<Frame>> + 'a>
 }
 
 impl<'a> Frames<'a> {
     /// Creates a new `Frames` from an implementation specific iterator.
-    pub fn new(iterator: Box<Iterator<Item = ImageResult<Frame>> + 'a>) -> Self {
+    pub fn new(iterator: Box<dyn Iterator<Item = ImageResult<Frame>> + 'a>) -> Self {
         Frames { iterator }
     }
 
