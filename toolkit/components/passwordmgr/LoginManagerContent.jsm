@@ -210,6 +210,12 @@ const observer = {
         break;
       }
 
+      // Used to watch for changes to fields filled with generated passwords.
+      case "input": {
+        LoginManagerContent._maybeStopTreatingAsGeneratedPasswordField(aEvent);
+        break;
+      }
+
       case "keydown": {
         if (
           aEvent.keyCode == aEvent.DOM_VK_TAB ||
@@ -1522,6 +1528,27 @@ this.LoginManagerContent = {
     });
   },
 
+  _maybeStopTreatingAsGeneratedPasswordField(event) {
+    let passwordField = event.target;
+
+    // If the field isn't empty then keep treating it as a generated password field.
+    if (passwordField.value) {
+      return;
+    }
+
+    log("_maybeStopTreatingAsGeneratedPasswordField: Stopping");
+    // Remove all the event listeners added in _generatedPasswordFilledOrEdited
+    for (let eventType of ["blur", "change", "focus", "input"]) {
+      passwordField.removeEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
+
+    // Mask the password field
+    this._togglePasswordFieldMasking(passwordField, false);
+  },
+
   /**
    * Notify the parent that a generated password was filled into a field or
    * edited so that it can potentially be saved.
@@ -1540,23 +1567,16 @@ this.LoginManagerContent = {
 
     this._highlightFilledField(passwordField);
 
-    passwordField.addEventListener("blur", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    passwordField.addEventListener("focus", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-
+    // change: Listen for changes to the field filled with the generated password so we can preserve edits.
+    // input: Listen for the field getting blanked (without blurring) or a paste
+    for (let eventType of ["blur", "change", "focus", "input"]) {
+      passwordField.addEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
     // Unmask the password field
     this._togglePasswordFieldMasking(passwordField, true);
-
-    // Listen for changes to the field filled with the generated password so we can preserve edits.
-    passwordField.addEventListener("change", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
 
     if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
       log(
