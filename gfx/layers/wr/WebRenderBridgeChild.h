@@ -163,7 +163,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   void SetWebRenderLayerManager(WebRenderLayerManager* aManager);
 
-  ipc::IShmemAllocator* GetShmemAllocator();
+  mozilla::ipc::IShmemAllocator* GetShmemAllocator();
 
   bool IsThreadSafe() const override { return false; }
 
