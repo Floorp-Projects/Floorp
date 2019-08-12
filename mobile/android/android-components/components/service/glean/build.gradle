@@ -14,7 +14,7 @@ apply plugin: 'kotlin-android'
  * created during unit testing.
  * This uses a specific version of the schema identified by a git commit hash.
  */
-String GLEAN_PING_SCHEMA_GIT_HASH = "73c5a65"
+String GLEAN_PING_SCHEMA_GIT_HASH = "7755497"
 String GLEAN_PING_SCHEMA_URL = "https://raw.githubusercontent.com/mozilla-services/mozilla-pipeline-schemas/$GLEAN_PING_SCHEMA_GIT_HASH/schemas/glean/baseline/baseline.1.schema.json"
 
 android {
