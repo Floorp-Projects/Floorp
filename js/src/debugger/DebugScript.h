@@ -21,6 +21,7 @@ namespace js {
 
 class BreakpointSite;
 class Debugger;
+class FreeOp;
 
 // DebugScript manages the internal debugger state for a JSScript, which may be
 // associated with multiple Debuggers.
@@ -82,12 +83,12 @@ class DebugScript {
   static BreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
                                                    JSScript* script,
                                                    jsbytecode* pc);
-  static void destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
+  static void destroyBreakpointSite(FreeOp* fop, JSScript* script,
                                     jsbytecode* pc);
 
-  static void clearBreakpointsIn(JSFreeOp* fop, JS::Realm* realm, Debugger* dbg,
+  static void clearBreakpointsIn(FreeOp* fop, JS::Realm* realm, Debugger* dbg,
                                  JSObject* handler);
-  static void clearBreakpointsIn(JSFreeOp* fop, JSScript* script, Debugger* dbg,
+  static void clearBreakpointsIn(FreeOp* fop, JSScript* script, Debugger* dbg,
                                  JSObject* handler);
 
 #ifdef DEBUG
@@ -101,7 +102,7 @@ class DebugScript {
    * Only incrementing is fallible, as it could allocate a DebugScript.
    */
   static bool incrementStepperCount(JSContext* cx, JSScript* script);
-  static void decrementStepperCount(JSFreeOp* fop, JSScript* script);
+  static void decrementStepperCount(FreeOp* fop, JSScript* script);
 
   /*
    * Increment or decrement the generator observer count. If the count is
@@ -110,7 +111,7 @@ class DebugScript {
    * Only incrementing is fallible, as it could allocate a DebugScript.
    */
   static bool incrementGeneratorObserverCount(JSContext* cx, JSScript* script);
-  static void decrementGeneratorObserverCount(JSFreeOp* fop, JSScript* script);
+  static void decrementGeneratorObserverCount(FreeOp* fop, JSScript* script);
 };
 
 } /* namespace js */

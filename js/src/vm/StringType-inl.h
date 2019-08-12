@@ -411,7 +411,7 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
   return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1));
 }
 
-MOZ_ALWAYS_INLINE void JSString::finalize(JSFreeOp* fop) {
+MOZ_ALWAYS_INLINE void JSString::finalize(js::FreeOp* fop) {
   /* FatInline strings are in a different arena. */
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_ATOM);
@@ -423,7 +423,7 @@ MOZ_ALWAYS_INLINE void JSString::finalize(JSFreeOp* fop) {
   }
 }
 
-inline void JSFlatString::finalize(JSFreeOp* fop) {
+inline void JSFlatString::finalize(js::FreeOp* fop) {
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_ATOM);
 
@@ -442,21 +442,21 @@ inline size_t JSFlatString::allocSize() const {
   return (count + 1) * charSize;
 }
 
-inline void JSFatInlineString::finalize(JSFreeOp* fop) {
+inline void JSFatInlineString::finalize(js::FreeOp* fop) {
   MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_STRING);
   MOZ_ASSERT(isInline());
 
   // Nothing to do.
 }
 
-inline void js::FatInlineAtom::finalize(JSFreeOp* fop) {
+inline void js::FatInlineAtom::finalize(js::FreeOp* fop) {
   MOZ_ASSERT(JSString::isAtom());
   MOZ_ASSERT(getAllocKind() == js::gc::AllocKind::FAT_INLINE_ATOM);
 
   // Nothing to do.
 }
 
-inline void JSExternalString::finalize(JSFreeOp* fop) {
+inline void JSExternalString::finalize(js::FreeOp* fop) {
   if (!JSString::isExternal()) {
     // This started out as an external string, but was turned into a
     // non-external string by JSExternalString::ensureFlat.

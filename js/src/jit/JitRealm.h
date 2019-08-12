@@ -684,8 +684,8 @@ class JitRealm {
 };
 
 // Called from Zone::discardJitCode().
-void InvalidateAll(JSFreeOp* fop, JS::Zone* zone);
-void FinishInvalidation(JSFreeOp* fop, JSScript* script);
+void InvalidateAll(FreeOp* fop, JS::Zone* zone);
+void FinishInvalidation(FreeOp* fop, JSScript* script);
 
 // This class ensures JIT code is executable on its destruction. Creators
 // must call makeWritable(), and not attempt to write to the buffer if it fails.

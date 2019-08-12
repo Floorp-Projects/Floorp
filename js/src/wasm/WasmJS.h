@@ -127,7 +127,7 @@ JSObject* InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global);
 class WasmModuleObject : public NativeObject {
   static const unsigned MODULE_SLOT = 0;
   static const ClassOps classOps_;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
   static bool imports(JSContext* cx, unsigned argc, Value* vp);
   static bool exports(JSContext* cx, unsigned argc, Value* vp);
   static bool customSections(JSContext* cx, unsigned argc, Value* vp);
@@ -162,7 +162,7 @@ class WasmGlobalObject : public NativeObject {
   static const unsigned CELL_SLOT = 2;
 
   static const ClassOps classOps_;
-  static void finalize(JSFreeOp*, JSObject* obj);
+  static void finalize(FreeOp*, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
 
   static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
@@ -218,7 +218,7 @@ class WasmInstanceObject : public NativeObject {
   static bool exportsGetterImpl(JSContext* cx, const CallArgs& args);
   static bool exportsGetter(JSContext* cx, unsigned argc, Value* vp);
   bool isNewborn() const;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
 
   // ExportMap maps from function index to exported function object.
@@ -287,7 +287,7 @@ class WasmMemoryObject : public NativeObject {
   static const unsigned BUFFER_SLOT = 0;
   static const unsigned OBSERVERS_SLOT = 1;
   static const ClassOps classOps_;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
   static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
   static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
   static bool growImpl(JSContext* cx, const CallArgs& args);
@@ -347,7 +347,7 @@ class WasmTableObject : public NativeObject {
   static const unsigned TABLE_SLOT = 0;
   static const ClassOps classOps_;
   bool isNewborn() const;
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
   static bool lengthGetterImpl(JSContext* cx, const CallArgs& args);
   static bool lengthGetter(JSContext* cx, unsigned argc, Value* vp);

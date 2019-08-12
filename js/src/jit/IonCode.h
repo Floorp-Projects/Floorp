@@ -101,7 +101,7 @@ class JitCode : public gc::TenuredCell {
   size_t headerSize() const { return headerSize_; }
 
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(FreeOp* fop);
   void setInvalidated() { invalidated_ = true; }
 
   void setHasBytecodeMap() { hasBytecodeMap_ = true; }
@@ -294,7 +294,7 @@ struct IonScript {
                         size_t safepointsSize,
                         OptimizationLevel optimizationLevel);
   static void Trace(JSTracer* trc, IonScript* script);
-  static void Destroy(JSFreeOp* fop, IonScript* script);
+  static void Destroy(FreeOp* fop, IonScript* script);
 
   static inline size_t offsetOfMethod() { return offsetof(IonScript, method_); }
   static inline size_t offsetOfOsrEntryOffset() {
@@ -437,7 +437,7 @@ struct IonScript {
 
   size_t invalidationCount() const { return invalidationCount_; }
   void incrementInvalidationCount() { invalidationCount_++; }
-  void decrementInvalidationCount(JSFreeOp* fop) {
+  void decrementInvalidationCount(FreeOp* fop) {
     MOZ_ASSERT(invalidationCount_);
     invalidationCount_--;
     if (!invalidationCount_) {

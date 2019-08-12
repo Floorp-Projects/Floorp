@@ -432,7 +432,7 @@ class ObjectGroup : public gc::TenuredCell {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  void finalize(JSFreeOp* fop);
+  void finalize(FreeOp* fop);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
 

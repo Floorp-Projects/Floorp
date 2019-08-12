@@ -149,7 +149,7 @@ void TypedArrayObject::assertZeroLengthArrayData() const {
 }
 #endif
 
-void TypedArrayObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   TypedArrayObject* curObj = &obj->as<TypedArrayObject>();
 

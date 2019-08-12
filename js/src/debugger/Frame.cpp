@@ -34,7 +34,7 @@
 #include "debugger/Script.h"               // for DebuggerScript
 #include "frontend/BytecodeCompilation.h"  // for CompileEvalScript
 #include "gc/Barrier.h"                    // for HeapPtr
-#include "gc/FreeOp.h"                     // for JSFreeOp
+#include "gc/FreeOp.h"                     // for FreeOp
 #include "gc/GC.h"                         // for MemoryUse
 #include "gc/Marking.h"                    // for IsAboutToBeFinalized
 #include "gc/Rooting.h"                    // for RootedDebuggerFrame
@@ -105,7 +105,7 @@ void ScriptedOnStepHandler::hold(JSObject* owner) {
   AddCellMemory(owner, allocSize(), MemoryUse::DebuggerOnStepHandler);
 }
 
-void ScriptedOnStepHandler::drop(JSFreeOp* fop, JSObject* owner) {
+void ScriptedOnStepHandler::drop(FreeOp* fop, JSObject* owner) {
   fop->delete_(owner, this, allocSize(), MemoryUse::DebuggerOnStepHandler);
 }
 
@@ -137,7 +137,7 @@ void ScriptedOnPopHandler::hold(JSObject* owner) {
   AddCellMemory(owner, allocSize(), MemoryUse::DebuggerOnPopHandler);
 }
 
-void ScriptedOnPopHandler::drop(JSFreeOp* fop, JSObject* owner) {
+void ScriptedOnPopHandler::drop(FreeOp* fop, JSObject* owner) {
   fop->delete_(owner, this, allocSize(), MemoryUse::DebuggerOnPopHandler);
 }
 
@@ -368,7 +368,7 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
   return true;
 }
 
-void DebuggerFrame::clearGenerator(JSFreeOp* fop) {
+void DebuggerFrame::clearGenerator(FreeOp* fop) {
   if (!hasGenerator()) {
     return;
   }
@@ -400,7 +400,7 @@ void DebuggerFrame::clearGenerator(JSFreeOp* fop) {
 }
 
 void DebuggerFrame::clearGenerator(
-    JSFreeOp* fop, Debugger* owner,
+    FreeOp* fop, Debugger* owner,
     Debugger::GeneratorWeakMap::Enum* maybeGeneratorFramesEnum) {
   if (!hasGenerator()) {
     return;
@@ -675,7 +675,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
     return true;
   }
 
-  JSFreeOp* fop = cx->defaultFreeOp();
+  FreeOp* fop = cx->defaultFreeOp();
   AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
 
   // Adjust execution observability and step counts on whatever code (JS or
@@ -691,7 +691,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
       }
     } else if (!handler && prior) {
       // Single stepping toggled on->off.
-      JSFreeOp* fop = cx->runtime()->defaultFreeOp();
+      FreeOp* fop = cx->runtime()->defaultFreeOp();
       if (!instance->debug().decrementStepperCount(fop,
                                                    wasmFrame->funcIndex())) {
         return false;
@@ -970,7 +970,7 @@ void DebuggerFrame::setOnPopHandler(JSContext* cx, OnPopHandler* handler) {
     return;
   }
 
-  JSFreeOp* fop = cx->defaultFreeOp();
+  FreeOp* fop = cx->defaultFreeOp();
 
   if (prior) {
     prior->drop(fop, this);
@@ -1030,7 +1030,7 @@ void DebuggerFrame::setFrameIterData(FrameIter::Data* data) {
   InitObjectPrivate(this, data, MemoryUse::DebuggerFrameIterData);
 }
 
-void DebuggerFrame::freeFrameIterData(JSFreeOp* fop) {
+void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
   if (FrameIter::Data* data = frameIterData()) {
     fop->delete_(this, data, MemoryUse::DebuggerFrameIterData);
     setPrivate(nullptr);
@@ -1038,7 +1038,7 @@ void DebuggerFrame::freeFrameIterData(JSFreeOp* fop) {
 }
 
 void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
-    JSFreeOp* fop, AbstractFramePtr frame) {
+    FreeOp* fop, AbstractFramePtr frame) {
   // If this frame has an onStep handler, decrement the script's count.
   OnStepHandler* handler = onStepHandler();
   if (!handler) {
@@ -1060,7 +1060,7 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
 }
 
 /* static */
-void DebuggerFrame::finalize(JSFreeOp* fop, JSObject* obj) {
+void DebuggerFrame::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   DebuggerFrame& frameobj = obj->as<DebuggerFrame>();
   frameobj.freeFrameIterData(fop);

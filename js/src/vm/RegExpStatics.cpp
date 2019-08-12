@@ -20,7 +20,7 @@ using namespace js;
  * that js::Class in a global reserved slot.
  */
 
-static void resc_finalize(JSFreeOp* fop, JSObject* obj) {
+static void resc_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   RegExpStatics* res =
       static_cast<RegExpStatics*>(obj->as<RegExpStaticsObject>().getPrivate());

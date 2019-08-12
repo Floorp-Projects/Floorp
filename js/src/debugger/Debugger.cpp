@@ -49,7 +49,7 @@
 #include "frontend/ParseContext.h"       // for UsedNameTracker
 #include "frontend/Parser.h"             // for Parser
 #include "gc/Barrier.h"                  // for GCPtrNativeObject
-#include "gc/FreeOp.h"                   // for JSFreeOp
+#include "gc/FreeOp.h"                   // for FreeOp
 #include "gc/GC.h"                       // for IterateLazyScripts
 #include "gc/GCMarker.h"                 // for GCMarker
 #include "gc/GCRuntime.h"                // for GCRuntime, AutoEnterIteration
@@ -308,14 +308,14 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
 
 BreakpointSite::BreakpointSite(Type type) : type_(type), enabledCount(0) {}
 
-void BreakpointSite::inc(JSFreeOp* fop) {
+void BreakpointSite::inc(FreeOp* fop) {
   enabledCount++;
   if (enabledCount == 1) {
     recompile(fop);
   }
 }
 
-void BreakpointSite::dec(JSFreeOp* fop) {
+void BreakpointSite::dec(FreeOp* fop) {
   MOZ_ASSERT(enabledCount > 0);
   enabledCount--;
   if (enabledCount == 0) {
@@ -366,7 +366,7 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
   site->breakpoints.pushBack(this);
 }
 
-void Breakpoint::destroy(JSFreeOp* fop,
+void Breakpoint::destroy(FreeOp* fop,
                          MayDestroySite mayDestroySite /* true */) {
   if (debugger->enabled) {
     site->dec(fop);
@@ -390,13 +390,13 @@ JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
   MOZ_ASSERT(!DebugAPI::hasBreakpointsAt(script, pc));
 }
 
-void JSBreakpointSite::recompile(JSFreeOp* fop) {
+void JSBreakpointSite::recompile(FreeOp* fop) {
   if (script->hasBaselineScript()) {
     script->baselineScript()->toggleDebugTraps(script, pc);
   }
 }
 
-void JSBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
+void JSBreakpointSite::destroyIfEmpty(FreeOp* fop) {
   if (isEmpty()) {
     DebugScript::destroyBreakpointSite(fop, script, pc);
   }
@@ -409,11 +409,11 @@ WasmBreakpointSite::WasmBreakpointSite(wasm::Instance* instance_,
   MOZ_ASSERT(instance->debugEnabled());
 }
 
-void WasmBreakpointSite::recompile(JSFreeOp* fop) {
+void WasmBreakpointSite::recompile(FreeOp* fop) {
   instance->debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
-void WasmBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
+void WasmBreakpointSite::destroyIfEmpty(FreeOp* fop) {
   if (isEmpty()) {
     instance->destroyBreakpointSite(fop, offset);
   }
@@ -523,7 +523,7 @@ DebuggerMemory& Debugger::memory() const {
 
 /*** DebuggerVectorHolder *****************************************************/
 
-static void GlobalDebuggerVectorHolder_finalize(JSFreeOp* fop, JSObject* obj) {
+static void GlobalDebuggerVectorHolder_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   void* ptr = obj->as<NativeObject>().getPrivate();
   auto debuggers = static_cast<GlobalObject::DebuggerVector*>(ptr);
@@ -3063,7 +3063,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
 
   AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 
-  JSFreeOp* fop = cx->runtime()->defaultFreeOp();
+  FreeOp* fop = cx->runtime()->defaultFreeOp();
 
   Vector<JSScript*> scripts(cx);
 
@@ -3756,7 +3756,7 @@ void Debugger::trace(JSTracer* trc) {
 }
 
 /* static */
-void DebugAPI::sweepAll(JSFreeOp* fop) {
+void DebugAPI::sweepAll(FreeOp* fop) {
   JSRuntime* rt = fop->runtime();
 
   Debugger* dbg = rt->debuggerList().getFirst();
@@ -3785,8 +3785,7 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
 }
 
 /* static */
-void Debugger::detachAllDebuggersFromGlobal(JSFreeOp* fop,
-                                            GlobalObject* global) {
+void Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global) {
   const GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
   MOZ_ASSERT(!debuggers->empty());
   while (!debuggers->empty()) {
@@ -4694,7 +4693,7 @@ static WeakHeapPtr<Debugger*>* findDebuggerInVector(
   return p;
 }
 
-void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
+void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
                                     WeakGlobalObjectSet::Enum* debugEnum,
                                     FromSweep fromSweep) {
   // The caller might have found global by enumerating this->debuggees; if
@@ -6354,7 +6353,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       // The difference is that the current frameobj is no longer in its
       // Debugger's frame map, so it will not be cleaned up by neither
       // lambda. Manually clean it up here.
-      JSFreeOp* fop = cx->runtime()->defaultFreeOp();
+      FreeOp* fop = cx->runtime()->defaultFreeOp();
       frameobj->freeFrameIterData(fop);
       frameobj->maybeDecrementFrameScriptStepperCount(fop, to);
 
@@ -6382,7 +6381,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
                                                         AbstractFramePtr frame,
                                                         bool suspending) {
   forEachDebuggerFrame(frame, [&](DebuggerFrame* frameobj) {
-    JSFreeOp* fop = cx->runtime()->defaultFreeOp();
+    FreeOp* fop = cx->runtime()->defaultFreeOp();
     frameobj->freeFrameIterData(fop);
 
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);

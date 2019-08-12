@@ -17,6 +17,7 @@
 
 namespace js {
 
+class FreeOp;
 class GlobalObject;
 
 class DateTimeFormatObject : public NativeObject {
@@ -34,7 +35,7 @@ class DateTimeFormatObject : public NativeObject {
  private:
   static const ClassOps classOps_;
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
 extern JSObject* CreateDateTimeFormatPrototype(

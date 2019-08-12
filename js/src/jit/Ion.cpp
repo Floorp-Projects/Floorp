@@ -708,7 +708,7 @@ void JitCode::traceChildren(JSTracer* trc) {
   }
 }
 
-void JitCode::finalize(JSFreeOp* fop) {
+void JitCode::finalize(FreeOp* fop) {
   // If this jitcode had a bytecode map, it must have already been removed.
 #ifdef DEBUG
   JSRuntime* rt = fop->runtime();
@@ -1037,7 +1037,7 @@ void IonScript::Trace(JSTracer* trc, IonScript* script) {
   }
 }
 
-void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
+void IonScript::Destroy(FreeOp* fop, IonScript* script) {
   // This allocation is tracked by JSScript::setIonScript / clearIonScript.
   fop->deleteUntracked(script);
 }
@@ -2493,7 +2493,7 @@ MethodStatus jit::Recompile(JSContext* cx, HandleScript script,
   return Method_Compiled;
 }
 
-static void InvalidateActivation(JSFreeOp* fop,
+static void InvalidateActivation(FreeOp* fop,
                                  const JitActivationIterator& activations,
                                  bool invalidateAll) {
   JitSpew(JitSpew_IonInvalidate, "BEGIN invalidating activation");
@@ -2660,7 +2660,7 @@ static void InvalidateActivation(JSFreeOp* fop,
   JitSpew(JitSpew_IonInvalidate, "END invalidating activation");
 }
 
-void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
+void jit::InvalidateAll(FreeOp* fop, Zone* zone) {
   // The caller should previously have cancelled off thread compilation.
 #ifdef DEBUG
   for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
@@ -2691,7 +2691,7 @@ static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
   }
 }
 
-void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
+void jit::Invalidate(TypeZone& types, FreeOp* fop,
                      const RecompileInfoVector& invalid, bool resetUses,
                      bool cancelOffThread) {
   JitSpew(JitSpew_IonInvalidate, "Start invalidation.");
@@ -2820,7 +2820,7 @@ void jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses,
   Invalidate(cx, scripts, resetUses, cancelOffThread);
 }
 
-void jit::FinishInvalidation(JSFreeOp* fop, JSScript* script) {
+void jit::FinishInvalidation(FreeOp* fop, JSScript* script) {
   if (!script->hasIonScript()) {
     return;
   }
@@ -3014,7 +3014,7 @@ size_t jit::SizeOfIonData(JSScript* script,
   return result;
 }
 
-void jit::DestroyJitScripts(JSFreeOp* fop, JSScript* script) {
+void jit::DestroyJitScripts(FreeOp* fop, JSScript* script) {
   if (script->hasIonScript()) {
     IonScript* ion = script->ionScript();
     script->clearIonScript(fop);

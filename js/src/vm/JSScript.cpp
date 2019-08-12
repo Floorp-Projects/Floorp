@@ -1515,7 +1515,7 @@ void JSScript::setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript) {
   setIonScript(rt->defaultFreeOp(), ionScript);
 }
 
-void JSScript::setIonScript(JSFreeOp* fop, js::jit::IonScript* ionScript) {
+void JSScript::setIonScript(FreeOp* fop, js::jit::IonScript* ionScript) {
   MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT,
                 !baselineScript()->hasPendingIonBuilder());
   if (hasIonScript()) {
@@ -1651,7 +1651,7 @@ bool JSScript::hasScriptName() {
   return p.found();
 }
 
-void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
   sso->source()->decref();
@@ -4189,7 +4189,7 @@ void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
 
-void JSScript::finalize(JSFreeOp* fop) {
+void JSScript::finalize(FreeOp* fop) {
   // NOTE: this JSScript may be partially initialized at this point.  E.g. we
   // may have created it and partially initialized it with
   // JSScript::Create(), but not yet finished initializing it with
@@ -4875,7 +4875,7 @@ void JSScript::traceChildren(JSTracer* trc) {
   }
 }
 
-void LazyScript::finalize(JSFreeOp* fop) {
+void LazyScript::finalize(FreeOp* fop) {
   if (lazyData_) {
     fop->free_(this, lazyData_, lazyData_->allocationSize(),
                MemoryUse::LazyScriptData);
