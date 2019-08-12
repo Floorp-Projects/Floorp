@@ -251,7 +251,7 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
   return iterobj;
 }
 
-void MapIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
+void MapIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
@@ -620,7 +620,7 @@ MapObject* MapObject::create(JSContext* cx,
   return mapObj;
 }
 
-void MapObject::finalize(FreeOp* fop, JSObject* obj) {
+void MapObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   if (ValueMap* map = obj->as<MapObject>().getData()) {
     fop->delete_(obj, map, MemoryUse::MapObjectTable);
@@ -628,7 +628,7 @@ void MapObject::finalize(FreeOp* fop, JSObject* obj) {
 }
 
 /* static */
-void MapObject::sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj) {
+void MapObject::sweepAfterMinorGC(JSFreeOp* fop, MapObject* mapobj) {
   bool wasInsideNursery = IsInsideNursery(mapobj);
   if (wasInsideNursery && !IsForwarded(mapobj)) {
     finalize(fop, mapobj);
@@ -1023,7 +1023,7 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
   return iterobj;
 }
 
-void SetIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
+void SetIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
@@ -1244,7 +1244,7 @@ void SetObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-void SetObject::finalize(FreeOp* fop, JSObject* obj) {
+void SetObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   SetObject* setobj = static_cast<SetObject*>(obj);
   if (ValueSet* set = setobj->getData()) {
@@ -1253,7 +1253,7 @@ void SetObject::finalize(FreeOp* fop, JSObject* obj) {
 }
 
 /* static */
-void SetObject::sweepAfterMinorGC(FreeOp* fop, SetObject* setobj) {
+void SetObject::sweepAfterMinorGC(JSFreeOp* fop, SetObject* setobj) {
   bool wasInsideNursery = IsInsideNursery(setobj);
   if (wasInsideNursery && !IsForwarded(setobj)) {
     finalize(fop, setobj);

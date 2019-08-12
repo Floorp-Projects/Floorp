@@ -293,7 +293,7 @@ void js::ForOfPIC::Chain::trace(JSTracer* trc) {
   }
 }
 
-static void ForOfPIC_finalize(FreeOp* fop, JSObject* obj) {
+static void ForOfPIC_finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   if (ForOfPIC::Chain* chain =
           ForOfPIC::fromJSObject(&obj->as<NativeObject>())) {
@@ -301,12 +301,12 @@ static void ForOfPIC_finalize(FreeOp* fop, JSObject* obj) {
   }
 }
 
-void js::ForOfPIC::Chain::finalize(FreeOp* fop, JSObject* obj) {
+void js::ForOfPIC::Chain::finalize(JSFreeOp* fop, JSObject* obj) {
   freeAllStubs(fop);
   fop->delete_(obj, this, MemoryUse::ForOfPIC);
 }
 
-void js::ForOfPIC::Chain::freeAllStubs(FreeOp* fop) {
+void js::ForOfPIC::Chain::freeAllStubs(JSFreeOp* fop) {
   Stub* stub = stubs_;
   while (stub) {
     Stub* next = stub->next();
