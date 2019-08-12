@@ -23,6 +23,11 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
+loader.lazyImporter(
+  this,
+  "BrowserToolboxProcess",
+  "resource://devtools/client/framework/ToolboxProcess.jsm"
+);
 
 // Timeout to wait before we assume that a connect() timed out without an error.
 // In milliseconds. (With the Debugger pane open, this has been reported to last
@@ -129,6 +134,7 @@ window.addEventListener(
   async function() {
     gShortcuts = new KeyShortcuts({ window });
     gShortcuts.on("CmdOrCtrl+W", onCloseCommand);
+    gShortcuts.on("CmdOrCtrl+Alt+Shift+I", onDebugBrowserToolbox);
 
     const statusMessageContainer = document.getElementById(
       "status-message-title"
@@ -160,6 +166,16 @@ window.addEventListener(
 
 function onCloseCommand(event) {
   window.close();
+}
+
+/**
+ * Open a Browser toolbox debugging the current browser toolbox
+ *
+ * This helps debugging the browser toolbox code, especially the code
+ * running in the parent process. i.e. frontend code.
+ */
+function onDebugBrowserToolbox() {
+  BrowserToolboxProcess.init();
 }
 
 async function openToolbox(target) {
