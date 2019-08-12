@@ -18,15 +18,15 @@ implementation "org.mozilla.components:service-experiments:{latest-version}"
 ```
 
 ### Initializing the Experiments library
-In order to use the library, first you have to initialize it by calling `Experiments.initialize()`. You do this once per app launch 
-(typically in your `Application` class `onCreate` method). You simply have to call `Experiments.initialize()` and
-provide the `applicationContext` (and optionally a `Configuration` object), like this:
+
+In order to use the library, first you have to initialize it by calling `Experiments.initialize()`. 
+You do this once per app launch (typically in your `Application` class `onCreate` method). You 
+simply have to call `Experiments.initialize()` and provide the `applicationContext` (and optionally 
+a `Configuration` object), like this:
 
 ```Kotlin
 class SampleApp : Application() {
     override fun onCreate() {
-        // Glean needs to be initialized first.
-        Glean.initialize(/* ... */)
         Experiments.initialize(
             applicationContext,
             configuration // This is optional, e.g. for overriding the fetch client.
@@ -35,21 +35,26 @@ class SampleApp : Application() {
 }
 ```
 
-Note that this library depends on the Glean library, which has to be initialized first. See the [Glean README](../glean/README.md) for more details.
+This library makes use of [Glean](https://mozilla.github.io/glean/book/index.html) for reporting 
+experiment enrollment. If Glean is not used and initialized by the application, the recording 
+methods are a no-op.
 
 ### Updating of experiments
 
-The library updates it's list of experiments automatically and async from Kinto on library initialization. As this is asynchronous, it will not have immediate effect.
+The library updates its list of experiments automatically and asynchronously from Kinto on library 
+initialization. As this is asynchronous, it will not have immediate effect.
 
-Afterwards, the list of experiments will be updated every 6 hours.
+Afterwards, the list of experiments will be updated in the background every 6 hours.
 
 ### Checking if a user is part of an experiment
-In order to check if a user is part of a specific experiment, `Experiments` provides a Kotlin-friendly
-`withExperiment` API. You pass the id of the experiment you want to check and if the client is in the experiment, you get the selected branch name passed:
+
+In order to check if a user is part of a specific experiment, `Experiments` provides a 
+Kotlin-friendly `withExperiment` API. You pass the id of the experiment you want to check and if the 
+client is in the experiment, you get the selected branch name passed:
 
 ```Kotlin
-Experiments.withExperiment("button-color-experiment") {
-    when(it) { // `it` is the branch name.
+Experiments.withExperiment("button-color-experiment") { branchName ->
+    when(branchName) {
       "red" -> button.setBackgroundColor(Color.RED)
       "control" -> button.setBackgroundColor(DEFAULT_COLOR)
     }
@@ -64,14 +69,15 @@ For any technical tests, we do have a Kinto dev server available, which can be f
 The admin interface is [here](https://kinto.dev.mozaws.net/v1/admin/). For setting up a testing setup we can:
 - [Create a collection in the main bucket](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/create).
   - The *collection id* should be `mobile-experiments`.
-  - The *JSON schema* should have [this content](https://gist.github.com/travis79/c112d803dfcd84cb5f854f5b22bfcd0f#file-json-schema-json).
-  - The *UI schema* should have [this content](https://gist.github.com/travis79/c112d803dfcd84cb5f854f5b22bfcd0f#file-ui-schema-json).
+  - The *JSON schema* should have [this content](KintoSchema.md#JSON-Schema)
+  - The *UI schema* should have [this content](KintoSchema.md#UI-Schema)
   - The *Records list columns* should contain `id` and `description`.
   - Click *Create collection*
 - In the [`mobile-experiments` record list](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/mobile-experiments/records), create new entries for experiments as needed.
 - In the mobile application, use the debug commands below to switch to the `dev` endpoint.
 
 ### ExperimentsDebugActivity usage
+
 Experiments exports the [`ExperimentsDebugActivity`](src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt)
 that can be used to trigger functionality or toggle debug features on or off. Users can invoke this special activity, at
 run-time, using the following [`adb`](https://developer.android.com/studio/command-line/adb) command:
@@ -163,6 +169,7 @@ An individual experiment record looks e.g. like this:
 ```
 
 ### Experiment fields
+
 The experiments records in Kinto contain the following properties:
 
 | Name                      | Type   | Required | Description                                                                                                                                     | Example                                                        |
