@@ -400,8 +400,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                           artifact)
 
         # if running webkit tests locally, need to copy webkit source into talos/tests
-        if self.config.get('run_local') and ('speedometer' in self.suite or
-                                             'stylebench' in self.suite or
+        if self.config.get('run_local') and ('stylebench' in self.suite or
                                              'motionmark' in self.suite):
             self.get_webkit_source()
 

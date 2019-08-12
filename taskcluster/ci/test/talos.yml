@@ -325,21 +325,6 @@ talos-perf-reftest-singletons:
         extra-options:
             - --suite=perf-reftest-singletons
 
-talos-speedometer:
-    description: "Talos speedometer"
-    try-name: speedometer
-    treeherder-symbol: T(sp)
-    run-on-projects:
-        by-test-platform:
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
-            macosx.*64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'trunk', 'try']
-    max-run-time: 1500
-    mozharness:
-        extra-options:
-            - --suite=speedometer
-
 talos-svgr:
     description: "Talos svgr"
     try-name: svgr
