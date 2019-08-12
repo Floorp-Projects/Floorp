@@ -110,11 +110,11 @@ async function testPopup(hasPopup, buttonToClick) {
       );
     }
 
-    let lastSeen = SpecialPowers.getIntPref(
-      "privacy.socialtracking.notification.lastSeen",
-      0
+    let lastShown = SpecialPowers.getCharPref(
+      "privacy.socialtracking.notification.lastShown",
+      "0"
     );
-    ok(lastSeen, "last seen timestamp updated");
+    ok(lastShown !== "0", "last shown timestamp updated");
     is(
       SpecialPowers.getIntPref(
         "privacy.socialtracking.notification.counter",
@@ -136,7 +136,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
@@ -148,7 +148,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", false],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
@@ -161,7 +161,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", 2],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
@@ -173,7 +173,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 3600000], // 1H
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
@@ -185,7 +185,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 3],
         ["privacy.socialtracking.notification.max", 5],
@@ -198,7 +198,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
@@ -211,7 +211,7 @@ add_task(async function testSocialTrackingPopups() {
       prefs: [
         ["privacy.socialtracking.notification.enabled", true],
         ["privacy.socialtracking.notification.session.pageload.min", -1],
-        ["privacy.socialtracking.notification.lastSeen", 0],
+        ["privacy.socialtracking.notification.lastShown", "0"],
         ["privacy.socialtracking.notification.period.min", 0],
         ["privacy.socialtracking.notification.counter", 0],
         ["privacy.socialtracking.notification.max", 999],
