@@ -331,6 +331,7 @@ Section "Uninstall"
   ${un.RegCleanFileHandler}  ".ogv"  "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".pdf"  "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanFileHandler}  ".webm"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler} ".svg" "FirefoxHTML-$AppUserModelID"
 
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${un.GetSecondInstallPath} "Software\Mozilla" $R9

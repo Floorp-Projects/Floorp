@@ -59,6 +59,8 @@ class RacyRegisteredThread final {
   // This is called on every profiler restart. Put things that should happen at
   // that time here.
   void ReinitializeOnResume() {
+    mPendingMarkers.reset();
+
     // This is needed to cause an initial sample to be taken from sleeping
     // threads that had been observed prior to the profiler stopping and
     // restarting. Otherwise sleeping threads would not have any samples to
