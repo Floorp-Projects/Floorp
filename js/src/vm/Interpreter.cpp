@@ -1793,12 +1793,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     COUNT_COVERAGE_PC(REGS.pc);                       \
   JS_END_MACRO
 
-#define SET_SCRIPT(s)                                                       \
-  JS_BEGIN_MACRO                                                            \
-    script = (s);                                                           \
-    MOZ_ASSERT(cx->realm() == script->realm());                             \
-    if (DebugAPI::hasAnyBreakpointsOrStepMode(script) || script->hasScriptCounts()) \
-      activation.enableInterruptsUnconditionally();                         \
+#define SET_SCRIPT(s)                                    \
+  JS_BEGIN_MACRO                                         \
+    script = (s);                                        \
+    MOZ_ASSERT(cx->realm() == script->realm());          \
+    if (DebugAPI::hasAnyBreakpointsOrStepMode(script) || \
+        script->hasScriptCounts())                       \
+      activation.enableInterruptsUnconditionally();      \
   JS_END_MACRO
 
 #define SANITY_CHECKS()              \

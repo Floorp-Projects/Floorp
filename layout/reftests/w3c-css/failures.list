@@ -311,9 +311,11 @@ fuzzy-if(OSX&&!webrender,255-255,100-150) css-writing-modes/outline-inline-vlr-0
 #Therefore using fuzzy annotation as a catch all
 fuzzy(0-255,0-2808) css-multicol/multicol-rule-large-001.xht
 
-# fails because column-span property not implemented (Bug 616436)
-fails css-multicol/multicol-fill-auto-block-children-001.xht
-fails css-multicol/multicol-fill-auto-block-children-002.xht
+# multicol-fill-auto-block-children-ref.xht has been updated in wpt in
+# bug 1523595 Part 4. Updating to the upstream version should eliminate the
+# fuzzy-if on OSX for multicol-fill-auto-block-children-001.xht.
+pref(layout.css.column-span.enabled,true) fuzzy-if(OSX,255-255,2762-2762) css-multicol/multicol-fill-auto-block-children-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-fill-auto-block-children-002.xht
 pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) css-multicol/multicol-span-all-block-sibling-003.xht
 
 # skip these tests since they haven't been triaged yet.

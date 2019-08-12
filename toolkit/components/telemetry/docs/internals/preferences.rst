@@ -28,7 +28,7 @@ mozconfig Defines
 
   When Defined (which it is on most platforms):
 
-  * includes ``toolkit/components/telemetry/healthreport-prefs.js`` (which sets ``datareporting.healthreport.{infoURL|uploadEnabled}``)
+  * Sets ``datareporting.healthreport.{infoURL|uploadEnabled}`` in ``modules/libpref/init/all.js``.
 
 ``MOZ_DATA_REPORTING``
 

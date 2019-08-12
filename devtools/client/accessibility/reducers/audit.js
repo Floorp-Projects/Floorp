@@ -50,7 +50,9 @@ function audit(state = getInitialState(), action) {
       let { filters } = state;
       const isToggledToActive = !filters[filter];
 
-      if (filter === FILTERS.ALL) {
+      if (filter === FILTERS.NONE) {
+        filters = getInitialState().filters;
+      } else if (filter === FILTERS.ALL) {
         filters = isToggledToActive
           ? allActiveFilters()
           : getInitialState().filters;

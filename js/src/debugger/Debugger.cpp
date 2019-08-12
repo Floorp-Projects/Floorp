@@ -531,14 +531,13 @@ static void GlobalDebuggerVectorHolder_finalize(FreeOp* fop, JSObject* obj) {
 }
 
 static const ClassOps GlobalDebuggerVectorHolder_classOps = {
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  nullptr,
-  GlobalDebuggerVectorHolder_finalize
-};
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    GlobalDebuggerVectorHolder_finalize};
 
 static const Class GlobalDebuggerVectorHolder_class = {
     "GlobalDebuggerVectorHolder",
@@ -547,9 +546,8 @@ static const Class GlobalDebuggerVectorHolder_class = {
 
 /* static */
 JSObject* DebugAPI::newGlobalDebuggersHolder(JSContext* cx) {
-  NativeObject* obj =
-      NewNativeObjectWithGivenProto(cx, &GlobalDebuggerVectorHolder_class,
-                                    nullptr);
+  NativeObject* obj = NewNativeObjectWithGivenProto(
+      cx, &GlobalDebuggerVectorHolder_class, nullptr);
   if (!obj) {
     return nullptr;
   }
@@ -664,8 +662,8 @@ bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
   return true;
 }
 
-static bool DebuggerExists(GlobalObject* global,
-                           const std::function<bool(Debugger* dbg)>& predicate) {
+static bool DebuggerExists(
+    GlobalObject* global, const std::function<bool(Debugger* dbg)>& predicate) {
   // The GC analysis can't determine that the predicate can't GC, so let it know
   // explicitly.
   JS::AutoSuppressGCAnalysis nogc;
@@ -685,29 +683,26 @@ static bool DebuggerExists(GlobalObject* global,
 /* static */
 bool Debugger::hasLiveHook(GlobalObject* global, Hook which) {
   return DebuggerExists(global, [=](Debugger* dbg) {
-      return dbg->enabled && dbg->getHook(which);
-    });
+    return dbg->enabled && dbg->getHook(which);
+  });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesAllExecution(GlobalObject* global) {
-  return DebuggerExists(global, [=](Debugger* dbg) {
-      return dbg->observesAllExecution();
-    });
+  return DebuggerExists(
+      global, [=](Debugger* dbg) { return dbg->observesAllExecution(); });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesCoverage(GlobalObject* global) {
-  return DebuggerExists(global, [=](Debugger* dbg) {
-      return dbg->observesCoverage();
-    });
+  return DebuggerExists(global,
+                        [=](Debugger* dbg) { return dbg->observesCoverage(); });
 }
 
 /* static */
 bool DebugAPI::debuggerObservesAsmJS(GlobalObject* global) {
-  return DebuggerExists(global, [=](Debugger* dbg) {
-      return dbg->observesAsmJS();
-    });
+  return DebuggerExists(global,
+                        [=](Debugger* dbg) { return dbg->observesAsmJS(); });
 }
 
 /* static */
@@ -1118,7 +1113,8 @@ ResumeMode DebugAPI::slowPathOnExceptionUnwind(JSContext* cx,
 
   RootedValue rval(cx);
   ResumeMode resumeMode = Debugger::dispatchHook(
-      cx, [](Debugger* dbg) -> bool {
+      cx,
+      [](Debugger* dbg) -> bool {
         return dbg->getHook(Debugger::OnExceptionUnwind);
       },
       [&](Debugger* dbg) -> ResumeMode {
@@ -2461,8 +2457,7 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
       for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
         Debugger* dbg = *p;
-        for (Debugger::FrameMap::Range r = dbg->frames.all();
-             !r.empty();
+        for (Debugger::FrameMap::Range r = dbg->frames.all(); !r.empty();
              r.popFront()) {
           AbstractFramePtr frame = r.front().key();
           NativeObject* frameobj = r.front().value();
@@ -2478,8 +2473,7 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
 
         // Also count hooks set on suspended generator frames.
         for (Debugger::GeneratorWeakMap::Range r = dbg->generatorFrames.all();
-             !r.empty();
-             r.popFront()) {
+             !r.empty(); r.popFront()) {
           AbstractGeneratorObject& genObj =
               r.front().key()->as<AbstractGeneratorObject>();
           DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
@@ -2649,8 +2643,7 @@ void DebugAPI::slowPathOnNewGlobalObject(JSContext* cx,
 
 /* static */
 void DebugAPI::slowPathNotifyParticipatesInGC(
-    uint64_t majorGCNumber,
-    GlobalObject::DebuggerVector& dbgs) {
+    uint64_t majorGCNumber, GlobalObject::DebuggerVector& dbgs) {
   for (GlobalObject::DebuggerVector::Range r = dbgs.all(); !r.empty();
        r.popFront()) {
     if (!r.front().unbarrieredGet()->debuggeeIsBeingCollected(majorGCNumber)) {
@@ -3152,7 +3145,8 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
 
 /* static */
 bool Debugger::updateExecutionObservabilityOfScripts(
-    JSContext* cx, const DebugAPI::ExecutionObservableSet& obs, IsObserving observing) {
+    JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
+    IsObserving observing) {
   if (Zone* zone = obs.singleZone()) {
     return UpdateExecutionObservabilityOfScriptsInZone(cx, zone, obs,
                                                        observing);
@@ -6178,8 +6172,8 @@ DebuggerScript* Debugger::wrapVariantReferent(
   } else if (referent.is<LazyScript*>()) {
     obj = wrapVariantReferent(cx, lazyScripts, referent);
   } else {
-        referent.template as<WasmInstanceObject*>();
-        obj = wrapVariantReferent(cx, wasmInstanceScripts, referent);
+    referent.template as<WasmInstanceObject*>();
+    obj = wrapVariantReferent(cx, wasmInstanceScripts, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6377,10 +6371,8 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
 /* static */
 bool DebugAPI::inFrameMaps(AbstractFramePtr frame) {
   bool foundAny = false;
-  Debugger::forEachDebuggerFrame(frame,
-                                 [&](DebuggerFrame* frameobj) {
-                                   foundAny = true;
-                                 });
+  Debugger::forEachDebuggerFrame(
+      frame, [&](DebuggerFrame* frameobj) { foundAny = true; });
   return foundAny;
 }
 

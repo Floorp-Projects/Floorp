@@ -16,4 +16,14 @@ global.loader = {
     const module = fn();
     global[name] = module;
   },
+  lazyRequireGetter: (context, name, module, destructure) => {
+    const value = destructure ? require(module)[name] : require(module || name);
+    global[name] = value;
+  },
 };
+
+global.define = function(fn) {
+  fn(null, global, { exports: global });
+};
+
+global.requestIdleCallback = function() {};

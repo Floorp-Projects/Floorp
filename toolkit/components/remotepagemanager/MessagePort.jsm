@@ -61,6 +61,7 @@ let RPMAccessManager = {
       getBoolPref: [
         "browser.contentblocking.report.lockwise.enabled",
         "browser.contentblocking.report.monitor.enabled",
+        "privacy.socialtracking.block_cookies.enabled",
       ],
       getStringPref: [
         "browser.contentblocking.category",

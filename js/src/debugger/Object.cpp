@@ -1264,7 +1264,7 @@ bool DebuggerObject::makeDebuggeeNativeFunctionMethod(JSContext* cx,
                                                       Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "makeDebuggeeNativeFunction", args, object);
   if (!args.requireAtLeast(
-           cx, "Debugger.Object.prototype.makeDebuggeeNativeFunction", 1)) {
+          cx, "Debugger.Object.prototype.makeDebuggeeNativeFunction", 1)) {
     return false;
   }
 
@@ -1304,8 +1304,8 @@ bool DebuggerObject::setInstrumentationMethod(JSContext* cx, unsigned argc,
                                               Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "setInstrumentation", args, object);
 
-  if (!args.requireAtLeast(
-           cx, "Debugger.Object.prototype.setInstrumentation", 2)) {
+  if (!args.requireAtLeast(cx, "Debugger.Object.prototype.setInstrumentation",
+                           2)) {
     return false;
   }
 
@@ -1367,8 +1367,7 @@ bool DebuggerObject::setInstrumentationMethod(JSContext* cx, unsigned argc,
 
 /* static */
 bool DebuggerObject::setInstrumentationActiveMethod(JSContext* cx,
-                                                    unsigned argc,
-                                                    Value* vp) {
+                                                    unsigned argc, Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "setInstrumentationActive", args, object);
 
   if (!DebuggerObject::requireGlobal(cx, object)) {
@@ -1376,7 +1375,7 @@ bool DebuggerObject::setInstrumentationActiveMethod(JSContext* cx,
   }
 
   if (!args.requireAtLeast(
-      cx, "Debugger.Object.prototype.setInstrumentationActive", 1)) {
+          cx, "Debugger.Object.prototype.setInstrumentationActive", 1)) {
     return false;
   }
 
