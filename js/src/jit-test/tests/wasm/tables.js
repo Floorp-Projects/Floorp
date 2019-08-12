@@ -9,7 +9,7 @@ const badFuncRefError = /can only pass WebAssembly exported functions to funcref
 
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
-wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /elem segment requires a table section/);
+wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /elem segment requires a table/);
 wasmFailValidateText(`(module (table 10 funcref) (elem (i32.const 0) 0))`, /table element out of range/);
 wasmFailValidateText(`(module (table 10 funcref) (func) (elem (i32.const 0) 0 1))`, /table element out of range/);
 wasmFailValidateText(`(module (table 10 funcref) (func) (elem (f32.const 0) 0) ${callee(0)})`, /type mismatch/);
@@ -252,13 +252,14 @@ assertEq(tbl.get(0).foo, 42);
                                0x00,                   // Limits: Min only
                                0x01,                   // Limits: Min
                                0x09,                   // Elements section
-                               0x07,                   // Section size
+                               0x08,                   // Section size
                                0x01,                   // One element segment
                                flag,                   // Flag should be 2, or > 2 if invalid
                                tblindex,               // Table index must be 0, or > 0 if invalid
                                0x41,                   // Init expr: i32.const
                                0x00,                   // Init expr: zero (payload)
                                0x0b,                   // Init expr: end
+                               0x00,                   // Extern kind: Function
                                0x00]);                 // Zero functions
     }
 
@@ -266,9 +267,9 @@ assertEq(tbl.get(0).foo, 42);
     new WebAssembly.Module(makeIt(0x02, 0x00));
 
     // Should fail because the kind is unknown
-    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x03, 0x00)),
+    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x08, 0x00)),
                        WebAssembly.CompileError,
-                       /invalid elem initializer-kind/);
+                       /invalid elem segment flags field/);
 
     // Should fail because the table index is invalid
     assertErrorMessage(() => new WebAssembly.Module(makeIt(0x02, 0x01)),
