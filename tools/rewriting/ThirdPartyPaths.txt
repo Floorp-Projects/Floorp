@@ -4,10 +4,13 @@ browser/components/translation/cld2/
 browser/extensions/screenshots/build/raven.js
 devtools/client/aboutdebugging-new/test/jest/node_modules/
 devtools/client/application/test/components/node_modules/
+devtools/client/debugger/flow-typed/npm/
 devtools/client/debugger/node_modules/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
 devtools/client/shared/sourceeditor/tern/
+devtools/client/shared/vendor/
+devtools/shared/jsbeautify/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
 dom/canvas/test/webgl-conf/checkout/
@@ -107,6 +110,7 @@ mozglue/misc/decimal/
 netwerk/dns/nsIDNKitInterface.h
 netwerk/sctp/src/
 netwerk/srtp/src/
+node_modules/
 nsprpub/
 other-licenses/
 parser/expat/
