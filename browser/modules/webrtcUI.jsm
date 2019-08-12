@@ -1152,9 +1152,6 @@ function prompt(aBrowser, aRequest) {
   let schemeHistogram = Services.telemetry.getKeyedHistogramById(
     "PERMISSION_REQUEST_ORIGIN_SCHEME"
   );
-  let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById(
-    "PERMISSION_REQUEST_THIRD_PARTY_ORIGIN"
-  );
   let userInputHistogram = Services.telemetry.getKeyedHistogramById(
     "PERMISSION_REQUEST_HANDLING_USER_INPUT"
   );
@@ -1174,7 +1171,6 @@ function prompt(aBrowser, aRequest) {
     requestType = requestType.toLowerCase();
 
     schemeHistogram.add(requestType, scheme);
-    thirdPartyHistogram.add(requestType, aRequest.isThirdPartyOrigin);
     userInputHistogram.add(requestType, aRequest.isHandlingUserInput);
   }
 }
