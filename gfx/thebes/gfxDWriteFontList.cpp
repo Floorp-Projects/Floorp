@@ -1163,7 +1163,9 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
     gfxFontUtils::ReadOtherFamilyNamesForFace(familyName, data, size,
                                               otherFamilyNames, false);
     for (const auto& alias : otherFamilyNames) {
-      auto af = mAliasTable.LookupOrAdd(alias);
+      nsAutoCString key(alias);
+      ToLowerCase(key);
+      auto af = mAliasTable.LookupOrAdd(key);
       af->AppendElement(facePtrs[i]);
     }
 

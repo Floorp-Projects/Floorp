@@ -642,9 +642,7 @@ void FontList::SetAliases(
   nsTArray<Family::InitData> aliasArray;
   aliasArray.SetCapacity(aAliasTable.Count());
   for (auto i = aAliasTable.Iter(); !i.Done(); i.Next()) {
-    nsAutoCString key(i.Key());
-    ToLowerCase(key);
-    aliasArray.AppendElement(Family::InitData(key, i.Key()));
+    aliasArray.AppendElement(Family::InitData(i.Key(), i.Key()));
   }
   aliasArray.Sort();
 
