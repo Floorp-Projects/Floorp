@@ -9,61 +9,64 @@
 <body>
 <pre id="test">
 <script type="text/javascript">
-function unexpected({name}) {
-  ok(false, `${name} unexpectedly fired`);
+function unexpected({type}) {
+  ok(false, `${type} unexpectedly fired`);
 }
 
 (async _ => {
   SimpleTest.waitForExplicitFinish();
   let blobUrl = null;
+  let stream = null;
   try {
     // This is the memory limit per blob. If a blob is larger than this,
-    // MediaRecorder will put it in a file. We tell MediaRecorder to issue 10
-    // blobs per second (i.e., timeslice of 100ms) with a video bps of ten times
-    // the blob limit. That should make the blob size hover around this limit,
-    // causing us to go both under and over.
+    // MediaRecorder will put it in a file. For this test we need to get at
+    // least one blob under, and one blob over the limit.
     const memoryLimit = 3000;
     await SpecialPowers.pushPrefEnv({set: [
       ["media.recorder.max_memory", memoryLimit],
     ]});
-    let hasMemoryBlob = false;
-    let hasFileBlob = false;
     // We always use fake devices since the loopback ones don't make enough
     // pixels change per frame to make the encoded frames large enough.
     await pushGetUserMediaTestPrefs({fakeAudio: true, fakeVideo: true});
-    const stream = await navigator.mediaDevices.getUserMedia(
+    stream = await navigator.mediaDevices.getUserMedia(
       {audio: true, video: true});
     const blobs = [];
 
-    mediaRecorder = new MediaRecorder(
-      stream, {videoBitsPerSecond: memoryLimit * 8 * 10});
+    mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
        "Media recorder stream = element stream at the start of recording");
-    mediaRecorder.start(100);
+    mediaRecorder.start();
     mediaRecorder.addEventListener("warning", unexpected);
     mediaRecorder.addEventListener("error", unexpected);
     mediaRecorder.addEventListener("stop", unexpected);
-    mediaRecorder.addEventListener("dataavailable", ({data, type}) => {
-      const isMemoryBlob = data.size < memoryLimit;
-      const isFileBlob = data.size >= memoryLimit;
-      if (!hasMemoryBlob) {
-        hasMemoryBlob = isMemoryBlob;
-      }
-      if (!hasFileBlob) {
-        hasFileBlob = isFileBlob;
-      }
-      info(`dataavailable fired, size=${data.size}, ` +
-           `memory=${isMemoryBlob}, file=${isFileBlob}`);
+    await new Promise(r => mediaRecorder.onstart = r);
+
+    for (let hasMemory = false; !hasMemory;) {
+      mediaRecorder.requestData();
+      const {data} = await new Promise(r => mediaRecorder.ondataavailable = r);
       blobs.push(data);
+      ok(data.size < memoryLimit, "Blob should be small enough at start");
+      hasMemory = data.size > 0 && data.size < memoryLimit;
+      info(`Blob is ${data.size} bytes.${hasMemory ? " In memory." : ""}`);
+    }
+    info("Got a memory blob");
 
-      // We'll stop recording when we have both a memory and a file blob
-      if (hasMemoryBlob && hasFileBlob && mediaRecorder.state == "recording") {
-        info("Stopping recording");
-        mediaRecorder.removeEventListener("stop", unexpected);
-        mediaRecorder.stop();
-      }
-    });
+    SimpleTest.requestFlakyTimeout("Wait for file blob");
+    for (let hasFile = false, waitTimeMs = 500; !hasFile; waitTimeMs *= 4) {
+      info(`Waiting ${waitTimeMs/1000} seconds for file blob`);
+      await new Promise(r => setTimeout(r, waitTimeMs));
+      mediaRecorder.requestData();
+      const {data} = await new Promise(r => mediaRecorder.ondataavailable = r);
+      blobs.push(data);
+      hasFile = data.size > memoryLimit;
+      info(`Blob is ${data.size} bytes. In ${hasFile ? "file" : "memory"}.`);
+    }
+    info("Got a file blob");
 
+    mediaRecorder.stop();
+    const {data} = await new Promise(r => mediaRecorder.ondataavailable = r);
+    blobs.push(data);
+    mediaRecorder.removeEventListener("stop", unexpected);
     await new Promise(r => mediaRecorder.onstop = r);
 
     const video = document.createElement("video");
@@ -80,6 +83,11 @@ function unexpected({name}) {
   } catch (e) {
     ok(false, e);
   } finally {
+    if (stream) {
+      for (const t of stream.getTracks()) {
+        t.stop();
+      }
+    }
     if (blobUrl) {
       URL.revokeObjectURL(blobUrl);
     }

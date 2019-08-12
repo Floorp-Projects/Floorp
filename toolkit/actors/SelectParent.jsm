@@ -671,6 +671,11 @@ class SelectParent extends JSWindowActorParent {
         let topBrowsingContext = this.manager.browsingContext.top;
         let browser = topBrowsingContext.embedderElement;
 
+        if (browser.outerBrowser) {
+          // We are in RDM mode
+          browser = browser.outerBrowser;
+        }
+
         if (!browser.hasAttribute("selectmenulist")) {
           return;
         }
@@ -717,6 +722,12 @@ class SelectParent extends JSWindowActorParent {
       case "Forms:HideDropDown": {
         let topBrowsingContext = this.manager.browsingContext.top;
         let browser = topBrowsingContext.embedderElement;
+
+        if (browser.outerBrowser) {
+          // We are in RDM mode
+          browser = browser.outerBrowser;
+        }
+
         SelectParentHelper.hide(this._menulist, browser);
         break;
       }

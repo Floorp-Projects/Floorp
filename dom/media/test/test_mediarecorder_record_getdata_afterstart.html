@@ -38,13 +38,13 @@ function startTest(test, token) {
     info('onstart fired successfully');
     hasonstart = true;
     // On audio only case, we produce audio/ogg as mimeType.
-    is('audio/ogg', mMediaRecorder.mimeType, "check the record mimetype return " + mMediaRecorder.mimeType);
+    is('audio/ogg', mMediaRecorder.mimeType, "MediaRecorder mimetype as expected");
     mMediaRecorder.requestData();
   };
 
   mMediaRecorder.onstop = function() {
     info('onstop fired successfully');
-    ok (hasondataavailable, "should have ondataavailable before onstop");
+    ok(hasondataavailable, "should have ondataavailable before onstop");
     is(mMediaRecorder.state, 'inactive', 'check recording status is inactive');
     SimpleTest.finish();
   };
@@ -53,8 +53,9 @@ function startTest(test, token) {
     info('ondataavailable fired successfully');
     if (mMediaRecorder.state == 'recording') {
       hasondataavailable = true;
-      ok(hasonstart, "should has onstart event first");
-      ok(e.data.size > 0, 'check blob has data');
+      ok(hasonstart, "should have had start event first");
+      is(e.data.type, mMediaRecorder.mimeType,
+        "blob's mimeType matches the recorder's");
       mMediaRecorder.stop();
     }
   };

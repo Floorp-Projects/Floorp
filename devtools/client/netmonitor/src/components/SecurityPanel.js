@@ -83,6 +83,116 @@ const SHA1_FINGERPRINT_LABEL = L10N.getStr(
 );
 
 /*
+ * Localize special values for key exchange group name,
+ * certificate signature scheme, and certificate
+ * transparency status.
+ */
+const formatSecurityInfo = securityInfo => {
+  const formattedSecurityInfo = { ...securityInfo };
+
+  const formatters = {
+    keaGroupName: value => {
+      if (value === "none") {
+        return KEA_GROUP_NONE;
+      }
+      if (value === "custom") {
+        return KEA_GROUP_CUSTOM;
+      }
+      if (value === "unknown group") {
+        return KEA_GROUP_UNKNOWN;
+      }
+      return value;
+    },
+    signatureSchemeName: value => {
+      if (value === "none") {
+        return SIGNATURE_SCHEME_NONE;
+      }
+      if (value === "unknown signature") {
+        return SIGNATURE_SCHEME_UNKNOWN;
+      }
+      return value;
+    },
+    certificateTransparency: value => {
+      if (value === 5) {
+        return CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
+      }
+      if (value === 6) {
+        return CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
+      }
+      if (value === 7) {
+        return CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
+      }
+      return value;
+    },
+  };
+
+  return Object.keys(formatters).reduce((acc, key) => {
+    const formatter = formatters[key];
+    acc[key] = formatter(acc[key]);
+    return acc;
+  }, formattedSecurityInfo);
+};
+
+const getConnectionLabel = securityInfo => ({
+  [PROTOCOL_VERSION_LABEL]: securityInfo.protocolVersion || NOT_AVAILABLE,
+  [CIPHER_SUITE_LABEL]: securityInfo.cipherSuite || NOT_AVAILABLE,
+  [KEA_GROUP_LABEL]: securityInfo.keaGroupName || NOT_AVAILABLE,
+  [SIGNATURE_SCHEME_LABEL]: securityInfo.signatureSchemeName || NOT_AVAILABLE,
+});
+
+const getHostHeaderLabel = securityInfo => ({
+  [HSTS_LABEL]: securityInfo.hsts ? ENABLED_LABEL : DISABLED_LABEL,
+  [HPKP_LABEL]: securityInfo.hpkp ? ENABLED_LABEL : DISABLED_LABEL,
+});
+
+const getCertificateLabel = securityInfo => {
+  const { fingerprint, issuer, subject, validity } = securityInfo.cert;
+
+  return {
+    [SUBJECT_INFO_LABEL]: {
+      [CERT_DETAIL_COMMON_NAME_LABEL]: subject.commonName || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_LABEL]: subject.organization || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_UNIT_LABEL]: subject.organizationUnit || NOT_AVAILABLE,
+    },
+    [ISSUER_INFO_LABEL]: {
+      [CERT_DETAIL_COMMON_NAME_LABEL]: issuer.commonName || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_LABEL]: issuer.organization || NOT_AVAILABLE,
+      [CERT_DETAIL_ORG_UNIT_LABEL]: issuer.organizationUnit || NOT_AVAILABLE,
+    },
+    [PERIOD_OF_VALIDITY_LABEL]: {
+      [BEGINS_LABEL]: validity.start || NOT_AVAILABLE,
+      [EXPIRES_LABEL]: validity.end || NOT_AVAILABLE,
+    },
+    [FINGERPRINTS_LABEL]: {
+      [SHA256_FINGERPRINT_LABEL]: fingerprint.sha256 || NOT_AVAILABLE,
+      [SHA1_FINGERPRINT_LABEL]: fingerprint.sha1 || NOT_AVAILABLE,
+    },
+    [CERTIFICATE_TRANSPARENCY_LABEL]:
+      securityInfo.certificateTransparency || NOT_AVAILABLE,
+  };
+};
+
+const getObject = ({ securityInfo, url }) => {
+  if (securityInfo.state !== "secure" && securityInfo.state !== "weak") {
+    return {
+      [ERROR_LABEL]: securityInfo.errorMessage || NOT_AVAILABLE,
+    };
+  }
+
+  const HOST_HEADER_LABEL = L10N.getFormatStr(
+    "netmonitor.security.hostHeader",
+    getUrlHost(url)
+  );
+  const formattedSecurityInfo = formatSecurityInfo(securityInfo);
+
+  return {
+    [CONNECTION_LABEL]: getConnectionLabel(formattedSecurityInfo),
+    [HOST_HEADER_LABEL]: getHostHeaderLabel(formattedSecurityInfo),
+    [CERTIFICATE_LABEL]: getCertificateLabel(formattedSecurityInfo),
+  };
+};
+
+/*
  * Security panel component
  * If the site is being served over HTTPS, you get an extra tab labeled "Security".
  * This contains details about the secure connection used including the protocol,
@@ -141,7 +251,6 @@ class SecurityPanel extends Component {
     );
   }
 
-  /* eslint-disable complexity */
   render() {
     const { openLink, request } = this.props;
     const { securityInfo, url } = request;
@@ -150,90 +259,7 @@ class SecurityPanel extends Component {
       return null;
     }
 
-    let object;
-
-    if (securityInfo.state === "secure" || securityInfo.state === "weak") {
-      const { subject, issuer, validity, fingerprint } = securityInfo.cert;
-      const HOST_HEADER_LABEL = L10N.getFormatStr(
-        "netmonitor.security.hostHeader",
-        getUrlHost(url)
-      );
-
-      // Localize special values for key exchange group name.
-      if (securityInfo.keaGroupName == "none") {
-        securityInfo.keaGroupName = KEA_GROUP_NONE;
-      }
-      if (securityInfo.keaGroupName == "custom") {
-        securityInfo.keaGroupName = KEA_GROUP_CUSTOM;
-      }
-      if (securityInfo.keaGroupName == "unknown group") {
-        securityInfo.keaGroupName = KEA_GROUP_UNKNOWN;
-      }
-
-      // Localize special values for certificate signature scheme.
-      if (securityInfo.signatureSchemeName == "none") {
-        securityInfo.signatureSchemeName = SIGNATURE_SCHEME_NONE;
-      }
-      if (securityInfo.signatureSchemeName == "unknown signature") {
-        securityInfo.signatureSchemeName = SIGNATURE_SCHEME_UNKNOWN;
-      }
-
-      // Localize special values for certificate transparency status.
-      if (securityInfo.certificateTransparency == 5) {
-        securityInfo.certificateTransparency = CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
-      }
-      if (securityInfo.certificateTransparency == 6) {
-        securityInfo.certificateTransparency = CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
-      }
-      if (securityInfo.certificateTransparency == 7) {
-        securityInfo.certificateTransparency = CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
-      }
-
-      object = {
-        [CONNECTION_LABEL]: {
-          [PROTOCOL_VERSION_LABEL]:
-            securityInfo.protocolVersion || NOT_AVAILABLE,
-          [CIPHER_SUITE_LABEL]: securityInfo.cipherSuite || NOT_AVAILABLE,
-          [KEA_GROUP_LABEL]: securityInfo.keaGroupName || NOT_AVAILABLE,
-          [SIGNATURE_SCHEME_LABEL]:
-            securityInfo.signatureSchemeName || NOT_AVAILABLE,
-        },
-        [HOST_HEADER_LABEL]: {
-          [HSTS_LABEL]: securityInfo.hsts ? ENABLED_LABEL : DISABLED_LABEL,
-          [HPKP_LABEL]: securityInfo.hpkp ? ENABLED_LABEL : DISABLED_LABEL,
-        },
-        [CERTIFICATE_LABEL]: {
-          [SUBJECT_INFO_LABEL]: {
-            [CERT_DETAIL_COMMON_NAME_LABEL]:
-              subject.commonName || NOT_AVAILABLE,
-            [CERT_DETAIL_ORG_LABEL]: subject.organization || NOT_AVAILABLE,
-            [CERT_DETAIL_ORG_UNIT_LABEL]:
-              subject.organizationUnit || NOT_AVAILABLE,
-          },
-          [ISSUER_INFO_LABEL]: {
-            [CERT_DETAIL_COMMON_NAME_LABEL]: issuer.commonName || NOT_AVAILABLE,
-            [CERT_DETAIL_ORG_LABEL]: issuer.organization || NOT_AVAILABLE,
-            [CERT_DETAIL_ORG_UNIT_LABEL]:
-              issuer.organizationUnit || NOT_AVAILABLE,
-          },
-          [PERIOD_OF_VALIDITY_LABEL]: {
-            [BEGINS_LABEL]: validity.start || NOT_AVAILABLE,
-            [EXPIRES_LABEL]: validity.end || NOT_AVAILABLE,
-          },
-          [FINGERPRINTS_LABEL]: {
-            [SHA256_FINGERPRINT_LABEL]: fingerprint.sha256 || NOT_AVAILABLE,
-            [SHA1_FINGERPRINT_LABEL]: fingerprint.sha1 || NOT_AVAILABLE,
-          },
-          [CERTIFICATE_TRANSPARENCY_LABEL]:
-            securityInfo.certificateTransparency || NOT_AVAILABLE,
-        },
-      };
-    } else {
-      object = {
-        [ERROR_LABEL]: securityInfo.errorMessage || NOT_AVAILABLE,
-      };
-    }
-
+    const object = getObject({ securityInfo, url });
     return div(
       { className: "panel-container security-panel" },
       PropertiesView({
@@ -246,7 +272,6 @@ class SecurityPanel extends Component {
       })
     );
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = SecurityPanel;

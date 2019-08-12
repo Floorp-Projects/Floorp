@@ -9,7 +9,7 @@ name = "jsrust_shared"
 path = "lib.rs"
 
 [dependencies]
-baldrdash = { path = "../../wasm/cranelift" }
+baldrdash = { path = "../../wasm/cranelift", optional = true }
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 
 [features]
