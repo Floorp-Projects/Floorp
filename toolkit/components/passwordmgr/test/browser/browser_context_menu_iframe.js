@@ -36,29 +36,10 @@ add_task(async function test_context_menu_iframe_fill() {
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
     async function(browser) {
-      let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
-        window,
-        "popupshown"
-      );
-      let eventDetails = { type: "contextmenu", button: 2 };
-
-      // To click at the right point we have to take into account the iframe offset.
-      // Synthesize a right mouse click over the password input element.
-      BrowserTestUtils.synthesizeMouseAtCenter(
-        ["#test-iframe", "#form-basic-password"],
-        eventDetails,
-        browser
-      );
-      await contextMenuShownPromise;
-
-      // Synthesize a mouse click over the fill login menu header.
-      let popupHeader = document.getElementById("fill-login");
-      let popupShownPromise = BrowserTestUtils.waitForEvent(
-        popupHeader,
-        "popupshown"
-      );
-      EventUtils.synthesizeMouseAtCenter(popupHeader, {});
-      await popupShownPromise;
+      await openPasswordContextMenu(browser, [
+        "#test-iframe",
+        "#form-basic-password",
+      ]);
 
       let popupMenu = document.getElementById("fill-login-popup");
 
@@ -124,25 +105,18 @@ add_task(async function test_context_menu_iframe_sandbox() {
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
     async function(browser) {
-      let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
-        window,
-        "popupshown"
-      );
-      let eventDetails = { type: "contextmenu", button: 2 };
-
-      BrowserTestUtils.synthesizeMouseAtCenter(
+      await openPasswordContextMenu(
+        browser,
         ["#test-iframe-sandbox", "#form-basic-password"],
-        eventDetails,
-        browser
+        function checkDisabled() {
+          let popupHeader = document.getElementById("fill-login");
+          ok(
+            popupHeader.disabled,
+            "Check that the Fill Login menu item is disabled"
+          );
+          return false;
+        }
       );
-      await contextMenuShownPromise;
-
-      let popupHeader = document.getElementById("fill-login");
-      ok(
-        popupHeader.disabled,
-        "Check that the Fill Login menu item is disabled"
-      );
-
       let contextMenu = document.getElementById("contentAreaContextMenu");
       contextMenu.hidePopup();
     }
@@ -159,23 +133,17 @@ add_task(async function test_context_menu_iframe_sandbox_same_origin() {
       url: TEST_ORIGIN + IFRAME_PAGE_PATH,
     },
     async function(browser) {
-      let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
-        window,
-        "popupshown"
-      );
-      let eventDetails = { type: "contextmenu", button: 2 };
-
-      BrowserTestUtils.synthesizeMouseAtCenter(
-        ["#test-iframe-sandbox-same-origin", "#form-basic-password"],
-        eventDetails,
-        browser
-      );
-      await contextMenuShownPromise;
-
-      let popupHeader = document.getElementById("fill-login");
-      ok(
-        !popupHeader.disabled,
-        "Check that the Fill Login menu item is enabled"
+      await openPasswordContextMenu(
+        browser,
+        ["#test-iframe-sandbox", "#form-basic-password"],
+        function checkDisabled() {
+          let popupHeader = document.getElementById("fill-login");
+          ok(
+            popupHeader.disabled,
+            "Check that the Fill Login menu item is disabled"
+          );
+          return false;
+        }
       );
 
       let contextMenu = document.getElementById("contentAreaContextMenu");

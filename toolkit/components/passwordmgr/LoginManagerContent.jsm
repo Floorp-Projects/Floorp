@@ -1006,9 +1006,9 @@ this.LoginManagerContent = {
     if (LoginHelper.isUsernameFieldType(acInputField)) {
       this.onUsernameAutocompleted(acInputField, loginGUID);
     } else if (acInputField.hasBeenTypePassword) {
-      // Ensure the field gets re-masked in case a generated password was
-      // filled into it previously.
-      this._disableAutomaticPasswordFieldUnmasking(acInputField);
+      // Ensure the field gets re-masked and edits don't overwrite the generated
+      // password in case a generated password was filled into it previously.
+      this._stopTreatingAsGeneratedPasswordField(acInputField);
       this._highlightFilledField(acInputField);
     }
   },
@@ -1535,8 +1535,12 @@ this.LoginManagerContent = {
     if (passwordField.value) {
       return;
     }
+    this._stopTreatingAsGeneratedPasswordField(passwordField);
+  },
 
-    log("_maybeStopTreatingAsGeneratedPasswordField: Stopping");
+  _stopTreatingAsGeneratedPasswordField(passwordField) {
+    log("_stopTreatingAsGeneratedPasswordField");
+
     // Remove all the event listeners added in _generatedPasswordFilledOrEdited
     for (let eventType of ["blur", "change", "focus", "input"]) {
       passwordField.removeEventListener(eventType, observer, {
@@ -1632,18 +1636,6 @@ this.LoginManagerContent = {
       return;
     }
     editor.mask();
-  },
-
-  _disableAutomaticPasswordFieldUnmasking(passwordField) {
-    passwordField.removeEventListener("blur", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    passwordField.removeEventListener("focus", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    this._togglePasswordFieldMasking(passwordField, false);
   },
 
   /** Remove login field highlight when its value is cleared or overwritten.
@@ -2013,7 +2005,7 @@ this.LoginManagerContent = {
       if (passwordField.value != selectedLogin.password) {
         // Ensure the field gets re-masked in case a generated password was
         // filled into it previously.
-        this._disableAutomaticPasswordFieldUnmasking(passwordField);
+        this._stopTreatingAsGeneratedPasswordField(passwordField);
         passwordField.setUserInput(selectedLogin.password);
         let autoFilledLogin = {
           guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,
