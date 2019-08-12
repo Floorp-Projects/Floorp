@@ -709,9 +709,6 @@ async function withPerfObserver(testFn, exceptions = {}, win = window) {
  * uninterruptible reflows when typing into the URL bar
  * with the default values in Places.
  *
- * @param {bool} useAwesomebar
- *        Pass true if the legacy awesomebar is enabled.  Pass false if the
- *        quantumbar is enabled.
  * @param {bool} keyed
  *        Pass true to synthesize typing the search string one key at a time.
  * @param {array} expectedReflowsFirstOpen
@@ -721,7 +718,6 @@ async function withPerfObserver(testFn, exceptions = {}, win = window) {
  *        opened, if you're testing opening the panel twice.
  */
 async function runUrlbarTest(
-  useAwesomebar,
   keyed,
   expectedReflowsFirstOpen,
   expectedReflowsSecondOpen = null
@@ -736,51 +732,23 @@ async function runUrlbarTest(
   URLBar.focus();
   URLBar.value = SEARCH_TERM;
   let testFn = async function() {
-    if (useAwesomebar) {
-      let popup = URLBar.popup;
-      let oldInvalidate = popup.invalidate.bind(popup);
-      let oldResultsAdded = popup.onResultsAdded.bind(popup);
-      let oldSetTimeout = win.setTimeout;
+    let popup = URLBar.view;
+    let oldOnQueryResults = popup.onQueryResults.bind(popup);
+    let oldOnQueryFinished = popup.onQueryFinished.bind(popup);
 
-      // We need to invalidate the frame tree outside of the normal
-      // mechanism since invalidations and result additions to the
-      // URL bar occur without firing JS events (which is how we
-      // normally know to dirty the frame tree).
-      popup.invalidate = reason => {
-        dirtyFrame(win);
-        oldInvalidate(reason);
-      };
+    // We need to invalidate the frame tree outside of the normal
+    // mechanism since invalidations and result additions to the
+    // URL bar occur without firing JS events (which is how we
+    // normally know to dirty the frame tree).
+    popup.onQueryResults = context => {
+      dirtyFrame(win);
+      oldOnQueryResults(context);
+    };
 
-      popup.onResultsAdded = () => {
-        dirtyFrame(win);
-        oldResultsAdded();
-      };
-
-      win.setTimeout = (fn, ms) => {
-        return oldSetTimeout(() => {
-          dirtyFrame(win);
-          fn();
-        }, ms);
-      };
-    } else {
-      let popup = URLBar.view;
-      let oldOnQueryResults = popup.onQueryResults.bind(popup);
-      let oldOnQueryFinished = popup.onQueryFinished.bind(popup);
-
-      // We need to invalidate the frame tree outside of the normal
-      // mechanism since invalidations and result additions to the
-      // URL bar occur without firing JS events (which is how we
-      // normally know to dirty the frame tree).
-      popup.onQueryResults = context => {
-        dirtyFrame(win);
-        oldOnQueryResults(context);
-      };
-
-      popup.onQueryFinished = context => {
-        dirtyFrame(win);
-        oldOnQueryFinished(context);
-      };
-    }
+    popup.onQueryFinished = context => {
+      dirtyFrame(win);
+      oldOnQueryFinished(context);
+    };
 
     let waitExtra = async () => {
       // There are several setTimeout(fn, 0); calls inside autocomplete.xml
@@ -851,7 +819,7 @@ async function runUrlbarTest(
       ),
   };
 
-  info(`First opening, useAwesomebar=${useAwesomebar}`);
+  info("First opening");
   await withPerfObserver(
     testFn,
     { expectedReflows: expectedReflowsFirstOpen, frames: expectedRects },
@@ -859,7 +827,7 @@ async function runUrlbarTest(
   );
 
   if (expectedReflowsSecondOpen) {
-    info(`Second opening, useAwesomebar=${useAwesomebar}`);
+    info("Second opening");
     await withPerfObserver(
       testFn,
       { expectedReflows: expectedReflowsSecondOpen, frames: expectedRects },
