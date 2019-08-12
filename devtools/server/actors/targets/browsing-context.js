@@ -1258,6 +1258,33 @@ const browsingContextTargetPrototype = {
     return windowUtils.serviceWorkersTestingEnabled;
   },
 
+  /**
+   * Prepare to enter a nested event loop by disabling debuggee events.
+   */
+  preNest() {
+    if (!this.window) {
+      // The browsing context is already closed.
+      return;
+    }
+    const windowUtils = this.window.windowUtils;
+
+    windowUtils.suppressEventHandling(true);
+    windowUtils.suspendTimeouts();
+  },
+
+  /**
+   * Prepare to exit a nested event loop by enabling debuggee events.
+   */
+  postNest(nestData) {
+    if (!this.window) {
+      // The browsing context is already closed.
+      return;
+    }
+    const windowUtils = this.window.windowUtils;
+    windowUtils.resumeTimeouts();
+    windowUtils.suppressEventHandling(false);
+  },
+
   _changeTopLevelDocument(window) {
     // Fake a will-navigate on the previous document
     // to let a chance to unregister it

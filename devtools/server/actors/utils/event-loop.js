@@ -7,6 +7,8 @@
 "use strict";
 
 const xpcInspector = require("xpcInspector");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { dumpn } = DevToolsUtils;
 
 /**
  * Manages pushing event loops and automatically pops and exits them in the
@@ -16,8 +18,15 @@ const xpcInspector = require("xpcInspector");
  *        The thread actor instance that owns this EventLoopStack.
  * @param DebuggerServerConnection connection
  *        The remote protocol connection associated with this event loop stack.
+ * @param Object hooks
+ *        An object with the following properties:
+ *          - url: The URL string of the debuggee we are spinning an event loop
+ *                 for.
+ *          - preNest: function called before entering a nested event loop
+ *          - postNest: function called after exiting a nested event loop
  */
-function EventLoopStack({ thread, connection }) {
+function EventLoopStack({ thread, connection, hooks }) {
+  this._hooks = hooks;
   this._thread = thread;
   this._connection = connection;
 }
@@ -64,6 +73,7 @@ EventLoopStack.prototype = {
     return new EventLoop({
       thread: this._thread,
       connection: this._connection,
+      hooks: this._hooks,
     });
   },
 };
@@ -76,9 +86,13 @@ EventLoopStack.prototype = {
  *        The thread actor that is creating this nested event loop.
  * @param DebuggerServerConnection connection
  *        The remote protocol connection associated with this event loop.
+ * @param Object hooks
+ *        The same hooks object passed into EventLoopStack during its
+ *        initialization.
  */
-function EventLoop({ thread, connection }) {
+function EventLoop({ thread, connection, hooks }) {
   this._thread = thread;
+  this._hooks = hooks;
   this._connection = connection;
 
   this.enter = this.enter.bind(this);
@@ -89,14 +103,14 @@ EventLoop.prototype = {
   entered: false,
   resolved: false,
   get url() {
-    return this._thread._parent.url;
+    return this._hooks.url;
   },
 
   /**
    * Enter this nested event loop.
    */
   enter: function() {
-    const preNestData = this.preNest();
+    const nestData = this._hooks.preNest ? this._hooks.preNest() : null;
 
     this.entered = true;
     xpcInspector.enterNestedEventLoop(this);
@@ -109,7 +123,9 @@ EventLoop.prototype = {
       }
     }
 
-    this.postNest(preNestData);
+    if (this._hooks.postNest) {
+      this._hooks.postNest(nestData);
+    }
   },
 
   /**
@@ -135,55 +151,6 @@ EventLoop.prototype = {
       return true;
     }
     return false;
-  },
-
-  /**
-   * Retrieve the list of all DOM Windows debugged by the current thread actor.
-   */
-  getAllWindowDebuggees() {
-    return (
-      this._thread.dbg
-        .getDebuggees()
-        .filter(debuggee => {
-          // Select only debuggee that relates to windows
-          // e.g. ignore sandboxes, jsm and such
-          return debuggee.class == "Window";
-        })
-        .map(debuggee => {
-          // Retrieve the JS reference for these windows
-          return debuggee.unsafeDereference();
-        })
-        // Ignore iframes as they will be paused automatically when pausing their
-        // owner top level document
-        .filter(window => window.top === window)
-    );
-  },
-
-  /**
-   * Prepare to enter a nested event loop by disabling debuggee events.
-   */
-  preNest() {
-    const windows = [];
-    // Disable events in all open windows.
-    for (const window of this.getAllWindowDebuggees()) {
-      const { windowUtils } = window;
-      windowUtils.suppressEventHandling(true);
-      windowUtils.suspendTimeouts();
-      windows.push(window);
-    }
-    return windows;
-  },
-
-  /**
-   * Prepare to exit a nested event loop by enabling debuggee events.
-   */
-  postNest(pausedWindows) {
-    // Enable events in all open windows.
-    for (const window of pausedWindows) {
-      const { windowUtils } = window;
-      windowUtils.resumeTimeouts();
-      windowUtils.suppressEventHandling(false);
-    }
   },
 };
 
