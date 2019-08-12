@@ -277,7 +277,7 @@ tab_test("elem.drop 0", "",
 // and refers to a passive segment
 tab_test("elem.drop 3", "",
          WebAssembly.CompileError,
-         /active elem segment requires a table section/,
+         /active elem segment requires a table/,
          /*haveStorage=*/false, /*haveInitA=*/true, /*haveInitP=*/true);
 
 // drop with no tables but with passive segments only, ix out of range
