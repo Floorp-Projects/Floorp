@@ -27,6 +27,12 @@
 #include "mozilla/RangedArray.h"
 #include "nsLanguageAtomService.h"
 
+namespace mozilla {
+namespace fontlist {
+struct AliasData;
+}
+}  // namespace mozilla
+
 class CharMapHashKey : public PLDHashEntryHdr {
  public:
   typedef gfxCharacterMap* KeyType;
@@ -431,6 +437,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       mozilla::StyleGenericFontFamily aGenericType);
 
  protected:
+  friend class mozilla::fontlist::FontList;
+
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {
    public:
     InitOtherFamilyNamesRunnable()
@@ -778,8 +786,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   mozilla::UniquePtr<mozilla::fontlist::FontList> mSharedFontList;
 
-  nsClassHashtable<nsCStringHashKey, nsTArray<mozilla::fontlist::Pointer>>
-      mAliasTable;
+  nsClassHashtable<nsCStringHashKey, mozilla::fontlist::AliasData> mAliasTable;
   nsDataHashtable<nsCStringHashKey, mozilla::fontlist::LocalFaceRec::InitData>
       mLocalNameTable;
 
