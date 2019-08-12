@@ -20,7 +20,7 @@ namespace layout {
 
 using namespace gfx;
 
-// This class is fake DrawTarget, used to intercept text draw calls, while
+// This class is a fake DrawTarget, used to intercept text draw calls, while
 // also collecting up the other aspects of text natively.
 //
 // When using advanced-layers in nsDisplayText's constructor, we construct this
@@ -350,15 +350,27 @@ class TextDrawTarget : public DrawTarget {
     return wr::ToRoundedLayoutRect(mClipStack.LastElement());
   }
   LayoutDeviceRect GeckoClipRect() { return mClipStack.LastElement(); }
-  // Whether anything unsupported was encountered. Currently:
+  // Whether anything unsupported was encountered. This will result in this
+  // text being emitted as a blob, which means subpixel-AA can't be used and
+  // that performance will probably be a bit worse. At this point, we've
+  // properly implemented everything that shows up a lot, so you can assume
+  // that the remaining things we don't implement are fairly rare. The complete
+  // set of things that we don't implement are as follows:
   //
-  // * Synthetic bold/italics
-  // * SVG fonts
-  // * Unserializable fonts
-  // * Tofu glyphs
-  // * Pratial ligatures
-  // * Text writing-mode
-  // * Text stroke
+  // * Unserializable Fonts: WR lives across an IPC boundary
+  // * Text-Combine-Upright Squishing: no one's really bothered to impl it yet
+  // * Text-Stroke: not a real standard (exists for webcompat)
+  // * SVG Glyphs: not a real standard (we got overzealous with svg)
+  // * Color Glyphs (Emoji) With Transparency: requires us to apply transparency
+  //   with a composited layer (a single emoji can be many single-color glyphs)
+  //
+  // The transparent colored-glyphs issue is probably the most valuable to fix,
+  // since ideally it would also result in us fixing transparency for all
+  // intersecting glyphs (which currently look bad with or without webrender,
+  // so there's no fallback like with emoji). Specifically, transparency
+  // looks bad for "cursive" fonts where glyphs overlap at the seams. Since
+  // this is more common for non-latin scripts (e.g. मनीष), this amounts to us
+  // treating non-latin scripts poorly... unless they're emoji. Yikes!
   bool mHasUnsupportedFeatures = false;
 
   // The caller promises to call Save/Restore on the builder as needed.

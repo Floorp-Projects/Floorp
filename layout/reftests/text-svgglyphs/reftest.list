@@ -5,7 +5,7 @@ pref(gfx.font_rendering.opentype_svg.enabled,false)   != svg-glyph-positioning.s
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,0-2,0-350) == svg-glyph-positioning.svg svg-glyph-positioning-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-html.html svg-glyph-html-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-direct.svg svg-glyph-direct-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(webrender&&winWidget,129-138,2188-2461) fuzzy-if(OSX,134-134,2463-2463) == svg-glyph-invalid.html svg-glyph-invalid-ref.html
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(webrender&&OSX,176-176,2330-2330) fuzzy-if(!webrender&&OSX,134-134,2463-2463) == svg-glyph-invalid.html svg-glyph-invalid-ref.html
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectfill-solid.svg svg-glyph-objectfill-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,0-2,0-200) == svg-glyph-objectstroke-solid.svg svg-glyph-objectstroke-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(0-1,0-7) fuzzy-if(gtkWidget&&/^Linux\x20x86_64/.test(http.oscpu),0-1,0-79) fuzzy-if(skiaContent,0-1,0-300) == svg-glyph-objectgradient.svg svg-glyph-objectgradient-ref.svg # see bug 871961#c5
