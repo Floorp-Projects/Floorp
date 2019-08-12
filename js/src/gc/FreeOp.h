@@ -19,44 +19,31 @@
 struct JSRuntime;
 
 namespace js {
+
 namespace gc {
 class AutoSetThreadIsPerformingGC;
 }  // namespace gc
-}  // namespace js
 
 /*
- * A JSFreeOp can do one thing: free memory. For convenience, it has delete_
+ * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
  *
- * JSFreeOp is passed to finalizers and other sweep-phase hooks so that we do
- * not need to pass a JSContext to those hooks.
+ * FreeOp is passed to finalizers and other sweep-phase hooks so that we do not
+ * need to pass a JSContext to those hooks.
  */
-class JSFreeOp {
-  using Cell = js::gc::Cell;
-  using MemoryUse = js::MemoryUse;
-
-  JSRuntime* runtime_;
-
-  // We may accumulate a set of deferred free operations to be performed when
-  // the JSFreeOp is destroyed. This only applies to non-default JSFreeOps that
-  // are stack allocated and used during GC sweeping.
-  js::Vector<void*, 0, js::SystemAllocPolicy> freeLaterList;
-
-  js::jit::JitPoisonRangeVector jitPoisonRanges;
-
+class FreeOp : public JSFreeOp {
+  Vector<void*, 0, SystemAllocPolicy> freeLaterList;
+  jit::JitPoisonRangeVector jitPoisonRanges;
   const bool isDefault;
   bool isCollecting_;
 
-  friend class js::gc::AutoSetThreadIsPerformingGC;
+  friend class gc::AutoSetThreadIsPerformingGC;
 
  public:
-  explicit JSFreeOp(JSRuntime* maybeRuntime, bool isDefault = false);
-  ~JSFreeOp();
+  static FreeOp* get(JSFreeOp* fop) { return static_cast<FreeOp*>(fop); }
 
-  JSRuntime* runtime() const {
-    MOZ_ASSERT(runtime_);
-    return runtime_;
-  }
+  explicit FreeOp(JSRuntime* maybeRuntime, bool isDefault = false);
+  ~FreeOp();
 
   bool onMainThread() const { return runtime_ != nullptr; }
 
@@ -78,7 +65,7 @@ class JSFreeOp {
   // The memory should have been associated with the GC thing using
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
   // js::AddCellMemory.
-  void free_(Cell* cell, void* p, size_t nbytes, MemoryUse use);
+  void free_(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   // Deprecated. Where possible, memory should be tracked against the owning GC
   // thing by calling js::AddCellMemory and the memory freed with freeLater()
@@ -86,18 +73,18 @@ class JSFreeOp {
   void freeUntrackedLater(void* p) { queueForFreeLater(p); }
 
   // Queue memory that was associated with a GC thing using js::AddCellMemory to
-  // be freed when the JSFreeOp is destroyed.
+  // be freed when the FreeOp is destroyed.
   //
-  // This should not be called on the default JSFreeOps returned by
+  // This should not be called on the default FreeOps returned by
   // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
   // the runtime itself is destroyed.
   //
   // This is used to ensure that copy-on-write object elements are not freed
   // until all objects that refer to them have been finalized.
-  void freeLater(Cell* cell, void* p, size_t nbytes, MemoryUse use);
+  void freeLater(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
-  bool appendJitPoisonRange(const js::jit::JitPoisonRange& range) {
-    // JSFreeOps other than the defaultFreeOp() are constructed on the stack,
+  bool appendJitPoisonRange(const jit::JitPoisonRange& range) {
+    // FreeOps other than the defaultFreeOp() are constructed on the stack,
     // and won't hold onto the pointers to free indefinitely.
     MOZ_ASSERT(!isDefaultFreeOp());
 
@@ -122,7 +109,7 @@ class JSFreeOp {
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
   // js::AddCellMemory.
   template <class T>
-  void delete_(Cell* cell, T* p, MemoryUse use) {
+  void delete_(gc::Cell* cell, T* p, MemoryUse use) {
     delete_(cell, p, sizeof(T), use);
   }
 
@@ -133,7 +120,7 @@ class JSFreeOp {
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
   // js::AddCellMemory.
   template <class T>
-  void delete_(Cell* cell, T* p, size_t nbytes, MemoryUse use) {
+  void delete_(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use) {
     if (p) {
       p->~T();
       free_(cell, p, nbytes, use);
@@ -152,7 +139,7 @@ class JSFreeOp {
   // each zone. If this is the case then some other form of accounting would be
   // more appropriate.
   template <class T>
-  void release(Cell* cell, T* p, MemoryUse use) {
+  void release(gc::Cell* cell, T* p, MemoryUse use) {
     release(cell, p, sizeof(T), use);
   }
 
@@ -163,14 +150,16 @@ class JSFreeOp {
   // js::InitReservedSlot or js::InitObjectPrivate, or possibly
   // js::AddCellMemory.
   template <class T>
-  void release(Cell* cell, T* p, size_t nbytes, MemoryUse use);
+  void release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use);
 
   // Update the memory accounting for a GC for memory freed by some other
   // method.
-  void removeCellMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void removeCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use);
 
  private:
   void queueForFreeLater(void* p);
 };
+
+}  // namespace js
 
 #endif  // gc_FreeOp_h

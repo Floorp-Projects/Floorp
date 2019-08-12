@@ -65,6 +65,7 @@ class AutoRealm;
 class CrossCompartmentKey;
 class Debugger;
 class DebuggerEnvironment;
+class FreeOp;
 class PromiseObject;
 namespace gc {
 struct Cell;
@@ -733,7 +734,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   enum class FromSweep { No, Yes };
 
   MOZ_MUST_USE bool addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> obj);
-  void removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
+  void removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
                             WeakGlobalObjectSet::Enum* debugEnum,
                             FromSweep fromSweep);
 
@@ -1058,7 +1059,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   WeakGlobalObjectSet::Range allDebuggees() const { return debuggees.all(); }
 
-  static void detachAllDebuggersFromGlobal(JSFreeOp* fop, GlobalObject* global);
+  static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
 #ifdef DEBUG
   static bool isDebuggerCrossCompartmentEdge(JSObject* obj,
                                              const js::gc::Cell* cell);
@@ -1236,7 +1237,7 @@ struct Handler {
   virtual void hold(JSObject* owner) = 0;
 
   /* Report that this Handler is no longer held by owner. See comment above. */
-  virtual void drop(JSFreeOp* fop, JSObject* owner) = 0;
+  virtual void drop(js::FreeOp* fop, JSObject* owner) = 0;
 
   /*
    * Trace the reference to the handler. This method will be called by the
@@ -1280,7 +1281,7 @@ class BreakpointSite {
   size_t allocSize();
 
  protected:
-  virtual void recompile(JSFreeOp* fop) = 0;
+  virtual void recompile(FreeOp* fop) = 0;
   bool isEnabled() const { return enabledCount > 0; }
 
  public:
@@ -1290,10 +1291,10 @@ class BreakpointSite {
   bool hasBreakpoint(Breakpoint* bp);
   Type type() const { return type_; }
 
-  void inc(JSFreeOp* fop);
-  void dec(JSFreeOp* fop);
+  void inc(FreeOp* fop);
+  void dec(FreeOp* fop);
   bool isEmpty() const;
-  virtual void destroyIfEmpty(JSFreeOp* fop) = 0;
+  virtual void destroyIfEmpty(FreeOp* fop) = 0;
 
   inline JSBreakpointSite* asJS();
   inline WasmBreakpointSite* asWasm();
@@ -1343,7 +1344,7 @@ class Breakpoint {
   Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
 
   enum MayDestroySite { False, True };
-  void destroy(JSFreeOp* fop,
+  void destroy(FreeOp* fop,
                MayDestroySite mayDestroySite = MayDestroySite::True);
 
   Breakpoint* nextInDebugger();
@@ -1360,12 +1361,12 @@ class JSBreakpointSite : public BreakpointSite {
   jsbytecode* const pc;
 
  protected:
-  void recompile(JSFreeOp* fop) override;
+  void recompile(FreeOp* fop) override;
 
  public:
   JSBreakpointSite(JSScript* script, jsbytecode* pc);
 
-  void destroyIfEmpty(JSFreeOp* fop) override;
+  void destroyIfEmpty(FreeOp* fop) override;
 };
 
 inline JSBreakpointSite* BreakpointSite::asJS() {
@@ -1379,12 +1380,12 @@ class WasmBreakpointSite : public BreakpointSite {
   uint32_t offset;
 
  private:
-  void recompile(JSFreeOp* fop) override;
+  void recompile(FreeOp* fop) override;
 
  public:
   WasmBreakpointSite(wasm::Instance* instance, uint32_t offset);
 
-  void destroyIfEmpty(JSFreeOp* fop) override;
+  void destroyIfEmpty(FreeOp* fop) override;
 };
 
 inline WasmBreakpointSite* BreakpointSite::asWasm() {

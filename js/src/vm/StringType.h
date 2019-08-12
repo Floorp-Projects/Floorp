@@ -546,7 +546,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
 
   /* Only called by the GC for strings with the AllocKind::STRING kind. */
 
-  inline void finalize(JSFreeOp* fop);
+  inline void finalize(js::FreeOp* fop);
 
   /* Gets the number of bytes that the chars take on the heap. */
 
@@ -982,7 +982,7 @@ class JSFlatString : public JSLinearString {
 
   inline size_t allocSize() const;
 
-  inline void finalize(JSFreeOp* fop);
+  inline void finalize(js::FreeOp* fop);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dumpRepresentation(js::GenericPrinter& out, int indent) const;
@@ -1115,7 +1115,7 @@ class JSFatInlineString : public JSInlineString {
 
   // Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING
   // kind.
-  MOZ_ALWAYS_INLINE void finalize(JSFreeOp* fop);
+  MOZ_ALWAYS_INLINE void finalize(js::FreeOp* fop);
 };
 
 static_assert(sizeof(JSFatInlineString) % js::gc::CellAlignBytes == 0,
@@ -1145,7 +1145,7 @@ class JSExternalString : public JSLinearString {
 
   // Only called by the GC for strings with the AllocKind::EXTERNAL_STRING
   // kind.
-  inline void finalize(JSFreeOp* fop);
+  inline void finalize(js::FreeOp* fop);
 
   // Free the external chars and allocate a new buffer, converting this to a
   // flat string (which still lives in an AllocKind::EXTERNAL_STRING
@@ -1236,7 +1236,7 @@ class FatInlineAtom : public JSAtom {
   HashNumber hash() const { return hash_; }
   void initHash(HashNumber hash) { hash_ = hash; }
 
-  inline void finalize(JSFreeOp* fop);
+  inline void finalize(js::FreeOp* fop);
 };
 
 static_assert(

@@ -174,7 +174,7 @@ struct JSContext : public JS::RootingContext,
   // Free lists for parallel allocation in the atoms zone on helper threads.
   js::ContextData<js::gc::FreeLists*> atomsZoneFreeLists_;
 
-  js::ContextData<JSFreeOp> defaultFreeOp_;
+  js::ContextData<js::FreeOp> defaultFreeOp_;
 
   // Thread that the JSContext is currently running on, if in use.
   js::Thread::Id currentThread_;
@@ -297,7 +297,7 @@ struct JSContext : public JS::RootingContext,
     return *runtime_->wellKnownSymbols;
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
-  JSFreeOp* defaultFreeOp() { return &defaultFreeOp_.ref(); }
+  js::FreeOp* defaultFreeOp() { return &defaultFreeOp_.ref(); }
   void* stackLimitAddress(JS::StackKind kind) {
     return &nativeStackLimit[kind];
   }
@@ -1288,13 +1288,13 @@ class MOZ_RAII AutoSetThreadIsPerformingGC {
 
  public:
   AutoSetThreadIsPerformingGC() : cx(TlsContext.get()) {
-    JSFreeOp* fop = cx->defaultFreeOp();
+    FreeOp* fop = cx->defaultFreeOp();
     MOZ_ASSERT(!fop->isCollecting());
     fop->isCollecting_ = true;
   }
 
   ~AutoSetThreadIsPerformingGC() {
-    JSFreeOp* fop = cx->defaultFreeOp();
+    FreeOp* fop = cx->defaultFreeOp();
     MOZ_ASSERT(fop->isCollecting());
     fop->isCollecting_ = false;
   }

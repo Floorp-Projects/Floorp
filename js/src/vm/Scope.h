@@ -382,7 +382,7 @@ class Scope : public js::gc::TenuredCell {
   static Scope* clone(JSContext* cx, HandleScope scope, HandleScope enclosing);
 
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(FreeOp* fop);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

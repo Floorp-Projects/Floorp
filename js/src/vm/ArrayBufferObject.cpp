@@ -938,7 +938,7 @@ ArrayBufferObject::FreeInfo* ArrayBufferObject::freeInfo() const {
   return reinterpret_cast<FreeInfo*>(inlineDataPointer());
 }
 
-void ArrayBufferObject::releaseData(JSFreeOp* fop) {
+void ArrayBufferObject::releaseData(FreeOp* fop) {
   switch (bufferKind()) {
     case INLINE_DATA:
       // Inline data doesn't require releasing.
@@ -1479,7 +1479,7 @@ void ArrayBufferObject::addSizeOfExcludingThis(
 }
 
 /* static */
-void ArrayBufferObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void ArrayBufferObject::finalize(FreeOp* fop, JSObject* obj) {
   obj->as<ArrayBufferObject>().releaseData(fop);
 }
 

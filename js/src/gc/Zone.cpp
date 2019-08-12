@@ -177,7 +177,7 @@ Zone::DebuggerVector* Zone::getOrCreateDebuggers(JSContext* cx) {
   return debuggers;
 }
 
-void Zone::sweepBreakpoints(JSFreeOp* fop) {
+void Zone::sweepBreakpoints(FreeOp* fop) {
   if (fop->runtime()->debuggerList().isEmpty()) {
     return;
   }
@@ -343,7 +343,7 @@ void Zone::sweepWeakMaps() {
   WeakMapBase::sweepZone(this);
 }
 
-void Zone::discardJitCode(JSFreeOp* fop,
+void Zone::discardJitCode(FreeOp* fop,
                           ShouldDiscardBaselineCode discardBaselineCode,
                           ShouldDiscardJitScripts discardJitScripts) {
   if (!jitZone()) {
@@ -540,7 +540,7 @@ void Zone::deleteEmptyCompartment(JS::Compartment* comp) {
   MOZ_ASSERT(comp->realms().length() == 1);
 
   Realm* realm = comp->realms()[0];
-  JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
+  FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
   realm->destroy(fop);
   comp->destroy(fop);
 

@@ -367,7 +367,7 @@ class PropertyIteratorObject : public NativeObject {
 
  private:
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
 class ArrayIteratorObject : public NativeObject {

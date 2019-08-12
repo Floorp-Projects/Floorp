@@ -2651,7 +2651,7 @@ bool js::ClassCanHaveExtraProperties(const Class* clasp) {
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
 }
 
-void TypeZone::processPendingRecompiles(JSFreeOp* fop,
+void TypeZone::processPendingRecompiles(FreeOp* fop,
                                         RecompileInfoVector& recompiles) {
   MOZ_ASSERT(!recompiles.empty());
 
@@ -4486,7 +4486,7 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
   if (zone->types.hadOOMSweepingTypes()) {
     gc::AutoSetThreadIsSweeping threadIsSweeping;
     JSRuntime* rt = zone->runtimeFromMainThread();
-    JSFreeOp fop(rt);
+    FreeOp fop(rt);
     js::CancelOffThreadIonCompile(rt);
     zone->setPreservingCode(false);
     zone->discardJitCode(&fop, Zone::KeepBaselineCode);

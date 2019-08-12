@@ -1125,6 +1125,15 @@ extern JS_FRIEND_API const DOMCallbacks* GetDOMCallbacks(JSContext* cx);
 
 extern JS_FRIEND_API JSObject* GetTestingFunctions(JSContext* cx);
 
+/**
+ * Helper to convert FreeOp to JSFreeOp when the definition of FreeOp is not
+ * available and the compiler does not know that FreeOp inherits from
+ * JSFreeOp.
+ */
+inline JSFreeOp* CastToJSFreeOp(FreeOp* fop) {
+  return reinterpret_cast<JSFreeOp*>(fop);
+}
+
 /* Implemented in jsexn.cpp. */
 
 /**

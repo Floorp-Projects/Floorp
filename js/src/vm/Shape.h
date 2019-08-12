@@ -515,9 +515,9 @@ class ShapeCachePtr {
     p = icptr;
   }
 
-  void destroy(JSFreeOp* fop, BaseShape* base);
+  void destroy(FreeOp* fop, BaseShape* base);
 
-  void maybePurgeCache(JSFreeOp* fop, BaseShape* base);
+  void maybePurgeCache(FreeOp* fop, BaseShape* base);
 
   void trace(JSTracer* trc);
 
@@ -669,7 +669,7 @@ class BaseShape : public gc::TenuredCell {
   BaseShape& operator=(const BaseShape& other) = delete;
 
  public:
-  void finalize(JSFreeOp* fop);
+  void finalize(FreeOp* fop);
 
   explicit inline BaseShape(const StackBaseShape& base);
 
@@ -740,7 +740,7 @@ class BaseShape : public gc::TenuredCell {
     return (cache_.isIC()) ? cache_.getICPointer() : nullptr;
   }
 
-  void maybePurgeCache(JSFreeOp* fop) { cache_.maybePurgeCache(fop, this); }
+  void maybePurgeCache(FreeOp* fop) { cache_.maybePurgeCache(fop, this); }
 
   uint32_t slotSpan() const {
     MOZ_ASSERT(isOwned());
@@ -1353,9 +1353,9 @@ class Shape : public gc::TenuredCell {
   void dumpSubtree(int level, js::GenericPrinter& out) const;
 #endif
 
-  void sweep(JSFreeOp* fop);
-  void finalize(JSFreeOp* fop);
-  void removeChild(JSFreeOp* fop, Shape* child);
+  void sweep(FreeOp* fop);
+  void finalize(FreeOp* fop);
+  void removeChild(FreeOp* fop, Shape* child);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Shape;
 

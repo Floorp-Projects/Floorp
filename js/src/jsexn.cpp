@@ -45,7 +45,7 @@
 
 using namespace js;
 
-static void exn_finalize(JSFreeOp* fop, JSObject* obj);
+static void exn_finalize(FreeOp* fop, JSObject* obj);
 
 static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp);
 
@@ -337,7 +337,7 @@ JSString* js::ComputeStackString(JSContext* cx) {
   return str.get();
 }
 
-static void exn_finalize(JSFreeOp* fop, JSObject* obj) {
+static void exn_finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport()) {
     // Bug 1560019: This allocation is not currently tracked.

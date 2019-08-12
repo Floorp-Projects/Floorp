@@ -27,11 +27,11 @@ typedef uint8_t jsbytecode;
 class JSAtom;
 struct JSContext;
 class JSFunction;
-class JSFreeOp;
 class JSObject;
 struct JSRuntime;
 class JSScript;
 class JSString;
+struct JSFreeOp;
 
 namespace js {
 class TempAllocPolicy;

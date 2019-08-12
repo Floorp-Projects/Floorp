@@ -324,7 +324,7 @@ inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use,
 // Initialize an object's reserved slot with a private value pointing to
 // malloc-allocated memory and associate the memory with the object.
 //
-// This call should be matched with a call to JSFreeOp::free_/delete_ in the
+// This call should be matched with a call to FreeOp::free_/delete_ in the
 // object's finalizer to free the memory and update the memory accounting.
 
 inline void InitReservedSlot(NativeObject* obj, uint32_t slot, void* ptr,
@@ -341,7 +341,7 @@ inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
 // Initialize an object's private slot with a pointer to malloc-allocated memory
 // and associate the memory with the object.
 //
-// This call should be matched with a call to JSFreeOp::free_/delete_ in the
+// This call should be matched with a call to FreeOp::free_/delete_ in the
 // object's finalizer to free the memory and update the memory accounting.
 
 inline void InitObjectPrivate(NativeObject* obj, void* ptr, size_t nbytes,

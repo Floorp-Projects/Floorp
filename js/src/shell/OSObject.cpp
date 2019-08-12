@@ -429,7 +429,7 @@ class FileObject : public NativeObject {
     return obj;
   }
 
-  static void finalize(JSFreeOp* fop, JSObject* obj) {
+  static void finalize(FreeOp* fop, JSObject* obj) {
     FileObject* fileObj = &obj->as<FileObject>();
     RCFile* file = fileObj->rcFile();
     fop->removeCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);

@@ -47,7 +47,7 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto,
   setGeneration(zone()->types.generation);
 }
 
-void ObjectGroup::finalize(JSFreeOp* fop) {
+void ObjectGroup::finalize(FreeOp* fop) {
   if (auto newScript = newScriptDontCheckGeneration()) {
     newScript->clear();
     fop->delete_(this, newScript, newScript->gcMallocBytes(),
