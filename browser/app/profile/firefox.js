@@ -1373,7 +1373,7 @@ pref("security.insecure_connection_icon.pbmode.enabled", true);
 pref("security.secure_connection_icon_color_gray", false);
 
 // Ignore EV certificate and treat as normal secure connection instead
-pref("security.identityblock.show_extended_validation", true);
+pref("security.identityblock.show_extended_validation", false);
 
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);
