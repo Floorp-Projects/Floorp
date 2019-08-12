@@ -105,14 +105,16 @@ void MobileViewportManager::RequestReflow(bool aForceAdjustResolution) {
   RefreshViewportSize(aForceAdjustResolution);
 }
 
-void MobileViewportManager::ResolutionUpdated() {
+void MobileViewportManager::ResolutionUpdated(
+    mozilla::ResolutionChangeOrigin aOrigin) {
   MVM_LOG("%p: resolution updated\n", this);
 
   if (!mContext) {
     return;
   }
 
-  if (!mPainted) {
+  if (!mPainted &&
+      aOrigin == mozilla::ResolutionChangeOrigin::MainThreadRestore) {
     // Save the value, so our default zoom calculation
     // can take it into account later on.
     SetRestoreResolution(mContext->GetResolution());
@@ -410,6 +412,8 @@ void MobileViewportManager::UpdateResolution(
   }
 
   // If the zoom has changed, update the pres shell resolution accordingly.
+  // We characterize this as MainThreadAdjustment, because we don't want our
+  // change here to be remembered as a restore resolution.
   if (newZoom) {
     // Non-positive zoom factors can produce NaN or negative viewport sizes,
     // so we better be sure we've got a positive zoom factor.
@@ -418,7 +422,7 @@ void MobileViewportManager::UpdateResolution(
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
     mContext->SetResolutionAndScaleTo(
-        resolution.scale, ResolutionChangeOrigin::MainThreadRestore);
+        resolution.scale, ResolutionChangeOrigin::MainThreadAdjustment);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
   }
