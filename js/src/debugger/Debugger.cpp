@@ -49,7 +49,7 @@
 #include "frontend/ParseContext.h"       // for UsedNameTracker
 #include "frontend/Parser.h"             // for Parser
 #include "gc/Barrier.h"                  // for GCPtrNativeObject
-#include "gc/FreeOp.h"                   // for FreeOp
+#include "gc/FreeOp.h"                   // for JSFreeOp
 #include "gc/GC.h"                       // for IterateLazyScripts
 #include "gc/GCMarker.h"                 // for GCMarker
 #include "gc/GCRuntime.h"                // for GCRuntime, AutoEnterIteration

@@ -21,7 +21,6 @@ namespace js {
 
 class BreakpointSite;
 class Debugger;
-class FreeOp;
 
 // DebugScript manages the internal debugger state for a JSScript, which may be
 // associated with multiple Debuggers.
