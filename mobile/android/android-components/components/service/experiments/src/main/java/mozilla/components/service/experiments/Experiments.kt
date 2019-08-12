@@ -12,7 +12,7 @@ import androidx.annotation.VisibleForTesting
 import java.io.File
 
 /**
- * Entry point of the library.
+ * This is the main experiments API, which is exposed through the global [Experiments] object.
  */
 @Suppress("TooManyFunctions")
 open class ExperimentsInternalAPI internal constructor() {
@@ -51,6 +51,8 @@ open class ExperimentsInternalAPI internal constructor() {
      * as shared preferences.  As we cannot enforce through the compiler that the context pass to
      * the initialize function is a applicationContext, there could potentially be a memory leak
      * if the initializing application doesn't comply.
+     *
+     * @param configuration [Configuration] containing information about the experiments endpoint.
      */
     fun initialize(
         applicationContext: Context,
@@ -91,11 +93,17 @@ open class ExperimentsInternalAPI internal constructor() {
         updater.initialize(configuration)
     }
 
+    /**
+     * Returns the [ExperimentsUpdater] for the given [Context].
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExperimentsUpdater(context: Context): ExperimentsUpdater {
         return ExperimentsUpdater(context, this)
     }
 
+    /**
+     * Returns the [FlatFileExperimentStorage] for the given [Context]
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExperimentsStorage(context: Context): FlatFileExperimentStorage {
         return FlatFileExperimentStorage(
@@ -122,8 +130,11 @@ open class ExperimentsInternalAPI internal constructor() {
     }
 
     /**
-     * Requests new experiments from the server and
-     * saves them to local storage
+     * Handles the required tasks when new experiments have been fetched from the server.
+     *
+     * This includes:
+     * - Storing the experiments that have been freshly retrieved from the server.
+     * - Updating the active experiment
      */
     @Synchronized
     internal fun onExperimentsUpdated(serverState: ExperimentsSnapshot) {
@@ -132,7 +143,6 @@ open class ExperimentsInternalAPI internal constructor() {
         experimentsResult = serverState
         storage.save(serverState)
 
-        // TODO
         // Choices here:
         // 1) There currently is an active experiment.
         // 1a) Should it stop? E.g. because it was deleted. If so, continue with 2.
@@ -161,6 +171,10 @@ open class ExperimentsInternalAPI internal constructor() {
         }
     }
 
+    /**
+     * Evaluates the current [experimentsResult] to determine enrollment in any experiments,
+     * including reporting enrollment in an experiment in Glean.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findAndStartActiveExperiment() {
         assert(activeExperiment == null) { "Should not have an active experiment" }
@@ -173,6 +187,10 @@ open class ExperimentsInternalAPI internal constructor() {
         }
     }
 
+    /**
+     * Performs the necessary tasks to stop the active experiment, including reporting this to
+     * telemetry via Glean.
+     */
     private fun stopActiveExperiment() {
         assert(activeExperiment != null) { "Should have an active experiment" }
 
@@ -184,6 +202,9 @@ open class ExperimentsInternalAPI internal constructor() {
         activeExperiment = null
     }
 
+    /**
+     * This function finds and returns any active experiments from persisted storage.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun loadActiveExperiment(
         context: Context,
@@ -244,6 +265,10 @@ open class ExperimentsInternalAPI internal constructor() {
         return evaluator.getExperiment(ExperimentDescriptor(experimentId), experimentsResult.experiments)
     }
 
+    /**
+     * Helper function to perform the tasks necessary to override the experiment once it has been
+     * set using [setOverride] or [setOverrideNow].
+     */
     private fun overrideActiveExperiment() {
         evaluator.findActiveExperiment(context, experimentsResult.experiments)?.let {
             logger.info("""Setting override experiment - id="${it.experiment.id}", branch="${it.branch}"""")
@@ -355,11 +380,21 @@ open class ExperimentsInternalAPI internal constructor() {
     companion object {
         private const val LOG_TAG = "experiments"
         private const val EXPERIMENTS_DATA_DIR = "experiments-service"
-
         private const val EXPERIMENTS_JSON_FILENAME = "experiments.json"
     }
 }
 
+/**
+ * The main Experiments object.
+ *
+ * This is a global object that must be initialized by the application by calling the [initialize]
+ * function before the experiments library can fetch updates from the server or be used to determine
+ * experiment enrollment.
+ *
+ * ```
+ * Experiments.initialize(applicationContext)
+ * ```
+ */
 @SuppressLint("StaticFieldLeak")
 object Experiments : ExperimentsInternalAPI() {
     internal const val SCHEMA_VERSION = 1
