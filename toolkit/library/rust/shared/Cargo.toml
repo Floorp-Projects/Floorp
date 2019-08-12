@@ -34,7 +34,7 @@ xulstore = { path = "../../../components/xulstore", optional = true }
 log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
-jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
+jsrust_shared = { path = "../../../../js/src/rust/shared" }
 arrayvec = "0.4"
 cert_storage = { path = "../../../../security/manager/ssl/cert_storage", optional = true }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
@@ -58,7 +58,7 @@ gecko_refcount_logging = ["geckoservo/gecko_refcount_logging"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 moz_memory = ["mp4parse_capi/mp4parse_fallible"]
 moz_places = ["bookmark_sync"]
-spidermonkey_rust = ["jsrust_shared"]
+spidermonkey_rust = ["jsrust_shared/baldrdash"]
 cranelift_x86 = ["jsrust_shared/cranelift_x86"]
 cranelift_arm32 = ["jsrust_shared/cranelift_arm32"]
 cranelift_arm64 = ["jsrust_shared/cranelift_arm64"]

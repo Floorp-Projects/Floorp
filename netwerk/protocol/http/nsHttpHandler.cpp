@@ -2535,8 +2535,9 @@ nsHttpsHandler::AllowPort(int32_t aPort, const char* aScheme, bool* _retval) {
   return NS_OK;
 }
 
-nsresult nsHttpHandler::EnsureHSTSDataReadyNative(
-    already_AddRefed<mozilla::net::HSTSDataCallbackWrapper> aCallback) {
+NS_IMETHODIMP
+nsHttpHandler::EnsureHSTSDataReadyNative(
+    RefPtr<mozilla::net::HSTSDataCallbackWrapper> aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIURI> uri;
@@ -2546,15 +2547,14 @@ nsresult nsHttpHandler::EnsureHSTSDataReadyNative(
   bool shouldUpgrade = false;
   bool willCallback = false;
   OriginAttributes originAttributes;
-  RefPtr<HSTSDataCallbackWrapper> callback = aCallback;
-  auto func = [callback](bool aResult, nsresult aStatus) {
+  auto func = [callback(aCallback)](bool aResult, nsresult aStatus) {
     callback->DoCallback(aResult);
   };
   rv = NS_ShouldSecureUpgrade(uri, nullptr, nullptr, false, false,
                               originAttributes, shouldUpgrade, std::move(func),
                               willCallback);
   if (NS_FAILED(rv) || !willCallback) {
-    callback->DoCallback(false);
+    aCallback->DoCallback(false);
     return rv;
   }
 
@@ -2600,7 +2600,7 @@ nsHttpHandler::EnsureHSTSDataReady(JSContext* aCx, Promise** aPromise) {
   RefPtr<HSTSDataCallbackWrapper> wrapper =
       new HSTSDataCallbackWrapper(std::move(callback));
   promise.forget(aPromise);
-  return EnsureHSTSDataReadyNative(wrapper.forget());
+  return EnsureHSTSDataReadyNative(wrapper);
 }
 
 void nsHttpHandler::ShutdownConnectionManager() {

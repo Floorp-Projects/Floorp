@@ -234,6 +234,15 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       await tabLoaded(containerTab);
       debug("Wait until inner browser available");
       innerBrowser = await getInnerBrowser(containerBrowser);
+
+      Object.defineProperty(innerBrowser, "outerBrowser", {
+        get() {
+          return tab.linkedBrowser;
+        },
+        configurable: true,
+        enumerable: true,
+      });
+
       addXULBrowserDecorations(innerBrowser);
       if (innerBrowser.isRemoteBrowser != tab.linkedBrowser.isRemoteBrowser) {
         throw new Error(

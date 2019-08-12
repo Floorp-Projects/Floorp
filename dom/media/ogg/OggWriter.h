@@ -23,14 +23,17 @@ class OggWriter : public ContainerWriter {
   OggWriter();
   ~OggWriter();
 
-  nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
+  // Write frames into the ogg container. aFlags should be set to END_OF_STREAM
+  // for the final set of frames.
+  nsresult WriteEncodedTrack(const nsTArray<RefPtr<EncodedFrame>>& aData,
                              uint32_t aFlags = 0) override;
 
-  nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+  nsresult GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                             uint32_t aFlags = 0) override;
 
   // Check metadata type integrity and reject unacceptable track encoder.
-  nsresult SetMetadata(TrackMetadataBase* aMetadata) override;
+  nsresult SetMetadata(
+      const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) override;
 
  private:
   nsresult Init();
@@ -38,7 +41,7 @@ class OggWriter : public ContainerWriter {
   nsresult WriteEncodedData(const nsTArray<uint8_t>& aBuffer, int aDuration,
                             uint32_t aFlags = 0);
 
-  void ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs);
+  void ProduceOggPage(nsTArray<nsTArray<uint8_t>>* aOutputBufs);
   // Store the Medatata from track encoder
   RefPtr<OpusMetadata> mMetadata;
 

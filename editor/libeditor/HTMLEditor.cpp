@@ -4259,7 +4259,7 @@ bool HTMLEditor::IsInVisibleTextFrames(Text& aText) const {
   return isVisible;
 }
 
-bool HTMLEditor::IsVisibleTextNode(Text& aText) {
+bool HTMLEditor::IsVisibleTextNode(Text& aText) const {
   if (!aText.TextDataLength()) {
     return false;
   }
@@ -4268,12 +4268,12 @@ bool HTMLEditor::IsVisibleTextNode(Text& aText) {
     return true;
   }
 
-  WSRunObject wsRunObj(this, &aText, 0);
+  WSRunScanner wsRunScanner(this, &aText, 0);
   nsCOMPtr<nsINode> nextVisibleNode;
   WSType visibleNodeType;
-  wsRunObj.NextVisibleNode(EditorRawDOMPoint(&aText, 0),
-                           address_of(nextVisibleNode), nullptr,
-                           &visibleNodeType);
+  wsRunScanner.NextVisibleNode(EditorRawDOMPoint(&aText, 0),
+                               address_of(nextVisibleNode), nullptr,
+                               &visibleNodeType);
   return (visibleNodeType == WSType::normalWS ||
           visibleNodeType == WSType::text) &&
          &aText == nextVisibleNode;
@@ -4287,7 +4287,7 @@ bool HTMLEditor::IsVisibleTextNode(Text& aText) {
 nsresult HTMLEditor::IsEmptyNode(nsINode* aNode, bool* outIsEmptyNode,
                                  bool aSingleBRDoesntCount,
                                  bool aListOrCellNotEmpty,
-                                 bool aSafeToAskFrames) {
+                                 bool aSafeToAskFrames) const {
   NS_ENSURE_TRUE(aNode && outIsEmptyNode, NS_ERROR_NULL_POINTER);
   *outIsEmptyNode = true;
   bool seenBR = false;
@@ -4301,7 +4301,8 @@ nsresult HTMLEditor::IsEmptyNode(nsINode* aNode, bool* outIsEmptyNode,
 nsresult HTMLEditor::IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyNode,
                                      bool aSingleBRDoesntCount,
                                      bool aListOrCellNotEmpty,
-                                     bool aSafeToAskFrames, bool* aSeenBR) {
+                                     bool aSafeToAskFrames,
+                                     bool* aSeenBR) const {
   NS_ENSURE_TRUE(aNode && outIsEmptyNode && aSeenBR, NS_ERROR_NULL_POINTER);
 
   if (Text* text = aNode->GetAsText()) {

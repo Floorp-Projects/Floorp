@@ -42,6 +42,7 @@ fails-if(Android) == disabled-1.html disabled-1-ref.html
 == width-auto-size-rtl.html width-auto-size-rtl-ref.html
 == width-exact-fit-rtl.html width-auto-size-rtl-ref.html
 == display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
+== button-empty-columns.html button-empty-columns-ref.html
 == 1317351.html 1317351-ref.html
 
 == dynamic-text-indent.html dynamic-text-indent-ref.html
