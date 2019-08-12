@@ -1323,7 +1323,6 @@ class TranslationUnit(ipdl.ast.TranslationUnit):
 # -----------------------------------------------------------------------------
 
 pod_types = {
-    'bool': 1,
     'int8_t': 1,
     'uint8_t': 1,
     'int16_t': 2,
