@@ -83,6 +83,9 @@ add_task(async function test() {
           }
           adjustedCertsElemLabel = adjustedCertsElemLabel
             .replace(/\s+/g, "-")
+            .replace(/\./g, "")
+            .replace(/\//g, "")
+            .replace(/--/g, "-")
             .toLowerCase();
 
           let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
