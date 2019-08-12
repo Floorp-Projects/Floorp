@@ -262,7 +262,7 @@ class TypeZone {
   void addPendingRecompile(JSContext* cx, const RecompileInfo& info);
   void addPendingRecompile(JSContext* cx, JSScript* script);
 
-  void processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles);
+  void processPendingRecompiles(JSFreeOp* fop, RecompileInfoVector& recompiles);
 
   bool isSweepingTypes() const { return sweepingTypes; }
   void setSweepingTypes(bool sweeping) {

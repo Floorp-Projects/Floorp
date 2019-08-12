@@ -715,7 +715,7 @@ void ProxyObject::trace(JSTracer* trc, JSObject* obj) {
   Proxy::trace(trc, obj);
 }
 
-static void proxy_Finalize(FreeOp* fop, JSObject* obj) {
+static void proxy_Finalize(JSFreeOp* fop, JSObject* obj) {
   // Suppress a bogus warning about finalize().
   JS::AutoSuppressGCAnalysis nogc;
 

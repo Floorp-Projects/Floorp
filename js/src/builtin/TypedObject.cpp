@@ -3027,7 +3027,7 @@ static bool CreateTraceList(JSContext* cx, HandleTypeDescr descr) {
 }
 
 /* static */
-void TypeDescr::finalize(FreeOp* fop, JSObject* obj) {
+void TypeDescr::finalize(JSFreeOp* fop, JSObject* obj) {
   TypeDescr& descr = obj->as<TypeDescr>();
   if (descr.hasTraceList()) {
     auto list = const_cast<uint32_t*>(descr.traceList());

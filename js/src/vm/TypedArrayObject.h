@@ -158,7 +158,7 @@ class TypedArrayObject : public ArrayBufferViewObject {
 
   static bool isOriginalByteOffsetGetter(Native native);
 
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   /* Initialization bits */

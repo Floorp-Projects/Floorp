@@ -1078,7 +1078,7 @@ void PropertyIteratorObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-void PropertyIteratorObject::finalize(FreeOp* fop, JSObject* obj) {
+void PropertyIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   if (NativeIterator* ni =
           obj->as<PropertyIteratorObject>().getNativeIterator()) {
     fop->free_(obj, ni, ni->allocationSize(), MemoryUse::NativeIterator);

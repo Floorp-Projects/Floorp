@@ -166,7 +166,7 @@ inline void JSScript::setBaselineScript(
 }
 
 inline void JSScript::setBaselineScript(
-    js::FreeOp* fop, js::jit::BaselineScript* baselineScript) {
+    JSFreeOp* fop, js::jit::BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
     js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
     clearBaselineScript(fop);
@@ -181,14 +181,14 @@ inline void JSScript::setBaselineScript(
   updateJitCodeRaw(fop->runtime());
 }
 
-inline void JSScript::clearBaselineScript(js::FreeOp* fop) {
+inline void JSScript::clearBaselineScript(JSFreeOp* fop) {
   MOZ_ASSERT(hasBaselineScript());
   fop->removeCellMemory(this, baseline->allocBytes(),
                         js::MemoryUse::BaselineScript);
   baseline = nullptr;
 }
 
-inline void JSScript::clearIonScript(js::FreeOp* fop) {
+inline void JSScript::clearIonScript(JSFreeOp* fop) {
   MOZ_ASSERT(hasIonScript());
   fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
   ion = nullptr;

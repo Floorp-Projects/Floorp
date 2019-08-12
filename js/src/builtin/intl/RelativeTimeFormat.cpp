@@ -126,7 +126,7 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void js::RelativeTimeFormatObject::finalize(FreeOp* fop, JSObject* obj) {
+void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   constexpr auto RT_FORMAT_SLOT =

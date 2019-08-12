@@ -149,7 +149,7 @@ bool js::intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp) {
   return NumberFormat(cx, args, true);
 }
 
-void js::NumberFormatObject::finalize(FreeOp* fop, JSObject* obj) {
+void js::NumberFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   auto* numberFormat = &obj->as<NumberFormatObject>();

@@ -202,7 +202,7 @@ class TypeDescr : public NativeObject {
   void initInstances(const JSRuntime* rt, uint8_t* mem, size_t length);
   void traceInstances(JSTracer* trace, uint8_t* mem, size_t length);
 
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
 typedef Handle<TypeDescr*> HandleTypeDescr;

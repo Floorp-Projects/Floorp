@@ -83,7 +83,7 @@ class RealmInstrumentation {
 
   void trace(JSTracer* trc);
 
-  static void holderFinalize(FreeOp* fop, JSObject* obj);
+  static void holderFinalize(JSFreeOp* fop, JSObject* obj);
   static void holderTrace(JSTracer* trc, JSObject* obj);
 };
 

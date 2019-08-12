@@ -89,7 +89,7 @@ class Symbol : public js::gc::TenuredCell {
       js::TraceManuallyBarrieredEdge(trc, &description_, "description");
     }
   }
-  inline void finalize(js::FreeOp*) {}
+  inline void finalize(JSFreeOp*) {}
 
   static MOZ_ALWAYS_INLINE void writeBarrierPre(Symbol* thing) {
     if (thing && !thing->isWellKnownSymbol()) {

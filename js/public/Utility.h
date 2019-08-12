@@ -488,7 +488,7 @@ static inline void js_free(void* p) {
  * - Ordinarily, use js_free/js_delete.
  *
  * - For deallocations during GC finalization, use one of the following
- *   operations on the FreeOp provided to the finalizer:
+ *   operations on the JSFreeOp provided to the finalizer:
  *
  *     FreeOp::{free_,delete_}
  */
