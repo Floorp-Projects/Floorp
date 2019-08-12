@@ -7140,12 +7140,12 @@ static bool EncodeDestinationOffsetOrFlags(Encoder& e, uint32_t index,
     // and it must be zero.  In the bulk-mem-ops proposal, it is repurposed
     // as a flag field, and if the index is not zero it must be present.
     if (index) {
-      if (!e.writeVarU32(uint32_t(InitializerKind::ActiveWithIndex)) ||
+      if (!e.writeVarU32(uint32_t(DataSegmentKind::ActiveWithIndex)) ||
           !e.writeVarU32(index)) {
         return false;
       }
     } else {
-      if (!e.writeVarU32(uint32_t(InitializerKind::Active))) {
+      if (!e.writeVarU32(uint32_t(DataSegmentKind::Active))) {
         return false;
       }
     }
@@ -7156,7 +7156,7 @@ static bool EncodeDestinationOffsetOrFlags(Encoder& e, uint32_t index,
       return false;
     }
   } else {
-    if (!e.writeVarU32(uint32_t(InitializerKind::Passive))) {
+    if (!e.writeVarU32(uint32_t(DataSegmentKind::Passive))) {
       return false;
     }
   }
