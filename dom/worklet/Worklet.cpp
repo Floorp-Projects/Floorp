@@ -374,9 +374,6 @@ void ExecutionRunnable::RunOnWorkletThread() {
   AutoEntryScript aes(globalScope, "Worklet");
   JSContext* cx = aes.cx();
 
-  JS::Rooted<JSObject*> globalObj(cx, globalScope->GetGlobalJSObject());
-  JSAutoRealm ar(cx, globalObj);
-
   JS::Rooted<JSObject*> module(cx);
   if (!ParseAndLinkModule(cx, &module)) {
     ErrorResult error;
