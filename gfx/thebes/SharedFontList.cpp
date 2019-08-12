@@ -6,6 +6,7 @@
 #include "gfxPlatformFontList.h"
 #include "gfxFontUtils.h"
 #include "gfxFont.h"
+#include "nsReadableUtils.h"
 #include "prerror.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Logging.h"
@@ -747,6 +748,48 @@ Family* FontList::FindFamily(const nsCString& aName) {
       return &families[match];
     }
   }
+
+#ifdef XP_WIN
+  // For Windows only, because of how DWrite munges font family names in some
+  // cases (see
+  // https://msdnshared.blob.core.windows.net/media/MSDNBlogsFS/prod.evol.blogs.msdn.com/CommunityServer.Components.PostAttachments/00/02/24/90/36/WPF%20Font%20Selection%20Model.pdf
+  // and discussion on the OpenType list), try stripping any known "regular"
+  // style name from the end of the requested family name.
+  // After the deferred font loader has finished, this is no longer needed as
+  // the "real" family names will have been found in AliasFamilies() above.
+  if (!header.mAliasCount && aName.Contains(' ')) {
+    const nsLiteralCString kStyleSuffixes[] = {
+        nsLiteralCString(" book"),   nsLiteralCString(" medium"),
+        nsLiteralCString(" normal"), nsLiteralCString(" regular"),
+        nsLiteralCString(" roman"),  nsLiteralCString(" upright")};
+    for (const auto& styleName : kStyleSuffixes) {
+      if (StringEndsWith(aName, styleName)) {
+        // See if we have a known family that matches the "base" family name
+        // with trailing style-name element stripped off.
+        nsAutoCString strippedName(aName.BeginReading(),
+                                   aName.Length() - styleName.Length());
+        families = Families();
+        if (BinarySearchIf(families, 0, header.mFamilyCount,
+                           FamilyNameComparator(this, strippedName), &match)) {
+          // If so, this may be a possible family to satisfy the search; check
+          // if the extended family name was actually found as an alternate
+          // (either it's already in mAliasTable, or it gets added there when
+          // we call ReadFaceNamesForFamily on this candidate).
+          Family* candidateFamily = &families[match];
+          auto pfl = gfxPlatformFontList::PlatformFontList();
+          if (pfl->mAliasTable.Lookup(aName)) {
+            return candidateFamily;
+          }
+          pfl->ReadFaceNamesForFamily(candidateFamily, false);
+          if (pfl->mAliasTable.Lookup(aName)) {
+            return candidateFamily;
+          }
+        }
+        break;
+      }
+    }
+  }
+#endif
 
   return nullptr;
 }
