@@ -34,7 +34,6 @@ class JSScript;
 class JSString;
 
 namespace js {
-using FreeOp = JSFreeOp;
 class TempAllocPolicy;
 };  // namespace js
 

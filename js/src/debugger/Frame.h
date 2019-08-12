@@ -28,7 +28,6 @@
 namespace js {
 
 class AbstractGeneratorObject;
-class FreeOp;
 class GlobalObject;
 
 /*
