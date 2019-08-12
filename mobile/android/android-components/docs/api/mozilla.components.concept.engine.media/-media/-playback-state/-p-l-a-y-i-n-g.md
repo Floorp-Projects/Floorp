@@ -2,7 +2,7 @@
 
 # PLAYING
 
-`PLAYING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L80)
+`PLAYING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L86)
 
 Sent when the media has enough data to start playing, after the play event, but also when recovering from
 being stalled, when looping media restarts, and after seeked, if it was playing before seeking.

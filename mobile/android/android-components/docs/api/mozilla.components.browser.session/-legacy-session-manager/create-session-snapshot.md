@@ -2,4 +2,4 @@
 
 # createSessionSnapshot
 
-`fun createSessionSnapshot(session: `[`Session`](../-session/index.md)`): `[`Item`](../-session-manager/-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L82)
+`fun createSessionSnapshot(session: `[`Session`](../-session/index.md)`): `[`Item`](../-session-manager/-snapshot/-item/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/LegacySessionManager.kt#L84)

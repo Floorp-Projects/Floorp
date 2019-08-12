@@ -2,7 +2,7 @@
 
 # MediaFeature
 
-`class MediaFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/MediaFeature.kt#L22)
+`class MediaFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/MediaFeature.kt#L23)
 
 Feature implementation for media playback in web content. This feature takes care of:
 
