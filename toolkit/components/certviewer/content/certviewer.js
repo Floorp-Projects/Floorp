@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async e => {
   let url = new URL(document.URL);
   let certInfo = url.searchParams.getAll("cert");
   if (certInfo.length === 0) {
-    await render(false, true);
+    await render(true);
     return;
   }
   certInfo = certInfo.map(cert => decodeURIComponent(cert));
