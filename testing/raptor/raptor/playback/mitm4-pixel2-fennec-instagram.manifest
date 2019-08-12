@@ -1,10 +1,10 @@
 [
   {
-    "size": 3640621,
+    "size":  10623385,
     "visibility": "public",
-    "digest": "f779e68181cf1d34e3ac9624b3fbf46607827796baf8878588b5651cf3e28ff2b3d26806ac8bbc44e892c06233a6c2e6db598aa6d34ea90a4c3738d429425142",
+    "digest": "c3ab585ec654c021877de3f69e82a9fa4f0efc1549ec885d3bc3c06aab1f7126ec23be9b207f18efa14b3959e64b123c3ca239e43814503a74e09c69795b111a",
     "algorithm": "sha512",
-    "filename": "mitm4-pixel2-fennec-jianshu.zip",
+    "filename": "mitm4-pixel2-fennec-instagram.zip",
     "unpack": true
   }
 ]
