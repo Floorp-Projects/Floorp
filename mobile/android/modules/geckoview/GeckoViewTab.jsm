@@ -65,15 +65,6 @@ class BrowserAppShim {
     return this.selectedBrowser;
   }
 
-  // ext-tabs calls tabListener.initTabReady(); which rely on deck when initializing ProgressListeners.
-  // Deck will be removed by https://phabricator.services.mozilla.com/D36575.
-  get deck() {
-    return {
-      addEventListener() {},
-      removeEventListener() {},
-    };
-  }
-
   static getBrowserApp(window) {
     let { BrowserApp } = window;
 
