@@ -38,8 +38,6 @@ class ApplicationPanel {
     this.panelWin = null;
     this.toolbox = null;
     this.emit("destroyed");
-
-    return this;
   }
 }
 
