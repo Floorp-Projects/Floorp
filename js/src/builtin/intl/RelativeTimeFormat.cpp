@@ -106,11 +106,9 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  relativeTimeFormat->setReservedSlot(RelativeTimeFormatObject::INTERNALS_SLOT,
-                                      NullValue());
-  relativeTimeFormat->setReservedSlot(
-      RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT,
-      PrivateValue(nullptr));
+  relativeTimeFormat->setFixedSlot(RelativeTimeFormatObject::INTERNALS_SLOT,
+                                   NullValue());
+  relativeTimeFormat->setRelativeDateTimeFormatter(nullptr);
 
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
@@ -129,12 +127,8 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
 void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  constexpr auto RT_FORMAT_SLOT =
-      RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
-  const Value& slot =
-      obj->as<RelativeTimeFormatObject>().getReservedSlot(RT_FORMAT_SLOT);
   if (URelativeDateTimeFormatter* rtf =
-          static_cast<URelativeDateTimeFormatter*>(slot.toPrivate())) {
+          obj->as<RelativeTimeFormatObject>().getRelativeDateTimeFormatter()) {
     ureldatefmt_close(rtf);
   }
 }
@@ -365,17 +359,14 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Obtain a cached URelativeDateTimeFormatter object.
-  constexpr auto RT_FORMAT_SLOT =
-      RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
-  void* priv = relativeTimeFormat->getReservedSlot(RT_FORMAT_SLOT).toPrivate();
   URelativeDateTimeFormatter* rtf =
-      static_cast<URelativeDateTimeFormatter*>(priv);
+      relativeTimeFormat->getRelativeDateTimeFormatter();
   if (!rtf) {
     rtf = NewURelativeDateTimeFormatter(cx, relativeTimeFormat);
     if (!rtf) {
       return false;
     }
-    relativeTimeFormat->setReservedSlot(RT_FORMAT_SLOT, PrivateValue(rtf));
+    relativeTimeFormat->setRelativeDateTimeFormatter(rtf);
   }
 
   URelativeDateTimeUnit relDateTimeUnit;

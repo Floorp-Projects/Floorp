@@ -110,10 +110,9 @@ static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
     return false;
   }
 
-  dateTimeFormat->setReservedSlot(DateTimeFormatObject::INTERNALS_SLOT,
-                                  NullValue());
-  dateTimeFormat->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT,
-                                  PrivateValue(nullptr));
+  dateTimeFormat->setFixedSlot(DateTimeFormatObject::INTERNALS_SLOT,
+                               NullValue());
+  dateTimeFormat->setDateFormat(nullptr);
 
   RootedValue thisValue(
       cx, construct ? ObjectValue(*dateTimeFormat) : args.thisv());
@@ -159,9 +158,7 @@ bool js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
 void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  const Value& slot = obj->as<DateTimeFormatObject>().getReservedSlot(
-      DateTimeFormatObject::UDATE_FORMAT_SLOT);
-  if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate())) {
+  if (UDateFormat* df = obj->as<DateTimeFormatObject>().getDateFormat()) {
     udat_close(df);
   }
 }
@@ -959,17 +956,13 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Obtain a cached UDateFormat object.
-  void* priv =
-      dateTimeFormat->getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT)
-          .toPrivate();
-  UDateFormat* df = static_cast<UDateFormat*>(priv);
+  UDateFormat* df = dateTimeFormat->getDateFormat();
   if (!df) {
     df = NewUDateFormat(cx, dateTimeFormat);
     if (!df) {
       return false;
     }
-    dateTimeFormat->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT,
-                                    PrivateValue(df));
+    dateTimeFormat->setDateFormat(df);
   }
 
   // Use the UDateFormat to actually format the time stamp.

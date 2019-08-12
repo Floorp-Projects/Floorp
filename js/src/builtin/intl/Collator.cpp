@@ -98,9 +98,8 @@ static bool Collator(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  collator->setReservedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
-  collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                            PrivateValue(nullptr));
+  collator->setFixedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
+  collator->setCollator(nullptr);
 
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
@@ -131,9 +130,7 @@ bool js::intl_Collator(JSContext* cx, unsigned argc, Value* vp) {
 void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  const Value& slot =
-      obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
-  if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate())) {
+  if (UCollator* coll = obj->as<CollatorObject>().getCollator()) {
     ucol_close(coll);
   }
 }
@@ -481,16 +478,13 @@ bool js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp) {
                                    &args[0].toObject().as<CollatorObject>());
 
   // Obtain a cached UCollator object.
-  void* priv =
-      collator->getReservedSlot(CollatorObject::UCOLLATOR_SLOT).toPrivate();
-  UCollator* coll = static_cast<UCollator*>(priv);
+  UCollator* coll = collator->getCollator();
   if (!coll) {
     coll = NewUCollator(cx, collator);
     if (!coll) {
       return false;
     }
-    collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                              PrivateValue(coll));
+    collator->setCollator(coll);
   }
 
   // Use the UCollator to actually compare the strings.

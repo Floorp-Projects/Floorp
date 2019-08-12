@@ -15,6 +15,8 @@
 #include "js/RootingAPI.h"
 #include "vm/NativeObject.h"
 
+using UDateFormat = void*;
+
 namespace js {
 
 class GlobalObject;
@@ -30,6 +32,18 @@ class DateTimeFormatObject : public NativeObject {
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
+
+  UDateFormat* getDateFormat() const {
+    const auto& slot = getFixedSlot(UDATE_FORMAT_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UDateFormat*>(slot.toPrivate());
+  }
+
+  void setDateFormat(UDateFormat* dateFormat) {
+    setFixedSlot(UDATE_FORMAT_SLOT, PrivateValue(dateFormat));
+  }
 
  private:
   static const ClassOps classOps_;
