@@ -328,7 +328,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
       data: layout,
     });
-    if (layout.spocs && layout.spocs.url) {
+    if (
+      layout.spocs &&
+      layout.spocs.url &&
+      layout.spocs.url !==
+        this.store.getState().DiscoveryStream.spocs.spocs_endpoint
+    ) {
       sendUpdate({
         type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
         data: layout.spocs.url,
