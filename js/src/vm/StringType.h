@@ -334,7 +334,7 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
 
     /* Ensure js::shadow::String has the same layout. */
     using JS::shadow::String;
-    static_assert(JSString::offsetOfFlags() == offsetof(String, flags_),
+    static_assert(JSString::offsetOfRawFlagsField() == offsetof(String, flags_),
                   "shadow::String flags offset must match JSString");
 #if JS_BITS_PER_WORD == 32
     static_assert(JSString::offsetOfLength() == offsetof(String, length_),

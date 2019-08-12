@@ -527,6 +527,11 @@ class CellWithLengthAndFlags : public BaseCell {
     return data;
   }
 
+  // Returns the offset of flags_. JIT code should use offsetOfFlags below.
+  static constexpr size_t offsetOfRawFlagsField() {
+    return offsetof(CellWithLengthAndFlags, flags_);
+  }
+
   // Offsets for direct field from jit code. A number of places directly
   // access 32-bit length and flags fields so do endian trickery here.
 #if JS_BITS_PER_WORD == 32
