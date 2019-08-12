@@ -3,12 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Services = require("Services");
+
 const {
   ENABLE,
   DISABLE,
   RESET,
   UPDATE_CAN_BE_DISABLED,
   UPDATE_CAN_BE_ENABLED,
+  UPDATE_PREF,
+  PREF_KEYS,
 } = require("../constants");
 
 /**
@@ -28,6 +32,11 @@ exports.updateCanBeDisabled = canBeDisabled => dispatch =>
  */
 exports.updateCanBeEnabled = canBeEnabled => dispatch =>
   dispatch({ canBeEnabled, type: UPDATE_CAN_BE_ENABLED });
+
+exports.updatePref = (name, value) => dispatch => {
+  dispatch({ type: UPDATE_PREF, name, value });
+  Services.prefs.setBoolPref(PREF_KEYS[name], value);
+};
 
 /**
  * Enable accessibility services in order to view accessible tree.

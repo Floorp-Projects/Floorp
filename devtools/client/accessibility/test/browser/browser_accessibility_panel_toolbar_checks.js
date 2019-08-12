@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* global toggleFilter */
+/* global toggleMenuItem */
 
 const TEST_URI = `<html>
   <head>
@@ -26,70 +26,70 @@ const tests = [
   {
     desc: "Check initial state.",
     expected: {
-      toolbar: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
   {
     desc: "Toggle first filter (all) to activate.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 1);
+      await toggleMenuItem(doc, 0, 1);
     },
     expected: {
-      toolbar: [false, true, true, true],
+      activeToolbarFilters: [false, true, true, true],
     },
   },
   {
     desc: "Click on the filter again.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 1);
+      await toggleMenuItem(doc, 0, 1);
     },
     expected: {
-      toolbar: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
   {
     desc: "Toggle first custom filter to activate.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 2);
+      await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      toolbar: [false, false, true, false],
+      activeToolbarFilters: [false, false, true, false],
     },
   },
   {
     desc: "Click on the filter again.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 2);
+      await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      toolbar: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
   {
     desc: "Toggle first custom filter to activate.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 2);
+      await toggleMenuItem(doc, 0, 2);
     },
     expected: {
-      toolbar: [false, false, true, false],
+      activeToolbarFilters: [false, false, true, false],
     },
   },
   {
     desc: "Toggle second custom filter to activate.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 3);
+      await toggleMenuItem(doc, 0, 3);
     },
     expected: {
-      toolbar: [false, true, true, true],
+      activeToolbarFilters: [false, true, true, true],
     },
   },
   {
     desc: "Click on the none filter to de-activate all.",
     setup: async ({ doc }) => {
-      await toggleFilter(doc, 0);
+      await toggleMenuItem(doc, 0, 0);
     },
     expected: {
-      toolbar: [true, false, false, false],
+      activeToolbarFilters: [true, false, false, false],
     },
   },
 ];

@@ -53,13 +53,13 @@ class AccessibilityTreeFilter extends Component {
       auditing: PropTypes.array.isRequired,
       filters: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
-      walker: PropTypes.object.isRequired,
+      accessibilityWalker: PropTypes.object.isRequired,
       describedby: PropTypes.string,
     };
   }
 
   async toggleFilter(filterKey) {
-    const { dispatch, filters, walker } = this.props;
+    const { dispatch, filters, accessibilityWalker } = this.props;
 
     if (filterKey !== FILTERS.NONE && !filters[filterKey]) {
       if (gTelemetry) {
@@ -67,7 +67,7 @@ class AccessibilityTreeFilter extends Component {
       }
 
       dispatch(actions.auditing(filterKey));
-      await dispatch(actions.audit(walker, filterKey));
+      await dispatch(actions.audit(accessibilityWalker, filterKey));
     }
 
     // We wait to dispatch filter toggle until the tree is ready to be filtered
