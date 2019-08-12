@@ -262,10 +262,29 @@ class nsCocoaUtils {
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
       @param aResult the resulting NSImage
       @param scaleFactor the desired scale factor of the NSImage (2 for a retina display)
+      @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
+                              bool that indicates whether the RGB values on all
+                              pixels are zero
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
   static nsresult CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
-                                                  NSImage** aResult, CGFloat scaleFactor);
+                                                  NSImage** aResult, CGFloat scaleFactor,
+                                                  bool* aIsEntirelyBlack = nullptr);
+
+  /** Creates a Cocoa <code>NSImage</code> from a frame of an <code>imgIContainer</code>.
+      The new <code>NSImage</code> will have both a regular and HiDPI representation.
+      The caller owns the <code>NSImage</code>.
+      @param aImage the image to extract a frame from
+      @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aResult the resulting NSImage
+      @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
+                              bool that indicates whether the RGB values on all
+                              pixels are zero
+      @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
+   */
+  static nsresult CreateDualRepresentationNSImageFromImageContainer(
+      imgIContainer* aImage, uint32_t aWhichFrame, NSImage** aResult,
+      bool* aIsEntirelyBlack = nullptr);
 
   /**
    * Returns nsAString for aSrc.

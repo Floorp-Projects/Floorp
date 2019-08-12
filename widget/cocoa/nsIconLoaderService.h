@@ -23,9 +23,11 @@ class imgRequestProxy;
 
 class nsIconLoaderService : public imgINotificationObserver {
  public:
+  // If aScaleFactor is not specified, then an image with both regular and
+  // HiDPI representations will be loaded.
   nsIconLoaderService(nsIContent* aContent, nsIntRect* aImageRegionRect,
-                      RefPtr<nsIconLoaderObserver> aObserver,
-                      uint32_t aIconHeight, uint32_t aIconWidth);
+                      RefPtr<nsIconLoaderObserver> aObserver, uint32_t aIconHeight,
+                      uint32_t aIconWidth, CGFloat aScaleFactor = 0.0f);
 
  public:
   NS_DECL_ISUPPORTS
@@ -55,6 +57,7 @@ class nsIconLoaderService : public imgINotificationObserver {
   NSImage* mNativeIconImage;
   uint32_t mIconHeight;
   uint32_t mIconWidth;
+  CGFloat mScaleFactor;
   RefPtr<nsIconLoaderObserver> mCompletionHandler;
 };
 
