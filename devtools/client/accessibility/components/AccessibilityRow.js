@@ -25,9 +25,12 @@ const {
 } = require("devtools/client/inspector/markup/utils");
 const { openDocLink } = require("devtools/client/shared/link");
 const {
+  PREFS,
   VALUE_FLASHING_DURATION,
   VALUE_HIGHLIGHT_DURATION,
 } = require("../constants");
+
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // Actions
 const { updateDetails } = require("../actions/details");
@@ -79,16 +82,26 @@ class AccessibilityRow extends Component {
       ...TreeRow.propTypes,
       hasContextMenu: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
-      walker: PropTypes.object,
+      accessibilityWalker: PropTypes.object,
+      scrollContentNodeIntoView: PropTypes.bool.isRequired,
+      supports: PropTypes.object,
+      getDOMWalker: PropTypes.func.isRequired,
     };
   }
 
   componentDidMount() {
-    const { selected, object } = this.props.member;
+    const {
+      member: { selected, object },
+      scrollContentNodeIntoView,
+    } = this.props;
     if (selected) {
       this.unhighlight();
       this.update();
-      this.highlight(object, { duration: VALUE_HIGHLIGHT_DURATION });
+      this.highlight(
+        object,
+        { duration: VALUE_HIGHLIGHT_DURATION },
+        scrollContentNodeIntoView
+      );
     }
 
     if (this.props.highlighted) {
@@ -101,12 +114,19 @@ class AccessibilityRow extends Component {
    * accessible panel sidebar.
    */
   componentDidUpdate(prevProps) {
-    const { selected, object } = this.props.member;
+    const {
+      member: { selected, object },
+      scrollContentNodeIntoView,
+    } = this.props;
     // If row is selected, update corresponding accessible details.
     if (!prevProps.member.selected && selected) {
       this.unhighlight();
       this.update();
-      this.highlight(object, { duration: VALUE_HIGHLIGHT_DURATION });
+      this.highlight(
+        object,
+        { duration: VALUE_HIGHLIGHT_DURATION },
+        scrollContentNodeIntoView
+      );
     }
 
     if (this.props.highlighted) {
@@ -129,17 +149,19 @@ class AccessibilityRow extends Component {
     scrollIntoView(row);
   }
 
-  update() {
+  async update() {
     const {
       dispatch,
       member: { object },
       supports,
+      getDOMWalker,
     } = this.props;
-    if (!gToolbox || !object.actorID) {
+    const domWalker = await getDOMWalker();
+    if (!domWalker || !object.actorID) {
       return;
     }
 
-    dispatch(updateDetails(gToolbox.walker, object, supports));
+    dispatch(updateDetails(domWalker, object, supports));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, object);
   }
 
@@ -163,28 +185,67 @@ class AccessibilityRow extends Component {
     }, VALUE_FLASHING_DURATION);
   }
 
-  highlight(accessible, options) {
-    const { walker, dispatch } = this.props;
-    dispatch(unhighlight());
-
-    if (!accessible || !walker) {
+  /**
+   * Scroll the node that corresponds to a current accessible object into view.
+   * @param   {Object}
+   *          Accessible front that is rendered for this node.
+   *
+   * @returns {Promise}
+   *          Promise that resolves when the node is scrolled into view if
+   *          possible.
+   */
+  async scrollNodeIntoViewIfNeeded({ actorID }) {
+    const domWalker = await this.props.getDOMWalker();
+    if (!domWalker || !actorID) {
       return;
     }
 
-    walker
+    const node = await domWalker.getNodeFromActor(actorID, [
+      "rawAccessible",
+      "DOMNode",
+    ]);
+    if (!node) {
+      return;
+    }
+
+    if (node.nodeType == nodeConstants.ELEMENT_NODE) {
+      await node.scrollIntoView();
+    } else if (node.nodeType != nodeConstants.DOCUMENT_NODE) {
+      // scrollIntoView method is only part of the Element interface, in cases
+      // where node is a text node (and not a document node) scroll into view
+      // its parent.
+      await node.parentNode().scrollIntoView();
+    }
+  }
+
+  async highlight(accessible, options, scrollContentNodeIntoView) {
+    const { accessibilityWalker, dispatch } = this.props;
+    dispatch(unhighlight());
+
+    if (!accessible || !accessibilityWalker) {
+      return;
+    }
+
+    // If necessary scroll the node into view before showing the accessibility
+    // highlighter.
+    if (scrollContentNodeIntoView) {
+      await this.scrollNodeIntoViewIfNeeded(accessible);
+    }
+
+    accessibilityWalker
       .highlightAccessible(accessible, options)
       .catch(error => console.warn(error));
   }
 
   unhighlight() {
-    const { walker, dispatch } = this.props;
+    const { accessibilityWalker, dispatch } = this.props;
     dispatch(unhighlight());
 
-    if (!walker) {
+    if (!accessibilityWalker) {
       return;
     }
 
-    walker.unhighlight().catch(error => console.warn(error));
+    accessibilityWalker.unhighlight().catch(error => console.warn(error));
   }
 
   async printToJSON() {
@@ -259,8 +320,11 @@ class AccessibilityRow extends Component {
   }
 }
 
-const mapStateToProps = ({ ui }) => ({
-  supports: ui.supports,
+const mapStateToProps = ({
+  ui: { supports, [PREFS.SCROLL_INTO_VIEW]: scrollContentNodeIntoView },
+}) => ({
+  supports,
+  scrollContentNodeIntoView,
 });
 
 module.exports = connect(

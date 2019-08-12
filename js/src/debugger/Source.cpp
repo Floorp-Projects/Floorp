@@ -169,18 +169,19 @@ DebuggerSource* DebuggerSource::checkThis(JSContext* cx, const CallArgs& args,
   return thisobj;
 }
 
-#define THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, fnname, args, obj, referent)            \
-  CallArgs args = CallArgsFromVp(argc, vp);                                             \
-  RootedDebuggerSource obj(cx, DebuggerSource::check(cx, args.thisv(), fnname));        \
-  if (!obj) return false;                                                               \
+#define THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, fnname, args, obj, referent) \
+  CallArgs args = CallArgsFromVp(argc, vp);                                  \
+  RootedDebuggerSource obj(cx,                                               \
+                           DebuggerSource::check(cx, args.thisv(), fnname)); \
+  if (!obj) return false;                                                    \
   Rooted<DebuggerSourceReferent> referent(cx, obj->getReferent())
 
-#define THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, fnname, args, obj, sourceObject)  \
-  CallArgs args = CallArgsFromVp(argc, vp);                                     \
-  RootedDebuggerSource obj(cx, DebuggerSource::checkThis<ScriptSourceObject*>(  \
-                                   cx, args, fnname, "a JS source"));           \
-  if (!obj) return false;                                                       \
-  RootedScriptSourceObject sourceObject(                                        \
+#define THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, fnname, args, obj, sourceObject) \
+  CallArgs args = CallArgsFromVp(argc, vp);                                    \
+  RootedDebuggerSource obj(cx, DebuggerSource::checkThis<ScriptSourceObject*>( \
+                                   cx, args, fnname, "a JS source"));          \
+  if (!obj) return false;                                                      \
+  RootedScriptSourceObject sourceObject(                                       \
       cx, obj->getReferent().as<ScriptSourceObject*>())
 
 class DebuggerSourceGetTextMatcher {

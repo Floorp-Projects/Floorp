@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccessibilityPrefs component: prefs checked 1`] = `"<button class=\\"devtools-button badge toolbar-menu-button prefs\\" title=\\"accessibility.tree.filters.prefs\\" aria-expanded=\\"false\\" aria-haspopup=\\"menu\\" aria-controls=\\"accessibility-tree-filters-prefs-menu\\"></button>"`;
+
+exports[`AccessibilityPrefs component: prefs not set by default 1`] = `"<button class=\\"devtools-button badge toolbar-menu-button prefs\\" title=\\"accessibility.tree.filters.prefs\\" aria-expanded=\\"false\\" aria-haspopup=\\"menu\\" aria-controls=\\"accessibility-tree-filters-prefs-menu\\"></button>"`;
+
+exports[`AccessibilityPrefs component: toggle pref 1`] = `"<button class=\\"devtools-button badge toolbar-menu-button prefs\\" title=\\"accessibility.tree.filters.prefs\\" aria-expanded=\\"false\\" aria-haspopup=\\"menu\\" aria-controls=\\"accessibility-tree-filters-prefs-menu\\"></button>"`;

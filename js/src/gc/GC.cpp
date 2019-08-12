@@ -2139,8 +2139,8 @@ void ZoneHeapThreshold::updateAfterGC(size_t lastBytes,
                                       const AutoLockGC& lock) {
   float growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-  gcTriggerBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, gckind,
-                                            tunables, lock);
+  gcTriggerBytes_ =
+      computeZoneTriggerBytes(growthFactor, lastBytes, gckind, tunables, lock);
 }
 
 /* static */

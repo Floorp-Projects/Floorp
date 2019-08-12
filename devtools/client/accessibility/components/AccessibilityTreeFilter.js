@@ -12,11 +12,27 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const {
   div,
+  hr,
   span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
-const ToggleButton = createFactory(require("./Button").ToggleButton);
+
+loader.lazyGetter(this, "MenuButton", function() {
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuButton")
+  );
+});
+loader.lazyGetter(this, "MenuItem", function() {
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuItem")
+  );
+});
+loader.lazyGetter(this, "MenuList", function() {
+  return createFactory(
+    require("devtools/client/shared/components/menu/MenuList")
+  );
+});
 
 const actions = require("../actions/audit");
 
@@ -25,9 +41,10 @@ const { FILTERS } = require("../constants");
 
 const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {
-  [FILTERS.ALL]: "accessibility.filter.all",
-  [FILTERS.CONTRAST]: "accessibility.badge.contrast",
-  [FILTERS.TEXT_LABEL]: "accessibility.badge.textLabel",
+  [FILTERS.NONE]: "accessibility.filter.none",
+  [FILTERS.ALL]: "accessibility.filter.all2",
+  [FILTERS.CONTRAST]: "accessibility.filter.contrast",
+  [FILTERS.TEXT_LABEL]: "accessibility.filter.textLabel",
 };
 
 class AccessibilityTreeFilter extends Component {
@@ -36,21 +53,21 @@ class AccessibilityTreeFilter extends Component {
       auditing: PropTypes.array.isRequired,
       filters: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
-      walker: PropTypes.object.isRequired,
+      accessibilityWalker: PropTypes.object.isRequired,
       describedby: PropTypes.string,
     };
   }
 
   async toggleFilter(filterKey) {
-    const { dispatch, filters, walker } = this.props;
+    const { dispatch, filters, accessibilityWalker } = this.props;
 
-    if (!filters[filterKey]) {
+    if (filterKey !== FILTERS.NONE && !filters[filterKey]) {
       if (gTelemetry) {
         gTelemetry.keyedScalarAdd(TELEMETRY_AUDIT_ACTIVATED, filterKey, 1);
       }
 
       dispatch(actions.auditing(filterKey));
-      await dispatch(actions.audit(walker, filterKey));
+      await dispatch(actions.audit(accessibilityWalker, filterKey));
     }
 
     // We wait to dispatch filter toggle until the tree is ready to be filtered
@@ -59,45 +76,64 @@ class AccessibilityTreeFilter extends Component {
     dispatch(actions.filterToggle(filterKey));
   }
 
-  onClick(filterKey, e) {
-    const { mozInputSource, MOZ_SOURCE_KEYBOARD } = e.nativeEvent;
-    if (e.isTrusted && mozInputSource === MOZ_SOURCE_KEYBOARD) {
-      // Already handled by key down handler on user input.
-      return;
-    }
-
-    this.toggleFilter(filterKey);
-  }
-
-  onKeyDown(filterKey, e) {
-    // We explicitely handle "click" and "keydown" events this way here because
-    // of the expectation of both Space and Enter triggering the click event
-    // even though Enter is the only one in the spec.
-    if (![" ", "Enter"].includes(e.key)) {
-      return;
-    }
-
+  onClick(filterKey) {
     this.toggleFilter(filterKey);
   }
 
   render() {
     const { auditing, filters, describedby } = this.props;
     const toolbarLabelID = "accessibility-tree-filters-label";
-    const filterButtons = Object.entries(filters).map(([filterKey, active]) =>
-      ToggleButton({
-        className: "badge",
-        key: filterKey,
-        active,
-        label: L10N.getStr(FILTER_LABELS[filterKey]),
-        onClick: this.onClick.bind(this, filterKey),
-        onKeyDown: this.onKeyDown.bind(this, filterKey),
-        busy: auditing.includes(filterKey),
-      })
+    const filterNoneChecked = !Object.values(filters).includes(true);
+    const items = [
+      MenuItem({
+        key: FILTERS.NONE,
+        checked: filterNoneChecked,
+        className: `filter ${FILTERS.NONE}`,
+        label: L10N.getStr(FILTER_LABELS[FILTERS.NONE]),
+        onClick: this.onClick.bind(this, FILTERS.NONE),
+        disabled: auditing.length > 0,
+      }),
+      hr(),
+    ];
+
+    const { [FILTERS.ALL]: filterAllChecked, ...filtersWithoutAll } = filters;
+    items.push(
+      MenuItem({
+        key: FILTERS.ALL,
+        checked: filterAllChecked,
+        className: `filter ${FILTERS.ALL}`,
+        label: L10N.getStr(FILTER_LABELS[FILTERS.ALL]),
+        onClick: this.onClick.bind(this, FILTERS.ALL),
+        disabled: auditing.length > 0,
+      }),
+      hr(),
+      Object.entries(filtersWithoutAll).map(([filterKey, active]) =>
+        MenuItem({
+          key: filterKey,
+          checked: active,
+          className: `filter ${filterKey}`,
+          label: L10N.getStr(FILTER_LABELS[filterKey]),
+          onClick: this.onClick.bind(this, filterKey),
+          disabled: auditing.length > 0,
+        })
+      )
     );
+
+    let label;
+    if (filterNoneChecked) {
+      label = L10N.getStr(FILTER_LABELS[FILTERS.NONE]);
+    } else if (filterAllChecked) {
+      label = L10N.getStr(FILTER_LABELS[FILTERS.ALL]);
+    } else {
+      label = Object.keys(filtersWithoutAll)
+        .filter(filterKey => filtersWithoutAll[filterKey])
+        .map(filterKey => L10N.getStr(FILTER_LABELS[filterKey]))
+        .join(", ");
+    }
 
     return div(
       {
-        role: "toolbar",
+        role: "group",
         className: "accessibility-tree-filters",
         "aria-labelledby": toolbarLabelID,
         "aria-describedby": describedby,
@@ -106,7 +142,15 @@ class AccessibilityTreeFilter extends Component {
         { id: toolbarLabelID, role: "presentation" },
         L10N.getStr("accessibility.tree.filters")
       ),
-      ...filterButtons
+      MenuButton(
+        {
+          menuId: "accessibility-tree-filters-menu",
+          doc: document,
+          className: `devtools-button badge toolbar-menu-button filters`,
+          label,
+        },
+        MenuList({}, items)
+      )
     );
   }
 }
