@@ -426,7 +426,7 @@ class HTMLEditor final : public TextEditor,
 
   nsresult GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
                              const nsAString& aValue, bool* aFirst, bool* aAny,
-                             bool* aAll);
+                             bool* aAll) const;
   nsresult GetInlinePropertyWithAttrValue(nsAtom* aProperty, nsAtom* aAttr,
                                           const nsAString& aValue, bool* aFirst,
                                           bool* aAny, bool* aAll,
@@ -852,7 +852,7 @@ class HTMLEditor final : public TextEditor,
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
    * only whitespaces and they are collapsed, returns false.
    */
-  bool IsVisibleTextNode(Text& aText);
+  bool IsVisibleTextNode(Text& aText) const;
 
   /**
    * aNode must be a non-null text node.
@@ -861,10 +861,10 @@ class HTMLEditor final : public TextEditor,
   nsresult IsEmptyNode(nsINode* aNode, bool* outIsEmptyBlock,
                        bool aSingleBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
-                       bool aSafeToAskFrames = false);
+                       bool aSafeToAskFrames = false) const;
   nsresult IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyBlock,
                            bool aSingleBRDoesntCount, bool aListOrCellNotEmpty,
-                           bool aSafeToAskFrames, bool* aSeenBR);
+                           bool aSafeToAskFrames, bool* aSeenBR) const;
 
   static bool HasAttributes(Element* aElement) {
     MOZ_ASSERT(aElement);
@@ -1076,7 +1076,8 @@ class HTMLEditor final : public TextEditor,
 
   nsresult GetInlinePropertyBase(nsAtom& aProperty, nsAtom* aAttribute,
                                  const nsAString* aValue, bool* aFirst,
-                                 bool* aAny, bool* aAll, nsAString* outValue);
+                                 bool* aAny, bool* aAll,
+                                 nsAString* outValue) const;
 
   MOZ_CAN_RUN_SCRIPT
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
@@ -2496,7 +2497,7 @@ class HTMLEditor final : public TextEditor,
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
    * any visible characters.
    */
-  bool IsEmptyTextNode(nsINode& aNode);
+  bool IsEmptyTextNode(nsINode& aNode) const;
 
   MOZ_CAN_RUN_SCRIPT bool IsSimpleModifiableNode(nsIContent* aContent,
                                                  nsAtom* aProperty,
