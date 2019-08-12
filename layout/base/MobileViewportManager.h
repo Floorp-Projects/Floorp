@@ -64,7 +64,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
 
   /* Notify the MobileViewportManager that the resolution on the presShell was
    * updated, and the visual viewport size needs to be updated. */
-  void ResolutionUpdated();
+  void ResolutionUpdated(mozilla::ResolutionChangeOrigin aOrigin);
 
   /* Called to compute the initial viewport on page load or before-first-paint,
    * whichever happens first. Also called directly if we are created after the
