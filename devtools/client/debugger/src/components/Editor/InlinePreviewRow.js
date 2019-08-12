@@ -14,7 +14,7 @@ import type { Preview } from "../../types";
 type Props = {
   editor: Object,
   line: number,
-  preview: Preview,
+  previews: Array<Preview>,
 };
 
 import "./InlinePreview.css";
@@ -57,7 +57,7 @@ class InlinePreviewRow extends PureComponent<Props> {
       );
     }
 
-    const { editor, line, preview } = props;
+    const { editor, line, previews } = props;
 
     if (!this.IPWidget) {
       const widget = document.createElement("div");
@@ -74,11 +74,11 @@ class InlinePreviewRow extends PureComponent<Props> {
 
     ReactDOM.render(
       <React.Fragment>
-        {Object.keys(preview).map((variableName: string) => (
+        {previews.map((preview: Preview) => (
           <InlinePreview
             line={line}
-            variable={variableName}
-            value={preview[variableName]}
+            variable={preview.name}
+            value={preview.value}
           />
         ))}
       </React.Fragment>,

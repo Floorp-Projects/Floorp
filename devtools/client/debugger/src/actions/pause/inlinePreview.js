@@ -3,12 +3,13 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
+import { sortBy } from "lodash";
 import { getOriginalFrameScope, getGeneratedFrameScope } from "../../selectors";
 import { features } from "../../utils/prefs";
 import { getValue } from "../../utils/pause";
 
 import type { OriginalScope } from "../../utils/pause/mapScopes";
-import type { ThreadId, Frame, Scope, Preview } from "../../types";
+import type { ThreadId, Frame, Scope, Previews } from "../../types";
 import type { ThunkArgs } from "../types";
 
 // We need to display all variables in the current functional scope so
@@ -53,7 +54,7 @@ export function generateInlinePreview(thread: ThreadId, frame: ?Frame) {
       return;
     }
 
-    const previewData: Preview = {};
+    const previews: Previews = {};
     const pausedOnLine: number = frame.location.line;
 
     const levels: number = getLocalScopeLevels(originalAstScopes);
@@ -82,7 +83,7 @@ export function generateInlinePreview(thread: ThreadId, frame: ?Frame) {
           properties = await client.loadObjectProperties(root);
         }
 
-        const preview: Preview = getBindingValues(
+        const preview: Previews = getBindingValues(
           originalAstScopes,
           pausedOnLine,
           name,
@@ -92,18 +93,22 @@ export function generateInlinePreview(thread: ThreadId, frame: ?Frame) {
         );
 
         for (const line in preview) {
-          previewData[line] = { ...previewData[line], ...preview[line] };
+          previews[line] = (previews[line] || []).concat(preview[line]);
         }
       }
 
       scopes = scopes.parent;
     }
 
+    for (const line in previews) {
+      previews[line] = sortBy(previews[line], ["column"]);
+    }
+
     return dispatch({
       type: "ADD_INLINE_PREVIEW",
       thread,
       frame,
-      previewData,
+      previews,
     });
   };
 }
@@ -115,13 +120,13 @@ function getBindingValues(
   value: any,
   curLevel: number,
   properties: Array<Object> | null
-): Preview {
-  const preview: Preview = {};
+): Previews {
+  const previews: Previews = {};
 
   const binding =
     originalAstScopes[curLevel] && originalAstScopes[curLevel].bindings[name];
   if (!binding) {
-    return preview;
+    return previews;
   }
 
   // Show a variable only once ( an object and it's child property are
@@ -134,6 +139,7 @@ function getBindingValues(
     const ref = binding.refs[i];
     // Subtracting 1 from line as codemirror lines are 0 indexed
     let line = ref.start.line - 1;
+    const column: number = ref.start.column;
     // We don't want to render inline preview below the paused line
     if (line >= pausedOnLine - 1) {
       continue;
@@ -153,18 +159,22 @@ function getBindingValues(
     // Variable with same name exists, display value of current or
     // closest to the current scope's variable
     if (identifiers.has(displayName)) {
-      return preview;
+      continue;
     }
 
-    if (!preview[line]) {
-      preview[line] = {};
+    if (!previews[line]) {
+      previews[line] = [];
     }
 
     identifiers.add(displayName);
 
-    preview[line][displayName] = getValue(displayValue);
+    previews[line].push({
+      name: displayName,
+      value: getValue(displayValue),
+      column,
+    });
   }
-  return preview;
+  return previews;
 }
 
 function getExpressionNameAndValue(
