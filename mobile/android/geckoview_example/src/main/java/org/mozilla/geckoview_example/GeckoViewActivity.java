@@ -171,7 +171,7 @@ public class GeckoViewActivity extends AppCompatActivity {
                 public GeckoResult<AllowOrDeny> onCloseTab(WebExtension source, GeckoSession session) {
                     TabSession tabSession = mTabSessionManager.getSession(session);
                     closeTab(tabSession);
-                    return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+                    return GeckoResult.ALLOW;
                 }
             });
         }

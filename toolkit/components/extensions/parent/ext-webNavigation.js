@@ -141,7 +141,6 @@ class WebNavigationEventManager extends EventManager {
         if (
           chromeWin &&
           chromeWin.gBrowser &&
-          chromeWin.gBrowserInit &&
           chromeWin.gBrowserInit.isAdoptingTab() &&
           chromeWin.gBrowser.selectedBrowser === data.browser
         ) {
