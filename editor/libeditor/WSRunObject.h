@@ -132,7 +132,244 @@ inline const WSType operator|(const WSType::Enum& aLeft,
   return WSType(aLeft) | WSType(aRight);
 }
 
-class MOZ_STACK_CLASS WSRunObject final {
+class MOZ_STACK_CLASS WSRunScanner {
+ public:
+  /**
+   * The constructors take 2 DOM points.  They represent a range in an editing
+   * host.  aScanEndPoint (aScanEndNode and aScanEndOffset) must be later
+   * point from aScanStartPoint (aScanStartNode and aScanStartOffset).
+   * The end point is currently used only with InsertText().  Therefore,
+   * currently, this assumes that the range does not cross block boundary.  If
+   * you use aScanEndPoint newly, please test enough.
+   */
+  template <typename PT, typename CT>
+  WSRunScanner(const HTMLEditor* aHTMLEditor,
+               const EditorDOMPointBase<PT, CT>& aScanStartPoint,
+               const EditorDOMPointBase<PT, CT>& aScanEndPoint);
+  template <typename PT, typename CT>
+  WSRunScanner(const HTMLEditor* aHTMLEditor,
+               const EditorDOMPointBase<PT, CT>& aScanStartPoint)
+      : WSRunScanner(aHTMLEditor, aScanStartPoint, aScanStartPoint) {}
+  WSRunScanner(const HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
+               int32_t aScanStartOffset, nsINode* aScanEndNode,
+               int32_t aScanEndOffset)
+      : WSRunScanner(aHTMLEditor,
+                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
+                     EditorRawDOMPoint(aScanEndNode, aScanEndOffset)) {}
+  WSRunScanner(const HTMLEditor* aHTMLEditor, nsINode* aScanStartNode,
+               int32_t aScanStartOffset)
+      : WSRunScanner(aHTMLEditor,
+                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
+                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
+  ~WSRunScanner();
+
+  // NextVisibleNode() returns the first piece of visible thing after aPoint.
+  // If there is no visible ws qualifying it returns what is after the ws run.
+  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
+  // Note that {outVisNode,outVisOffset} is set to just BEFORE the visible
+  // object. Also outVisOffset might be invalid offset unless outVisNode is
+  // end reason node.
+  template <typename PT, typename CT>
+  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                       nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
+                       WSType* outType) const;
+
+  template <typename PT, typename CT>
+  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                       WSType* outType) const {
+    NextVisibleNode(aPoint, nullptr, nullptr, outType);
+  }
+
+  // PriorVisibleNode() returns the first piece of visible thing before aPoint.
+  // If there is no visible ws qualifying it returns what is before the ws run.
+  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
+  // Note that {outVisNode,outVisOffset} is set to just AFTER the visible
+  // object. Also outVisOffset might be invalid offset unless outVisNode is
+  // start reason node.
+  template <typename PT, typename CT>
+  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                        nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
+                        WSType* outType) const;
+
+  template <typename PT, typename CT>
+  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
+                        WSType* outType) const {
+    PriorVisibleNode(aPoint, nullptr, nullptr, outType);
+  }
+
+ protected:
+  // WSFragment represents a single run of ws (all leadingws, or all normalws,
+  // or all trailingws, or all leading+trailingws).  Note that this single run
+  // may still span multiple nodes.
+  struct WSFragment final {
+    nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
+    nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
+    int32_t mStartOffset;          // offset where ws run starts
+    int32_t mEndOffset;            // offset where ws run ends
+    // type of ws, and what is to left and right of it
+    WSType mType, mLeftType, mRightType;
+    // other ws runs to left or right.  may be null.
+    WSFragment *mLeft, *mRight;
+
+    WSFragment()
+        : mStartOffset(0), mEndOffset(0), mLeft(nullptr), mRight(nullptr) {}
+
+    EditorRawDOMPoint StartPoint() const {
+      return EditorRawDOMPoint(mStartNode, mStartOffset);
+    }
+    EditorRawDOMPoint EndPoint() const {
+      return EditorRawDOMPoint(mEndNode, mEndOffset);
+    }
+  };
+
+  // A WSPoint struct represents a unique location within the ws run.  It is
+  // always within a textnode that is one of the nodes stored in the list
+  // in the wsRunObject.  For convenience, the character at that point is also
+  // stored in the struct.
+  struct MOZ_STACK_CLASS WSPoint final {
+    RefPtr<dom::Text> mTextNode;
+    uint32_t mOffset;
+    char16_t mChar;
+
+    WSPoint() : mTextNode(nullptr), mOffset(0), mChar(0) {}
+
+    WSPoint(dom::Text* aTextNode, int32_t aOffset, char16_t aChar)
+        : mTextNode(aTextNode), mOffset(aOffset), mChar(aChar) {}
+  };
+
+  /**
+   * FindNearestRun() looks for a WSFragment which is closest to specified
+   * direction from aPoint.
+   *
+   * @param aPoint      The point to start to look for.
+   * @param aForward    true if caller needs to look for a WSFragment after the
+   *                    point in the DOM tree.  Otherwise, i.e., before the
+   *                    point, false.
+   * @return            Found WSFragment instance.
+   *                    If aForward is true and:
+   *                      if aPoint is end of a run, returns next run.
+   *                      if aPoint is start of a run, returns the run.
+   *                      if aPoint is before the first run, returns the first
+   *                      run.
+   *                      If aPoint is after the last run, returns nullptr.
+   *                    If aForward is false and:
+   *                      if aPoint is end of a run, returns the run.
+   *                      if aPoint is start of a run, returns its next run.
+   *                      if aPoint is before the first run, returns nullptr.
+   *                      if aPoint is after the last run, returns the last run.
+   */
+  template <typename PT, typename CT>
+  WSFragment* FindNearestRun(const EditorDOMPointBase<PT, CT>& aPoint,
+                             bool aForward) const;
+
+  /**
+   * GetNextCharPoint() returns next character's point of aPoint.  If there is
+   * no character after aPoint, mTextNode is set to nullptr.
+   */
+  template <typename PT, typename CT>
+  WSPoint GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
+  WSPoint GetNextCharPoint(const WSPoint& aPoint) const;
+
+  /**
+   * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
+   * helper methods of GetNextCharPoint(const EditorRawDOMPoint&) and
+   * GetPreviousCharPoint(const EditorRawDOMPoint&).  When the container
+   * isn't in mNodeArray, they call one of these methods.  Then, these
+   * methods look for nearest text node in mNodeArray from aPoint.
+   * Then, will call GetNextCharPoint(const WSPoint&) or
+   * GetPreviousCharPoint(const WSPoint&) and returns its result.
+   */
+  template <typename PT, typename CT>
+  WSPoint GetNextCharPointInternal(
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
+  template <typename PT, typename CT>
+  WSPoint GetPreviousCharPointInternal(
+      const EditorDOMPointBase<PT, CT>& aPoint) const;
+
+  nsresult GetWSNodes();
+
+  /**
+   * Return the node which we will handle white-space under. This is the
+   * closest block within the DOM subtree we're editing, or if none is
+   * found, the (inline) root of the editable subtree.
+   */
+  nsINode* GetWSBoundingParent() const;
+
+  static bool IsBlockNode(nsINode* aNode);
+
+  nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
+                                     nsINode* aBlockParent) const;
+  nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
+                                nsINode* aBlockParent) const;
+  nsIContent* GetNextWSNodeInner(nsINode* aStartNode,
+                                 nsINode* aBlockParent) const;
+  nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
+                            nsINode* aBlockParent) const;
+
+  /**
+   * GetPreviousCharPoint() returns previous character's point of of aPoint.
+   * If there is no character before aPoint, mTextNode is set to nullptr.
+   */
+  template <typename PT, typename CT>
+  WSPoint GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
+  WSPoint GetPreviousCharPoint(const WSPoint& aPoint) const;
+
+  char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
+
+  void GetRuns();
+  void ClearRuns();
+  void MakeSingleWSRun(WSType aType);
+
+  // The list of nodes containing ws in this run.
+  nsTArray<RefPtr<dom::Text>> mNodeArray;
+
+  // The node passed to our constructor.
+  EditorDOMPoint mScanStartPoint;
+  EditorDOMPoint mScanEndPoint;
+  // Together, the above represent the point at which we are building up ws
+  // info.
+
+  // The editing host when the instance is created.
+  RefPtr<Element> mEditingHost;
+
+  // true if we are in preformatted whitespace context.
+  bool mPRE;
+
+  // Node/offset where ws starts and ends.
+  nsCOMPtr<nsINode> mStartNode;
+  int32_t mStartOffset;
+  // Reason why ws starts (eText, eOtherBlock, etc.).
+  WSType mStartReason;
+  // The node that implicated by start reason.
+  nsCOMPtr<nsINode> mStartReasonNode;
+
+  // Node/offset where ws ends.
+  nsCOMPtr<nsINode> mEndNode;
+  int32_t mEndOffset;
+  // Reason why ws ends (eText, eOtherBlock, etc.).
+  WSType mEndReason;
+  // The node that implicated by end reason.
+  nsCOMPtr<nsINode> mEndReasonNode;
+
+  // Location of first nbsp in ws run, if any.
+  RefPtr<dom::Text> mFirstNBSPNode;
+  int32_t mFirstNBSPOffset;
+
+  // Location of last nbsp in ws run, if any.
+  RefPtr<dom::Text> mLastNBSPNode;
+  int32_t mLastNBSPOffset;
+
+  // The first WSFragment in the run.
+  WSFragment* mStartRun;
+
+  // The last WSFragment in the run, may be same as first.
+  WSFragment* mEndRun;
+
+  // Non-owning.
+  const HTMLEditor* mHTMLEditor;
+};
+
+class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
  protected:
   typedef EditorBase::AutoTransactionsConserveSelection
       AutoTransactionsConserveSelection;
@@ -173,7 +410,6 @@ class MOZ_STACK_CLASS WSRunObject final {
       : WSRunObject(aHTMLEditor,
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset),
                     EditorRawDOMPoint(aScanStartNode, aScanStartOffset)) {}
-  ~WSRunObject();
 
   // ScrubBlockBoundary removes any non-visible whitespace at the specified
   // location relative to a block node.
@@ -278,40 +514,6 @@ class MOZ_STACK_CLASS WSRunObject final {
   // makes any needed conversion to adjacent ws to retain its significance.
   MOZ_CAN_RUN_SCRIPT nsresult DeleteWSForward();
 
-  // PriorVisibleNode() returns the first piece of visible thing before aPoint.
-  // If there is no visible ws qualifying it returns what is before the ws run.
-  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
-  // Note that {outVisNode,outVisOffset} is set to just AFTER the visible
-  // object. Also outVisOffset might be invalid offset unless outVisNode is
-  // start reason node.
-  template <typename PT, typename CT>
-  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                        nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
-                        WSType* outType) const;
-
-  template <typename PT, typename CT>
-  void PriorVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                        WSType* outType) const {
-    PriorVisibleNode(aPoint, nullptr, nullptr, outType);
-  }
-
-  // NextVisibleNode() returns the first piece of visible thing after aPoint.
-  // If there is no visible ws qualifying it returns what is after the ws run.
-  // If outVisNode and/or outvisOffset is unused, callers can use nullptr.
-  // Note that {outVisNode,outVisOffset} is set to just BEFORE the visible
-  // object. Also outVisOffset might be invalid offset unless outVisNode is
-  // end reason node.
-  template <typename PT, typename CT>
-  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                       nsCOMPtr<nsINode>* outVisNode, int32_t* outVisOffset,
-                       WSType* outType) const;
-
-  template <typename PT, typename CT>
-  void NextVisibleNode(const EditorDOMPointBase<PT, CT>& aPoint,
-                       WSType* outType) const {
-    NextVisibleNode(aPoint, nullptr, nullptr, outType);
-  }
-
   // AdjustWhitespace examines the ws object for nbsp's that can
   // be safely converted to regular ascii space and converts them.
   MOZ_CAN_RUN_SCRIPT nsresult AdjustWhitespace();
@@ -319,64 +521,8 @@ class MOZ_STACK_CLASS WSRunObject final {
   Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
-  // WSFragment represents a single run of ws (all leadingws, or all normalws,
-  // or all trailingws, or all leading+trailingws).  Note that this single run
-  // may still span multiple nodes.
-  struct WSFragment final {
-    nsCOMPtr<nsINode> mStartNode;  // node where ws run starts
-    nsCOMPtr<nsINode> mEndNode;    // node where ws run ends
-    int32_t mStartOffset;          // offset where ws run starts
-    int32_t mEndOffset;            // offset where ws run ends
-    // type of ws, and what is to left and right of it
-    WSType mType, mLeftType, mRightType;
-    // other ws runs to left or right.  may be null.
-    WSFragment *mLeft, *mRight;
+  using WSPoint = WSRunScanner::WSPoint;
 
-    WSFragment()
-        : mStartOffset(0), mEndOffset(0), mLeft(nullptr), mRight(nullptr) {}
-
-    EditorRawDOMPoint StartPoint() const {
-      return EditorRawDOMPoint(mStartNode, mStartOffset);
-    }
-    EditorRawDOMPoint EndPoint() const {
-      return EditorRawDOMPoint(mEndNode, mEndOffset);
-    }
-  };
-
-  // A WSPoint struct represents a unique location within the ws run.  It is
-  // always within a textnode that is one of the nodes stored in the list
-  // in the wsRunObject.  For convenience, the character at that point is also
-  // stored in the struct.
-  struct MOZ_STACK_CLASS WSPoint final {
-    RefPtr<dom::Text> mTextNode;
-    uint32_t mOffset;
-    char16_t mChar;
-
-    WSPoint() : mTextNode(nullptr), mOffset(0), mChar(0) {}
-
-    WSPoint(dom::Text* aTextNode, int32_t aOffset, char16_t aChar)
-        : mTextNode(aTextNode), mOffset(aOffset), mChar(aChar) {}
-  };
-
-  /**
-   * Return the node which we will handle white-space under. This is the
-   * closest block within the DOM subtree we're editing, or if none is
-   * found, the (inline) root of the editable subtree.
-   */
-  nsINode* GetWSBoundingParent() const;
-
-  nsresult GetWSNodes();
-  void GetRuns();
-  void ClearRuns();
-  void MakeSingleWSRun(WSType aType);
-  nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
-                                     nsINode* aBlockParent) const;
-  nsIContent* GetPreviousWSNode(const EditorDOMPoint& aPoint,
-                                nsINode* aBlockParent) const;
-  nsIContent* GetNextWSNodeInner(nsINode* aStartNode,
-                                 nsINode* aBlockParent) const;
-  nsIContent* GetNextWSNode(const EditorDOMPoint& aPoint,
-                            nsINode* aBlockParent) const;
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToDeleteRangePriv(WSRunObject* aEndObject);
   MOZ_CAN_RUN_SCRIPT nsresult PrepareToSplitAcrossBlocksPriv();
 
@@ -391,38 +537,6 @@ class MOZ_STACK_CLASS WSRunObject final {
    */
   MOZ_CAN_RUN_SCRIPT nsresult DeleteRange(const EditorDOMPoint& aStartPoint,
                                           const EditorDOMPoint& aEndPoint);
-
-  /**
-   * GetNextCharPoint() returns next character's point of aPoint.  If there is
-   * no character after aPoint, mTextNode is set to nullptr.
-   */
-  template <typename PT, typename CT>
-  WSPoint GetNextCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
-  WSPoint GetNextCharPoint(const WSPoint& aPoint) const;
-
-  /**
-   * GetPreviousCharPoint() returns previous character's point of of aPoint.
-   * If there is no character before aPoint, mTextNode is set to nullptr.
-   */
-  template <typename PT, typename CT>
-  WSPoint GetPreviousCharPoint(const EditorDOMPointBase<PT, CT>& aPoint) const;
-  WSPoint GetPreviousCharPoint(const WSPoint& aPoint) const;
-
-  /**
-   * GetNextCharPointInternal() and GetPreviousCharPointInternal() are
-   * helper methods of GetNextCharPoint(const EditorRawDOMPoint&) and
-   * GetPreviousCharPoint(const EditorRawDOMPoint&).  When the container
-   * isn't in mNodeArray, they call one of these methods.  Then, these
-   * methods look for nearest text node in mNodeArray from aPoint.
-   * Then, will call GetNextCharPoint(const WSPoint&) or
-   * GetPreviousCharPoint(const WSPoint&) and returns its result.
-   */
-  template <typename PT, typename CT>
-  WSPoint GetNextCharPointInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
-  template <typename PT, typename CT>
-  WSPoint GetPreviousCharPointInternal(
-      const EditorDOMPointBase<PT, CT>& aPoint) const;
 
   /**
    * InsertNBSPAndRemoveFollowingASCIIWhitespaces() inserts an NBSP first.
@@ -457,32 +571,6 @@ class MOZ_STACK_CLASS WSRunObject final {
                                  dom::Text** outEndNode,
                                  int32_t* outEndOffset) const;
 
-  /**
-   * FindNearestRun() looks for a WSFragment which is closest to specified
-   * direction from aPoint.
-   *
-   * @param aPoint      The point to start to look for.
-   * @param aForward    true if caller needs to look for a WSFragment after the
-   *                    point in the DOM tree.  Otherwise, i.e., before the
-   *                    point, false.
-   * @return            Found WSFragment instance.
-   *                    If aForward is true and:
-   *                      if aPoint is end of a run, returns next run.
-   *                      if aPoint is start of a run, returns the run.
-   *                      if aPoint is before the first run, returns the first
-   *                      run.
-   *                      If aPoint is after the last run, returns nullptr.
-   *                    If aForward is false and:
-   *                      if aPoint is end of a run, returns the run.
-   *                      if aPoint is start of a run, returns its next run.
-   *                      if aPoint is before the first run, returns nullptr.
-   *                      if aPoint is after the last run, returns the last run.
-   */
-  template <typename PT, typename CT>
-  WSFragment* FindNearestRun(const EditorDOMPointBase<PT, CT>& aPoint,
-                             bool aForward) const;
-
-  char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
   MOZ_CAN_RUN_SCRIPT nsresult CheckTrailingNBSPOfRun(WSFragment* aRun);
 
   /**
@@ -500,7 +588,6 @@ class MOZ_STACK_CLASS WSRunObject final {
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode, int32_t aOffset);
 
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();
-  static bool IsBlockNode(nsINode* aNode);
 
   EditorDOMPoint StartPoint() const {
     return EditorDOMPoint(mStartNode, mStartOffset);
@@ -508,50 +595,6 @@ class MOZ_STACK_CLASS WSRunObject final {
   EditorDOMPoint EndPoint() const {
     return EditorDOMPoint(mEndNode, mEndOffset);
   }
-
-  // The node passed to our constructor.
-  EditorDOMPoint mScanStartPoint;
-  EditorDOMPoint mScanEndPoint;
-
-  // The editing host when the instance is created.
-  RefPtr<Element> mEditingHost;
-
-  // Together, the above represent the point at which we are building up ws
-  // info.
-
-  // true if we are in preformatted whitespace context.
-  bool mPRE;
-  // Node/offset where ws starts and ends.
-  nsCOMPtr<nsINode> mStartNode;
-  int32_t mStartOffset;
-  // Reason why ws starts (eText, eOtherBlock, etc.).
-  WSType mStartReason;
-  // The node that implicated by start reason.
-  nsCOMPtr<nsINode> mStartReasonNode;
-
-  // Node/offset where ws ends.
-  nsCOMPtr<nsINode> mEndNode;
-  int32_t mEndOffset;
-  // Reason why ws ends (eText, eOtherBlock, etc.).
-  WSType mEndReason;
-  // The node that implicated by end reason.
-  nsCOMPtr<nsINode> mEndReasonNode;
-
-  // Location of first nbsp in ws run, if any.
-  RefPtr<dom::Text> mFirstNBSPNode;
-  int32_t mFirstNBSPOffset;
-
-  // Location of last nbsp in ws run, if any.
-  RefPtr<dom::Text> mLastNBSPNode;
-  int32_t mLastNBSPOffset;
-
-  // The list of nodes containing ws in this run.
-  nsTArray<RefPtr<dom::Text>> mNodeArray;
-
-  // The first WSFragment in the run.
-  WSFragment* mStartRun;
-  // The last WSFragment in the run, may be same as first.
-  WSFragment* mEndRun;
 
   // Non-owning.
   HTMLEditor* mHTMLEditor;
