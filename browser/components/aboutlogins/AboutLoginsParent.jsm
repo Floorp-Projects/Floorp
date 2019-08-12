@@ -434,7 +434,7 @@ var AboutLoginsParent = {
       messageId: "enable-password-sync-notification-message",
       buttonId: "enable-password-sync-preferences-button",
       onClick(browser) {
-        browser.ownerGlobal.gSync.openFxAManagePage("password-manager");
+        browser.ownerGlobal.gSync.openPrefs("password-manager");
       },
       extraFtl: ["branding/brand.ftl", "browser/branding/sync-brand.ftl"],
     });
