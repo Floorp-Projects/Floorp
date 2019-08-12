@@ -287,6 +287,45 @@ add_task(async function test_graph_display() {
       "6 days ago has no content"
     );
     ok(allBars[0].classList.contains("empty"), "6 days ago is an empty bar");
+
+    // Check that each tab has the correct aria-describedby value. This helps screen readers
+    // know what type of tracker the reported tab number is referencing.
+    const socialTab = content.document.getElementById("tab-social");
+    is(
+      socialTab.getAttribute("aria-describedby"),
+      "socialTitle",
+      "aria-describedby attribute is socialTitle"
+    );
+
+    const cookieTab = content.document.getElementById("tab-cookie");
+    is(
+      cookieTab.getAttribute("aria-describedby"),
+      "cookieTitle",
+      "aria-describedby attribute is cookieTitle"
+    );
+
+    const trackerTab = content.document.getElementById("tab-tracker");
+    is(
+      trackerTab.getAttribute("aria-describedby"),
+      "trackerTitle",
+      "aria-describedby attribute is trackerTitle"
+    );
+
+    const fingerprinterTab = content.document.getElementById(
+      "tab-fingerprinter"
+    );
+    is(
+      fingerprinterTab.getAttribute("aria-describedby"),
+      "fingerprinterTitle",
+      "aria-describedby attribute is fingerprinterTitle"
+    );
+
+    const cryptominerTab = content.document.getElementById("tab-cryptominer");
+    is(
+      cryptominerTab.getAttribute("aria-describedby"),
+      "cryptominerTitle",
+      "aria-describedby attribute is cryptominerTitle"
+    );
   });
 
   // Use the TrackingDBService API to delete the data.
