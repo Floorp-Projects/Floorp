@@ -24,11 +24,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=695385
 <pre id="test">
 <script type="application/javascript">
 // Main Function
-function run() {
+async function run() {
   SimpleTest.waitForExplicitFinish();
+
+  // FIXME(Fission): The load event fires before cross-origin iframes have
+  // loaded (bug 1559841).
+  if (SpecialPowers.useRemoteSubframes) {
+    for (let i = 0; i < 100; i++) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+
   let snapshots = new Array(4);
   for (let i = 0; i < snapshots.length; i++) {
-    snapshots[i] = snapshotWindow(frames[i].window, false);
+    snapshots[i] = await snapshotWindow(frames[i], false);
   }
 
   // Compare mochi.test iframe against its reference:

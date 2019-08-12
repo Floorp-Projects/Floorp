@@ -27,12 +27,12 @@ win1.document.body.textContent = "Should show";
 
 var windowsLoaded = 0;
 
-window.onmessage = function(ev) {
+window.onmessage = async function(ev) {
   is(ev.data, "loaded", "Message should be 'loaded'");
   if (++windowsLoaded == 2) {
-    var one = snapshotWindow(win1);
-    var two = snapshotWindow(win2);
-    var three = snapshotWindow(win3);
+    var one = await snapshotWindow(win1);
+    var two = await snapshotWindow(win2);
+    var three = await snapshotWindow(win3);
     win1.close();
     win2.close();
     win3.close();
