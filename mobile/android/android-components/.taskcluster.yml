@@ -9,7 +9,11 @@ tasks:
   $let:
     decision_task_id: {$eval: as_slugid("decision_task")}
     expires_in: {$fromNow: '1 year'}
-    user: ${event.sender.login}
+    user:
+      # GitHub adds "[bot]" to bot usernames and that doesn't validate as email.
+      $if: 'event.sender.login == "bors[bot]"'
+      then: bors
+      else: ${event.sender.login}
 
     # We define the following variable at the very top, because they are used in the
     # default definition
