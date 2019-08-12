@@ -6980,7 +6980,7 @@ class StreamCacheEntryObject : public NativeObject {
   static const ClassOps classOps_;
   static const JSPropertySpec properties_;
 
-  static void finalize(JSFreeOp*, JSObject* obj) {
+  static void finalize(FreeOp*, JSObject* obj) {
     obj->as<StreamCacheEntryObject>().cache().Release();
   }
 

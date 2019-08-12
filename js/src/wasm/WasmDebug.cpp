@@ -127,7 +127,7 @@ bool DebugState::incrementStepperCount(JSContext* cx, uint32_t funcIndex) {
   return true;
 }
 
-bool DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
+bool DebugState::decrementStepperCount(FreeOp* fop, uint32_t funcIndex) {
   const CodeRange& codeRange =
       codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
   MOZ_ASSERT(codeRange.isFunction());
@@ -228,7 +228,7 @@ bool DebugState::hasBreakpointSite(uint32_t offset) {
   return breakpointSites_.has(offset);
 }
 
-void DebugState::destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
+void DebugState::destroyBreakpointSite(FreeOp* fop, Instance* instance,
                                        uint32_t offset) {
   WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
   MOZ_ASSERT(p);
@@ -237,7 +237,7 @@ void DebugState::destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
   breakpointSites_.remove(p);
 }
 
-void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
+void DebugState::clearBreakpointsIn(FreeOp* fop, WasmInstanceObject* instance,
                                     js::Debugger* dbg, JSObject* handler) {
   MOZ_ASSERT(instance);
   if (breakpointSites_.empty()) {
@@ -262,7 +262,7 @@ void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
   }
 }
 
-void DebugState::clearAllBreakpoints(JSFreeOp* fop,
+void DebugState::clearAllBreakpoints(FreeOp* fop,
                                      WasmInstanceObject* instance) {
   clearBreakpointsIn(fop, instance, nullptr, nullptr);
 }

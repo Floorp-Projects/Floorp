@@ -511,7 +511,7 @@ void BaselineScript::Trace(JSTracer* trc, BaselineScript* script) {
   script->trace(trc);
 }
 
-void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
+void BaselineScript::Destroy(FreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonBuilder());
 
   // This allocation is tracked by JSScript::setBaselineScript /
@@ -915,7 +915,7 @@ void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
   toggleCodeCoverageInstrumentationUnchecked(enable);
 }
 
-void jit::FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script) {
+void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
   MOZ_ASSERT(script->hasBaselineScript());
   MOZ_ASSERT(!script->jitScript()->active());
 

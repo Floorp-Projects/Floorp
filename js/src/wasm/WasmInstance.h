@@ -57,7 +57,7 @@ class Instance {
   const UniqueDebugState maybeDebug_;
   StructTypeDescrVector structTypeDescrs_;
 
-  friend void Zone::sweepBreakpoints(JSFreeOp*);
+  friend void Zone::sweepBreakpoints(js::FreeOp*);
 
   // Internal helpers:
   const void** addressOfFuncTypeId(const FuncTypeIdDesc& funcTypeId) const;
@@ -169,7 +169,7 @@ class Instance {
 
   JSString* createDisplayURL(JSContext* cx);
   WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
-  void destroyBreakpointSite(JSFreeOp* fop, uint32_t offset);
+  void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
 
   // about:memory reporting:
 

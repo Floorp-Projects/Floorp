@@ -4365,8 +4365,9 @@ static void FinalizeFFIType(JSFreeOp* fop, JSObject* obj, const Value& slot,
                             size_t elementCount) {
   ffi_type* ffiType = static_cast<ffi_type*>(slot.toPrivate());
   size_t size = elementCount * sizeof(ffi_type*);
-  fop->free_(obj, ffiType->elements, size, MemoryUse::CTypeFFITypeElements);
-  fop->delete_(obj, ffiType, MemoryUse::CTypeFFIType);
+  FreeOp::get(fop)->free_(obj, ffiType->elements, size,
+                          MemoryUse::CTypeFFITypeElements);
+  FreeOp::get(fop)->delete_(obj, ffiType, MemoryUse::CTypeFFIType);
 }
 
 void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
@@ -4383,7 +4384,7 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
       slot = JS_GetReservedSlot(obj, SLOT_FNINFO);
       if (!slot.isUndefined()) {
         auto fninfo = static_cast<FunctionInfo*>(slot.toPrivate());
-        fop->delete_(obj, fninfo, MemoryUse::CTypeFunctionInfo);
+        FreeOp::get(fop)->delete_(obj, fninfo, MemoryUse::CTypeFunctionInfo);
       }
       break;
     }
@@ -4396,7 +4397,7 @@ void CType::Finalize(JSFreeOp* fop, JSObject* obj) {
       if (!slot.isUndefined()) {
         auto info = static_cast<FieldInfoHash*>(slot.toPrivate());
         fieldCount = info->count();
-        fop->delete_(obj, info, MemoryUse::CTypeFieldInfo);
+        FreeOp::get(fop)->delete_(obj, info, MemoryUse::CTypeFieldInfo);
       }
 
       // Free the ffi_type info.
@@ -7267,7 +7268,7 @@ void CClosure::Finalize(JSFreeOp* fop, JSObject* obj) {
   }
 
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(slot.toPrivate());
-  fop->delete_(obj, cinfo, MemoryUse::CClosureInfo);
+  FreeOp::get(fop)->delete_(obj, cinfo, MemoryUse::CClosureInfo);
 }
 
 void CClosure::ClosureStub(ffi_cif* cif, void* result, void** args,
@@ -7531,9 +7532,9 @@ void CData::Finalize(JSFreeOp* fop, JSObject* obj) {
   if (owns) {
     JSObject* typeObj = &JS_GetReservedSlot(obj, SLOT_CTYPE).toObject();
     size_t size = CType::GetSize(typeObj);
-    fop->free_(obj, *buffer, size, MemoryUse::CDataBuffer);
+    FreeOp::get(fop)->free_(obj, *buffer, size, MemoryUse::CDataBuffer);
   }
-  fop->delete_(obj, buffer, MemoryUse::CDataBufferPtr);
+  FreeOp::get(fop)->delete_(obj, buffer, MemoryUse::CDataBufferPtr);
 }
 
 JSObject* CData::GetCType(JSObject* dataObj) {
@@ -8462,7 +8463,7 @@ void Int64Base::Finalize(JSFreeOp* fop, JSObject* obj) {
   }
 
   uint64_t* buffer = static_cast<uint64_t*>(slot.toPrivate());
-  fop->delete_(obj, buffer, MemoryUse::CTypesInt64);
+  FreeOp::get(fop)->delete_(obj, buffer, MemoryUse::CTypesInt64);
 }
 
 uint64_t Int64Base::GetInt(JSObject* obj) {

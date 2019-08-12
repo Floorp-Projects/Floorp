@@ -35,7 +35,7 @@ static RealmInstrumentation* GetInstrumentation(JSObject* obj) {
 }
 
 /* static */
-void RealmInstrumentation::holderFinalize(JSFreeOp* fop, JSObject* obj) {
+void RealmInstrumentation::holderFinalize(FreeOp* fop, JSObject* obj) {
   RealmInstrumentation* instrumentation = GetInstrumentation(obj);
   fop->delete_(obj, instrumentation, MemoryUse::RealmInstrumentation);
 }

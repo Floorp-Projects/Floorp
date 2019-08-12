@@ -181,7 +181,7 @@ bool Shape::hashify(JSContext* cx, Shape* shape) {
   return true;
 }
 
-void ShapeCachePtr::maybePurgeCache(JSFreeOp* fop, BaseShape* base) {
+void ShapeCachePtr::maybePurgeCache(FreeOp* fop, BaseShape* base) {
   if (isTable()) {
     ShapeTable* table = getTablePointer();
     if (table->freeList() == SHAPE_INVALID_SLOT) {
@@ -305,7 +305,7 @@ void ShapeTable::trace(JSTracer* trc) {
   }
 }
 
-inline void ShapeCachePtr::destroy(JSFreeOp* fop, BaseShape* base) {
+inline void ShapeCachePtr::destroy(FreeOp* fop, BaseShape* base) {
   if (isTable()) {
     fop->delete_(base, getTablePointer(), MemoryUse::ShapeCache);
   } else if (isIC()) {
@@ -1683,7 +1683,7 @@ void Zone::checkBaseShapeTableAfterMovingGC() {
 
 #endif  // JSGC_HASH_TABLE_CHECKS
 
-void BaseShape::finalize(JSFreeOp* fop) {
+void BaseShape::finalize(FreeOp* fop) {
   if (cache_.isInitialized()) {
     cache_.destroy(fop, this);
   }
@@ -1794,7 +1794,7 @@ bool PropertyTree::insertChild(JSContext* cx, Shape* parent, Shape* child) {
   return true;
 }
 
-void Shape::removeChild(JSFreeOp* fop, Shape* child) {
+void Shape::removeChild(FreeOp* fop, Shape* child) {
   MOZ_ASSERT(!child->inDictionary());
   MOZ_ASSERT(child->parent == this);
 
@@ -1882,7 +1882,7 @@ Shape* PropertyTree::getChild(JSContext* cx, Shape* parent,
   return inlinedGetChild(cx, parent, child);
 }
 
-void Shape::sweep(JSFreeOp* fop) {
+void Shape::sweep(FreeOp* fop) {
   /*
    * We detach the child from the parent if the parent is reachable.
    *
@@ -1903,7 +1903,7 @@ void Shape::sweep(JSFreeOp* fop) {
   }
 }
 
-void Shape::finalize(JSFreeOp* fop) {
+void Shape::finalize(FreeOp* fop) {
   if (!inDictionary() && kids.isHash()) {
     fop->delete_(this, kids.toHash(), MemoryUse::ShapeKids);
   }

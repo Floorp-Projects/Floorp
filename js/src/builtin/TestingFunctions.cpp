@@ -3148,7 +3148,7 @@ class CloneBufferObject : public NativeObject {
     return CallNonGenericMethod<is, getCloneBufferAsArrayBuffer_impl>(cx, args);
   }
 
-  static void Finalize(JSFreeOp* fop, JSObject* obj) {
+  static void Finalize(FreeOp* fop, JSObject* obj) {
     obj->as<CloneBufferObject>().discard();
   }
 };

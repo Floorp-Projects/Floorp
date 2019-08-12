@@ -418,7 +418,7 @@ struct MOZ_RAII AutoEnterAnalysis {
   // Prevent us from calling the objectMetadataCallback.
   js::AutoSuppressAllocationMetadataBuilder suppressMetadata;
 
-  JSFreeOp* freeOp;
+  FreeOp* freeOp;
   Zone* zone;
 
   explicit AutoEnterAnalysis(JSContext* cx)
@@ -426,7 +426,7 @@ struct MOZ_RAII AutoEnterAnalysis {
     init(cx->defaultFreeOp(), cx->zone());
   }
 
-  AutoEnterAnalysis(JSFreeOp* fop, Zone* zone)
+  AutoEnterAnalysis(FreeOp* fop, Zone* zone)
       : suppressGC(TlsContext.get()), suppressMetadata(zone) {
     init(fop, zone);
   }
@@ -444,7 +444,7 @@ struct MOZ_RAII AutoEnterAnalysis {
   }
 
  private:
-  void init(JSFreeOp* fop, Zone* zone) {
+  void init(FreeOp* fop, Zone* zone) {
 #ifdef JS_CRASH_DIAGNOSTICS
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
 #endif

@@ -324,7 +324,7 @@ class JS::Compartment {
  public:
   explicit Compartment(JS::Zone* zone, bool invisibleToDebugger);
 
-  void destroy(JSFreeOp* fop);
+  void destroy(js::FreeOp* fop);
 
   MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
@@ -380,7 +380,8 @@ class JS::Compartment {
   void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
   static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
 
-  void sweepRealms(JSFreeOp* fop, bool keepAtleastOne, bool destroyingRuntime);
+  void sweepRealms(js::FreeOp* fop, bool keepAtleastOne,
+                   bool destroyingRuntime);
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepCrossCompartmentObjectWrappers();
 

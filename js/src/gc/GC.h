@@ -25,6 +25,7 @@ namespace js {
 
 class AccessorShape;
 class FatInlineAtom;
+class FreeOp;
 class NormalAtom;
 
 class Nursery;
@@ -56,7 +57,7 @@ FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
 
 extern void TraceRuntime(JSTracer* trc);
 
-extern void ReleaseAllJITCode(JSFreeOp* op);
+extern void ReleaseAllJITCode(FreeOp* op);
 
 extern void PrepareForDebugGC(JSRuntime* rt);
 

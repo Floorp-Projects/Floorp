@@ -114,7 +114,7 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-void js::PluralRulesObject::finalize(JSFreeOp* fop, JSObject* obj) {
+void js::PluralRulesObject::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   auto* pluralRules = &obj->as<PluralRulesObject>();

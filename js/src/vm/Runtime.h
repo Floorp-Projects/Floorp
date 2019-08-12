@@ -690,10 +690,10 @@ struct JSRuntime {
   js::WriteOnceData<js::PropertyName*> emptyString;
 
  private:
-  js::MainThreadData<JSFreeOp*> defaultFreeOp_;
+  js::MainThreadData<js::FreeOp*> defaultFreeOp_;
 
  public:
-  JSFreeOp* defaultFreeOp() {
+  js::FreeOp* defaultFreeOp() {
     MOZ_ASSERT(defaultFreeOp_);
     return defaultFreeOp_;
   }

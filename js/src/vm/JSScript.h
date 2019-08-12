@@ -1279,7 +1279,7 @@ class ScriptSourceObject : public NativeObject {
   static const Class class_;
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 
   static ScriptSourceObject* create(JSContext* cx, ScriptSource* source);
   static ScriptSourceObject* clone(JSContext* cx, HandleScriptSourceObject sso);
@@ -2616,8 +2616,8 @@ class JSScript : public js::BaseScript {
   js::jit::IonScript* maybeIonScript() const { return ion; }
   js::jit::IonScript* const* addressOfIonScript() const { return &ion; }
   void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
-  void setIonScript(JSFreeOp* fop, js::jit::IonScript* ionScript);
-  inline void clearIonScript(JSFreeOp* fop);
+  void setIonScript(js::FreeOp* fop, js::jit::IonScript* ionScript);
+  inline void clearIonScript(js::FreeOp* fop);
 
   bool hasBaselineScript() const {
     bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -2633,9 +2633,9 @@ class JSScript : public js::BaseScript {
   }
   inline void setBaselineScript(JSRuntime* rt,
                                 js::jit::BaselineScript* baselineScript);
-  inline void setBaselineScript(JSFreeOp* fop,
+  inline void setBaselineScript(js::FreeOp* fop,
                                 js::jit::BaselineScript* baselineScript);
-  inline void clearBaselineScript(JSFreeOp* fop);
+  inline void clearBaselineScript(js::FreeOp* fop);
 
   void updateJitCodeRaw(JSRuntime* rt);
 
@@ -2751,8 +2751,8 @@ class JSScript : public js::BaseScript {
   bool hasJitScript() const { return jitScript_ != nullptr; }
   js::jit::JitScript* jitScript() { return jitScript_; }
 
-  void maybeReleaseJitScript(JSFreeOp* fop);
-  void releaseJitScript(JSFreeOp* fop);
+  void maybeReleaseJitScript(js::FreeOp* fop);
+  void releaseJitScript(js::FreeOp* fop);
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;
@@ -3046,7 +3046,7 @@ class JSScript : public js::BaseScript {
   bool hasDebugScript() const { return hasFlag(MutableFlags::HasDebugScript); }
   void setHasDebugScript(bool b) { setFlag(MutableFlags::HasDebugScript, b); }
 
-  void finalize(JSFreeOp* fop);
+  void finalize(js::FreeOp* fop);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
 
@@ -3460,7 +3460,7 @@ class LazyScript : public BaseScript {
 
   friend class GCMarker;
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
+  void finalize(js::FreeOp* fop);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
 

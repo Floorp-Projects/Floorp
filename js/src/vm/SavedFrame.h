@@ -41,7 +41,7 @@ class SavedFrame : public NativeObject {
   static bool parentProperty(JSContext* cx, unsigned argc, Value* vp);
   static bool toStringMethod(JSContext* cx, unsigned argc, Value* vp);
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 
   // Convenient getters for SavedFrame's reserved slots for use from C++.
   JSAtom* getSource();

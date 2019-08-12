@@ -24,6 +24,7 @@ struct UNumberFormatter;
 namespace js {
 
 class ArrayObject;
+class FreeOp;
 
 class NumberFormatObject : public NativeObject {
  public:
@@ -65,7 +66,7 @@ class NumberFormatObject : public NativeObject {
  private:
   static const ClassOps classOps_;
 
-  static void finalize(JSFreeOp* fop, JSObject* obj);
+  static void finalize(FreeOp* fop, JSObject* obj);
 };
 
 extern JSObject* CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl,
