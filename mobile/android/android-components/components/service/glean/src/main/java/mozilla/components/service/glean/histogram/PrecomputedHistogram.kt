@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.histogram
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.HistogramType
 import mozilla.components.support.ktx.android.org.json.tryGetInt
 import mozilla.components.support.ktx.android.org.json.tryGetLong
@@ -24,7 +23,6 @@ import org.json.JSONObject
  * @param values a map containing the bucket index mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the custom distribution
  */
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 data class PrecomputedHistogram(
     val rangeMin: Long,
     val rangeMax: Long,

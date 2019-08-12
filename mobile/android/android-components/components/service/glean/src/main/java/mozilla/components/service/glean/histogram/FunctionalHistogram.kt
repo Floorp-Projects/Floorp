@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.histogram
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import org.json.JSONObject
 import java.lang.Math.pow
@@ -28,7 +27,6 @@ import kotlin.math.log
  * @param values a map containing the minimum bucket value mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the histogram
  */
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 data class FunctionalHistogram(
     // map from bucket limits to accumulated values
     val values: MutableMap<Long, Long> = mutableMapOf(),
