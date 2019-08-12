@@ -52,7 +52,6 @@
 
 /************************************************************************/
 
-struct JSFreeOp;
 struct JSFunctionSpec;
 struct JSPropertySpec;
 
