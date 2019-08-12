@@ -128,8 +128,7 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
   event->GetType(type);
 
   if (type.Equals(DOM_META_ADDED)) {
-    MVM_LOG("%p: got a dom-meta-added event\n", this);
-    RefreshViewportSize(mPainted);
+    HandleDOMMetaAdded();
   } else if (type.Equals(DOM_META_CHANGED)) {
     MVM_LOG("%p: got a dom-meta-changed event\n", this);
     RefreshViewportSize(mPainted);
@@ -144,6 +143,11 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
     }
   }
   return NS_OK;
+}
+
+void MobileViewportManager::HandleDOMMetaAdded() {
+  MVM_LOG("%p: got a dom-meta-added event\n", this);
+  RefreshViewportSize(mPainted);
 }
 
 NS_IMETHODIMP
