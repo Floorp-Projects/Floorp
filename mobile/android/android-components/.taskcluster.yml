@@ -157,7 +157,7 @@ tasks:
                       metadata:
                         name: 'Android Components - Decision task (Pull Request #${pull_request_number})'
                         description: 'Building and testing Android components - triggered by [#${pull_request_number}](${pull_request_url})'
-            - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
+            - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/" && head_branch != "staging.tmp" && head_branch != "trying.tmp"'
               then:
                 $mergeDeep:
                   - {$eval: 'default_task_definition'}
