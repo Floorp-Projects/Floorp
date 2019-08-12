@@ -490,7 +490,7 @@ static inline void js_free(void* p) {
  * - For deallocations during GC finalization, use one of the following
  *   operations on the JSFreeOp provided to the finalizer:
  *
- *     FreeOp::{free_,delete_}
+ *     JSFreeOp::{free_,delete_}
  */
 
 /*

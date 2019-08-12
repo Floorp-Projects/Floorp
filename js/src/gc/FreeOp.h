@@ -88,7 +88,7 @@ class JSFreeOp {
   // Queue memory that was associated with a GC thing using js::AddCellMemory to
   // be freed when the JSFreeOp is destroyed.
   //
-  // This should not be called on the default FreeOps returned by
+  // This should not be called on the default JSFreeOps returned by
   // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
   // the runtime itself is destroyed.
   //
@@ -97,7 +97,7 @@ class JSFreeOp {
   void freeLater(Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   bool appendJitPoisonRange(const js::jit::JitPoisonRange& range) {
-    // FreeOps other than the defaultFreeOp() are constructed on the stack,
+    // JSFreeOps other than the defaultFreeOp() are constructed on the stack,
     // and won't hold onto the pointers to free indefinitely.
     MOZ_ASSERT(!isDefaultFreeOp());
 
@@ -172,9 +172,5 @@ class JSFreeOp {
  private:
   void queueForFreeLater(void* p);
 };
-
-namespace js {
-using FreeOp = JSFreeOp;
-}  // namespace js
 
 #endif  // gc_FreeOp_h
