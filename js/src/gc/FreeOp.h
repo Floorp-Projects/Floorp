@@ -22,7 +22,7 @@ namespace js {
 
 namespace gc {
 class AutoSetThreadIsPerformingGC;
-} // namespace gc
+}  // namespace gc
 
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_

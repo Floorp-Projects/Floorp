@@ -47,8 +47,7 @@ void DebugAPI::onNewScript(JSContext* cx, HandleScript script) {
 }
 
 /* static */
-void DebugAPI::onNewGlobalObject(JSContext* cx,
-                                 Handle<GlobalObject*> global) {
+void DebugAPI::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global) {
   MOZ_ASSERT(!global->realm()->firedOnNewGlobalObject);
 #ifdef DEBUG
   global->realm()->firedOnNewGlobalObject = true;
@@ -180,6 +179,6 @@ void DebugAPI::sweepBreakpoints(FreeOp* fop, JSScript* script) {
   }
 }
 
-} // namespace js
+}  // namespace js
 
 #endif /* debugger_DebugAPI_inl_h */

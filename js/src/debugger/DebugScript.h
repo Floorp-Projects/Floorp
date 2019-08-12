@@ -88,8 +88,8 @@ class DebugScript {
 
   static void clearBreakpointsIn(FreeOp* fop, JS::Realm* realm, Debugger* dbg,
                                  JSObject* handler);
-  static void clearBreakpointsIn(FreeOp* fop, JSScript* script,
-                                 Debugger* dbg, JSObject* handler);
+  static void clearBreakpointsIn(FreeOp* fop, JSScript* script, Debugger* dbg,
+                                 JSObject* handler);
 
 #ifdef DEBUG
   static uint32_t getStepperCount(JSScript* script);

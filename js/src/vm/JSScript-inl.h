@@ -183,7 +183,8 @@ inline void JSScript::setBaselineScript(
 
 inline void JSScript::clearBaselineScript(js::FreeOp* fop) {
   MOZ_ASSERT(hasBaselineScript());
-  fop->removeCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
+  fop->removeCellMemory(this, baseline->allocBytes(),
+                        js::MemoryUse::BaselineScript);
   baseline = nullptr;
 }
 
