@@ -89,19 +89,15 @@ DomPanel.prototype = {
   },
 
   destroy() {
-    if (this._destroying) {
-      return this._destroying;
+    if (this._destroyed) {
+      return;
     }
+    this._destroyed = true;
 
-    this._destroying = new Promise(resolve => {
-      this.target.off("navigate", this.onTabNavigated);
-      this._toolbox.off("select", this.onPanelVisibilityChange);
+    this.target.off("navigate", this.onTabNavigated);
+    this._toolbox.off("select", this.onPanelVisibilityChange);
 
-      this.emit("destroyed");
-      resolve();
-    });
-
-    return this._destroying;
+    this.emit("destroyed");
   },
 
   // Events
