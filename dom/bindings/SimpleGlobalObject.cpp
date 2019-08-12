@@ -41,7 +41,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SimpleGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
 NS_INTERFACE_MAP_END
 
-static void SimpleGlobal_finalize(js::FreeOp* fop, JSObject* obj) {
+static void SimpleGlobal_finalize(JSFreeOp* fop, JSObject* obj) {
   SimpleGlobalObject* globalObject =
       static_cast<SimpleGlobalObject*>(JS_GetPrivate(obj));
   if (globalObject) {

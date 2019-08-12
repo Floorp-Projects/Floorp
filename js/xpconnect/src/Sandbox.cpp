@@ -411,7 +411,7 @@ static bool SandboxCloneInto(JSContext* cx, unsigned argc, Value* vp) {
   return xpc::CloneInto(cx, args[0], args[1], options, args.rval());
 }
 
-static void sandbox_finalize(js::FreeOp* fop, JSObject* obj) {
+static void sandbox_finalize(JSFreeOp* fop, JSObject* obj) {
   nsIScriptObjectPrincipal* sop =
       static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));
   if (!sop) {
