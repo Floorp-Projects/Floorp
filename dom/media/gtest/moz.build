@@ -14,6 +14,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    'AudioGenerator.cpp',
     'MockMediaResource.cpp',
     'TestAudioBuffers.cpp',
     'TestAudioCallbackDriver.cpp',
@@ -37,6 +38,7 @@ UNIFIED_SOURCES += [
     'TestMediaSpan.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
+    'TestMuxer.cpp',
     'TestOpusParser.cpp',
     'TestRust.cpp',
     'TestTimeUnit.cpp',

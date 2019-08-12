@@ -10,8 +10,7 @@
 
 namespace mozilla {
 
-WebMWriter::WebMWriter(uint32_t aTrackTypes) : ContainerWriter() {
-  mMetadataRequiredFlag = aTrackTypes;
+WebMWriter::WebMWriter() : ContainerWriter() {
   mEbmlComposer = new EbmlComposer();
 }
 
@@ -19,17 +18,16 @@ WebMWriter::~WebMWriter() {
   // Out-of-line dtor so mEbmlComposer nsAutoPtr can delete a complete type.
 }
 
-nsresult WebMWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                                       uint32_t aFlags) {
+nsresult WebMWriter::WriteEncodedTrack(
+    const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::WriteEncodedTrack", OTHER);
-  for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
-    mEbmlComposer->WriteSimpleBlock(
-        aData.GetEncodedFrames().ElementAt(i).get());
+  for (uint32_t i = 0; i < aData.Length(); i++) {
+    mEbmlComposer->WriteSimpleBlock(aData.ElementAt(i).get());
   }
   return NS_OK;
 }
 
-nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                       uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::GetContainerData", OTHER);
   mEbmlComposer->ExtractBuffer(aOutputBufs, aFlags);
@@ -39,40 +37,75 @@ nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   return NS_OK;
 }
 
-nsresult WebMWriter::SetMetadata(TrackMetadataBase* aMetadata) {
-  MOZ_ASSERT(aMetadata);
+nsresult WebMWriter::SetMetadata(
+    const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) {
   AUTO_PROFILER_LABEL("WebMWriter::SetMetadata", OTHER);
+  MOZ_DIAGNOSTIC_ASSERT(!aMetadata.IsEmpty());
 
-  if (aMetadata->GetKind() == TrackMetadataBase::METADATA_VP8) {
-    VP8Metadata* meta = static_cast<VP8Metadata*>(aMetadata);
-    MOZ_ASSERT(meta, "Cannot find vp8 encoder metadata");
-    mEbmlComposer->SetVideoConfig(meta->mWidth, meta->mHeight,
-                                  meta->mDisplayWidth, meta->mDisplayHeight);
-    mMetadataRequiredFlag =
-        mMetadataRequiredFlag & ~ContainerWriter::CREATE_VIDEO_TRACK;
+  // Integrity checks
+  bool bad = false;
+  for (const RefPtr<TrackMetadataBase>& metadata : aMetadata) {
+    MOZ_ASSERT(metadata);
+
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_VP8) {
+      VP8Metadata* meta = static_cast<VP8Metadata*>(metadata.get());
+      if (meta->mWidth == 0 || meta->mHeight == 0 || meta->mDisplayWidth == 0 ||
+          meta->mDisplayHeight == 0) {
+        bad = true;
+      }
+    }
+
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
+      VorbisMetadata* meta = static_cast<VorbisMetadata*>(metadata.get());
+      if (meta->mSamplingFrequency == 0 || meta->mChannels == 0 ||
+          meta->mData.IsEmpty()) {
+        bad = true;
+      }
+    }
+
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
+      OpusMetadata* meta = static_cast<OpusMetadata*>(metadata.get());
+      if (meta->mSamplingFrequency == 0 || meta->mChannels == 0 ||
+          meta->mIdHeader.IsEmpty()) {
+        bad = true;
+      }
+    }
+  }
+  if (bad) {
+    return NS_ERROR_FAILURE;
   }
 
-  if (aMetadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
-    VorbisMetadata* meta = static_cast<VorbisMetadata*>(aMetadata);
-    MOZ_ASSERT(meta, "Cannot find vorbis encoder metadata");
-    mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
-    mEbmlComposer->SetAudioCodecPrivateData(meta->mData);
-    mMetadataRequiredFlag =
-        mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
-  }
+  // Storing
+  DebugOnly<bool> hasAudio = false;
+  DebugOnly<bool> hasVideo = false;
+  for (const RefPtr<TrackMetadataBase>& metadata : aMetadata) {
+    MOZ_ASSERT(metadata);
 
-  if (aMetadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
-    OpusMetadata* meta = static_cast<OpusMetadata*>(aMetadata);
-    MOZ_ASSERT(meta, "Cannot find Opus encoder metadata");
-    mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
-    mEbmlComposer->SetAudioCodecPrivateData(meta->mIdHeader);
-    mMetadataRequiredFlag =
-        mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
-  }
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_VP8) {
+      MOZ_ASSERT(!hasVideo);
+      VP8Metadata* meta = static_cast<VP8Metadata*>(metadata.get());
+      mEbmlComposer->SetVideoConfig(meta->mWidth, meta->mHeight,
+                                    meta->mDisplayWidth, meta->mDisplayHeight);
+      hasVideo = true;
+    }
 
-  if (!mMetadataRequiredFlag) {
-    mEbmlComposer->GenerateHeader();
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
+      MOZ_ASSERT(!hasAudio);
+      VorbisMetadata* meta = static_cast<VorbisMetadata*>(metadata.get());
+      mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
+      mEbmlComposer->SetAudioCodecPrivateData(meta->mData);
+      hasAudio = true;
+    }
+
+    if (metadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
+      MOZ_ASSERT(!hasAudio);
+      OpusMetadata* meta = static_cast<OpusMetadata*>(metadata.get());
+      mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
+      mEbmlComposer->SetAudioCodecPrivateData(meta->mIdHeader);
+      hasAudio = true;
+    }
   }
+  mEbmlComposer->GenerateHeader();
   return NS_OK;
 }
 

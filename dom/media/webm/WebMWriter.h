@@ -41,30 +41,28 @@ class VP8Metadata : public TrackMetadataBase {
  */
 class WebMWriter : public ContainerWriter {
  public:
-  // aTrackTypes indicate this muxer should multiplex into Video only or A/V
-  // foramt. Run in MediaRecorder thread
-  explicit WebMWriter(uint32_t aTrackTypes);
+  // Run in MediaRecorder thread
+  WebMWriter();
   virtual ~WebMWriter();
 
-  // WriteEncodedTrack inserts raw packets into WebM stream.
-  nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
+  // WriteEncodedTrack inserts raw packets into WebM stream. Does not accept
+  // any flags: any specified will be ignored. Writing is finalized via
+  // flushing via GetContainerData().
+  nsresult WriteEncodedTrack(const nsTArray<RefPtr<EncodedFrame>>& aData,
                              uint32_t aFlags = 0) override;
 
   // GetContainerData outputs multiplexing data.
   // aFlags indicates the muxer should enter into finished stage and flush out
   // queue data.
-  nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+  nsresult GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                             uint32_t aFlags = 0) override;
 
   // Assign metadata into muxer
-  nsresult SetMetadata(TrackMetadataBase* aMetadata) override;
+  nsresult SetMetadata(
+      const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) override;
 
  private:
   nsAutoPtr<EbmlComposer> mEbmlComposer;
-
-  // Indicate what kind of meta data needed in the writer.
-  // If this value become 0, it means writer can start to generate header.
-  uint8_t mMetadataRequiredFlag;
 };
 
 }  // namespace mozilla

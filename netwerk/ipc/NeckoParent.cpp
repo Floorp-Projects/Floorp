@@ -982,7 +982,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
   };
   RefPtr<HSTSDataCallbackWrapper> wrapper =
       new HSTSDataCallbackWrapper(std::move(callback));
-  gHttpHandler->EnsureHSTSDataReadyNative(wrapper.forget());
+  gHttpHandler->EnsureHSTSDataReadyNative(wrapper);
   return IPC_OK();
 }
 

@@ -6,7 +6,6 @@
 #include "prtime.h"
 #include "GeckoProfiler.h"
 
-#undef LOG
 #define LOG(args, ...)
 
 namespace mozilla {
@@ -46,22 +45,20 @@ nsresult OggWriter::Init() {
   return (rc == 0) ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
-nsresult OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                                      uint32_t aFlags) {
+nsresult OggWriter::WriteEncodedTrack(
+    const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("OggWriter::WriteEncodedTrack", OTHER);
 
-  uint32_t len = aData.GetEncodedFrames().Length();
+  uint32_t len = aData.Length();
   for (uint32_t i = 0; i < len; i++) {
-    if (aData.GetEncodedFrames()[i]->GetFrameType() !=
-        EncodedFrame::OPUS_AUDIO_FRAME) {
+    if (aData[i]->mFrameType != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }
 
     // only pass END_OF_STREAM on the last frame!
     nsresult rv = WriteEncodedData(
-        aData.GetEncodedFrames()[i]->GetFrameData(),
-        aData.GetEncodedFrames()[i]->GetDuration(),
+        aData[i]->GetFrameData(), aData[i]->mDuration,
         i < len - 1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) : aFlags);
     if (NS_FAILED(rv)) {
       LOG("%p Failed to WriteEncodedTrack!", this);
@@ -111,7 +108,7 @@ nsresult OggWriter::WriteEncodedData(const nsTArray<uint8_t>& aBuffer,
   return NS_OK;
 }
 
-void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs) {
+void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t>>* aOutputBufs) {
   aOutputBufs->AppendElement();
   aOutputBufs->LastElement().SetLength(mOggPage.header_len + mOggPage.body_len);
   memcpy(aOutputBufs->LastElement().Elements(), mOggPage.header,
@@ -120,7 +117,7 @@ void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs) {
          mOggPage.body, mOggPage.body_len);
 }
 
-nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                      uint32_t aFlags) {
   int rc = -1;
   AUTO_PROFILER_LABEL("OggWriter::GetContainerData", OTHER);
@@ -144,12 +141,13 @@ nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
     rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
     NS_ENSURE_TRUE(rc > 0, NS_ERROR_FAILURE);
 
-    ProduceOggPage(aOutputBufs);
-    return NS_OK;
-
     // Force generate a page even if the amount of packet data is not enough.
     // Usually do so after a header packet.
-  } else if (aFlags & ContainerWriter::FLUSH_NEEDED) {
+
+    ProduceOggPage(aOutputBufs);
+  }
+
+  if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     // rc = 0 means no packet to put into a page, or an internal error.
     rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
   } else {
@@ -164,20 +162,25 @@ nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     mIsWritingComplete = true;
   }
-  return (rc > 0) ? NS_OK : NS_ERROR_FAILURE;
+  // We always return NS_OK here since it's OK to call this without having
+  // enough data to fill a page. It's the more common case compared to internal
+  // errors, and we cannot distinguish the two.
+  return NS_OK;
 }
 
-nsresult OggWriter::SetMetadata(TrackMetadataBase* aMetadata) {
-  MOZ_ASSERT(aMetadata);
+nsresult OggWriter::SetMetadata(
+    const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) {
+  MOZ_ASSERT(aMetadata.Length() == 1);
+  MOZ_ASSERT(aMetadata[0]);
 
   AUTO_PROFILER_LABEL("OggWriter::SetMetadata", OTHER);
 
-  if (aMetadata->GetKind() != TrackMetadataBase::METADATA_OPUS) {
+  if (aMetadata[0]->GetKind() != TrackMetadataBase::METADATA_OPUS) {
     LOG("wrong meta data type!");
     return NS_ERROR_FAILURE;
   }
   // Validate each field of METADATA
-  mMetadata = static_cast<OpusMetadata*>(aMetadata);
+  mMetadata = static_cast<OpusMetadata*>(aMetadata[0].get());
   if (mMetadata->mIdHeader.Length() == 0) {
     LOG("miss mIdHeader!");
     return NS_ERROR_FAILURE;
@@ -191,3 +194,5 @@ nsresult OggWriter::SetMetadata(TrackMetadataBase* aMetadata) {
 }
 
 }  // namespace mozilla
+
+#undef LOG

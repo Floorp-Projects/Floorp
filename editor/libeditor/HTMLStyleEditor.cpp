@@ -53,7 +53,7 @@ static already_AddRefed<nsAtom> AtomizeAttribute(const nsAString& aAttribute) {
   return NS_Atomize(aAttribute);
 }
 
-bool HTMLEditor::IsEmptyTextNode(nsINode& aNode) {
+bool HTMLEditor::IsEmptyTextNode(nsINode& aNode) const {
   bool isEmptyTextNode = false;
   return EditorBase::IsTextNode(&aNode) &&
          NS_SUCCEEDED(IsEmptyNode(&aNode, &isEmptyTextNode)) && isEmptyTextNode;
@@ -1014,7 +1014,7 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
                                            nsAtom* aAttribute,
                                            const nsAString* aValue,
                                            bool* aFirst, bool* aAny, bool* aAll,
-                                           nsAString* outValue) {
+                                           nsAString* outValue) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   *aAny = false;
@@ -1183,7 +1183,7 @@ HTMLEditor::GetInlineProperty(const nsAString& aProperty,
 
 nsresult HTMLEditor::GetInlineProperty(nsAtom* aProperty, nsAtom* aAttribute,
                                        const nsAString& aValue, bool* aFirst,
-                                       bool* aAny, bool* aAll) {
+                                       bool* aAny, bool* aAll) const {
   if (NS_WARN_IF(!aProperty) || NS_WARN_IF(!aFirst) || NS_WARN_IF(!aAny) ||
       NS_WARN_IF(!aAll)) {
     return NS_ERROR_INVALID_ARG;

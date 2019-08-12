@@ -55,14 +55,15 @@ void EbmlComposer::GenerateHeader() {
           if (mCodecPrivateData.Length() > 0) {
             // Extract the pre-skip from mCodecPrivateData
             // then convert it to nanoseconds.
-            // Details in OpusTrackEncoder.cpp.
-            mCodecDelay = (uint64_t)LittleEndian::readUint16(
-                              mCodecPrivateData.Elements() + 10) *
-                          PR_NSEC_PER_SEC / 48000;
+            // For more details see
+            // https://tools.ietf.org/html/rfc7845#section-4.2
+            uint64_t codecDelay = (uint64_t)LittleEndian::readUint16(
+                                      mCodecPrivateData.Elements() + 10) *
+                                  PR_NSEC_PER_SEC / 48000;
             // Fixed 80ms, convert into nanoseconds.
             uint64_t seekPreRoll = 80 * PR_NSEC_PER_MSEC;
             writeAudioTrack(&ebml, 0x2, 0x0, "A_OPUS", mSampleFreq, mChannels,
-                            mCodecDelay, seekPreRoll,
+                            codecDelay, seekPreRoll,
                             mCodecPrivateData.Elements(),
                             mCodecPrivateData.Length());
           }
@@ -82,39 +83,28 @@ void EbmlComposer::GenerateHeader() {
 }
 
 void EbmlComposer::FinishCluster() {
-  if (!mWritingCluster) {
+  if (!WritingCluster()) {
     return;
   }
 
-  MOZ_ASSERT(mClusterLengthLoc > 0);
+  MOZ_ASSERT(mCurrentClusterLengthLoc > 0);
   EbmlGlobal ebml;
   EbmlLoc ebmlLoc;
-  ebmlLoc.offset = mClusterLengthLoc;
+  ebmlLoc.offset = mCurrentClusterLengthLoc;
   ebml.offset = 0;
-  for (uint32_t i = mClusterHeaderIndex; i < mClusters.Length(); i++) {
-    ebml.offset += mClusters[i].Length();
+  for (const auto& block : mCurrentCluster) {
+    ebml.offset += block.Length();
   }
-  ebml.buf = mClusters[mClusterHeaderIndex].Elements();
+  ebml.buf = mCurrentCluster[0].Elements();
   Ebml_EndSubElement(&ebml, &ebmlLoc);
-  // Move the mClusters data from mClusterHeaderIndex that we can skip
-  // the metadata and the rest P-frames after ContainerWriter::FLUSH_NEEDED.
-  for (uint32_t i = mClusterHeaderIndex; i < mClusters.Length(); i++) {
-    mFinishedClusters.AppendElement()->SwapElements(mClusters[i]);
-  }
-
-  mClusterHeaderIndex = 0;
-  mClusterLengthLoc = 0;
-  mClusters.Clear();
-  mWritingCluster = false;
+  mFinishedClusters.AppendElements(std::move(mCurrentCluster));
+  mCurrentClusterLengthLoc = 0;
+  MOZ_ASSERT(mCurrentCluster.IsEmpty());
 }
 
 void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
   MOZ_RELEASE_ASSERT(mMetadataFinished);
-
-  EbmlGlobal ebml;
-  ebml.offset = 0;
-
-  auto frameType = aFrame->GetFrameType();
+  auto frameType = aFrame->mFrameType;
   const bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
   const bool isVP8PFrame = (frameType == EncodedFrame::FrameType::VP8_P_FRAME);
   const bool isOpus = (frameType == EncodedFrame::FrameType::OPUS_AUDIO_FRAME);
@@ -123,16 +113,13 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     FinishCluster();
   }
 
-  if (isVP8PFrame && !mWritingCluster) {
+  if (isVP8PFrame && !WritingCluster()) {
     // We ensure that clusters start with I-frames.
     return;
   }
 
   int64_t timeCode =
-      aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
-  if (isOpus) {
-    timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
-  }
+      aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
 
   if (!mHasVideo && timeCode >= FLUSH_AUDIO_ONLY_AFTER_MS) {
     MOZ_ASSERT(mHasAudio);
@@ -145,29 +132,25 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     FinishCluster();
   }
 
-  auto block = mClusters.AppendElement();
+  bool needClusterHeader = !WritingCluster();
+  auto block = mCurrentCluster.AppendElement();
   block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
+
+  EbmlGlobal ebml;
+  ebml.offset = 0;
   ebml.buf = block->Elements();
 
-  if (!mWritingCluster) {
+  if (needClusterHeader) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
-    MOZ_ASSERT(mClusters.Length() > 0);
-    // current cluster header array index
-    mClusterHeaderIndex = mClusters.Length() - 1;
-    mClusterLengthLoc = ebmlLoc.offset;
+    mCurrentClusterLengthLoc = ebmlLoc.offset;
     // if timeCode didn't under/overflow before, it shouldn't after this
-    mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
-    Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
+    mCurrentClusterTimecode = aFrame->mTime / PR_USEC_PER_MSEC;
+    Ebml_SerializeUnsigned(&ebml, Timecode, mCurrentClusterTimecode);
 
     // Can't under-/overflow now
     timeCode =
-        aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
-    if (isOpus) {
-      timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
-    }
-
-    mWritingCluster = true;
+        aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mCurrentClusterTimecode;
   }
 
   writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode),
@@ -212,11 +195,8 @@ void EbmlComposer::ExtractBuffer(nsTArray<nsTArray<uint8_t> >* aDestBufs,
   if (aFlag & ContainerWriter::FLUSH_NEEDED) {
     FinishCluster();
   }
-  // aDestBufs may have some element
-  for (uint32_t i = 0; i < mFinishedClusters.Length(); i++) {
-    aDestBufs->AppendElement()->SwapElements(mFinishedClusters[i]);
-  }
-  mFinishedClusters.Clear();
+  aDestBufs->AppendElements(std::move(mFinishedClusters));
+  MOZ_ASSERT(mFinishedClusters.IsEmpty());
 }
 
 }  // namespace mozilla
