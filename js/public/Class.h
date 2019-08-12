@@ -573,7 +573,7 @@ typedef bool (*GetElementsOp)(JSContext* cx, JS::HandleObject obj,
                               uint32_t begin, uint32_t end,
                               ElementAdder* adder);
 
-typedef void (*FinalizeOp)(FreeOp* fop, JSObject* obj);
+typedef void (*FinalizeOp)(JSFreeOp* fop, JSObject* obj);
 
 // The special treatment of |finalize| and |trace| is necessary because if we
 // assign either of those hooks to a local variable and then call it -- as is
@@ -867,7 +867,7 @@ static const uint32_t JSCLASS_CACHED_PROTO_MASK =
 namespace js {
 
 struct MOZ_STATIC_CLASS Class {
-  JS_CLASS_MEMBERS(js::ClassOps, FreeOp);
+  JS_CLASS_MEMBERS(js::ClassOps, JSFreeOp);
   const ClassSpec* spec;
   const ClassExtension* ext;
   const ObjectOps* oOps;

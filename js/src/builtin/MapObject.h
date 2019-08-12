@@ -139,7 +139,7 @@ class MapObject : public NativeObject {
       OrderedHashMap<Value, Value, UnbarrieredHashPolicy, ZoneAllocPolicy>;
   friend class OrderedHashTableRef<MapObject>;
 
-  static void sweepAfterMinorGC(FreeOp* fop, MapObject* mapobj);
+  static void sweepAfterMinorGC(JSFreeOp* fop, MapObject* mapobj);
 
  private:
   static const ClassSpec classSpec_;
@@ -152,7 +152,7 @@ class MapObject : public NativeObject {
   static ValueMap& extract(HandleObject o);
   static ValueMap& extract(const CallArgs& args);
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   static bool is(HandleValue v);
@@ -198,7 +198,7 @@ class MapIteratorObject : public NativeObject {
   static MapIteratorObject* create(JSContext* cx, HandleObject mapobj,
                                    ValueMap* data,
                                    MapObject::IteratorKind kind);
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static MOZ_MUST_USE bool next(Handle<MapIteratorObject*> mapIterator,
@@ -253,7 +253,7 @@ class SetObject : public NativeObject {
       OrderedHashSet<Value, UnbarrieredHashPolicy, ZoneAllocPolicy>;
   friend class OrderedHashTableRef<SetObject>;
 
-  static void sweepAfterMinorGC(FreeOp* fop, SetObject* setobj);
+  static void sweepAfterMinorGC(JSFreeOp* fop, SetObject* setobj);
 
  private:
   static const ClassSpec classSpec_;
@@ -267,7 +267,7 @@ class SetObject : public NativeObject {
   static ValueSet& extract(HandleObject o);
   static ValueSet& extract(const CallArgs& args);
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   static bool is(HandleValue v);
@@ -311,7 +311,7 @@ class SetIteratorObject : public NativeObject {
   static SetIteratorObject* create(JSContext* cx, HandleObject setobj,
                                    ValueSet* data,
                                    SetObject::IteratorKind kind);
-  static void finalize(FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
   static size_t objectMoved(JSObject* obj, JSObject* old);
 
   static MOZ_MUST_USE bool next(Handle<SetIteratorObject*> setIterator,

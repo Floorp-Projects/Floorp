@@ -169,7 +169,7 @@ static inline bool IsErrorStatus(JitExecStatus status) {
 struct EnterJitData;
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
-void Invalidate(TypeZone& types, FreeOp* fop,
+void Invalidate(TypeZone& types, JSFreeOp* fop,
                 const RecompileInfoVector& invalid, bool resetUses = true,
                 bool cancelOffThread = true);
 void Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
@@ -254,7 +254,7 @@ bool OffThreadCompilationAvailable(JSContext* cx);
 void ForbidCompilation(JSContext* cx, JSScript* script);
 
 size_t SizeOfIonData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf);
-void DestroyJitScripts(FreeOp* fop, JSScript* script);
+void DestroyJitScripts(JSFreeOp* fop, JSScript* script);
 void TraceJitScripts(JSTracer* trc, JSScript* script);
 
 bool JitSupportsSimd();

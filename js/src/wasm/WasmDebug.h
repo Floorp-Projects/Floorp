@@ -94,17 +94,18 @@ class DebugState {
                                                 Instance* instance,
                                                 uint32_t offset);
   bool hasBreakpointSite(uint32_t offset);
-  void destroyBreakpointSite(FreeOp* fop, Instance* instance, uint32_t offset);
-  void clearBreakpointsIn(FreeOp* fp, WasmInstanceObject* instance,
+  void destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
+                             uint32_t offset);
+  void clearBreakpointsIn(JSFreeOp* fp, WasmInstanceObject* instance,
                           js::Debugger* dbg, JSObject* handler);
-  void clearAllBreakpoints(FreeOp* fp, WasmInstanceObject* instance);
+  void clearAllBreakpoints(JSFreeOp* fp, WasmInstanceObject* instance);
 
   // When the Code is debug-enabled, single-stepping mode can be toggled on
   // the granularity of individual functions.
 
   bool stepModeEnabled(uint32_t funcIndex) const;
   bool incrementStepperCount(JSContext* cx, uint32_t funcIndex);
-  bool decrementStepperCount(FreeOp* fop, uint32_t funcIndex);
+  bool decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex);
 
   // Stack inspection helpers.
 

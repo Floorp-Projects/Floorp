@@ -463,7 +463,7 @@ Scope* Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing) {
   return nullptr;
 }
 
-void Scope::finalize(FreeOp* fop) {
+void Scope::finalize(JSFreeOp* fop) {
   MOZ_ASSERT(CurrentThreadIsGCSweeping());
   applyScopeDataTyped([this, fop](auto data) {
     fop->delete_(this, data, SizeOfAllocatedData(data), MemoryUse::ScopeData);

@@ -901,7 +901,7 @@ bool UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-void ArgumentsObject::finalize(FreeOp* fop, JSObject* obj) {
+void ArgumentsObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (argsobj.data()) {

@@ -147,7 +147,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   explicit Zone(JSRuntime* rt);
   ~Zone();
   MOZ_MUST_USE bool init(bool isSystem);
-  void destroy(js::FreeOp* fop);
+  void destroy(JSFreeOp* fop);
 
   static JS::Zone* from(ZoneAllocator* zoneAlloc) {
     return static_cast<Zone*>(zoneAlloc);
@@ -202,7 +202,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   };
 
   void discardJitCode(
-      js::FreeOp* fop,
+      JSFreeOp* fop,
       ShouldDiscardBaselineCode discardBaselineCode = DiscardBaselineCode,
       ShouldDiscardJitScripts discardJitScripts = KeepJitScripts);
 
@@ -312,10 +312,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #endif
 
   void sweepAfterMinorGC(JSTracer* trc);
-  void sweepBreakpoints(js::FreeOp* fop);
+  void sweepBreakpoints(JSFreeOp* fop);
   void sweepUniqueIds();
   void sweepWeakMaps();
-  void sweepCompartments(js::FreeOp* fop, bool keepAtleastOne, bool lastGC);
+  void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
 
   using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
 

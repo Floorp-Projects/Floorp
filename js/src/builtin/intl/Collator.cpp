@@ -128,7 +128,7 @@ bool js::intl_Collator(JSContext* cx, unsigned argc, Value* vp) {
   return Collator(cx, args);
 }
 
-void js::CollatorObject::finalize(FreeOp* fop, JSObject* obj) {
+void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   const Value& slot =

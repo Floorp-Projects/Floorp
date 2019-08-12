@@ -322,7 +322,7 @@ class ModuleObject : public NativeObject {
   static const ClassOps classOps_;
 
   static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(js::FreeOp* fop, JSObject* obj);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
 
   bool hasImportBindings() const;
   FunctionDeclarationVector* functionDeclarations();

@@ -56,7 +56,7 @@ FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
 
 extern void TraceRuntime(JSTracer* trc);
 
-extern void ReleaseAllJITCode(FreeOp* op);
+extern void ReleaseAllJITCode(JSFreeOp* op);
 
 extern void PrepareForDebugGC(JSRuntime* rt);
 
