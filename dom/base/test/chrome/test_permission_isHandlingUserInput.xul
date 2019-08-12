@@ -39,6 +39,8 @@
   }
 
   async function runTest() {
+    await SpecialPowers.setBoolPref("dom.webnotifications.allowcrossoriginiframe", true);
+
     // Test programmatic request for persistent storage.
     let request = checkPermissionRequest("persistent-storage", false);
     navigator.storage.persist();
@@ -78,6 +80,8 @@
       frameWin.Notification.requestPermission();
     });
     await request;
+
+    await SpecialPowers.clearUserPref("dom.webnotifications.allowcrossoriginiframe");
   }
 
   frame.addEventListener("load", function() {
