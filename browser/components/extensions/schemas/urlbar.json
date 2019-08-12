@@ -217,6 +217,32 @@
         "description": "Hides the contextual tip (it will still be in the DOM).",
         "parameters": []
       }
+    ],
+    "events": [
+      {
+        "name": "onButtonClicked",
+        "type": "function",
+        "description": "Fired when the user clicks the contextual tip's button.",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "integer",
+            "description": "The id of the window where the contextual tip's button was clicked."
+          }
+        ]
+      },
+      {
+        "name": "onLinkClicked",
+        "type": "function",
+        "description": "Fired when the user clicks the contextual tip's link.",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "integer",
+            "description": "The id of the window where the contextual tip's link was clicked."
+          }
+        ]
+      }
     ]
   }
 ]
