@@ -175,6 +175,15 @@ impl Default for Swizzle {
     }
 }
 
+/// Swizzle settings of the texture cache.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
+pub struct SwizzleSettings {
+    /// Swizzle required on sampling a texture with BGRA8 format.
+    pub bgra8_sampling_swizzle: Swizzle,
+}
+
 /// An ID for a texture that is owned by the `texture_cache` module.
 ///
 /// This can include atlases or standalone textures allocated via the texture
@@ -307,6 +316,7 @@ pub struct TextureCacheUpdate {
     pub stride: Option<i32>,
     pub offset: i32,
     pub layer_index: i32,
+    pub format_override: Option<ImageFormat>,
     pub source: TextureUpdateSource,
 }
 
@@ -364,10 +374,11 @@ impl TextureUpdateList {
         self.push_update(TextureCacheUpdate {
             id,
             rect,
-            source: TextureUpdateSource::DebugClear,
             stride: None,
             offset: 0,
             layer_index: layer_index as i32,
+            format_override: None,
+            source: TextureUpdateSource::DebugClear,
         });
     }
 

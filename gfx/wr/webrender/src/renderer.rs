@@ -1468,7 +1468,7 @@ impl GpuCacheTexture {
                         DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, 1),
                     );
 
-                    uploader.upload(rect, 0, None, &*row.cpu_blocks);
+                    uploader.upload(rect, 0, None, None, &*row.cpu_blocks);
 
                     row.is_dirty = false;
                 }
@@ -1592,7 +1592,7 @@ impl<T> VertexDataTexture<T> {
         );
         device
             .upload_texture(self.texture(), &self.pbo, 0)
-            .upload(rect, 0, None, data);
+            .upload(rect, 0, None, None, data);
     }
 
     fn deinit(mut self, device: &mut Device) {
@@ -1858,7 +1858,7 @@ impl Renderer {
         );
 
         let color_cache_formats = device.preferred_color_formats();
-        let bgra_swizzle = device.bgra_swizzle();
+        let swizzle_settings = device.swizzle_settings();
         let supports_dual_source_blending = match gl_type {
             gl::GlType::Gl => device.supports_extension("GL_ARB_blend_func_extended") &&
                 device.supports_extension("GL_ARB_explicit_attrib_location"),
@@ -2166,7 +2166,7 @@ impl Renderer {
                 },
                 start_size,
                 color_cache_formats,
-                bgra_swizzle,
+                swizzle_settings,
             );
 
             let glyph_cache = GlyphCache::new(max_glyph_cache_size);
@@ -3168,7 +3168,7 @@ impl Renderer {
                 }
 
                 for update in update_list.updates {
-                    let TextureCacheUpdate { id, rect, stride, offset, layer_index, source } = update;
+                    let TextureCacheUpdate { id, rect, stride, offset, layer_index, format_override, source } = update;
                     let texture = &self.texture_resolver.texture_cache_map[&id];
 
                     let bytes_uploaded = match source {
@@ -3179,7 +3179,10 @@ impl Renderer {
                                 0,
                             );
                             uploader.upload(
-                                rect, layer_index, stride,
+                                rect,
+                                layer_index,
+                                stride,
+                                format_override,
                                 &data[offset as usize ..],
                             )
                         }
@@ -3193,12 +3196,10 @@ impl Renderer {
                                 .as_mut()
                                 .expect("Found external image, but no handler set!");
                             // The filter is only relevant for NativeTexture external images.
-                            let size = match handler.lock(id, channel_index, ImageRendering::Auto).source {
+                            let dummy_data;
+                            let data = match handler.lock(id, channel_index, ImageRendering::Auto).source {
                                 ExternalImageSource::RawData(data) => {
-                                    uploader.upload(
-                                        rect, layer_index, stride,
-                                        &data[offset as usize ..],
-                                    )
+                                    &data[offset as usize ..]
                                 }
                                 ExternalImageSource::Invalid => {
                                     // Create a local buffer to fill the pbo.
@@ -3207,13 +3208,20 @@ impl Renderer {
                                     let total_size = width * rect.size.height;
                                     // WR haven't support RGBAF32 format in texture_cache, so
                                     // we use u8 type here.
-                                    let dummy_data: Vec<u8> = vec![255; total_size as usize];
-                                    uploader.upload(rect, layer_index, stride, &dummy_data)
+                                    dummy_data = vec![0xFFu8; total_size as usize];
+                                    &dummy_data
                                 }
                                 ExternalImageSource::NativeTexture(eid) => {
                                     panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
                                 }
                             };
+                            let size = uploader.upload(
+                                rect,
+                                layer_index,
+                                stride,
+                                format_override,
+                                data,
+                            );
                             handler.unlock(id, channel_index);
                             size
                         }
