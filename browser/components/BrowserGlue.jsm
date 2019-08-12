@@ -3965,6 +3965,16 @@ ContentPermissionPrompt.prototype = {
     }
     schemeHistogram.add(type, scheme);
 
+    // request.element should be the browser element in e10s.
+    if (request.element && request.element.contentPrincipal) {
+      let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById(
+        "PERMISSION_REQUEST_THIRD_PARTY_ORIGIN"
+      );
+      let isThirdParty =
+        request.principal.origin != request.element.contentPrincipal.origin;
+      thirdPartyHistogram.add(type, isThirdParty);
+    }
+
     let userInputHistogram = Services.telemetry.getKeyedHistogramById(
       "PERMISSION_REQUEST_HANDLING_USER_INPUT"
     );
