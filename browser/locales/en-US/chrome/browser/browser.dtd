@@ -783,8 +783,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY protections.trackingContent.description "Websites may load external ads, videos, and other content that contain tracking code. Blocking tracking content can help sites load faster, but some buttons, forms, and login fields might not work.">
 <!ENTITY protections.socialMediaTrackers.description "Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles.">
 
-<!ENTITY protections.manageProtectionSettings.label "Manage Protection Settings">
-
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
@@ -809,24 +807,18 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY contentBlocking.trackingProtection4.label "Tracking Content">
 
-<!ENTITY contentBlocking.manageSettings.label "Manage Content Blocking">
+<!ENTITY contentBlocking.manageSettings2.label "Manage Protection Settings">
 <!ENTITY contentBlocking.manageSettings.accesskey "M">
 
-<!ENTITY contentBlocking.trackersView.label "Trackers">
 <!ENTITY contentBlocking.trackersView.strictInfo.label "To block all trackers, set content blocking to “Strict”.">
 
 <!ENTITY contentBlocking.socialblock.label "Social Media Trackers">
-<!ENTITY contentBlocking.socialblockView.label "Social Media Trackers Blocked">
-<!ENTITY contentBlocking.socialblockView.description "Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles.">
 
-<!ENTITY contentBlocking.cookies.label "Cookies">
-<!ENTITY contentBlocking.cookiesView.label "Cookies and Site Data">
+<!ENTITY contentBlocking.cookies2.label "Cross-Site Tracking Cookies">
 
 <!ENTITY contentBlocking.cryptominers.label "Cryptominers">
-<!ENTITY contentBlocking.cryptominersView.label "Cryptominers">
 
 <!ENTITY contentBlocking.fingerprinters.label "Fingerprinters">
-<!ENTITY contentBlocking.fingerprintersView.label "Fingerprinters">
 
 <!ENTITY contentBlocking.openBreakageReportView2.label "Report a problem">
 <!ENTITY contentBlocking.breakageReportView.label "Report Problems">

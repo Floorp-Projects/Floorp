@@ -28,6 +28,20 @@ var Fingerprinting = {
         "contentBlocking.fingerprintersView.blocked.label"
       ));
     },
+
+    get subViewTitleBlocking() {
+      delete this.subViewTitleBlocking;
+      return (this.subViewTitleBlocking = gNavigatorBundle.getString(
+        "protections.blocking.fingerprinters.title"
+      ));
+    },
+
+    get subViewTitleNotBlocking() {
+      delete this.subViewTitleNotBlocking;
+      return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
+        "protections.notBlocking.fingerprinters.title"
+      ));
+    },
   },
 
   init() {
@@ -50,6 +64,13 @@ var Fingerprinting = {
 
   updateCategoryItem() {
     this.categoryItem.classList.toggle("blocked", this.enabled);
+  },
+
+  get subView() {
+    delete this.subView;
+    return (this.subView = document.getElementById(
+      "protections-popup-fingerprintersView"
+    ));
   },
 
   get subViewList() {
@@ -93,6 +114,12 @@ var Fingerprinting = {
 
     this.subViewList.textContent = "";
     this.subViewList.append(fragment);
+    this.subView.setAttribute(
+      "title",
+      this.enabled && !gProtectionsHandler.hasException
+        ? this.strings.subViewTitleBlocking
+        : this.strings.subViewTitleNotBlocking
+    );
   },
 
   _createListItem(origin, actions) {
@@ -113,23 +140,11 @@ var Fingerprinting = {
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
-    let image = document.createXULElement("image");
-    image.className = "protections-popup-fingerprintersView-icon";
-    image.classList.toggle("allowed", isAllowed);
-    listItem.append(image);
-
     let label = document.createXULElement("label");
     label.value = uri.host;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
-
-    if (!isAllowed) {
-      let stateLabel = document.createXULElement("label");
-      stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "protections-popup-list-state-label";
-      listItem.append(stateLabel);
-    }
 
     return listItem;
   },
@@ -144,6 +159,20 @@ var Cryptomining = {
       delete this.subViewBlocked;
       return (this.subViewBlocked = gNavigatorBundle.getString(
         "contentBlocking.cryptominersView.blocked.label"
+      ));
+    },
+
+    get subViewTitleBlocking() {
+      delete this.subViewTitleBlocking;
+      return (this.subViewTitleBlocking = gNavigatorBundle.getString(
+        "protections.blocking.cryptominers.title"
+      ));
+    },
+
+    get subViewTitleNotBlocking() {
+      delete this.subViewTitleNotBlocking;
+      return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
+        "protections.notBlocking.cryptominers.title"
       ));
     },
   },
@@ -168,6 +197,13 @@ var Cryptomining = {
 
   updateCategoryItem() {
     this.categoryItem.classList.toggle("blocked", this.enabled);
+  },
+
+  get subView() {
+    delete this.subView;
+    return (this.subView = document.getElementById(
+      "protections-popup-cryptominersView"
+    ));
   },
 
   get subViewList() {
@@ -209,6 +245,12 @@ var Cryptomining = {
 
     this.subViewList.textContent = "";
     this.subViewList.append(fragment);
+    this.subView.setAttribute(
+      "title",
+      this.enabled && !gProtectionsHandler.hasException
+        ? this.strings.subViewTitleBlocking
+        : this.strings.subViewTitleNotBlocking
+    );
   },
 
   _createListItem(origin, actions) {
@@ -229,23 +271,11 @@ var Cryptomining = {
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
-    let image = document.createXULElement("image");
-    image.className = "protections-popup-cryptominersView-icon";
-    image.classList.toggle("allowed", isAllowed);
-    listItem.append(image);
-
     let label = document.createXULElement("label");
     label.value = uri.host;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
-
-    if (!isAllowed) {
-      let stateLabel = document.createXULElement("label");
-      stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "protections-popup-list-state-label";
-      listItem.append(stateLabel);
-    }
 
     return listItem;
   },
@@ -264,6 +294,13 @@ var TrackingProtection = {
     delete this.categoryItem;
     return (this.categoryItem = document.getElementById(
       "protections-popup-category-tracking-protection"
+    ));
+  },
+
+  get subView() {
+    delete this.subView;
+    return (this.subView = document.getElementById(
+      "protections-popup-trackersView"
     ));
   },
 
@@ -286,6 +323,20 @@ var TrackingProtection = {
       delete this.subViewBlocked;
       return (this.subViewBlocked = gNavigatorBundle.getString(
         "contentBlocking.trackersView.blocked.label"
+      ));
+    },
+
+    get subViewTitleBlocking() {
+      delete this.subViewTitleBlocking;
+      return (this.subViewTitleBlocking = gNavigatorBundle.getString(
+        "protections.blocking.trackingContent.title"
+      ));
+    },
+
+    get subViewTitleNotBlocking() {
+      delete this.subViewTitleNotBlocking;
+      return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
+        "protections.notBlocking.trackingContent.title"
       ));
     },
   },
@@ -405,6 +456,12 @@ var TrackingProtection = {
     ) {
       this.subViewList.textContent = "";
       this.subViewList.append(fragment);
+      this.subView.setAttribute(
+        "title",
+        this.enabled && !gProtectionsHandler.hasException
+          ? this.strings.subViewTitleBlocking
+          : this.strings.subViewTitleNotBlocking
+      );
     }
   },
 
@@ -457,23 +514,11 @@ var TrackingProtection = {
     // and overflows in our panel.
     listItem.tooltipText = uri.host;
 
-    let image = document.createXULElement("image");
-    image.className = "protections-popup-trackersView-icon";
-    image.classList.toggle("allowed", isAllowed);
-    listItem.append(image);
-
     let label = document.createXULElement("label");
     label.value = uri.host;
     label.className = "protections-popup-list-host-label";
     label.setAttribute("crop", "end");
     listItem.append(label);
-
-    if (!isAllowed) {
-      let stateLabel = document.createXULElement("label");
-      stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "protections-popup-list-state-label";
-      listItem.append(stateLabel);
-    }
 
     return listItem;
   },
@@ -496,6 +541,20 @@ var ThirdPartyCookies = {
     ));
   },
 
+  get subView() {
+    delete this.subView;
+    return (this.subView = document.getElementById(
+      "protections-popup-cookiesView"
+    ));
+  },
+
+  get subViewHeading() {
+    delete this.subViewHeading;
+    return (this.subViewHeading = document.getElementById(
+      "protections-popup-cookiesView-heading"
+    ));
+  },
+
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
@@ -511,10 +570,10 @@ var ThirdPartyCookies = {
       ));
     },
 
-    get subViewBlocked() {
-      delete this.subViewBlocked;
-      return (this.subViewBlocked = gNavigatorBundle.getString(
-        "contentBlocking.cookiesView.blocked.label"
+    get subViewTitleNotBlocking() {
+      delete this.subViewTitleNotBlocking;
+      return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
+        "protections.notBlocking.crossSiteTrackingCookies.title"
       ));
     },
   },
@@ -587,7 +646,7 @@ var ThirdPartyCookies = {
         label = "contentBlocking.cookies.blockingUnvisited2.label";
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-        label = "contentBlocking.cookies.blockingTrackers2.label";
+        label = "contentBlocking.cookies.blockingTrackers3.label";
         break;
       default:
         Cu.reportError(
@@ -630,30 +689,69 @@ var ThirdPartyCookies = {
     this.subViewList.textContent = "";
 
     for (let category of ["firstParty", "trackers", "thirdParty"]) {
+      let itemsToShow;
+      if (category == "trackers" && gProtectionsHandler.hasException) {
+        itemsToShow = categories[category];
+      } else {
+        itemsToShow = categories[category].filter(
+          info => !info.isAllowed || info.hasException
+        );
+      }
+
+      if (!itemsToShow.length) {
+        continue;
+      }
+
       let box = document.createXULElement("vbox");
       let label = document.createXULElement("label");
       label.className = "protections-popup-cookiesView-list-header";
       label.textContent = gNavigatorBundle.getString(
-        `contentBlocking.cookiesView.${category}.label`
+        `contentBlocking.cookiesView.${
+          category == "trackers" ? "trackers2" : category
+        }.label`
       );
       box.appendChild(label);
 
-      for (let info of categories[category]) {
+      for (let info of itemsToShow) {
         box.appendChild(this._createListItem(info));
-      }
-
-      // If the category is empty, add a label noting that to the user.
-      if (categories[category].length == 0) {
-        let emptyLabel = document.createXULElement("label");
-        emptyLabel.classList.add("protections-popup-empty-label");
-        emptyLabel.textContent = gNavigatorBundle.getString(
-          `contentBlocking.cookiesView.${category}.empty.label`
-        );
-        box.appendChild(emptyLabel);
       }
 
       this.subViewList.appendChild(box);
     }
+
+    this.subViewHeading.hidden = false;
+    if (!this.enabled || gProtectionsHandler.hasException) {
+      this.subView.setAttribute("title", this.strings.subViewTitleNotBlocking);
+      return;
+    }
+
+    let title;
+    switch (this.behaviorPref) {
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        title = "protections.blocking.cookies.3rdParty.title";
+        this.subViewHeading.hidden = true;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        title = "protections.blocking.cookies.all.title";
+        this.subViewHeading.hidden = true;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        title = "protections.blocking.cookies.unvisited.title";
+        this.subViewHeading.hidden = true;
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        title = "protections.blocking.cookies.trackers.title";
+        break;
+      default:
+        Cu.reportError(
+          `Error: Unknown cookieBehavior pref when updating subview: ${
+            this.behaviorPref
+          }`
+        );
+        break;
+    }
+
+    this.subView.setAttribute("title", gNavigatorBundle.getString(title));
   },
 
   _hasException(origin) {
@@ -793,15 +891,9 @@ var ThirdPartyCookies = {
   _createListItem({ origin, isAllowed, hasException }) {
     let listItem = document.createXULElement("hbox");
     listItem.className = "protections-popup-list-item";
-    listItem.classList.toggle("allowed", isAllowed);
     // Repeat the origin in the tooltip in case it's too long
     // and overflows in our panel.
     listItem.tooltipText = origin;
-
-    let image = document.createXULElement("image");
-    image.className = "protections-popup-cookiesView-icon";
-    image.classList.toggle("allowed", isAllowed);
-    listItem.append(image);
 
     let label = document.createXULElement("label");
     label.value = origin;
@@ -809,20 +901,21 @@ var ThirdPartyCookies = {
     label.setAttribute("crop", "end");
     listItem.append(label);
 
-    let stateLabel;
-    if (isAllowed && hasException) {
-      stateLabel = document.createXULElement("label");
-      stateLabel.value = this.strings.subViewAllowed;
-      stateLabel.className = "protections-popup-list-state-label";
-      listItem.append(stateLabel);
-    } else if (!isAllowed) {
-      stateLabel = document.createXULElement("label");
-      stateLabel.value = this.strings.subViewBlocked;
-      stateLabel.className = "protections-popup-list-state-label";
-      listItem.append(stateLabel);
-    }
-
     if (hasException) {
+      let stateLabel;
+      if (isAllowed) {
+        stateLabel = document.createXULElement("label");
+        stateLabel.value = this.strings.subViewAllowed;
+        stateLabel.className = "protections-popup-list-state-label";
+        listItem.append(stateLabel);
+        listItem.classList.toggle("allowed", true);
+      } else {
+        stateLabel = document.createXULElement("label");
+        stateLabel.value = this.strings.subViewBlocked;
+        stateLabel.className = "protections-popup-list-state-label";
+        listItem.append(stateLabel);
+      }
+
       let removeException = document.createXULElement("button");
       removeException.className = "identity-popup-permission-remove-button";
       removeException.tooltipText = gNavigatorBundle.getFormattedString(
@@ -836,7 +929,6 @@ var ThirdPartyCookies = {
           ? this.strings.subViewBlocked
           : this.strings.subViewAllowed;
         listItem.classList.toggle("allowed", !isAllowed);
-        image.classList.toggle("allowed", !isAllowed);
         removeException.hidden = true;
       });
       listItem.append(removeException);
@@ -861,6 +953,20 @@ var SocialTracking = {
       delete this.subViewBlocked;
       return (this.subViewBlocked = gNavigatorBundle.getString(
         "contentBlocking.fingerprintersView.blocked.label"
+      ));
+    },
+
+    get subViewTitleBlocking() {
+      delete this.subViewTitleBlocking;
+      return (this.subViewTitleBlocking = gNavigatorBundle.getString(
+        "protections.blocking.socialMediaTrackers.title"
+      ));
+    },
+
+    get subViewTitleNotBlocking() {
+      delete this.subViewTitleNotBlocking;
+      return (this.subViewTitleNotBlocking = gNavigatorBundle.getString(
+        "protections.notBlocking.socialMediaTrackers.title"
       ));
     },
   },
@@ -947,6 +1053,13 @@ var SocialTracking = {
     ));
   },
 
+  get subView() {
+    delete this.subView;
+    return (this.subView = document.getElementById(
+      "protections-popup-socialblockView"
+    ));
+  },
+
   get subViewList() {
     delete this.subViewList;
     return (this.subViewList = document.getElementById(
@@ -968,6 +1081,12 @@ var SocialTracking = {
 
     this.subViewList.textContent = "";
     this.subViewList.append(fragment);
+    this.subView.setAttribute(
+      "title",
+      this.enabled
+        ? this.strings.subViewTitleBlocking
+        : this.strings.subViewTitleNotBlocking
+    );
   },
 
   _createListItem(origin, actions) {
@@ -1238,25 +1357,15 @@ var gProtectionsHandler = {
     ));
   },
 
-  get blockingSectionDescription() {
-    delete this.blockingSectionDescription;
-    return (this.blockingSectionDescription = document.getElementById(
-      "protections-popup-blocking-section-header"
-    ));
-  },
-
-  get notBlockingSectionDescription() {
-    delete this.notBlockingSectionDescription;
-    return (this.notBlockingSectionDescription = document.getElementById(
-      "protections-popup-not-blocking-section-header"
-    ));
-  },
-
   get _notBlockingWhyLink() {
     delete this._notBlockingWhyLink;
     return (this._notBlockingWhyLink = document.getElementById(
       "protections-popup-not-blocking-section-why"
     ));
+  },
+
+  get hasException() {
+    return this._protectionsPopup.hasAttribute("hasException");
   },
 
   strings: {
@@ -1568,8 +1677,6 @@ var gProtectionsHandler = {
     let anyDetected = false;
     let anyBlocking = false;
     this.noTrackersDetectedDescription.hidden = false;
-    this.blockingSectionDescription.hidden = true;
-    this.notBlockingSectionDescription.hidden = true;
 
     for (let blocker of this.blockers) {
       // Store data on whether the blocker is activated in the current document for
@@ -1579,13 +1686,6 @@ var gProtectionsHandler = {
       blocker.activated = blocker.isBlocking(event);
       let detected = blocker.isDetected(event);
       blocker.categoryItem.hidden = !detected;
-      if (detected) {
-        if (blocker.enabled) {
-          this.blockingSectionDescription.hidden = false;
-        } else {
-          this.notBlockingSectionDescription.hidden = false;
-        }
-      }
       anyDetected = anyDetected || detected;
       anyBlocking = anyBlocking || blocker.activated;
     }

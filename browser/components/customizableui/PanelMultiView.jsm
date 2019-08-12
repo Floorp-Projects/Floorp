@@ -1329,7 +1329,11 @@ var PanelView = class extends AssociatedToNode {
     let header = this.node.firstElementChild;
     if (header && header.classList.contains("panel-header")) {
       if (value) {
-        header.querySelector("label").setAttribute("value", value);
+        // The back button has a label in it - we want to select
+        // the label that's a direct child of the header.
+        header
+          .querySelector(".panel-header > label")
+          .setAttribute("value", value);
       } else {
         header.remove();
       }
