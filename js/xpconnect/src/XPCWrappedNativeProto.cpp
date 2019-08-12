@@ -63,7 +63,7 @@ bool XPCWrappedNativeProto::Init(JSContext* cx, nsIXPCScriptable* scriptable) {
   return success;
 }
 
-void XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp* fop,
+void XPCWrappedNativeProto::JSProtoObjectFinalized(JSFreeOp* fop,
                                                    JSObject* obj) {
   MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
