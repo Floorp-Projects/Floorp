@@ -17,10 +17,10 @@ use glium::backend::glutin::Display;
 /// Load the image using `png`
 fn load_image(path: &path::PathBuf) -> io::Result<RawImage2d<'static, u8>> {
     use png::ColorType::*;
-    let decoder = png::Decoder::new(try!(File::open(path)));
-    let (info, mut reader) = try!(decoder.read_info());
+    let decoder = png::Decoder::new(File::open(path)?);
+    let (info, mut reader) = decoder.read_info()?;
     let mut img_data = vec![0; info.buffer_size()];
-    try!(reader.next_frame(&mut img_data));
+    reader.next_frame(&mut img_data)?;
 
     let (data, format) = match info.color_type {
         RGB => (img_data, ClientFormat::U8U8U8),
@@ -61,7 +61,7 @@ fn main_loop(files: Vec<path::PathBuf>) -> io::Result<()> {
     use glium::glutin::{KeyboardInput, WindowEvent};
 
     let mut files = files.iter();
-    let image = try!(load_image(files.next().unwrap()));
+    let image = load_image(files.next().unwrap())?;
 
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new();
@@ -169,12 +169,12 @@ fn main() {
         for file in args.iter().skip(1) {
             match if file.contains("*") {
                 (|| -> io::Result<_> {
-                    for entry in try!(glob::glob(&file).map_err(|err| {
+                    for entry in glob::glob(&file).map_err(|err| {
                         io::Error::new(io::ErrorKind::Other, err.msg)
-                    })) {
-                        files.push(try!(entry.map_err(|_| {
+                    })? {
+                        files.push(entry.map_err(|_| {
                             io::Error::new(io::ErrorKind::Other, "glob error")
-                        })))
+                        })?)
                     }
                     Ok(())
                 })()
