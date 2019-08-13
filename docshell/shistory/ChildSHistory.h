@@ -23,8 +23,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
-#include "nsThreadUtils.h"
-#include "mozilla/LinkedList.h"
 
 class nsSHistory;
 class nsDocShell;
@@ -64,9 +62,6 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
    */
   bool CanGo(int32_t aOffset);
   void Go(int32_t aOffset, ErrorResult& aRv);
-  void AsyncGo(int32_t aOffset);
-
-  void RemovePendingHistoryNavigations();
 
   /**
    * Evicts all content viewers within the current process.
@@ -80,31 +75,8 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
  private:
   virtual ~ChildSHistory();
 
-  class PendingAsyncHistoryNavigation
-      : public Runnable,
-        public mozilla::LinkedListElement<PendingAsyncHistoryNavigation> {
-   public:
-    PendingAsyncHistoryNavigation(ChildSHistory* aHistory, int32_t aOffset)
-        : Runnable("PendingAsyncHistoryNavigation"),
-          mHistory(aHistory),
-          mOffset(aOffset) {}
-
-    NS_IMETHOD Run() override {
-      if (isInList()) {
-        remove();
-        mHistory->Go(mOffset, IgnoreErrors());
-      }
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<ChildSHistory> mHistory;
-    int32_t mOffset;
-  };
-
   RefPtr<nsDocShell> mDocShell;
   RefPtr<nsSHistory> mHistory;
-  mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
 };
 
 }  // namespace dom

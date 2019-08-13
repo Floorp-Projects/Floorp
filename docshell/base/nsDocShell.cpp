@@ -21,7 +21,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Components.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
@@ -8934,65 +8933,70 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
   return rv;
 }
 
-bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
-                                          SameDocumentNavigationState& aState) {
+nsresult nsDocShell::MaybeHandleSameDocumentNavigation(
+    nsDocShellLoadState* aLoadState, bool* aWasSameDocument) {
   MOZ_ASSERT(aLoadState);
+  MOZ_ASSERT(aWasSameDocument);
+  *aWasSameDocument = false;
   if (!(aLoadState->LoadType() == LOAD_NORMAL ||
         aLoadState->LoadType() == LOAD_STOP_CONTENT ||
         LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
                             LOAD_FLAGS_REPLACE_HISTORY) ||
         aLoadState->LoadType() == LOAD_HISTORY ||
         aLoadState->LoadType() == LOAD_LINK)) {
-    return false;
+    return NS_OK;
   }
-
+  nsresult rv;
   nsCOMPtr<nsIURI> currentURI = mCurrentURI;
 
-  nsresult rvURINew = aLoadState->URI()->GetRef(aState.mNewHash);
+  nsAutoCString curHash, newHash;
+  bool curURIHasRef = false, newURIHasRef = false;
+
+  nsresult rvURINew = aLoadState->URI()->GetRef(newHash);
   if (NS_SUCCEEDED(rvURINew)) {
-    rvURINew = aLoadState->URI()->GetHasRef(&aState.mNewURIHasRef);
+    rvURINew = aLoadState->URI()->GetHasRef(&newURIHasRef);
   }
 
+  bool sameExceptHashes = false;
   if (currentURI && NS_SUCCEEDED(rvURINew)) {
-    nsresult rvURIOld = currentURI->GetRef(aState.mCurrentHash);
+    nsresult rvURIOld = currentURI->GetRef(curHash);
     if (NS_SUCCEEDED(rvURIOld)) {
-      rvURIOld = currentURI->GetHasRef(&aState.mCurrentURIHasRef);
+      rvURIOld = currentURI->GetHasRef(&curURIHasRef);
     }
     if (NS_SUCCEEDED(rvURIOld)) {
       if (NS_FAILED(currentURI->EqualsExceptRef(aLoadState->URI(),
-                                                &aState.mSameExceptHashes))) {
-        aState.mSameExceptHashes = false;
+                                                &sameExceptHashes))) {
+        sameExceptHashes = false;
       }
     }
   }
 
-  if (!aState.mSameExceptHashes && sURIFixup && currentURI &&
-      NS_SUCCEEDED(rvURINew)) {
+  if (!sameExceptHashes && sURIFixup && currentURI && NS_SUCCEEDED(rvURINew)) {
     // Maybe aLoadState->URI() came from the exposable form of currentURI?
     nsCOMPtr<nsIURI> currentExposableURI;
-    DebugOnly<nsresult> rv = sURIFixup->CreateExposableURI(
-        currentURI, getter_AddRefs(currentExposableURI));
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "CreateExposableURI should not fail, ever!");
-    nsresult rvURIOld = currentExposableURI->GetRef(aState.mCurrentHash);
+    rv = sURIFixup->CreateExposableURI(currentURI,
+                                       getter_AddRefs(currentExposableURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rvURIOld = currentExposableURI->GetRef(curHash);
     if (NS_SUCCEEDED(rvURIOld)) {
-      rvURIOld = currentExposableURI->GetHasRef(&aState.mCurrentURIHasRef);
+      rvURIOld = currentExposableURI->GetHasRef(&curURIHasRef);
     }
     if (NS_SUCCEEDED(rvURIOld)) {
-      if (NS_FAILED(currentExposableURI->EqualsExceptRef(
-              aLoadState->URI(), &aState.mSameExceptHashes))) {
-        aState.mSameExceptHashes = false;
+      if (NS_FAILED(currentExposableURI->EqualsExceptRef(aLoadState->URI(),
+                                                         &sameExceptHashes))) {
+        sameExceptHashes = false;
       }
     }
   }
 
+  bool historyNavBetweenSameDoc = false;
   if (mOSHE && aLoadState->SHEntry()) {
     // We're doing a history load.
 
-    mOSHE->SharesDocumentWith(aLoadState->SHEntry(),
-                              &aState.mHistoryNavBetweenSameDoc);
+    mOSHE->SharesDocumentWith(aLoadState->SHEntry(), &historyNavBetweenSameDoc);
 
 #ifdef DEBUG
-    if (aState.mHistoryNavBetweenSameDoc) {
+    if (historyNavBetweenSameDoc) {
       nsCOMPtr<nsIInputStream> currentPostData = mOSHE->GetPostData();
       NS_ASSERTION(currentPostData == aLoadState->PostDataStream(),
                    "Different POST data for entries for the same page?");
@@ -9015,21 +9019,13 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
   // that history.go(0) and the like trigger full refreshes, rather than
   // same document navigations.
   bool doSameDocumentNavigation =
-      (aState.mHistoryNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
+      (historyNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
       (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
-       aState.mSameExceptHashes && aState.mNewURIHasRef);
+       sameExceptHashes && newURIHasRef);
 
-  return doSameDocumentNavigation;
-}
-
-nsresult nsDocShell::HandleSameDocumentNavigation(
-    nsDocShellLoadState* aLoadState, SameDocumentNavigationState& aState) {
-#ifdef DEBUG
-  SameDocumentNavigationState state;
-  MOZ_ASSERT(IsSameDocumentNavigation(aLoadState, state));
-#endif
-
-  nsCOMPtr<nsIURI> currentURI = mCurrentURI;
+  if (!doSameDocumentNavigation) {
+    return NS_OK;
+  }
 
   // Save the position of the scrollers.
   nsPoint scrollPos = GetCurScrollPos();
@@ -9188,8 +9184,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // arguments it receives.  But even if we don't end up scrolling,
   // ScrollToAnchor performs other important tasks, such as informing
   // the presShell that we have a new hash.  See bug 680257.
-  nsresult rv = ScrollToAnchor(aState.mCurrentURIHasRef, aState.mNewURIHasRef,
-                               aState.mNewHash, aLoadState->LoadType());
+  rv = ScrollToAnchor(curURIHasRef, newURIHasRef, newHash,
+                      aLoadState->LoadType());
   NS_ENSURE_SUCCESS(rv, rv);
 
   /* restore previous position of scroller(s), if we're moving
@@ -9213,11 +9209,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // reference to avoid null derefs. See bug 914521.
   if (win) {
     // Fire a hashchange event URIs differ, and only in their hashes.
-    bool doHashchange = aState.mSameExceptHashes &&
-                        (aState.mCurrentURIHasRef != aState.mNewURIHasRef ||
-                         !aState.mCurrentHash.Equals(aState.mNewHash));
+    bool doHashchange = sameExceptHashes && (curURIHasRef != newURIHasRef ||
+                                             !curHash.Equals(newHash));
 
-    if (aState.mHistoryNavBetweenSameDoc || doHashchange) {
+    if (historyNavBetweenSameDoc || doHashchange) {
       win->DispatchSyncPopState();
     }
 
@@ -9232,6 +9227,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     }
   }
 
+  *aWasSameDocument = true;
   return NS_OK;
 }
 
@@ -9279,22 +9275,14 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   // If we don't have a target, we're loading into ourselves, and our load
   // delegate may want to intercept that load.
-  SameDocumentNavigationState sameDocumentNavigationState;
-  bool sameDocument =
-      IsSameDocumentNavigation(aLoadState, sameDocumentNavigationState);
-  // LoadDelegate has already had chance to delegate loads which ended up to
-  // session history, so no need to re-delegate here, and we don't want fragment
-  // navigations to go through load delegate.
-  if (!sameDocument && !(aLoadState->LoadType() & LOAD_CMD_HISTORY)) {
-    bool handled;
-    rv = MaybeHandleLoadDelegate(
-        aLoadState, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW, &handled);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (handled) {
-      return NS_OK;
-    }
+  bool handled;
+  rv = MaybeHandleLoadDelegate(
+      aLoadState, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW, &handled);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (handled) {
+    return NS_OK;
   }
 
   // If a source docshell has been passed, check to see if we are sandboxed
@@ -9403,9 +9391,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // See if this is actually a load between two history entries for the same
   // document. If the process fails, or if we successfully navigate within the
   // same document, return.
-  if (sameDocument) {
-    return HandleSameDocumentNavigation(aLoadState,
-                                        sameDocumentNavigationState);
+  bool wasSameDocument;
+  rv = MaybeHandleSameDocumentNavigation(aLoadState, &wasSameDocument);
+  if (NS_FAILED(rv) || wasSameDocument) {
+    return rv;
   }
 
   // mContentViewer->PermitUnload can destroy |this| docShell, which
@@ -9612,18 +9601,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
   // If we have a saved content viewer in history, restore and show it now.
   if (aLoadState->SHEntry() && (mLoadType & LOAD_CMD_HISTORY)) {
-    // https://html.spec.whatwg.org/#history-traversal:
-    // To traverse the history
-    // "If entry has a different Document object than the current entry, then
-    // run the following substeps: Remove any tasks queued by the history
-    // traversal task source..."
-    // Same document object case was handled already above with
-    // HandleSameDocumentNavigation call.
-    RefPtr<ChildSHistory> shistory = GetRootSessionHistory();
-    if (shistory) {
-      shistory->RemovePendingHistoryNavigations();
-    }
-
     // It's possible that the previous viewer of mContentViewer is the
     // viewer that will end up in aLoadState->SHEntry() when it gets closed.  If
     // that's the case, we need to go ahead and force it into its shentry so we
@@ -11284,14 +11261,6 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   nsCOMPtr<nsISHEntry> newSHEntry;
   if (!aReplace) {
     // Step 2.
-
-    // Step 2.2, "Remove any tasks queued by the history traversal task
-    // source..."
-    RefPtr<ChildSHistory> shistory = GetRootSessionHistory();
-    if (shistory) {
-      shistory->RemovePendingHistoryNavigations();
-    }
-
     // Save the current scroll position (bug 590573).  Step 2.3.
     nsPoint scrollPos = GetCurScrollPos();
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);

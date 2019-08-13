@@ -18,8 +18,8 @@
 #include "nsContentUtils.h"
 #include "nsISHistory.h"
 #include "mozilla/dom/Location.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StaticPrefs_dom.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -159,11 +159,7 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
 
   // Ignore the return value from Go(), since returning errors from Go() can
   // lead to exceptions and a possible leak of history length
-  if (StaticPrefs::dom_window_history_async()) {
-    session_history->AsyncGo(aDelta);
-  } else {
-    session_history->Go(aDelta, IgnoreErrors());
-  }
+  session_history->Go(aDelta, IgnoreErrors());
 }
 
 void nsHistory::Back(ErrorResult& aRv) {
@@ -181,11 +177,7 @@ void nsHistory::Back(ErrorResult& aRv) {
     return;
   }
 
-  if (StaticPrefs::dom_window_history_async()) {
-    sHistory->AsyncGo(-1);
-  } else {
-    sHistory->Go(-1, IgnoreErrors());
-  }
+  sHistory->Go(-1, IgnoreErrors());
 }
 
 void nsHistory::Forward(ErrorResult& aRv) {
@@ -203,11 +195,7 @@ void nsHistory::Forward(ErrorResult& aRv) {
     return;
   }
 
-  if (StaticPrefs::dom_window_history_async()) {
-    sHistory->AsyncGo(1);
-  } else {
-    sHistory->Go(1, IgnoreErrors());
-  }
+  sHistory->Go(1, IgnoreErrors());
 }
 
 void nsHistory::PushState(JSContext* aCx, JS::Handle<JS::Value> aData,
