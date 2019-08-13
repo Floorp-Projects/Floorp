@@ -364,9 +364,6 @@ class TextEditRules {
 #endif  // #ifdef DEBUG
 
   bool mDidExplicitlySetInterline;
-  // In bidirectional text, delete characters not visually adjacent to the
-  // caret without moving the caret first.
-  bool mDeleteBidiImmediately;
   bool mIsHTMLEditRules;
 };
 

@@ -5,6 +5,7 @@
 
 #include "mozilla/TextEditRules.h"
 
+#include "mozilla/StaticPrefs_bidi.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
@@ -70,7 +71,8 @@ nsresult TextEditRules::CheckBidiLevelForDeletion(
     return NS_OK;  // perform the deletion
   }
 
-  if (!mDeleteBidiImmediately && levelBefore != levelAfter) {
+  if (!StaticPrefs::bidi_edit_delete_immediately() &&
+      levelBefore != levelAfter) {
     *aCancel = true;
   }
 

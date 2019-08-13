@@ -28,6 +28,7 @@ pref_groups = [
     'accessibility',
     'apz',
     'beacon',
+    'bidi',
     'browser',
     'canvas',
     'channelclassifier',
