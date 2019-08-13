@@ -3216,14 +3216,6 @@ pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 // full domains: any subdomains of the domains listed will also be allowed.
 pref("browser.tabs.remote.separatedMozillaDomains", "addons.mozilla.org,accounts.firefox.com");
 
-# This pref controls whether the 'context-fill' and 'context-stroke' keywords
-# can be used in SVG-as-an-image in the content processes to use the fill/
-# stroke specified on the element that embeds the image.  (These keywords are
-# always enabled in the chrome process, regardless of this pref.)
-# Also, these keywords are currently not part of any spec, which is partly why
-# we disable them for web content.
-pref("svg.context-properties.content.enabled", false);
-
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
 pref("font.minimum-size.ar", 0);
