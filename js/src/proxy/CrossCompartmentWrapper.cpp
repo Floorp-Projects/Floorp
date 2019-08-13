@@ -574,8 +574,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   }
 
   if (!wobj->is<WrapperObject>()) {
-    MOZ_ASSERT(js::IsProxy(wobj) && js::GetProxyHandler(wobj)->family() ==
-                                        js::GetDOMRemoteProxyHandlerFamily());
+    MOZ_ASSERT(js::IsDOMRemoteProxyObject(wobj));
     return;
   }
 
