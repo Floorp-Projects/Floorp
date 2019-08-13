@@ -3115,6 +3115,22 @@ void gfxPlatform::InitWebRenderConfig() {
       gfxVars::SetUseWebRenderTripleBufferingWin(true);
     }
   }
+
+  // When Windows version is mort than 1903 and GPU is intel GPU, it could cause
+  // flickering with DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL. See Bug 1556634.
+  // As a workaround, use DXGI_ALPHA_MODE_PREMULTIPLIED instead of
+  // DXGI_ALPHA_MODE_IGNORE at SwapChain.
+  // XXX remove this workaround.
+  if (IsWin10May2019UpdateOrLater() && UseWebRender() &&
+      gfxVars::UseWebRenderDCompWin()) {
+    nsAutoString adapterVendorID;
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    gfxInfo->GetAdapterVendorID(adapterVendorID);
+    if (adapterVendorID == u"0x8086") {  // Intel
+      gfxVars::SetWorkaroundWebRenderIntelBug1556634(true);
+      gfxCriticalNote << "Use Premul SwapChain for Intel GPU";
+    }
+  }
 #endif
 
   // Set features that affect WR's RendererOptions

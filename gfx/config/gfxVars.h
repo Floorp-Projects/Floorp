@@ -44,6 +44,7 @@ class gfxVarReceiver;
   _(UseWebRenderDCompWin, bool, false)                             \
   _(UseWebRenderTripleBufferingWin, bool, false)                   \
   _(UseWebRenderProgramBinaryDisk, bool, false)                    \
+  _(WorkaroundWebRenderIntelBug1556634, bool, false)               \
   _(WebRenderDebugFlags, int32_t, 0)                               \
   _(ScreenDepth, int32_t, 0)                                       \
   _(GREDirectory, nsString, nsString())                            \
