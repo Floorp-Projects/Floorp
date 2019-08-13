@@ -26,6 +26,8 @@ class BenchmarkStorageParent : public PBenchmarkStorageParent {
   IPCResult RecvGet(const nsCString& aDbName, const nsCString& aKey,
                     GetResolver&& aResolve);
 
+  IPCResult RecvCheckVersion(const nsCString& aDbName, int32_t aVersion);
+
  private:
   RefPtr<KeyValueStorage> mStorage;
 };
