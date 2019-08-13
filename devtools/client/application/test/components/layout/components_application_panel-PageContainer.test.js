@@ -7,6 +7,8 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
+console.error = jest.fn();
+
 // Import setupStore with imported & combined reducers
 const {
   setupStore,
@@ -33,6 +35,16 @@ describe("PageContainer", () => {
     });
   }
 
+  beforeEach(() => {
+    console.error.mockClear();
+  });
+
+  it("renders the ManifestPage component when manifest page is selected", () => {
+    const store = buildStoreWithSelectedPage(PAGE_TYPES.MANIFEST);
+    const wrapper = shallow(PageContainer({ store })).dive();
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it("renders the WorkersPage component when workers page is selected", () => {
     const store = buildStoreWithSelectedPage(PAGE_TYPES.SERVICE_WORKERS);
     const wrapper = shallow(PageContainer({ store })).dive();
@@ -42,12 +54,14 @@ describe("PageContainer", () => {
   it("renders nothing when no page is selected", () => {
     const store = buildStoreWithSelectedPage(null);
     const wrapper = shallow(PageContainer({ store })).dive();
+    expect(console.error).toHaveBeenCalledTimes(1);
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders nothing when an invalid page is selected", () => {
     const store = buildStoreWithSelectedPage("foo");
     const wrapper = shallow(PageContainer({ store })).dive();
+    expect(console.error).toHaveBeenCalledTimes(1);
     expect(wrapper).toMatchSnapshot();
   });
 });

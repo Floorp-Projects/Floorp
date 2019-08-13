@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestPage renders the expected snapshot 1`] = `
+<Localized
+  id="manifest-empty-intro"
+>
+  <section
+    className="manifest-page"
+  />
+</Localized>
+`;
