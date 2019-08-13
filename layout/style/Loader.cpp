@@ -131,6 +131,87 @@ static const char* const gStateStrings[] = {
 
 namespace mozilla {
 
+class SheetLoadDataHashKey : public nsURIHashKey {
+ public:
+  typedef SheetLoadDataHashKey* KeyType;
+  typedef const SheetLoadDataHashKey* KeyTypePointer;
+
+  explicit SheetLoadDataHashKey(const SheetLoadDataHashKey* aKey)
+      : nsURIHashKey(aKey->mKey),
+        mPrincipal(aKey->mPrincipal),
+        mCORSMode(aKey->mCORSMode),
+        mReferrerInfo(aKey->mReferrerInfo) {
+    MOZ_COUNT_CTOR(SheetLoadDataHashKey);
+  }
+
+  SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                       CORSMode aCORSMode, nsIReferrerInfo* aReferrerInfo)
+      : nsURIHashKey(aURI),
+        mPrincipal(aPrincipal),
+        mCORSMode(aCORSMode),
+        mReferrerInfo(aReferrerInfo) {
+    MOZ_COUNT_CTOR(SheetLoadDataHashKey);
+  }
+
+  SheetLoadDataHashKey(SheetLoadDataHashKey&& toMove)
+      : nsURIHashKey(std::move(toMove)),
+        mPrincipal(std::move(toMove.mPrincipal)),
+        mCORSMode(std::move(toMove.mCORSMode)),
+        mReferrerInfo(std::move(toMove.mReferrerInfo)) {
+    MOZ_COUNT_CTOR(SheetLoadDataHashKey);
+  }
+
+  explicit SheetLoadDataHashKey(css::SheetLoadData* aLoadData);
+
+  ~SheetLoadDataHashKey() { MOZ_COUNT_DTOR(SheetLoadDataHashKey); }
+
+  SheetLoadDataHashKey* GetKey() const {
+    return const_cast<SheetLoadDataHashKey*>(this);
+  }
+  const SheetLoadDataHashKey* GetKeyPointer() const { return this; }
+
+  bool KeyEquals(const SheetLoadDataHashKey* aKey) const {
+    if (!nsURIHashKey::KeyEquals(aKey->mKey)) {
+      return false;
+    }
+
+    if (!mPrincipal != !aKey->mPrincipal) {
+      // One or the other has a principal, but not both... not equal
+      return false;
+    }
+
+    if (mCORSMode != aKey->mCORSMode) {
+      // Different CORS modes; we don't match
+      return false;
+    }
+
+    bool eq;
+    if (NS_FAILED(mReferrerInfo->Equals(aKey->mReferrerInfo, &eq)) || !eq) {
+      return false;
+    }
+
+    return !mPrincipal ||
+           (NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq);
+  }
+
+  static const SheetLoadDataHashKey* KeyToPointer(SheetLoadDataHashKey* aKey) {
+    return aKey;
+  }
+  static PLDHashNumber HashKey(const SheetLoadDataHashKey* aKey) {
+    return nsURIHashKey::HashKey(aKey->mKey);
+  }
+
+  nsIURI* GetURI() const { return nsURIHashKey::GetKey(); }
+
+  enum { ALLOW_MEMMOVE = true };
+
+ protected:
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  CORSMode mCORSMode;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+};
+
+
 SheetLoadDataHashKey::SheetLoadDataHashKey(css::SheetLoadData* aLoadData)
     : nsURIHashKey(aLoadData->mURI),
       mPrincipal(aLoadData->mLoaderPrincipal),
