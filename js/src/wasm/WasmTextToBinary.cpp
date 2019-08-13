@@ -2094,7 +2094,7 @@ WasmToken WasmTokenStream::next() {
       if (consume(u"import")) {
         return WasmToken(WasmToken::Import, begin, cur_);
       }
-      if (consume(u"infinity")) {
+      if (consume(u"infinity") || consume(u"inf")) {
         return WasmToken(WasmToken::Infinity, begin, cur_);
       }
       if (consume(u"if")) {
