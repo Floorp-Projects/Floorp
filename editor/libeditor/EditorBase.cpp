@@ -4764,9 +4764,8 @@ nsresult EditorBase::FinalizeSelection() {
 
   if (RefPtr<nsCaret> caret = GetCaret()) {
     caret->SetIgnoreUserModify(true);
+    selectionController->SetCaretEnabled(false);
   }
-
-  selectionController->SetCaretEnabled(false);
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!fm)) {
