@@ -2555,6 +2555,31 @@
   value: 0
   mirror: always
 
+# In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
+# this pref forces font inflation to always be enabled in all modes.
+# That is, any heuristics used to detect pan-and-zoom
+# vs. non-pan-and-zoom modes are disabled and all content is treated
+# as pan-and-zoom mode wrt font inflation.
+#
+# This pref has no effect if font inflation is not enabled through
+# either of the prefs above.  It has no meaning in single-mode UIs.
+- name: font.size.inflation.forceEnabled
+  type: bool
+  value: false
+  mirror: always
+
+# In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
+# this pref disables font inflation in master-process contexts where
+# existing heuristics can't be used determine enabled-ness.
+#
+# This pref has no effect if font inflation is not enabled through
+# either of the prefs above.  The "forceEnabled" pref above overrides
+# this pref.
+- name: font.size.inflation.disabledInMasterProcess
+  type: bool
+  value: false
+  mirror: always
+
 # Defines the font size inflation mapping intercept parameter.
 #
 # Font size inflation computes a minimum font size, m, based on
