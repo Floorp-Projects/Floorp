@@ -4,4 +4,6 @@ exports[`PageContainer renders nothing when an invalid page is selected 1`] = `"
 
 exports[`PageContainer renders nothing when no page is selected 1`] = `""`;
 
+exports[`PageContainer renders the ManifestPage component when manifest page is selected 1`] = `<ManifestPage />`;
+
 exports[`PageContainer renders the WorkersPage component when workers page is selected 1`] = `<Connect(WorkersPage) />`;

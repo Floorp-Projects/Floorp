@@ -13,6 +13,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { PAGE_TYPES } = require("../../constants");
 
+const ManifestPage = createFactory(require("../manifest/ManifestPage"));
 const WorkersPage = createFactory(require("../service-workers/WorkersPage"));
 
 class PageContainer extends PureComponent {
@@ -26,9 +27,15 @@ class PageContainer extends PureComponent {
     let component = null;
 
     switch (this.props.page) {
+      case PAGE_TYPES.MANIFEST:
+        component = ManifestPage({});
+        break;
       case PAGE_TYPES.SERVICE_WORKERS:
         component = WorkersPage({});
         break;
+      default:
+        console.error("Unknown path. Can not direct to a page.");
+        return null;
     }
 
     return component;
