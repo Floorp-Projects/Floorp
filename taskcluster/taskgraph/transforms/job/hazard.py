@@ -10,13 +10,15 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Optional, Any
 
-from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.job import (
+    run_job_using,
+    configure_taskdesc_for_run,
+)
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     setup_secrets,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
-    support_vcs_checkout,
 )
 
 haz_run_schema = Schema({
@@ -44,14 +46,13 @@ haz_run_schema = Schema({
 def docker_worker_hazard(config, job, taskdesc):
     run = job['run']
 
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
     worker['artifacts'] = []
 
     docker_worker_add_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
     docker_worker_add_tooltool(config, job, taskdesc)
     setup_secrets(config, job, taskdesc)
-    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -61,15 +62,8 @@ def docker_worker_hazard(config, job, taskdesc):
 
     # script parameters
     if run.get('mozconfig'):
-        env['MOZCONFIG'] = run['mozconfig']
+        env['MOZCONFIG'] = run.pop('mozconfig')
 
-    # build-haz-linux.sh needs this otherwise it assumes the checkout is in
-    # the workspace.
-    env['GECKO_PATH'] = '{workdir}/checkouts/gecko'.format(**run)
-
-    worker['command'] = [
-        '{workdir}/bin/run-task'.format(**run),
-        '--gecko-checkout', '{workdir}/checkouts/gecko'.format(**run),
-        '--',
-        '/bin/bash', '-c', run['command']
-    ]
+    run['using'] = 'run-task'
+    run['cwd'] = run['workdir']
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
