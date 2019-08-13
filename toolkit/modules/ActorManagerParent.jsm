@@ -309,6 +309,7 @@ let LEGACY_ACTORS = {
       module: "resource://gre/actors/PictureInPictureChild.jsm",
       events: {
         canplay: { capture: true, mozSystemGroup: true },
+        contextmenu: { capture: true },
       },
     },
   },
