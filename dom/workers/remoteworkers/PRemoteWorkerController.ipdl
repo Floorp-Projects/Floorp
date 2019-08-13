@@ -25,6 +25,8 @@ protocol PRemoteWorkerController {
 
   async Terminated();
 
+  async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
+
  parent:
   async PFetchEventOp(ServiceWorkerFetchEventOpArgs aArgs);
 
