@@ -6,6 +6,7 @@ ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://gre/modules/IndexedDB.jsm", this);
 
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"

@@ -6,7 +6,7 @@ decorate_task(withMockPreferences, async function testApplyMigrations(
   const migrationsAppliedPref = "app.normandy.migrationsApplied";
   mockPreferences.set(migrationsAppliedPref, 0);
 
-  NormandyMigrations.applyAll();
+  await NormandyMigrations.applyAll();
 
   is(
     Services.prefs.getIntPref(migrationsAppliedPref),
@@ -31,7 +31,7 @@ decorate_task(withMockPreferences, async function testPrefMigration(
     "Migrated pref should not have a user value before running migration"
   );
 
-  NormandyMigrations.applyOne(0);
+  await NormandyMigrations.applyOne(0);
 
   ok(
     !Services.prefs.prefHasUserValue(legacyPref),
@@ -60,7 +60,7 @@ decorate_task(withMockPreferences, async function testMigration0(
   // Both enabled
   mockPreferences.set(studiesEnabledPref, true);
   mockPreferences.set(healthReportUploadEnabledPref, true);
-  NormandyMigrations.applyOne(1);
+  await NormandyMigrations.applyOne(1);
   ok(
     Services.prefs.getBoolPref(studiesEnabledPref),
     "Studies should be enabled."
@@ -71,7 +71,7 @@ decorate_task(withMockPreferences, async function testMigration0(
   // Telemetry disabled, studies enabled
   mockPreferences.set(studiesEnabledPref, true);
   mockPreferences.set(healthReportUploadEnabledPref, false);
-  NormandyMigrations.applyOne(1);
+  await NormandyMigrations.applyOne(1);
   ok(
     !Services.prefs.getBoolPref(studiesEnabledPref),
     "Studies should be disabled."
@@ -82,7 +82,7 @@ decorate_task(withMockPreferences, async function testMigration0(
   // Telemetry enabled, studies disabled
   mockPreferences.set(studiesEnabledPref, false);
   mockPreferences.set(healthReportUploadEnabledPref, true);
-  NormandyMigrations.applyOne(1);
+  await NormandyMigrations.applyOne(1);
   ok(
     !Services.prefs.getBoolPref(studiesEnabledPref),
     "Studies should be disabled."
@@ -93,7 +93,7 @@ decorate_task(withMockPreferences, async function testMigration0(
   // Both disabled
   mockPreferences.set(studiesEnabledPref, false);
   mockPreferences.set(healthReportUploadEnabledPref, false);
-  NormandyMigrations.applyOne(1);
+  await NormandyMigrations.applyOne(1);
   ok(
     !Services.prefs.getBoolPref(studiesEnabledPref),
     "Studies should be disabled."
