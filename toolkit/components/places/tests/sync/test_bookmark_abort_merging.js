@@ -9,7 +9,6 @@ add_task(async function test_abort_merging() {
   let buf = await openMirror("abort_merging");
 
   let promise = new Promise((resolve, reject) => {
-    buf.merger.finalize();
     let callback = {
       handleSuccess() {
         reject(new Error("Shouldn't have merged after aborting"));
@@ -19,7 +18,8 @@ add_task(async function test_abort_merging() {
         resolve();
       },
     };
-    buf.merger.merge(0, 0, [], callback);
+    let op = buf.merger.merge(0, 0, [], callback);
+    op.cancel();
   });
 
   await promise;
@@ -56,7 +56,13 @@ add_task(async function test_blocker_state() {
     },
   ]);
 
-  await buf.tryApply(0, 0, { notifyAll() {} }, []);
+  await buf.tryApply(
+    0,
+    0,
+    { notifyAll() {} },
+    [],
+    buf.finalizeController.signal
+  );
   await barrier.wait();
 
   let state = buf.progress.fetchState();
@@ -73,6 +79,10 @@ add_task(async function test_blocker_state() {
       "finalize",
     ],
     "Should report merge progress after waiting on blocker"
+  );
+  ok(
+    buf.finalizeController.signal.aborted,
+    "Should abort finalize signal on shutdown"
   );
 
   await buf.finalize();

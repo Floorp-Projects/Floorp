@@ -1639,6 +1639,13 @@ var PlacesUtils = {
   },
 
   /**
+   * Invalidates the entire GUID cache.
+   */
+  invalidateCachedGuids() {
+    GuidHelper.invalidateCache();
+  },
+
+  /**
    * Asynchronously retrieve a JS-object representation of a places bookmarks
    * item (a bookmark, a folder, or a separator) along with all of its
    * descendants.
@@ -2908,6 +2915,11 @@ var GuidHelper = {
     let guid = this.guidsForIds.get(aItemId);
     this.guidsForIds.delete(aItemId);
     this.idsForGuids.delete(guid);
+  },
+
+  invalidateCache() {
+    this.guidsForIds.clear();
+    this.idsForGuids.clear();
   },
 
   ensureObservingRemovedItems() {
