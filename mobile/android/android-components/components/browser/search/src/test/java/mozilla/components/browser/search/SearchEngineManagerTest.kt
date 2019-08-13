@@ -49,16 +49,20 @@ class SearchEngineManagerTest {
         manager.loadAsync(testContext)
             .await()
 
-        val engines = manager.getSearchEngines(testContext)
-        assertEquals(3, engines.size)
+        val verify = { engines: List<SearchEngine> ->
+            assertEquals(3, engines.size)
 
-        engines.assertContainsIdentifier("mozsearch")
-        engines.assertContainsIdentifier("google")
-        engines.assertContainsIdentifier("bing")
+            engines.assertContainsIdentifier("mozsearch")
+            engines.assertContainsIdentifier("google")
+            engines.assertContainsIdentifier("bing")
+        }
+
+        verify(manager.getSearchEngines(testContext))
+        verify(manager.getSearchEnginesAsync(testContext))
     }
 
     @Test
-    fun `manager returns engines from deffered`() = runBlockingTest {
+    fun `manager returns engines from deferred`() = runBlockingTest {
         val provider = mockProvider(listOf(
             mockSearchEngine("mozsearch"),
             mockSearchEngine("google"),
@@ -87,8 +91,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val engines = manager.getSearchEngines(testContext)
-        assertEquals(3, engines.size)
+        val verify = { engines: List<SearchEngine> ->
+            assertEquals(3, engines.size)
+        }
+
+        verify(manager.getSearchEngines(testContext))
+        verify(manager.getSearchEnginesAsync(testContext))
     }
 
     @Test
@@ -100,8 +108,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getDefaultSearchEngine(testContext, "banana")
-        assertEquals("mozsearch", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("mozsearch", default.identifier)
+        }
+
+        verify(manager.getDefaultSearchEngine(testContext, "banana"))
+        verify(manager.getDefaultSearchEngineAsync(testContext, "banana"))
     }
 
     @Test
@@ -113,11 +125,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getDefaultSearchEngine(
-            testContext,
-            "Bing Search")
+        val verify = { default: SearchEngine ->
+            assertEquals("bing", default.identifier)
+        }
 
-        assertEquals("bing", default.identifier)
+        verify(manager.getDefaultSearchEngine(testContext, "Bing Search"))
+        verify(manager.getDefaultSearchEngineAsync(testContext, "Bing Search"))
     }
 
     @Test
@@ -134,8 +147,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getDefaultSearchEngine(testContext)
-        assertEquals("mozsearch", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("mozsearch", default.identifier)
+        }
+
+        verify(manager.getDefaultSearchEngine(testContext))
+        verify(manager.getDefaultSearchEngineAsync(testContext))
     }
 
     @Test
@@ -147,8 +164,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getDefaultSearchEngine(testContext)
-        assertEquals("mozsearch", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("mozsearch", default.identifier)
+        }
+
+        verify(manager.getDefaultSearchEngine(testContext))
+        verify(manager.getDefaultSearchEngineAsync(testContext))
     }
 
     @Test
@@ -164,8 +185,12 @@ class SearchEngineManagerTest {
         val manager = SearchEngineManager(listOf(provider))
         manager.defaultSearchEngine = mockSearchEngine("bing")
 
-        val default = manager.getDefaultSearchEngine(testContext)
-        assertEquals("bing", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("bing", default.identifier)
+        }
+
+        verify(manager.getDefaultSearchEngine(testContext))
+        verify(manager.getDefaultSearchEngineAsync(testContext))
     }
 
     @Test
@@ -181,9 +206,12 @@ class SearchEngineManagerTest {
         val manager = SearchEngineManager(listOf(provider))
         manager.defaultSearchEngine = mockSearchEngine("bing")
 
-        val default =
-            manager.getDefaultSearchEngine(testContext, "Google Search")
-        assertEquals("google", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("google", default.identifier)
+        }
+
+        verify(manager.getDefaultSearchEngine(testContext, "Google Search"))
+        verify(manager.getDefaultSearchEngineAsync(testContext, "Google Search"))
     }
 
     @Test
@@ -195,8 +223,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getProvidedDefaultSearchEngine(testContext)
-        assertEquals("mozsearch", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("mozsearch", default.identifier)
+        }
+
+        verify(manager.getProvidedDefaultSearchEngine(testContext))
+        verify(manager.getProvidedDefaultSearchEngineAsync(testContext))
     }
 
     @Test
@@ -213,8 +245,12 @@ class SearchEngineManagerTest {
 
         val manager = SearchEngineManager(listOf(provider))
 
-        val default = manager.getProvidedDefaultSearchEngine(testContext)
-        assertEquals("mozsearch", default.identifier)
+        val verify = { default: SearchEngine ->
+            assertEquals("mozsearch", default.identifier)
+        }
+
+        verify(manager.getProvidedDefaultSearchEngine(testContext))
+        verify(manager.getProvidedDefaultSearchEngineAsync(testContext))
     }
 
     @Test
