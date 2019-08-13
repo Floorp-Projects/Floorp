@@ -1,0 +1,129 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include ChannelInfo;
+include ClientIPCTypes;
+include DOMTypes;
+include FetchTypes;
+
+using ServiceWorkerState from "mozilla/dom/ServiceWorkerIPCUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * ServiceWorkerOpArgs
+ */
+struct ServiceWorkerCheckScriptEvaluationOpArgs {};
+
+struct ServiceWorkerUpdateStateOpArgs {
+  ServiceWorkerState state;
+};
+
+struct ServiceWorkerTerminateWorkerOpArgs {};
+
+struct ServiceWorkerLifeCycleEventOpArgs {
+  nsString eventName;
+};
+
+// Possibly need to differentiate an empty array from the absence of an array.
+union OptionalPushData {
+  void_t;
+  uint8_t[];
+};
+
+struct ServiceWorkerPushEventOpArgs {
+  nsString messageId;
+  OptionalPushData data;
+};
+
+struct ServiceWorkerPushSubscriptionChangeEventOpArgs {};
+
+struct ServiceWorkerNotificationEventOpArgs {
+  nsString eventName;
+  nsString id;
+  nsString title;
+  nsString dir;
+  nsString lang;
+  nsString body;
+  nsString tag;
+  nsString icon;
+  nsString data;
+  nsString behavior;
+  nsString scope;
+  uint32_t disableOpenClickDelay;
+};
+
+struct ServiceWorkerMessageEventOpArgs {
+  ClientInfoAndState clientInfoAndState;
+  ClonedMessageData clonedData;
+};
+
+struct ServiceWorkerFetchEventOpArgs {
+  nsCString workerScriptSpec;
+  IPCInternalRequest internalRequest;
+  nsString clientId;
+  nsString resultingClientId;
+  bool isReload;
+  bool isNonSubresourceRequest;
+};
+
+union ServiceWorkerOpArgs {
+  ServiceWorkerCheckScriptEvaluationOpArgs;
+  ServiceWorkerUpdateStateOpArgs;
+  ServiceWorkerTerminateWorkerOpArgs;
+  ServiceWorkerLifeCycleEventOpArgs;
+  ServiceWorkerPushEventOpArgs;
+  ServiceWorkerPushSubscriptionChangeEventOpArgs;
+  ServiceWorkerNotificationEventOpArgs;
+  ServiceWorkerMessageEventOpArgs;
+  ServiceWorkerFetchEventOpArgs;
+};
+
+/**
+ * IPCFetchEventRespondWithResult
+ */
+struct FetchEventRespondWithClosure {
+  nsCString respondWithScriptSpec;
+  uint32_t respondWithLineNumber;
+  uint32_t respondWithColumnNumber;
+};
+
+struct IPCSynthesizeResponseArgs {
+  IPCInternalResponse internalResponse;
+  FetchEventRespondWithClosure closure;
+};
+
+struct ResetInterceptionArgs {};
+
+struct CancelInterceptionArgs {
+  nsresult status;
+};
+
+union IPCFetchEventRespondWithResult {
+  IPCSynthesizeResponseArgs;
+  ResetInterceptionArgs;
+  CancelInterceptionArgs;
+};
+
+/**
+ * ServiceWorkerOpResult
+ */
+struct ServiceWorkerCheckScriptEvaluationOpResult {
+  bool workerScriptExecutedSuccessfully;
+  bool fetchHandlerWasAdded;
+};
+
+struct ServiceWorkerFetchEventOpResult {
+  nsresult rv;
+};
+
+union ServiceWorkerOpResult {
+  nsresult;
+  ServiceWorkerCheckScriptEvaluationOpResult;
+  ServiceWorkerFetchEventOpResult;
+};
+
+}  // namespace dom
+}  // namespace mozilla
