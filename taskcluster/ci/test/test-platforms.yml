@@ -266,6 +266,26 @@ windows10-64-shippable-qr/opt:
         - raptor-firefox
         - web-platform-tests
 
+windows10-64-mingwclang/debug:
+    build-platform: win64-mingwclang/debug
+    test-sets:
+        - mingwclang-tests-debug
+
+windows10-64-mingwclang/opt:
+    build-platform: win64-mingwclang/opt
+    test-sets:
+        - mingwclang-tests-opt
+
+windows7-32-mingwclang/debug:
+    build-platform: win32-mingwclang/debug
+    test-sets:
+        - mingwclang-tests-debug
+
+windows7-32-mingwclang/opt:
+    build-platform: win32-mingwclang/opt
+    test-sets:
+        - mingwclang-tests-opt
+
 ##
 # MacOS X platforms (matching /macosx.*/)
 

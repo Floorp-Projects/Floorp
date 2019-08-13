@@ -40,7 +40,7 @@ class StringBuffer;
 
 extern MOZ_MUST_USE bool InitRuntimeNumberState(JSRuntime* rt);
 
-#if !EXPOSE_INTL_API
+#if !ENABLE_INTL_API
 extern void FinishRuntimeNumberState(JSRuntime* rt);
 #endif
 

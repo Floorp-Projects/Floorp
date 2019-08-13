@@ -698,7 +698,7 @@ struct JSRuntime {
     return defaultFreeOp_;
   }
 
-#if !EXPOSE_INTL_API
+#if !ENABLE_INTL_API
   /* Number localization, used by jsnum.cpp. */
   js::WriteOnceData<const char*> thousandsSeparator;
   js::WriteOnceData<const char*> decimalSeparator;

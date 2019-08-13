@@ -1370,7 +1370,7 @@ pref("security.insecure_connection_icon.enabled", true);
 pref("security.insecure_connection_icon.pbmode.enabled", true);
 
 // For secure connections, show gray instead of green lock icon
-pref("security.secure_connection_icon_color_gray", false);
+pref("security.secure_connection_icon_color_gray", true);
 
 // Ignore EV certificate and treat as normal secure connection instead
 pref("security.identityblock.show_extended_validation", false);

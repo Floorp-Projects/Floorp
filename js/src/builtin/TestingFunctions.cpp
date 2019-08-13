@@ -371,7 +371,7 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef EXPOSE_INTL_API
+#ifdef ENABLE_INTL_API
   value = BooleanValue(true);
 #else
   value = BooleanValue(false);
