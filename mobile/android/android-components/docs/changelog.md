@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **context-menu**
+  * Exposed title tag from GV in HitResult. Fixes [#1444]. If title is null or blank or possibly misleading (starting with http) the src value is returned for title
+
 * **service-glean**
   * Timing distributions now use a functional bucketing algorithm that does not require fixed limits to be defined up front.
 
