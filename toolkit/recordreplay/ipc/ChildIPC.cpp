@@ -348,9 +348,7 @@ void ReportFatalError(const Maybe<MinidumpInfo>& aMinidump, const char* aFormat,
   Thread::WaitForeverNoIdle();
 }
 
-size_t GetId() {
-  return gChannel->GetId();
-}
+size_t GetId() { return gChannel->GetId(); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Vsyncs
@@ -572,13 +570,10 @@ bool Repaint(nsAString& aData) {
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
 
   nsString options;
-  nsresult rv = encoder->InitFromData((const uint8_t*) gDrawTargetBuffer,
-                                      gPaintWidth * gPaintHeight * 4,
-                                      gPaintWidth,
-                                      gPaintHeight,
-                                      gPaintWidth * 4,
-                                      imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                                      options);
+  nsresult rv = encoder->InitFromData(
+      (const uint8_t*)gDrawTargetBuffer, gPaintWidth * gPaintHeight * 4,
+      gPaintWidth, gPaintHeight, gPaintWidth * 4,
+      imgIEncoder::INPUT_FORMAT_HOSTARGB, options);
   if (NS_FAILED(rv)) {
     return false;
   }

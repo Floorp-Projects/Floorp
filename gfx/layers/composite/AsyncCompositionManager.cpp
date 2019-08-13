@@ -12,10 +12,10 @@
 #include "mozilla/ServoBindings.h"  // for Servo_AnimationValue_GetOpacity, etc
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/WidgetUtils.h"    // for ComputeTransformForRotation
-#include "mozilla/gfx/BaseRect.h"   // for BaseRect
-#include "mozilla/gfx/Point.h"      // for RoundedToInt, PointTyped
-#include "mozilla/gfx/Rect.h"       // for RoundedToInt, RectTyped
+#include "mozilla/WidgetUtils.h"      // for ComputeTransformForRotation
+#include "mozilla/gfx/BaseRect.h"     // for BaseRect
+#include "mozilla/gfx/Point.h"        // for RoundedToInt, PointTyped
+#include "mozilla/gfx/Rect.h"         // for RoundedToInt, RectTyped
 #include "mozilla/gfx/ScaleFactor.h"  // for ScaleFactor
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"  // for APZSampler

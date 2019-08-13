@@ -280,8 +280,9 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     MOZ_RELEASE_ASSERT(!mSyncMessageReply);
     mSyncMessageReply = new Message();
     if (mSyncMessageIsCall
-        ? !mOpposite->GetIPCChannel()->Call(mSyncMessage, mSyncMessageReply)
-        : !mOpposite->GetIPCChannel()->Send(mSyncMessage, mSyncMessageReply)) {
+            ? !mOpposite->GetIPCChannel()->Call(mSyncMessage, mSyncMessageReply)
+            : !mOpposite->GetIPCChannel()->Send(mSyncMessage,
+                                                mSyncMessageReply)) {
       MOZ_RELEASE_ASSERT(mSide == ipc::ChildSide);
       BeginShutdown();
     }
@@ -295,15 +296,16 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     aProtocol->MaybeSendSyncMessage(false);
   }
 
-  void HandleSyncMessage(const Message& aMessage, Message*& aReply, bool aCall) {
+  void HandleSyncMessage(const Message& aMessage, Message*& aReply,
+                         bool aCall) {
     MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
 
     mSyncMessage = new Message();
     mSyncMessage->CopyFrom(aMessage);
     mSyncMessageIsCall = aCall;
 
-    mOppositeMessageLoop->PostTask(
-        NewRunnableFunction("StaticMaybeSendSyncMessage", StaticMaybeSendSyncMessage, this));
+    mOppositeMessageLoop->PostTask(NewRunnableFunction(
+        "StaticMaybeSendSyncMessage", StaticMaybeSendSyncMessage, this));
 
     if (mSide == ipc::ChildSide) {
       AutoMarkMainThreadWaitingForIPDLReply blocked;

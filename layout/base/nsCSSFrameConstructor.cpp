@@ -6142,9 +6142,9 @@ nsIFrame* nsCSSFrameConstructor::FindSiblingInternal(
 
   auto getInsideMarkerFrame = [](const nsIContent* aContent) -> nsIFrame* {
     auto* marker = nsLayoutUtils::GetMarkerFrame(aContent);
-    const bool isInsideMarker = marker &&
-        marker->GetInFlowParent()->StyleList()->mListStylePosition ==
-            NS_STYLE_LIST_STYLE_POSITION_INSIDE;
+    const bool isInsideMarker =
+        marker && marker->GetInFlowParent()->StyleList()->mListStylePosition ==
+                      NS_STYLE_LIST_STYLE_POSITION_INSIDE;
     return isInsideMarker ? marker : nullptr;
   };
 

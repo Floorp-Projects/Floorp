@@ -572,8 +572,7 @@ void MediaDecoder::SetStateMachineParameters() {
   mOnNextFrameStatus = mDecoderStateMachine->OnNextFrameStatus().Connect(
       mAbstractMainThread, this, &MediaDecoder::OnNextFrameStatus);
   mOnStoreDecoderBenchmark = mReader->OnStoreDecoderBenchmark().Connect(
-      mAbstractMainThread, this,
-      &MediaDecoder::OnStoreDecoderBenchmark);
+      mAbstractMainThread, this, &MediaDecoder::OnStoreDecoderBenchmark);
 
   mOnEncrypted = mReader->OnEncrypted().Connect(
       mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DispatchEncrypted);

@@ -15,9 +15,9 @@
 #include "gfxRect.h"                  // for gfxRect
 #include "mozilla/MathAlgorithms.h"   // for Abs
 #include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/gfx/Point.h"        // for IntSize
-#include "mozilla/gfx/Rect.h"         // for Rect
-#include "mozilla/gfx/Tools.h"        // for BytesPerPixel
+#include "mozilla/gfx/Point.h"  // for IntSize
+#include "mozilla/gfx/Rect.h"   // for Rect
+#include "mozilla/gfx/Tools.h"  // for BytesPerPixel
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"  // for CompositorBridgeChild
 #include "mozilla/layers/LayerMetricsWrapper.h"

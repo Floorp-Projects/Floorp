@@ -7,7 +7,7 @@
 #ifndef GFX_FRAMEMETRICS_H
 #define GFX_FRAMEMETRICS_H
 
-#include <stdint.h>  // for uint8_t, uint32_t, uint64_t
+#include <stdint.h>                 // for uint8_t, uint32_t, uint64_t
 #include "Units.h"                  // for CSSRect, CSSPixel, etc
 #include "mozilla/DefineEnum.h"     // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"  // for HashGeneric

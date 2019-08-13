@@ -54,8 +54,8 @@
 #include "mozilla/StaticPrefs_slider.h"
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/StaticPrefs_toolkit.h"
-#include "mozilla/Telemetry.h"               // for Telemetry
-#include "mozilla/TimeStamp.h"               // for TimeDuration, TimeStamp
+#include "mozilla/Telemetry.h"  // for Telemetry
+#include "mozilla/TimeStamp.h"  // for TimeDuration, TimeStamp
 #include "mozilla/dom/CheckerboardReportService.h"  // for CheckerboardEventStorage
 // note: CheckerboardReportService.h actually lives in gfx/layers/apz/util/
 #include "mozilla/dom/Touch.h"              // for Touch

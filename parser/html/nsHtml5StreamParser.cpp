@@ -873,18 +873,16 @@ class AddContentRunnable : public Runnable {
 inline void nsHtml5StreamParser::OnNewContent(Span<const char16_t> aData) {
   if (mURIToSendToDevtools) {
     NS_DispatchToMainThread(new AddContentRunnable(mUUIDForDevtools,
-                                                   mURIToSendToDevtools,
-                                                   aData,
+                                                   mURIToSendToDevtools, aData,
                                                    /* aComplete */ false));
   }
 }
 
 inline void nsHtml5StreamParser::OnContentComplete() {
   if (mURIToSendToDevtools) {
-    NS_DispatchToMainThread(new AddContentRunnable(mUUIDForDevtools,
-                                                   mURIToSendToDevtools,
-                                                   Span<const char16_t>(),
-                                                   /* aComplete */ true));
+    NS_DispatchToMainThread(new AddContentRunnable(
+        mUUIDForDevtools, mURIToSendToDevtools, Span<const char16_t>(),
+        /* aComplete */ true));
     mURIToSendToDevtools = nullptr;
   }
 }
@@ -1193,9 +1191,7 @@ void nsHtml5StreamParser::DoStopRequest() {
                      "Stream ended without being open.");
   mTokenizerMutex.AssertCurrentThreadOwns();
 
-  auto guard = MakeScopeExit([&] {
-      OnContentComplete();
-    });
+  auto guard = MakeScopeExit([&] { OnContentComplete(); });
 
   if (IsTerminated()) {
     return;

@@ -44,7 +44,6 @@ class PreloadedStyleSheet : public nsIPreloadedStyleSheet {
   virtual ~PreloadedStyleSheet() {}
 
  private:
-
   class StylesheetPreloadObserver final : public nsICSSLoaderObserver {
    public:
     NS_DECL_ISUPPORTS

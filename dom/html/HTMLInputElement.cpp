@@ -772,8 +772,8 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
     SetFilePickerFiltersFromAccept(filePicker);
 
     if (StaticPrefs::dom_capture_enabled()) {
-      const nsAttrValue* captureVal = GetParsedAttr(nsGkAtoms::capture,
-                                                    kNameSpaceID_None);
+      const nsAttrValue* captureVal =
+          GetParsedAttr(nsGkAtoms::capture, kNameSpaceID_None);
       if (captureVal) {
         filePicker->SetCapture(captureVal->GetEnumValue());
       }
@@ -1341,8 +1341,8 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
               dateTimeBoxElement,
               aName == nsGkAtoms::value
-                ? NS_LITERAL_STRING("MozDateTimeValueChanged")
-                : NS_LITERAL_STRING("MozDateTimeAttributeChanged"),
+                  ? NS_LITERAL_STRING("MozDateTimeValueChanged")
+                  : NS_LITERAL_STRING("MozDateTimeAttributeChanged"),
               CanBubble::eNo, ChromeOnlyDispatch::eNo);
           dispatcher->RunDOMEventWhenSafe();
         }
@@ -5254,7 +5254,8 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return aResult.ParseEnumValue(aValue, kInputInputmodeTable, false);
     }
     if (aAttribute == nsGkAtoms::capture) {
-      return aResult.ParseEnumValue(aValue, kCaptureTable, false, kCaptureDefault);
+      return aResult.ParseEnumValue(aValue, kCaptureTable, false,
+                                    kCaptureDefault);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       // We have to call |ParseImageAttribute| unconditionally since we

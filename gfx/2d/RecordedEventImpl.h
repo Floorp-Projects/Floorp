@@ -2711,7 +2711,8 @@ RecordedDrawSurfaceWithShadow::RecordedDrawSurfaceWithShadow(S& aStream)
   ReadElement(aStream, mColor);
   ReadElement(aStream, mOffset);
   ReadElement(aStream, mSigma);
-  ReadElementConstrained(aStream, mOp, CompositionOp::OP_OVER, CompositionOp::OP_COUNT);
+  ReadElementConstrained(aStream, mOp, CompositionOp::OP_OVER,
+                         CompositionOp::OP_COUNT);
 }
 
 inline void RecordedDrawSurfaceWithShadow::OutputSimpleEventInfo(

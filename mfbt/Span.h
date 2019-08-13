@@ -20,20 +20,20 @@
 // https://github.com/Microsoft/GSL/blob/3819df6e378ffccf0e29465afe99c3b324c2aa70/include/gsl/gsl_util
 
 #ifndef mozilla_Span_h
-#  define mozilla_Span_h
+#define mozilla_Span_h
 
-#  include "mozilla/Array.h"
-#  include "mozilla/Assertions.h"
-#  include "mozilla/Casting.h"
-#  include "mozilla/IntegerTypeTraits.h"
-#  include "mozilla/Move.h"
-#  include "mozilla/TypeTraits.h"
-#  include "mozilla/UniquePtr.h"
+#include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
+#include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/Move.h"
+#include "mozilla/TypeTraits.h"
+#include "mozilla/UniquePtr.h"
 
-#  include <algorithm>
-#  include <array>
-#  include <cstring>
-#  include <iterator>
+#include <algorithm>
+#include <array>
+#include <cstring>
+#include <iterator>
 
 namespace mozilla {
 

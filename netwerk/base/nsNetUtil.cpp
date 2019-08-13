@@ -2902,8 +2902,9 @@ nsresult NS_ShouldSecureUpgrade(
       return rv;
     }
 
-    nsresult rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                          aOriginAttributes, nullptr, &hstsSource, &isStsHost);
+    nsresult rv =
+        sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
+                         aOriginAttributes, nullptr, &hstsSource, &isStsHost);
 
     // if the SSS check fails, it's likely because this load is on a
     // malformed URI or something else in the setup is wrong, so any error

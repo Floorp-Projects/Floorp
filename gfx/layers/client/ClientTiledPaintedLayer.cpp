@@ -5,13 +5,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientTiledPaintedLayer.h"
-#include "FrameMetrics.h"          // for FrameMetrics
-#include "Units.h"                 // for ScreenIntRect, CSSPoint, etc
-#include "UnitTransforms.h"        // for TransformTo
-#include "ClientLayerManager.h"    // for ClientLayerManager, etc
-#include "gfxPlatform.h"           // for gfxPlatform
-#include "gfxRect.h"               // for gfxRect
-#include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc
+#include "FrameMetrics.h"        // for FrameMetrics
+#include "Units.h"               // for ScreenIntRect, CSSPoint, etc
+#include "UnitTransforms.h"      // for TransformTo
+#include "ClientLayerManager.h"  // for ClientLayerManager, etc
+#include "gfxPlatform.h"         // for gfxPlatform
+#include "gfxRect.h"             // for gfxRect
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize

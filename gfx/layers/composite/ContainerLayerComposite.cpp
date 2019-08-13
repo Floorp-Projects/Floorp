@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ContainerLayerComposite.h"
-#include <algorithm>                         // for min
-#include "FrameMetrics.h"                    // for FrameMetrics
-#include "Units.h"                           // for LayerRect, LayerPixel, etc
-#include "CompositableHost.h"                // for CompositableHost
-#include "gfxEnv.h"                          // for gfxEnv
-#include "mozilla/Assertions.h"              // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"                  // for RefPtr
+#include <algorithm>             // for min
+#include "FrameMetrics.h"        // for FrameMetrics
+#include "Units.h"               // for LayerRect, LayerPixel, etc
+#include "CompositableHost.h"    // for CompositableHost
+#include "gfxEnv.h"              // for gfxEnv
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/RefPtr.h"      // for RefPtr
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"               // for UniquePtr
