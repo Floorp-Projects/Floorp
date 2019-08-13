@@ -58,7 +58,6 @@ import mozilla.components.concept.engine.request.RequestInterceptor.Interception
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.utils.DownloadUtils
-import java.util.Date
 
 /**
  * WebView-based implementation of EngineView.
@@ -71,9 +70,6 @@ class SystemEngineView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
     @VisibleForTesting(otherwise = PRIVATE)
     internal var session: SystemEngineSession? = null
-    internal var jsAlertCount = 0
-    internal var shouldShowMoreDialogs = true
-    internal var lastDialogShownAt = Date()
 
     /**
      * Render the content of the given session.
@@ -169,7 +165,6 @@ class SystemEngineView @JvmOverloads constructor(
                     onNavigationStateChange(view.canGoBack(), view.canGoForward())
                 }
             }
-            resetJSAlertAbuseState()
         }
 
         override fun onPageFinished(view: WebView?, url: String?) {
@@ -406,25 +401,17 @@ class SystemEngineView @JvmOverloads constructor(
                 result.cancel()
             }
 
-            if (shouldShowMoreDialogs) {
-
-                session.notifyObservers {
-                    onPromptRequest(
-                        PromptRequest.Alert(
-                            title,
-                            message ?: "",
-                            areDialogsBeingAbused(),
-                            onDismiss
-                        ) { shouldNotShowMoreDialogs ->
-                            shouldShowMoreDialogs = !shouldNotShowMoreDialogs
-                            result.confirm()
-                        })
-                }
-            } else {
-                result.cancel()
+            session.notifyObservers {
+                onPromptRequest(
+                    PromptRequest.Alert(
+                        title,
+                        message ?: "",
+                        false,
+                        onDismiss
+                    ) { _ ->
+                        result.confirm()
+                    })
             }
-
-            updateJSDialogAbusedState()
             return true
         }
 
@@ -443,72 +430,57 @@ class SystemEngineView @JvmOverloads constructor(
                 result.cancel()
             }
 
-            val onConfirm: (Boolean, String) -> Unit = { shouldNotShowMoreDialogs, valueInput ->
-                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+            val onConfirm: (Boolean, String) -> Unit = { _, valueInput ->
                 result.confirm(valueInput)
             }
 
-            if (shouldShowMoreDialogs) {
-                session.notifyObservers {
-                    onPromptRequest(
-                        PromptRequest.TextPrompt(
-                            title,
-                            message ?: "",
-                            defaultValue ?: "",
-                            areDialogsBeingAbused(),
-                            onDismiss,
-                            onConfirm
-                        )
+            session.notifyObservers {
+                onPromptRequest(
+                    PromptRequest.TextPrompt(
+                        title,
+                        message ?: "",
+                        defaultValue ?: "",
+                        false,
+                        onDismiss,
+                        onConfirm
                     )
-                }
-            } else {
-                result.cancel()
+                )
             }
-            updateJSDialogAbusedState()
             return true
         }
 
         override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult): Boolean {
             val session = session ?: return applyDefaultJsDialogBehavior(result)
             val title = context.getString(R.string.mozac_browser_engine_system_alert_title, url ?: session.currentUrl)
-            val positiveButton = context.getString(android.R.string.ok)
-            val negativeButton = context.getString(android.R.string.cancel)
 
             val onDismiss: () -> Unit = {
                 result.cancel()
             }
 
-            val onConfirmPositiveButton: (Boolean) -> Unit = { shouldNotShowMoreDialogs ->
-                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+            val onConfirmPositiveButton: (Boolean) -> Unit = { _ ->
                 result.confirm()
             }
 
-            val onConfirmNegativeButton: (Boolean) -> Unit = { shouldNotShowMoreDialogs ->
-                shouldShowMoreDialogs = !shouldNotShowMoreDialogs
+            val onConfirmNegativeButton: (Boolean) -> Unit = { _ ->
                 result.cancel()
             }
 
-            if (shouldShowMoreDialogs) {
-                session.notifyObservers {
-                    onPromptRequest(
-                        PromptRequest.Confirm(
-                            title,
-                            message ?: "",
-                            areDialogsBeingAbused(),
-                            positiveButton,
-                            negativeButton,
-                            "",
-                            onConfirmPositiveButton,
-                            onConfirmNegativeButton,
-                            {},
-                            onDismiss
-                        )
+            session.notifyObservers {
+                onPromptRequest(
+                    PromptRequest.Confirm(
+                        title,
+                        message ?: "",
+                        false,
+                        "",
+                        "",
+                        "",
+                        onConfirmPositiveButton,
+                        onConfirmNegativeButton,
+                        {},
+                        onDismiss
                     )
-                }
-            } else {
-                result.cancel()
+                )
             }
-            updateJSDialogAbusedState()
             return true
         }
 
@@ -708,40 +680,9 @@ class SystemEngineView @JvmOverloads constructor(
         }, handler)
     }
 
-    private fun resetJSAlertAbuseState() {
-        jsAlertCount = 0
-        shouldShowMoreDialogs = true
-    }
-
     private fun applyDefaultJsDialogBehavior(result: JsResult?): Boolean {
         result?.cancel()
         return true
-    }
-
-    internal fun updateJSDialogAbusedState() {
-        if (!areDialogsAbusedByTime()) {
-            jsAlertCount = 0
-        }
-        ++jsAlertCount
-        lastDialogShownAt = Date()
-    }
-
-    internal fun areDialogsBeingAbused(): Boolean {
-        return areDialogsAbusedByTime() || areDialogsAbusedByCount()
-    }
-
-    internal fun areDialogsAbusedByTime(): Boolean {
-        return if (jsAlertCount == 0) {
-            false
-        } else {
-            val now = Date()
-            val diffInSeconds = (now.time - lastDialogShownAt.time) / SECOND_MS
-            diffInSeconds < MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT
-        }
-    }
-
-    internal fun areDialogsAbusedByCount(): Boolean {
-        return jsAlertCount > MAX_SUCCESSIVE_DIALOG_COUNT
     }
 
     @Suppress("Deprecation")

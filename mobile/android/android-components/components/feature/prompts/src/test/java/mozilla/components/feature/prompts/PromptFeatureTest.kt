@@ -33,6 +33,7 @@ import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -62,6 +63,11 @@ class PromptFeatureTest {
 
         mockSessionManager = spy(SessionManager(engine))
         promptFeature = PromptFeature(mock<Fragment>(), mockSessionManager, null, mockFragmentManager) { }
+    }
+
+    @After
+    fun tearDown() {
+        promptFeature.promptAbuserDetector.resetJSAlertAbuseState()
     }
 
     @Test
@@ -685,6 +691,57 @@ class PromptFeatureTest {
         assertTrue(onCancelWasCalled)
 
         session.promptRequest = Consumable.from(promptRequest)
+    }
+
+    @Test
+    fun `When dialogs are been abused prompts must not be allow to be displayed`() {
+        val session = getSelectedSession()
+        var onDismissWasCalled: Boolean
+        val onDismiss = { onDismissWasCalled = true }
+        val mockAlertRequest = Alert("", "", false, onDismiss, {})
+        val mockTextRequest = TextPrompt("", "", "", false, onDismiss) { _, _ -> }
+        val mockConfirmRequest =
+            PromptRequest.Confirm("", "", false, "", "", "", {}, {}, {}, onDismiss)
+
+        val promptRequest = arrayOf(mockAlertRequest, mockTextRequest, mockConfirmRequest)
+
+        stubContext()
+        promptFeature.start()
+        promptFeature.promptAbuserDetector.userWantsMoreDialogs(false)
+
+        promptRequest.forEach { _ ->
+            onDismissWasCalled = false
+            session.promptRequest = Consumable.from(mockAlertRequest)
+
+            verify(mockFragmentManager, never()).beginTransaction()
+            assertTrue(onDismissWasCalled)
+        }
+    }
+
+    @Test
+    fun `When dialogs are been abused but the page is refreshed prompts must be allow to be displayed`() {
+        val session = getSelectedSession()
+        var onDismissWasCalled = false
+        val onDismiss = { onDismissWasCalled = true }
+        val mockAlertRequest = Alert("", "", false, onDismiss, {})
+
+        stubContext()
+        promptFeature.start()
+        promptFeature.promptAbuserDetector.userWantsMoreDialogs(false)
+
+        session.promptRequest = Consumable.from(mockAlertRequest)
+
+        verify(mockFragmentManager, never()).beginTransaction()
+        assertTrue(onDismissWasCalled)
+
+        session.notifyObservers {
+            onLoadingStateChanged(session, false)
+        }
+
+        session.promptRequest = Consumable.from(mockAlertRequest)
+
+        verify(mockFragmentManager).beginTransaction()
+        assertTrue(promptFeature.promptAbuserDetector.shouldShowMoreDialogs)
     }
 
     private fun getSelectedSession(): Session {

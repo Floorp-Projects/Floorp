@@ -12,46 +12,21 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.prompt.PromptRequest.Alert
-import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
-import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_PREVIOUS_FAILED
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_NONE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_PW_ENCRYPTED
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_SECURE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.ButtonCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_ANY
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_ENVIRONMENT
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_USER
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoiceCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.DATETIME_LOCAL
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MONTH
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.InvalidParameterException
@@ -59,102 +34,118 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
+typealias GeckoAuthOptions = PromptDelegate.AuthPrompt.AuthOptions
+typealias GeckoChoice = PromptDelegate.ChoicePrompt.Choice
+typealias GECKO_AUTH_FLAGS = PromptDelegate.AuthPrompt.AuthOptions.Flags
+typealias GECKO_AUTH_LEVEL = PromptDelegate.AuthPrompt.AuthOptions.Level
+typealias GECKO_PROMPT_FILE_TYPE = PromptDelegate.FilePrompt.Type
+typealias GECKO_PROMPT_CHOICE_TYPE = PromptDelegate.ChoicePrompt.Type
+typealias GECKO_PROMPT_FILE_CAPTURE = PromptDelegate.FilePrompt.Capture
+typealias AC_AUTH_LEVEL = PromptRequest.Authentication.Level
+typealias AC_AUTH_METHOD = PromptRequest.Authentication.Method
+typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
 
 /**
  * Gecko-based PromptDelegate implementation.
  */
 @Suppress("TooManyFunctions")
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
-    GeckoSession.PromptDelegate {
+    PromptDelegate {
 
     override fun onChoicePrompt(
         session: GeckoSession,
-        title: String?,
-        msg: String?,
-        type: Int,
-        geckoChoices: Array<out GeckoChoice>,
-        callback: ChoiceCallback
-    ) {
-        val choices = convertToChoices(geckoChoices)
+        geckoPrompt: PromptDelegate.ChoicePrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val choices = convertToChoices(geckoPrompt.choices)
         val onConfirmSingleChoice: (Choice) -> Unit = { selectedChoice ->
-            callback.confirm(selectedChoice.id)
+            geckoResult.complete(geckoPrompt.confirm(selectedChoice.id))
         }
         val onConfirmMultipleSelection: (Array<Choice>) -> Unit = { selectedChoices ->
             val ids = selectedChoices.toIdsArray()
-            callback.confirm(ids)
+            geckoResult.complete(geckoPrompt.confirm(ids))
         }
 
-        val promptRequest = when (type) {
-            CHOICE_TYPE_SINGLE -> SingleChoice(choices, onConfirmSingleChoice)
-            CHOICE_TYPE_MENU -> MenuChoice(choices, onConfirmSingleChoice)
-            CHOICE_TYPE_MULTIPLE -> MultipleChoice(choices, onConfirmMultipleSelection)
-            else -> throw InvalidParameterException("$type is not a valid Gecko @Choice.ChoiceType")
+        val promptRequest = when (geckoPrompt.type) {
+            GECKO_PROMPT_CHOICE_TYPE.SINGLE -> SingleChoice(
+                choices,
+                onConfirmSingleChoice
+            )
+            GECKO_PROMPT_CHOICE_TYPE.MENU -> MenuChoice(
+                choices,
+                onConfirmSingleChoice
+            )
+            GECKO_PROMPT_CHOICE_TYPE.MULTIPLE -> MultipleChoice(
+                choices,
+                onConfirmMultipleSelection
+            )
+            else -> throw InvalidParameterException("${geckoPrompt.type} is not a valid Gecko @Choice.ChoiceType")
         }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(promptRequest)
         }
+
+        return geckoResult
     }
 
-    override fun onAlert(
+    override fun onAlertPrompt(
         session: GeckoSession,
-        title: String?,
-        message: String?,
-        callback: AlertCallback
-    ) {
-
-        val hasShownManyDialogs = callback.hasCheckbox()
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
+        prompt: PromptDelegate.AlertPrompt
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onConfirm: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
+        val title = prompt.title ?: ""
+        val message = prompt.message ?: ""
 
         geckoEngineSession.notifyObservers {
-            onPromptRequest(Alert(title ?: "", message ?: "", hasShownManyDialogs, onDismiss) { showMoreDialogs ->
-                callback.checkboxValue = showMoreDialogs
-                callback.dismiss()
-            })
+            onPromptRequest(
+                PromptRequest.Alert(
+                    title,
+                    message,
+                    false,
+                    onConfirm
+                ) { _ ->
+                    onConfirm()
+                })
         }
+        return geckoResult
     }
 
     override fun onFilePrompt(
         session: GeckoSession,
-        title: String?,
-        selectionType: Int,
-        mimeTypes: Array<out String>?,
-        capture: Int,
-        callback: FileCallback
-    ) {
+        prompt: PromptDelegate.FilePrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val isMultipleFilesSelection = prompt.type == GECKO_PROMPT_FILE_TYPE.MULTIPLE
+
+        val captureMode = when (prompt.capture) {
+            GECKO_PROMPT_FILE_CAPTURE.ANY -> AC_FILE_FACING_MODE.ANY
+            GECKO_PROMPT_FILE_CAPTURE.USER -> AC_FILE_FACING_MODE.FRONT_CAMERA
+            GECKO_PROMPT_FILE_CAPTURE.ENVIRONMENT -> AC_FILE_FACING_MODE.BACK_CAMERA
+            else -> AC_FILE_FACING_MODE.NONE
+        }
 
         val onSelectMultiple: (Context, Array<Uri>) -> Unit = { context, uris ->
             val filesUris = uris.map {
                 it.toFileUri(context)
             }.toTypedArray()
 
-            callback.confirm(context, filesUris)
-        }
-
-        val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
-
-        val captureMode = when (capture) {
-            CAPTURE_TYPE_ANY -> PromptRequest.File.FacingMode.ANY
-            CAPTURE_TYPE_USER -> PromptRequest.File.FacingMode.FRONT_CAMERA
-            CAPTURE_TYPE_ENVIRONMENT -> PromptRequest.File.FacingMode.BACK_CAMERA
-            else -> PromptRequest.File.FacingMode.NONE
+            geckoResult.complete(prompt.confirm(context, filesUris))
         }
 
         val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
-            callback.confirm(context, uri.toFileUri(context))
+            geckoResult.complete(prompt.confirm(context, uri.toFileUri(context)))
         }
 
         val onDismiss: () -> Unit = {
-            callback.dismiss()
+            geckoResult.complete(prompt.dismiss())
         }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.File(
-                    mimeTypes ?: emptyArray(),
+                    prompt.mimeTypes ?: emptyArray(),
                     isMultipleFilesSelection,
                     captureMode,
                     onSelectSingle,
@@ -163,79 +154,77 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 )
             )
         }
+        return geckoResult
     }
 
     override fun onDateTimePrompt(
         session: GeckoSession,
-        title: String?,
-        type: Int,
-        value: String?,
-        minDate: String?,
-        maxDate: String?,
-        geckoCallback: TextCallback
-    ) {
-        val initialDateString = value ?: ""
+        prompt: PromptDelegate.DateTimePrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onConfirm: (String) -> Unit = { geckoResult.complete(prompt.confirm(it)) }
         val onClear: () -> Unit = {
-            geckoCallback.confirm("")
+            onConfirm("")
         }
-        val format = when (type) {
-            DATETIME_TYPE_DATE -> "yyyy-MM-dd"
-            DATETIME_TYPE_MONTH -> "yyyy-MM"
-            DATETIME_TYPE_WEEK -> "yyyy-'W'ww"
-            DATETIME_TYPE_TIME -> "HH:mm"
-            DATETIME_TYPE_DATETIME_LOCAL -> "yyyy-MM-dd'T'HH:mm"
+        val initialDateString = prompt.defaultValue ?: ""
+
+        val format = when (prompt.type) {
+            DATE -> "yyyy-MM-dd"
+            MONTH -> "yyyy-MM"
+            WEEK -> "yyyy-'W'ww"
+            TIME -> "HH:mm"
+            DATETIME_LOCAL -> "yyyy-MM-dd'T'HH:mm"
             else -> {
-                throw InvalidParameterException("$type is not a valid DatetimeType")
+                throw InvalidParameterException("${prompt.type} is not a valid DatetimeType")
             }
         }
 
         notifyDatePromptRequest(
-            title ?: "",
+            prompt.title ?: "",
             initialDateString,
-            minDate,
-            maxDate,
+            prompt.minValue,
+            prompt.maxValue,
             onClear,
             format,
-            geckoCallback
+            onConfirm
         )
+
+        return geckoResult
     }
 
     override fun onAuthPrompt(
         session: GeckoSession,
-        title: String?,
-        message: String?,
-        options: AuthOptions,
-        geckoCallback: AuthCallback
-    ) {
+        geckoPrompt: PromptDelegate.AuthPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val title = geckoPrompt.title ?: ""
+        val message = geckoPrompt.message ?: ""
+        val flags = geckoPrompt.authOptions.flags
+        val userName = geckoPrompt.authOptions.username ?: ""
+        val password = geckoPrompt.authOptions.password ?: ""
+        val method =
+            if (flags in GECKO_AUTH_FLAGS.HOST) AC_AUTH_METHOD.HOST else AC_AUTH_METHOD.PROXY
+        val level = geckoPrompt.authOptions.toACLevel()
+        val onlyShowPassword = flags in GECKO_AUTH_FLAGS.ONLY_PASSWORD
+        val previousFailed = flags in GECKO_AUTH_FLAGS.PREVIOUS_FAILED
+        val isCrossOrigin = flags in GECKO_AUTH_FLAGS.CROSS_ORIGIN_SUB_RESOURCE
 
-        val flags = options.flags
-        val userName = options.username ?: ""
-        val password = options.password ?: ""
-        val method = if (flags in AUTH_FLAG_HOST) Method.HOST else Method.PROXY
-
-        val level = getAuthLevel(options)
-
-        val onlyShowPassword = flags in AUTH_FLAG_ONLY_PASSWORD
-        val previousFailed = flags in AUTH_FLAG_PREVIOUS_FAILED
-        val isCrossOrigin = flags in AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
-
-        val onConfirm: (String, String) -> Unit = { user, pass ->
-            if (onlyShowPassword) {
-                geckoCallback.confirm(pass)
-            } else {
-                geckoCallback.confirm(user, pass)
+        val onConfirm: (String, String) -> Unit =
+            { user, pass ->
+                if (onlyShowPassword) {
+                    geckoResult.complete(geckoPrompt.confirm(pass))
+                } else {
+                    geckoResult.complete(geckoPrompt.confirm(user, pass))
+                }
             }
-        }
 
-        val onDismiss: () -> Unit = {
-            geckoCallback.dismiss()
-        }
+        val onDismiss: () -> Unit = { geckoResult.complete(geckoPrompt.dismiss()) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.Authentication(
-                    title ?: "",
-                    message ?: "",
+                    title,
+                    message,
                     userName,
                     password,
                     method,
@@ -248,63 +237,64 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 )
             )
         }
+        return geckoResult
     }
 
     override fun onTextPrompt(
         session: GeckoSession,
-        title: String?,
-        inputLabel: String?,
-        inputValue: String?,
-        callback: TextCallback
-    ) {
-        val hasShownManyDialogs = callback.hasCheckbox()
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
+        prompt: PromptDelegate.TextPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val title = prompt.title ?: ""
+        val inputLabel = prompt.message ?: ""
+        val inputValue = prompt.defaultValue ?: ""
+        val onDismiss: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.TextPrompt(
-                    title ?: "",
-                    inputLabel ?: "",
-                    inputValue ?: "",
-                    hasShownManyDialogs,
+                    title,
+                    inputLabel,
+                    inputValue,
+                    false,
                     onDismiss
-                ) { showMoreDialogs, valueInput ->
-                    callback.checkboxValue = showMoreDialogs
-                    callback.confirm(valueInput)
+                ) { _, valueInput ->
+                    geckoResult.complete(prompt.confirm(valueInput))
                 })
         }
+
+        return geckoResult
     }
 
     override fun onColorPrompt(
         session: GeckoSession,
-        title: String?,
-        defaultColor: String?,
-        callback: TextCallback
-    ) {
+        prompt: PromptDelegate.ColorPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onConfirm: (String) -> Unit = { geckoResult.complete(prompt.confirm(it)) }
+        val onDismiss: () -> Unit = { geckoResult.complete(prompt.dismiss()) }
 
-        val onConfirm: (String) -> Unit = {
-            callback.confirm(it)
-        }
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
+        val defaultColor = prompt.defaultValue ?: ""
+
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.Color(defaultColor ?: "", onConfirm, onDismiss)
+                PromptRequest.Color(defaultColor, onConfirm, onDismiss)
             )
         }
+        return geckoResult
     }
 
-    override fun onPopupRequest(session: GeckoSession, targetUri: String?): GeckoResult<AllowOrDeny> {
-        val geckoResult = GeckoResult<AllowOrDeny>()
-        val onAllow: () -> Unit = { geckoResult.complete(AllowOrDeny.ALLOW) }
-        val onDeny: () -> Unit = { geckoResult.complete(AllowOrDeny.DENY) }
+    override fun onPopupPrompt(
+        session: GeckoSession,
+        prompt: PromptDelegate.PopupPrompt
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onAllow: () -> Unit = { geckoResult.complete(prompt.confirm(AllowOrDeny.ALLOW)) }
+        val onDeny: () -> Unit = { geckoResult.complete(prompt.confirm(AllowOrDeny.DENY)) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.Popup(targetUri ?: "", onAllow, onDeny)
+                PromptRequest.Popup(prompt.targetUri ?: "", onAllow, onDeny)
             )
         }
         return geckoResult
@@ -312,56 +302,47 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onButtonPrompt(
         session: GeckoSession,
-        title: String?,
-        message: String?,
-        buttonTitles: Array<out String?>?,
-        callback: ButtonCallback
-    ) {
-        val hasShownManyDialogs = callback.hasCheckbox()
-        val positiveButtonTitle = buttonTitles?.get(BUTTON_TYPE_POSITIVE) ?: ""
-        val negativeButtonTitle = buttonTitles?.get(BUTTON_TYPE_NEGATIVE) ?: ""
-        val neutralButtonTitle = buttonTitles?.get(BUTTON_TYPE_NEUTRAL) ?: ""
+        prompt: PromptDelegate.ButtonPrompt
+    ): GeckoResult<PromptResponse>? {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val title = prompt.title ?: ""
+        val message = prompt.message ?: ""
 
-        val onConfirmPositiveButton: (Boolean) -> Unit = { showMoreDialogs ->
-            callback.checkboxValue = showMoreDialogs
-            callback.confirm(BUTTON_TYPE_POSITIVE)
+        val onConfirmPositiveButton: (Boolean) -> Unit = {
+            geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.POSITIVE))
+        }
+        val onConfirmNegativeButton: (Boolean) -> Unit = {
+            geckoResult.complete(prompt.confirm(PromptDelegate.ButtonPrompt.Type.NEGATIVE))
         }
 
-        val onConfirmNegativeButton: (Boolean) -> Unit = { showMoreDialogs ->
-            callback.checkboxValue = showMoreDialogs
-            callback.confirm(BUTTON_TYPE_NEGATIVE)
-        }
-
-        val onConfirmNeutralButton: (Boolean) -> Unit = { showMoreDialogs ->
-            callback.checkboxValue = showMoreDialogs
-            callback.confirm(BUTTON_TYPE_NEUTRAL)
-        }
-
-        val onDismiss: () -> Unit = {
-            callback.dismiss()
-        }
+        val onDismiss: (Boolean) -> Unit = { geckoResult.complete(prompt.dismiss()) }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.Confirm(
-                    title ?: "",
-                    message ?: "",
-                    hasShownManyDialogs,
-                    positiveButtonTitle,
-                    negativeButtonTitle,
-                    neutralButtonTitle,
+                    title,
+                    message,
+                    false,
+                    "",
+                    "",
+                    "",
                     onConfirmPositiveButton,
                     onConfirmNegativeButton,
-                    onConfirmNeutralButton,
                     onDismiss
-                )
+                ) {
+                    onDismiss(false)
+                }
             )
         }
+        return geckoResult
     }
 
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
-        return Choice(id, !disabled, label, selected, separator, choiceChildren)
+        // On the GeckoView docs states that label is a @NonNull, but on run-time
+        // we are getting null values
+        @Suppress("USELESS_ELVIS")
+        return Choice(id, !disabled, label ?: "", selected, separator, choiceChildren)
     }
 
     /**
@@ -386,35 +367,45 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         maxDateString: String?,
         onClear: () -> Unit,
         format: String,
-        geckoCallback: TextCallback
+        onConfirm: (String) -> Unit
     ) {
         val initialDate = initialDateString.toDate(format)
         val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate(format)
         val maxDate = if (maxDateString.isNullOrEmpty()) null else maxDateString.toDate(format)
         val onSelect: (Date) -> Unit = {
             val stringDate = it.toString(format)
-            geckoCallback.confirm(stringDate)
+            onConfirm(stringDate)
         }
 
         val selectionType = when (format) {
-            "HH:mm" -> TimeSelection.Type.TIME
-            "yyyy-MM" -> TimeSelection.Type.MONTH
-            "yyyy-MM-dd'T'HH:mm" -> TimeSelection.Type.DATE_AND_TIME
-            else -> TimeSelection.Type.DATE
+            "HH:mm" -> PromptRequest.TimeSelection.Type.TIME
+            "yyyy-MM" -> PromptRequest.TimeSelection.Type.MONTH
+            "yyyy-MM-dd'T'HH:mm" -> PromptRequest.TimeSelection.Type.DATE_AND_TIME
+            else -> PromptRequest.TimeSelection.Type.DATE
         }
 
         geckoEngineSession.notifyObservers {
-            onPromptRequest(TimeSelection(title, initialDate, minDate, maxDate, selectionType, onSelect, onClear))
+            onPromptRequest(
+                PromptRequest.TimeSelection(
+                    title,
+                    initialDate,
+                    minDate,
+                    maxDate,
+                    selectionType,
+                    onSelect,
+                    onClear
+                )
+            )
         }
     }
 
-    private fun getAuthLevel(options: AuthOptions): Level {
-        return when (options.level) {
-            AUTH_LEVEL_NONE -> Level.NONE
-            AUTH_LEVEL_PW_ENCRYPTED -> Level.PASSWORD_ENCRYPTED
-            AUTH_LEVEL_SECURE -> Level.SECURED
+    private fun GeckoAuthOptions.toACLevel(): AC_AUTH_LEVEL {
+        return when (level) {
+            GECKO_AUTH_LEVEL.NONE -> AC_AUTH_LEVEL.NONE
+            GECKO_AUTH_LEVEL.PW_ENCRYPTED -> AC_AUTH_LEVEL.PASSWORD_ENCRYPTED
+            GECKO_AUTH_LEVEL.SECURE -> AC_AUTH_LEVEL.SECURED
             else -> {
-                Level.NONE
+                AC_AUTH_LEVEL.NONE
             }
         }
     }
