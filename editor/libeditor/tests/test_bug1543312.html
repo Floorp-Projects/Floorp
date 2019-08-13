@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1543312
+-->
+<head>
+  <title>Test for Bug 1543312</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script>
+add_task(async function() {
+  let iframe = document.getElementById("iframe2");
+  iframe.style.display = "none";
+  iframe.offsetHeight; // reflow
+  iframe.style.display = "";
+  iframe.offsetHeight; // reflow
+
+  iframe.focus();
+  let edit = iframe.contentDocument.getElementById("edit");
+  edit.focus();
+  synthesizeCompositionChange({
+    "composition": {
+      "string": "foo",
+      "clauses": [{
+        "length": 3,
+        "attr": COMPOSITION_ATTR_RAW_CLAUSE
+      }],
+      "caret": {
+        "start": 3,
+        "length": 0
+      }
+    }
+  });
+  synthesizeComposition({type: "compositioncommitasis"});
+  synthesizeCompositionChange({
+    "composition": {
+      "string": "bar",
+      "clauses": [{
+        "length": 3,
+        "attr": COMPOSITION_ATTR_RAW_CLAUSE
+      }],
+      "caret": {
+        "start": 3,
+        "length": 0
+      }
+    }
+  });
+  synthesizeComposition({type: "compositioncommitasis"});
+
+  is(edit.textContent, "foobar", "caret is updated correctly");
+
+  synthesizeKey("1");
+  is(edit.textContent, "foobar1", "caret is updated correctly");
+});
+</script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1543312">Mozilla Bug 1543312</a>
+  <p id="display"></p>
+
+  <div>
+    <iframe id="iframe1" srcdoc="<div contenteditable></div>"></iframe>
+    <iframe id="iframe2" srcdoc="<div id=edit contenteditable></div>"></iframe>
+  </div>
+</body>
+</html>

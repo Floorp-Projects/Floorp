@@ -6066,6 +6066,10 @@ void Document::DeletePresShell() {
     mResizeObserverController->ShellDetachedFromDocument();
   }
 
+  if (IsEditingOn()) {
+    TurnEditingOff();
+  }
+
   PresShell* oldPresShell = mPresShell;
   mPresShell = nullptr;
   UpdateFrameRequestCallbackSchedulingState(oldPresShell);
