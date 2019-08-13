@@ -430,6 +430,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool UsesContainerScrolling() const;
 
+  bool UsesOverlayScrollbars() const;
+
   // In the case where |aDestination| is given, elements which are entirely out
   // of view when the scroll position is moved to |aDestination| are not going
   // to be used for snap positions.

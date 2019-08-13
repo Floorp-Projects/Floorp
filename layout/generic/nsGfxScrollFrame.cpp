@@ -473,8 +473,24 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
                std::max(0, compositionSize.height - hScrollbarDesiredHeight));
   }
 
-  nsRect scrolledRect = mHelper.GetUnsnappedScrolledRectInternal(
-      aState->mContentsOverflowAreas.ScrollableOverflow(), scrollPortSize);
+  nsRect overflowRect = aState->mContentsOverflowAreas.ScrollableOverflow();
+  // If the content height expanded by the minimum-scale will be taller than
+  // the scrollable overflow area, we need to expand the area here to tell
+  // properly whether we need to render the overlay vertical scrollbar.
+  // NOTE: This expanded size should NOT be used for non-overley scrollbars
+  // cases since putting the vertical non-overlay scrollbar will make the
+  // content width narrow a little bit, which in turn the minimum scale value
+  // becomes a bit bigger than before, then the vertical scrollbar is no longer
+  // needed, which means the content width becomes the original width, then the
+  // minimum-scale is changed to the original one, and so forth.
+  if (mHelper.UsesOverlayScrollbars() && mHelper.mIsUsingMinimumScaleSize &&
+      mHelper.mMinimumScaleSize.height > overflowRect.YMost()) {
+    MOZ_ASSERT(StaticPrefs::layout_viewport_contains_no_contents_area());
+    overflowRect.height +=
+        mHelper.mMinimumScaleSize.height - overflowRect.YMost();
+  }
+  nsRect scrolledRect =
+      mHelper.GetUnsnappedScrolledRectInternal(overflowRect, scrollPortSize);
   nscoord oneDevPixel = aState->mBoxState.PresContext()->DevPixelsToAppUnits(1);
 
   if (!aForce) {
@@ -6152,10 +6168,8 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
-  bool overlayScrollBars =
-      Document::UseOverlayScrollbars(presShell->GetDocument());
-  bool overlayScrollBarsWithZoom =
-      overlayScrollBars && mIsRoot && presShell->IsVisualViewportSizeSet();
+  bool overlayScrollBarsWithZoom = UsesOverlayScrollbars() && mIsRoot &&
+                                   presShell->IsVisualViewportSizeSet();
 
   nsSize scrollPortClampingSize = mScrollPort.Size();
   double res = 1.0;
@@ -6983,6 +6997,10 @@ bool ScrollFrameHelper::UsesContainerScrolling() const {
     return mIsRoot;
   }
   return false;
+}
+
+bool ScrollFrameHelper::UsesOverlayScrollbars() const {
+  return Document::UseOverlayScrollbars(mOuter->PresShell()->GetDocument());
 }
 
 bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
