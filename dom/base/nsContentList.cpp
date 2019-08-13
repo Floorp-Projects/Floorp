@@ -783,7 +783,7 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
   if (mDeep) {
     // If we already have nodes start searching at the last one, otherwise
     // start searching at the root.
-    nsINode* cur = count ? mElements[count - 1] : mRootNode;
+    nsINode* cur = count ? mElements[count - 1].get() : mRootNode;
     do {
       cur = cur->GetNextNode(mRootNode);
       if (!cur) {
