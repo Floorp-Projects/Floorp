@@ -183,24 +183,6 @@ function clearCurrentNodeSelection(inspector) {
 }
 
 /**
- * Open the inspector in a tab with given URL.
- * @param {string} url  The URL to open.
- * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
- * @return A promise that is resolved once the tab and inspector have loaded
- *         with an object: { tab, toolbox, inspector }.
- */
-var openInspectorForURL = async function(url, hostType) {
-  const tab = await addTab(url);
-  const { inspector, toolbox, testActor } = await openInspector(hostType);
-  return { tab, inspector, toolbox, testActor };
-};
-
-async function getActiveInspector() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  return gDevTools.getToolbox(target).getPanel("inspector");
-}
-
-/**
  * Right click on a node in the test page and click on the inspect menu item.
  * @param {TestActor}
  * @param {String} selector The selector for the node to click on in the page.

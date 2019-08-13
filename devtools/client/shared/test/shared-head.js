@@ -4,6 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
+/* import-globals-from ../../inspector/test/shared-head.js */
+
 "use strict";
 
 // This shared-head.js file is used for multiple mochitest test directories in
@@ -231,6 +233,24 @@ var refreshTab = async function(tab = gBrowser.selectedTab) {
   await finished;
   info("Tab finished refreshing.");
 };
+
+/**
+ * Open the inspector in a tab with given URL.
+ * @param {string} url  The URL to open.
+ * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
+ * @return A promise that is resolved once the tab and inspector have loaded
+ *         with an object: { tab, toolbox, inspector }.
+ */
+var openInspectorForURL = async function(url, hostType) {
+  const tab = await addTab(url);
+  const { inspector, toolbox, testActor } = await openInspector(hostType);
+  return { tab, inspector, toolbox, testActor };
+};
+
+async function getActiveInspector() {
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  return gDevTools.getToolbox(target).getPanel("inspector");
+}
 
 /**
  * Simulate a key event from a <key> element.

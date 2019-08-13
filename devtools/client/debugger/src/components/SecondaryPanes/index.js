@@ -40,6 +40,7 @@ import CommandBar from "./CommandBar";
 import UtilsBar from "./UtilsBar";
 import XHRBreakpoints from "./XHRBreakpoints";
 import EventListeners from "./EventListeners";
+import DOMMutationBreakpoints from "./DOMMutationBreakpoints";
 import WhyPaused from "./WhyPaused";
 
 import Scopes from "./Scopes";
@@ -373,6 +374,19 @@ class SecondaryPanes extends Component<Props, State> {
     };
   }
 
+  getDOMMutationsItem(): AccordionPaneItem {
+    return {
+      header: L10N.getStr("domMutationHeader"),
+      className: "dom-mutations-pane",
+      buttons: [],
+      component: <DOMMutationBreakpoints />,
+      opened: prefs.domMutationBreakpointsVisible,
+      onToggle: opened => {
+        prefs.domMutationBreakpointsVisible = opened;
+      },
+    };
+  }
+
   getStartItems(): AccordionPaneItem[] {
     const items: AccordionPaneItem[] = [];
     const { horizontal, hasFrames } = this.props;
@@ -400,6 +414,10 @@ class SecondaryPanes extends Component<Props, State> {
 
     if (features.eventListenersBreakpoints) {
       items.push(this.getEventListenersItem());
+    }
+
+    if (features.domMutationBreakpoints) {
+      items.push(this.getDOMMutationsItem());
     }
 
     return items;
