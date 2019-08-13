@@ -160,8 +160,11 @@ bool nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame) {
   // checking the SDL prefs here, since we don't know if we're being called for
   // painting or hit-testing anyway.
   const nsStyleSVGReset* style = aFrame->StyleSVGReset();
-  return aFrame->StyleEffects()->HasFilters() || style->HasClipPath() ||
-         style->HasMask();
+  const nsStyleEffects* effects = aFrame->StyleEffects();
+  // TODO(cbrewster): remove backdrop-filter from this list once it is supported
+  // in preserve-3d cases.
+  return effects->HasFilters() || effects->HasBackdropFilters() ||
+         style->HasClipPath() || style->HasMask();
 }
 
 bool nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(
@@ -1103,10 +1106,10 @@ void nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams) {
 }
 
 bool nsSVGIntegrationUtils::BuildWebRenderFilters(
-    nsIFrame* aFilteredFrame, WrFiltersHolder& aWrFilters,
-    Maybe<nsRect>& aPostFilterClip) {
-  return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame, aWrFilters,
-                                                 aPostFilterClip);
+    nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilters,
+    WrFiltersHolder& aWrFilters, Maybe<nsRect>& aPostFilterClip) {
+  return nsFilterInstance::BuildWebRenderFilters(aFilteredFrame, aFilters,
+                                                 aWrFilters, aPostFilterClip);
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {

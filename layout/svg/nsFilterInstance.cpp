@@ -116,13 +116,13 @@ static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
 }
 
 bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
+                                             Span<const StyleFilter> aFilters,
                                              WrFiltersHolder& aWrFilters,
                                              Maybe<nsRect>& aPostFilterClip) {
   aWrFilters.filters.Clear();
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
 
-  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
 
@@ -136,7 +136,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   // read the rendered contents of aFilteredFrame.
   bool inputIsTainted = true;
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
-                            *metrics, filterChain, inputIsTainted, nullptr,
+                            *metrics, aFilters, inputIsTainted, nullptr,
                             scaleMatrixInDevUnits, nullptr, nullptr, nullptr,
                             nullptr);
 
