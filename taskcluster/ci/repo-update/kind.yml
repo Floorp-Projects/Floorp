@@ -53,7 +53,7 @@ jobs:
             implementation: docker-worker
             os: linux
             docker-image: {in-tree: periodic-updates}
-            max-run-time: 10800  # Takes 2-3 hours
+            max-run-time: 18000  # Takes 4+ hours
             env:
                 PRODUCT: firefox
                 REVIEWERS: "ryanvm"
