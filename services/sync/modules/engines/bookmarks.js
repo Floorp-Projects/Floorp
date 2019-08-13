@@ -85,6 +85,10 @@ XPCOMUtils.defineLazyGetter(this, "IGNORED_SOURCES", () => [
 // building the remote tree, and checks structure differences only.
 const BUFFERED_BOOKMARK_VALIDATOR_VERSION = 2;
 
+// The maximum time that the buffered engine should wait before aborting a
+// bookmark merge.
+const BUFFERED_BOOKMARK_APPLY_TIMEOUT_MS = 5 * 60 * 60 * 1000; // 5 minutes
+
 function isSyncedRootNode(node) {
   return (
     node.root == "bookmarksMenuFolder" ||
@@ -449,7 +453,8 @@ BaseBookmarksEngine.prototype = {
       if (
         Async.isShutdownException(ex) ||
         ex.status > 0 ||
-        ex.name == "MergeConflictError"
+        ex.name == "MergeConflictError" ||
+        ex.name == "InterruptedError"
       ) {
         // Don't run maintenance on shutdown or HTTP errors, or if we aborted
         // the sync because the user changed their bookmarks during merging.
@@ -837,6 +842,10 @@ BufferedBookmarksEngine.prototype = {
   // aborted early.
   _defaultSort: "oldest",
 
+  // The time to wait before aborting a merge in `_processIncoming`. Exposed
+  // for tests.
+  _applyTimeout: BUFFERED_BOOKMARK_APPLY_TIMEOUT_MS,
+
   async _ensureCurrentSyncID(newSyncID) {
     await super._ensureCurrentSyncID(newSyncID);
     let buf = await this._store.ensureOpenMirror();
@@ -875,12 +884,24 @@ BufferedBookmarksEngine.prototype = {
   async _processIncoming(newitems) {
     await super._processIncoming(newitems);
     let buf = await this._store.ensureOpenMirror();
-    let recordsToUpload = await buf.apply({
-      remoteTimeSeconds: Resource.serverTime,
-      weakUpload: [...this._needWeakUpload.keys()],
-    });
-    this._needWeakUpload.clear();
-    this._modified.replace(recordsToUpload);
+
+    let watchdog = Async.watchdog();
+    watchdog.start(this._applyTimeout);
+
+    try {
+      let recordsToUpload = await buf.apply({
+        remoteTimeSeconds: Resource.serverTime,
+        weakUpload: [...this._needWeakUpload.keys()],
+        signal: watchdog.signal,
+      });
+      this._modified.replace(recordsToUpload);
+    } finally {
+      watchdog.stop();
+      if (watchdog.abortReason) {
+        this._log.warn(`Aborting bookmark merge: ${watchdog.abortReason}`);
+      }
+      this._needWeakUpload.clear();
+    }
   },
 
   async _reconcile(item) {
