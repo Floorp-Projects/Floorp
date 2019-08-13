@@ -3,14 +3,16 @@ use crate::command::{
     GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
-    Cookie as MarionetteCookie, Date as MarionetteDate, Timeouts as MarionetteTimeouts,
+    Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
+    Timeouts as MarionetteTimeouts, WebElement as MarionetteWebElement,
 };
 use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
     Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, Script as MarionetteScript,
-    Selector as MarionetteSelector, Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
+    Selector as MarionetteSelector, SwitchToFrame as MarionetteSwitchToFrame, Url as MarionetteUrl,
+    WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -945,6 +947,9 @@ fn try_convert_to_marionette_message(
         SetWindowRect(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SetWindowRect(x.to_marionette()?),
         )),
+        SwitchToFrame(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::SwitchToFrame(x.to_marionette()?),
+        )),
         SwitchToParentFrame => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SwitchToParentFrame,
         )),
@@ -1029,7 +1034,6 @@ impl MarionetteCommand {
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
                 }
-                SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
                 SwitchToWindow(ref x) => {
                     (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette()))
                 }
@@ -1479,16 +1483,12 @@ impl ToMarionette<MarionetteDate> for Date {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for FrameId {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        match *self {
-            FrameId::Short(x) => data.insert("id".to_string(), serde_json::to_value(x)?),
-            FrameId::Element(ref x) => {
-                data.insert("element".to_string(), Value::Object(x.to_marionette()?))
-            }
-        };
-        Ok(data)
+impl ToMarionette<MarionetteFrame> for FrameId {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteFrame> {
+        match self {
+            FrameId::Short(x) => Ok(MarionetteFrame::Index(x.clone())),
+            FrameId::Element(ref x) => Ok(MarionetteFrame::Element(x.to_marionette()?)),
+        }
     }
 }
 
@@ -1563,20 +1563,14 @@ impl ToMarionette<MarionetteKeys> for SendKeysParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for SwitchToFrameParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        match self.id {
-            None => None,
-            Some(FrameId::Short(_)) => {
-                data.insert("id".to_string(), serde_json::to_value(&self.id)?)
-            }
-            Some(FrameId::Element(ref web_element)) => data.insert(
-                "element".to_string(),
-                serde_json::to_value(web_element.to_string())?,
-            ),
-        };
-        Ok(data)
+impl ToMarionette<MarionetteSwitchToFrame> for SwitchToFrameParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteSwitchToFrame> {
+        Ok(MarionetteSwitchToFrame {
+            id: match &self.id {
+                None => None,
+                Some(x) => Some(x.to_marionette()?),
+            },
+        })
     }
 }
 
@@ -1613,11 +1607,11 @@ impl ToMarionette<LegacyWebElement> for WebElement {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for WebElement {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert("id".to_string(), serde_json::to_value(self.to_string())?);
-        Ok(data)
+impl ToMarionette<MarionetteWebElement> for WebElement {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteWebElement> {
+        Ok(MarionetteWebElement {
+            element: self.to_string(),
+        })
     }
 }
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Timeouts};
+use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Frame, Timeouts};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Url {
@@ -61,6 +61,11 @@ pub struct Keys {
 pub struct Script {
     pub script: String,
     pub args: Option<Vec<Value>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SwitchToFrame {
+    pub id: Option<Frame>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -176,6 +181,8 @@ pub enum Command {
     SetTimeouts(Timeouts),
     #[serde(rename = "WebDriver:SetWindowRect")]
     SetWindowRect(WindowRect),
+    #[serde(rename = "WebDriver:SwitchToFrame")]
+    SwitchToFrame(SwitchToFrame),
     #[serde(rename = "WebDriver:SwitchToParentFrame")]
     SwitchToParentFrame,
 }
