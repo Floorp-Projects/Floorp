@@ -16,7 +16,7 @@ const { PAGE_TYPES } = require("../../constants");
 const ManifestPage = createFactory(require("../manifest/ManifestPage"));
 const WorkersPage = createFactory(require("../service-workers/WorkersPage"));
 
-class PageContainer extends PureComponent {
+class PageSwitcher extends PureComponent {
   static get propTypes() {
     return {
       page: PropTypes.oneOf(Object.values(PAGE_TYPES)),
@@ -48,4 +48,4 @@ function mapStateToProps(state) {
   };
 }
 
-module.exports = connect(mapStateToProps)(PageContainer);
+module.exports = connect(mapStateToProps)(PageSwitcher);

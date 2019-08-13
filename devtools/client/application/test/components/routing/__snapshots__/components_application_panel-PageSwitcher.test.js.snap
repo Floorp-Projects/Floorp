@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PageSwitcher renders nothing when an invalid page is selected 1`] = `""`;
+
+exports[`PageSwitcher renders nothing when no page is selected 1`] = `""`;
+
+exports[`PageSwitcher renders the ManifestPage component when manifest page is selected 1`] = `<ManifestPage />`;
+
+exports[`PageSwitcher renders the WorkersPage component when workers page is selected 1`] = `<Connect(WorkersPage) />`;
