@@ -65,6 +65,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerOp.cpp',
     'ServiceWorkerParent.cpp',
     'ServiceWorkerPrivate.cpp',
+    'ServiceWorkerPrivateImpl.cpp',
     'ServiceWorkerProxy.cpp',
     'ServiceWorkerRegisterJob.cpp',
     'ServiceWorkerRegistrar.cpp',
@@ -104,6 +105,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
+    '/extensions/permissions',
     '/js/xpconnect/loader',
 ]
 
