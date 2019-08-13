@@ -21,6 +21,8 @@
 
 #include "mozilla/TypeTraits.h"
 
+#include "ds/Bitmap.h"
+
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -164,6 +166,7 @@ struct ModuleEnvironment {
   Maybe<uint32_t> startFuncIndex;
   ElemSegmentVector elemSegments;
   MaybeSectionRange codeSection;
+  SparseBitmap validForRefFunc;
 
   // Fields decoded as part of the wasm module tail:
   DataSegmentEnvVector dataSegments;

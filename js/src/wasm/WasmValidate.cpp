@@ -987,6 +987,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+      case uint16_t(Op::RefFunc): {
+        uint32_t unusedIndex;
+        CHECK(iter.readRefFunc(&unusedIndex));
+        break;
+      }
       case uint16_t(Op::RefNull): {
         if (!env.refTypesEnabled()) {
           return iter.unrecognizedOpcode(&op);
@@ -2470,6 +2475,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       }
 
       seg->elemFuncIndices.infallibleAppend(funcIndex);
+      if (funcIndex != NullFuncIndex) {
+        env->validForRefFunc.setBit(funcIndex);
+      }
     }
 
     env->elemSegments.infallibleAppend(std::move(seg));
