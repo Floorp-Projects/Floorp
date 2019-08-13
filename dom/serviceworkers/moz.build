@@ -65,6 +65,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerRegistrationParent.cpp',
     'ServiceWorkerRegistrationProxy.cpp',
     'ServiceWorkerScriptCache.cpp',
+    'ServiceWorkerShutdownBlocker.cpp',
     'ServiceWorkerUnregisterCallback.cpp',
     'ServiceWorkerUnregisterJob.cpp',
     'ServiceWorkerUpdateJob.cpp',
