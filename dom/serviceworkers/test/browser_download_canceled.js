@@ -38,23 +38,27 @@ async function clearDownloads() {
  */
 function promiseClickDownloadDialogButton(buttonAction) {
   const uri = "chrome://mozapps/content/downloads/unknownContentType.xul";
-  BrowserTestUtils.promiseAlertDialogOpen(buttonAction, uri, async win => {
-    // nsHelperAppDlg.js currently uses an eval-based setTimeout(0) to invoke
-    // its postShowCallback that results in a misleading error to the console
-    // if we close the dialog before it gets a chance to run.  Just a
-    // setTimeout is not sufficient because it appears we get our "load"
-    // listener before the document's, so we use TestUtils.waitForTick() to
-    // defer until after its load handler runs, then use setTimeout(0) to end
-    // up after its eval.
-    await TestUtils.waitForTick();
+  return BrowserTestUtils.promiseAlertDialogOpen(
+    buttonAction,
+    uri,
+    async win => {
+      // nsHelperAppDlg.js currently uses an eval-based setTimeout(0) to invoke
+      // its postShowCallback that results in a misleading error to the console
+      // if we close the dialog before it gets a chance to run.  Just a
+      // setTimeout is not sufficient because it appears we get our "load"
+      // listener before the document's, so we use TestUtils.waitForTick() to
+      // defer until after its load handler runs, then use setTimeout(0) to end
+      // up after its eval.
+      await TestUtils.waitForTick();
 
-    await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => setTimeout(resolve, 0));
 
-    const button = win.document.documentElement.getButton(buttonAction);
-    button.disabled = false;
-    info(`clicking ${buttonAction} button`);
-    button.click();
-  });
+      const button = win.document.documentElement.getButton(buttonAction);
+      button.disabled = false;
+      info(`clicking ${buttonAction} button`);
+      button.click();
+    }
+  );
 }
 
 async function performCanceledDownload(tab, path) {
