@@ -68,6 +68,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
+@Suppress("TooManyFunctions")
 class PromptFeature(
     private val activity: Activity? = null,
     private val fragment: Fragment? = null,
@@ -76,6 +77,7 @@ class PromptFeature(
     private val fragmentManager: FragmentManager,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature {
+    internal val promptAbuserDetector = PromptAbuserDetector()
 
     constructor(
         activity: Activity,
@@ -123,6 +125,7 @@ class PromptFeature(
      * and displays a dialog when needed.
      */
     override fun start() {
+        promptAbuserDetector.resetJSAlertAbuseState()
         observer.observeIdOrSelected(sessionId)
 
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
@@ -208,7 +211,11 @@ class PromptFeature(
             when (it) {
                 is TimeSelection -> it.onConfirm(value as Date)
                 is Color -> it.onConfirm(value as String)
-                is Alert -> it.onConfirm(value as Boolean)
+                is Alert -> {
+                    val shouldNotShowMoreDialogs = value as Boolean
+                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                    it.onConfirm(!shouldNotShowMoreDialogs)
+                }
                 is SingleChoice -> it.onConfirm(value as Choice)
                 is MenuChoice -> it.onConfirm(value as Choice)
                 is PromptRequest.Popup -> it.onAllow()
@@ -221,18 +228,23 @@ class PromptFeature(
 
                 is TextPrompt -> {
                     val pair = value as Pair<Boolean, String>
-                    it.onConfirm(pair.first, pair.second)
+
+                    val shouldNotShowMoreDialogs = pair.first
+                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                    it.onConfirm(!shouldNotShowMoreDialogs, pair.second)
                 }
 
                 is PromptRequest.Confirm -> {
                     val pair = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
+                    val isCheckBoxChecked = pair.first
+                    promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
                     when (pair.second) {
                         MultiButtonDialogFragment.ButtonType.POSITIVE ->
-                            it.onConfirmPositiveButton(pair.first)
+                            it.onConfirmPositiveButton(!isCheckBoxChecked)
                         MultiButtonDialogFragment.ButtonType.NEGATIVE ->
-                            it.onConfirmNegativeButton(pair.first)
+                            it.onConfirmNegativeButton(!isCheckBoxChecked)
                         MultiButtonDialogFragment.ButtonType.NEUTRAL ->
-                            it.onConfirmNeutralButton(pair.first)
+                            it.onConfirmNeutralButton(!isCheckBoxChecked)
                     }
                 }
             }
@@ -295,7 +307,12 @@ class PromptFeature(
 
             is Alert -> {
                 with(promptRequest) {
-                    AlertDialogFragment.newInstance(session.id, title, message, hasShownManyDialogs)
+                    AlertDialogFragment.newInstance(
+                        session.id,
+                        title,
+                        message,
+                        promptAbuserDetector.areDialogsBeingAbused()
+                    )
                 }
             }
 
@@ -321,7 +338,13 @@ class PromptFeature(
 
             is TextPrompt -> {
                 with(promptRequest) {
-                    TextPromptDialogFragment.newInstance(session.id, title, inputLabel, inputValue, hasShownManyDialogs)
+                    TextPromptDialogFragment.newInstance(
+                        session.id,
+                        title,
+                        inputLabel,
+                        inputValue,
+                        promptAbuserDetector.areDialogsBeingAbused()
+                    )
                 }
             }
 
@@ -360,13 +383,24 @@ class PromptFeature(
 
             is PromptRequest.Confirm -> {
                 with(promptRequest) {
+                    val positiveButton = if (positiveButtonTitle.isEmpty()) {
+                        context.getString(R.string.mozac_feature_prompts_ok)
+                    } else {
+                        positiveButtonTitle
+                    }
+                    val negativeButton = if (positiveButtonTitle.isEmpty()) {
+                        context.getString(R.string.mozac_feature_prompts_cancel)
+                    } else {
+                        positiveButtonTitle
+                    }
+
                     MultiButtonDialogFragment.newInstance(
                         session.id,
                         title,
                         message,
-                        hasShownManyDialogs,
-                        positiveButtonTitle,
-                        negativeButtonTitle,
+                        promptAbuserDetector.areDialogsBeingAbused(),
+                        positiveButton,
+                        negativeButton,
                         neutralButtonTitle
                     )
                 }
@@ -376,7 +410,27 @@ class PromptFeature(
         }
 
         dialog.feature = this
-        dialog.show(fragmentManager, FRAGMENT_TAG)
+
+        if (canShowThisPrompt(promptRequest)) {
+            dialog.show(fragmentManager, FRAGMENT_TAG)
+        } else {
+            (promptRequest as PromptRequest.Dismissible).onDismiss()
+        }
+        promptAbuserDetector.updateJSDialogAbusedState()
+    }
+
+    private fun canShowThisPrompt(promptRequest: PromptRequest): Boolean {
+        return when (promptRequest) {
+            is SingleChoice,
+            is MultipleChoice,
+            is MenuChoice,
+            is TimeSelection,
+            is File,
+            is Color,
+            is Authentication,
+            is PromptRequest.Popup -> true
+            is Alert, is TextPrompt, is PromptRequest.Confirm -> promptAbuserDetector.shouldShowMoreDialogs
+        }
     }
 
     /**
@@ -391,6 +445,12 @@ class PromptFeature(
         override fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean {
             feature.onPromptRequested(session, promptRequest)
             return false
+        }
+
+        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+            if (!loading) {
+                feature.promptAbuserDetector.resetJSAlertAbuseState()
+            }
         }
     }
 
