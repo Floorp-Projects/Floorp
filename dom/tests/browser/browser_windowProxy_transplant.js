@@ -90,6 +90,11 @@ add_task(async function() {
 
         content.win1 = iframe.contentWindow;
         let chromeWin1 = iframe.contentWindow;
+        let chromeWin1x = Cu.waiveXrays(iframe.contentWindow);
+        content.win1x = Cu.waiveXrays(iframe.contentWindow);
+
+        ok(chromeWin1 != chromeWin1x, "waiving xrays creates a new thing?");
+
         content.bc1 = iframe.browsingContext;
 
         is(
@@ -148,6 +153,14 @@ add_task(async function() {
           !Cu.isDeadWrapper(chromeWin1),
           "chromeWin1 shouldn't be a dead wrapper after navigation"
         );
+        ok(
+          Cu.isDeadWrapper(chromeWin1x),
+          "chromeWin1x should be a dead wrapper after navigation"
+        );
+        ok(
+          Cu.isDeadWrapper(content.win1x),
+          "content.win1x should be a dead wrapper after navigation"
+        );
 
         is(
           content.bc1,
@@ -193,8 +206,9 @@ add_task(async function() {
           content.bc4,
           "cross to same-origin navigation BrowsingContext match"
         );
-        todo(
-          content.win3 == content.win4,
+        is(
+          content.win3,
+          content.win4,
           "cross to same-origin navigation WindowProxy match"
         );
       }
