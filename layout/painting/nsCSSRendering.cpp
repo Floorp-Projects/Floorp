@@ -3937,7 +3937,9 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                     const nsCSSRendering::PaintDecorationLineParams& aParams,
                     const nsTArray<SkScalar>& aIntercepts, Rect& aRect) {
   nsCSSRendering::PaintDecorationLineParams clipParams = aParams;
-  double padding = 2.0 * aParams.lineSize.height;
+  double padding = aParams.lineSize.height;
+  double oneCSSPixel = aFrame->PresContext()->CSSPixelsToDevPixels(1.0f);
+  padding = std::max(padding, oneCSSPixel);
   int length = aIntercepts.Length();
 
   SkScalar startIntercept = 0;
