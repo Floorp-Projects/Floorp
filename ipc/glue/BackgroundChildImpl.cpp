@@ -325,7 +325,7 @@ bool BackgroundChildImpl::DeallocPPendingIPCBlobChild(
 
 dom::PRemoteWorkerChild* BackgroundChildImpl::AllocPRemoteWorkerChild(
     const RemoteWorkerData& aData) {
-  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild();
+  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild(aData);
   return agent.forget().take();
 }
 
