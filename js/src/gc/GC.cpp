@@ -1912,6 +1912,12 @@ void GCRuntime::setGrayRootsTracer(JSTraceDataOp traceOp, void* data) {
   grayRootTracer.data = data;
 }
 
+void GCRuntime::clearBlackAndGrayRootTracers() {
+  MOZ_ASSERT(rt->isBeingDestroyed());
+  blackRootTracers.ref().clear();
+  setGrayRootsTracer(nullptr, nullptr);
+}
+
 void GCRuntime::setGCCallback(JSGCCallback callback, void* data) {
   gcCallback.op = callback;
   gcCallback.data = data;
@@ -4544,7 +4550,11 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
    * Mark phase.
    */
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
-  traceRuntimeForMajorGC(gcmarker, session);
+  if (rt->isBeingDestroyed()) {
+    checkNoRuntimeRoots(session);
+  } else {
+    traceRuntimeForMajorGC(gcmarker, session);
+  }
 
   if (isIncremental) {
     markCompartments();
@@ -8581,11 +8591,23 @@ JS_FRIEND_API const char* JS::GCTraceKindToAscii(JS::TraceKind kind) {
   switch (kind) {
 #define MAP_NAME(name, _0, _1, _2) \
   case JS::TraceKind::name:        \
-    return #name;
+    return "JS " #name;
     JS_FOR_EACH_TRACEKIND(MAP_NAME);
 #undef MAP_NAME
     default:
       return "Invalid";
+  }
+}
+
+JS_FRIEND_API size_t JS::GCTraceKindSize(JS::TraceKind kind) {
+  switch (kind) {
+#define MAP_SIZE(name, type, _0, _1) \
+  case JS::TraceKind::name:          \
+    return sizeof(type);
+    JS_FOR_EACH_TRACEKIND(MAP_SIZE);
+#undef MAP_SIZE
+    default:
+      return 0;
   }
 }
 
@@ -9192,8 +9214,11 @@ extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(
 
 #endif
 
+js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
+    : CallbackTracer(rt, TraceWeakMapKeysValues) {}
+
 js::gc::ClearEdgesTracer::ClearEdgesTracer()
-    : CallbackTracer(TlsContext.get(), TraceWeakMapKeysValues) {}
+    : ClearEdgesTracer(TlsContext.get()->runtime()) {}
 
 template <typename S>
 inline bool js::gc::ClearEdgesTracer::clearEdge(S** thingp) {

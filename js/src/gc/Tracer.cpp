@@ -51,10 +51,13 @@ JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 
 template <typename T>
 bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
-  // return true as default. For some types the lambda below won't be called.
+  // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
   auto thing = MapGCThingTyped(*thingp, [trc, name, &ret](auto t) {
-    ret = DoCallback(trc, &t, name);
+    if (!DoCallback(trc, &t, name)) {
+      ret = false;
+      return TaggedPtr<T>::empty();
+    }
     return TaggedPtr<T>::wrap(t);
   });
   // Only update *thingp if the value changed, to avoid TSan false positives for

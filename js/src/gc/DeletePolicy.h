@@ -7,37 +7,9 @@
 #ifndef gc_DeletePolicy_h
 #define gc_DeletePolicy_h
 
-#include "js/TracingAPI.h"
+#include "gc/ClearEdgesTracer.h"
 
 namespace js {
-namespace gc {
-
-struct ClearEdgesTracer final : public JS::CallbackTracer {
-  ClearEdgesTracer();
-
-#ifdef DEBUG
-  TracerKind getTracerKind() const override { return TracerKind::ClearEdges; }
-#endif
-
-  template <typename T>
-  inline bool clearEdge(T** thingp);
-
-  bool onObjectEdge(JSObject** objp) override;
-  bool onStringEdge(JSString** strp) override;
-  bool onSymbolEdge(JS::Symbol** symp) override;
-  bool onBigIntEdge(JS::BigInt** bip) override;
-  bool onScriptEdge(JSScript** scriptp) override;
-  bool onShapeEdge(js::Shape** shapep) override;
-  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
-  bool onBaseShapeEdge(js::BaseShape** basep) override;
-  bool onJitCodeEdge(js::jit::JitCode** codep) override;
-  bool onLazyScriptEdge(js::LazyScript** lazyp) override;
-  bool onScopeEdge(js::Scope** scopep) override;
-  bool onRegExpSharedEdge(js::RegExpShared** sharedp) override;
-  bool onChild(const JS::GCCellPtr& thing) override;
-};
-
-}  // namespace gc
 
 /*
  * Provides a delete policy that can be used for objects which have their
