@@ -207,7 +207,6 @@
 @RESPATH@/chrome/marionette.manifest
 @RESPATH@/components/marionette.manifest
 @RESPATH@/components/marionette.js
-@RESPATH@/defaults/pref/marionette.js
 #endif
 
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
