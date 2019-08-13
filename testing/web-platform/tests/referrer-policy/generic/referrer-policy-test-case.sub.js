@@ -131,7 +131,7 @@ function ReferrerPolicyTestCase(scenario, testDescription, sanityChecker) {
 
     function asyncResolve(result) {
       return new Promise((resolve, reject) => {
-        setTimeout(() => resolve(result), 0);
+        step_timeout(() => resolve(result), 0);
     });}
 
     // Request in the top-level document.
