@@ -740,10 +740,12 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-        view?.let {
-            FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
-                it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
-            ).show()
+        if (newAccount) {
+            view?.let {
+                FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                    it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
+                ).show()
+            }
         }
         emitModeChanges()
     }
