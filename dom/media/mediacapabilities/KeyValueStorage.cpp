@@ -95,7 +95,9 @@ class VoidCallback final : public nsIKeyValueVoidCallback {
     mResultPromise.Reject(NS_ERROR_FAILURE, __func__);
     return NS_OK;
   }
-  RefPtr<GenericPromise> Ensure() { return mResultPromise.Ensure(__func__); }
+  RefPtr<GenericPromise> Ensure(const char* aMethodName) {
+    return mResultPromise.Ensure(aMethodName);
+  }
 
  protected:
   ~VoidCallback() = default;
@@ -121,7 +123,7 @@ RefPtr<GenericPromise> KeyValueStorage::Put(const nsACString& aKey,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return GenericPromise::CreateAndReject(rv, __func__);
   }
-  return callback->Ensure();
+  return callback->Ensure(__func__);
 }
 
 RefPtr<GenericPromise> KeyValueStorage::Put(const nsACString& aName,
@@ -201,6 +203,33 @@ RefPtr<KeyValueStorage::GetPromise> KeyValueStorage::Get(
         });
   }
   return Get(aKey);
+}
+
+RefPtr<GenericPromise> KeyValueStorage::Clear() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mDatabase);
+  MOZ_ASSERT(!mDatabaseName.IsEmpty());
+
+  auto callback = MakeRefPtr<VoidCallback>(this);
+  nsresult rv = mDatabase->Clear(callback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+  return callback->Ensure(__func__);
+}
+
+RefPtr<GenericPromise> KeyValueStorage::Clear(const nsACString& aName) {
+  if (!mDatabase || !mDatabaseName.Equals(aName)) {
+    mDatabaseName = aName;
+    RefPtr<KeyValueStorage> self = this;
+    return Init()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [self](bool) { return self->Clear(); },
+        [](nsresult rv) {
+          return GenericPromise::CreateAndReject(rv, __func__);
+        });
+  }
+  return Clear();
 }
 
 }  // namespace mozilla
