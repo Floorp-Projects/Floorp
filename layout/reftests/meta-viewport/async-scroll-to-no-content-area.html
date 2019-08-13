@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html reftest-displayport-w="3200" reftest-displayport-h="4000"
+      reftest-async-scroll
+      reftest-async-scroll-x="2400"
+      reftest-async-scroll-y="3000">
+<!--
+  This content size will be (400%, 400%) (i.e. (3200px, 4000px) in reftest)
+  because of 'minimum-scale=0.25', but is rendered 1.0x scale initially so that
+  there is room to scroll to (0px, 3000px).
+  -->
+<meta name="viewport" content="width=device-width,minimum-scale=0.25,initial-scale=1">
+<style>
+html {
+  background-color: green;
+}
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none; /* avoid drawing scrollbars */
+}
+#quadruple-width {
+  background-color: red;
+  width: 400%;
+  height: 100%;
+  position: absolute;
+}
+#fixed {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  position: fixed;
+  bottom: 0px;
+  right: 0px;
+}
+</style>
+<div id="quadruple-width"></div>
+<div id="fixed"></div>
+</html>
