@@ -438,7 +438,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     fn make_heap(&mut self, func: &mut ir::Function, index: MemoryIndex) -> WasmResult<ir::Heap> {
         // Currently, Baldrdash doesn't support multiple memories.
         if index.index() != 0 {
-            return Err(WasmError::Unsupported("only one wasm memory supported"));
+            return Err(WasmError::Unsupported("only one wasm memory supported".to_string()));
         }
 
         // Get the address of the `TlsData::memoryBase` field.
@@ -558,7 +558,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
 
         // Currently, Baldrdash doesn't support multiple tables.
         if table_index.index() != 0 {
-            return Err(WasmError::Unsupported("only one wasm table supported"));
+            return Err(WasmError::Unsupported("only one wasm table supported".to_string()));
         }
         let wtable = self.get_table(pos.func, table_index);
 
