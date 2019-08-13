@@ -32,6 +32,8 @@ protocol PRemoteWorkerController {
 
   async Shutdown() returns (bool aOk);
 
+  async ExecServiceWorkerOp(ServiceWorkerOpArgs aArgs)
+      returns (ServiceWorkerOpResult aResult);
 };
 
 }  // namespace dom
