@@ -167,12 +167,12 @@ data class PrecomputedHistogram(
      * ping payload. Compared to [toJsonObject] which is designed for lossless roundtripping:
      *
      *   - this does not include the bucketing parameters
-     *   - all buckets [0, max + 1] are inserted into values
+     *   - all buckets [min, max + 1] are inserted into values
      *
      * @return The histogram as JSON to send in a ping payload
      */
     internal fun toJsonPayloadObject(): JSONObject {
-        // Include all buckets [0, max + 1], where max is the maximum bucket with
+        // Include all buckets [min, max + 1], where max is the maximum bucket with
         // any value recorded.
         val contiguousValues = if (!values.isEmpty()) {
             val bucketMax = values.keys.max()!!
