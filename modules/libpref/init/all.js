@@ -3358,28 +3358,6 @@ pref("font.size.variable.x-math", 16);
 pref("font.size.monospace.x-math", 13);
 
 /*
- * A value greater than zero enables font size inflation for
- * pan-and-zoom UIs, so that the fonts in a block are at least the size
- * that, if a block's width is scaled to match the device's width, the
- * fonts in the block are big enough that at most the pref value ems of
- * text fit in *the width of the device*.
- *
- * When both this pref and the next are set, the larger inflation is
- * used.
- */
-pref("font.size.inflation.emPerLine", 0);
-/*
- * A value greater than zero enables font size inflation for
- * pan-and-zoom UIs, so that if a block's width is scaled to match the
- * device's width, the fonts in a block are at least the font size
- * given.  The value given is in twips, i.e., 1/20 of a point, or 1/1440
- * of an inch.
- *
- * When both this pref and the previous are set, the larger inflation is
- * used.
- */
-pref("font.size.inflation.minTwips", 0);
-/*
  * In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
  * this pref forces font inflation to always be enabled in all modes.
  * That is, any heuristics used to detect pan-and-zoom
@@ -3422,29 +3400,6 @@ pref("font.size.inflation.disabledInMasterProcess", false);
  * A value of 0 means there's no character length threshold.
  */
 pref("font.size.inflation.lineThreshold", 400);
-
-/*
- * Defines the font size inflation mapping intercept parameter.
- *
- * Font size inflation computes a minimum font size, m, based on
- * other preferences (see font.size.inflation.minTwips and
- * font.size.inflation.emPerLine, above) and the width of the
- * frame in which the text resides. Using this minimum, a specified
- * font size, s, is mapped to an inflated font size, i, using an
- * equation that varies depending on the value of the font size
- * inflation mapping intercept parameter, P:
- *
- * If the intercept parameter is negative, then the following mapping
- * function is used:
- *
- * i = m + s
- *
- * If the intercept parameter is non-negative, then the mapping function
- * is a function such that its graph meets the graph of i = s at the
- * point where both i and s are (1 + P/2) * m for values of s that are
- * large enough. This means that when s=0, i is always equal to m.
- */
-pref("font.size.inflation.mappingIntercept", 1);
 
 /**
  * This setting corresponds to a global text zoom setting affecting
