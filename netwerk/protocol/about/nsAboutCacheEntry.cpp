@@ -337,7 +337,8 @@ nsresult nsAboutCacheEntry::Channel::WriteCacheEntryDescription(
 
   // javascript: and data: URLs should not be linkified
   // since clicking them can cause scripts to run - bug 162584
-  if (NS_SUCCEEDED(rv) && !(uri->SchemeIs("javascript") || uri->SchemeIs("data"))) {
+  if (NS_SUCCEEDED(rv) &&
+      !(uri->SchemeIs("javascript") || uri->SchemeIs("data"))) {
     buffer.AppendLiteral("<a href=\"");
     buffer.Append(escapedStr);
     buffer.AppendLiteral("\">");

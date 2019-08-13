@@ -14,10 +14,10 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_test.h"
-#include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
-#include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
-#include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaHorizontalizer,
-                                            //     WheelDeltaAdjustmentStrategy
+#include "mozilla/TextEvents.h"           // for WidgetKeyboardEvent
+#include "mozilla/TouchEvents.h"          // for WidgetTouchEvent
+#include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaHorizontalizer,
+                                          //     WheelDeltaAdjustmentStrategy
 
 namespace mozilla {
 namespace layers {

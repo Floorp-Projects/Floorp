@@ -757,7 +757,6 @@ void Location::Reload(bool aForceget, ErrorResult& aRv) {
     }
   }
 
-
   uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
   if (aForceget) {

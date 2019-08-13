@@ -2748,7 +2748,8 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   if (changeHint & nsChangeHint_ReconstructFrame) {
     if (wasRestyled) {
       const bool wasAbsPos =
-        styleFrame && styleFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
+          styleFrame &&
+          styleFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
       auto* newDisp = upToDateStyleIfRestyled->StyleDisplay();
       // https://drafts.csswg.org/css-scroll-anchoring/#suppression-triggers
       //

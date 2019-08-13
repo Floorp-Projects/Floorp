@@ -474,7 +474,8 @@ class MergeState {
         }  // aNewItem can't be the glass item on the builder yet.
 
         if (destItem->IsGlassItem()) {
-          if (destItem != oldItem || destItem != mBuilder->Builder()->GetGlassDisplayItem()) {
+          if (destItem != oldItem ||
+              destItem != mBuilder->Builder()->GetGlassDisplayItem()) {
             mBuilder->Builder()->SetGlassDisplayItem(destItem);
           }
         }

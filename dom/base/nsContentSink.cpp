@@ -1483,12 +1483,11 @@ nsresult nsContentSink::WillParseImpl(void) {
     uint32_t lastEventTime;
     vm->GetLastUserEventTime(lastEventTime);
 
-    bool newDynLower =
-        mDocument->IsInBackgroundWindow() ||
-        ((currentTime - mBeginLoadTime) >
-             StaticPrefs::content_sink_initial_perf_time() &&
-         (currentTime - lastEventTime) <
-             StaticPrefs::content_sink_interactive_time());
+    bool newDynLower = mDocument->IsInBackgroundWindow() ||
+                       ((currentTime - mBeginLoadTime) >
+                            StaticPrefs::content_sink_initial_perf_time() &&
+                        (currentTime - lastEventTime) <
+                            StaticPrefs::content_sink_interactive_time());
 
     if (mDynamicLowerValue != newDynLower) {
       FavorPerformanceHint(!newDynLower, 0);

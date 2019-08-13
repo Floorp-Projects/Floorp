@@ -328,7 +328,8 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
         // in-process frame. For remote frames, the BrowserBridgeParent::Init
         // method should've already set up the OwnerProcessId.
         uint64_t childId = browserParent->Manager()->ChildID();
-        MOZ_ASSERT_IF(bridge, browsingContext == browserParent->GetBrowsingContext());
+        MOZ_ASSERT_IF(bridge,
+                      browsingContext == browserParent->GetBrowsingContext());
         MOZ_ASSERT_IF(bridge, browsingContext->IsOwnedByProcess(childId));
         browsingContext->SetOwnerProcessId(childId);
 

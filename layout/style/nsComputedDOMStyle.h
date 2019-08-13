@@ -189,9 +189,12 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   already_AddRefed<CSSValue> GetTransformValue(const mozilla::StyleTransform&);
 
-  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackSize(const mozilla::StyleTrackSize&);
-  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackBreadth(const mozilla::StyleTrackBreadth&);
-  void SetValueToTrackBreadth(nsROCSSPrimitiveValue*, const mozilla::StyleTrackBreadth&);
+  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackSize(
+      const mozilla::StyleTrackSize&);
+  already_AddRefed<nsROCSSPrimitiveValue> GetGridTrackBreadth(
+      const mozilla::StyleTrackBreadth&);
+  void SetValueToTrackBreadth(nsROCSSPrimitiveValue*,
+                              const mozilla::StyleTrackBreadth&);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
       const mozilla::StyleGridTemplateComponent& aTrackList,
       const mozilla::ComputedGridTrackInfo* aTrackInfo);

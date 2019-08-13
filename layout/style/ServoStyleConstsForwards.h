@@ -142,9 +142,7 @@ struct StyleBox {
     return *(*this) == *aOther;
   }
 
-  bool operator!=(const StyleBox<T>& aOther) const {
-    return *this != *aOther;
-  }
+  bool operator!=(const StyleBox<T>& aOther) const { return *this != *aOther; }
 
  private:
   T* mRaw;

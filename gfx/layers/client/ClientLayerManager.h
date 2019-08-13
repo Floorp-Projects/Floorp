@@ -9,9 +9,9 @@
 
 #include <stdint.h>  // for int32_t
 #include "Layers.h"
-#include "gfxContext.h"           // for gfxContext
-#include "mozilla/Attributes.h"   // for override
-#include "mozilla/LinkedList.h"   // for LinkedList
+#include "gfxContext.h"          // for gfxContext
+#include "mozilla/Attributes.h"  // for override
+#include "mozilla/LinkedList.h"  // for LinkedList
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/WidgetUtils.h"  // for ScreenRotation
 #include "mozilla/gfx/Rect.h"     // for Rect

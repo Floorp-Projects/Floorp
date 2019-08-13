@@ -1209,7 +1209,8 @@ nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return aStream->WriteBytes(AsBytes(MakeSpan(mCert->derCert.data, mCert->derCert.len)));
+  return aStream->WriteBytes(
+      AsBytes(MakeSpan(mCert->derCert.data, mCert->derCert.len)));
 }
 
 NS_IMETHODIMP

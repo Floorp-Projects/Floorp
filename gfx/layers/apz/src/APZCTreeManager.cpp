@@ -2601,15 +2601,15 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetAPZCAtPointWR(
   ScrollableLayerGuid guid{layersId, 0, scrollId};
   if (RefPtr<HitTestingTreeNode> node =
           GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
-    MOZ_ASSERT(node->GetApzc()); // any node returned must have an APZC
+    MOZ_ASSERT(node->GetApzc());  // any node returned must have an APZC
     result = node->GetApzc();
     EventRegionsOverride flags = node->GetEventRegionsOverride();
     if (flags & EventRegionsOverride::ForceDispatchToContent) {
       hitInfo += CompositorHitTestFlags::eApzAwareListeners;
     }
   }
-  APZCTM_LOG("Successfully matched APZC %p (hit result 0x%x)\n",
-             result.get(), hitInfo.serialize());
+  APZCTM_LOG("Successfully matched APZC %p (hit result 0x%x)\n", result.get(),
+             hitInfo.serialize());
   if (!result) {
     // It falls back to the root
     MOZ_ASSERT(scrollId == ScrollableLayerGuid::NULL_SCROLL_ID);

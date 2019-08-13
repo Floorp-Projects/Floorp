@@ -61,24 +61,24 @@ namespace mscom {
 nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
   static StaticLocalAutoPtr<BackgroundMTAData> sMTAData(
       []() -> BackgroundMTAData* {
-    BackgroundMTAData* bgData = new BackgroundMTAData();
+        BackgroundMTAData* bgData = new BackgroundMTAData();
 
-    auto setClearOnShutdown = [ptr = &sMTAData]() -> void {
-      ClearOnShutdown(ptr, ShutdownPhase::ShutdownThreads);
-    };
+        auto setClearOnShutdown = [ptr = &sMTAData]() -> void {
+          ClearOnShutdown(ptr, ShutdownPhase::ShutdownThreads);
+        };
 
-    if (NS_IsMainThread()) {
-      setClearOnShutdown();
-      return bgData;
-    }
+        if (NS_IsMainThread()) {
+          setClearOnShutdown();
+          return bgData;
+        }
 
-    SystemGroup::Dispatch(
-        TaskCategory::Other,
-        NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
-                               setClearOnShutdown));
+        SystemGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
+                                   setClearOnShutdown));
 
-    return bgData;
-  }());
+        return bgData;
+      }());
 
   MOZ_ASSERT(sMTAData);
 

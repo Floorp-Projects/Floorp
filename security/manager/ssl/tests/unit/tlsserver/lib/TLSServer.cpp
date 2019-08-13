@@ -141,8 +141,8 @@ static SECStatus AddKeyFromFile(const std::string& path,
 
   SECKEYPrivateKey* privateKey = nullptr;
   if (PK11_ImportDERPrivateKeyInfoAndReturnKey(
-          slot.get(), &item, nullptr, nullptr, true, false, KU_ALL,
-          &privateKey, nullptr) != SECSuccess) {
+          slot.get(), &item, nullptr, nullptr, true, false, KU_ALL, &privateKey,
+          nullptr) != SECSuccess) {
     PrintPRError("PK11_ImportDERPrivateKeyInfoAndReturnKey failed");
     return SECFailure;
   }

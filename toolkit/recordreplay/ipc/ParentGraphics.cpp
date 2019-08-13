@@ -160,9 +160,8 @@ void UpdateGraphicsAfterPaint(const PaintMessage& aMsg) {
     InitGraphicsSandbox();
   }
 
-  size_t stride =
-      layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat,
-                                                    aMsg.mWidth);
+  size_t stride = layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat,
+                                                                aMsg.mWidth);
   UpdateMiddlemanCanvas(aMsg.mWidth, aMsg.mHeight, stride, gGraphicsMemory);
 }
 
@@ -171,9 +170,8 @@ void UpdateGraphicsAfterRepaint(const nsACString& aImageData) {
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), aImageData);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
-  RefPtr<gfx::SourceSurface> surface =
-    image::ImageOps::DecodeToSurface(stream.forget(),
-                                     NS_LITERAL_CSTRING("image/png"), 0);
+  RefPtr<gfx::SourceSurface> surface = image::ImageOps::DecodeToSurface(
+      stream.forget(), NS_LITERAL_CSTRING("image/png"), 0);
   MOZ_RELEASE_ASSERT(surface);
 
   RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
@@ -181,8 +179,7 @@ void UpdateGraphicsAfterRepaint(const nsACString& aImageData) {
   gfx::DataSourceSurface::ScopedMap map(dataSurface,
                                         gfx::DataSourceSurface::READ);
 
-  UpdateMiddlemanCanvas(surface->GetSize().width,
-                        surface->GetSize().height,
+  UpdateMiddlemanCanvas(surface->GetSize().width, surface->GetSize().height,
                         map.GetStride(), map.GetData());
 }
 
@@ -191,9 +188,8 @@ void RestoreMainGraphics() {
     return;
   }
 
-  size_t stride =
-      layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat,
-                                                    gLastPaintWidth);
+  size_t stride = layers::ImageDataSerializer::ComputeRGBStride(
+      gSurfaceFormat, gLastPaintWidth);
   UpdateMiddlemanCanvas(gLastPaintWidth, gLastPaintHeight, stride,
                         gGraphicsMemory);
 }

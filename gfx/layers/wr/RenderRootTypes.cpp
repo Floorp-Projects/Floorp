@@ -31,7 +31,7 @@ bool IPDLParamTraits<mozilla::layers::RenderRootDisplayListData>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     paramType* aResult) {
   if (ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRenderRoot) &&
-    ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&
+      ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIdNamespace) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRect) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mCommands) &&
       ReadIPDLParam(aMsg, aIter, aActor, &aResult->mContentSize) &&

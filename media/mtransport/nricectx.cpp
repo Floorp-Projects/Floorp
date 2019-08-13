@@ -863,7 +863,7 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   SetCtxFlags(default_route_only, proxy_only);
-    
+
   proxy_only_ = proxy_only;
 
   // This might start gathering for the first time, or again after

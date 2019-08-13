@@ -35,9 +35,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
                    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
                    bool aUseEmbeddedBitmap,
                    DWRITE_RENDERING_MODE aRenderingMode,
-                   IDWriteRenderingParams* aParams,
-                   Float aGamma, Float aContrast,
-                   const gfxFontStyle* aStyle = nullptr);
+                   IDWriteRenderingParams* aParams, Float aGamma,
+                   Float aContrast, const gfxFontStyle* aStyle = nullptr);
 
   FontType GetType() const override { return FontType::DWRITE; }
 
@@ -64,7 +63,9 @@ class ScaledFontDWrite final : public ScaledFontBase {
   AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() const { return mUseEmbeddedBitmap; }
-  bool ForceGDIMode() const { return mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC; }
+  bool ForceGDIMode() const {
+    return mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC;
+  }
   DWRITE_RENDERING_MODE GetRenderingMode() const { return mRenderingMode; }
 
 #ifdef USE_SKIA
