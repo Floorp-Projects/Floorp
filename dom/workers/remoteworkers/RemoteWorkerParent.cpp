@@ -84,7 +84,7 @@ void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
   }
 
   if (mController) {
-    mController->ForgetActorAndTerminate();
+    mController->NoteDeadWorkerActor();
     mController = nullptr;
   }
 }
@@ -115,6 +115,17 @@ IPCResult RemoteWorkerParent::RecvError(const ErrorValue& aValue) {
   }
 
   return IPC_OK();
+}
+
+void RemoteWorkerParent::MaybeSendDelete() {
+  if (mDeleteSent) {
+    return;
+  }
+
+  // For some reason, if the following two lines are swapped, ASan says there's
+  // a UAF...
+  mDeleteSent = true;
+  Unused << Send__delete__(this);
 }
 
 IPCResult RemoteWorkerParent::RecvClose() {
