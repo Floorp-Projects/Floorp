@@ -3216,10 +3216,6 @@ pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 // full domains: any subdomains of the domains listed will also be allowed.
 pref("browser.tabs.remote.separatedMozillaDomains", "addons.mozilla.org,accounts.firefox.com");
 
-// Is support for the new getBBox method from SVG 2 enabled?
-// See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
-pref("svg.new-getBBox.enabled", false);
-
 # This pref controls whether the 'context-fill' and 'context-stroke' keywords
 # can be used in SVG-as-an-image in the content processes to use the fill/
 # stroke specified on the element that embeds the image.  (These keywords are
