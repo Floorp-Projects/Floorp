@@ -214,7 +214,12 @@ class TextEditRules {
    * This method may remove empty text node and makes guarantee that caret
    * is never at left of <br> element.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
+  enum class SetSelectionInterLinePosition {
+    Yes,
+    No,
+  };
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection(
+      SetSelectionInterLinePosition aSetSelectionInterLinePosition);
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 
@@ -363,7 +368,6 @@ class TextEditRules {
   bool mIsHandling;
 #endif  // #ifdef DEBUG
 
-  bool mDidExplicitlySetInterline;
   bool mIsHTMLEditRules;
 };
 

@@ -193,6 +193,7 @@ HTMLEditRules::HTMLEditRules()
       mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false),
       mDidDeleteSelection(false),
+      mDidExplicitlySetInterline(false),
       mDidRangedDelete(false),
       mDidEmptyParentBlocksRemoved(false),
       mRestoreContentEditableCount(false),
@@ -206,6 +207,7 @@ void HTMLEditRules::InitFields() {
   mDocChangeRange = nullptr;
   mReturnInEmptyLIKillsList = true;
   mDidDeleteSelection = false;
+  mDidExplicitlySetInterline = false;
   mDidRangedDelete = false;
   mDidEmptyParentBlocksRemoved = false;
   mRestoreContentEditableCount = false;
@@ -3931,11 +3933,12 @@ nsresult HTMLEditRules::DidDeleteSelection() {
   }
 
   // call through to base class
-  nsresult rv = TextEditRules::DidDeleteSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = TextEditRules::DidDeleteSelection(
+      mDidExplicitlySetInterline ? SetSelectionInterLinePosition::No
+                                 : SetSelectionInterLinePosition::Yes);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditRules::DidDeleteSelection() failed");
+  return rv;
 }
 
 nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,

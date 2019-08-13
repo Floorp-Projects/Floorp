@@ -91,14 +91,12 @@ TextEditRules::TextEditRules()
 #ifdef DEBUG
       mIsHandling(false),
 #endif  // #ifdef DEBUG
-      mDidExplicitlySetInterline(false),
       mIsHTMLEditRules(false) {
   InitFields();
 }
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mDidExplicitlySetInterline = false;
 }
 
 HTMLEditRules* TextEditRules::AsHTMLEditRules() {
@@ -162,8 +160,6 @@ nsresult TextEditRules::BeforeEdit() {
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-
-  mDidExplicitlySetInterline = false;
 
 #ifdef DEBUG
   mIsHandling = true;
@@ -296,7 +292,8 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
-      return DidDeleteSelection();
+      MOZ_ASSERT(!mIsHTMLEditRules);
+      return DidDeleteSelection(SetSelectionInterLinePosition::Yes);
     case EditSubAction::eInsertElement:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -783,6 +780,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
                                     const nsAString* aString,
                                     int32_t aMaxLength) {
   MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(!mIsHTMLEditRules);
   MOZ_ASSERT(aCancel);
   MOZ_ASSERT(aHandled);
   MOZ_ASSERT(aString);
@@ -897,7 +895,8 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   // If we replaced non-empty value with empty string, we need to delete the
   // text node.
   if (tString.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored = DidDeleteSelection();
+    DebugOnly<nsresult> rvIgnored =
+        DidDeleteSelection(SetSelectionInterLinePosition::Yes);
     MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_DESTROYED);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "DidDeleteSelection() failed");
@@ -1023,7 +1022,8 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
   return NS_OK;
 }
 
-nsresult TextEditRules::DidDeleteSelection() {
+nsresult TextEditRules::DidDeleteSelection(
+    SetSelectionInterLinePosition aSetSelectionInterLinePosition) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   EditorDOMPoint selectionStartPoint(
@@ -1046,7 +1046,7 @@ nsresult TextEditRules::DidDeleteSelection() {
     }
   }
 
-  if (mDidExplicitlySetInterline) {
+  if (aSetSelectionInterLinePosition != SetSelectionInterLinePosition::Yes) {
     return NS_OK;
   }
   // We prevent the caret from sticking on the left of prior BR
