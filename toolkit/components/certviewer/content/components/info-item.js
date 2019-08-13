@@ -33,6 +33,8 @@ export class InfoItem extends HTMLElement {
 
     this.classList.add(labelText);
 
+    this.classList.add(labelText);
+
     let info = this.shadowRoot.querySelector(".info");
     info.textContent = this.item.info;
 

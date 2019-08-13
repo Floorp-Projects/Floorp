@@ -28,6 +28,12 @@ label:dir(rtl) {
   white-space: nowrap;
 }
 
+:host(.value) *,
+:host(.method) *,
+:host(.padding) * {
+  padding-bottom: 10px;
+}
+
 :host(.warning) * {
   border: 2px solid var(--yellow-50);
 }
