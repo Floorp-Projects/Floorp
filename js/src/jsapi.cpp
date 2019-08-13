@@ -1204,8 +1204,8 @@ JS_PUBLIC_API void JS_GC(JSContext* cx, JS::GCReason reason) {
 }
 
 JS_PUBLIC_API void JS_MaybeGC(JSContext* cx) {
-  gc::GCRuntime& gc = cx->runtime()->gc;
-  gc.maybeGC(cx->zone());
+  AssertHeapIsIdle();
+  cx->runtime()->gc.maybeGC();
 }
 
 JS_PUBLIC_API void JS_SetGCCallback(JSContext* cx, JSGCCallback cb,
