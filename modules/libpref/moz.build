@@ -40,6 +40,7 @@ pref_groups = [
     'editor',
     'extensions',
     'fission',
+    'font',
     'full_screen_api',
     'general',
     'geo',
