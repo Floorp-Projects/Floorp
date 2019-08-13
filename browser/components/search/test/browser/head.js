@@ -207,12 +207,6 @@ function getOneOffs() {
   let oneOff = oneOffsContainer.querySelector(".search-panel-one-offs");
   for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
     if (oneOff.nodeType == Node.ELEMENT_NODE) {
-      if (
-        oneOff.classList.contains("dummy") ||
-        oneOff.classList.contains("search-setting-button-compact")
-      ) {
-        break;
-      }
       oneOffs.push(oneOff);
     }
   }
