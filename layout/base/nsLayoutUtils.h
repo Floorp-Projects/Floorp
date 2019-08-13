@@ -2398,11 +2398,6 @@ class nsLayoutUtils {
   static bool GPUImageScalingEnabled();
 
   /**
-   * Checks whether we want to layerize animated images whenever possible.
-   */
-  static bool AnimatedImageLayersEnabled();
-
-  /**
    * Checks whether support for inter-character ruby is enabled.
    */
   static bool IsInterCharacterRubyEnabled();

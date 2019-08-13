@@ -557,19 +557,6 @@ bool nsLayoutUtils::GPUImageScalingEnabled() {
   return sGPUImageScalingEnabled;
 }
 
-bool nsLayoutUtils::AnimatedImageLayersEnabled() {
-  static bool sAnimatedImageLayersEnabled;
-  static bool sAnimatedImageLayersPrefCached = false;
-
-  if (!sAnimatedImageLayersPrefCached) {
-    sAnimatedImageLayersPrefCached = true;
-    Preferences::AddBoolVarCache(&sAnimatedImageLayersEnabled,
-                                 "layout.animated-image-layers.enabled", false);
-  }
-
-  return sAnimatedImageLayersEnabled;
-}
-
 bool nsLayoutUtils::IsInterCharacterRubyEnabled() {
   static bool sInterCharacterRubyEnabled;
   static bool sInterCharacterRubyEnabledPrefCached = false;

@@ -4027,6 +4027,12 @@
   value: false
   mirror: always
 
+# Whether we should layerize all animated images (if otherwise possible).
+- name: layout.animated-image-layers.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
   value: false
