@@ -36,14 +36,13 @@ PATH=$DIRNAME:$PATH
 # Use GECKO_BASE_REPOSITORY as a signal for whether we are running in automation.
 export AUTOMATION=${GECKO_BASE_REPOSITORY:+1}
 
-: "${GECKO_DIR:="$DIRNAME"/../../..}"
+: "${GECKO_PATH:="$DIRNAME"/../../..}"
 : "${TOOLTOOL_CACHE:=$WORKSPACE/tt-cache}"
 
-if ! [ -d "$GECKO_DIR" ]; then
-    echo "GECKO_DIR must be set to a directory containing a gecko source checkout" >&2
+if ! [ -d "$GECKO_PATH" ]; then
+    echo "GECKO_PATH must be set to a directory containing a gecko source checkout" >&2
     exit 1
 fi
-GECKO_DIR="$( cd "$GECKO_DIR" && pwd )"
 
 # Directory to populate with tooltool-installed tools
 export TOOLTOOL_DIR="$WORKSPACE"
@@ -54,9 +53,9 @@ mkdir -p "$MOZ_OBJDIR"
 
 if [ -n "$DO_TOOLTOOL" ]; then (
     cd "$TOOLTOOL_DIR"
-    "$GECKO_DIR"/mach artifact toolchain -v\
+    "$GECKO_PATH"/mach artifact toolchain -v\
                 ${TOOLTOOL_MANIFEST:+ --tooltool-url https://tooltool.mozilla-releng.net/ \
-                                      --tooltool-manifest "$GECKO_DIR/$TOOLTOOL_MANIFEST"} \
+                                      --tooltool-manifest "$GECKO_PATH/$TOOLTOOL_MANIFEST"} \
                 --cache-dir "$TOOLTOOL_CACHE"${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
 ) fi
 
