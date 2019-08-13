@@ -2074,7 +2074,7 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     }
   }
 
-  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, aDirection);
+  DebugOnly<nsresult> rv = rules->BeforeEdit();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "TextEditRules::BeforeEdit() failed to handle something");
@@ -2088,8 +2088,7 @@ void TextEditor::OnEndHandlingTopLevelEditSubAction() {
     RefPtr<TextEditRules> rules(mRules);
 
     // post processing
-    DebugOnly<nsresult> rv = rules->AfterEdit(
-        GetTopLevelEditSubAction(), GetDirectionOfTopLevelEditSubAction());
+    DebugOnly<nsresult> rv = rules->AfterEdit();
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "TextEditRules::AfterEdit() failed to handle something");

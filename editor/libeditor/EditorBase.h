@@ -1829,8 +1829,7 @@ class EditorBase : public nsIEditor,
     mAllowsTransactionsToChangeSelection = aAllow;
   }
 
-  nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
-                                  nsINode* previousSelectedNode,
+  nsresult HandleInlineSpellCheck(nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
                                   nsINode* aStartContainer,
                                   uint32_t aStartOffset, nsINode* aEndContainer,

@@ -595,13 +595,13 @@ class TextEditor : public EditorBase,
    * HandleInlineSpellCheckAfterEdit() does spell-check after handling top level
    * edit subaction.
    */
-  nsresult HandleInlineSpellCheckAfterEdit(EditSubAction aEditSubAction) {
+  nsresult HandleInlineSpellCheckAfterEdit() {
     MOZ_ASSERT(IsEditActionDataAvailable());
     if (!GetSpellCheckRestartPoint().IsSet()) {
       return NS_OK;  // Maybe being initialized.
     }
     nsresult rv = HandleInlineSpellCheck(
-        aEditSubAction, GetSpellCheckRestartPoint().GetContainer(),
+        GetSpellCheckRestartPoint().GetContainer(),
         GetSpellCheckRestartPoint().Offset(), nullptr, 0, nullptr, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to spellcheck");
     ClearSpellCheckRestartPoint();
