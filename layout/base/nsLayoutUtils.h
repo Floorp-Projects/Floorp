@@ -2445,14 +2445,6 @@ class nsLayoutUtils {
 
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
-  static bool FontSizeInflationForceEnabled() {
-    return sFontSizeInflationForceEnabled;
-  }
-
-  static bool FontSizeInflationDisabledInMasterProcess() {
-    return sFontSizeInflationDisabledInMasterProcess;
-  }
-
   /**
    * See comment above "font.size.systemFontScale" in
    * modules/libpref/init/all.js.
@@ -3017,8 +3009,6 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static bool sFontSizeInflationForceEnabled;
-  static bool sFontSizeInflationDisabledInMasterProcess;
   static uint32_t sSystemFontScale;
   static uint32_t sZoomMaxPercent;
   static uint32_t sZoomMinPercent;
