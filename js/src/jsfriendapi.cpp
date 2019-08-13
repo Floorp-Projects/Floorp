@@ -1201,6 +1201,11 @@ const void* js::GetDOMRemoteProxyHandlerFamily() {
   return gDOMRemoteProxyHandlerFamily;
 }
 
+JS_FRIEND_API bool js::IsDOMRemoteProxyObject(JSObject* object) {
+  return js::IsProxy(object) && js::GetProxyHandler(object)->family() ==
+                                    js::GetDOMRemoteProxyHandlerFamily();
+}
+
 static XrayJitInfo* gXrayJitInfo = nullptr;
 
 JS_FRIEND_API void js::SetXrayJitInfo(XrayJitInfo* info) {
