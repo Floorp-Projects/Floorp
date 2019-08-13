@@ -294,30 +294,22 @@ ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId) {
   return serviceWorker.forget();
 }
 
-void ServiceWorkerRegistrationInfo::TryToActivateAsync(
-    TryToActivateCallback&& aCallback) {
+void ServiceWorkerRegistrationInfo::TryToActivateAsync() {
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-      NewRunnableMethod<StoreCopyPassByRRef<TryToActivateCallback>>(
-          "ServiceWorkerRegistrationInfo::TryToActivate", this,
-          &ServiceWorkerRegistrationInfo::TryToActivate,
-          std::move(aCallback))));
+      NewRunnableMethod("ServiceWorkerRegistrationInfo::TryToActivate", this,
+                        &ServiceWorkerRegistrationInfo::TryToActivate)));
 }
 
 /*
  * TryToActivate should not be called directly, use TryToActivateAsync instead.
  */
-void ServiceWorkerRegistrationInfo::TryToActivate(
-    TryToActivateCallback&& aCallback) {
+void ServiceWorkerRegistrationInfo::TryToActivate() {
   MOZ_ASSERT(NS_IsMainThread());
   bool controlling = IsControllingClients();
   bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
   bool idle = IsIdle();
   if (idle && (!controlling || skipWaiting)) {
     Activate();
-  }
-
-  if (aCallback) {
-    aCallback();
   }
 }
 
@@ -709,14 +701,8 @@ uint64_t ServiceWorkerRegistrationInfo::Version() const {
   return mDescriptor.Version();
 }
 
-uint32_t ServiceWorkerRegistrationInfo::GetUpdateDelay(
-    const bool aWithMultiplier) {
+uint32_t ServiceWorkerRegistrationInfo::GetUpdateDelay() {
   uint32_t delay = Preferences::GetInt("dom.serviceWorkers.update_delay", 1000);
-
-  if (!aWithMultiplier) {
-    return delay;
-  }
-
   // This can potentially happen if you spam registration->Update(). We don't
   // want to wrap to a lower value.
   if (mDelayMultiplier >= INT_MAX / (delay ? delay : 1)) {
