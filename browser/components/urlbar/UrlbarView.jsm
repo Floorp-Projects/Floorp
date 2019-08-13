@@ -85,7 +85,6 @@ class UrlbarView {
     }
 
     this._openPanel();
-    this.input.focus();
   }
 
   /**
