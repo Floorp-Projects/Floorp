@@ -19,6 +19,8 @@ config = {
     'avoid_avx2': True,
     'operating_system': 'linux',
     'partial_env': {
-        'PATH': '%(abs_work_dir)s/src/clang/bin/:%(PATH)s',
+        'PATH': ('%(abs_work_dir)s/src/clang/bin:'
+                 '%(abs_work_dir)s/src/binutils/bin:'
+                 '%(abs_work_dir)s/src/nasm:%(PATH)s'),
     },
 }
