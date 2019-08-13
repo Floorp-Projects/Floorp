@@ -161,6 +161,11 @@ public class MmaLeanplumImp implements MmaInterface {
     }
 
     @Override
+    public void setToken(@NonNull String token) {
+        Leanplum.setToken(token);
+    }
+
+    @Override
     public PanelConfig getPanelConfig(@NonNull Context context, PanelConfig.TYPE type, final boolean useLocalValues) {
         if (useLocalValues) {
             throw new UnsupportedOperationException("Cannot build remote panel config with local values");
