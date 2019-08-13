@@ -7,6 +7,7 @@
 #include "RemoteWorkerParent.h"
 #include "RemoteWorkerController.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/PFetchEventOpProxyParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
@@ -65,6 +66,22 @@ void RemoteWorkerParent::Initialize() {
     NS_ProxyRelease("RemoteWorkerParent::Initialize ContentParent", target,
                     parent.forget());
   }
+}
+
+PFetchEventOpProxyParent* RemoteWorkerParent::AllocPFetchEventOpProxyParent(
+    const ServiceWorkerFetchEventOpArgs& aArgs) {
+  MOZ_CRASH("PFetchEventOpProxyParent actors must be manually constructed!");
+  return nullptr;
+}
+
+bool RemoteWorkerParent::DeallocPFetchEventOpProxyParent(
+    PFetchEventOpProxyParent* aActor) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
 }
 
 void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
