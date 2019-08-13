@@ -275,7 +275,6 @@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/marionette.manifest
 @BINPATH@/components/marionette.js
-@BINPATH@/@PREF_DIR@/marionette.js
 #endif
 
 #ifdef PKG_LOCALE_MANIFEST
