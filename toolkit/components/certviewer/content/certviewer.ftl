@@ -60,6 +60,14 @@ certificate-viewer-timestamp = Timestamp
 certificate-viewer-value = Value
 certificate-viewer-version = Version
 
+## Variables
+##   $domain (String) - The common name from the certificate being displayed.
+
+certificate-viewer-download-pem = PEM (cert)
+  .download = { $domain }.pem
+certificate-viewer-download-pem-chain = PEM (chain)
+  .download = { $domain }-chain.pem
+
 ## Error codes
 
 certificate-viewer-warning-section-title = Warning
