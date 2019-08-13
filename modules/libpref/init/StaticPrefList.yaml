@@ -588,6 +588,18 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "bidi."
+#---------------------------------------------------------------------------
+
+# Whether delete and backspace should immediately delete characters not
+# visually adjacent to the caret, or adjust the visual position of the caret
+# on the first keypress and delete the character on a second keypress
+- name: bidi.edit.delete_immediately
+  type: bool
+  value: true
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "browser."
 #---------------------------------------------------------------------------
 

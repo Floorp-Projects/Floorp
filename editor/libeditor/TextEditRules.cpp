@@ -92,7 +92,6 @@ TextEditRules::TextEditRules()
       mIsHandling(false),
 #endif  // #ifdef DEBUG
       mDidExplicitlySetInterline(false),
-      mDeleteBidiImmediately(false),
       mIsHTMLEditRules(false) {
   InitFields();
 }
@@ -100,7 +99,6 @@ TextEditRules::TextEditRules()
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
   mDidExplicitlySetInterline = false;
-  mDeleteBidiImmediately = false;
 }
 
 HTMLEditRules* TextEditRules::AsHTMLEditRules() {
@@ -149,10 +147,6 @@ nsresult TextEditRules::Init(TextEditor* aTextEditor) {
       return rv;
     }
   }
-
-  // XXX We should use AddBoolVarCache and use "current" value at initializing.
-  mDeleteBidiImmediately =
-      Preferences::GetBool("bidi.edit.delete_immediately", false);
 
   return NS_OK;
 }
