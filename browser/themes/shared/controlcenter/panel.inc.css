@@ -672,7 +672,7 @@ description#identity-popup-content-verifier,
   grid-row: 1;
 }
 
-.protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
+#protections-popup:not([hasException]) .protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
 .protections-popup-category:not(.blocked):not([hidden]) ~ #protections-popup-not-blocking-section-header {
   display: flex;
 }
