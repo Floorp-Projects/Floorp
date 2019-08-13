@@ -6,11 +6,7 @@
 
 #include "ServiceWorkerInfo.h"
 
-#include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerScriptCache.h"
-#include "mozilla/dom/ClientIPCTypes.h"
-#include "mozilla/dom/ClientState.h"
-#include "mozilla/dom/RemoteWorkerTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -150,7 +146,6 @@ void ServiceWorkerInfo::UpdateState(ServiceWorkerState aState) {
   mDescriptor.SetState(aState);
   if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
-    mServiceWorkerPrivate->NoteDeadServiceWorkerInfo();
   }
 }
 
