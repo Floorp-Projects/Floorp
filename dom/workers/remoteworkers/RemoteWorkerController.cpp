@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "RemoteWorkerController.h"
 #include "RemoteWorkerManager.h"
@@ -26,7 +27,7 @@ already_AddRefed<RemoteWorkerController> RemoteWorkerController::Create(
   MOZ_ASSERT(aObserver);
 
   RefPtr<RemoteWorkerController> controller =
-      new RemoteWorkerController(aObserver);
+      new RemoteWorkerController(aData, aObserver);
 
   RefPtr<RemoteWorkerManager> manager = RemoteWorkerManager::GetOrCreate();
   MOZ_ASSERT(manager);
@@ -36,8 +37,13 @@ already_AddRefed<RemoteWorkerController> RemoteWorkerController::Create(
   return controller.forget();
 }
 
-RemoteWorkerController::RemoteWorkerController(RemoteWorkerObserver* aObserver)
-    : mObserver(aObserver), mState(ePending) {
+RemoteWorkerController::RemoteWorkerController(const RemoteWorkerData& aData,
+                                               RemoteWorkerObserver* aObserver)
+    : mObserver(aObserver),
+      mState(ePending),
+      mIsServiceWorker(aData.serviceWorkerData().type() ==
+                       OptionalServiceWorkerData::TServiceWorkerData) {
+  AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 }
