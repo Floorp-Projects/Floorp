@@ -580,6 +580,7 @@ impl BackendProfileCounters {
                 yuv_image: ResourceProfileCounter::new("Interned YUV images"),
                 clip: ResourceProfileCounter::new("Interned clips"),
                 filter_data: ResourceProfileCounter::new("Interned filter data"),
+                backdrop: ResourceProfileCounter::new("Interned backdrops"),
             },
         }
     }
