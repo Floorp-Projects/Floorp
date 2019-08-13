@@ -686,8 +686,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     // we annotate each one linked to a valid owning element (node).
     if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
             aStatus)) {
-      Document* doc = mLoader->GetDocument();
-      if (doc) {
+      if (Document* doc = mLoader->GetDocument()) {
         for (SheetLoadData* data = this; data; data = data->mNext) {
           // mOwningElement may be null but AddBlockTrackingNode can cope
           nsCOMPtr<nsIContent> content =
