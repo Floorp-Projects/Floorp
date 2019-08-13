@@ -845,6 +845,25 @@ class RecursiveMakeBackend(CommonBackend):
                 non_default_graphs[target_name][root] = self._compile_graph[root]
                 del self._compile_graph[root]
 
+        targets_per_directory = defaultdict(list)
+        for target in self._compile_graph.iterkeys():
+            targets_per_directory[mozpath.dirname(target)].append(
+                mozpath.basename(target))
+
+        # In directories that have both a shared and a static library, there
+        # may also be source files that are applied to both. What can happen
+        # then is that both the shared and static library are attempted to be
+        # built in parallel via other dependencies, and both try to build the
+        # same source files at the same time, and that can lead to race
+        # conditions and build failures. This means we need an implicit
+        # dependency between the shared and the static library that the library
+        # graph doesn't necessarily know about, so we encode it in the compile
+        # graph manually.
+        for directory, targets in targets_per_directory.iteritems():
+            if 'target-shared' in targets and 'target' in targets:
+                self._compile_graph[mozpath.join(directory, 'target-shared')].add(
+                    mozpath.join(directory, 'target'))
+
         for root in chain(*non_default_roots.values()):
             compile_roots.remove(root)
             dirname = mozpath.dirname(root)

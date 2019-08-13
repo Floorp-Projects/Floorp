@@ -10,9 +10,9 @@ set -x -e -v
 
 cd $GECKO_PATH
 
-# This will download the rustc, cmake, ninja, MSVC, and wrench-deps artifacts.
+# This will download the rustc, MSVC, and wrench-deps artifacts.
 . taskcluster/scripts/misc/tooltool-download.sh
-export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:$MOZ_FETCHES_DIR/cmake/bin:$MOZ_FETCHES_DIR/ninja/bin
+export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin
 
 .  taskcluster/scripts/misc/vs-setup.sh
 
@@ -25,7 +25,6 @@ powershell.exe 'iex (Get-Content -Raw ci-scripts\set-screenresolution.ps1); Set-
 
 # Run the CI scripts
 export CARGOFLAGS='--verbose --frozen'
-export FREETYPE_CMAKE_GENERATOR=Ninja
 cmd.exe /c 'ci-scripts\windows-tests.cmd'
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh

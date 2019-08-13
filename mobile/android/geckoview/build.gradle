@@ -1,5 +1,7 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
+import groovy.json.JsonOutput
+
 apply plugin: 'com.android.library'
 apply plugin: 'checkstyle'
 apply plugin: 'kotlin-android'
@@ -199,26 +201,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     }
 }
 
-tasks.withType(Javadoc) {
-    // Implement warning-as-error for javadoc.
-    def warnings = 0
-    def listener = {
-        if (it.contains(': warning')) {
-            warnings++
-        }
-    } as StandardOutputListener
-
-    doFirst {
-        logging.addStandardErrorListener(listener)
-    }
-    doLast {
-        logging.removeStandardErrorListener(listener)
-        if (warnings > 0) {
-            throw new GradleException("Treating $warnings javadoc warning(s) as error(s)")
-        }
-    }
-}
-
 dependencies {
     implementation "com.android.support:support-v4:$support_library_version"
     implementation "com.android.support:palette-v7:$support_library_version"
@@ -261,6 +243,32 @@ android.libraryVariants.all { variant ->
         destinationDir = new File(destinationDir, variant.baseName)
         doFirst {
             classpath = files(variant.javaCompileProvider.get().classpath.files)
+        }
+
+        def results = []
+        def listener = {
+            // Like '/abs/path/to/topsrcdir/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java:480: warning: no @return'
+            def matches = (it =~ /(.+):(\d+): (warning|error): (.*)/)
+            if (!matches) {
+                return
+            }
+            def (_, file, line, level, message) = matches[0]
+            results << [path: file, lineno: line, level: level, message: message]
+        } as StandardOutputListener
+
+        doFirst {
+            logging.addStandardErrorListener(listener)
+        }
+
+        doLast {
+            logging.removeStandardErrorListener(listener)
+
+            // We used to treat Javadoc warnings as errors here; now we rely on the
+            // `android-javadoc` linter to fail in the face of Javadoc warnings.
+            def resultsJson = JsonOutput.toJson(results)
+
+            file("$buildDir/reports").mkdirs()
+            file("$buildDir/reports/javadoc-results-${name}.json").write(resultsJson)
         }
 
         source = variant.sourceSets.collect({ it.java.srcDirs })
@@ -379,8 +387,16 @@ publishing {
                     }
 
                     scm {
-                        connection = 'scm::hg::https://hg.mozilla.org/mozilla-central/'
-                        url = 'https://hg.mozilla.org/mozilla-central/'
+                        if (mozconfig.substs.MOZ_INCLUDE_SOURCE_INFO) {
+                            // URL is like "https://hg.mozilla.org/mozilla-central/rev/1e64b8a0c546a49459d404aaf930d5b1f621246a".
+                            connection = "scm::hg::${mozconfig.substs.MOZ_SOURCE_REPO}"
+                            url = mozconfig.substs.MOZ_SOURCE_URL
+                            tag = mozconfig.substs.MOZ_SOURCE_CHANGESET
+                        } else {
+                            // Default to mozilla-central.
+                            connection = 'scm::hg::https://hg.mozilla.org/mozilla-central/'
+                            url = 'https://hg.mozilla.org/mozilla-central/'
+                        }
                     }
 
                     // Unfortunately Gradle does not provide a way to expose dependencies for custom

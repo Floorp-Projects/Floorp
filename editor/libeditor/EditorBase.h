@@ -100,6 +100,7 @@ class DataTransfer;
 class DragEvent;
 class Element;
 class EventTarget;
+class HTMLBRElement;
 }  // namespace dom
 
 namespace widget {
@@ -692,6 +693,7 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eCreateOrChangeDefinitionList:
         case EditSubAction::eInsertElement:
         case EditSubAction::eInsertQuotation:
+        case EditSubAction::eInsertQuotedText:
         case EditSubAction::ePasteHTMLContent:
         case EditSubAction::eInsertHTMLSource:
         case EditSubAction::eSetPositionToAbsolute:
@@ -1464,6 +1466,29 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
+
+  /**
+   * HasPaddingBRElementForEmptyEditor() returns true if there is a padding
+   * <br> element for empty editor.  When this returns true, it means that
+   * we're empty.
+   */
+  bool HasPaddingBRElementForEmptyEditor() const {
+    return !!mPaddingBRElementForEmptyEditor;
+  }
+
+  /**
+   * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
+   * for empty editor if there is.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  EnsureNoPaddingBRElementForEmptyEditor();
+
+  /**
+   * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
+   * for empty editor if there is no children.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  MaybeCreatePaddingBRElementForEmptyEditor();
 
   MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
@@ -2296,6 +2321,11 @@ class EditorBase : public nsIEditor,
   RefPtr<TransactionManager> mTransactionManager;
   // Cached root node.
   RefPtr<Element> mRootElement;
+
+  // mPaddingBRElementForEmptyEditor should be used for placing caret
+  // at proper position when editor is empty.
+  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
+
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   RefPtr<EditorEventListener> mEventListener;

@@ -233,6 +233,47 @@ struct ModuleEnvironment {
   }
 };
 
+// ElemSegmentFlags provides methods for decoding and encoding the flags field
+// of an element segment. This is needed as the flags field has a non-trivial
+// encoding that is effectively split into independent `kind` and `payload`
+// enums.
+class ElemSegmentFlags {
+  enum class Flags : uint32_t {
+    Passive = 0x1,
+    WithIndexOrDeclared = 0x2,
+    ElemExpression = 0x4,
+    // Below this line are convenient combinations of flags
+    KindMask = Passive | WithIndexOrDeclared,
+    PayloadMask = ElemExpression,
+    AllFlags = Passive | WithIndexOrDeclared | ElemExpression,
+  };
+  uint32_t encoded_;
+
+  explicit ElemSegmentFlags(uint32_t encoded) : encoded_(encoded) {}
+
+ public:
+  ElemSegmentFlags(ElemSegmentKind kind, ElemSegmentPayload payload) {
+    encoded_ = uint32_t(kind) | uint32_t(payload);
+  }
+
+  static Maybe<ElemSegmentFlags> construct(uint32_t encoded) {
+    if (encoded > uint32_t(Flags::AllFlags)) {
+      return Nothing();
+    }
+    return Some(ElemSegmentFlags(encoded));
+  }
+
+  uint32_t encoded() const { return encoded_; }
+
+  ElemSegmentKind kind() const {
+    return static_cast<ElemSegmentKind>(encoded_ & uint32_t(Flags::KindMask));
+  }
+  ElemSegmentPayload payload() const {
+    return static_cast<ElemSegmentPayload>(encoded_ &
+                                           uint32_t(Flags::PayloadMask));
+  }
+};
+
 // The Encoder class appends bytes to the Bytes object it is given during
 // construction. The client is responsible for the Bytes's lifetime and must
 // keep the Bytes alive as long as the Encoder is used.

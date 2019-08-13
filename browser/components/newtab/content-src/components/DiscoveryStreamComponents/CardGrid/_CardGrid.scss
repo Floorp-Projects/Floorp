@@ -68,7 +68,7 @@ $col4-header-font-size: 14;
       }
 
       .excerpt {
-        @include limit-visibile-lines(3, 24, 15);
+        @include limit-visibile-lines(4, 24, 15);
       }
     }
 

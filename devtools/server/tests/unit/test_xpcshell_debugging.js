@@ -7,6 +7,12 @@
 // Test the xpcshell-test debug support.  Ideally we should have this test
 // next to the xpcshell support code, but that's tricky...
 
+// HACK: ServiceWorkerManager requires the "profile-change-teardown" to cleanly
+// shutdown, and setting _profileInitialized to `true` will trigger those
+// notifications (see /testing/xpcshell/head.js).
+// eslint-disable-next-line no-undef
+_profileInitialized = true;
+
 add_task(async function() {
   const testFile = do_get_file("xpcshell_debugging_script.js");
 

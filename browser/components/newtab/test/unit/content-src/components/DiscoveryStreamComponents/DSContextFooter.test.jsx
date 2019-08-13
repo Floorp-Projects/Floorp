@@ -1,4 +1,7 @@
-import { DSContextFooter } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
+import {
+  DSContextFooter,
+  StatusMessage,
+} from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import React from "react";
 import { mount } from "enzyme";
 import { cardContextTypes } from "content-src/components/Card/types.js";
@@ -8,6 +11,7 @@ describe("<DSContextFooter>", () => {
   let sandbox;
   const bookmarkBadge = "bookmark";
   const removeBookmarkBadge = "removedBookmark";
+  const context = "Sponsored by Babel";
 
   beforeEach(() => {
     wrapper = mount(<DSContextFooter />);
@@ -32,14 +36,11 @@ describe("<DSContextFooter>", () => {
   });
   it("should only render a sponsored context if pass a sponsored context", async () => {
     wrapper = mount(
-      <DSContextFooter
-        context_type={bookmarkBadge}
-        context="Sponsored by Babel"
-      />
+      <DSContextFooter context_type={bookmarkBadge} context={context} />
     );
 
-    assert.isFalse(wrapper.find(".status-message").exists());
-    assert.isTrue(wrapper.find(".story-sponsored-label").exists());
+    assert.lengthOf(wrapper.find(StatusMessage), 0);
+    assert.equal(wrapper.find(".story-sponsored-label").text(), context);
   });
   it("should render a new badge if props change from an old badge to a new one", async () => {
     wrapper = mount(<DSContextFooter context_type={bookmarkBadge} />);

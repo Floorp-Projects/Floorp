@@ -98,77 +98,66 @@ nsresult HTMLEditor::LoadHTML(const nsAString& aInputString) {
 
   // force IME commit; set up rules sniffing and batching
   CommitComposition();
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
       *this, EditSubAction::eInsertHTMLSource, nsIEditor::eNext);
 
-  EditSubActionInfo subActionInfo(EditSubAction::eInsertHTMLSource);
-  bool cancel, handled;
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (cancel) {
-    return NS_OK;  // rules canceled the operation
-  }
 
-  if (!handled) {
-    // Delete Selection, but only if it isn't collapsed, see bug #106269
-    if (!SelectionRefPtr()->IsCollapsed()) {
-      rv = DeleteSelectionAsSubAction(eNone, eStrip);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    // Get the first range in the selection, for context:
-    RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
-    if (NS_WARN_IF(!range)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Create fragment for pasted HTML.
-    ErrorResult error;
-    RefPtr<DocumentFragment> documentFragment =
-        range->CreateContextualFragment(aInputString, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    // Put the fragment into the document at start of selection.
-    EditorDOMPoint pointToInsert(range->StartRef());
-    // XXX We need to make pointToInsert store offset for keeping traditional
-    //     behavior since using only child node to pointing insertion point
-    //     changes the behavior when inserted child is moved by mutation
-    //     observer.  We need to investigate what we should do here.
-    Unused << pointToInsert.Offset();
-    for (nsCOMPtr<nsIContent> contentToInsert =
-             documentFragment->GetFirstChild();
-         contentToInsert; contentToInsert = documentFragment->GetFirstChild()) {
-      rv = InsertNodeWithTransaction(*contentToInsert, pointToInsert);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      // XXX If the inserted node has been moved by mutation observer,
-      //     incrementing offset will cause odd result.  Next new node
-      //     will be inserted after existing node and the offset will be
-      //     overflown from the container node.
-      pointToInsert.Set(pointToInsert.GetContainer(),
-                        pointToInsert.Offset() + 1);
-      if (NS_WARN_IF(!pointToInsert.Offset())) {
-        // Append the remaining children to the container if offset is
-        // overflown.
-        pointToInsert.SetToEndOf(pointToInsert.GetContainer());
-      }
+  // Delete Selection, but only if it isn't collapsed, see bug #106269
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
-  rv = rules->DidDoAction(subActionInfo, rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  // Get the first range in the selection, for context:
+  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+  if (NS_WARN_IF(!range)) {
+    return NS_ERROR_FAILURE;
   }
+
+  // Create fragment for pasted HTML.
+  ErrorResult error;
+  RefPtr<DocumentFragment> documentFragment =
+      range->CreateContextualFragment(aInputString, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Put the fragment into the document at start of selection.
+  EditorDOMPoint pointToInsert(range->StartRef());
+  // XXX We need to make pointToInsert store offset for keeping traditional
+  //     behavior since using only child node to pointing insertion point
+  //     changes the behavior when inserted child is moved by mutation
+  //     observer.  We need to investigate what we should do here.
+  Unused << pointToInsert.Offset();
+  for (nsCOMPtr<nsIContent> contentToInsert = documentFragment->GetFirstChild();
+       contentToInsert; contentToInsert = documentFragment->GetFirstChild()) {
+    rv = InsertNodeWithTransaction(*contentToInsert, pointToInsert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // XXX If the inserted node has been moved by mutation observer,
+    //     incrementing offset will cause odd result.  Next new node
+    //     will be inserted after existing node and the offset will be
+    //     overflown from the container node.
+    pointToInsert.Set(pointToInsert.GetContainer(), pointToInsert.Offset() + 1);
+    if (NS_WARN_IF(!pointToInsert.Offset())) {
+      // Append the remaining children to the container if offset is
+      // overflown.
+      pointToInsert.SetToEndOf(pointToInsert.GetContainer());
+    }
+  }
+
   return NS_OK;
 }
 

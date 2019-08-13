@@ -63,17 +63,6 @@
         <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff.tooltip;</tooltip>
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
-            <description id="protections-popup-blocking-section-header"
-                         hidden="true"
-                         role="heading"
-                         aria-level="2">&protections.blocking.label;</description>
-            <hbox id="protections-popup-not-blocking-section-header" hidden="true">
-              <description id="protections-popup-not-blocking-section-description">&protections.notBlocking.label;</description>
-              <label id="protections-popup-not-blocking-section-why"
-                     class="text-link"
-                     onmouseover="document.getElementById(event.target.tooltip).openPopup(event.target);"
-                     onmouseout="document.getElementById(event.target.tooltip).hidePopup()">&protections.notBlocking.why.label;</label>
-            </hbox>
             <toolbarbutton id="protections-popup-category-tracking-protection"
                            onclick="gProtectionsHandler.showTrackersSubview();"
                            class="protections-popup-category" align="center"
@@ -94,7 +83,7 @@
                            wrap="true">
               <image class="protections-popup-category-icon thirdpartycookies-icon"/>
               <label flex="1" id="protections-popup-cookies-category-label-disabled"
-                     class="protections-popup-category-label">&contentBlocking.cookies.label;</label>
+                     class="protections-popup-category-label">&contentBlocking.cookies2.label;</label>
               <label flex="1" id="protections-popup-cookies-category-label-enabled"
                      class="protections-popup-category-label"
                      hidden="true"></label>
@@ -113,6 +102,17 @@
               <image class="protections-popup-category-icon fingerprinters-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.fingerprinters.label;</label>
             </toolbarbutton>
+            <description id="protections-popup-blocking-section-header"
+                         hidden="true"
+                         role="heading"
+                         aria-level="2">&protections.blocking.label;</description>
+            <hbox id="protections-popup-not-blocking-section-header" hidden="true">
+              <description id="protections-popup-not-blocking-section-description">&protections.notBlocking.label;</description>
+              <label id="protections-popup-not-blocking-section-why"
+                     class="text-link"
+                     onmouseover="document.getElementById(event.target.tooltip).openPopup(event.target);"
+                     onmouseout="document.getElementById(event.target.tooltip).hidePopup()">&protections.notBlocking.why.label;</label>
+            </hbox>
           </vbox>
         </vbox>
       </vbox>
@@ -184,8 +184,10 @@
     <!-- Trackers SubView -->
     <panelview id="protections-popup-trackersView"
                role="document"
-               title="&contentBlocking.trackersView.label;"
                descriptionheightworkaround="true">
+        <vbox id="protections-popup-trackersView-description" class="protections-popup-description">
+          <description>&protections.trackingContent.description;</description>
+        </vbox>
         <vbox id="protections-popup-trackersView-list" class="protections-popup-list">
         </vbox>
         <hbox id="protections-popup-trackersView-strict-info">
@@ -194,7 +196,7 @@
         </hbox>
         <vbox class="panel-footer">
           <button id="protections-popup-trackersView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
+                  label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
         </vbox>
@@ -203,16 +205,15 @@
     <!-- Social Block SubView -->
     <panelview id="protections-popup-socialblockView"
                role="document"
-               title="&contentBlocking.socialblockView.label;"
                descriptionheightworkaround="true">
-        <vbox id="protections-popup-socialblockView-heading">
-          <description>&contentBlocking.socialblockView.description;</description>
+        <vbox id="protections-popup-socialblockView-heading" class="protections-popup-description">
+          <description>&protections.socialMediaTrackers.description;</description>
         </vbox>
         <vbox id="protections-popup-socialblockView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
           <button id="protections-popup-socialblockView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
+                  label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
         </vbox>
@@ -221,13 +222,15 @@
     <!-- Cookies SubView -->
     <panelview id="protections-popup-cookiesView"
                role="document"
-               title="&contentBlocking.cookiesView.label;"
                descriptionheightworkaround="true">
+        <vbox id="protections-popup-cookiesView-heading" class="protections-popup-description">
+          <description>&protections.crossSiteTrackingCookies.description;</description>
+        </vbox>
         <vbox id="protections-popup-cookiesView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
           <button id="protections-popup-cookiesView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
+                  label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
         </vbox>
@@ -236,13 +239,15 @@
     <!-- Fingerprinters SubView -->
     <panelview id="protections-popup-fingerprintersView"
                role="document"
-               title="&contentBlocking.fingerprintersView.label;"
                descriptionheightworkaround="true">
+        <vbox id="protections-popup-fingerprinters-heading" class="protections-popup-description">
+          <description>&protections.fingerprinters.description;</description>
+        </vbox>
         <vbox id="protections-popup-fingerprintersView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
           <button id="protections-popup-fingerprintersView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
+                  label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
         </vbox>
@@ -251,13 +256,15 @@
     <!-- Cryptominers SubView -->
     <panelview id="protections-popup-cryptominersView"
                role="document"
-               title="&contentBlocking.cryptominersView.label;"
                descriptionheightworkaround="true">
+        <vbox id="protections-popup-cryptominers-heading" class="protections-popup-description">
+          <description>&protections.cryptominers.description;</description>
+        </vbox>
         <vbox id="protections-popup-cryptominersView-list" class="protections-popup-list">
         </vbox>
         <vbox class="panel-footer">
           <button id="protections-popup-cryptominersView-settings-button"
-                  label="&contentBlocking.manageSettings.label;"
+                  label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
         </vbox>

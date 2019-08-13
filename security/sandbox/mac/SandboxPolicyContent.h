@@ -69,12 +69,15 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
         (subpath "/Library/Filesystems/NetFSPlugins")
         (subpath "/usr/share"))))
 
+  ; Timezone
+  (allow file-read*
+    (subpath "/private/var/db/timezone")
+    (subpath "/usr/share/zoneinfo")
+    (subpath "/usr/share/zoneinfo.default")
+    (literal "/private/etc/localtime"))
+
   ; Top-level directory metadata access (bug 1404298)
   (allow file-read-metadata (regex #"^/[^/]+$"))
-
-  (allow file-read-metadata
-    (literal "/private/etc/localtime")
-    (regex #"^/private/tmp/KSInstallAction\."))
 
   ; Allow read access to standard special files.
   (allow file-read*

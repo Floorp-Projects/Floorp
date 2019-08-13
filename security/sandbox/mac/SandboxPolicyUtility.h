@@ -53,6 +53,13 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
     (literal "/dev/urandom")
     (subpath "/usr/share/icu"))
 
+  ; Timezone
+  (allow file-read*
+    (subpath "/private/var/db/timezone")
+    (subpath "/usr/share/zoneinfo")
+    (subpath "/usr/share/zoneinfo.default")
+    (literal "/private/etc/localtime"))
+
   (allow mach-lookup
     (global-name "com.apple.coreservices.launchservicesd"))
 )SANDBOX_LITERAL";

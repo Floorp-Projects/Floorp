@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
     - release-bouncer-check
+    - release-push-langpacks
 
 job-defaults:
     run-on-projects: []

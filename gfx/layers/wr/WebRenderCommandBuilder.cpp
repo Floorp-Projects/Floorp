@@ -841,9 +841,9 @@ struct DIGroup {
             // Ideally we would drop these items earlier...
             item->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
           if (dirty) {
-            // What should the clip settting strategy be? We can set the full clip
-            // everytime. this is probably easiest for now. An alternative would
-            // be to put the push and the pop into separate items and let
+            // What should the clip settting strategy be? We can set the full
+            // clip everytime. this is probably easiest for now. An alternative
+            // would be to put the push and the pop into separate items and let
             // invalidation handle it that way.
             DisplayItemClip currentClip = paintedItem->GetClip();
 
@@ -859,8 +859,8 @@ struct DIGroup {
             }
 
             paintedItem->Paint(aGrouper->mDisplayListBuilder, aContext);
-            TakeExternalSurfaces(aRecorder, data->mExternalSurfaces, aRootManager,
-                                 aResources);
+            TakeExternalSurfaces(aRecorder, data->mExternalSurfaces,
+                                 aRootManager, aResources);
 
             if (currentClip.HasClip()) {
               aContext->Restore();
@@ -1470,6 +1470,12 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   auto p = group.mGroupBounds;
   auto q = groupBounds;
+  // XXX: we currently compute the paintRect for the entire svg, but if the svg
+  // gets split into multiple groups (blobs), then they will all inherit this
+  // overall size even though they may each be much smaller. This can lead to
+  // allocating much larger textures than necessary in webrender.
+  //
+  // Don’t bother fixing this unless we run into this in the real world, though.
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
      q.y, q.width, q.height);
   if (!group.mGroupBounds.IsEqualEdges(groupBounds) ||

@@ -1271,21 +1271,29 @@ struct AstNullValue {};
 typedef Variant<AstRef, AstNullValue> AstElem;
 typedef AstVector<AstElem> AstElemVector;
 
+enum class AstElemSegmentKind {
+  Active,
+  Passive,
+  Declared,
+};
+
 class AstElemSegment : public AstNode {
+  AstElemSegmentKind kind_;
   AstRef targetTable_;
   AstExpr* offsetIfActive_;
   AstElemVector elems_;
 
  public:
-  AstElemSegment(AstRef targetTable, AstExpr* offsetIfActive,
-                 AstElemVector&& elems)
-      : targetTable_(targetTable),
+  AstElemSegment(AstElemSegmentKind kind, AstRef targetTable,
+                 AstExpr* offsetIfActive, AstElemVector&& elems)
+      : kind_(kind),
+        targetTable_(targetTable),
         offsetIfActive_(offsetIfActive),
         elems_(std::move(elems)) {}
 
+  AstElemSegmentKind kind() const { return kind_; }
   AstRef targetTable() const { return targetTable_; }
   AstRef& targetTableRef() { return targetTable_; }
-  bool isPassive() const { return offsetIfActive_ == nullptr; }
   AstExpr* offsetIfActive() const { return offsetIfActive_; }
   AstElemVector& elems() { return elems_; }
   const AstElemVector& elems() const { return elems_; }

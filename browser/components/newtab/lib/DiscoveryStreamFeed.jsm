@@ -6,30 +6,38 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { NewTabUtils } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(
+  this,
+  "Services",
+  "resource://gre/modules/Services.jsm"
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 ChromeUtils.defineModuleGetter(
   this,
   "perfService",
   "resource://activity-stream/common/PerfService.jsm"
 );
-const { UserDomainAffinityProvider } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "UserDomainAffinityProvider",
   "resource://activity-stream/lib/UserDomainAffinityProvider.jsm"
 );
-
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-const { PersistentCache } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "PersistentCache",
   "resource://activity-stream/lib/PersistentCache.jsm"
 );
-
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
@@ -329,7 +337,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
       data: layout,
     });
-    if (layout.spocs && layout.spocs.url) {
+    if (
+      layout.spocs &&
+      layout.spocs.url &&
+      layout.spocs.url !==
+        this.store.getState().DiscoveryStream.spocs.spocs_endpoint
+    ) {
       sendUpdate({
         type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
         data: layout.spocs.url,
@@ -1300,6 +1313,7 @@ defaultLayoutResp = {
       components: [
         {
           type: "CardGrid",
+          cta_variant: false,
           properties: {
             items: 21,
           },
