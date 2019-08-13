@@ -75,49 +75,6 @@ const SyncedBookmarksMerger = Components.Constructor(
   "mozISyncedBookmarksMerger"
 );
 
-/**
- * A common table expression for all local items in Places, to be included in a
- * `WITH RECURSIVE` clause. We start at the roots, excluding tags (bug 424160),
- * and work our way down.
- *
- * Note that syncable items (`isSyncable`) descend from the four syncable roots.
- * Any other roots and their descendants, like the left pane root, left pane
- * queries, and custom roots, are non-syncable.
- *
- * Newer Desktops should never reupload non-syncable items (bug 1274496), and
- * should have removed them in Places migrations (bug 1310295). However, these
- * items might be orphaned in "unfiled", in which case they're seen as syncable
- * locally. If the server has the missing parents and roots, we'll determine
- * that the items are non-syncable when merging, remove them from Places, and
- * upload tombstones to the server.
- */
-XPCOMUtils.defineLazyGetter(
-  this,
-  "LocalItemsSQLFragment",
-  () => `
-  localItems(id, guid, parentId, parentGuid, position, type, title,
-             parentTitle, placeId, dateAdded, lastModified, syncChangeCounter,
-             isSyncable, level) AS (
-    SELECT b.id, b.guid, p.id, p.guid, b.position, b.type, b.title, p.title,
-           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
-           b.guid IN (${PlacesUtils.bookmarks.userContentRoots
-             .map(v => `'${v}'`)
-             .join(",")}), 0
-    FROM moz_bookmarks b
-    JOIN moz_bookmarks p ON p.id = b.parent
-    WHERE b.guid <> '${PlacesUtils.bookmarks.tagsGuid}' AND
-          p.guid = '${PlacesUtils.bookmarks.rootGuid}'
-    UNION ALL
-    SELECT b.id, b.guid, s.id, s.guid, b.position, b.type, b.title, s.title,
-           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
-           s.isSyncable, s.level + 1
-    FROM moz_bookmarks b
-    JOIN localItems s ON s.id = b.parent
-    WHERE b.guid <> '${PlacesUtils.bookmarks.rootGuid}'
-  )
-`
-);
-
 // These can be removed once they're exposed in a central location (bug
 // 1375896).
 const DB_URL_LENGTH_MAX = 65536;
@@ -597,30 +554,11 @@ class SyncedBookmarksMirror {
    *         upload to the server, and to store in the mirror once upload
    *         succeeds.
    */
-  async apply(options = {}) {
-    let hasChanges =
-      ("weakUpload" in options && options.weakUpload.length > 0) ||
-      (await this.hasChanges());
-    if (!hasChanges) {
-      MirrorLog.debug("No changes detected in both mirror and Places");
-      let limit =
-        "maxFrecenciesToRecalculate" in options
-          ? options.maxFrecenciesToRecalculate
-          : DEFAULT_MAX_FRECENCIES_TO_RECALCULATE;
-      await updateFrecencies(this.db, limit);
-      return {};
-    }
-    let changeRecords = await this.forceApply(options);
-    return changeRecords;
-  }
-
-  // Forces a full merge, even if there are no local or remote changes, and
-  // no items to weakly upload. Exposed for tests.
-  async forceApply({
-    localTimeSeconds = Date.now() / 1000,
-    remoteTimeSeconds = 0,
-    weakUpload = [],
-    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE,
+  async apply({
+    localTimeSeconds,
+    remoteTimeSeconds,
+    weakUpload,
+    maxFrecenciesToRecalculate,
     signal = null,
   } = {}) {
     // We intentionally don't use `executeBeforeShutdown` in this function,
@@ -632,25 +570,15 @@ class SyncedBookmarksMirror {
       this.finalizeController.signal,
       signal
     );
-    let observersToNotify = new BookmarkObserverRecorder(this.db, {
-      maxFrecenciesToRecalculate,
-      signal: finalizeOrInterruptSignal,
-    });
-
-    if (!(await this.validLocalRoots())) {
-      throw new SyncedBookmarksMirror.MergeError(
-        "Local tree has misparented root"
-      );
-    }
 
     let changeRecords;
     try {
       changeRecords = await this.tryApply(
+        finalizeOrInterruptSignal,
         localTimeSeconds,
         remoteTimeSeconds,
-        observersToNotify,
         weakUpload,
-        finalizeOrInterruptSignal
+        maxFrecenciesToRecalculate
       );
     } finally {
       this.progress.reset();
@@ -660,110 +588,29 @@ class SyncedBookmarksMirror {
   }
 
   async tryApply(
+    signal,
     localTimeSeconds,
     remoteTimeSeconds,
-    observersToNotify,
     weakUpload,
-    signal
+    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE
   ) {
-    await withTiming("Merging bookmarks in Rust", () => {
-      return new Promise((resolve, reject) => {
-        let op = null;
-        function onAbort() {
-          signal.removeEventListener("abort", onAbort);
-          op.cancel();
-        }
-        let callback = {
-          QueryInterface: ChromeUtils.generateQI([
-            Ci.mozISyncedBookmarksMirrorProgressListener,
-            Ci.mozISyncedBookmarksMirrorCallback,
-          ]),
-          // `mozISyncedBookmarksMirrorProgressListener` methods.
-          onFetchLocalTree: (took, count, problems) => {
-            this.progress.stepWithItemCount(
-              ProgressTracker.STEPS.FETCH_LOCAL_TREE,
-              took,
-              count
-            );
-            // We don't record local tree problems in validation telemetry.
-          },
-          onFetchRemoteTree: (took, count, problemsBag) => {
-            this.progress.stepWithItemCount(
-              ProgressTracker.STEPS.FETCH_REMOTE_TREE,
-              took,
-              count
-            );
-            // Record validation telemetry for problems in the remote tree.
-            let problems = bagToNamedCounts(problemsBag, [
-              "orphans",
-              "misparentedRoots",
-              "multipleParents",
-              "nonFolderParents",
-              "parentChildDisagreements",
-              "missingChildren",
-            ]);
-            this.recordValidationTelemetry(took, count, problems);
-          },
-          onMerge: (took, countsBag) => {
-            let counts = bagToNamedCounts(countsBag, [
-              "items",
-              "deletes",
-              "dupes",
-              "remoteRevives",
-              "localDeletes",
-              "localRevives",
-              "remoteDeletes",
-            ]);
-            this.progress.stepWithTelemetry(
-              ProgressTracker.STEPS.MERGE,
-              took,
-              counts
-            );
-          },
-          onApply: took => {
-            this.progress.stepWithTelemetry(ProgressTracker.STEPS.APPLY, took);
-          },
-          // `mozISyncedBookmarksMirrorCallback` methods.
-          handleSuccess(result) {
-            signal.removeEventListener("abort", onAbort);
-            resolve(result);
-          },
-          handleError(code, message) {
-            signal.removeEventListener("abort", onAbort);
-            switch (code) {
-              case Cr.NS_ERROR_STORAGE_BUSY:
-                reject(
-                  new SyncedBookmarksMirror.MergeConflictError(
-                    "Local tree changed during merge"
-                  )
-                );
-                break;
+    let wasMerged = await withTiming("Merging bookmarks in Rust", () =>
+      this.merge(signal, localTimeSeconds, remoteTimeSeconds, weakUpload)
+    );
 
-              case Cr.NS_ERROR_ABORT:
-                reject(new SyncedBookmarksMirror.InterruptedError(message));
-                break;
-
-              default:
-                reject(new SyncedBookmarksMirror.MergeError(message));
-            }
-          },
-        };
-        op = this.merger.merge(
-          localTimeSeconds,
-          remoteTimeSeconds,
-          weakUpload,
-          callback
-        );
-        if (signal.aborted) {
-          op.cancel();
-        } else {
-          signal.addEventListener("abort", onAbort);
-        }
-      });
-    });
+    if (!wasMerged) {
+      MirrorLog.debug("No changes detected in both mirror and Places");
+      await updateFrecencies(this.db, maxFrecenciesToRecalculate);
+      return {};
+    }
 
     // At this point, the database is consistent, so we can notify observers and
     // inflate records for outgoing items.
+
+    let observersToNotify = new BookmarkObserverRecorder(this.db, {
+      maxFrecenciesToRecalculate,
+      signal,
+    });
 
     await withTiming(
       "Notifying Places observers",
@@ -815,6 +662,107 @@ class SyncedBookmarksMirror {
           Object.keys(records).length
         )
     );
+  }
+
+  merge(
+    signal,
+    localTimeSeconds = Date.now() / 1000,
+    remoteTimeSeconds = 0,
+    weakUpload = []
+  ) {
+    return new Promise((resolve, reject) => {
+      let op = null;
+      function onAbort() {
+        signal.removeEventListener("abort", onAbort);
+        op.cancel();
+      }
+      let callback = {
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.mozISyncedBookmarksMirrorProgressListener,
+          Ci.mozISyncedBookmarksMirrorCallback,
+        ]),
+        // `mozISyncedBookmarksMirrorProgressListener` methods.
+        onFetchLocalTree: (took, count, problems) => {
+          this.progress.stepWithItemCount(
+            ProgressTracker.STEPS.FETCH_LOCAL_TREE,
+            took,
+            count
+          );
+          // We don't record local tree problems in validation telemetry.
+        },
+        onFetchRemoteTree: (took, count, problemsBag) => {
+          this.progress.stepWithItemCount(
+            ProgressTracker.STEPS.FETCH_REMOTE_TREE,
+            took,
+            count
+          );
+          // Record validation telemetry for problems in the remote tree.
+          let problems = bagToNamedCounts(problemsBag, [
+            "orphans",
+            "misparentedRoots",
+            "multipleParents",
+            "nonFolderParents",
+            "parentChildDisagreements",
+            "missingChildren",
+          ]);
+          this.recordValidationTelemetry(took, count, problems);
+        },
+        onMerge: (took, countsBag) => {
+          let counts = bagToNamedCounts(countsBag, [
+            "items",
+            "deletes",
+            "dupes",
+            "remoteRevives",
+            "localDeletes",
+            "localRevives",
+            "remoteDeletes",
+          ]);
+          this.progress.stepWithTelemetry(
+            ProgressTracker.STEPS.MERGE,
+            took,
+            counts
+          );
+        },
+        onApply: took => {
+          this.progress.stepWithTelemetry(ProgressTracker.STEPS.APPLY, took);
+        },
+        // `mozISyncedBookmarksMirrorCallback` methods.
+        handleSuccess(result) {
+          signal.removeEventListener("abort", onAbort);
+          resolve(result);
+        },
+        handleError(code, message) {
+          signal.removeEventListener("abort", onAbort);
+          switch (code) {
+            case Cr.NS_ERROR_STORAGE_BUSY:
+              reject(
+                new SyncedBookmarksMirror.MergeConflictError(
+                  "Local tree changed during merge"
+                )
+              );
+              break;
+
+            case Cr.NS_ERROR_ABORT:
+              reject(new SyncedBookmarksMirror.InterruptedError(message));
+              break;
+
+            default:
+              reject(new SyncedBookmarksMirror.MergeError(message));
+          }
+        },
+      };
+      op = this.merger.merge(
+        localTimeSeconds,
+        remoteTimeSeconds,
+        weakUpload,
+        callback
+      );
+      if (signal.aborted) {
+        op.cancel();
+      } else {
+        signal.addEventListener("abort", onAbort);
+      }
+    });
   }
 
   /**
@@ -1110,64 +1058,6 @@ class SyncedBookmarksMirror {
                     GENERATE_GUID()), :url, hash(:url), :revHost)`,
       { url: url.href, revHost: PlacesUtils.getReversedHost(url) }
     );
-  }
-
-  /*
-   * Checks if Places or mirror have any unsynced/unmerged changes.
-   *
-   * @return {Boolean}
-   *         `true` if something has changed.
-   */
-  async hasChanges() {
-    // In the first subquery, we check incoming items with needsMerge = true
-    // except the tombstones who don't correspond to any local bookmark because
-    // we don't store them yet, hence never "merged" (see bug 1343103).
-    let rows = await this.db.execute(`
-      SELECT
-      EXISTS (
-       SELECT 1
-       FROM items v
-       LEFT JOIN moz_bookmarks b ON v.guid = b.guid
-       WHERE v.needsMerge AND
-       (NOT v.isDeleted OR b.guid NOT NULL)
-      ) OR EXISTS (
-       WITH RECURSIVE
-       ${LocalItemsSQLFragment}
-       SELECT 1
-       FROM localItems
-       WHERE syncChangeCounter > 0
-      ) OR EXISTS (
-       SELECT 1
-       FROM moz_bookmarks_deleted
-      )
-      AS hasChanges
-    `);
-    return !!rows[0].getResultByName("hasChanges");
-  }
-
-  /**
-   * Ensures that all local roots are parented correctly. Misparented roots
-   * (bug 1453994, bug 1472127) might produce an invalid tree, so we check
-   * before merging, and rely on Places to reparent any invalid roots after
-   * the next restart or maintenance run.
-   *
-   * @return {Boolean}
-   *         `true` if the Places root, and four syncable roots, are parented
-   *         correctly.
-   */
-  async validLocalRoots() {
-    let rows = await this.db.execute(`
-      SELECT EXISTS(SELECT 1 FROM moz_bookmarks
-                    WHERE guid = '${PlacesUtils.bookmarks.rootGuid}' AND
-                          parent = 0) AND
-             (SELECT COUNT(*) FROM moz_bookmarks b
-              JOIN moz_bookmarks p ON p.id = b.parent
-              WHERE b.guid IN (${PlacesUtils.bookmarks.userContentRoots.map(
-                v => `'${v}'`
-              )}) AND
-                    p.guid = '${PlacesUtils.bookmarks.rootGuid}') =
-             ${PlacesUtils.bookmarks.userContentRoots.length} AS areValid`);
-    return !!rows[0].getResultByName("areValid");
   }
 
   /**

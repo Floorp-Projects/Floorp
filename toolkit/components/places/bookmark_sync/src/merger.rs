@@ -131,7 +131,7 @@ struct MergeTask {
     weak_uploads: Vec<nsString>,
     progress: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>>,
     callback: ThreadPtrHandle<mozISyncedBookmarksMirrorCallback>,
-    result: AtomicRefCell<error::Result<()>>,
+    result: AtomicRefCell<error::Result<store::ApplyStatus>>,
 }
 
 impl MergeTask {
@@ -200,22 +200,18 @@ impl Task for MergeTask {
             &self.weak_uploads,
         );
         *self.result.borrow_mut() = store
-            .prepare()
+            .validate()
+            .and_then(|_| store.prepare())
             .and_then(|_| store.merge_with_driver(&driver, &*self.controller));
     }
 
     fn done(&self) -> Result<(), nsresult> {
         let callback = self.callback.get().unwrap();
         match mem::replace(&mut *self.result.borrow_mut(), Err(error::Error::DidNotRun)) {
-            Ok(()) => unsafe { callback.HandleSuccess() },
+            Ok(status) => unsafe { callback.HandleSuccess(status.into()) },
             Err(err) => {
-                let message = {
-                    let mut message = nsString::new();
-                    match write!(message, "{}", err) {
-                        Ok(_) => message,
-                        Err(_) => nsString::from("Merge failed with unknown error"),
-                    }
-                };
+                let mut message = nsString::new();
+                write!(message, "{}", err).unwrap();
                 unsafe { callback.HandleError(err.into(), &*message) }
             }
         }

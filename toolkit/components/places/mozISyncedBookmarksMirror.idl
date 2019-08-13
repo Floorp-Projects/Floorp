@@ -33,7 +33,7 @@ interface mozISyncedBookmarksMirrorProgressListener : nsISupports {
 // A callback called when the merge finishes.
 [scriptable, uuid(d23fdfea-92c8-409d-a516-08ae395d578f)]
 interface mozISyncedBookmarksMirrorCallback : nsISupports {
-  void handleSuccess();
+  void handleSuccess(in bool result);
   void handleError(in nsresult code, in AString message);
 };
 
