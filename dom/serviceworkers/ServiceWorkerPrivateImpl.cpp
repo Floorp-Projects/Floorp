@@ -388,6 +388,34 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   return NS_OK;
 }
 
+RefPtr<GenericPromise> ServiceWorkerPrivateImpl::SetSkipWaitingFlag() {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mOuter);
+  MOZ_ASSERT(mOuter->mInfo);
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+  if (!swm) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> regInfo =
+      swm->GetRegistration(mOuter->mInfo->Principal(), mOuter->mInfo->Scope());
+
+  if (!regInfo) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  mOuter->mInfo->SetSkipWaitingFlag();
+
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+
+  regInfo->TryToActivateAsync([promise] { promise->Resolve(true, __func__); });
+
+  return promise;
+}
+
 nsresult ServiceWorkerPrivateImpl::RefreshRemoteWorkerData(
     const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration) {
   AssertIsOnMainThread();

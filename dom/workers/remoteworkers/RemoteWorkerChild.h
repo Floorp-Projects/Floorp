@@ -63,7 +63,7 @@ class RemoteWorkerChild final
 
   RefPtr<GenericNonExclusivePromise> GetTerminationPromise();
 
-  void CloseWorkerOnMainThread();
+  RefPtr<GenericPromise> MaybeSendSetServiceWorkerSkipWaitingFlag();
 
  private:
   class InitializeWorkerRunnable;

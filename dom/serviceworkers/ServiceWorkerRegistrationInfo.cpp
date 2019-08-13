@@ -294,22 +294,30 @@ ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId) {
   return serviceWorker.forget();
 }
 
-void ServiceWorkerRegistrationInfo::TryToActivateAsync() {
+void ServiceWorkerRegistrationInfo::TryToActivateAsync(
+    TryToActivateCallback&& aCallback) {
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-      NewRunnableMethod("ServiceWorkerRegistrationInfo::TryToActivate", this,
-                        &ServiceWorkerRegistrationInfo::TryToActivate)));
+      NewRunnableMethod<StoreCopyPassByRRef<TryToActivateCallback>>(
+          "ServiceWorkerRegistrationInfo::TryToActivate", this,
+          &ServiceWorkerRegistrationInfo::TryToActivate,
+          std::move(aCallback))));
 }
 
 /*
  * TryToActivate should not be called directly, use TryToActivateAsync instead.
  */
-void ServiceWorkerRegistrationInfo::TryToActivate() {
+void ServiceWorkerRegistrationInfo::TryToActivate(
+    TryToActivateCallback&& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   bool controlling = IsControllingClients();
   bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
   bool idle = IsIdle();
   if (idle && (!controlling || skipWaiting)) {
     Activate();
+  }
+
+  if (aCallback) {
+    aCallback();
   }
 }
 

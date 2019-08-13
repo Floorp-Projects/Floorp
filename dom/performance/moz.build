@@ -42,6 +42,8 @@ UNIFIED_SOURCES += [
     'PerformanceWorker.cpp',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
 
 FINAL_LIBRARY = 'xul'

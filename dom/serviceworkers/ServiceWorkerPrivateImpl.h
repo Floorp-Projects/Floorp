@@ -52,6 +52,8 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
 
   nsresult Initialize();
 
+  RefPtr<GenericPromise> SetSkipWaitingFlag();
+
  private:
   class RAIIActorPtrHolder;
 

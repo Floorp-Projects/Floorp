@@ -165,5 +165,22 @@ void RemoteWorkerParent::SetController(RemoteWorkerController* aController) {
   mController = aController;
 }
 
+IPCResult RemoteWorkerParent::RecvSetServiceWorkerSkipWaitingFlag(
+    SetServiceWorkerSkipWaitingFlagResolver&& aResolve) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mController) {
+    mController->SetServiceWorkerSkipWaitingFlag()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [resolve = aResolve](bool /* unused */) { resolve(true); },
+        [resolve = aResolve](nsresult /* unused */) { resolve(false); });
+  } else {
+    aResolve(false);
+  }
+
+  return IPC_OK();
+}
+
 }  // namespace dom
 }  // namespace mozilla

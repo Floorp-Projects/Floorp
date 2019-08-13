@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/dom/serviceworkers',
     '/xpcom/build',
 ]
 
