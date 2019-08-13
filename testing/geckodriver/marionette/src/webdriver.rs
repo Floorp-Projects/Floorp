@@ -108,6 +108,12 @@ pub enum Command {
     ElementClear(LegacyWebElement),
     #[serde(rename = "WebDriver:ElementClick")]
     ElementClick(LegacyWebElement),
+    #[serde(rename = "WebDriver:ElementSendKeys")]
+    ElementSendKeys {
+        id: String,
+        text: String,
+        value: Vec<String>,
+    },
     #[serde(rename = "WebDriver:ExecuteAsyncScript")]
     ExecuteAsyncScript(Script),
     #[serde(rename = "WebDriver:ExecuteScript")]
