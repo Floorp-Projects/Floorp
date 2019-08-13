@@ -7,6 +7,7 @@
 #include "MediaFormatReader.h"
 
 #include "AllocationPolicy.h"
+#include "DecoderBenchmark.h"
 #include "GeckoProfiler.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
@@ -416,6 +417,10 @@ void MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData) {
                 ownerData.mDecoder.get());
             mOwner->SetVideoDecodeThreshold();
             mOwner->ScheduleUpdate(aTrack);
+            if (aTrack == TrackInfo::kVideoTrack) {
+              DecoderBenchmark::CheckVersion(
+                  ownerData.GetCurrentInfo()->mMimeType);
+            }
           },
           [this, &aData, &ownerData](const MediaResult& aError) {
             aData.mInitRequest.Complete();
