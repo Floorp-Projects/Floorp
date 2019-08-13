@@ -109,6 +109,9 @@ fn make_shared_flags(env_flags: &Option<EnvVariableFlags>) -> settings::SetResul
     //
     sb.set("baldrdash_prologue_words", "3")?;
 
+    // Make sure that libcalls use the supplementary VMContext argument.
+    sb.set("libcall_call_conv", "baldrdash")?;
+
     // Assembler::PatchDataWithValueCheck expects -1 stored where a function address should be
     // patched in.
     sb.enable("allones_funcaddrs")?;
