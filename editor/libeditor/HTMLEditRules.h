@@ -192,12 +192,6 @@ class HTMLEditRules : public TextEditRules {
                                        int32_t aMaxLength);
 
   /**
-   * WillLoadHTML() is called before loading enter document from source.
-   * This removes padding <br> element for empty editor if there is.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillLoadHTML();
-
-  /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is
    * executed or something equivalent.  This method actually tries to insert
    * new paragraph or <br> element, etc.

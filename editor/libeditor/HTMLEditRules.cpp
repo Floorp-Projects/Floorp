@@ -715,8 +715,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString, aInfo.maxLength);
-    case EditSubAction::eInsertHTMLSource:
-      return WillLoadHTML();
     case EditSubAction::eInsertParagraphSeparator: {
       UndefineCaretBidiLevel();
       EditActionResult result = WillInsertParagraphSeparator();
@@ -773,6 +771,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
     case EditSubAction::eIncreaseZIndex:
       return WillRelativeChangeZIndex(1, aCancel, aHandled);
+    case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -813,6 +812,7 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText:
       return NS_OK;
+    case EditSubAction::eInsertHTMLSource:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
       MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
@@ -1663,29 +1663,6 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::WillLoadHTML() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // Delete mPaddingBRElementForEmptyEditor if it exists. If we really
-  // need one, it will be added during post-processing in AfterEditInner().
-  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
-    // A mutation event listener may recreate padding <br> element for empty
-    // editor again during the call of DeleteNodeWithTransaction().  So, move
-    // it first.
-    RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(HTMLEditorRef().mPaddingBRElementForEmptyEditor));
-    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
-                                 .DeleteNodeWithTransaction(*paddingBRElement);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to remove the padding <br> element");
-  }
-
   return NS_OK;
 }
 
