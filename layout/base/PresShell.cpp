@@ -1038,9 +1038,9 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
   mFontSizeInflationLineThreshold =
       StaticPrefs::font_size_inflation_lineThreshold();
   mFontSizeInflationForceEnabled =
-      nsLayoutUtils::FontSizeInflationForceEnabled();
+      StaticPrefs::font_size_inflation_forceEnabled();
   mFontSizeInflationDisabledInMasterProcess =
-      nsLayoutUtils::FontSizeInflationDisabledInMasterProcess();
+      StaticPrefs::font_size_inflation_disabledInMasterProcess();
   // We'll compute the font size inflation state in Initialize(), when we know
   // the document type.
 
