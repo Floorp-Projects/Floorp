@@ -12,7 +12,6 @@
 #include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
-#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsPrimitives.h"
@@ -198,41 +197,6 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Update(ErrorResult& aRv) {
   RefPtr<Promise> outer = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
-  }
-
-  /**
-   * `ServiceWorker` objects are not exposed on worker threads yet, so calling
-   * `ServiceWorkerRegistration::Get{Installing,Waiting,Active}` won't work.
-   */
-  const bool hasNewestWorker = mDescriptor.GetInstalling() ||
-                               mDescriptor.GetWaiting() ||
-                               mDescriptor.GetActive();
-
-  /**
-   * If newestWorker is null, return a promise rejected with an
-   * "InvalidStateError" DOMException and abort these steps.
-   */
-  if (!hasNewestWorker) {
-    outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return outer.forget();
-  }
-
-  /**
-   * If the context object’s relevant settings object’s global object
-   * globalObject is a ServiceWorkerGlobalScope object, and globalObject’s
-   * associated service worker's state is "installing", return a promise
-   * rejected with an "InvalidStateError" DOMException and abort these steps.
-   */
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-
-    if (workerPrivate->IsServiceWorker() &&
-        (workerPrivate->GetServiceWorkerDescriptor().State() ==
-         ServiceWorkerState::Installing)) {
-      outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return outer.forget();
-    }
   }
 
   RefPtr<ServiceWorkerRegistration> self = this;
