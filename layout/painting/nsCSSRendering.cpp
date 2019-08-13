@@ -3746,7 +3746,7 @@ static bool GetSkFontFromGfxFont(DrawTarget& aDrawTarget, gfxFont* aFont,
 // SkTextBlob, data is returned through aTextPos and aBounds
 static void GetPositioning(
     const nsCSSRendering::PaintDecorationLineParams& aParams, const Rect& aRect,
-    SkScalar aBounds[], SkPoint& aTextPos) {
+    Float aOneCSSPixel, SkScalar aBounds[], SkPoint& aTextPos) {
   // the upper and lower lines/edges of the under or over line
   SkScalar upperLine, lowerLine;
 
@@ -3766,11 +3766,14 @@ static void GetPositioning(
   }
 
   // set up the bounds, add in a little padding to the thickness of the line
-  // (unless the line is <= 1px thick)
-  Float linePadding =
-      aParams.lineSize.height > 1 ? 0.25f * aParams.lineSize.height : 0;
-  aBounds[0] = upperLine - linePadding;
-  aBounds[1] = lowerLine + linePadding;
+  // (unless the line is <= 1 CSS pixel thick)
+  Float lineThicknessPadding = aParams.lineSize.height > aOneCSSPixel
+                                   ? 0.25f * aParams.lineSize.height
+                                   : 0;
+  // don't allow padding greater than 0.75 CSS pixel
+  lineThicknessPadding = std::min(lineThicknessPadding, 0.75f * aOneCSSPixel);
+  aBounds[0] = upperLine - lineThicknessPadding;
+  aBounds[1] = lowerLine + lineThicknessPadding;
 }
 
 // positions an individual glyph according to the given offset
@@ -4030,7 +4033,8 @@ void nsCSSRendering::PaintDecorationLine(
   // get positioning info
   SkPoint textPos = {0, 0};
   SkScalar bounds[] = {0, 0};
-  GetPositioning(aParams, rect, bounds, textPos);
+  Float oneCSSPixel = aFrame->PresContext()->CSSPixelsToDevPixels(1.0f);
+  GetPositioning(aParams, rect, oneCSSPixel, bounds, textPos);
 
   // array for the text intercepts
   nsTArray<SkScalar> intercepts;
