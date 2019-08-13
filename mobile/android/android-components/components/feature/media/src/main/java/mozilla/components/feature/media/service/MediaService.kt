@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -36,7 +37,7 @@ internal class MediaService : Service() {
     private val logger = Logger("MediaService")
     private val notification = MediaNotification(this)
     private val mediaSession by lazy { MediaSessionCompat(this, "MozacMedia") }
-    private val audioFocus = AudioFocus(this)
+    private val audioFocus by lazy { AudioFocus(getSystemService(Context.AUDIO_SERVICE) as AudioManager) }
 
     override fun onCreate() {
         super.onCreate()
@@ -102,6 +103,7 @@ internal class MediaService : Service() {
     }
 
     private fun shutdown() {
+        audioFocus.abandon()
         mediaSession.release()
         stopSelf()
     }
