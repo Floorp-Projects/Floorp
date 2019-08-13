@@ -15,12 +15,12 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 == no-scalable-with-minimum-scale.html no-scalable-with-minimum-scale-ref.html
 == clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html
 == position-fixed-on-half-height-content.html position-fixed-on-half-height-content-ref.html
-fails == position-fixed-on-landscape-content.html position-fixed-on-half-height-content-ref.html
-fails == position-fixed-on-square-content.html position-fixed-on-square-content-ref.html
-fails == async-scroll-to-no-content-area.html async-scroll-to-no-content-area-ref.html
-fails == resolution-change-on-landscape-content.html resolution-change-on-landscape-content-ref.html
+pref(layout.viewport_contains_no_contents_area,true) == position-fixed-on-landscape-content.html position-fixed-on-half-height-content-ref.html
+pref(layout.viewport_contains_no_contents_area,true) == position-fixed-on-square-content.html position-fixed-on-square-content-ref.html
+pref(layout.viewport_contains_no_contents_area,true) fails-if(webrender) == async-scroll-to-no-content-area.html async-scroll-to-no-content-area-ref.html # bug 1571623 to track down the failure on WebRender
+pref(layout.viewport_contains_no_contents_area,true) == resolution-change-on-landscape-content.html resolution-change-on-landscape-content-ref.html
 == scrollbars-in-half-height-content.html scrollbars-in-half-height-content-ref.html
-fails-if(usesOverlayScrollbars) == scrollbars-in-landscape-content.html scrollbars-in-landscape-content-ref.html
+pref(layout.viewport_contains_no_contents_area,true) fails-if(usesOverlayScrollbars) == scrollbars-in-landscape-content.html scrollbars-in-landscape-content-ref.html
 
 skip-if(!Android) fails-if(geckoview&&webrender) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
 == position-fixed-out-of-view.html about:blank
@@ -28,13 +28,13 @@ skip-if(!Android) fails-if(geckoview&&webrender) == position-fixed-on-minimum-sc
 == overflow-region.html overflow-region-ref.html
 == overflow-hidden-region.html overflow-region-ref.html
 == overflow-hidden-region-with-negative-left-positioned-element.html overflow-region-ref.html
-fails == horizontal-overflow-hidden-region.html horizontal-overflow-hidden-region-ref.html # bug 1508177
+pref(layout.viewport_contains_no_contents_area,true) == horizontal-overflow-hidden-region.html horizontal-overflow-hidden-region-ref.html
 == vertical-overflow-hidden-region.html about:blank
 == scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
 == wrapped-text-at-icb.html wrapped-text-at-icb-ref.html
 == overflow-hidden-region-dynamic-width-change.html overflow-region-ref.html
 == remove-overflow-hidden-region.html remove-overflow-hidden-region-ref.html
-fails == dynamic-grow-width.html horizontal-overflow-hidden-region-ref.html # bug 1508177
+pref(layout.viewport_contains_no_contents_area,true) == dynamic-grow-width.html horizontal-overflow-hidden-region-ref.html
 == dynamic-grow-width-and-height.html overflow-region-ref.html
 == not-able-to-scrollTo.html about:blank
 == min-scale-aspect-ratio.html about:blank

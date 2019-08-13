@@ -5858,11 +5858,12 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   mMinimumScaleSize = CSSSize::ToAppUnits(ScreenSize(displaySize) / minScale);
 
   // Clamp the min-scale size so it's not taller than the content height.
-  // TODO: Bug 1508177: We can drop this condition once after we shrink the
-  // content even if no content area gets visible.
-  mMinimumScaleSize =
-      Min(mMinimumScaleSize,
-          nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
+  // TODO: Bug 1571599: Drop this check.
+  if (!StaticPrefs::layout_viewport_contains_no_contents_area()) {
+    mMinimumScaleSize =
+        Min(mMinimumScaleSize,
+            nsSize(aScrollableOverflow.XMost(), aScrollableOverflow.YMost()));
+  }
 
   // Ensure the minimum-scale size is never smaller than the ICB size.
   // That could happen if a page has a meta viewport tag with large explicitly
