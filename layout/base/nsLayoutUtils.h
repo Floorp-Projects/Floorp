@@ -2371,11 +2371,6 @@ class nsLayoutUtils {
   static bool AreAsyncAnimationsEnabled();
 
   /**
-   * Checks if we should warn about animations that can't be async
-   */
-  static bool IsAnimationLoggingEnabled();
-
-  /**
    * Checks if retained display lists are enabled.
    */
   static bool AreRetainedDisplayListsEnabled();

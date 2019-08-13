@@ -517,31 +517,8 @@ Size nsLayoutUtils::ComputeSuitableScaleForAnimation(
 }
 
 bool nsLayoutUtils::AreAsyncAnimationsEnabled() {
-  static bool sAreAsyncAnimationsEnabled;
-  static bool sAsyncPrefCached = false;
-
-  if (!sAsyncPrefCached) {
-    sAsyncPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sAreAsyncAnimationsEnabled,
-        "layers.offmainthreadcomposition.async-animations");
-  }
-
-  return sAreAsyncAnimationsEnabled &&
+  return StaticPrefs::layers_offmainthreadcomposition_async_animations() &&
          gfxPlatform::OffMainThreadCompositingEnabled();
-}
-
-bool nsLayoutUtils::IsAnimationLoggingEnabled() {
-  static bool sShouldLog;
-  static bool sShouldLogPrefCached;
-
-  if (!sShouldLogPrefCached) {
-    sShouldLogPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sShouldLog, "layers.offmainthreadcomposition.log-animations");
-  }
-
-  return sShouldLog;
 }
 
 bool nsLayoutUtils::AreRetainedDisplayListsEnabled() {

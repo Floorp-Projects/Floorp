@@ -4785,12 +4785,6 @@ pref("layers.tiles.edge-padding", true);
 pref("layers.tiles.edge-padding", false);
 #endif
 
-// Whether to animate simple opacity and transforms on the compositor
-pref("layers.offmainthreadcomposition.async-animations", true);
-
-// Whether to log information about off main thread animations to stderr
-pref("layers.offmainthreadcomposition.log-animations", false);
-
 pref("layers.draw-mask-debug", false);
 
 pref("gfx.content.always-paint", false);
