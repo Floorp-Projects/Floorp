@@ -2,6 +2,9 @@ const { FilterExpressions } = ChromeUtils.import(
   "resource://gre/modules/components-utils/FilterExpressions.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -42,6 +45,12 @@ ChromeUtils.defineModuleGetter(
   this,
   "AttributionCode",
   "resource:///modules/AttributionCode.jsm"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "UpdateManager",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
 );
 
 const FXA_USERNAME_PREF = "services.sync.username";
@@ -206,6 +215,35 @@ function sortMessagesByTargeting(messages) {
   });
 }
 
+/**
+ * Sort messages in descending order based on the value of `priority`
+ * Messages with no `priority` are ranked lowest (even after a message with
+ * priority 0).
+ */
+function sortMessagesByPriority(messages) {
+  return messages.sort((a, b) => {
+    if (isNaN(a.priority) && isNaN(b.priority)) {
+      return 0;
+    }
+    if (!isNaN(a.priority) && isNaN(b.priority)) {
+      return -1;
+    }
+    if (isNaN(a.priority) && !isNaN(b.priority)) {
+      return 1;
+    }
+
+    // Descending order; higher priority comes first
+    if (a.priority > b.priority) {
+      return -1;
+    }
+    if (a.priority < b.priority) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
 const TargetingGetters = {
   get locale() {
     return Services.locale.appLocaleAsLangTag;
@@ -359,6 +397,28 @@ const TargetingGetters = {
 
     return false;
   },
+  get hasAccessedFxAPanel() {
+    return Services.prefs.getBoolPref(
+      "identity.fxaccounts.toolbar.accessed",
+      true
+    );
+  },
+  get isWhatsNewPanelEnabled() {
+    return Services.prefs.getBoolPref(
+      "browser.messaging-system.whatsNewPanel.enabled",
+      false
+    );
+  },
+  get earliestFirefoxVersion() {
+    if (UpdateManager.updateCount) {
+      const earliestFirefoxVersion = UpdateManager.getUpdateAt(
+        UpdateManager.updateCount - 1
+      ).previousAppVersion;
+      return parseInt(earliestFirefoxVersion.match(/\d+/), 10);
+    }
+
+    return null;
+  },
 };
 
 this.ASRouterTargeting = {
@@ -465,7 +525,8 @@ this.ASRouterTargeting = {
    */
   async findMatchingMessage({ messages, trigger, context, onError }) {
     const weightSortedMessages = sortMessagesByWeightedRank([...messages]);
-    const sortedMessages = sortMessagesByTargeting(weightSortedMessages);
+    let sortedMessages = sortMessagesByTargeting(weightSortedMessages);
+    sortedMessages = sortMessagesByPriority(sortedMessages);
     const triggerContext = trigger ? trigger.context : {};
     const combinedContext = this.combineContexts(context, triggerContext);
 
