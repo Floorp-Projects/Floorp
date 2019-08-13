@@ -1398,3 +1398,11 @@ JS_FRIEND_API JS::Value js::MaybeGetScriptPrivate(JSObject* object) {
 JS_FRIEND_API uint64_t js::GetGCHeapUsageForObjectZone(JSObject* obj) {
   return obj->zone()->zoneSize.gcBytes();
 }
+
+#ifdef DEBUG
+JS_FRIEND_API bool js::RuntimeIsBeingDestroyed() {
+  JSRuntime* runtime = TlsContext.get()->runtime();
+  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime));
+  return runtime->isBeingDestroyed();
+}
+#endif

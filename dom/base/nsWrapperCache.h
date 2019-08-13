@@ -106,7 +106,10 @@ class nsWrapperCache {
     if (mozilla::recordreplay::IsReplaying()) {
       mozilla::recordreplay::SetWeakPointerJSRoot(this, nullptr);
     }
-    MOZ_ASSERT(!PreservingWrapper(),
+    // Preserved wrappers should never end up getting cleared, but this can
+    // happen during shutdown when a leaked wrapper object is finalized, causing
+    // its wrapper to be cleared.
+    MOZ_ASSERT(!PreservingWrapper() || js::RuntimeIsBeingDestroyed(),
                "Destroying cache with a preserved wrapper!");
   }
 
@@ -183,7 +186,11 @@ class nsWrapperCache {
    * Clear the cache.
    */
   void ClearWrapper() {
-    MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
+    // Preserved wrappers should never end up getting cleared, but this can
+    // happen during shutdown when a leaked wrapper object is finalized, causing
+    // its wrapper to be cleared.
+    MOZ_ASSERT(!PreservingWrapper() || js::RuntimeIsBeingDestroyed(),
+               "Clearing a preserved wrapper!");
     SetWrapperJSObject(nullptr);
   }
 

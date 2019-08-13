@@ -37,6 +37,7 @@ struct TaggedPtr<JS::Value> {
                   "Type must be a GC thing derived from js::gc::Cell");
     return JS::PrivateGCThingValue(priv);
   }
+  static JS::Value empty() { return JS::UndefinedValue(); }
 };
 
 template <>
@@ -45,11 +46,13 @@ struct TaggedPtr<jsid> {
     return NON_INTEGER_ATOM_TO_JSID(&str->asAtom());
   }
   static jsid wrap(JS::Symbol* sym) { return SYMBOL_TO_JSID(sym); }
+  static jsid empty() { return JSID_VOID; }
 };
 
 template <>
 struct TaggedPtr<TaggedProto> {
   static TaggedProto wrap(JSObject* obj) { return TaggedProto(obj); }
+  static TaggedProto empty() { return TaggedProto(); }
 };
 
 template <typename T>

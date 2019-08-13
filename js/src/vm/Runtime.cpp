@@ -267,14 +267,14 @@ void JSRuntime::destroyRuntime() {
     CancelOffThreadParses(this);
     CancelOffThreadCompressions(this);
 
-    /* Remove persistent GC roots. */
-    gc.finishRoots();
-
     /*
      * Flag us as being destroyed. This allows the GC to free things like
      * interned atoms and Ion trampolines.
      */
     beingDestroyed_ = true;
+
+    /* Remove persistent GC roots. */
+    gc.finishRoots();
 
     /* Allow the GC to release scripts that were being profiled. */
     profilingScripts = false;

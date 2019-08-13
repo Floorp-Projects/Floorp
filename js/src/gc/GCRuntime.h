@@ -371,6 +371,7 @@ class GCRuntime {
   void setGrayRootsTracer(JSTraceDataOp traceOp, void* data);
   MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
   void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
+  void clearBlackAndGrayRootTracers();
 
   void updateMemoryCountersOnGCStart();
 
@@ -612,6 +613,9 @@ class GCRuntime {
   void traceRuntimeAtoms(JSTracer* trc, const AutoAccessAtomsZone& atomsAccess);
   void traceKeptAtoms(JSTracer* trc);
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
+  void traceEmbeddingBlackRoots(JSTracer* trc);
+  void traceEmbeddingGrayRoots(JSTracer* trc);
+  void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
   void markCompartments();
   IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,

@@ -1132,13 +1132,12 @@ void DispatchOffThreadTask(RunnableTask* task) {
 }
 
 void XPCJSRuntime::Shutdown(JSContext* cx) {
-  // This destructor runs before ~CycleCollectedJSContext, which does the
-  // actual JS_DestroyContext() call. But destroying the context triggers
-  // one final GC, which can call back into the context with various
-  // callbacks if we aren't careful. Null out the relevant callbacks.
+  // This destructor runs before ~CycleCollectedJSContext, which does the actual
+  // JS_DestroyContext() call. But destroying the context triggers one final GC,
+  // which can call back into the context with various callbacks if we aren't
+  // careful. Remove the relevant callbacks, but leave the weak pointer
+  // callbacks to clear out any remaining table entries.
   JS_RemoveFinalizeCallback(cx, FinalizeCallback);
-  JS_RemoveWeakPointerZonesCallback(cx, WeakPointerZonesCallback);
-  JS_RemoveWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback);
   xpc_DelocalizeRuntime(JS_GetRuntime(cx));
 
   JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
@@ -1147,11 +1146,8 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
   gHelperThreads->Shutdown();
   gHelperThreads = nullptr;
 
-  // clean up and destroy maps...
-  mWrappedJSMap->ShutdownMarker();
-  delete mWrappedJSMap;
-  mWrappedJSMap = nullptr;
-
+  // Clean up and destroy maps. Any remaining entries in mWrappedJSMap will be
+  // cleaned up by the weak pointer callbacks.
   delete mIID2NativeInterfaceMap;
   mIID2NativeInterfaceMap = nullptr;
 
@@ -1172,6 +1168,7 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
 
 XPCJSRuntime::~XPCJSRuntime() {
   MOZ_COUNT_DTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);
+  delete mWrappedJSMap;
 }
 
 // If |*anonymizeID| is non-zero and this is a user realm, the name will
