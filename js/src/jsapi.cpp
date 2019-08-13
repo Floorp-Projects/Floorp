@@ -659,15 +659,20 @@ static void ReleaseAssertObjectHasNoWrappers(JSContext* cx,
  * we intentionally crash instead.
  */
 
+static void CheckTransplantObject(JSObject* obj) {
+#ifdef DEBUG
+  MOZ_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
+  JS::AssertCellIsNotGray(obj);
+#endif
+}
+
 JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
                                             HandleObject target) {
   AssertHeapIsIdle();
   MOZ_ASSERT(origobj != target);
-  MOZ_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
-  MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
+  CheckTransplantObject(origobj);
+  CheckTransplantObject(target);
   ReleaseAssertObjectHasNoWrappers(cx, target);
-  JS::AssertCellIsNotGray(origobj);
-  JS::AssertCellIsNotGray(target);
 
   RootedObject newIdentity(cx);
 
