@@ -17,10 +17,19 @@
 
 main {
   margin: auto;
+  width: $wrapper-default-width;
   // Offset the snippets container so things at the bottom of the page are still
   // visible when snippets are visible. Adjust for other spacing.
   padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
-  width: $wrapper-default-width;
+
+  section {
+    margin-bottom: $section-spacing;
+    position: relative;
+  }
+
+  .hide-main & {
+    visibility: hidden;
+  }
 
   @media (min-width: $break-point-medium) {
     width: $wrapper-max-width-medium;
@@ -34,15 +43,11 @@ main {
     width: $wrapper-max-width-widest;
   }
 
-  section {
-    margin-bottom: $section-spacing;
-    position: relative;
-  }
+}
 
-  .hide-main & {
-    visibility: hidden;
-  }
-
+.below-search-snippet.withButton {
+  margin: auto;
+  width: 100%;
 }
 
 .ds-outer-wrapper-search-alignment {

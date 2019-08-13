@@ -171,36 +171,38 @@ export class SimpleSnippet extends React.PureComponent {
     }
 
     return (
-      <SnippetBase
-        {...props}
-        className={className}
-        textStyle={this.props.textStyle}
-      >
-        {sectionHeader}
-        <ConditionalWrapper
-          condition={sectionHeader}
-          wrap={this.wrapSnippetContent}
+      <div className="snippet-hover-wrapper">
+        <SnippetBase
+          {...props}
+          className={className}
+          textStyle={this.props.textStyle}
         >
-          <img
-            src={safeURI(props.content.icon) || DEFAULT_ICON_PATH}
-            className="icon icon-light-theme"
-            alt={props.content.icon_alt_text || ICON_ALT_TEXT}
-          />
-          <img
-            src={
-              safeURI(props.content.icon_dark_theme || props.content.icon) ||
-              DEFAULT_ICON_PATH
-            }
-            className="icon icon-dark-theme"
-            alt={props.content.icon_alt_text || ICON_ALT_TEXT}
-          />
-          <div>
-            {this.renderTitle()} <p className="body">{this.renderText()}</p>
-            {this.props.extraContent}
-          </div>
-          {<div>{this.renderButton()}</div>}
-        </ConditionalWrapper>
-      </SnippetBase>
+          {sectionHeader}
+          <ConditionalWrapper
+            condition={sectionHeader}
+            wrap={this.wrapSnippetContent}
+          >
+            <img
+              src={safeURI(props.content.icon) || DEFAULT_ICON_PATH}
+              className="icon icon-light-theme"
+              alt={props.content.icon_alt_text || ICON_ALT_TEXT}
+            />
+            <img
+              src={
+                safeURI(props.content.icon_dark_theme || props.content.icon) ||
+                DEFAULT_ICON_PATH
+              }
+              className="icon icon-dark-theme"
+              alt={props.content.icon_alt_text || ICON_ALT_TEXT}
+            />
+            <div>
+              {this.renderTitle()} <p className="body">{this.renderText()}</p>
+              {this.props.extraContent}
+            </div>
+            {<div>{this.renderButton()}</div>}
+          </ConditionalWrapper>
+        </SnippetBase>
+      </div>
     );
   }
 }

@@ -198,7 +198,7 @@ for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM
 
 const ASRouterActions = {};
 
-for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_APPLICATIONS_MENU", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PREFERENCES_PAGE", "SHOW_FIREFOX_ACCOUNTS", "PIN_CURRENT_TAB"]) {
+for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_APPLICATIONS_MENU", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PREFERENCES_PAGE", "SHOW_FIREFOX_ACCOUNTS", "PIN_CURRENT_TAB", "ENABLE_FIREFOX_MONITOR"]) {
   ASRouterActions[type] = type;
 } // Helper function for creating routed actions between content and main
 // Not intended to be used by consumers
@@ -1724,6 +1724,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _templates_Trailhead_Trailhead__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(25);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
 
@@ -1863,6 +1866,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     this.sendClick = this.sendClick.bind(this);
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
+    this.onUserAction = this.onUserAction.bind(this);
     this.state = {
       message: {},
       bundle: {}
@@ -1872,6 +1876,63 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       this.headerPortal = props.document.getElementById("header-asrouter-container");
       this.footerPortal = props.document.getElementById("footer-asrouter-container");
     }
+  }
+
+  async fetchFlowParams(params = {}) {
+    let result = {};
+    const {
+      fxaEndpoint,
+      dispatch
+    } = this.props;
+
+    if (!fxaEndpoint) {
+      const err = "Tried to fetch flow params before fxaEndpoint pref was ready";
+      console.error(err); // eslint-disable-line no-console
+    }
+
+    try {
+      const urlObj = new URL(fxaEndpoint);
+      urlObj.pathname = "metrics-flow";
+      Object.keys(params).forEach(key => {
+        urlObj.searchParams.append(key, params[key]);
+      });
+      const response = await fetch(urlObj.toString(), {
+        credentials: "omit"
+      });
+
+      if (response.status === 200) {
+        const {
+          deviceId,
+          flowId,
+          flowBeginTime
+        } = await response.json();
+        result = {
+          deviceId,
+          flowId,
+          flowBeginTime
+        };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+
+        dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+          type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT,
+          data: {
+            event: "FXA_METRICS_FETCH_ERROR",
+            value: response.status
+          }
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+      dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+        type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT,
+        data: {
+          event: "FXA_METRICS_ERROR"
+        }
+      }));
+    }
+
+    return result;
   }
 
   sendUserActionTelemetry(extraProps = {}) {
@@ -2071,6 +2132,39 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
+  async getMonitorUrl({
+    url,
+    flowRequestParams = {}
+  }) {
+    const flowValues = await this.fetchFlowParams(flowRequestParams); // Note that flowParams are actually added dynamically on the page
+
+    const urlObj = new URL(url);
+    ["deviceId", "flowId", "flowBeginTime"].forEach(key => {
+      if (key in flowValues) {
+        urlObj.searchParams.append(key, flowValues[key]);
+      }
+    });
+    return urlObj.toString();
+  }
+
+  async onUserAction(action) {
+    switch (action.type) {
+      // This needs to be handled locally because its
+      case common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["ASRouterActions"].ENABLE_FIREFOX_MONITOR:
+        const url = await this.getMonitorUrl(action.data.args);
+        ASRouterUtils.executeAction({
+          type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["ASRouterActions"].OPEN_URL,
+          data: {
+            args: url
+          }
+        });
+        break;
+
+      default:
+        ASRouterUtils.executeAction(action);
+    }
+  }
+
   renderSnippets() {
     if (this.state.bundle.template === "onboarding" || this.state.message.template === "fxa_overlay" || this.state.message.template === "return_to_amo_overlay" || this.state.message.template === "trailhead") {
       return null;
@@ -2093,7 +2187,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       UISurface: "NEWTAB_FOOTER_BAR",
       onBlock: this.onBlockById(this.state.message.id),
       onDismiss: this.onDismissById(this.state.message.id),
-      onAction: ASRouterUtils.executeAction,
+      onAction: this.onUserAction,
       sendClick: this.sendClick,
       sendUserActionTelemetry: this.sendUserActionTelemetry
     }))));
@@ -2188,7 +2282,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
     const shouldRenderInHeader = TEMPLATES_ABOVE_PAGE.includes(message.template);
     return shouldRenderBelowSearch ? // Render special below search snippets in place;
     react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
-      className: "below-search-snippet"
+      className: "below-search-snippet-wrapper"
     }, this.renderSnippets()) : // For onboarding, regular snippets etc. we should render
     // everything in our footer container.
     react_dom__WEBPACK_IMPORTED_MODULE_8___default.a.createPortal(react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_7___default.a.Fragment, null, this.renderPreviewBanner(), this.renderTrailhead(), this.renderFirstRunOverlay(), this.renderOnboarding(), this.renderSnippets()), shouldRenderInHeader ? this.headerPortal : this.footerPortal);
@@ -2867,7 +2961,7 @@ module.exports = {"title":"EOYSnippet","description":"Fundraising Snippet","vers
 /* 19 */
 /***/ (function(module) {
 
-module.exports = {"title":"SimpleSnippet","description":"A simple template with an icon, text, and optional button.","version":"1.1.1","type":"object","definitions":{"plainText":{"description":"Plain text (no HTML allowed)","type":"string"},"richText":{"description":"Text with HTML subset allowed: i, b, u, strong, em, br","type":"string"},"link_url":{"description":"Target for links or buttons","type":"string","format":"uri"}},"properties":{"title":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Snippet title displayed before snippet text"}]},"text":{"allOf":[{"$ref":"#/definitions/richText"},{"description":"Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}]},"icon":{"type":"string","description":"Snippet icon. 64x64px. SVG or PNG preferred."},"icon_dark_theme":{"type":"string","description":"Snippet icon, dark theme variant. 64x64px. SVG or PNG preferred."},"icon_alt_text":{"type":"string","description":"Alt text describing icon for screen readers","default":""},"title_icon":{"type":"string","description":"Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."},"title_icon_dark_theme":{"type":"string","description":"Small icon that shows up before the title / text. Dark theme variant. 16x16px. SVG or PNG preferred. Grayscale."},"title_icon_alt_text":{"type":"string","description":"Alt text describing title icon for screen readers","default":""},"button_action":{"type":"string","description":"The type of action the button should trigger."},"button_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, button_label links to this"}]},"button_action_args":{"type":"string","description":"Additional parameters for button action, example which specific menu the button should open"},"button_label":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Text for a button next to main snippet text that links to button_url. Requires button_url."}]},"button_color":{"type":"string","description":"The text color of the button. Valid CSS color."},"button_background_color":{"type":"string","description":"The background color of the button. Valid CSS color."},"block_button_text":{"type":"string","description":"Tooltip text used for dismiss button.","default":"Remove this"},"tall":{"type":"boolean","description":"To be used by fundraising only, increases height to roughly 120px. Defaults to false."},"do_not_autoblock":{"type":"boolean","description":"Used to prevent blocking the snippet after the CTA (link or button) has been clicked"},"links":{"additionalProperties":{"url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"The url where the link points to."}]},"metric":{"type":"string","description":"Custom event name sent with telemetry event."},"args":{"type":"string","description":"Additional parameters for link action, example which specific menu the button should open"}}},"section_title_icon":{"type":"string","description":"Section title icon. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."},"section_title_icon_dark_theme":{"type":"string","description":"Section title icon, dark theme variant. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."},"section_title_text":{"type":"string","description":"Section title text. section_title_icon must also be specified to display."},"section_title_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, section_title_text links to this"}]}},"additionalProperties":false,"required":["text"],"dependencies":{"button_action":["button_label"],"button_url":["button_label"],"button_color":["button_label"],"button_background_color":["button_label"],"section_title_url":["section_title_text"]}};
+module.exports = {"title":"SimpleSnippet","description":"A simple template with an icon, text, and optional button.","version":"1.1.1","type":"object","definitions":{"plainText":{"description":"Plain text (no HTML allowed)","type":"string"},"richText":{"description":"Text with HTML subset allowed: i, b, u, strong, em, br","type":"string"},"link_url":{"description":"Target for links or buttons","type":"string","format":"uri"}},"properties":{"title":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Snippet title displayed before snippet text"}]},"text":{"allOf":[{"$ref":"#/definitions/richText"},{"description":"Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}]},"icon":{"type":"string","description":"Snippet icon. 64x64px. SVG or PNG preferred."},"icon_dark_theme":{"type":"string","description":"Snippet icon, dark theme variant. 64x64px. SVG or PNG preferred."},"icon_alt_text":{"type":"string","description":"Alt text describing icon for screen readers","default":""},"title_icon":{"type":"string","description":"Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."},"title_icon_dark_theme":{"type":"string","description":"Small icon that shows up before the title / text. Dark theme variant. 16x16px. SVG or PNG preferred. Grayscale."},"title_icon_alt_text":{"type":"string","description":"Alt text describing title icon for screen readers","default":""},"button_action":{"type":"string","description":"The type of action the button should trigger."},"button_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, button_label links to this"}]},"button_action_args":{"description":"Additional parameters for button action, example which specific menu the button should open"},"button_label":{"allOf":[{"$ref":"#/definitions/plainText"},{"description":"Text for a button next to main snippet text that links to button_url. Requires button_url."}]},"button_color":{"type":"string","description":"The text color of the button. Valid CSS color."},"button_background_color":{"type":"string","description":"The background color of the button. Valid CSS color."},"block_button_text":{"type":"string","description":"Tooltip text used for dismiss button.","default":"Remove this"},"tall":{"type":"boolean","description":"To be used by fundraising only, increases height to roughly 120px. Defaults to false."},"do_not_autoblock":{"type":"boolean","description":"Used to prevent blocking the snippet after the CTA (link or button) has been clicked"},"links":{"additionalProperties":{"url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"The url where the link points to."}]},"metric":{"type":"string","description":"Custom event name sent with telemetry event."},"args":{"type":"string","description":"Additional parameters for link action, example which specific menu the button should open"}}},"section_title_icon":{"type":"string","description":"Section title icon. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."},"section_title_icon_dark_theme":{"type":"string","description":"Section title icon, dark theme variant. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."},"section_title_text":{"type":"string","description":"Section title text. section_title_icon must also be specified to display."},"section_title_url":{"allOf":[{"$ref":"#/definitions/link_url"},{"description":"A url, section_title_text links to this"}]}},"additionalProperties":false,"required":["text"],"dependencies":{"button_action":["button_label"],"button_url":["button_label"],"button_color":["button_label"],"button_background_color":["button_label"],"section_title_url":["section_title_text"]}};
 
 /***/ }),
 /* 20 */
@@ -9659,7 +9753,9 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
       className += " has-section-header";
     }
 
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, _extends({}, props, {
+    return external_React_default.a.createElement("div", {
+      className: "snippet-hover-wrapper"
+    }, external_React_default.a.createElement(SnippetBase_SnippetBase, _extends({}, props, {
       className: className,
       textStyle: this.props.textStyle
     }), sectionHeader, external_React_default.a.createElement(ConditionalWrapper, {
@@ -9675,7 +9771,7 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
       alt: props.content.icon_alt_text || ICON_ALT_TEXT
     }), external_React_default.a.createElement("div", null, this.renderTitle(), " ", external_React_default.a.createElement("p", {
       className: "body"
-    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", null, this.renderButton())));
+    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", null, this.renderButton()))));
   }
 
 }
@@ -10315,21 +10411,81 @@ function SimpleBelowSearchSnippet_extends() { SimpleBelowSearchSnippet_extends =
 
 
 
+
 const SimpleBelowSearchSnippet_DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
 
 const SimpleBelowSearchSnippet_ICON_ALT_TEXT = "";
 class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onButtonClick = this.onButtonClick.bind(this);
+  }
+
   renderText() {
     const {
       props
     } = this;
-    return external_React_default.a.createElement(RichText["RichText"], {
+    return props.content.text ? external_React_default.a.createElement(RichText["RichText"], {
       text: props.content.text,
       customElements: this.props.customElements,
       localization_id: "text",
       links: props.content.links,
       sendClick: props.sendClick
+    }) : null;
+  }
+
+  renderTitle() {
+    const {
+      title
+    } = this.props.content;
+    return title ? external_React_default.a.createElement("h3", {
+      className: "title title-inline"
+    }, title, external_React_default.a.createElement("br", null)) : null;
+  }
+
+  async onButtonClick() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({
+        event: "CLICK_BUTTON",
+        id: this.props.UISurface
+      });
+    }
+
+    const {
+      button_url
+    } = this.props.content; // If button_url is defined handle it as OPEN_URL action
+
+    const type = this.props.content.button_action || button_url && "OPEN_URL";
+    await this.props.onAction({
+      type,
+      data: {
+        args: this.props.content.button_action_args || button_url
+      }
     });
+
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
+  }
+
+  _shouldRenderButton() {
+    return this.props.content.button_action || this.props.onButtonClick || this.props.content.button_url;
+  }
+
+  renderButton() {
+    const {
+      props
+    } = this;
+
+    if (!this._shouldRenderButton()) {
+      return null;
+    }
+
+    return external_React_default.a.createElement(Button, {
+      onClick: props.onButtonClick || this.onButtonClick,
+      color: props.content.button_color,
+      backgroundColor: props.content.button_background_color
+    }, props.content.button_label);
   }
 
   render() {
@@ -10337,12 +10493,22 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
       props
     } = this;
     let className = "SimpleBelowSearchSnippet";
+    let containerName = "below-search-snippet";
 
     if (props.className) {
       className += ` ${props.className}`;
     }
 
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
+    if (this._shouldRenderButton()) {
+      className += " withButton";
+      containerName += " withButton";
+    }
+
+    return external_React_default.a.createElement("div", {
+      className: containerName
+    }, external_React_default.a.createElement("div", {
+      className: "snippet-hover-wrapper"
+    }, external_React_default.a.createElement(SnippetBase_SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
       className: className,
       textStyle: this.props.textStyle
     }), external_React_default.a.createElement("img", {
@@ -10353,9 +10519,13 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
       src: Object(template_utils["safeURI"])(props.content.icon_dark_theme || props.content.icon) || SimpleBelowSearchSnippet_DEFAULT_ICON_PATH,
       className: "icon icon-dark-theme",
       alt: props.content.icon_alt_text || SimpleBelowSearchSnippet_ICON_ALT_TEXT
-    }), external_React_default.a.createElement("div", null, external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("div", {
+      className: "textContainer"
+    }, this.renderTitle(), external_React_default.a.createElement("p", {
       className: "body"
-    }, this.renderText()), this.props.extraContent));
+    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", {
+      className: "buttonContainer"
+    }, this.renderButton()))));
   }
 
 }

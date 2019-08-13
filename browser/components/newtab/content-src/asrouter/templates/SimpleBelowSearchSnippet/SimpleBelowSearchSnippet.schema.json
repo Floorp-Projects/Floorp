@@ -1,9 +1,13 @@
 {
   "title": "SimpleBelowSearchSnippet",
-  "description": "A simple template with just an icon and rich text. It gets inserted below the Activity Stream search box.",
+  "description": "A simple template with an icon, rich text and an optional button. It gets inserted below the Activity Stream search box.",
   "version": "1.2.0",
   "type": "object",
   "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
     "richText": {
       "description": "Text with HTML subset allowed: i, b, u, strong, em, br",
       "type": "string"
@@ -15,6 +19,12 @@
     }
   },
   "properties": {
+    "title": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Snippet title displayed before snippet text"}
+      ]
+    },
     "text": {
       "allOf": [
         {"$ref": "#/definitions/richText"},
@@ -38,6 +48,33 @@
       "type": "string",
       "description": "Tooltip text used for dismiss button.",
       "default": "Remove this"
+    },
+    "button_action": {
+      "type": "string",
+      "description": "The type of action the button should trigger."
+    },
+    "button_url": {
+      "allOf": [
+        {"$ref": "#/definitions/link_url"},
+        {"description": "A url, button_label links to this"}
+      ]
+    },
+    "button_action_args": {
+      "description": "Additional parameters for button action, example which specific menu the button should open"
+    },
+    "button_label": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+      ]
+    },
+    "button_color": {
+      "type": "string",
+      "description": "The text color of the button. Valid CSS color."
+    },
+    "button_background_color": {
+      "type": "string",
+      "description": "The background color of the button. Valid CSS color."
     },
     "do_not_autoblock": {
       "type": "boolean",
@@ -64,5 +101,10 @@
   },
   "additionalProperties": false,
   "required": ["text"],
-  "dependencies": {}
+  "dependencies": {
+    "button_action": ["button_label"],
+    "button_url": ["button_label"],
+    "button_color": ["button_label"],
+    "button_background_color": ["button_label"]
+  }
 }
