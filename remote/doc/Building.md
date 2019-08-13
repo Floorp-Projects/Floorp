@@ -24,7 +24,7 @@ do this, provided you haven’t touched any compiled code (C++ or Rust):
 	% ./mach build faster
 
 Component files include the likes of command-line-handler.js,
-RemoteAgent.manifest, moz.build files, prefs/remote.js, and jar.mn.
+RemoteAgent.manifest, moz.build files, and jar.mn.
 All the JS modules (files ending with `.jsm`) are symlinked into
 the build and can be changed without rebuilding.
 
