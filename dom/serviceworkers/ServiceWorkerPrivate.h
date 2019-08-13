@@ -27,6 +27,7 @@ class ClientInfoAndState;
 class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
 class ServiceWorkerPrivate;
+class ServiceWorkerPrivateImpl;
 class ServiceWorkerRegistrationInfo;
 
 namespace ipc {
@@ -88,6 +89,7 @@ class KeepAliveToken final : public nsISupports {
 // ExtendableEventWorkerRunnable.
 class ServiceWorkerPrivate final {
   friend class KeepAliveToken;
+  friend class ServiceWorkerPrivateImpl;
 
  public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
@@ -101,6 +103,48 @@ class ServiceWorkerPrivate final {
   NS_DECL_OWNINGTHREAD
 
  public:
+  class Inner {
+   public:
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+    virtual nsresult SendMessageEvent(
+        RefPtr<ServiceWorkerCloneData>&& aData,
+        const ClientInfoAndState& aClientInfoAndState) = 0;
+
+    virtual nsresult CheckScriptEvaluation(
+        RefPtr<LifeCycleEventCallback> aScriptEvaluationCallback) = 0;
+
+    virtual nsresult SendLifeCycleEvent(
+        const nsAString& aEventName,
+        RefPtr<LifeCycleEventCallback> aCallback) = 0;
+
+    virtual nsresult SendPushEvent(
+        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
+        const nsAString& aMessageId, const Maybe<nsTArray<uint8_t>>& aData) = 0;
+
+    virtual nsresult SendPushSubscriptionChangeEvent() = 0;
+
+    virtual nsresult SendNotificationEvent(
+        const nsAString& aEventName, const nsAString& aID,
+        const nsAString& aTitle, const nsAString& aDir, const nsAString& aLang,
+        const nsAString& aBody, const nsAString& aTag, const nsAString& aIcon,
+        const nsAString& aData, const nsAString& aBehavior,
+        const nsAString& aScope, uint32_t aDisableOpenClickDelay) = 0;
+
+    virtual nsresult SendFetchEvent(
+        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
+        nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
+        const nsAString& aResultingClientId, bool aIsReload) = 0;
+
+    virtual void TerminateWorker() = 0;
+
+    virtual void UpdateState(ServiceWorkerState aState) = 0;
+
+    virtual void NoteDeadOuter() = 0;
+
+    virtual bool WorkerIsDead() const = 0;
+  };
+
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
   nsresult SendMessageEvent(RefPtr<ServiceWorkerCloneData>&& aData,
@@ -169,7 +213,8 @@ class ServiceWorkerPrivate final {
     NotificationClickEvent,
     NotificationCloseEvent,
     LifeCycleEvent,
-    AttachEvent
+    AttachEvent,
+    Unknown
   };
 
   // Timer callbacks
