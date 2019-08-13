@@ -189,16 +189,23 @@ async function openPopupAndGetEngineButton(
   }
 
   const contextMenu = oneOffInstance.contextMenuPopup;
-  const oneOffButtons = oneOffInstance.buttons;
+  let oneOffButton = oneOffInstance.buttons;
 
   // Get the one-off button for the test engine.
-  let oneOffButton;
-  for (let node of oneOffButtons.children) {
-    if (node.engine && node.engine.name == TEST_ENGINE_NAME) {
-      oneOffButton = node;
+  for (
+    oneOffButton = oneOffButton.firstChild;
+    oneOffButton;
+    oneOffButton = oneOffButton.nextSibling
+  ) {
+    if (
+      oneOffButton.nodeType == Node.ELEMENT_NODE &&
+      oneOffButton.engine &&
+      oneOffButton.engine.name == TEST_ENGINE_NAME
+    ) {
       break;
     }
   }
+
   Assert.notEqual(
     oneOffButton,
     undefined,
