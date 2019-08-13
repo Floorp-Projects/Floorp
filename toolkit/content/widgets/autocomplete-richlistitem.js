@@ -961,29 +961,29 @@
 
     get _markup() {
       return `
-      <image class="ac-type-icon"></image>
-      <image class="ac-site-icon"></image>
+      <image class="ac-type-icon"/>
+      <image class="ac-site-icon"/>
       <vbox class="ac-title" align="left">
         <description class="ac-text-overflow-container">
-          <description class="ac-title-text"></description>
+          <description class="ac-title-text"/>
         </description>
       </vbox>
       <hbox class="ac-tags" align="center">
         <description class="ac-text-overflow-container">
-          <description class="ac-tags-text"></description>
+          <description class="ac-tags-text"/>
         </description>
       </hbox>
       <hbox class="ac-separator" align="center">
-        <description class="ac-separator-text" value="—"></description>
+        <description class="ac-separator-text" value="—"/>
       </hbox>
       <hbox class="ac-url" align="center">
         <description class="ac-text-overflow-container">
-          <description class="ac-url-text"></description>
+          <description class="ac-url-text"/>
         </description>
       </hbox>
       <hbox class="ac-action" align="center">
         <description class="ac-text-overflow-container">
-          <description class="ac-action-text"></description>
+          <description class="ac-action-text"/>
         </description>
       </hbox>
     `;
