@@ -69,6 +69,12 @@ pub struct SwitchToFrame {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SwitchToWindow {
+    pub name: String,
+    pub handle: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
     // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
     #[serde(rename = "WebDriver:AcceptDialog")]
@@ -185,6 +191,8 @@ pub enum Command {
     SwitchToFrame(SwitchToFrame),
     #[serde(rename = "WebDriver:SwitchToParentFrame")]
     SwitchToParentFrame,
+    #[serde(rename = "WebDriver:SwitchToWindow")]
+    SwitchToWindow(SwitchToWindow),
 }
 
 #[cfg(test)]
