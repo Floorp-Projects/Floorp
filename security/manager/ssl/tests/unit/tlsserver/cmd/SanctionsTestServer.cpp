@@ -18,22 +18,22 @@
 using namespace mozilla;
 using namespace mozilla::test;
 
-struct SymantecCertHost {
+struct SanctionsCertHost {
   const char* mHostName;
   const char* mCertName;
 };
 
 // Hostname, cert nickname pairs.
-const SymantecCertHost sSymantecCertHosts[] = {
+const SanctionsCertHost sSanctionsCertHosts[] = {
     {"symantec-whitelist-after-cutoff.example.com",
-     "ee-from-whitelist-after-cutoff"},
+     "symantec-ee-from-whitelist-after-cutoff"},
     {"symantec-whitelist-before-cutoff.example.com",
-     "ee-from-whitelist-before-cutoff"},
+     "symantec-ee-from-whitelist-before-cutoff"},
     {"symantec-not-whitelisted-after-cutoff.example.com",
-     "ee-not-whitelisted-after-cutoff"},
+     "symantec-ee-not-whitelisted-after-cutoff"},
     {"symantec-not-whitelisted-before-cutoff.example.com",
-     "ee-not-whitelisted-before-cutoff"},
-    {"symantec-unaffected.example.com", "ee-unaffected"},
+     "symantec-ee-not-whitelisted-before-cutoff"},
+    {"symantec-unaffected.example.com", "symantec-ee-unaffected"},
     {nullptr, nullptr}};
 
 int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
@@ -56,8 +56,8 @@ int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
 
 int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
                           uint32_t aSrvNameArrSize, void* aArg) {
-  const SymantecCertHost* host =
-      GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sSymantecCertHosts);
+  const SanctionsCertHost* host =
+      GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sSanctionsCertHosts);
   if (!host) {
     // No static cert <-> hostname mapping found. This happens when we use a
     // collection of certificates in a given directory and build a cert DB at

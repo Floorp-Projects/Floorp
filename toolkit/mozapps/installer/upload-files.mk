@@ -276,7 +276,7 @@ NO_PKG_FILES += \
 	pk12util* \
 	BadCertAndPinningServer* \
 	OCSPStaplingServer* \
-	SymantecSanctionsServer* \
+	SanctionsTestServer* \
 	GenerateOCSPResponse* \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \

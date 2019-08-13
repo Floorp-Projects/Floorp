@@ -401,7 +401,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     "BadCertAndPinningServer",
                     "OCSPStaplingServer",
                     "GenerateOCSPResponse",
-                    "SymantecSanctionsServer"]
+                    "SanctionsTestServer"]
         for fname in binaries:
             local = os.path.join(self.localBin, fname)
             if os.path.isfile(local):

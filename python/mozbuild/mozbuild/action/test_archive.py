@@ -35,7 +35,7 @@ TEST_HARNESS_BINS = [
     'BadCertAndPinningServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
-    'SymantecSanctionsServer',
+    'SanctionsTestServer',
     'SmokeDMD',
     'certutil',
     'crashinject',
