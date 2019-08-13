@@ -36,6 +36,11 @@ let tabListener = {
       let { BrowserApp } = browser.ownerGlobal;
       let nativeTab = BrowserApp.getTabForBrowser(browser);
 
+      // Ignore initial about:blank
+      if (!request && this.initializingTabs.has(nativeTab)) {
+        return;
+      }
+
       // Now we are certain that the first page in the tab was loaded.
       this.initializingTabs.delete(nativeTab);
 
