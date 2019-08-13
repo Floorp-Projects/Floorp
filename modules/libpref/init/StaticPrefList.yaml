@@ -4329,6 +4329,12 @@
   value: true
   mirror: always
 
+# Are inter-character ruby annotations enabled?
+- name: layout.css.ruby.intercharacter.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: layout.css.scroll-behavior.damping-ratio
   type: AtomicFloat
   value: 1.0f
