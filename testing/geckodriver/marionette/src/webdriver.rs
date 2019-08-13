@@ -166,12 +166,18 @@ pub enum Command {
     MinimizeWindow,
     #[serde(rename = "WebDriver:NewWindow")]
     NewWindow(NewWindow),
+    #[serde(rename = "WebDriver:Refresh")]
+    Refresh,
+    #[serde(rename = "WebDriver:ReleaseActions")]
+    ReleaseActions,
     #[serde(rename = "WebDriver:SendAlertText")]
     SendAlertText(Keys),
     #[serde(rename = "WebDriver:SetTimeouts")]
     SetTimeouts(Timeouts),
     #[serde(rename = "WebDriver:SetWindowRect")]
     SetWindowRect(WindowRect),
+    #[serde(rename = "WebDriver:SwitchToParentFrame")]
+    SwitchToParentFrame,
 }
 
 #[cfg(test)]
