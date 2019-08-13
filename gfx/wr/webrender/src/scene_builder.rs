@@ -18,6 +18,7 @@ use crate::intern::{Internable, Interner, UpdateList};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::prim_store::PrimitiveStoreStats;
+use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{LinearGradient, RadialGradient};
 use crate::prim_store::image::{Image, YuvImage};

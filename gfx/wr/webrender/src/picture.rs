@@ -1565,7 +1565,8 @@ impl TileCacheInstance {
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } => {
+            PrimitiveInstanceKind::RadialGradient { .. } |
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 // These don't contribute dependencies
             }
         };
@@ -1891,6 +1892,8 @@ bitflags! {
         const CLIP = 2;
         /// Preserve-3D requires a surface for plane-splitting.
         const PRESERVE3D = 4;
+        /// A backdrop that is reused which requires a surface.
+        const BACKDROP = 8;
     }
 }
 
@@ -2162,6 +2165,10 @@ impl PrimitiveList {
                     let data = &interners.yuv_image[data_handle];
                     (data.is_backface_visible, data.prim_size)
                 }
+                PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
+                    let data = &interners.backdrop[data_handle];
+                    (data.is_backface_visible, data.prim_size)
+                }
                 PrimitiveInstanceKind::PushClipChain |
                 PrimitiveInstanceKind::PopClipChain => {
                     (true, LayoutSize::zero())
@@ -2303,7 +2310,7 @@ pub struct PicturePrimitive {
     pub tile_cache: Option<Box<TileCacheInstance>>,
 
     /// The config options for this picture.
-    options: PictureOptions,
+    pub options: PictureOptions,
 }
 
 impl PicturePrimitive {
@@ -2556,38 +2563,44 @@ impl PicturePrimitive {
                             blur_std_deviation * scale_factors.0,
                             blur_std_deviation * scale_factors.1
                         );
-                        let inflation_factor = frame_state.surfaces[raster_config.surface_index.0].inflation_factor;
-                        let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil();
+                        let device_rect = if self.options.inflate_if_required {
+                            let inflation_factor = frame_state.surfaces[raster_config.surface_index.0].inflation_factor;
+                            let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil();
 
-                        // The clipped field is the part of the picture that is visible
-                        // on screen. The unclipped field is the screen-space rect of
-                        // the complete picture, if no screen / clip-chain was applied
-                        // (this includes the extra space for blur region). To ensure
-                        // that we draw a large enough part of the picture to get correct
-                        // blur results, inflate that clipped area by the blur range, and
-                        // then intersect with the total screen rect, to minimize the
-                        // allocation size.
-                        // We cast clipped to f32 instead of casting unclipped to i32
-                        // because unclipped can overflow an i32.
-                        let device_rect = clipped.to_f32()
-                            .inflate(inflation_factor, inflation_factor)
-                            .intersection(&unclipped)
-                            .unwrap();
+                            // The clipped field is the part of the picture that is visible
+                            // on screen. The unclipped field is the screen-space rect of
+                            // the complete picture, if no screen / clip-chain was applied
+                            // (this includes the extra space for blur region). To ensure
+                            // that we draw a large enough part of the picture to get correct
+                            // blur results, inflate that clipped area by the blur range, and
+                            // then intersect with the total screen rect, to minimize the
+                            // allocation size.
+                            // We cast clipped to f32 instead of casting unclipped to i32
+                            // because unclipped can overflow an i32.
+                            let device_rect = clipped.to_f32()
+                                .inflate(inflation_factor, inflation_factor)
+                                .intersection(&unclipped)
+                                .unwrap();
 
-                        let mut device_rect = match device_rect.try_cast::<i32>() {
-                            Some(rect) => rect,
-                            None => {
-                                return None
-                            }
+                            let mut device_rect = match device_rect.try_cast::<i32>() {
+                                Some(rect) => rect,
+                                None => {
+                                    return None
+                                }
+                            };
+
+                            // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
+                            // what would be even better is to rasterize the picture at the down-scaled size
+                            // directly.
+                            device_rect.size = RenderTask::adjusted_blur_source_size(
+                                device_rect.size,
+                                blur_std_deviation,
+                            );
+
+                            device_rect
+                        } else {
+                            clipped
                         };
-
-                        // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
-                        // what would be even better is to rasterize the picture at the down-scaled size
-                        // directly.
-                        device_rect.size = RenderTask::adjusted_blur_source_size(
-                            device_rect.size,
-                            blur_std_deviation,
-                        );
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -3325,7 +3338,9 @@ impl PicturePrimitive {
             let surface = state.current_surface_mut();
             // Inflate the local bounding rect if required by the filter effect.
             // This inflaction factor is to be applied to the surface itself.
-            surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.inflation_factor);
+            if self.options.inflate_if_required {
+                surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.inflation_factor);
+            }
 
             let mut surface_rect = surface.rect * Scale::new(1.0);
 
