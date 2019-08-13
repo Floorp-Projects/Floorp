@@ -43,34 +43,6 @@ NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
 
 static mozilla::LazyLogModule sCSMLog("CSMLog");
 
-// This allowlist contains files that are permanently allowed to use eval()-like
-// functions. It is supposed to be restricted to files that are exclusively used
-// in testing contexts.
-static nsLiteralCString evalAllowlist[] = {
-    // Test-only third-party library
-    NS_LITERAL_CSTRING("resource://testing-common/sinon-7.2.7.js"),
-    // Test-only third-party library
-    NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
-    // Test-only utility
-    NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
-
-    // The Browser Toolbox/Console
-    NS_LITERAL_CSTRING("debugger"),
-
-    // The following files are NOT supposed to stay on this whitelist.
-    // Bug numbers indicate planned removal of each file.
-
-    // Bug 1498560
-    NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
-};
-
-// We also permit two specific idioms in eval()-like contexts. We'd like to
-// elminate these too; but there are in-the-wild Mozilla privileged extensions
-// that use them.
-static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
-static NS_NAMED_LITERAL_STRING(sAllowedEval2,
-                               "function anonymous(\n) {\nreturn this\n}");
-
 static Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
 
 /* static */
@@ -388,6 +360,34 @@ FilenameType nsContentSecurityManager::FilenameToEvalType(
 /* static */
 void nsContentSecurityManager::AssertEvalNotRestricted(
     JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
+  // This allowlist contains files that are permanently allowed to use
+  // eval()-like functions. It is supposed to be restricted to files that are
+  // exclusively used in testing contexts.
+  static nsLiteralCString evalAllowlist[] = {
+      // Test-only third-party library
+      NS_LITERAL_CSTRING("resource://testing-common/sinon-7.2.7.js"),
+      // Test-only third-party library
+      NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
+      // Test-only utility
+      NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
+
+      // The Browser Toolbox/Console
+      NS_LITERAL_CSTRING("debugger"),
+
+      // The following files are NOT supposed to stay on this whitelist.
+      // Bug numbers indicate planned removal of each file.
+
+      // Bug 1498560
+      NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
+  };
+
+  // We also permit two specific idioms in eval()-like contexts. We'd like to
+  // elminate these too; but there are in-the-wild Mozilla privileged extensions
+  // that use them.
+  static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
+  static NS_NAMED_LITERAL_STRING(sAllowedEval2,
+                                 "function anonymous(\n) {\nreturn this\n}");
+
   bool systemPrincipal = aSubjectPrincipal->IsSystemPrincipal();
   if (systemPrincipal &&
       StaticPrefs::security_allow_eval_with_system_principal()) {
