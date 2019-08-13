@@ -98,6 +98,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of results in the urlbar popup.
   ["maxRichResults", 10],
 
+  // Whether the quantum bar displays the major design update.
+  ["megabar", false],
+
   // One-off search buttons enabled status.
   ["oneOffSearches", false],
 
