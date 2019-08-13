@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import sys
+import multiprocessing
 from functools import partial
 
 from mozbuild.base import MachCommandBase
@@ -49,8 +50,10 @@ class Documentation(MachCommandBase):
                           'default "localhost:5500".')
     @CommandArgument('--upload', action='store_true',
                      help='Upload generated files to S3.')
+    @CommandArgument('-j', '--jobs', default=str(multiprocessing.cpu_count()), dest='jobs',
+                     help='Distribute the build over N processes in parallel.')
     def build_docs(self, path=None, fmt='html', outdir=None, auto_open=True,
-                   serve=True, http=None, archive=False, upload=False):
+                   serve=True, http=None, archive=False, upload=False, jobs=None):
 
         from mozfile import which
 
@@ -74,7 +77,7 @@ class Documentation(MachCommandBase):
             return die('failed to generate documentation:\n'
                        '%s: could not find docs at this location' % path)
 
-        result = self._run_sphinx(docdir, savedir, fmt=fmt)
+        result = self._run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs)
         if result != 0:
             return die('failed to generate documentation:\n'
                        '%s: sphinx return code %d' % (path, result))
@@ -107,12 +110,12 @@ class Documentation(MachCommandBase):
 
         sphinx_trees = self.manager.trees or {savedir: docdir}
         for dest, src in sphinx_trees.items():
-            run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt)
+            run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt, jobs=jobs)
             server.watch(src, run_sphinx)
         server.serve(host=host, port=port, root=savedir,
                      open_url_delay=0.1 if auto_open else None)
 
-    def _run_sphinx(self, docdir, savedir, config=None, fmt='html'):
+    def _run_sphinx(self, docdir, savedir, config=None, fmt='html', jobs=None):
         import sphinx
         config = config or self.manager.conf_py_path
         args = [
@@ -122,6 +125,8 @@ class Documentation(MachCommandBase):
             docdir,
             savedir,
         ]
+        if jobs:
+            args.extend(['-j', jobs])
         return sphinx.build_main(args)
 
     @property
