@@ -868,6 +868,12 @@ fn try_convert_to_marionette_message(
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
+        GetCSSValue(ref e, ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetCSSValue {
+                id: e.clone().to_string(),
+                property: x.clone(),
+            },
+        )),
         GetCurrentUrl => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetCurrentUrl,
         )),
@@ -1001,12 +1007,6 @@ impl MarionetteCommand {
                         )?,
                     );
                     (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
-                }
-                GetCSSValue(ref e, ref x) => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::String(e.to_string()));
-                    data.insert("propertyName".to_string(), Value::String(x.clone()));
-                    (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
                 }
                 NewSession(_) => {
                     let caps = capabilities
