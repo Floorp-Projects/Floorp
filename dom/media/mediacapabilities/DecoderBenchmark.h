@@ -33,6 +33,12 @@ class DecoderBenchmark final {
   static RefPtr<BenchmarkScorePromise> Get(
       const DecoderBenchmarkInfo& aBenchInfo);
 
+  /* For the specific decoder, specified by aDecoderName, it compares the
+   * version number, from a static list of versions, to the version number
+   * found in the database. If those numbers are different all benchmark
+   * entries for that decoder are deleted. */
+  static void CheckVersion(const nsACString& aDecoderName);
+
  private:
   void StoreScore(const nsACString& aDecoderName, const nsACString& aKey,
                   RefPtr<FrameStatistics> aStats);
