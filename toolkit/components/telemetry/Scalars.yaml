@@ -3644,6 +3644,7 @@ startup:
   profile_selection_reason:
     bug_numbers:
       - 1522934
+      - 1570652
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -3676,7 +3677,7 @@ startup:
           A first run of the application created a new profile to use.
         default:
           The default profile was selected as normal.
-    expires: "72"
+    expires: "77"
     keyed: false
     kind: string
     notification_emails:
@@ -3685,6 +3686,9 @@ startup:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+    record_into_store:
+      - main
+      - new-profile
 
   is_cold:
     bug_numbers:
