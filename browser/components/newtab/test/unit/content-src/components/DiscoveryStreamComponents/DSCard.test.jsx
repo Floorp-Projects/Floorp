@@ -1,12 +1,18 @@
 import {
   DSCard,
+  DefaultMeta,
   PlaceholderDSCard,
+  VariantMeta,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {
+  DSContextFooter,
+  StatusMessage,
+} from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import { actionCreators as ac } from "common/Actions.jsm";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 
 describe("<DSCard>", () => {
   let wrapper;
@@ -71,6 +77,22 @@ describe("<DSCard>", () => {
     assert.equal(wrapper.find(".active").length, 0);
   });
 
+  it("should render badges for pocket, bookmark when not a spoc element ", () => {
+    wrapper = mount(<DSCard context_type="bookmark" />);
+    const contextFooter = wrapper.find(DSContextFooter);
+
+    assert.lengthOf(contextFooter.find(StatusMessage), 1);
+  });
+
+  it("should render Sponsored Context for a spoc element", () => {
+    const context = "Sponsored by Foo";
+    wrapper = mount(<DSCard context_type="bookmark" context={context} />);
+    const contextFooter = wrapper.find(DSContextFooter);
+
+    assert.lengthOf(contextFooter.find(StatusMessage), 0);
+    assert.equal(contextFooter.find(".story-sponsored-label").text(), context);
+  });
+
   describe("onLinkClick", () => {
     let dispatch;
 
@@ -132,6 +154,57 @@ describe("<DSCard>", () => {
           tiles: [{ id: "fooidx", pos: 1, shim: "click shim" }],
         })
       );
+    });
+  });
+
+  describe("DSCard with CTA", () => {
+    beforeEach(() => {
+      wrapper = mount(<DSCard />);
+    });
+
+    it("should render Default Meta", () => {
+      const default_meta = wrapper.find(DefaultMeta);
+      assert.ok(default_meta.exists());
+    });
+
+    it("should not render cta-link for item with no cta", () => {
+      const meta = wrapper.find(DefaultMeta);
+      assert.notOk(meta.find(".cta-link").exists());
+    });
+
+    it("should render cta-link by default when item has cta", () => {
+      wrapper.setProps({ cta: "test" });
+      const meta = wrapper.find(DefaultMeta);
+      assert.equal(meta.find(".cta-link").text(), "test");
+    });
+
+    it("should render cta-button when item has cta and cta button variant is true", () => {
+      wrapper.setProps({ cta: "test", cta_variant: true });
+      const meta = wrapper.find(VariantMeta);
+      assert.equal(meta.find(".cta-button").text(), "test");
+    });
+
+    it("should not render Sponsored by label in footer for spoc item with cta button variant", () => {
+      wrapper.setProps({
+        cta: "test",
+        context: "Sponsored by test",
+        cta_variant: true,
+      });
+
+      assert.ok(wrapper.find(VariantMeta).exists());
+      assert.notOk(wrapper.find(DSContextFooter).exists());
+    });
+
+    it("should render sponsor text on top for spoc item and cta_variant true", () => {
+      wrapper.setProps({
+        sponsor: "Test",
+        context: "Sponsored by test",
+        cta_variant: true,
+      });
+
+      assert.ok(wrapper.find(VariantMeta).exists());
+      const meta = wrapper.find(VariantMeta);
+      assert.equal(meta.find(".source").text(), "Test · Sponsored");
     });
   });
 });

@@ -1907,7 +1907,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
     this.onUserAction = this.onUserAction.bind(this);
     this.fetchFlowParams = this.fetchFlowParams.bind(this);
     this.state = {
-      message: {}
+      message: {},
+      interruptCleared: false
     };
 
     if (props.document) {
@@ -2060,6 +2061,12 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       case "SET_MESSAGE":
         this.setState({
           message: action.data
+        });
+        break;
+
+      case "CLEAR_INTERRUPT":
+        this.setState({
+          interruptCleared: true
         });
         break;
 
@@ -2216,6 +2223,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
         document: this.props.document
       }, react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_FirstRun_FirstRun__WEBPACK_IMPORTED_MODULE_9__["FirstRun"], {
         document: this.props.document,
+        interruptCleared: this.state.interruptCleared,
         message: message,
         sendUserActionTelemetry: this.sendUserActionTelemetry,
         executeAction: ASRouterUtils.executeAction,
@@ -7871,7 +7879,6 @@ var external_ReactTransitionGroup_ = __webpack_require__(34);
  // Animation time is mirrored in DSContextFooter.scss
 
 const ANIMATION_DURATION = 3000;
-
 const StatusMessage = ({
   icon,
   fluentID
@@ -7884,7 +7891,6 @@ const StatusMessage = ({
   className: "story-context-label",
   "data-l10n-id": fluentID
 }));
-
 class DSContextFooter_DSContextFooter extends external_React_default.a.PureComponent {
   render() {
     const {
@@ -7898,7 +7904,7 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
     return external_React_default.a.createElement("div", {
       className: "story-footer"
     }, context && external_React_default.a.createElement("p", {
-      className: "story-sponsored-label"
+      className: "story-sponsored-label clamp"
     }, context), external_React_default.a.createElement(external_ReactTransitionGroup_["TransitionGroup"], {
       component: null
     }, !context && context_type && external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
@@ -7923,6 +7929,55 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
 
 
 
+const DefaultMeta = ({
+  source,
+  title,
+  excerpt,
+  context,
+  context_type,
+  cta
+}) => external_React_default.a.createElement("div", {
+  className: "meta"
+}, external_React_default.a.createElement("div", {
+  className: "info-wrap"
+}, external_React_default.a.createElement("p", {
+  className: "source clamp"
+}, source), external_React_default.a.createElement("header", {
+  className: "title clamp"
+}, title), excerpt && external_React_default.a.createElement("p", {
+  className: "excerpt clamp"
+}, excerpt), cta && external_React_default.a.createElement("div", {
+  role: "link",
+  className: "cta-link icon icon-arrow",
+  tabIndex: "0"
+}, cta)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+  context_type: context_type,
+  context: context
+}));
+const VariantMeta = ({
+  source,
+  title,
+  excerpt,
+  context,
+  context_type,
+  cta,
+  sponsor
+}) => external_React_default.a.createElement("div", {
+  className: "meta"
+}, external_React_default.a.createElement("div", {
+  className: "info-wrap"
+}, external_React_default.a.createElement("p", {
+  className: "source clamp"
+}, sponsor ? sponsor : source, context && ` · Sponsored`), external_React_default.a.createElement("header", {
+  className: "title clamp"
+}, title), excerpt && external_React_default.a.createElement("p", {
+  className: "excerpt clamp"
+}, excerpt)), cta && external_React_default.a.createElement("button", {
+  className: "button cta-button"
+}, cta), !context && external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+  context_type: context_type,
+  context: context
+}));
 class DSCard_DSCard extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -7964,20 +8019,22 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       extraClassNames: "img",
       source: this.props.image_src,
       rawSource: this.props.raw_image_src
-    })), external_React_default.a.createElement("div", {
-      className: "meta"
-    }, external_React_default.a.createElement("div", {
-      className: "info-wrap"
-    }, external_React_default.a.createElement("p", {
-      className: "source clamp"
-    }, this.props.source), external_React_default.a.createElement("header", {
-      className: "title clamp"
-    }, this.props.title), this.props.excerpt && external_React_default.a.createElement("p", {
-      className: "excerpt clamp"
-    }, this.props.excerpt)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+    })), this.props.cta_variant && external_React_default.a.createElement(VariantMeta, {
+      source: this.props.source,
+      title: this.props.title,
+      excerpt: this.props.excerpt,
+      context: this.props.context,
       context_type: this.props.context_type,
-      context: this.props.context
-    })), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
+      cta: this.props.cta,
+      sponsor: this.props.sponsor
+    }), !this.props.cta_variant && external_React_default.a.createElement(DefaultMeta, {
+      source: this.props.source,
+      title: this.props.title,
+      excerpt: this.props.excerpt,
+      context: this.props.context,
+      context_type: this.props.context_type,
+      cta: this.props.cta
+    }), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
       campaignId: this.props.campaignId,
       rows: [{
         id: this.props.id,
@@ -8129,11 +8186,14 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         shim: rec.shim,
         type: this.props.type,
         context: rec.context,
+        sponsor: rec.sponsor,
         dispatch: this.props.dispatch,
         source: rec.domain,
         pocket_id: rec.pocket_id,
         context_type: rec.context_type,
-        bookmarkGuid: rec.bookmarkGuid
+        bookmarkGuid: rec.bookmarkGuid,
+        cta: rec.cta,
+        cta_variant: this.props.cta_variant
       }));
     }
 
@@ -8222,6 +8282,7 @@ class DSMessage_DSMessage extends external_React_default.a.PureComponent {
 
 
 
+
 /**
  * @note exported for testing only
  */
@@ -8265,15 +8326,18 @@ class List_ListItem extends external_React_default.a.PureComponent {
       url: this.props.url
     }, external_React_default.a.createElement("div", {
       className: "ds-list-item-text"
-    }, external_React_default.a.createElement("div", null, external_React_default.a.createElement("div", {
+    }, external_React_default.a.createElement("p", null, external_React_default.a.createElement("span", {
+      className: "ds-list-item-info clamp"
+    }, this.props.domain)), external_React_default.a.createElement("div", {
+      className: "ds-list-item-body"
+    }, external_React_default.a.createElement("div", {
       className: "ds-list-item-title clamp"
     }, this.props.title), this.props.excerpt && external_React_default.a.createElement("div", {
       className: "ds-list-item-excerpt clamp"
-    }, this.props.excerpt)), external_React_default.a.createElement("p", null, this.props.context && external_React_default.a.createElement("span", null, external_React_default.a.createElement("span", {
-      className: "ds-list-item-context clamp"
-    }, this.props.context), external_React_default.a.createElement("br", null)), external_React_default.a.createElement("span", {
-      className: "ds-list-item-info clamp"
-    }, this.props.domain))), external_React_default.a.createElement(DSImage_DSImage, {
+    }, this.props.excerpt)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+      context: this.props.context,
+      context_type: this.props.context_type
+    })), external_React_default.a.createElement(DSImage_DSImage, {
       extraClassNames: "ds-list-image",
       source: this.props.image_src,
       rawSource: this.props.raw_image_src
@@ -8332,6 +8396,7 @@ function _List(props) {
         pos: rec.pos,
         title: rec.title,
         context: rec.context,
+        context_type: rec.context_type,
         type: props.type,
         url: rec.url,
         pocket_id: rec.pocket_id,
@@ -8395,6 +8460,7 @@ const List = Object(external_ReactRedux_["connect"])(state => ({
 
 
 
+
 class Hero_Hero extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -8444,6 +8510,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         type: this.props.type,
         dispatch: this.props.dispatch,
         context: rec.context,
+        context_type: rec.context_type,
         source: rec.domain,
         pocket_id: rec.pocket_id,
         bookmarkGuid: rec.bookmarkGuid
@@ -8473,15 +8540,16 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         className: "meta"
       }, external_React_default.a.createElement("div", {
         className: "header-and-excerpt"
-      }, heroRec.context ? external_React_default.a.createElement("p", {
-        className: "context"
-      }, heroRec.context) : external_React_default.a.createElement("p", {
+      }, external_React_default.a.createElement("p", {
         className: "source clamp"
       }, heroRec.domain), external_React_default.a.createElement("header", {
         className: "clamp"
       }, heroRec.title), external_React_default.a.createElement("p", {
         className: "excerpt clamp"
-      }, heroRec.excerpt))), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
+      }, heroRec.excerpt)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+        context: heroRec.context,
+        context_type: heroRec.context_type
+      })), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
         campaignId: heroRec.campaign_id,
         rows: [{
           id: heroRec.id,
@@ -9021,7 +9089,8 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           border: component.properties.border,
           type: component.type,
           dispatch: this.props.dispatch,
-          items: component.properties.items
+          items: component.properties.items,
+          cta_variant: component.cta_variant
         });
 
       case "Hero":
@@ -11027,13 +11096,13 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
     const {
       props
     } = this;
-    return external_React_default.a.createElement(RichText["RichText"], {
+    return props.content.text ? external_React_default.a.createElement(RichText["RichText"], {
       text: props.content.text,
       customElements: this.props.customElements,
       localization_id: "text",
       links: props.content.links,
       sendClick: props.sendClick
-    });
+    }) : null;
   }
 
   renderTitle() {
@@ -11041,8 +11110,8 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
       title
     } = this.props.content;
     return title ? external_React_default.a.createElement("h3", {
-      className: `title ${this._shouldRenderButton() ? "title-inline" : ""}`
-    }, title) : null;
+      className: "title title-inline"
+    }, title, external_React_default.a.createElement("br", null)) : null;
   }
 
   async onButtonClick() {
@@ -11123,7 +11192,7 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
       alt: props.content.icon_alt_text || SimpleBelowSearchSnippet_ICON_ALT_TEXT
     }), external_React_default.a.createElement("div", {
       className: "textContainer"
-    }, this.renderTitle(), " ", external_React_default.a.createElement("p", {
+    }, this.renderTitle(), external_React_default.a.createElement("p", {
       className: "body"
     }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", {
       className: "buttonContainer"
@@ -13550,8 +13619,8 @@ var addUtmParams = __webpack_require__(22);
 const TRANSITION_LENGTH = 500;
 const FLUENT_FILES = ["branding/brand.ftl", "browser/branding/brandings.ftl", "browser/branding/sync-brand.ftl", "browser/newtab/onboarding.ftl"];
 const helpers = {
-  selectInterruptAndTriplets(message = {}) {
-    const hasInterrupt = Boolean(message.content);
+  selectInterruptAndTriplets(message = {}, interruptCleared) {
+    const hasInterrupt = interruptCleared === true ? false : Boolean(message.content);
     const hasTriplets = Boolean(message.bundle && message.bundle.length);
     const UTMTerm = message.utm_term || "";
     return {
@@ -13595,19 +13664,21 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
 
   static getDerivedStateFromProps(props, state) {
     const {
-      message
+      message,
+      interruptCleared
     } = props;
 
-    if (message && message.id !== state.prevMessageId) {
+    if (interruptCleared !== state.prevInterruptCleared || message && message.id !== state.prevMessageId) {
       const {
         hasTriplets,
         hasInterrupt,
         interrupt,
         triplets,
         UTMTerm
-      } = helpers.selectInterruptAndTriplets(message);
+      } = helpers.selectInterruptAndTriplets(message, interruptCleared);
       return {
         prevMessageId: message.id,
+        prevInterruptCleared: interruptCleared,
         hasInterrupt,
         hasTriplets,
         interrupt,

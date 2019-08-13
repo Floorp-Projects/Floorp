@@ -219,8 +219,7 @@ $item-line-height: 20;
     margin: 0;
   }
 
-  .ds-list-item-info,
-  .ds-list-item-context {
+  .ds-list-item-info {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
     @include dark-theme-only {
       color: $grey-40;
@@ -233,6 +232,10 @@ $item-line-height: 20;
   .ds-list-item-title {
     font-weight: 600;
     margin-bottom: 4px;
+  }
+
+  .ds-list-item-body {
+    flex: 1;
   }
 
   .ds-list-item-text {

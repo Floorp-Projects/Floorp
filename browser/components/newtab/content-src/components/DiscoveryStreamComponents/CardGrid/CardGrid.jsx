@@ -30,11 +30,14 @@ export class CardGrid extends React.PureComponent {
             shim={rec.shim}
             type={this.props.type}
             context={rec.context}
+            sponsor={rec.sponsor}
             dispatch={this.props.dispatch}
             source={rec.domain}
             pocket_id={rec.pocket_id}
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
+            cta={rec.cta}
+            cta_variant={this.props.cta_variant}
           />
         )
       );
