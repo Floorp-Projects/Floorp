@@ -9628,13 +9628,13 @@
     "bug_numbers": [1230295]
   },
   "MEDIA_MKV_CANPLAY_REQUESTED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["ayang@mozilla.com"],
-    "expires_in_version": "65",
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["bvandyk@mozilla.com"],
+    "expires_in_version": "74",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
-    "bug_numbers": [1429986]
+    "bug_numbers": [1429986, 1570634]
   },
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS": {
     "record_in_processes": ["main", "content"],
@@ -9665,42 +9665,42 @@
     "description": "Counts the number of entries in the sample description box (stsd) for a track in an mp4. Recorded each time we process a track's metadata while parsing mp4s."
   },
   "MEDIACACHESTREAM_LENGTH_KB": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["gsquelart@mozilla.com"],
-    "bug_numbers": [1369538],
-    "expires_in_version": "60",
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
+    "alert_emails": ["jya@mozilla.com"],
+    "bug_numbers": [1369538, 1570634],
+    "expires_in_version": "74",
     "kind": "linear",
     "high": 520000,
     "n_buckets": 66,
     "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
   },
   "WEBRTC_DTLS_CIPHER": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content", "socket"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
-    "bug_numbers": [1484024],
-    "expires_in_version": "66",
+    "bug_numbers": [1484024, 1570634],
+    "expires_in_version": "74",
     "kind": "enumerated",
     "n_values": 14,
     "description": "The DTLS cipher (as integer) negotiated for a RTCPeerConnection. See TransportLayerDtls::RecordCipherTelemetry for the meaning of the values"
   },
   "WEBRTC_SRTP_CIPHER": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content", "socket"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
-    "bug_numbers": [1491511],
-    "expires_in_version": "67",
+    "bug_numbers": [1491511, 1570634],
+    "expires_in_version": "74",
     "kind": "categorical",
     "labels": ["Unknown", "Aes128CmHmacSha1_80", "Aes128CmHmacSha1_32", "AeadAes128Gcm", "AeadAes256Gcm"],
     "description": "The SRTP cipher (as label) negotiated for a RTCPeerConnection."
   },
   "WEBRTC_DTLS_PROTOCOL_VERSION": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content", "socket"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
-    "bug_numbers": [1491511],
-    "expires_in_version": "68",
+    "bug_numbers": [1491511, 1570634],
+    "expires_in_version": "74",
     "kind": "categorical",
     "labels": ["Unknown", "Dtls_version_1_0", "Dtls_version_1_2", "Dtls_version_1_3"],
     "description": "The DTLS protocol version (as label) negotiated for a RTCPeerConnection."
@@ -12655,93 +12655,93 @@
     "description": "The number of entries in persistent DataStorage (HSTS and HPKP data, basically)"
   },
   "VIDEO_PLAY_TIME_MS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "never",
     "description": "Total time spent playing video in milliseconds. This reports the total play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
     "n_buckets": 100,
-    "bug_numbers": [1261955, 1127646]
+    "bug_numbers": [1261955, 1127646, 1570634]
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "never",
     "description": "Total time spent playing video while element is hidden, in milliseconds. This reports the total hidden play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
     "n_buckets": 100,
-    "bug_numbers": [1285419]
+    "bug_numbers": [1285419, 1570634]
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "never",
     "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1287987]
+    "bug_numbers": [1287987, 1570634]
   },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "74",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145]
+    "bug_numbers": [1293145, 1570634]
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "74",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668]
+    "bug_numbers": [1289668, 1570634]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "74",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668]
+    "bug_numbers": [1289668, 1570634]
   },
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "74",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
-    "bug_numbers": [1294349]
+    "bug_numbers": [1294349, 1570634]
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
-    "bug_numbers": [1230265],
+    "expires_in_version": "74",
+    "bug_numbers": [1230265, 1570634],
     "kind": "linear",
     "high": 1000,
     "n_buckets": 100,
@@ -12749,8 +12749,8 @@
     "releaseChannelCollection": "opt-out"
   },
   "MEDIA_PLAY_PROMISE_RESOLUTION": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "bug_numbers": [1453176],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "72",
@@ -13684,14 +13684,14 @@
     "description": "Whether a preloaded script was used or the reason it was not used."
   },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1238433],
+    "bug_numbers": [1238433, 1570634],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
   },
   "MEDIA_DECODER_BACKEND_USED": {
@@ -13910,13 +13910,13 @@
     "bug_numbers": [1002846]
   },
   "WEBVTT_TRACK_KINDS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "74",
     "kind": "enumerated",
     "n_values": 10,
-    "bug_numbers": [1280644],
+    "bug_numbers": [1280644, 1570634],
     "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
     "releaseChannelCollection": "opt-out"
   },
@@ -15318,35 +15318,35 @@
     "description": "What buttons are pressed most often on the Mac Touch Bar?"
   },
   "AUDIO_TRACK_SILENCE_PROPORTION": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": [
       "alwu@mozilla.com",
       "cpearce@mozilla.com",
       "nohlmeier@mozilla.com"
     ],
-    "expires_in_version": "68",
+    "expires_in_version": "74",
     "kind": "linear",
     "high": 100,
     "n_buckets": 10,
-    "bug_numbers": [1482259],
+    "bug_numbers": [1482259, 1570634],
     "description": "In order to know how many silent audio track in the web comparing to other normal media, we record the silence proportion of audio track of media element. The range of value is from 0% - 100%.",
     "releaseChannelCollection": "opt-out"
   },
   "WEB_AUDIO_BECOMES_AUDIBLE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "geckoview"],
     "alert_emails": [
       "alwu@mozilla.com",
       "cpearce@mozilla.com",
       "nohlmeier@mozilla.com",
       "padenot@mozilla.com"
     ],
-    "expires_in_version": "69",
+    "expires_in_version": "74",
     "kind": "linear",
     "high": 60,
     "n_buckets": 10,
-    "bug_numbers": [1490074],
+    "bug_numbers": [1490074, 1570634],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
