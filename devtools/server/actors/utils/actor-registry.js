@@ -255,6 +255,11 @@ const ActorRegistry = {
         type: { target: true },
       }
     );
+    this.registerModule("devtools/server/actors/manifest", {
+      prefix: "manifest",
+      constructor: "ManifestActor",
+      type: { target: true },
+    });
   },
 
   /**
