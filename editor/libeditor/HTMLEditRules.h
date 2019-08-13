@@ -136,13 +136,6 @@ class HTMLEditRules : public TextEditRules {
   void StartToListenToEditSubActions() { mListenerEnabled = true; }
   void EndListeningToEditSubActions() { mListenerEnabled = false; }
 
-  /**
-   * OnModifyDocument() is called when DocumentModifiedWorker() calls
-   * HTMLEditor::OnModifyDocument().  The caller guarantees that there
-   * is AutoEditActionDataSetter instance in the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
-
  protected:
   virtual ~HTMLEditRules() = default;
 
@@ -190,12 +183,6 @@ class HTMLEditRules : public TextEditRules {
                                        const nsAString* inString,
                                        nsAString* outString,
                                        int32_t aMaxLength);
-
-  /**
-   * WillLoadHTML() is called before loading enter document from source.
-   * This removes padding <br> element for empty editor if there is.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillLoadHTML();
 
   /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is

@@ -291,6 +291,12 @@ a.hidden,
 }
 
 /* Legend */
+#graphLegendDescription {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
 input {
   position: absolute;
   left: -100px;

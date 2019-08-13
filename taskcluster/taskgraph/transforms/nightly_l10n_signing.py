@@ -39,6 +39,9 @@ def define_upstream_artifacts(config, jobs):
         dep_job = job['primary-dependency']
 
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
+        if dep_job.attributes.get('chunk_locales'):
+            # Used for l10n attribute passthrough
+            job['attributes']['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
         locale_specifications = generate_specifications_of_artifacts_to_sign(
             config,
@@ -53,11 +56,13 @@ def define_upstream_artifacts(config, jobs):
                 'taskType': 'l10n',
                 # Set paths based on artifacts in the specs (above) one per
                 # locale present in the chunk this is signing stuff for.
-                'paths': [
+                # Pass paths through set and sorted() so we get a list back
+                # and we remove any duplicates (e.g. hardcoded ja-JP-mac langpack)
+                'paths': sorted(set([
                     path_template.format(locale=locale)
                     for locale in dep_job.attributes.get('chunk_locales', [])
                     for path_template in spec['artifacts']
-                ],
+                ])),
                 'formats': spec['formats']
             })
 

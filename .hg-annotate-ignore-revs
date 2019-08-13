@@ -416,3 +416,4 @@ aa12d9e8a4f1cad6b8057ef69fa4b3273c3c3fab - Victor Porof - Bug 1561435 - Format b
 fb99af508d47ca0bfecbe0e6be3fc3f998576d63 - Victor Porof - Bug 1561435 - Format browser/actors/, a=automatic-formatting
 e78cfc62325608065dbb0819d2ceecf38fb0e233 - Victor Porof - Bug 1561435 - Fix linting errors for accessible/, r=standard8
 59f51c65dbf0c25ac557546d970c32648ab5d007 - Victor Porof - Bug 1561435 - Format accessible/, a=automatic-formatting
+3b3a2e363253d5db0f2103064e8f59d8a2ae0543 - Gabriel Luong - Bug 1569574 - Part 2: Format devtools/client/responsive/. a=automatic-formatting r=vporof

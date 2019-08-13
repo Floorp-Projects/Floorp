@@ -140,14 +140,14 @@ add_task(async function testSubcategoryLabels() {
       () =>
         categoryLabelEnabled.textContent ==
         gNavigatorBundle.getString(
-          "contentBlocking.cookies.blockingTrackers2.label"
+          "contentBlocking.cookies.blockingTrackers3.label"
         ),
       "The category label has updated correctly"
     );
     ok(
       categoryLabelEnabled.textContent ==
         gNavigatorBundle.getString(
-          "contentBlocking.cookies.blockingTrackers2.label"
+          "contentBlocking.cookies.blockingTrackers3.label"
         )
     );
 

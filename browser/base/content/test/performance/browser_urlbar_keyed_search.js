@@ -35,5 +35,5 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
 ];
 
 add_task(async function quantumbar() {
-  await runUrlbarTest(false, true, EXPECTED_REFLOWS_FIRST_OPEN);
+  await runUrlbarTest(true, EXPECTED_REFLOWS_FIRST_OPEN);
 });

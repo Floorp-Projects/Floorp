@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,16 +12,16 @@
 
 [package]
 name = "image"
-version = "0.21.1"
+version = "0.22.1"
 authors = ["ccgn", "bvssvni <bvssvni@gmail.com>", "nwin", "TyOverby <ty@pre-alpha.com>", "HeroicKatora", "Calum", "CensoredUsername <cens.username@gmail.com>", "fintelia <fintelia@gmail.com>"]
 exclude = ["src/png/testdata/*", "examples/*", "tests/*"]
 description = "Imaging library written in Rust. Provides basic filters and decoders for the most common image formats."
-homepage = "https://github.com/PistonDevelopers/image"
+homepage = "https://github.com/image-rs/image"
 documentation = "https://docs.rs/image"
 readme = "README.md"
 categories = ["multimedia::images", "multimedia::encoding"]
 license = "MIT"
-repository = "https://github.com/PistonDevelopers/image.git"
+repository = "https://github.com/image-rs/image.git"
 
 [lib]
 name = "image"
@@ -52,7 +52,7 @@ default-features = false
 version = "0.2.0"
 
 [dependencies.png]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.scoped_threadpool]
@@ -60,10 +60,13 @@ version = "0.1"
 optional = true
 
 [dependencies.tiff]
-version = "0.2.0"
+version = "0.3.1"
 optional = true
+[dev-dependencies.crc32fast]
+version = "1.2.0"
+
 [dev-dependencies.glob]
-version = "0.2.10"
+version = "0.3"
 
 [dev-dependencies.num-complex]
 version = "0.2.0"

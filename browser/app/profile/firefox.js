@@ -1927,7 +1927,7 @@ pref("privacy.socialtracking.notification.enabled", true);
 // minimum number of page loads until showing popup.
 pref("privacy.socialtracking.notification.session.pageload.min", 4);
 // timestamp of last popup was shown.
-pref("privacy.socialtracking.notification.lastSeen", 0);
+pref("privacy.socialtracking.notification.lastShown", "0");
 // don't show popup again within 2 days (2 * 86400 * 1000 milliseconds)
 pref("privacy.socialtracking.notification.period.min", 172800000);
 // current number of popup shown in the profile.

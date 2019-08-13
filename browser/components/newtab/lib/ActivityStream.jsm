@@ -16,49 +16,79 @@ ChromeUtils.defineModuleGetter(
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-const { AboutPreferences } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutPreferences",
   "resource://activity-stream/lib/AboutPreferences.jsm"
 );
-const { DefaultPrefs } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "DefaultPrefs",
   "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
 );
-const { NewTabInit } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "NewTabInit",
   "resource://activity-stream/lib/NewTabInit.jsm"
 );
-const { SectionsFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "SectionsFeed",
   "resource://activity-stream/lib/SectionsManager.jsm"
 );
-const { PlacesFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesFeed",
   "resource://activity-stream/lib/PlacesFeed.jsm"
 );
-const { PrefsFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrefsFeed",
   "resource://activity-stream/lib/PrefsFeed.jsm"
 );
-const { Store } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "Store",
   "resource://activity-stream/lib/Store.jsm"
 );
-const { SystemTickFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "SystemTickFeed",
   "resource://activity-stream/lib/SystemTickFeed.jsm"
 );
-const { TelemetryFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "TelemetryFeed",
   "resource://activity-stream/lib/TelemetryFeed.jsm"
 );
-const { FaviconFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "FaviconFeed",
   "resource://activity-stream/lib/FaviconFeed.jsm"
 );
-const { TopSitesFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "TopSitesFeed",
   "resource://activity-stream/lib/TopSitesFeed.jsm"
 );
-const { TopStoriesFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "TopStoriesFeed",
   "resource://activity-stream/lib/TopStoriesFeed.jsm"
 );
-const { HighlightsFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "HighlightsFeed",
   "resource://activity-stream/lib/HighlightsFeed.jsm"
 );
-const { ASRouterFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "ASRouterFeed",
   "resource://activity-stream/lib/ASRouterFeed.jsm"
 );
-const { DiscoveryStreamFeed } = ChromeUtils.import(
+ChromeUtils.defineModuleGetter(
+  this,
+  "DiscoveryStreamFeed",
   "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
 );
 

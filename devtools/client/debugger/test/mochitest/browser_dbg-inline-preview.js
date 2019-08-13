@@ -5,16 +5,22 @@
 async function checkInlinePreview(dbg, fnName, inlinePreviews) {
   invokeInTab(fnName);
 
-  await waitForAllElements(dbg, "inlinePreviewWidget", inlinePreviews.length);
+  await waitForAllElements(dbg, "inlinePreviewLables", inlinePreviews.length);
 
-  const widgets = findAllElements(dbg, "inlinePreviewWidget");
+  const labels = findAllElements(dbg, "inlinePreviewLables");
+  const values = findAllElements(dbg, "inlinePreviewValues");
 
   inlinePreviews.forEach((inlinePreview, index) => {
     const { identifier, value, expandedValue } = inlinePreview;
     is(
-      widgets[index].innerText,
-      `${identifier}${value}`,
-      `${identifier} in ${fnName} has correct preview`
+      labels[index].innerText,
+      identifier,
+      `${identifier} in ${fnName} has correct inline preview label`
+    );
+    is(
+      values[index].innerText,
+      value,
+      `${identifier} in ${fnName} has correct inline preview value`
     );
   });
 
@@ -25,32 +31,29 @@ async function checkInlinePreview(dbg, fnName, inlinePreviews) {
 add_task(async function() {
   await pushPref("devtools.debugger.features.inline-preview", true);
 
-  const dbg = await initDebugger("doc-preview.html", "preview.js");
-  await selectSource(dbg, "preview.js");
+  const dbg = await initDebugger(
+    "doc-inline-preview.html",
+    "inline-preview.js"
+  );
+  await selectSource(dbg, "inline-preview.js");
 
-  await checkInlinePreview(dbg, "empties", [
+  await checkInlinePreview(dbg, "checkValues", [
     { identifier: "a", value: '""' },
     { identifier: "b", value: "false" },
     { identifier: "c", value: "undefined" },
     { identifier: "d", value: "null" },
-  ]);
-
-  await checkInlinePreview(dbg, "smalls", [
-    { identifier: "a", value: '"..."' },
-    { identifier: "b", value: "true" },
-    { identifier: "c", value: "1" },
-    { identifier: "d", value: "[]" },
-    { identifier: "e", value: "Object { }" },
-  ]);
-
-  await checkInlinePreview(dbg, "objects", [
+    { identifier: "e", value: "[]" },
+    { identifier: "f", value: "Object { }" },
     { identifier: "obj", value: "Object { foo: 1 }" },
-  ]);
-
-  await checkInlinePreview(dbg, "largeArray", [
     {
       identifier: "bs",
       value: "[ {…}, {…}, {…}, … ]",
     },
+  ]);
+
+  await checkInlinePreview(dbg, "columnWise", [
+    { identifier: "c", value: '"c"' },
+    { identifier: "a", value: '"a"' },
+    { identifier: "b", value: '"b"' },
   ]);
 });

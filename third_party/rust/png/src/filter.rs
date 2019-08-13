@@ -1,5 +1,10 @@
 use std;
 
+/// The byte level filter applied to scanlines to prepare them for compression.
+///
+/// Compression in general benefits from repetitive data. The filter is a content-aware method of
+/// compressing the range of occurring byte values to help the compression algorithm. Note that
+/// this does not operate on pixels but on raw bytes of a scanline.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum FilterType {

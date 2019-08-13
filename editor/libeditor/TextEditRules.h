@@ -131,10 +131,6 @@ class TextEditRules {
    */
   void HandleNewLines(nsString& aString);
 
-  bool HasPaddingBRElementForEmptyEditor() const {
-    return !!mPaddingBRElementForEmptyEditor;
-  }
-
  protected:
   void InitFields();
 
@@ -189,16 +185,6 @@ class TextEditRules {
                                     int32_t aMaxLength);
 
   /**
-   * Called before inserting something into the editor.
-   * This method may removes mBougsNode if there is.  Therefore, this method
-   * might cause destroying the editor.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   *                            This can be nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
-
-  /**
    * Called before deleting selected content.
    * This method may actually remove the selected content with
    * DeleteSelectionWithTransaction().  So, this might cause destroying the
@@ -238,12 +224,6 @@ class TextEditRules {
 
   nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
 
-  nsresult WillUndo(bool* aCancel, bool* aHandled);
-  nsresult DidUndo(nsresult aResult);
-
-  nsresult WillRedo(bool* aCancel, bool* aHandled);
-  nsresult DidRedo(nsresult aResult);
-
   /**
    * Called prior to nsIEditor::OutputToString.
    *
@@ -254,11 +234,6 @@ class TextEditRules {
    */
   nsresult WillOutputText(const nsAString* aInFormat, nsAString* aOutText,
                           uint32_t aFlags, bool* aOutCancel, bool* aHandled);
-
-  /**
-   * Check for and replace a redundant trailing break.
-   */
-  MOZ_MUST_USE nsresult RemoveRedundantTrailingBR();
 
   /**
    * Creates a trailing break in the text doc if there is not one already.
@@ -388,9 +363,6 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // mPaddingBRElementForEmptyEditor should be used for placing caret
-  // at proper position when editor is empty.
-  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
   // Cached selected node.
   nsCOMPtr<nsINode> mCachedSelectionNode;
   // Cached selected offset.

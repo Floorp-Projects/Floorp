@@ -28,7 +28,10 @@ config = {
     'min_sdk': 16,
     'operating_system': 'android',
     'partial_env': {
+        'CXXFLAGS': '-stdlib=libstdc++',
+        'LDFLAGS': '-stdlib=libstdc++',
         'PATH': ('%(abs_work_dir)s/src/android-sdk-linux/tools:'
-                 '%(abs_work_dir)s/src/clang/bin/:%(PATH)s'),
+                 '%(abs_work_dir)s/src/clang/bin:'
+                 '%(abs_work_dir)s/src/nasm:%(PATH)s'),
     },
 }

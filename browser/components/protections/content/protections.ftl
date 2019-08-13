@@ -40,6 +40,9 @@ etp-card-content = Trackers follow you around online to collect information abou
 # capitalization for this string should match the output for your locale.
 graph-today = Today
 
+# This string is used to describe the graph for screenreader users.
+graph-legend-description = A graph containing the total number of each type of tracker blocked this week.
+
 social-tab-title = Social Media Trackers
 social-tab-contant = Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online. <a data-l10n-name="learn-more-link">Learn more</a>
 

@@ -18,8 +18,9 @@ export const FLUENT_FILES = [
 ];
 
 export const helpers = {
-  selectInterruptAndTriplets(message = {}) {
-    const hasInterrupt = Boolean(message.content);
+  selectInterruptAndTriplets(message = {}, interruptCleared) {
+    const hasInterrupt =
+      interruptCleared === true ? false : Boolean(message.content);
     const hasTriplets = Boolean(message.bundle && message.bundle.length);
     const UTMTerm = message.utm_term || "";
     return {
@@ -71,18 +72,22 @@ export class FirstRun extends React.PureComponent {
   }
 
   static getDerivedStateFromProps(props, state) {
-    const { message } = props;
-    if (message && message.id !== state.prevMessageId) {
+    const { message, interruptCleared } = props;
+    if (
+      interruptCleared !== state.prevInterruptCleared ||
+      (message && message.id !== state.prevMessageId)
+    ) {
       const {
         hasTriplets,
         hasInterrupt,
         interrupt,
         triplets,
         UTMTerm,
-      } = helpers.selectInterruptAndTriplets(message);
+      } = helpers.selectInterruptAndTriplets(message, interruptCleared);
 
       return {
         prevMessageId: message.id,
+        prevInterruptCleared: interruptCleared,
 
         hasInterrupt,
         hasTriplets,
