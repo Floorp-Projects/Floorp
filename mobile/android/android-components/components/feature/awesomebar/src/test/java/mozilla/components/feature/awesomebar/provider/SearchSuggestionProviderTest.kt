@@ -52,7 +52,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -108,7 +108,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -168,7 +168,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -217,7 +217,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -348,7 +348,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -382,7 +382,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                 testContext,
@@ -421,7 +421,7 @@ class SearchSuggestionProviderTest {
             doReturn("google").`when`(searchEngine).name
 
             val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
 
             val useCase = spy(SearchUseCases(
                     testContext,

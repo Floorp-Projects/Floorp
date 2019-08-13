@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.search.suggestions
 
+import android.content.Context
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.SearchEngineManager
 import org.json.JSONException
 import java.io.IOException
 
@@ -16,10 +18,32 @@ typealias SearchSuggestionFetcher = suspend (url: String) -> String?
 /**
  *  Provides an interface to get search suggestions from a given SearchEngine.
  */
-class SearchSuggestionClient(
-    private val searchEngine: SearchEngine,
+class SearchSuggestionClient {
+
+    private val context: Context?
     private val fetcher: SearchSuggestionFetcher
-) {
+
+    val searchEngineManager: SearchEngineManager?
+    var searchEngine: SearchEngine? = null
+        private set
+
+    internal constructor(
+        context: Context?,
+        searchEngineManager: SearchEngineManager?,
+        searchEngine: SearchEngine?,
+        fetcher: SearchSuggestionFetcher
+    ) {
+        this.context = context
+        this.searchEngineManager = searchEngineManager
+        this.searchEngine = searchEngine
+        this.fetcher = fetcher
+    }
+
+    constructor(searchEngine: SearchEngine, fetcher: SearchSuggestionFetcher) :
+        this (null, null, searchEngine, fetcher)
+
+    constructor(context: Context, searchEngineManager: SearchEngineManager, fetcher: SearchSuggestionFetcher) :
+        this (context, searchEngineManager, null, fetcher)
 
     /**
      * Exception types for errors caught while getting a list of suggestions
@@ -27,16 +51,24 @@ class SearchSuggestionClient(
     class FetchException : Exception("There was a problem fetching suggestions")
     class ResponseParserException : Exception("There was a problem parsing the suggestion response")
 
-    init {
-        if (!searchEngine.canProvideSearchSuggestions) {
-            throw IllegalArgumentException("SearchEngine does not support search suggestions!")
-        }
-    }
-
     /**
      * Gets search suggestions for a given query
      */
     suspend fun getSuggestions(query: String): List<String>? {
+        val searchEngine = searchEngine ?: run {
+            requireNotNull(searchEngineManager)
+            requireNotNull(context)
+            searchEngineManager.getDefaultSearchEngineAsync(context).also {
+                searchEngine = it
+            }
+        }
+
+        if (!searchEngine.canProvideSearchSuggestions) {
+            // This search engine doesn't support suggestions. Let's only return a default suggestion
+            // for the entered text.
+            return emptyList()
+        }
+
         val suggestionsURL = searchEngine.buildSuggestionsURL(query)
 
         val parser = selectResponseParser(searchEngine)
