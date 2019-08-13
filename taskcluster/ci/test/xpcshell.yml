@@ -31,6 +31,10 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 windows10-64-asan/opt: false    # No XPCShell on ASAN yet
+                windows7-32-mingwclang/opt: false
+                windows7-32-mingwclang/debug: false
+                windows10-64-mingwclang/opt: false
+                windows10-64-mingwclang/debug: false
                 windows.*: true
                 default: false
 

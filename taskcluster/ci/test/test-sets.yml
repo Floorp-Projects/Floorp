@@ -269,6 +269,20 @@ windows-tests:
     - test-verify-wpt
     - xpcshell
 
+mingwclang-tests-debug:
+    - cppunit
+    - firefox-ui-functional-remote
+    - mochitest-gpu
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+
+mingwclang-tests-opt:
+    - cppunit
+    - mochitest-gpu
+
 windows-aarch64-tests:
     - cppunit
     - crashtest

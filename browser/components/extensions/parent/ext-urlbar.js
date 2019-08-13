@@ -5,6 +5,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarContextualTip: "resource:///modules/UrlbarContextualTip.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderExtension: "resource:///modules/UrlbarProviderExtension.jsm",
 });
@@ -59,6 +60,35 @@ this.urlbar = class extends ExtensionAPI {
           "another extension is already using the contextual tip API."
       );
     }
+  }
+
+  /**
+   * Given either a "button" or "link" string, returns a function to
+   * register click listeners on the contextual tip's button or link element.
+   *
+   * See the `urlbar.contextualTip.onButtonClicked` and
+   * `urlbar.contextualTip.onLinkClicked` events for usage.
+   *
+   * @param {string} type
+   *   Represents the type of element to register a click listener on.
+   *   Must be either "button" or "link".
+   * @returns {function} Returns a function to register on the EventManager.
+   */
+  _registerClickListener(type) {
+    return fire => {
+      this._registerExtensionToUseContextualTip();
+
+      const listener = window => {
+        const windowId = this.extension.windowManager.wrapWindow(window).id;
+        fire.async(windowId);
+      };
+
+      UrlbarContextualTip.addClickListener(type, listener);
+
+      return () => {
+        UrlbarContextualTip.removeClickListener(type, listener);
+      };
+    };
   }
 
   getAPI(context) {
@@ -160,6 +190,28 @@ this.urlbar = class extends ExtensionAPI {
             const mostRecentWindow = windowTracker.getTopNormalWindow(context);
             mostRecentWindow.gURLBar.view.hideContextualTip();
           },
+
+          /*
+           * Fired when the user clicks the contextual tip's button.
+           * The listener is passed the id of the window where
+           * the contextual tip was clicked.
+           */
+          onButtonClicked: new EventManager({
+            context,
+            name: "urlbar.contextualTip.onButtonClicked",
+            register: this._registerClickListener("button"),
+          }).api(),
+
+          /**
+           * Fired when the user clicks the contextual tip's link.
+           * The listener is passed the id of the window where
+           * the contextual tip was clicked.
+           */
+          onLinkClicked: new EventManager({
+            context,
+            name: "urlbar.contextualTip.onLinkClicked",
+            register: this._registerClickListener("link"),
+          }).api(),
         },
       },
     };

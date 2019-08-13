@@ -1919,7 +1919,7 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
       NS_WARNING_ASSERTION(
           runParams.drawMode != DrawMode::GLYPH_PATH,
           "Rendering SVG glyph despite request for glyph path");
-      if (RenderSVGGlyph(runParams.context, devPt, aGlyphID,
+      if (RenderSVGGlyph(runParams.context, textDrawer, devPt, aGlyphID,
                          fontParams.contextPaint, runParams.callbacks,
                          *aEmittedGlyphs)) {
         return;
@@ -1928,8 +1928,9 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
 
     if (fontParams.haveColorGlyphs &&
         !gfxPlatform::GetPlatform()->HasNativeColrFontSupport() &&
-        RenderColorGlyph(runParams.dt, runParams.context, fontParams.scaledFont,
-                         fontParams.drawOptions, devPt, aGlyphID)) {
+        RenderColorGlyph(runParams.dt, runParams.context, textDrawer,
+                         fontParams.scaledFont, fontParams.drawOptions, devPt,
+                         aGlyphID)) {
       return;
     }
 
@@ -2082,14 +2083,6 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
   fontParams.contextPaint = aRunParams.runContextPaint;
 
   if (textDrawer) {
-    Color color;
-    if (fontParams.haveSVGGlyphs ||
-        (fontParams.haveColorGlyphs &&
-         aRunParams.context->HasNonOpaqueNonTransparentColor(color))) {
-      textDrawer->FoundUnsupportedFeature();
-      return;
-    }
-
     fontParams.isVerticalFont = aRunParams.isVerticalRun;
   } else {
     fontParams.isVerticalFont =
@@ -2319,11 +2312,19 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
   }
 }
 
-bool gfxFont::RenderSVGGlyph(gfxContext* aContext, gfx::Point aPoint,
-                             uint32_t aGlyphId,
+bool gfxFont::RenderSVGGlyph(gfxContext* aContext,
+                             layout::TextDrawTarget* aTextDrawer,
+                             gfx::Point aPoint, uint32_t aGlyphId,
                              SVGContextPaint* aContextPaint) const {
   if (!GetFontEntry()->HasSVGGlyph(aGlyphId)) {
     return false;
+  }
+
+  if (aTextDrawer) {
+    // WebRender doesn't support SVG Glyphs.
+    // (pretend to succeed, output doesn't matter, we will emit a blob)
+    aTextDrawer->FoundUnsupportedFeature();
+    return true;
   }
 
   const gfxFloat devUnitsPerSVGUnit =
@@ -2341,18 +2342,21 @@ bool gfxFont::RenderSVGGlyph(gfxContext* aContext, gfx::Point aPoint,
   return true;
 }
 
-bool gfxFont::RenderSVGGlyph(gfxContext* aContext, gfx::Point aPoint,
-                             uint32_t aGlyphId, SVGContextPaint* aContextPaint,
+bool gfxFont::RenderSVGGlyph(gfxContext* aContext,
+                             layout::TextDrawTarget* aTextDrawer,
+                             gfx::Point aPoint, uint32_t aGlyphId,
+                             SVGContextPaint* aContextPaint,
                              gfxTextRunDrawCallbacks* aCallbacks,
                              bool& aEmittedGlyphs) const {
   if (aCallbacks && aEmittedGlyphs) {
     aCallbacks->NotifyGlyphPathEmitted();
     aEmittedGlyphs = false;
   }
-  return RenderSVGGlyph(aContext, aPoint, aGlyphId, aContextPaint);
+  return RenderSVGGlyph(aContext, aTextDrawer, aPoint, aGlyphId, aContextPaint);
 }
 
 bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
+                               layout::TextDrawTarget* aTextDrawer,
                                mozilla::gfx::ScaledFont* scaledFont,
                                mozilla::gfx::DrawOptions aDrawOptions,
                                const mozilla::gfx::Point& aPoint,
@@ -2367,6 +2371,16 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
   if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, defaultColor, layerGlyphs,
                                           layerColors)) {
     return false;
+  }
+
+  // defaultColor is the one that comes from CSS, so it has transparency info.
+  bool hasTransparency = 0.f < defaultColor.a && defaultColor.a < 1.f;
+  if (aTextDrawer && hasTransparency && layerGlyphs.Length() > 1) {
+    // WebRender doesn't support drawing multi-layer transparent color-glyphs,
+    // as it requires compositing all the layers before applying transparency.
+    // (pretend to succeed, output doesn't matter, we will emit a blob)
+    aTextDrawer->FoundUnsupportedFeature();
+    return true;
   }
 
   for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();

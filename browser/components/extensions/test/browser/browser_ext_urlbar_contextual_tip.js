@@ -4,6 +4,12 @@ const { UrlbarTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlbarTestUtils.jsm"
 );
 
+const {
+  Management: {
+    global: { windowTracker },
+  },
+} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+
 /**
  * The two tests below test that the urlbar permission
  * is required to use the contextual tip API.
@@ -371,4 +377,103 @@ add_task(async function contextual_tip_removed_onShutdown() {
   Assert.ok(!win.document.getElementById("urlbar-contextual-tip"));
 
   await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * The following tests for the contextual tip's
+ * `onLinkClicked` and `onButtonClicked` events.
+ */
+
+/**
+ * Tests that a click listener can be set on the given type of element.
+ * @param {string} elementType Either "button" or "link"
+ * @param {boolean} shouldAddListenerBeforeTip
+ *   Indicates whether the click listener should be added before or after
+ *   the setting the contextual tip.
+ */
+async function add_onclick_to_element(elementType, shouldAddListenerBeforeTip) {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  const windowId = windowTracker.getId(win);
+
+  let ext = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    background() {
+      browser.test.onMessage.addListener(
+        (msg, elementType, shouldAddListenerBeforeTip) => {
+          if (msg == "elementType") {
+            const capitalizedElementType =
+              elementType[0].toUpperCase() + elementType.substring(1);
+
+            const addListener = () => {
+              browser.urlbar.contextualTip[
+                `on${capitalizedElementType}Clicked`
+              ].addListener(windowId => {
+                browser.test.sendMessage(`on-${elementType}-clicked`, windowId);
+              });
+            };
+
+            if (shouldAddListenerBeforeTip) {
+              addListener();
+            }
+
+            browser.urlbar.contextualTip.set({
+              title: "Title",
+              [`${elementType}Title`]: "Click Me!",
+            });
+
+            if (!shouldAddListenerBeforeTip) {
+              addListener();
+            }
+
+            browser.test.sendMessage("next-test");
+          }
+        }
+      );
+    },
+  });
+
+  await ext.startup();
+
+  ext.sendMessage("elementType", elementType, shouldAddListenerBeforeTip);
+  await ext.awaitMessage("next-test");
+
+  await BrowserTestUtils.waitForCondition(
+    () => !!win.gURLBar.view.contextualTip._elements
+  );
+
+  win.gURLBar.view.contextualTip._elements[elementType].click();
+  const windowIdFromExtension = await ext.awaitMessage(
+    `on-${elementType}-clicked`
+  );
+
+  Assert.equal(windowId, windowIdFromExtension);
+
+  await ext.unload();
+  await BrowserTestUtils.closeWindow(win);
+}
+
+/**
+ * Tests that a click listener can be added to the button
+ * through `onButtonClicked` and to the link through `onLinkClicked`.
+ */
+add_task(async () => {
+  await add_onclick_to_element("button");
+});
+add_task(async () => {
+  await add_onclick_to_element("link");
+});
+
+/**
+ * Tests that a click listener can be added to the button
+ * through `onButtonClicked` and to the link through `onLinkClicked`
+ * before a contextual tip has been created.
+ */
+add_task(async () => {
+  await add_onclick_to_element("button", true);
+});
+add_task(async () => {
+  await add_onclick_to_element("link", true);
 });
