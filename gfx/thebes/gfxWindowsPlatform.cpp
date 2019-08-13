@@ -1340,6 +1340,12 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
 
   d3d11.EnableByDefault();
 
+  // Check if the user really, really wants WARP.
+  if (StaticPrefs::layers_d3d11_force_warp_AtStartup()) {
+    // Force D3D11 on even if we disabled it.
+    d3d11.UserForceEnable("User force-enabled WARP");
+  }
+
   if (!IsWin8OrLater() &&
       !DeviceManagerDx::Get()->CheckRemotePresentSupport()) {
     nsCOMPtr<nsIGfxInfo> gfxInfo;
@@ -1365,12 +1371,6 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
                                         &message, failureId)) {
     d3d11.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
-  }
-
-  // Check if the user really, really wants WARP.
-  if (StaticPrefs::layers_d3d11_force_warp_AtStartup()) {
-    // Force D3D11 on even if we disabled it.
-    d3d11.UserForceEnable("User force-enabled WARP");
   }
 
   InitializeAdvancedLayersConfig();
