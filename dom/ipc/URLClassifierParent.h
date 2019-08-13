@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace dom {
 
+class IPCURLClassifierFeature;
+
 //////////////////////////////////////////////////////////////
 // URLClassifierParent
 
