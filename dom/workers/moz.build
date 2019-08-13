@@ -71,7 +71,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bindings',
     '/dom/system',
-    '/dom/workers/remoteworkers',
     '/js/xpconnect/loader',
     '/netwerk/base',
     '/xpcom/build',

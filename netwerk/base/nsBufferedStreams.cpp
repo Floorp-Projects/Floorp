@@ -9,7 +9,6 @@
 #include "nsStreamUtils.h"
 #include "nsNetCID.h"
 #include "nsIClassInfoImpl.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include <algorithm>
 
@@ -39,7 +38,6 @@ static struct {
 #endif
 
 using namespace mozilla::ipc;
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::MutexAutoLock;
 using mozilla::Nothing;
@@ -278,16 +276,7 @@ NS_IMPL_CLASSINFO(nsBufferedInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_BUFFEREDINPUTSTREAM_CID)
 
 NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
-  // Unfortunately there isn't a macro that combines ambiguous and conditional,
-  // and as far as I can tell, no other class would need such a macro.
-  if (mIsAsyncInputStream && aIID.Equals(NS_GET_IID(nsIInputStream))) {
-    foundInterface =
-        static_cast<nsIInputStream*>(static_cast<nsIAsyncInputStream*>(this));
-  } else if (!mIsAsyncInputStream && aIID.Equals(NS_GET_IID(nsIInputStream))) {
-    foundInterface = static_cast<nsIInputStream*>(
-        static_cast<nsIBufferedInputStream*>(this));
-  } else
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBufferedInputStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIBufferedInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
@@ -357,19 +346,6 @@ nsBufferedInputStream::Init(nsIInputStream* stream, uint32_t bufferSize) {
   }
 
   return NS_OK;
-}
-
-already_AddRefed<nsIInputStream> nsBufferedInputStream::GetInputStream() {
-  // A non-null mStream implies Init() has been called.
-  MOZ_ASSERT(mStream);
-
-  nsIInputStream* out = nullptr;
-  DebugOnly<nsresult> rv = QueryInterface(NS_GET_IID(nsIInputStream),
-                                          reinterpret_cast<void**>(&out));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(out);
-
-  return already_AddRefed<nsIInputStream>(out);
 }
 
 NS_IMETHODIMP
@@ -788,9 +764,7 @@ nsBufferedInputStream::Clone(nsIInputStream** aResult) {
   rv = bis->Init(clonedStream, mBufferSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult =
-      static_cast<nsBufferedInputStream*>(bis.get())->GetInputStream().take();
-
+  bis.forget(aResult);
   return NS_OK;
 }
 

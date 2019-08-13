@@ -92,22 +92,6 @@ class nsBufferedInputStream final : public nsBufferedStream,
 
   nsIInputStream* Source() { return (nsIInputStream*)mStream.get(); }
 
-  /**
-   * If there's a reference/pointer to an nsBufferedInputStream BEFORE calling
-   * Init() AND the intent is to ultimately convert/assign that
-   * reference/pointer to an nsIInputStream, DO NOT use that initial
-   * reference/pointer. Instead, use the value of QueryInterface-ing to an
-   * nsIInputStream (and, again, the QueryInterface must be performed after
-   * Init()). This is because nsBufferedInputStream has multiple underlying
-   * nsIInputStreams (one from nsIBufferedInputStream and one from
-   * nsIAsyncInputStream), and the correct base nsIInputStream to use will be
-   * unknown until the final value of mIsAsyncInputStream is set in Init().
-   *
-   * This method, however, does just that but also hides the QI details and
-   * will assert if called before Init().
-   */
-  already_AddRefed<nsIInputStream> GetInputStream();
-
  protected:
   virtual ~nsBufferedInputStream() = default;
 

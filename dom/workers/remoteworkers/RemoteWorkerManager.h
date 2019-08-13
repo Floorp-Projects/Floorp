@@ -39,12 +39,9 @@ class RemoteWorkerManager final {
   RemoteWorkerServiceParent* SelectTargetActor(const RemoteWorkerData& aData,
                                                base::ProcessId aProcessId);
 
-  RemoteWorkerServiceParent* SelectTargetActorForServiceWorker() const;
-
   void LaunchInternal(RemoteWorkerController* aController,
                       RemoteWorkerServiceParent* aTargetActor,
-                      const RemoteWorkerData& aData,
-                      bool aRemoteWorkerAlreadyRegistered = false);
+                      const RemoteWorkerData& aData);
 
   void LaunchNewContentProcess();
 
