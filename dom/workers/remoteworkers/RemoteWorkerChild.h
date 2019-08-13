@@ -105,6 +105,9 @@ class RemoteWorkerChild final
 
   mozilla::ipc::IPCResult RecvExecOp(RemoteWorkerOp&& aOp);
 
+  mozilla::ipc::IPCResult RecvExecServiceWorkerOp(
+      ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve);
+
   PFetchEventOpProxyChild* AllocPFetchEventOpProxyChild(
       const ServiceWorkerFetchEventOpArgs& aArgs);
 
