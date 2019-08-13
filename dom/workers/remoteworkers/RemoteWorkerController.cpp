@@ -278,6 +278,21 @@ RefPtr<ServiceWorkerOpPromise> RemoteWorkerController::ExecServiceWorkerOp(
   return promise;
 }
 
+RefPtr<GenericPromise> RemoteWorkerController::SetServiceWorkerSkipWaitingFlag()
+    const {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mObserver);
+
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+
+  static_cast<RemoteWorkerControllerParent*>(mObserver.get())
+      ->MaybeSendSetServiceWorkerSkipWaitingFlag(
+          [promise](bool aOk) { promise->Resolve(aOk, __func__); });
+
+  return promise;
+}
+
 RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
     Type aType, uint64_t aWindowID)
     : mType(aType), mWindowID(aWindowID) {
