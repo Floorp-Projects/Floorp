@@ -51,6 +51,7 @@ class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
 class ServiceWorkerRegistrar;
+class ServiceWorkerShutdownBlocker;
 
 class ServiceWorkerUpdateFinishCallback {
  protected:
@@ -280,6 +281,8 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void NoteInheritedController(const ClientInfo& aClientInfo,
                                const ServiceWorkerDescriptor& aController);
 
+  void BlockShutdownOn(GenericNonExclusivePromise* aPromise);
+
   nsresult GetClientRegistration(
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo** aRegistrationInfo);
@@ -385,6 +388,8 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
                                  const nsAString& aTag, const nsAString& aIcon,
                                  const nsAString& aData,
                                  const nsAString& aBehavior);
+
+  RefPtr<ServiceWorkerShutdownBlocker> mShutdownBlocker;
 };
 
 }  // namespace dom
