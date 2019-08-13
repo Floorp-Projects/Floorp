@@ -16,6 +16,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -198,6 +199,28 @@ class StringListsStorageEngineTest {
             snapshot["telemetry.string_list_metric"]?.count()
         )
 
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
+    }
+
+    @Test
+    fun `set() records an error and returns when passed an empty list`() {
+        val metric = StringListMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_list_metric",
+            sendInPings = listOf("store1")
+        )
+
+        StringListsStorageEngine.set(metricData = metric, value = listOf())
+
+        // If nothing was stored, then the snapshot should be null
+        val snapshot = StringListsStorageEngine.getSnapshot(
+            storeName = "store1",
+            clearStore = false)
+        assertNull("Empty list must not be stored", snapshot)
+
+        // Verify the error was recorded
         assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
