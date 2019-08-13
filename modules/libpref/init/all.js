@@ -1121,9 +1121,6 @@ pref("nglayout.debug.paint_flashing_chrome", false);
 // BasicLayers (other layer managers always update the entire widget area)
 pref("nglayout.debug.widget_update_flashing", false);
 
-// Enable/disable display list invalidation logging --- useful for debugging.
-pref("nglayout.debug.invalidation", false);
-
 // Whether frame visibility tracking is enabled globally.
 pref("layout.framevisibility.enabled", true);
 
