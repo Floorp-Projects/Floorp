@@ -26,7 +26,9 @@ namespace mozilla {
 namespace dom {
 
 class ErrorValue;
+class FetchEventOpProxyChild;
 class RemoteWorkerData;
+class ServiceWorkerOp;
 class WeakWorkerRef;
 class WorkerErrorReport;
 class WorkerPrivate;
@@ -34,7 +36,9 @@ class WorkerPrivate;
 class RemoteWorkerChild final
     : public SupportsThreadSafeWeakPtr<RemoteWorkerChild>,
       public PRemoteWorkerChild {
+  friend class FetchEventOpProxyChild;
   friend class PRemoteWorkerChild;
+  friend class ServiceWorkerOp;
 
  public:
   MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(RemoteWorkerChild)
