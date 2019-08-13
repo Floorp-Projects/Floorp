@@ -70,6 +70,10 @@
             history.pushState({ state: "state2" }, "state2");
             window.scrollTo(0, 0);
             history.back();
+            setTimeout(test);
+            break;
+          }
+          case 7: {
             opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled back to the state1's position");
             opener.is(history.state.state, "state1", "Unexpected state.");
 
@@ -79,6 +83,10 @@
             history.pushState({ state: "state4" }, "state4");
             window.scrollTo(0, 0);
             history.back();
+            setTimeout(test);
+            break;
+          }
+          case 8: {
             opener.is(Math.round(window.scrollY), 0, "Shouldn't have scrolled back to the state3's position");
             opener.is(history.state.state, "state3", "Unexpected state.");
 
@@ -87,8 +95,16 @@
             document.getElementById("bottom").scrollIntoView();
             opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled to 'bottom'.");
             history.back();
+            setTimeout(test);
+            break;
+          }
+          case 9: {
             window.scrollTo(0, 0);
             history.forward();
+            setTimeout(test);
+            break;
+          }
+          case 10: {
             opener.isnot(Math.round(window.scrollY), 0, "Should have scrolled back to the state5's position");
 
             var ifr = document.createElement("iframe");
@@ -97,12 +113,12 @@
             ifr.onload = test;
             break;
           }
-          case 7: {
+          case 11: {
             oldHistoryObject = SpecialPowers.wrap(event.target).contentWindow.history;
             event.target.src = "about:blank";
             break;
           }
-          case 8: {
+          case 12: {
             try {
               oldHistoryObject.scrollRestoration;
               opener.ok(false, "Should have thrown an exception.");
