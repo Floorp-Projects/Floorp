@@ -89,14 +89,8 @@ abstract class LeanplumCloudMessagingProvider {
       return;
     }
     LeanplumCloudMessagingProvider.registrationId = registrationId;
-    // Check if received push notification token is different from stored one and send new one to
-    // server.
-    if (!LeanplumCloudMessagingProvider.registrationId.equals(SharedPreferencesUtil.getString(
-        context, Constants.Defaults.LEANPLUM_PUSH, Constants.Defaults.PROPERTY_REGISTRATION_ID))) {
-      Log.i("Device registered for push notifications with registration token", registrationId);
-      storePreferences(context.getApplicationContext());
-      sendRegistrationIdToBackend(LeanplumCloudMessagingProvider.registrationId);
-    }
+    storePreferences(context.getApplicationContext());
+    sendRegistrationIdToBackend(registrationId);
   }
 
   /**
