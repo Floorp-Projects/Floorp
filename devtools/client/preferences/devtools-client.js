@@ -184,6 +184,7 @@ pref("devtools.netmonitor.ws.payload-preview-height", 128);
 pref("devtools.netmonitor.ws.visibleColumns",
   '["data", "time"]'
 );
+pref("devtools.netmonitor.ws.displayed-frames.limit", 500);
 
 pref("devtools.netmonitor.response.ui.limit", 10240);
 
