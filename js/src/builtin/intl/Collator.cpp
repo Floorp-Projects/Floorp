@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -215,15 +216,12 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  uint32_t index = 0;
-
   // The first element of the collations array must be |null| per
   // ES2017 Intl, 10.2.3 Internal Slots.
-  if (!DefineDataElement(cx, collations, index++, NullHandleValue)) {
+  if (!NewbornArrayPush(cx, collations, NullValue())) {
     return false;
   }
 
-  RootedValue element(cx);
   for (uint32_t i = 0; i < count; i++) {
     const char* collation = uenum_next(values, nullptr, &status);
     if (U_FAILURE(status)) {
@@ -251,8 +249,7 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
     if (!jscollation) {
       return false;
     }
-    element = StringValue(jscollation);
-    if (!DefineDataElement(cx, collations, index++, element)) {
+    if (!NewbornArrayPush(cx, collations, StringValue(jscollation))) {
       return false;
     }
   }
