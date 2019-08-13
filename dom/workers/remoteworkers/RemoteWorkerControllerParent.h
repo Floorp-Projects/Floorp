@@ -31,6 +31,9 @@ class RemoteWorkerControllerParent final : public PRemoteWorkerControllerParent,
   // Returns the corresponding RemoteWorkerParent (if any).
   RefPtr<RemoteWorkerParent> GetRemoteWorkerParent() const;
 
+  void MaybeSendSetServiceWorkerSkipWaitingFlag(
+      std::function<void(bool)>&& aCallback);
+
  private:
   ~RemoteWorkerControllerParent();
 
