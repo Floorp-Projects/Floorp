@@ -19,13 +19,13 @@ add_task(async function() {
   await selectNode("span", inspector);
   const container = await getContainerForSelector("h1", inspector);
 
-  const onHighlighterReady = toolbox.once("highlighter-ready");
+  const onHighlight = toolbox.highlighter.once("node-highlight");
   EventUtils.synthesizeMouseAtCenter(
     container.tagLine,
     { type: "mousemove" },
     inspector.markup.doc.defaultView
   );
-  await onHighlighterReady;
+  await onHighlight;
 
   isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
