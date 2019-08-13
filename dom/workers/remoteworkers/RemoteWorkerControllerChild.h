@@ -48,6 +48,9 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
 
   mozilla::ipc::IPCResult RecvTerminated();
 
+  mozilla::ipc::IPCResult RecvSetServiceWorkerSkipWaitingFlag(
+      SetServiceWorkerSkipWaitingFlagResolver&& aResolve);
+
   RefPtr<RemoteWorkerObserver> mObserver;
 
   bool mIPCActive = true;
