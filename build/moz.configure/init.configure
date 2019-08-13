@@ -627,9 +627,8 @@ option('--target', nargs=1,
 @imports(_from='mozbuild.configure.constants', _import='Endianness')
 @imports(_from='mozbuild.configure.constants', _import='Kernel')
 @imports(_from='mozbuild.configure.constants', _import='OS')
-@imports(_from='__builtin__', _import='KeyError')
 @imports(_from='__builtin__', _import='ValueError')
-def split_triplet(triplet, allow_unknown=False):
+def split_triplet(triplet):
     # The standard triplet is defined as
     #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
     # There is also a quartet form:
@@ -685,8 +684,6 @@ def split_triplet(triplet, allow_unknown=False):
         canonical_os = canonical_kernel = 'OpenBSD'
     elif os.startswith('solaris'):
         canonical_os = canonical_kernel = 'SunOS'
-    elif allow_unknown:
-        canonical_os = canonical_kernel = os
     else:
         raise ValueError('Unknown OS: %s' % os)
 
@@ -734,22 +731,8 @@ def split_triplet(triplet, allow_unknown=False):
     elif cpu == 'sh4':
         canonical_cpu = 'sh4'
         endianness = 'little'
-    elif allow_unknown:
-        canonical_cpu = cpu
-        endianness = 'unknown'
     else:
         raise ValueError('Unknown CPU type: %s' % cpu)
-
-    def sanitize(cls, value):
-        try:
-            return cls(value)
-        except (KeyError, ValueError):
-            if allow_unknown:
-                return value
-            raise
-
-    def bitness(cpu):
-        return CPU_bitness[cpu]
 
     # Toolchains, most notably for cross compilation may use cpu-os
     # prefixes. We need to be more specific about the LLVM target on Mac
@@ -764,11 +747,11 @@ def split_triplet(triplet, allow_unknown=False):
 
     return namespace(
         alias=triplet,
-        cpu=sanitize(CPU, canonical_cpu),
-        bitness=sanitize(bitness, canonical_cpu),
-        kernel=sanitize(Kernel, canonical_kernel),
-        os=sanitize(OS, canonical_os),
-        endianness=sanitize(Endianness, endianness),
+        cpu=CPU(canonical_cpu),
+        bitness=CPU_bitness[canonical_cpu],
+        kernel=Kernel(canonical_kernel),
+        os=OS(canonical_os),
+        endianness=Endianness(endianness),
         raw_cpu=cpu,
         raw_os=os,
         toolchain=toolchain,
