@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.histogram.FunctionalHistogram
+import mozilla.components.service.glean.storages.MemoryDistributionsStorageEngineImplementation
 import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -51,11 +52,11 @@ class MemoryDistributionMetricTypeTest {
         // Check the sum
         assertEquals(1L * kb + 2L * kb + 3L * kb, snapshot.sum)
         // Check that the 1L fell into the first value bucket
-        assertEquals(1L, snapshot.values[1024])
+        assertEquals(1L, snapshot.values[1023])
         // Check that the 2L fell into the second value bucket
-        assertEquals(1L, snapshot.values[2048])
+        assertEquals(1L, snapshot.values[2047])
         // Check that the 3L fell into the third value bucket
-        assertEquals(1L, snapshot.values[2896])
+        assertEquals(1L, snapshot.values[3024])
     }
 
     @Test
@@ -78,7 +79,7 @@ class MemoryDistributionMetricTypeTest {
         // Check the sum
         assertEquals(1L shl 40, snapshot.sum)
         // Check that the 1L fell into 1TB bucket
-        assertEquals(1L, snapshot.values[1L shl 40])
+        assertEquals(1L, snapshot.values[(1L shl 40) - 1])
     }
 
     @Test
@@ -138,11 +139,11 @@ class MemoryDistributionMetricTypeTest {
         // Check the sum
         assertEquals(6144L, snapshot.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot.values[1024])
+        assertEquals(1L, snapshot.values[1023])
         // Check that the 2L fell into the second bucket
-        assertEquals(1L, snapshot.values[2048])
+        assertEquals(1L, snapshot.values[2047])
         // Check that the 3L fell into the third bucket
-        assertEquals(1L, snapshot.values[2896])
+        assertEquals(1L, snapshot.values[3024])
 
         // Check that data was properly recorded in the third ping.
         assertTrue(metric.testHasValue("store3"))
@@ -150,11 +151,11 @@ class MemoryDistributionMetricTypeTest {
         // Check the sum
         assertEquals(6144L, snapshot2.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot2.values[1024])
+        assertEquals(1L, snapshot2.values[1023])
         // Check that the 2L fell into the second bucket
-        assertEquals(1L, snapshot2.values[2048])
+        assertEquals(1L, snapshot2.values[2047])
         // Check that the 3L fell into the third bucket
-        assertEquals(1L, snapshot2.values[2896])
+        assertEquals(1L, snapshot2.values[3024])
     }
 
     @Test
@@ -174,6 +175,10 @@ class MemoryDistributionMetricTypeTest {
         metric.accumulateSamples(testSamples)
 
         val kb = 1024L
+        val hist = FunctionalHistogram(
+            MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+            MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store1"))
@@ -182,15 +187,15 @@ class MemoryDistributionMetricTypeTest {
         assertEquals(6L * kb, snapshot.sum)
         // Check that the 1L fell into the first bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(1 * kb)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(1 * kb)]
         )
         // Check that the 2L fell into the second bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(2 * kb)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(2 * kb)]
         )
         // Check that the 3L fell into the third bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(3 * kb)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(3 * kb)]
         )
     }
 }

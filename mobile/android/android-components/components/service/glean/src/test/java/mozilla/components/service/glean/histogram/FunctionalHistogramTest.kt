@@ -21,30 +21,32 @@ class FunctionalHistogramTest {
 
     @Test
     fun `sampleToBucketMinimum correctly rounds down`() {
+        val hist = FunctionalHistogram(2.0, 8.0)
+
         // Check each of the first 100 integers, where numerical accuracy of the round-tripping
         // is most potentially problematic
         for (i in (0..100)) {
             val value = i.toLong()
-            val bucketMinimum = FunctionalHistogram.sampleToBucketMinimum(value)
+            val bucketMinimum = hist.sampleToBucketMinimum(value)
             assert(bucketMinimum <= value)
 
-            assertEquals(bucketMinimum, FunctionalHistogram.sampleToBucketMinimum(bucketMinimum))
+            assertEquals(bucketMinimum, hist.sampleToBucketMinimum(bucketMinimum))
         }
 
         // Do an exponential sampling of higher numbers
         for (i in (11..500)) {
             val value = pow(1.5, i.toDouble()).toLong()
-            val bucketMinimum = FunctionalHistogram.sampleToBucketMinimum(value)
+            val bucketMinimum = hist.sampleToBucketMinimum(value)
             assert(bucketMinimum <= value)
 
-            assertEquals(bucketMinimum, FunctionalHistogram.sampleToBucketMinimum(bucketMinimum))
+            assertEquals(bucketMinimum, hist.sampleToBucketMinimum(bucketMinimum))
         }
     }
 
     @Test
     fun `toJsonObject correctly converts a FunctionalHistogram object`() {
         // Define a FunctionalHistogram object
-        val tdd = FunctionalHistogram()
+        val tdd = FunctionalHistogram(2.0, 8.0)
 
         // Accumulate some samples to populate sum and values properties
         tdd.accumulate(1L)

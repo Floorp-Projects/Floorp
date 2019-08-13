@@ -28,57 +28,15 @@ import kotlin.math.log
  * @param sum the accumulated sum of all the samples in the histogram
  */
 data class FunctionalHistogram(
+    val logBase: Double,
+    val bucketsPerMagnitude: Double,
     // map from bucket limits to accumulated values
     val values: MutableMap<Long, Long> = mutableMapOf(),
     var sum: Long = 0
 ) {
+    private val exponent = pow(logBase, 1.0 / bucketsPerMagnitude)
+
     companion object {
-        // The base of the logarithm used to determine bucketing
-        internal const val LOG_BASE = 2.0
-
-        // The buckets per each order of magnitude of the logarithm.
-        internal const val BUCKETS_PER_MAGNITUDE = 8.0
-
-        // The combined log base and buckets per magnitude.
-        internal val EXPONENT = pow(LOG_BASE, 1.0 / BUCKETS_PER_MAGNITUDE)
-
-        /**
-         * Maps a sample to a "bucket index" that it belongs in.
-         * A "bucket index" is the consecutive integer index of each bucket, useful as a
-         * mathematical concept, even though the internal representation is stored and
-         * sent using the minimum value in each bucket.
-         *
-         * @param sample The data sample
-         * @return The bucket index the sample belongs in
-         */
-        internal fun sampleToBucketIndex(sample: Long): Long {
-            return log(sample.toDouble() + 1, EXPONENT).toLong()
-        }
-
-        /**
-         * Determines the minimum value of a bucket, given a bucket index.
-         *
-         * @param bucketIndex The ordinal index of a bucket
-         * @return The minimum value of the bucket
-         */
-        internal fun bucketIndexToBucketMinimum(bucketIndex: Long): Long {
-            return pow(EXPONENT, bucketIndex.toDouble()).toLong()
-        }
-
-        /**
-         * Maps a sample to the minimum value of the bucket it belongs in.
-         *
-         * @param sample The sample value
-         @ @return the minimum value of the bucket the sample belongs in
-         */
-        internal fun sampleToBucketMinimum(sample: Long): Long {
-            return if (sample == 0L) {
-                0L
-            } else {
-                bucketIndexToBucketMinimum(sampleToBucketIndex(sample))
-            }
-        }
-
         /**
          * Factory function that takes stringified JSON and converts it back into a
          * [FunctionalHistogram].
@@ -91,6 +49,17 @@ data class FunctionalHistogram(
             val jsonObject: JSONObject
             try {
                 jsonObject = JSONObject(json)
+            } catch (e: org.json.JSONException) {
+                return null
+            }
+
+            val logBase = try {
+                jsonObject.getDouble("log_base")
+            } catch (e: org.json.JSONException) {
+                return null
+            }
+            val bucketsPerMagnitude = try {
+                jsonObject.getDouble("buckets_per_magnitude")
             } catch (e: org.json.JSONException) {
                 return null
             }
@@ -113,9 +82,48 @@ data class FunctionalHistogram(
             val sum = jsonObject.tryGetLong("sum") ?: return null
 
             return FunctionalHistogram(
+                logBase = logBase,
+                bucketsPerMagnitude = bucketsPerMagnitude,
                 values = values,
                 sum = sum
             )
+        }
+    }
+
+    /**
+      * Maps a sample to a "bucket index" that it belongs in.
+      * A "bucket index" is the consecutive integer index of each bucket, useful as a
+      * mathematical concept, even though the internal representation is stored and
+      * sent using the minimum value in each bucket.
+      *
+      * @param sample The data sample
+      * @return The bucket index the sample belongs in
+      */
+    internal fun sampleToBucketIndex(sample: Long): Long {
+        return log(sample.toDouble() + 1, exponent).toLong()
+    }
+
+    /**
+      * Determines the minimum value of a bucket, given a bucket index.
+      *
+      * @param bucketIndex The ordinal index of a bucket
+      * @return The minimum value of the bucket
+      */
+    internal fun bucketIndexToBucketMinimum(bucketIndex: Long): Long {
+        return pow(exponent, bucketIndex.toDouble()).toLong()
+    }
+
+    /**
+      * Maps a sample to the minimum value of the bucket it belongs in.
+      *
+      * @param sample The sample value
+      * @return the minimum value of the bucket the sample belongs in
+      */
+    internal fun sampleToBucketMinimum(sample: Long): Long {
+        return if (sample == 0L) {
+            0L
+        } else {
+            bucketIndexToBucketMinimum(sampleToBucketIndex(sample))
         }
     }
 
@@ -139,10 +147,12 @@ data class FunctionalHistogram(
      * Helper function to build the [FunctionalHistogram] into a JSONObject for serialization
      * purposes.
      *
-     * @return The histogram as JSON for persistence
+     * @return The histogram as [JSONObject] for persistence
      */
     internal fun toJsonObject(): JSONObject {
         return JSONObject(mapOf(
+            "log_base" to logBase,
+            "buckets_per_magnitude" to bucketsPerMagnitude,
             "values" to values.mapKeys { "${it.key}" },
             "sum" to sum
         ))
@@ -152,7 +162,9 @@ data class FunctionalHistogram(
      * Helper function to build the [FunctionalHistogram] into a JSONObject for sending in the
      * ping payload.
      *
-     * @return The histogram as JSON for a ping payload
+     * All buckets [min, max + 1] are included in the histogram, even if the have zero values.
+     *
+     * @return The histogram as [JSONObject] for a ping payload
      */
     internal fun toJsonPayloadObject(): JSONObject {
         val completeValues = if (values.size != 0) {

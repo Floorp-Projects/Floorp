@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.histogram.FunctionalHistogram
+import mozilla.components.service.glean.storages.TimingDistributionsStorageEngineImplementation
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.timing.TimingManager
 import org.junit.After
@@ -166,6 +167,10 @@ class TimingDistributionMetricTypeTest {
         metric.accumulateSamples(testSamples)
 
         val secondsToNanos = 1000L * 1000L * 1000L
+        val hist = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
 
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store1"))
@@ -174,15 +179,15 @@ class TimingDistributionMetricTypeTest {
         assertEquals(6L * secondsToNanos, snapshot.sum)
         // Check that the 1L fell into the first bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(1 * secondsToNanos)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(1 * secondsToNanos)]
         )
         // Check that the 2L fell into the second bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(2 * secondsToNanos)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(2 * secondsToNanos)]
         )
         // Check that the 3L fell into the third bucket
         assertEquals(
-            1L, snapshot.values[FunctionalHistogram.sampleToBucketMinimum(3 * secondsToNanos)]
+            1L, snapshot.values[hist.sampleToBucketMinimum(3 * secondsToNanos)]
         )
     }
 }

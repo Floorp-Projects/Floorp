@@ -73,7 +73,10 @@ class TimingDistributionsStorageEngineTest {
 
     @Test
     fun `deserializer should correctly parse timing distributions`() {
-        val td = FunctionalHistogram()
+        val td = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
 
         val persistedSample = mapOf(
             "store1#telemetry.invalid_string" to "invalid_string",
@@ -82,8 +85,8 @@ class TimingDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_td_values" to "{\"values\":{\"0\": \"nope\"},\"sum\":0}",
-            "store1#telemetry.invalid_td_sum" to "{\"values\":{},\"sum\":\"nope\"}",
+            "store1#telemetry.invalid_td_values" to "{\"log_base\":2.0,\"buckets_per_magnitude\":8.0,\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_td_sum" to "{\"log_base\":2.0,\"buckets_per_magnitude\":8.0,\"values\":{},\"sum\":\"nope\"}",
             "store1#telemetry.test_timing_distribution" to td.toJsonObject().toString()
         )
 
@@ -151,7 +154,10 @@ class TimingDistributionsStorageEngineTest {
 
             // Using the FunctionalHistogram object here to easily turn the object into JSON
             // for comparison purposes.
-            val td = FunctionalHistogram()
+            val td = FunctionalHistogram(
+                TimingDistributionsStorageEngineImplementation.LOG_BASE,
+                TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
             td.accumulate(1000000L)
 
             runBlocking {
@@ -175,7 +181,10 @@ class TimingDistributionsStorageEngineTest {
             val storageEngine = TimingDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val td = FunctionalHistogram()
+            val td = FunctionalHistogram(
+                TimingDistributionsStorageEngineImplementation.LOG_BASE,
+                TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
             td.accumulate(1000000L)
 
             // Get snapshot from store1
@@ -237,10 +246,14 @@ class TimingDistributionsStorageEngineTest {
             metric.testHasValue())
 
         // Make sure that the overflow landed in the correct (last) bucket
+        val hist = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values[FunctionalHistogram.sampleToBucketMinimum(TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME)])
+            snapshot.values[hist.sampleToBucketMinimum(TimingDistributionsStorageEngineImplementation.MAX_SAMPLE_TIME)])
     }
 
     @Test
@@ -271,12 +284,17 @@ class TimingDistributionsStorageEngineTest {
         // Make sure that the samples are in the correct buckets
         val snapshot = metric.testGetValue()
 
+        val hist = FunctionalHistogram(
+            TimingDistributionsStorageEngineImplementation.LOG_BASE,
+            TimingDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
+
         // Check sum and count
         assertEquals("Accumulating updates the sum", 11110, snapshot.sum)
         assertEquals("Accumulating updates the count", 4, snapshot.count)
 
         for (i in samples) {
-            val binEdge = FunctionalHistogram.sampleToBucketMinimum(i)
+            val binEdge = hist.sampleToBucketMinimum(i)
             assertEquals("Accumulating should increment correct bucket", 1L, snapshot.values[binEdge])
         }
 
@@ -285,7 +303,7 @@ class TimingDistributionsStorageEngineTest {
         assertEquals(81, values.length())
 
         for (i in samples) {
-            val binEdge = FunctionalHistogram.sampleToBucketMinimum(i)
+            val binEdge = hist.sampleToBucketMinimum(i)
             assertEquals("Accumulating should increment correct bucket", 1L, values.getLong(binEdge.toString()))
             values.remove(binEdge.toString())
         }

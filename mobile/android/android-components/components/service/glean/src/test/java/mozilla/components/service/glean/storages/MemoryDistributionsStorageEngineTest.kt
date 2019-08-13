@@ -61,13 +61,16 @@ class MemoryDistributionsStorageEngineTest {
                 clearStore = true
             )
             assertEquals(1, snapshot!!.size)
-            assertEquals(1L, snapshot["telemetry.test_memory_distribution"]?.values!![1024])
+            assertEquals(1L, snapshot["telemetry.test_memory_distribution"]?.values!![1023])
         }
     }
 
     @Test
     fun `deserializer should correctly parse memory distributions`() {
-        val md = FunctionalHistogram()
+        val md = FunctionalHistogram(
+            MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+            MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
 
         val persistedSample = mapOf(
             "store1#telemetry.invalid_string" to "invalid_string",
@@ -76,8 +79,8 @@ class MemoryDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
-            "store1#telemetry.invalid_md_values" to "{\"values\":{\"0\": \"nope\"},\"sum\":0}",
-            "store1#telemetry.invalid_md_sum" to "{\"values\":{},\"sum\":\"nope\"}",
+            "store1#telemetry.invalid_md_values" to "{\"log_base\":2.0,\"buckets_per_magnitude\":16.0,\"values\":{\"0\": \"nope\"},\"sum\":0}",
+            "store1#telemetry.invalid_md_sum" to "{\"log_base\":2.0,\"buckets_per_magnitude\":16.0,\"values\":{},\"sum\":\"nope\"}",
             "store1#telemetry.test_memory_distribution" to md.toJsonObject().toString()
         )
 
@@ -142,7 +145,10 @@ class MemoryDistributionsStorageEngineTest {
 
             // Using the FunctionalHistogram object here to easily turn the object into JSON
             // for comparison purposes.
-            val md = FunctionalHistogram()
+            val md = FunctionalHistogram(
+                MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+                MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
             md.accumulate(1000000L * 1024L)
 
             runBlocking {
@@ -167,7 +173,10 @@ class MemoryDistributionsStorageEngineTest {
             val storageEngine = MemoryDistributionsStorageEngineImplementation()
             storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
-            val md = FunctionalHistogram()
+            val md = FunctionalHistogram(
+                MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+                MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+            )
             md.accumulate(1000000L * 1024)
 
             // Get snapshot from store1
@@ -217,6 +226,11 @@ class MemoryDistributionsStorageEngineTest {
         // Attempt to accumulate an overflow sample
         metric.accumulate(1L shl 41)
 
+        val hist = FunctionalHistogram(
+            MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+            MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
+
         // Check that memory distribution was recorded.
         assertTrue("Accumulating overflow values records data",
             metric.testHasValue())
@@ -225,7 +239,7 @@ class MemoryDistributionsStorageEngineTest {
         val snapshot = metric.testGetValue()
         assertEquals("Accumulating overflow values should increment last bucket",
             1L,
-            snapshot.values[FunctionalHistogram.sampleToBucketMinimum(MemoryDistributionsStorageEngineImplementation.MAX_BYTES)])
+            snapshot.values[hist.sampleToBucketMinimum(MemoryDistributionsStorageEngineImplementation.MAX_BYTES)])
     }
 
     @Test
@@ -257,17 +271,22 @@ class MemoryDistributionsStorageEngineTest {
         assertEquals("Accumulating updates the sum", 11110, snapshot.sum)
         assertEquals("Accumulating updates the count", 4, snapshot.count)
 
+        val hist = FunctionalHistogram(
+            MemoryDistributionsStorageEngineImplementation.LOG_BASE,
+            MemoryDistributionsStorageEngineImplementation.BUCKETS_PER_MAGNITUDE
+        )
+
         for (i in samples) {
-            val binEdge = FunctionalHistogram.sampleToBucketMinimum(i)
+            val binEdge = hist.sampleToBucketMinimum(i)
             assertEquals("Accumulating should increment correct bucket", 1L, snapshot.values[binEdge])
         }
 
         val json = snapshot.toJsonPayloadObject()
         val values = json.getJSONObject("values")
-        assertEquals(81, values.length())
+        assertEquals(154, values.length())
 
         for (i in samples) {
-            val binEdge = FunctionalHistogram.sampleToBucketMinimum(i)
+            val binEdge = hist.sampleToBucketMinimum(i)
             assertEquals("Accumulating should increment correct bucket", 1L, values.getLong(binEdge.toString()))
             values.remove(binEdge.toString())
         }

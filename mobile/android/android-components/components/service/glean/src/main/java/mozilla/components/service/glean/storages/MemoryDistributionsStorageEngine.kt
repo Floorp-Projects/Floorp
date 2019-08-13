@@ -25,6 +25,12 @@ internal open class MemoryDistributionsStorageEngineImplementation(
 ) : GenericStorageEngine<FunctionalHistogram>() {
 
     companion object {
+        // The base of the logarithm used to determine bucketing
+        internal const val LOG_BASE = 2.0
+
+        // The buckets per each order of magnitude of the logarithm.
+        internal const val BUCKETS_PER_MAGNITUDE = 16.0
+
         // Set a maximum recordable value of 1 terabyte so the buckets aren't
         // completely unbounded.
         internal const val MAX_BYTES: Long = 1L shl 40
@@ -126,14 +132,14 @@ internal open class MemoryDistributionsStorageEngineImplementation(
             // Too large samples should just be truncated, but otherwise we record and handle them
         }
 
-        val dummy = FunctionalHistogram()
+        val dummy = FunctionalHistogram(LOG_BASE, BUCKETS_PER_MAGNITUDE)
         validSamples.forEach { sample ->
             super.recordMetric(metricData, dummy, null) { currentValue, _ ->
                 currentValue?.let {
                     it.accumulate(sample)
                     it
                 } ?: let {
-                    val newMD = FunctionalHistogram()
+                    val newMD = FunctionalHistogram(LOG_BASE, BUCKETS_PER_MAGNITUDE)
                     newMD.accumulate(sample)
                     return@let newMD
                 }

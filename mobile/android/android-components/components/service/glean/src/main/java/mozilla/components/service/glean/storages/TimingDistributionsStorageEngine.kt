@@ -25,6 +25,12 @@ internal open class TimingDistributionsStorageEngineImplementation(
 ) : GenericStorageEngine<FunctionalHistogram>() {
 
     companion object {
+        // The base of the logarithm used to determine bucketing
+        internal const val LOG_BASE = 2.0
+
+        // The buckets per each order of magnitude of the logarithm.
+        internal const val BUCKETS_PER_MAGNITUDE = 8.0
+
         // Maximum time of 10 minutes in nanoseconds. This maximum means we
         // retain a maximum of 313 buckets.
         internal const val MAX_SAMPLE_TIME: Long = 1000L * 1000L * 1000L * 60L * 10L
@@ -124,14 +130,14 @@ internal open class TimingDistributionsStorageEngineImplementation(
             // Too long samples should just be truncated, but otherwise we record and handle them
         }
 
-        val dummy = FunctionalHistogram()
+        val dummy = FunctionalHistogram(LOG_BASE, BUCKETS_PER_MAGNITUDE)
         validSamples.forEach { sample ->
             super.recordMetric(metricData, dummy, null) { currentValue, _ ->
                 currentValue?.let {
                     it.accumulate(sample)
                     it
                 } ?: let {
-                    val newTD = FunctionalHistogram()
+                    val newTD = FunctionalHistogram(LOG_BASE, BUCKETS_PER_MAGNITUDE)
                     newTD.accumulate(sample)
                     return@let newTD
                 }
