@@ -248,6 +248,33 @@
   color: var(--autocomplete-popup-highlight-background);
 }
 
+/* Search one-offs. */
+#urlbar-results > .search-one-offs {
+  -moz-box-orient: horizontal;
+  padding-inline-start: var(--item-padding-start, 5px);
+  padding-inline-end: var(--item-padding-end, 5px);
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+#urlbar-results .search-panel-one-offs {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#urlbar-results .search-panel-header {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#urlbar-results .searchbar-engine-one-off-item {
+  min-width: 32px;
+  height: 32px;
+  margin: 0 4px;
+}
+
 /* search bar popup */
 
 #PopupSearchAutoComplete {
