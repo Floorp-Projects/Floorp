@@ -4134,6 +4134,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                                           &stackGlobal);
 
   if (stack) {
+    JSAutoRealm ar(aCx, stackGlobal);
     report->SerializeWorkerStack(aCx, this, stack);
   }
 
