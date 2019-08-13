@@ -141,13 +141,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPRemoteWorkerChild(
       mozilla::dom::PRemoteWorkerChild* aActor) override;
 
-  virtual mozilla::dom::PRemoteWorkerControllerChild*
-  AllocPRemoteWorkerControllerChild(
-      const mozilla::dom::RemoteWorkerData& aRemoteWorkerData) override;
-
-  virtual bool DeallocPRemoteWorkerControllerChild(
-      mozilla::dom::PRemoteWorkerControllerChild* aActor) override;
-
   virtual mozilla::dom::PRemoteWorkerServiceChild*
   AllocPRemoteWorkerServiceChild() override;
 
