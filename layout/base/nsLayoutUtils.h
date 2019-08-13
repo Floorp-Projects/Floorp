@@ -2446,14 +2446,6 @@ class nsLayoutUtils {
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
   /**
-   * See comment above "font.size.inflation.maxRatio" in
-   * modules/libpref/src/init/all.js .
-   */
-  static uint32_t FontSizeInflationMaxRatio() {
-    return sFontSizeInflationMaxRatio;
-  }
-
-  /**
    * See comment above "font.size.inflation.emPerLine" in
    * modules/libpref/src/init/all.js .
    */
@@ -3061,7 +3053,6 @@ class nsLayoutUtils {
   static uint32_t sFontSizeInflationMinTwips;
   static uint32_t sFontSizeInflationLineThreshold;
   static int32_t sFontSizeInflationMappingIntercept;
-  static uint32_t sFontSizeInflationMaxRatio;
   static bool sFontSizeInflationForceEnabled;
   static bool sFontSizeInflationDisabledInMasterProcess;
   static uint32_t sSystemFontScale;

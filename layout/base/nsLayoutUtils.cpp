@@ -26,6 +26,7 @@
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -190,8 +191,6 @@ uint32_t nsLayoutUtils::sFontSizeInflationMinTwips;
 uint32_t nsLayoutUtils::sFontSizeInflationLineThreshold;
 /* static */
 int32_t nsLayoutUtils::sFontSizeInflationMappingIntercept;
-/* static */
-uint32_t nsLayoutUtils::sFontSizeInflationMaxRatio;
 /* static */
 bool nsLayoutUtils::sFontSizeInflationForceEnabled;
 /* static */
@@ -7986,8 +7985,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddUintVarCache(&sFontSizeInflationMaxRatio,
-                               "font.size.inflation.maxRatio");
   Preferences::AddUintVarCache(&sFontSizeInflationEmPerLine,
                                "font.size.inflation.emPerLine");
   Preferences::AddUintVarCache(&sFontSizeInflationMinTwips,
@@ -8248,7 +8245,7 @@ float nsLayoutUtils::FontSizeInflationInner(const nsIFrame* aFrame,
   }
 
   int32_t interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
-  float maxRatio = (float)nsLayoutUtils::FontSizeInflationMaxRatio() / 100.0f;
+  float maxRatio = (float)StaticPrefs::font_size_inflation_maxRatio() / 100.0f;
 
   float ratio = float(styleFontSize) / float(aMinFontSize);
   float inflationRatio;
