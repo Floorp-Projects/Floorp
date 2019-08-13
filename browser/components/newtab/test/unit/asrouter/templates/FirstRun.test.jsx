@@ -213,6 +213,13 @@ describe("<FirstRun>", () => {
     );
   });
 
+  it("should hide the interrupt when props.interruptCleared changes to true", () => {
+    assert.lengthOf(wrapper.find(Interrupt), 1, "Interrupt shown");
+    wrapper.setProps({ interruptCleared: true });
+
+    assert.lengthOf(wrapper.find(Interrupt), 0, "Interrupt hidden");
+  });
+
   it("should hide triplets when closeTriplets is called and block extended triplets after 500ms", () => {
     // Simulate calling next scene
     wrapper

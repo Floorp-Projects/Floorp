@@ -405,7 +405,7 @@ assertErrorMessage(() => wasmEvalText(
       (table $t0 2 funcref)
       (elem 0 passive (i32.const 0)))`),
                    SyntaxError,
-                   /passive segment must not have a table/);
+                   /passive or declared segment must not have a table/);
 
 assertErrorMessage(() => wasmEvalText(
     `(module

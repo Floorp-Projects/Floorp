@@ -19,15 +19,14 @@ config = {
     'use_yasm': True,
     'operating_system': 'darwin',
     'partial_env': {
-        'CXXFLAGS': ('-target x86_64-apple-darwin11 '
+        'CXXFLAGS': ('-target x86_64-apple-darwin '
                      '-B %(abs_work_dir)s/src/cctools/bin '
                      '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
                      '-mmacosx-version-min=10.11'),
-        'LDFLAGS': ('-target x86_64-apple-darwin11 '
+        'LDFLAGS': ('-target x86_64-apple-darwin '
                     '-B %(abs_work_dir)s/src/cctools/bin '
                     '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
-                    '-mmacosx-version-min=10.11 '
-                    '-fuse-ld=%(abs_work_dir)s/src/cctools/bin/x86_64-darwin11-ld'),
+                    '-mmacosx-version-min=10.11'),
         'PATH': '%(abs_work_dir)s/src/clang/bin/:%(PATH)s',
     },
     "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],

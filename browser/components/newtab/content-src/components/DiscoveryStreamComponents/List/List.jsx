@@ -10,6 +10,7 @@ import { DSLinkMenu } from "../DSLinkMenu/DSLinkMenu";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
+import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 
 /**
  * @note exported for testing only
@@ -64,7 +65,12 @@ export class ListItem extends React.PureComponent {
           url={this.props.url}
         >
           <div className="ds-list-item-text">
-            <div>
+            <p>
+              <span className="ds-list-item-info clamp">
+                {this.props.domain}
+              </span>
+            </p>
+            <div className="ds-list-item-body">
               <div className="ds-list-item-title clamp">{this.props.title}</div>
               {this.props.excerpt && (
                 <div className="ds-list-item-excerpt clamp">
@@ -72,19 +78,10 @@ export class ListItem extends React.PureComponent {
                 </div>
               )}
             </div>
-            <p>
-              {this.props.context && (
-                <span>
-                  <span className="ds-list-item-context clamp">
-                    {this.props.context}
-                  </span>
-                  <br />
-                </span>
-              )}
-              <span className="ds-list-item-info clamp">
-                {this.props.domain}
-              </span>
-            </p>
+            <DSContextFooter
+              context={this.props.context}
+              context_type={this.props.context_type}
+            />
           </div>
           <DSImage
             extraClassNames="ds-list-image"
@@ -157,6 +154,7 @@ export function _List(props) {
             pos={rec.pos}
             title={rec.title}
             context={rec.context}
+            context_type={rec.context_type}
             type={props.type}
             url={rec.url}
             pocket_id={rec.pocket_id}

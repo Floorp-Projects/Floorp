@@ -46,7 +46,9 @@ jobs:
                 - openh264/linux32.py
             tooltool-downloads: public
         toolchains:
+            - linux64-binutils
             - linux64-clang
+            - linux64-nasm
     linux64/opt:
         attributes:
             build_platform: linux64
@@ -67,7 +69,9 @@ jobs:
                 - openh264/linux64.py
             tooltool-downloads: public
         toolchains:
+            - linux64-binutils
             - linux64-clang
+            - linux64-nasm
     macosx64/opt:
         attributes:
             build_platform: macosx64
@@ -177,6 +181,7 @@ jobs:
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
+            - linux64-nasm
     android-aarch64/opt:
         attributes:
             build_platform: android-aarch64
@@ -204,6 +209,7 @@ jobs:
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
+            - linux64-nasm
     android-x86/opt:
         attributes:
             build_platform: android-x86
@@ -231,6 +237,7 @@ jobs:
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
+            - linux64-nasm
     android-x86_64/opt:
         attributes:
             build_platform: android-x86_64
@@ -258,3 +265,4 @@ jobs:
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
+            - linux64-nasm

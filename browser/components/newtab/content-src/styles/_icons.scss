@@ -196,4 +196,8 @@
   &.icon-maximize {
     background-image: url('#{$image-path}glyph-maximize-16.svg');
   }
+
+  &.icon-arrow {
+    background-image: url('#{$image-path}glyph-arrow.svg');
+  }
 }

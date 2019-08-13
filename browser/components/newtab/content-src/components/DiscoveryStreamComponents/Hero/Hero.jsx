@@ -11,6 +11,7 @@ import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/Impression
 import { List } from "../List/List.jsx";
 import React from "react";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
+import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 
 export class Hero extends React.PureComponent {
   constructor(props) {
@@ -73,6 +74,7 @@ export class Hero extends React.PureComponent {
             type={this.props.type}
             dispatch={this.props.dispatch}
             context={rec.context}
+            context_type={rec.context_type}
             source={rec.domain}
             pocket_id={rec.pocket_id}
             bookmarkGuid={rec.bookmarkGuid}
@@ -103,14 +105,14 @@ export class Hero extends React.PureComponent {
             </div>
             <div className="meta">
               <div className="header-and-excerpt">
-                {heroRec.context ? (
-                  <p className="context">{heroRec.context}</p>
-                ) : (
-                  <p className="source clamp">{heroRec.domain}</p>
-                )}
+                <p className="source clamp">{heroRec.domain}</p>
                 <header className="clamp">{heroRec.title}</header>
                 <p className="excerpt clamp">{heroRec.excerpt}</p>
               </div>
+              <DSContextFooter
+                context={heroRec.context}
+                context_type={heroRec.context_type}
+              />
             </div>
             <ImpressionStats
               campaignId={heroRec.campaign_id}

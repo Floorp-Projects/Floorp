@@ -7,8 +7,8 @@ use std::slice::{Chunks, ChunksMut};
 
 use color::{ColorType, FromColor, Luma, LumaA, Rgb, Rgba, Bgr, Bgra};
 use flat::{FlatSamples, SampleLayout};
-use dynimage::save_buffer;
-use image::{GenericImage, GenericImageView};
+use dynimage::{save_buffer, save_buffer_with_format};
+use image::{GenericImage, GenericImageView, ImageFormat};
 use traits::Primitive;
 use utils::expand_packed;
 
@@ -19,8 +19,13 @@ pub trait Pixel: Copy + Clone {
     /// The underlying subpixel type.
     type Subpixel: Primitive;
 
+    /// The number of channels of this pixel type.
+    const CHANNEL_COUNT: u8;
     /// Returns the number of channels of this pixel type.
-    fn channel_count() -> u8;
+    #[deprecated(note="please use CHANNEL_COUNT associated constant")]
+    fn channel_count() -> u8 {
+        Self::CHANNEL_COUNT
+    }
 
     /// Returns the components as a slice.
     fn channels(&self) -> &[Self::Subpixel];
@@ -28,12 +33,23 @@ pub trait Pixel: Copy + Clone {
     /// Returns the components as a mutable slice
     fn channels_mut(&mut self) -> &mut [Self::Subpixel];
 
+    /// A string that can help to interpret the meaning each channel
+    /// See [gimp babl](http://gegl.org/babl/).
+    const COLOR_MODEL: &'static str;
     /// Returns a string that can help to interpret the meaning each channel
     /// See [gimp babl](http://gegl.org/babl/).
-    fn color_model() -> &'static str;
+    #[deprecated(note="please use COLOR_MODEL associated constant")]
+    fn color_model() -> &'static str {
+        Self::COLOR_MODEL
+    }
 
+    /// ColorType for this pixel format
+    const COLOR_TYPE: ColorType;
     /// Returns the ColorType for this pixel format
-    fn color_type() -> ColorType;
+    #[deprecated(note="please use COLOR_TYPE associated constant")]
+    fn color_type() -> ColorType {
+        Self::COLOR_TYPE
+    }
 
     /// Returns the channels of this pixel as a 4 tuple. If the pixel
     /// has less than 4 channels the remainder is filled with the maximum value
@@ -112,6 +128,25 @@ pub trait Pixel: Copy + Clone {
     where
         F: FnMut(Self::Subpixel) -> Self::Subpixel,
         G: FnMut(Self::Subpixel) -> Self::Subpixel;
+    
+    /// Apply the function ```f``` to each channel except the alpha channel. 
+    fn map_without_alpha<F>(&self, f: F) -> Self 
+    where 
+        F: FnMut(Self::Subpixel) -> Self::Subpixel,
+    {
+        let mut this = *self;
+        this.apply_with_alpha(f, |x| x);
+        this
+    }
+
+    /// Apply the function ```f``` to each channel except the alpha channel. 
+    /// Works in place.
+    fn apply_without_alpha<F>(&mut self, f: F) 
+    where 
+        F: FnMut(Self::Subpixel) -> Self::Subpixel,
+    {
+        self.apply_with_alpha(f, |x| x);
+    }
 
     /// Apply the function ```f``` to each channel of this pixel and
     /// ```other``` pairwise.
@@ -212,6 +247,92 @@ where
     }
 }
 
+/// Iterate over rows of an image
+pub struct Rows<'a, P: Pixel + 'a>
+where
+    <P as Pixel>::Subpixel: 'a,
+{
+    chunks: Chunks<'a, P::Subpixel>,
+}
+
+impl<'a, P: Pixel + 'a> Iterator for Rows<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    type Item = Pixels<'a, P>;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Pixels<'a, P>> {
+        self.chunks.next().map(|row| Pixels {
+            chunks: row.chunks(<P as Pixel>::CHANNEL_COUNT as usize),
+        })
+    }
+}
+
+impl<'a, P: Pixel + 'a> ExactSizeIterator for Rows<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    fn len(&self) -> usize {
+        self.chunks.len()
+    }
+}
+
+impl<'a, P: Pixel + 'a> DoubleEndedIterator for Rows<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    #[inline(always)]
+    fn next_back(&mut self) -> Option<Pixels<'a, P>> {
+        self.chunks.next_back().map(|row| Pixels {
+            chunks: row.chunks(<P as Pixel>::CHANNEL_COUNT as usize),
+        })
+    }
+}
+
+/// Iterate over mutable rows of an image
+pub struct RowsMut<'a, P: Pixel + 'a>
+where
+    <P as Pixel>::Subpixel: 'a,
+{
+    chunks: ChunksMut<'a, P::Subpixel>,
+}
+
+impl<'a, P: Pixel + 'a> Iterator for RowsMut<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    type Item = PixelsMut<'a, P>;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<PixelsMut<'a, P>> {
+        self.chunks.next().map(|row| PixelsMut {
+            chunks: row.chunks_mut(<P as Pixel>::CHANNEL_COUNT as usize),
+        })
+    }
+}
+
+impl<'a, P: Pixel + 'a> ExactSizeIterator for RowsMut<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    fn len(&self) -> usize {
+        self.chunks.len()
+    }
+}
+
+impl<'a, P: Pixel + 'a> DoubleEndedIterator for RowsMut<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    #[inline(always)]
+    fn next_back(&mut self) -> Option<PixelsMut<'a, P>> {
+        self.chunks.next_back().map(|row| PixelsMut {
+            chunks: row.chunks_mut(<P as Pixel>::CHANNEL_COUNT as usize),
+        })
+    }
+}
+
 /// Enumerate the pixels of an image.
 pub struct EnumeratePixels<'a, P: Pixel + 'a>
 where
@@ -237,10 +358,7 @@ where
         }
         let (x, y) = (self.x, self.y);
         self.x += 1;
-        match self.pixels.next() {
-            None => None,
-            Some(p) => Some((x, y, p)),
-        }
+        self.pixels.next().map(|p| (x, y, p))
     }
 }
 
@@ -250,6 +368,49 @@ where
 {
     fn len(&self) -> usize {
         self.pixels.len()
+    }
+}
+
+/// Enumerate the rows of an image.
+pub struct EnumerateRows<'a, P: Pixel + 'a>
+where
+    <P as Pixel>::Subpixel: 'a,
+{
+    rows: Rows<'a, P>,
+    y: u32,
+    width: u32,
+}
+
+impl<'a, P: Pixel + 'a> Iterator for EnumerateRows<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    type Item = (u32, EnumeratePixels<'a, P>);
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<(u32, EnumeratePixels<'a, P>)> {
+        let y = self.y;
+        self.y += 1;
+        self.rows.next().map(|r| {
+            (
+                y,
+                EnumeratePixels {
+                    x: 0,
+                    y,
+                    width: self.width,
+                    pixels: r,
+                },
+            )
+        })
+    }
+}
+
+impl<'a, P: Pixel + 'a> ExactSizeIterator for EnumerateRows<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    fn len(&self) -> usize {
+        self.rows.len()
     }
 }
 
@@ -278,10 +439,7 @@ where
         }
         let (x, y) = (self.x, self.y);
         self.x += 1;
-        match self.pixels.next() {
-            None => None,
-            Some(p) => Some((x, y, p)),
-        }
+        self.pixels.next().map(|p| (x, y, p))
     }
 }
 
@@ -291,6 +449,49 @@ where
 {
     fn len(&self) -> usize {
         self.pixels.len()
+    }
+}
+
+/// Enumerate the rows of an image.
+pub struct EnumerateRowsMut<'a, P: Pixel + 'a>
+where
+    <P as Pixel>::Subpixel: 'a,
+{
+    rows: RowsMut<'a, P>,
+    y: u32,
+    width: u32,
+}
+
+impl<'a, P: Pixel + 'a> Iterator for EnumerateRowsMut<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    type Item = (u32, EnumeratePixelsMut<'a, P>);
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<(u32, EnumeratePixelsMut<'a, P>)> {
+        let y = self.y;
+        self.y += 1;
+        self.rows.next().map(|r| {
+            (
+                y,
+                EnumeratePixelsMut {
+                    x: 0,
+                    y,
+                    width: self.width,
+                    pixels: r,
+                },
+            )
+        })
+    }
+}
+
+impl<'a, P: Pixel + 'a> ExactSizeIterator for EnumerateRowsMut<'a, P>
+where
+    P::Subpixel: 'a,
+{
+    fn len(&self) -> usize {
+        self.rows.len()
     }
 }
 
@@ -304,6 +505,9 @@ pub struct ImageBuffer<P: Pixel, Container> {
 }
 
 // generic implementation, shared along all image buffers
+//
+// TODO: Is the 'static bound on `I::Pixel` really required? Can we avoid it?  Remember to remove
+// the bounds on `imageops` in case this changes!
 impl<P, Container> ImageBuffer<P, Container>
 where
     P: Pixel + 'static,
@@ -351,7 +555,16 @@ where
     /// Returns an iterator over the pixels of this image.
     pub fn pixels(&self) -> Pixels<P> {
         Pixels {
-            chunks: self.data.chunks(<P as Pixel>::channel_count() as usize),
+            chunks: self.data.chunks(<P as Pixel>::CHANNEL_COUNT as usize),
+        }
+    }
+
+    /// Returns an iterator over the rows of this image.
+    pub fn rows(&self) -> Rows<P> {
+        Rows {
+            chunks: self
+                .data
+                .chunks(<P as Pixel>::CHANNEL_COUNT as usize * self.width as usize),
         }
     }
 
@@ -362,6 +575,17 @@ where
         EnumeratePixels {
             pixels: self.pixels(),
             x: 0,
+            y: 0,
+            width: self.width,
+        }
+    }
+
+    /// Enumerates over the rows of the image.
+    /// The iterator yields the y-coordinate of each row
+    /// along with a reference to them.
+    pub fn enumerate_rows(&self) -> EnumerateRows<P> {
+        EnumerateRows {
+            rows: self.rows(),
             y: 0,
             width: self.width,
         }
@@ -390,7 +614,7 @@ where
     }
 
     fn image_buffer_len(width: u32, height: u32) -> Option<usize> {
-        Some(<P as Pixel>::channel_count() as usize)
+        Some(<P as Pixel>::CHANNEL_COUNT as usize)
             .and_then(|size| size.checked_mul(width as usize))
             .and_then(|size| size.checked_mul(height as usize))
     }
@@ -401,14 +625,12 @@ where
             return None
         }
 
-        Some(unsafe {
-            self.unsafe_pixel_indices(x, y)
-        })
+        Some(self.pixel_indices_unchecked(x, y))
     }
 
     #[inline(always)]
-    unsafe fn unsafe_pixel_indices(&self, x: u32, y: u32) -> Range<usize> {
-        let no_channels = <P as Pixel>::channel_count() as usize;
+    fn pixel_indices_unchecked(&self, x: u32, y: u32) -> Range<usize> {
+        let no_channels = <P as Pixel>::CHANNEL_COUNT as usize;
         // If in bounds, this can't overflow as we have tested that at construction!
         let min_index = (y as usize*self.width as usize + x as usize)*no_channels;
         min_index..min_index+no_channels
@@ -417,7 +639,7 @@ where
     /// Get the format of the buffer when viewed as a matrix of samples.
     pub fn sample_layout(&self) -> SampleLayout {
         // None of these can overflow, as all our memory is addressable.
-        SampleLayout::row_major_packed(<P as Pixel>::channel_count(), self.width, self.height)
+        SampleLayout::row_major_packed(<P as Pixel>::CHANNEL_COUNT, self.width, self.height)
     }
 
     /// Return the raw sample buffer with its stride an dimension information.
@@ -434,7 +656,7 @@ where
         FlatSamples {
             samples: self.data,
             layout,
-            color_hint: Some(P::color_type()),
+            color_hint: Some(P::COLOR_TYPE),
         }
     }
 
@@ -448,7 +670,7 @@ where
         FlatSamples {
             samples: self.data.as_ref(),
             layout,
-            color_hint: Some(P::color_type()),
+            color_hint: Some(P::COLOR_TYPE),
         }
     }
 }
@@ -462,7 +684,16 @@ where
     /// Returns an iterator over the mutable pixels of this image.
     pub fn pixels_mut(&mut self) -> PixelsMut<P> {
         PixelsMut {
-            chunks: self.data.chunks_mut(<P as Pixel>::channel_count() as usize),
+            chunks: self.data.chunks_mut(<P as Pixel>::CHANNEL_COUNT as usize),
+        }
+    }
+
+    /// Returns an iterator over the mutable rows of this image.
+    pub fn rows_mut(&mut self) -> RowsMut<P> {
+        RowsMut {
+            chunks: self
+                .data
+                .chunks_mut(<P as Pixel>::CHANNEL_COUNT as usize * self.width as usize),
         }
     }
 
@@ -474,6 +705,18 @@ where
         EnumeratePixelsMut {
             pixels: self.pixels_mut(),
             x: 0,
+            y: 0,
+            width,
+        }
+    }
+
+    /// Enumerates over the rows of the image.
+    /// The iterator yields the y-coordinate of each row
+    /// along with a mutable reference to them.
+    pub fn enumerate_rows_mut(&mut self) -> EnumerateRowsMut<P> {
+        let width = self.width;
+        EnumerateRowsMut {
+            rows: self.rows_mut(),
             y: 0,
             width,
         }
@@ -520,7 +763,33 @@ where
             self,
             self.width(),
             self.height(),
-            <P as Pixel>::color_type(),
+            <P as Pixel>::COLOR_TYPE,
+        )
+    }
+}
+
+impl<P, Container> ImageBuffer<P, Container>
+where
+    P: Pixel<Subpixel = u8> + 'static,
+    Container: Deref<Target = [u8]>,
+{
+    /// Saves the buffer to a file at the specified path in
+    /// the specified format.
+    ///
+    /// See [`save_buffer_with_format`](fn.save_buffer_with_format.html) for
+    /// supported types.
+    pub fn save_with_format<Q>(&self, path: Q, format: ImageFormat) -> io::Result<()>
+    where
+        Q: AsRef<Path>,
+    {
+        // This is valid as the subpixel is u8.
+        save_buffer_with_format(
+            path,
+            self,
+            self.width(),
+            self.height(),
+            <P as Pixel>::COLOR_TYPE,
+            format,
         )
     }
 }
@@ -612,7 +881,7 @@ where
     /// Returns the pixel located at (x, y), ignoring bounds checking.
     #[inline(always)]
     unsafe fn unsafe_get_pixel(&self, x: u32, y: u32) -> P {
-        let indices = self.unsafe_pixel_indices(x, y);
+        let indices = self.pixel_indices_unchecked(x, y);
         *<P as Pixel>::from_slice(self.data.get_unchecked(indices))
     }
 
@@ -640,7 +909,7 @@ where
     /// Puts a pixel at location (x, y), ignoring bounds checking.
     #[inline(always)]
     unsafe fn unsafe_put_pixel(&mut self, x: u32, y: u32, pixel: P) {
-        let indices = self.unsafe_pixel_indices(x, y);
+        let indices = self.pixel_indices_unchecked(x, y);
         let p = <P as Pixel>::from_slice_mut(self.data.get_unchecked_mut(indices));
         *p = pixel
     }
@@ -753,9 +1022,7 @@ impl GrayImage {
         let (width, height) = self.dimensions();
         let mut data = self.into_raw();
         let entries = data.len();
-        data.reserve_exact(entries.checked_mul(3).unwrap()); // 3 additional channels
-                                                             // set_len is save since type is u8 an the data never read
-        unsafe { data.set_len(entries.checked_mul(4).unwrap()) }; // 4 channels in total
+        data.resize(entries.checked_mul(4).unwrap(), 0);
         let mut buffer = ImageBuffer::from_vec(width, height, data).unwrap();
         expand_packed(&mut buffer, 4, 8, |idx, pixel| {
             let (r, g, b) = palette[idx as usize];

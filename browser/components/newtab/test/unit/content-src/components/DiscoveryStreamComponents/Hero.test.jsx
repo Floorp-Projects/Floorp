@@ -2,6 +2,10 @@ import {
   DSCard,
   PlaceholderDSCard,
 } from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {
+  DSContextFooter,
+  StatusMessage,
+} from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import { actionCreators as ac } from "common/Actions.jsm";
 import { DSEmptyState } from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import { Hero } from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
@@ -48,6 +52,36 @@ describe("<Hero>", () => {
     assert.equal(
       wrapper.find("SafeAnchor").prop("url"),
       DEFAULT_PROPS.data.recommendations[0].url
+    );
+  });
+
+  it("should render badges for pocket, bookmark when not a spoc element ", () => {
+    const heroProps = {
+      data: { recommendations: [{ context_type: "bookmark" }] },
+      header: { title: "headerTitle" },
+    };
+
+    const wrapper = shallow(<Hero {...heroProps} />);
+    const contextFooter = wrapper.find(DSContextFooter).shallow();
+    assert.lengthOf(contextFooter.find(StatusMessage), 1);
+  });
+
+  it("should render Sponsored Context for a spoc element", () => {
+    const heroProps = {
+      data: {
+        recommendations: [
+          { context_type: "bookmark", context: "Sponsored by Foo" },
+        ],
+      },
+      header: { title: "headerTitle" },
+    };
+    const wrapper = shallow(<Hero {...heroProps} />);
+    const contextFooter = wrapper.find(DSContextFooter).shallow();
+
+    assert.lengthOf(contextFooter.find(StatusMessage), 0);
+    assert.equal(
+      contextFooter.find(".story-sponsored-label").text(),
+      heroProps.data.recommendations[0].context
     );
   });
 

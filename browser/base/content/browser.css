@@ -367,6 +367,34 @@ toolbarpaletteitem {
   display: none;
 }
 
+/* Rules for the urlbar's contextual tip's icon. */
+
+#urlbar-contextual-tip-icon {
+  background-image: var(--webextension-contextual-tip-icon);
+}
+
+:root[lwt-popup-brighttext] #urlbar-contextual-tip-icon {
+  background-image: var(--webextension-contextual-tip-icon-light);
+}
+
+:root[lwt-popup-darktext] #urlbar-contextual-tip-icon {
+  background-image: var(--webextension-contextual-tip-icon-dark);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #urlbar-contextual-tip-icon {
+    background-image: var(--webextension-contextual-tip-icon-2x);
+  }
+  
+  :root[lwt-popup-brighttext] #urlbar-contextual-tip-icon {
+    background-image: var(--webextension-contextual-tip-icon-2x-light);
+  }
+
+  :root[lwt-popup-darktext] #urlbar-contextual-tip-icon {
+    background-image: var(--webextension-contextual-tip-icon-2x-dark);
+  }
+}
+
 /* Rules to help integrate WebExtension buttons */
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {

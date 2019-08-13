@@ -58,9 +58,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "target_info.txt",
     "target.jsshell.zip",
     "mozharness.zip",
-    # This is only uploaded unsigned for Nightly, on beta/release/esr we
-    # beetmove the signed copy from amo.
-    "target.langpack.xpi",
 ]
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -68,9 +65,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
-    # This is only uploaded unsigned for Nightly, on beta/release/esr we
-    # beetmove the signed copy from amo.
-    "target.langpack.xpi",
 ]
 
 
@@ -111,9 +105,11 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = _compile_regex_mapping({
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_PATHS = _compile_regex_mapping({
     r'^linux(|64)(|-devedition|-asan-reporter)-(nightly|shippable)(|-l10n)$':
-        ['target.tar.bz2', 'target.tar.bz2.asc'],
+        ['target.langpack.xpi', 'target.tar.bz2', 'target.tar.bz2.asc'],
     r'^win(32|64)(|-aarch64)(|-devedition|-asan-reporter)-(nightly|shippable)(|-l10n)$':
         ['target.zip'],
+    r'macosx.*-(nightly|shippable)(|-l10n)$':
+        ['target.langpack.xpi'],  # Used only for ja-JP-mac
 })
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -277,22 +273,10 @@ def generate_upstream_artifacts(
                 )
                 platform_was_previously_matched_by_regex = platform_regex
                 if paths:
-                    usable_paths = paths[:]
-
-                    if 'target.langpack.xpi' in usable_paths and \
-                            not project == "mozilla-central":
-                        # XXX This is only beetmoved for m-c nightlies.
-                        # we should determine this better
-                        usable_paths.remove('target.langpack.xpi')
-
-                        if not len(usable_paths):
-                            # We may have removed our only path.
-                            continue
-
                     upstream_artifacts.append({
                         "taskId": {"task-reference": "<{}>".format(task_type)},
                         "taskType": task_type,
-                        "paths": ["{}/{}".format(artifact_prefix, path) for path in usable_paths],
+                        "paths": ["{}/{}".format(artifact_prefix, path) for path in paths],
                         "locale": locale or "en-US",
                     })
 
@@ -380,6 +364,50 @@ def make_task_worker(config, jobs):
         if locale:
             worker["locale"] = locale
         job["worker"] = worker
+
+        yield job
+
+
+@transforms.add
+def strip_unwanted_langpacks_from_worker(config, jobs):
+    """ Strips out langpacks where we didn't sign them.
+
+    This explicitly deletes langpacks from upstream artifacts and from artifact-maps.
+    Due to limitations in declarative artifacts, doing this was our easiest way right now.
+    """
+    ALWAYS_OK_PLATFORMS = {'linux64-shippable', 'linux64-devedition-nightly'}
+    OSX_OK_PLATFORMS = {'macosx64-shippable', 'macosx64-devedition-nightly'}
+    for job in jobs:
+        platform = job['attributes'].get('build_platform')
+        if platform in ALWAYS_OK_PLATFORMS:
+            # No need to strip anything
+            yield job
+            continue
+
+        for map in job['worker'].get('artifact-map', [])[:]:
+            if not any([path.endswith('target.langpack.xpi') for path in map['paths']]):
+                continue
+            if map['locale'] == 'ja-JP-mac':
+                # This locale should only exist on mac
+                assert platform in OSX_OK_PLATFORMS
+                continue
+            for path in map['paths'].keys():
+                if path.endswith('target.langpack.xpi'):
+                    del map['paths'][path]
+            if map['paths'] == {}:
+                job['worker']['artifact-map'].remove(map)
+
+        for artifact in job['worker'].get('upstream-artifacts', []):
+            if not any([path.endswith('target.langpack.xpi') for path in artifact['paths']]):
+                continue
+            if artifact['locale'] == 'ja-JP-mac':
+                # This locale should only exist on mac
+                assert platform in OSX_OK_PLATFORMS
+                continue
+            artifact['paths'] = [path for path in artifact['paths']
+                                 if not path.endswith('target.langpack.xpi')]
+            if artifact['paths'] == []:
+                job['worker']['upstream-artifacts'].remove(artifact)
 
         yield job
 

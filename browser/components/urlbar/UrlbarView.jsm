@@ -51,7 +51,7 @@ class UrlbarView {
   }
 
   /**
-   * Sets the title, button's title, and link's title
+   * Sets the icon, title, button's title, and link's title
    * for the contextual tip. If a contextual tip has not
    * been created, then it will be created.
    *
@@ -64,6 +64,13 @@ class UrlbarView {
    * @param {string} [details.linkTitle]
    *   Title of the link on the contextual tip.
    *   If omitted then the link will be hidden.
+   * @param {string} [details.iconStyle]
+   *   A non-empty string of styles to add to the icon's style attribute.
+   *   These styles set CSS variables to URLs of images;
+   *   the CSS variables responsible for the icon's background image are
+   *   the variable names containing `--webextension-contextual-tip-icon`
+   *   in `browser/base/content/browser.css`.
+   *   If ommited, no changes are made to the icon.
    */
   setContextualTip(details) {
     if (!this.contextualTip) {
@@ -88,10 +95,13 @@ class UrlbarView {
     if (this.contextualTip) {
       this.contextualTip.hide();
 
-      // If there's no results then close the popup.
-      if (this.visibleItemCount == 0) {
-        this.close();
-      }
+      // When the pending query has finished and there's 0 results then
+      // close the urlbar view.
+      this.input.lastQueryContextPromise.then(() => {
+        if (this.visibleItemCount == 0) {
+          this.close();
+        }
+      });
     }
   }
 

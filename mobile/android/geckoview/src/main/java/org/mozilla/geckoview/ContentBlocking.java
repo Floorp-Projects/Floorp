@@ -456,7 +456,8 @@ public class ContentBlocking {
 
         /**
          * The anti-tracking category types of the blocked resource.
-         * One or more of the {@link AntiTracking} flags.
+         *
+         * @return One or more of the {@link AntiTracking} flags.
          */
         @UiThread
         public @CBAntiTracking int getAntiTrackingCategory() {
@@ -465,7 +466,8 @@ public class ContentBlocking {
 
         /**
          * The safe browsing category types of the blocked resource.
-         * One or more of the {@link AntiTracking} flags.
+         *
+         * @return One or more of the {@link SafeBrowsing} flags.
          */
         @UiThread
         public @CBSafeBrowsing int getSafeBrowsingCategory() {
@@ -474,7 +476,8 @@ public class ContentBlocking {
 
         /**
          * The cookie types of the blocked resource.
-         * One or more of the {@link CookieBehavior} flags.
+         *
+         * @return One or more of the {@link CookieBehavior} flags.
          */
         @UiThread
         public @CBCookieBehavior int getCookieBehaviorCategory() {

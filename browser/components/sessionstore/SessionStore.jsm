@@ -2658,7 +2658,7 @@ var SessionStoreInternal = {
     // embedded within a normal tab. We can't do one of these swaps for a
     // cross-origin frame.
     if (browsingContext.embedderElement) {
-      let tabbrowser = browsingContext.embedderElement.ownerGlobal.gBrowser;
+      let tabbrowser = browsingContext.embedderElement.getTabBrowser();
       if (!tabbrowser) {
         debug(
           `[process-switch]: cannot find tabbrowser for loading tab - ignoring`

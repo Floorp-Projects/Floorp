@@ -77,18 +77,24 @@ enum { kLonely = 0, kPrevSib = 1, kNextSib = 2, kBothSibs = 3 };
  ********************************************************/
 
 static bool IsStyleCachePreservingSubAction(EditSubAction aEditSubAction) {
-  return aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-         aEditSubAction == EditSubAction::eInsertLineBreak ||
-         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
-         aEditSubAction == EditSubAction::eCreateOrChangeList ||
-         aEditSubAction == EditSubAction::eIndent ||
-         aEditSubAction == EditSubAction::eOutdent ||
-         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-         aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
-         aEditSubAction == EditSubAction::eRemoveList ||
-         aEditSubAction == EditSubAction::eCreateOrChangeDefinitionList ||
-         aEditSubAction == EditSubAction::eInsertElement ||
-         aEditSubAction == EditSubAction::eInsertQuotation;
+  switch (aEditSubAction) {
+    case EditSubAction::eDeleteSelectedContent:
+    case EditSubAction::eInsertLineBreak:
+    case EditSubAction::eInsertParagraphSeparator:
+    case EditSubAction::eCreateOrChangeList:
+    case EditSubAction::eIndent:
+    case EditSubAction::eOutdent:
+    case EditSubAction::eSetOrClearAlignment:
+    case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eRemoveList:
+    case EditSubAction::eCreateOrChangeDefinitionList:
+    case EditSubAction::eInsertElement:
+    case EditSubAction::eInsertQuotation:
+    case EditSubAction::eInsertQuotedText:
+      return true;
+    default:
+      return false;
+  }
 }
 
 static nsAtom& ParagraphSeparatorElement(ParagraphSeparator separator) {
@@ -632,7 +638,8 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
   // XXX Need to investigate when the padding <br> element is removed because
   //     I don't see the <br> element with testing manually.  If it won't be
   //     used, we can get rid of this cost.
-  rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
+  rv = MOZ_KnownLive(HTMLEditorRef())
+           .MaybeCreatePaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -659,9 +666,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
 
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
-  if (aInfo.mEditSubAction == EditSubAction::eComputeTextToOutput ||
-      aInfo.mEditSubAction == EditSubAction::eUndo ||
-      aInfo.mEditSubAction == EditSubAction::eRedo) {
+  if (aInfo.mEditSubAction == EditSubAction::eComputeTextToOutput) {
     return TextEditRules::WillDoAction(aInfo, aCancel, aHandled);
   }
 
@@ -710,8 +715,6 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString, aInfo.maxLength);
-    case EditSubAction::eInsertHTMLSource:
-      return WillLoadHTML();
     case EditSubAction::eInsertParagraphSeparator: {
       UndefineCaretBidiLevel();
       EditActionResult result = WillInsertParagraphSeparator();
@@ -755,7 +758,8 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
     case EditSubAction::eCreateOrChangeDefinitionList:
       return WillMakeDefListItem(aInfo.blockType, aInfo.entireList, aCancel,
                                  aHandled);
-    case EditSubAction::eInsertElement: {
+    case EditSubAction::eInsertElement:
+    case EditSubAction::eInsertQuotedText: {
       nsresult rv = WillInsert(aCancel);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -767,6 +771,11 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
     case EditSubAction::eIncreaseZIndex:
       return WillRelativeChangeZIndex(1, aCancel, aHandled);
+    case EditSubAction::eInsertHTMLSource:
+    case EditSubAction::eUndo:
+    case EditSubAction::eRedo:
+      MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
+      return NS_ERROR_UNEXPECTED;
     default:
       return TextEditRules::WillDoAction(aInfo, aCancel, aHandled);
   }
@@ -800,13 +809,23 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
       }
       return DidAbsolutePosition();
     }
+    case EditSubAction::eInsertElement:
+    case EditSubAction::eInsertQuotedText:
+      return NS_OK;
+    case EditSubAction::eInsertHTMLSource:
+    case EditSubAction::eUndo:
+    case EditSubAction::eRedo:
+      MOZ_ASSERT_UNREACHABLE("This path should've been dead code");
+      return NS_ERROR_UNEXPECTED;
     default:
       return TextEditRules::DidDoAction(aInfo, aResult);
   }
 }
 
 bool HTMLEditRules::DocumentIsEmpty() const {
-  return !!mPaddingBRElementForEmptyEditor;
+  // XXX This is wrong.  Even if there is no padding <br> element for empty
+  //     editor, the editor may be empty.
+  return HTMLEditorRef().HasPaddingBRElementForEmptyEditor();
 }
 
 nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
@@ -1235,7 +1254,13 @@ nsresult HTMLEditRules::GetFormatString(nsINode* aNode, nsAString& outFormat) {
 nsresult HTMLEditRules::WillInsert(bool* aCancel) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  nsresult rv = TextEditRules::WillInsert(aCancel);
+  // XXX Why don't we stop handling this call if we're readonly or disabled?
+  if (aCancel && (IsReadonly() || IsDisabled())) {
+    *aCancel = true;
+  }
+
+  nsresult rv =
+      MOZ_KnownLive(HTMLEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1640,29 +1665,6 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::WillLoadHTML() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // Delete mPaddingBRElementForEmptyEditor if it exists. If we really
-  // need one, it will be added during post-processing in AfterEditInner().
-  if (mPaddingBRElementForEmptyEditor) {
-    // A mutation event listener may recreate padding <br> element for empty
-    // editor again during the call of DeleteNodeWithTransaction().  So, move
-    // it first.
-    RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(mPaddingBRElementForEmptyEditor));
-    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
-                                 .DeleteNodeWithTransaction(*paddingBRElement);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to remove the padding <br> element");
-  }
-
   return NS_OK;
 }
 
@@ -2292,7 +2294,7 @@ nsresult HTMLEditRules::WillDeleteSelection(
 
   // If there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (HTMLEditorRef().HasPaddingBRElementForEmptyEditor()) {
     *aCancel = true;
     return NS_OK;
   }
@@ -9471,7 +9473,7 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
       if (point.GetContainer() == rootElement) {
         // Our root node is completely empty. Don't add a <br> here.
         // AfterEditInner() will add one for us when it calls
-        // CreatePaddingBRElementForEmptyEditorIfNeeded()!
+        // TextEditor::MaybeCreatePaddingBRElementForEmptyEditor()!
         return NS_OK;
       }
 
@@ -11118,37 +11120,10 @@ void HTMLEditRules::DocumentModifiedWorker() {
   }
 
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
-  htmlEditor->OnModifyDocument();
-}
-
-void HTMLEditRules::OnModifyDocument() {
-  MOZ_ASSERT(mHTMLEditor);
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  // DeleteNodeWithTransaction() below may cause a flush, which could destroy
-  // the editor
-  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
-
-  // Delete our padding <br> element for empty editor, if we have one, since
-  // the document might not be empty any more.
-  if (mPaddingBRElementForEmptyEditor) {
-    // A mutation event listener may recreate padding <br> element for empty
-    // editor again during the call of DeleteNodeWithTransaction().  So, move
-    // it first.
-    RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(mPaddingBRElementForEmptyEditor));
-    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
-                                 .DeleteNodeWithTransaction(*paddingBRElement);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to remove the padding <br> element");
-  }
-
-  // Try to recreate the padding <br> element for empty editor if needed.
-  DebugOnly<nsresult> rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
-  NS_WARNING_ASSERTION(
-      rv.value != NS_ERROR_EDITOR_DESTROYED,
-      "The editor has been destroyed during creating a padding <br> element");
+  nsresult rv = htmlEditor->OnModifyDocument();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::OnModifyDocument() failed");
+  Unused << rv;
 }
 
 }  // namespace mozilla

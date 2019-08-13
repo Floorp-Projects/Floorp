@@ -81,6 +81,13 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
       (literal "/dev/urandom")
       (literal "/usr/share/icu/icudt51l.dat"))
 
+  ; Timezone
+  (allow file-read*
+    (subpath "/private/var/db/timezone")
+    (subpath "/usr/share/zoneinfo")
+    (subpath "/usr/share/zoneinfo.default")
+    (literal "/private/etc/localtime"))
+
   (if (string=? hasWindowServer "TRUE")
     (allow mach-lookup (global-name "com.apple.windowserver.active")))
 )SANDBOX_LITERAL";
