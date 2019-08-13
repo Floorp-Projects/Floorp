@@ -6126,6 +6126,18 @@
   value: true
   mirror: always
 
+# Enable the use of display-lists for SVG hit-testing.
+- name: svg.display-lists.hit-testing.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Enable the use of display-lists for SVG painting.
+- name: svg.display-lists.painting.enabled
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "telemetry."
 #---------------------------------------------------------------------------
