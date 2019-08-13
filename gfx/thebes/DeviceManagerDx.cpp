@@ -655,8 +655,8 @@ void DeviceManagerDx::CreateWARPCompositorDevice() {
     textureSharingWorks = D3D11Checks::DoesTextureSharingWork(device);
   }
 
-  DxgiAdapterDesc nullAdapter;
-  PodZero(&nullAdapter);
+  DXGI_ADAPTER_DESC desc;
+  D3D11Checks::GetDxgiDesc(device, &desc);
 
   int featureLevel = device->GetFeatureLevel();
 
@@ -666,9 +666,9 @@ void DeviceManagerDx::CreateWARPCompositorDevice() {
     mCompositorDevice = device;
 
     int32_t sequenceNumber = GetNextDeviceCounter();
-    mDeviceStatus =
-        Some(D3D11DeviceStatus(true, textureSharingWorks, featureLevel,
-                               nullAdapter, sequenceNumber, formatOptions));
+    mDeviceStatus = Some(D3D11DeviceStatus(
+        true, textureSharingWorks, featureLevel, DxgiAdapterDesc::From(desc),
+        sequenceNumber, formatOptions));
   }
   mCompositorDevice->SetExceptionMode(0);
 
