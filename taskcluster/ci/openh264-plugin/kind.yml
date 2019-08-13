@@ -9,7 +9,6 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.openh264:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -45,10 +44,11 @@ jobs:
             config:
                 - openh264/linux32.py
             tooltool-downloads: public
-        toolchains:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-nasm
     linux64/opt:
         attributes:
             build_platform: linux64
@@ -68,10 +68,11 @@ jobs:
             config:
                 - openh264/linux64.py
             tooltool-downloads: public
-        toolchains:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-nasm
     macosx64/opt:
         attributes:
             build_platform: macosx64
@@ -91,9 +92,10 @@ jobs:
             config:
                 - openh264/macosx64.py
             tooltool-downloads: internal
-        toolchains:
-            - linux64-cctools-port
-            - linux64-clang
+        fetches:
+            toolchain:
+                - linux64-cctools-port
+                - linux64-clang
     win32/opt:
         attributes:
             build_platform: win32
@@ -112,8 +114,9 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win32.py
-        toolchains:
-            - win64-clang-cl
+        fetches:
+            toolchain:
+                - win64-clang-cl
     win64/opt:
         attributes:
             build_platform: win64
@@ -132,8 +135,9 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64.py
-        toolchains:
-            - win64-clang-cl
+        fetches:
+            toolchain:
+                - win64-clang-cl
     win64-aarch64/opt:
         attributes:
             build_platform: win64-aarch64
@@ -152,8 +156,9 @@ jobs:
             script: mozharness/scripts/openh264_build.py
             config:
                 - openh264/win64-aarch64.py
-        toolchains:
-            - win64-clang-cl
+        fetches:
+            toolchain:
+                - win64-clang-cl
     android-api-16/opt:
         attributes:
             build_platform: android-arm
@@ -177,11 +182,12 @@ jobs:
             config:
                 - openh264/android-arm.py
             tooltool-downloads: internal
-        toolchains:
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-nasm
     android-aarch64/opt:
         attributes:
             build_platform: android-aarch64
@@ -205,11 +211,12 @@ jobs:
             config:
                 - openh264/android-aarch64.py
             tooltool-downloads: internal
-        toolchains:
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-nasm
     android-x86/opt:
         attributes:
             build_platform: android-x86
@@ -233,11 +240,12 @@ jobs:
             config:
                 - openh264/android-x86.py
             tooltool-downloads: internal
-        toolchains:
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-nasm
     android-x86_64/opt:
         attributes:
             build_platform: android-x86_64
@@ -261,8 +269,9 @@ jobs:
             config:
                 - openh264/android-x86_64.py
             tooltool-downloads: internal
-        toolchains:
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang
-            - linux64-nasm
+        fetches:
+            toolchain:
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-nasm
