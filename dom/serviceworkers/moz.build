@@ -11,6 +11,7 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'ServiceWorker.h',
     'ServiceWorkerActors.h',
+    'ServiceWorkerCloneData.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
