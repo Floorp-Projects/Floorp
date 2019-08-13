@@ -136,13 +136,6 @@ class HTMLEditRules : public TextEditRules {
   void StartToListenToEditSubActions() { mListenerEnabled = true; }
   void EndListeningToEditSubActions() { mListenerEnabled = false; }
 
-  /**
-   * OnModifyDocument() is called when DocumentModifiedWorker() calls
-   * HTMLEditor::OnModifyDocument().  The caller guarantees that there
-   * is AutoEditActionDataSetter instance in the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
-
  protected:
   virtual ~HTMLEditRules() = default;
 
