@@ -20,6 +20,11 @@ data class SitePermissionsRules(
 ) {
     enum class Action {
         BLOCKED, ASK_TO_ALLOW;
+
+        fun toStatus(): SitePermissions.Status = when (this) {
+            BLOCKED -> SitePermissions.Status.BLOCKED
+            ASK_TO_ALLOW -> SitePermissions.Status.NO_DECISION
+        }
     }
 
     internal fun getActionFrom(request: PermissionRequest): Action {
