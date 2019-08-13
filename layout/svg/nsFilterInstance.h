@@ -126,9 +126,10 @@ class nsFilterInstance {
    * Try to build WebRender filters for a frame if the filters applied to it are
    * supported.
    */
-  static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
-                                    WrFiltersHolder& aWrFilters,
-                                    mozilla::Maybe<nsRect>& aPostFilterClip);
+  static bool BuildWebRenderFilters(
+      nsIFrame* aFilteredFrame,
+      mozilla::Span<const mozilla::StyleFilter> aFilters,
+      WrFiltersHolder& aWrFilters, mozilla::Maybe<nsRect>& aPostFilterClip);
 
  private:
   /**
