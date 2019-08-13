@@ -1,0 +1,15 @@
+---
+android-javadoc:
+    description: Android javadoc
+    include: ['mobile/android/geckoview']
+    exclude: []
+    extensions: ['java', 'kt']
+    support-files:
+        - 'mobile/android/**/Makefile.in'
+        - 'mobile/android/config/**'
+        - 'mobile/android/gradle.configure'
+        - 'mobile/android/**/moz.build'
+        - '**/*.gradle'
+    type: global
+    payload: android.lints:javadoc
+    setup: android.lints:setup
