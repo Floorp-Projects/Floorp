@@ -198,7 +198,6 @@
 #ifdef ENABLE_REMOTE_AGENT
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
-@RESPATH@/defaults/pref/remote.js
 #endif
 
 ; Marionette remote control protocol
