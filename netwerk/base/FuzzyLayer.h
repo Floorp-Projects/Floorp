@@ -8,6 +8,8 @@
 #define FuzzyLayer_h__
 
 #include "prerror.h"
+#include "nsError.h"
+#include "nsIFile.h"
 
 namespace mozilla {
 namespace net {

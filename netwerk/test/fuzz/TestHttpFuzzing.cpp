@@ -17,6 +17,9 @@
 namespace mozilla {
 namespace net {
 
+// Used to determine if the fuzzing target should use https:// in spec.
+static bool fuzzHttps = false;
+
 class FuzzingStreamListener final : public nsIStreamListener {
  public:
   NS_DECL_ISUPPORTS
@@ -83,6 +86,12 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   return 0;
 }
 
+static int FuzzingInitNetworkHttp2(int* argc, char*** argv) {
+  fuzzHttps = true;
+  Preferences::SetInt("network.http.spdy.default-concurrent", 1);
+  return FuzzingInitNetworkHttp(argc, argv);
+}
+
 static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
   // Set the data to be processed
   setNetworkFuzzingBuffer(data, size);
@@ -94,7 +103,12 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     nsAutoCString spec;
     nsresult rv;
 
-    spec = "http://127.0.0.1:8000";
+    if (fuzzHttps) {
+      spec = "https://127.0.0.1/";
+    } else {
+      spec = "http://127.0.0.1/";
+    }
+
     if (NS_NewURI(getter_AddRefs(url), spec) != NS_OK) {
       MOZ_CRASH("Call to NS_NewURI failed.");
     }
@@ -156,6 +170,9 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp, FuzzingRunNetworkHttp,
                           NetworkHttp);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2, FuzzingRunNetworkHttp,
+                          NetworkHttp2);
 
 }  // namespace net
 }  // namespace mozilla
