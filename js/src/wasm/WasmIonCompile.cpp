@@ -3312,6 +3312,47 @@ static bool EmitTableSize(FunctionCompiler& f) {
 #endif  // ENABLE_WASM_REFTYPES
 
 #ifdef ENABLE_WASM_REFTYPES
+static bool EmitRefFunc(FunctionCompiler& f) {
+  uint32_t funcIndex;
+  if (!f.iter().readRefFunc(&funcIndex)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  const SymbolicAddressSignature& callee = SASigFuncRef;
+  CallCompileState args;
+  if (!f.passInstance(callee.argTypes[0], &args)) {
+    return false;
+  }
+
+  MDefinition* funcIndexArg = f.constant(Int32Value(funcIndex), MIRType::Int32);
+  if (!funcIndexArg) {
+    return false;
+  }
+  if (!f.passArg(funcIndexArg, callee.argTypes[1], &args)) {
+    return false;
+  }
+
+  if (!f.finishCall(&args)) {
+    return false;
+  }
+
+  // The return value here is either null, denoting an error, or a short-lived
+  // pointer to a location containing a possibly-null ref.
+  MDefinition* ret;
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+    return false;
+  }
+
+  f.iter().setResult(ret);
+  return true;
+}
+
 static bool EmitRefNull(FunctionCompiler& f) {
   if (!f.iter().readRefNull()) {
     return false;
@@ -3788,6 +3829,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
                              MCompare::Compare_RefOrNull));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+      case uint16_t(Op::RefFunc):
+        CHECK(EmitRefFunc(f));
       case uint16_t(Op::RefNull):
         CHECK(EmitRefNull(f));
       case uint16_t(Op::RefIsNull):

@@ -123,6 +123,7 @@ class WasmToken {
     Param,
     Passive,
     Ref,
+    RefFunc,
     RefNull,
     Result,
     Return,
@@ -325,6 +326,7 @@ class WasmToken {
 #endif
       case Nop:
       case RefNull:
+      case RefFunc:
       case Return:
       case SetGlobal:
       case SetLocal:
@@ -2185,6 +2187,9 @@ WasmToken WasmTokenStream::next() {
         if (consume(u".eq")) {
           return WasmToken(WasmToken::ComparisonOpcode, Op::RefEq, begin, cur_);
         }
+        if (consume(u".func")) {
+          return WasmToken(WasmToken::RefFunc, begin, cur_);
+        }
         if (consume(u".null")) {
           return WasmToken(WasmToken::RefNull, begin, cur_);
         }
@@ -3972,6 +3977,15 @@ static AstExpr* ParseStructNarrow(WasmParseContext& c, bool inParens) {
 }
 #endif
 
+static AstExpr* ParseRefFunc(WasmParseContext& c) {
+  AstRef func;
+  if (!c.ts.matchRef(&func, c.error)) {
+    return nullptr;
+  }
+
+  return new (c.lifo) AstRefFunc(func);
+}
+
 static AstExpr* ParseRefNull(WasmParseContext& c) {
   return new (c.lifo) AstRefNull();
 }
@@ -4088,6 +4102,8 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
     case WasmToken::StructNarrow:
       return ParseStructNarrow(c, inParens);
 #endif
+    case WasmToken::RefFunc:
+      return ParseRefFunc(c);
     case WasmToken::RefNull:
       return ParseRefNull(c);
     default:
@@ -5775,6 +5791,10 @@ static bool ResolveStructNarrow(Resolver& r, AstStructNarrow& s) {
 }
 #endif
 
+static bool ResolveRefFunc(Resolver& r, AstRefFunc& s) {
+  return r.resolveFunction(s.func());
+}
+
 static bool ResolveRefNull(Resolver& r, AstRefNull& s) { return true; }
 
 static bool ResolveExpr(Resolver& r, AstExpr& expr) {
@@ -5784,6 +5804,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
     case AstExprKind::Unreachable:
     case AstExprKind::MemorySize:
       return true;
+    case AstExprKind::RefFunc:
+      return ResolveRefFunc(r, expr.as<AstRefFunc>());
     case AstExprKind::RefNull:
       return ResolveRefNull(r, expr.as<AstRefNull>());
     case AstExprKind::Drop:
@@ -6579,6 +6601,10 @@ static bool EncodeStructNarrow(Encoder& e, AstStructNarrow& s) {
 }
 #endif
 
+static bool EncodeRefFunc(Encoder& e, AstRefFunc& s) {
+  return e.writeOp(Op::RefFunc) && e.writeVarU32(s.func().index());
+}
+
 static bool EncodeRefNull(Encoder& e, AstRefNull& s) {
   return e.writeOp(Op::RefNull);
 }
@@ -6591,6 +6617,8 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return e.writeOp(Op::Nop);
     case AstExprKind::Unreachable:
       return e.writeOp(Op::Unreachable);
+    case AstExprKind::RefFunc:
+      return EncodeRefFunc(e, expr.as<AstRefFunc>());
     case AstExprKind::RefNull:
       return EncodeRefNull(e, expr.as<AstRefNull>());
     case AstExprKind::BinaryOperator:
