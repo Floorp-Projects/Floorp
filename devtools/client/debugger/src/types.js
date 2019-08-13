@@ -489,6 +489,13 @@ export type SourceDocuments = { [string]: Object };
 export type BreakpointPosition = MappedLocation;
 export type BreakpointPositions = { [number]: BreakpointPosition[] };
 
+export type DOMMutationBreakpoint = {
+  id: number,
+  nodeFront: Object,
+  mutationType: "subtree" | "attribute" | "removal",
+  enabled: boolean,
+};
+
 export type { Context, ThreadContext } from "./utils/context";
 
 export type Previews = {

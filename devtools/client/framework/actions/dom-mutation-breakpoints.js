@@ -100,7 +100,7 @@ function updateBreakpointsForMutations(mutationItems) {
         nodeFronts: removedNodeFronts,
       });
     }
-    if (changedNodeFronts.length > 0) {
+    if (changedNodeFronts.size > 0) {
       const enabledStates = [];
       for (const {
         id,
