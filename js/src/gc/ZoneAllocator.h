@@ -147,9 +147,7 @@ class ZoneAllocator : public JS::shadow::Zone,
                           const js::gc::ZoneThreshold& threshold,
                           JS::GCReason reason) {
     JSRuntime* rt = runtimeFromAnyThread();
-    float factor = rt->gc.tunables.allocThresholdFactor();
-    size_t thresholdBytes = threshold.gcTriggerBytes() * factor;
-    if (heap.gcBytes() >= thresholdBytes &&
+    if (heap.gcBytes() >= threshold.gcTriggerBytes() &&
         rt->heapState() == JS::HeapState::Idle) {
       gc::MaybeMallocTriggerZoneGC(rt, this, heap, threshold, reason);
     }

@@ -130,7 +130,7 @@ typedef enum JSGCParamKey {
    * The "do we collect?" decision depends on various parameters and can be
    * summarised as:
    *
-   *    ZoneSize * 1/UsageFactor > Max(ThresholdBase, LastSize) * GrowthFactor
+   *   ZoneSize > Max(ThresholdBase, LastSize) * GrowthFactor * ThresholdFactor
    *
    * Where
    *   ZoneSize: Current size of this zone.
@@ -139,9 +139,10 @@ typedef enum JSGCParamKey {
    *   GrowthFactor: A number above 1, calculated based on some of the
    *                 following parameters.
    *                 See computeZoneHeapGrowthFactorForHeapSize() in GC.cpp
-   *   UsageFactor: JSGC_ALLOCATION_THRESHOLD_FACTOR or
-   *                JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT or 1.0 for
-   *                non-incremental collections.
+   *   ThresholdFactor: 1.0 for incremental collections or
+   *                    JSGC_NON_INCREMENTAL_FACTOR or
+   *                    JSGC_AVOID_INTERRUPT_FACTOR for non-incremental
+   *                    collections.
    *
    * The RHS of the equation above is calculated and sets
    * zone->threshold.gcTriggerBytes(). When usage.gcBytes() surpasses
@@ -251,26 +252,26 @@ typedef enum JSGCParamKey {
   JSGC_COMPACTING_ENABLED = 23,
 
   /**
-   * Percentage for triggering a GC based on zone->threshold.gcTriggerBytes().
+   * Percentage for how far over a trigger threshold we go before triggering a
+   * non-incremental GC.
    *
-   * When the heap reaches this percentage of the allocation threshold an
-   * incremental collection is started.
+   * We trigger an incremental GC when a trigger threshold is reached but the
+   * collection may not be fast enough to keep up with the mutator. At some
+   * point we finish the collection non-incrementally.
    *
-   * Default: ZoneAllocThresholdFactorDefault
+   * Default: NonIncrementalFactor
    * Pref: None
    */
-  JSGC_ALLOCATION_THRESHOLD_FACTOR = 25,
+  JSGC_NON_INCREMENTAL_FACTOR = 25,
 
   /**
-   * Percentage for triggering a GC based on zone->threshold.gcTriggerBytes().
+   * Percentage for how far over a trigger threshold we go before triggering an
+   * incremental collection that would reset an in-progress collection.
    *
-   * Used instead of the above percentage if if another GC (in different zones)
-   * is already running.
-   *
-   * Default: ZoneAllocThresholdFactorAvoidInterruptDefault
+   * Default: AvoidInterruptFactor
    * Pref: None
    */
-  JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT = 26,
+  JSGC_AVOID_INTERRUPT_FACTOR = 26,
 
   /**
    * Attempt to run a minor GC in the idle time if the free space falls
