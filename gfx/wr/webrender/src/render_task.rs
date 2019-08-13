@@ -215,9 +215,13 @@ impl RenderTaskGraph {
         ) {
             *max_depth = std::cmp::max(*max_depth, task_depth);
 
-            {
-                let task_max_depth = &mut task_max_depths[task_id.index as usize];
-                *task_max_depth = std::cmp::max(*task_max_depth, task_depth);
+            let task_max_depth = &mut task_max_depths[task_id.index as usize];
+            if task_depth > *task_max_depth {
+                *task_max_depth = task_depth;
+            } else {
+                // If this task has already been processed at a larger depth,
+                // there is no need to process it again.
+                return;
             }
 
             let task = &tasks[task_id.index as usize];
