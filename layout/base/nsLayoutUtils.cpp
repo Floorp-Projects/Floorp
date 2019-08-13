@@ -167,9 +167,6 @@ using namespace mozilla::gfx;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_NOTHING;
 
-#define INTERCHARACTER_RUBY_ENABLED_PREF_NAME \
-  "layout.css.ruby.intercharacter.enabled"
-
 // The time in number of frames that we estimate for a refresh driver
 // to be quiescent
 #define DEFAULT_QUIESCENT_FRAMES 2
@@ -555,19 +552,6 @@ bool nsLayoutUtils::GPUImageScalingEnabled() {
   }
 
   return sGPUImageScalingEnabled;
-}
-
-bool nsLayoutUtils::IsInterCharacterRubyEnabled() {
-  static bool sInterCharacterRubyEnabled;
-  static bool sInterCharacterRubyEnabledPrefCached = false;
-
-  if (!sInterCharacterRubyEnabledPrefCached) {
-    sInterCharacterRubyEnabledPrefCached = true;
-    Preferences::AddBoolVarCache(&sInterCharacterRubyEnabled,
-                                 INTERCHARACTER_RUBY_ENABLED_PREF_NAME, false);
-  }
-
-  return sInterCharacterRubyEnabled;
 }
 
 void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
