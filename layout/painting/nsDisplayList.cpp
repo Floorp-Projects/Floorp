@@ -4456,7 +4456,7 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
     return WHENEVER_POSSIBLE;
   }
 
-  if (nsLayoutUtils::AnimatedImageLayersEnabled() && mBackgroundStyle) {
+  if (StaticPrefs::layout_animated_image_layers_enabled() && mBackgroundStyle) {
     const nsStyleImageLayers::Layer& layer =
         mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
     const nsStyleImage* image = &layer.mImage;

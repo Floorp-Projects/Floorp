@@ -29,6 +29,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Unused.h"
 
 #include "nsCOMPtr.h"
@@ -1777,7 +1778,7 @@ LayerState nsDisplayImage::GetLayerState(
     const ContainerLayerParameters& aParameters) {
   if (!nsDisplayItem::ForceActiveLayers()) {
     bool animated = false;
-    if (!nsLayoutUtils::AnimatedImageLayersEnabled() ||
+    if (!StaticPrefs::layout_animated_image_layers_enabled() ||
         mImage->GetType() != imgIContainer::TYPE_RASTER ||
         NS_FAILED(mImage->GetAnimated(&animated)) || !animated) {
       if (!aManager->IsCompositingCheap() ||
