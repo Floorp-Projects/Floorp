@@ -355,18 +355,19 @@ class GCSchedulingTunables {
   MainThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
   /*
-   * JSGC_ALLOCATION_THRESHOLD_FACTOR
+   * JSGC_NON_INCREMENTAL_FACTOR
    *
-   * Fraction of threshold.gcBytes() which triggers an incremental GC.
+   * Multiple of threshold.gcBytes() which triggers a non-incremental GC.
    */
-  UnprotectedData<float> allocThresholdFactor_;
+  UnprotectedData<float> nonIncrementalFactor_;
 
   /*
-   * JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT
+   * JSGC_AVOID_INTERRUPT_FACTOR
    *
-   * The same except when doing so would interrupt an already running GC.
+   * Multiple of threshold.gcBytes() which triggers a new incremental GC when
+   * doing so would interrupt an ongoing incremental GC.
    */
-  UnprotectedData<float> allocThresholdFactorAvoidInterrupt_;
+  UnprotectedData<float> avoidInterruptFactor_;
 
   /*
    * Number of bytes to allocate between incremental slices in GCs triggered
@@ -488,10 +489,8 @@ class GCSchedulingTunables {
   size_t gcMinNurseryBytes() const { return gcMinNurseryBytes_; }
   size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-  double allocThresholdFactor() const { return allocThresholdFactor_; }
-  double allocThresholdFactorAvoidInterrupt() const {
-    return allocThresholdFactorAvoidInterrupt_;
-  }
+  double nonIncrementalFactor() const { return nonIncrementalFactor_; }
+  double avoidInterruptFactor() const { return avoidInterruptFactor_; }
   size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
   bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
   const mozilla::TimeDuration& highFrequencyThreshold() const {
@@ -656,6 +655,9 @@ class ZoneThreshold {
 
  public:
   size_t gcTriggerBytes() const { return gcTriggerBytes_; }
+  size_t nonIncrementalTriggerBytes(GCSchedulingTunables& tunables) const {
+    return gcTriggerBytes_ * tunables.nonIncrementalFactor();
+  }
   float eagerAllocTrigger(bool highFrequencyGC) const;
 };
 
