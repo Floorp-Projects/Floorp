@@ -24,9 +24,9 @@ class JSObjectHolder;
 namespace dom {
 
 class ClientInfoAndState;
-class KeepAliveToken;
 class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
+class ServiceWorkerPrivate;
 class ServiceWorkerRegistrationInfo;
 
 namespace ipc {
@@ -39,6 +39,20 @@ class LifeCycleEventCallback : public Runnable {
 
   // Called on the worker thread.
   virtual void SetResult(bool aResult) = 0;
+};
+
+// Used to keep track of pending waitUntil as well as in-flight extendable
+// events. When the last token is released, we attempt to terminate the worker.
+class KeepAliveToken final : public nsISupports {
+ public:
+  NS_DECL_ISUPPORTS
+
+  explicit KeepAliveToken(ServiceWorkerPrivate* aPrivate);
+
+ private:
+  ~KeepAliveToken();
+
+  RefPtr<ServiceWorkerPrivate> mPrivate;
 };
 
 // ServiceWorkerPrivate is a wrapper for managing the on-demand aspect of

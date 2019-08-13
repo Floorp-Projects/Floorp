@@ -9,6 +9,10 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'FetchEventOpChild.h',
+    'FetchEventOpParent.h',
+    'FetchEventOpProxyChild.h',
+    'FetchEventOpProxyParent.h',
     'ServiceWorker.h',
     'ServiceWorkerActors.h',
     'ServiceWorkerCloneData.h',
@@ -30,6 +34,10 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'FetchEventOpChild.cpp',
+    'FetchEventOpParent.cpp',
+    'FetchEventOpProxyChild.cpp',
+    'FetchEventOpProxyParent.cpp',
     'RemoteServiceWorkerContainerImpl.cpp',
     'RemoteServiceWorkerImpl.cpp',
     'RemoteServiceWorkerRegistrationImpl.cpp',
@@ -78,6 +86,8 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'IPCServiceWorkerDescriptor.ipdlh',
     'IPCServiceWorkerRegistrationDescriptor.ipdlh',
+    'PFetchEventOp.ipdl',
+    'PFetchEventOpProxy.ipdl',
     'PServiceWorker.ipdl',
     'PServiceWorkerContainer.ipdl',
     'PServiceWorkerManager.ipdl',

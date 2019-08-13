@@ -15,6 +15,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/PFetchEventOpChild.h"
 
 namespace mozilla {
 
@@ -27,6 +28,21 @@ RemoteWorkerControllerChild::RemoteWorkerControllerChild(
     : mObserver(std::move(aObserver)) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mObserver);
+}
+
+PFetchEventOpChild* RemoteWorkerControllerChild::AllocPFetchEventOpChild(
+    const ServiceWorkerFetchEventOpArgs& aArgs) {
+  MOZ_CRASH("PFetchEventOpChild actors must be manually constructed!");
+  return nullptr;
+}
+
+bool RemoteWorkerControllerChild::DeallocPFetchEventOpChild(
+    PFetchEventOpChild* aActor) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
 }
 
 void RemoteWorkerControllerChild::ActorDestroy(ActorDestroyReason aReason) {
