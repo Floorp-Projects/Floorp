@@ -151,6 +151,11 @@ add_task(async function testTabRemovalEvent() {
 });
 
 add_task(async function testTabActivationEvent() {
+  if (!SpecialPowers.Services.androidBridge.isFennec) {
+    // TODO bug 1565536: tabs.onActivated is not supported in GeckoView.
+    info("skipping testTabActivationEvent");
+    return;
+  }
   async function background() {
     function makeExpectable() {
       let expectation = null, resolver = null;
