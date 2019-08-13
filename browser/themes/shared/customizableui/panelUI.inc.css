@@ -1171,6 +1171,10 @@ panelview .toolbarbutton-1,
   width: 12px;
 }
 
+.subviewbutton[type="open-to-new"]:-moz-locale-dir(rtl)::after {
+  transform: scaleX(-1);
+}
+
 #appMenu-popup .toolbaritem-combined-buttons {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
