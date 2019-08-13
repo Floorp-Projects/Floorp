@@ -105,9 +105,8 @@ const uint32_t FrameRateLevels[] = {
 };
 const size_t FrameRateLevelsSize = NELEMS(FrameRateLevels);
 
-/* static */
-nsCString KeyUtil::FindLevel(const uint32_t aLevels[], const size_t length,
-                             uint32_t aValue) {
+nsCString FindLevel(const uint32_t aLevels[], const size_t length,
+                    uint32_t aValue) {
   MOZ_ASSERT(aValue);
   if (aValue <= aLevels[0]) {
     return NS_LITERAL_CSTRING("Level0");
@@ -133,8 +132,7 @@ nsCString KeyUtil::FindLevel(const uint32_t aLevels[], const size_t length,
   return NS_LITERAL_CSTRING("");
 }
 
-/* static */
-nsCString KeyUtil::BitDepthToStr(uint8_t aBitDepth) {
+nsCString BitDepthToStr(uint8_t aBitDepth) {
   switch (aBitDepth) {
     case 8:  // ColorDepth::COLOR_8
       return NS_LITERAL_CSTRING("-8bit");
@@ -147,8 +145,7 @@ nsCString KeyUtil::BitDepthToStr(uint8_t aBitDepth) {
   return NS_LITERAL_CSTRING("");
 }
 
-/* static */
-nsCString KeyUtil::CreateKey(const DecoderBenchmarkInfo& aBenchInfo) {
+nsCString CreateStoreKey(const DecoderBenchmarkInfo& aBenchInfo) {
   nsAutoCString key("Resolution");
   key.Append(FindLevel(PixelLevels, PixelLevelsSize,
                        aBenchInfo.mWidth * aBenchInfo.mHeight));
@@ -169,7 +166,7 @@ void DecoderBenchmark::Store(const DecoderBenchmarkInfo& aBenchInfo,
         "Storing a benchmark is only allowed only from the content process.");
     return;
   }
-  StoreScore(aBenchInfo.mContentType, KeyUtil::CreateKey(aBenchInfo), aStats);
+  StoreScore(aBenchInfo.mContentType, CreateStoreKey(aBenchInfo), aStats);
 }
 
 /* static */
@@ -183,8 +180,7 @@ RefPtr<BenchmarkScorePromise> DecoderBenchmark::Get(
   // There is no need for any of the data members to query the database, thus
   // it can be a static method.
   auto bench = MakeRefPtr<DecoderBenchmark>();
-  return bench->GetScore(aBenchInfo.mContentType,
-                         KeyUtil::CreateKey(aBenchInfo));
+  return bench->GetScore(aBenchInfo.mContentType, CreateStoreKey(aBenchInfo));
 }
 
 static nsDataHashtable<nsCStringHashKey, int32_t> DecoderVersionTable() {

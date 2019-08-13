@@ -15,8 +15,7 @@ const int32_t AVG_WINDOW = 20;
  * aWindow and the already existing average aAverage. When the method returns
  * aAverage will contain the new average and aWindow will contain the new
  * window.*/
-void BenchmarkStorageParent::MovingAverage(int32_t& aAverage, int32_t& aWindow,
-                                           const int32_t aValue) {
+void MovingAverage(int32_t& aAverage, int32_t& aWindow, const int32_t aValue) {
   if (aWindow < AVG_WINDOW) {
     aAverage = (aAverage * aWindow + aValue) / (aWindow + 1);
     aWindow++;
@@ -40,8 +39,7 @@ void BenchmarkStorageParent::MovingAverage(int32_t& aAverage, int32_t& aWindow,
  * (19) and the average score (98). The aValue will
  * be parsed, the aWindow will contain the window (of the moving average) and
  * the return value will contain the average itself. */
-int32_t BenchmarkStorageParent::ParseStoredValue(int32_t aValue,
-                                                 int32_t& aWindow) {
+int32_t ParseStoredValue(int32_t aValue, int32_t& aWindow) {
   MOZ_ASSERT(aValue > 999);
   MOZ_ASSERT(aValue < 100000);
 
@@ -50,8 +48,7 @@ int32_t BenchmarkStorageParent::ParseStoredValue(int32_t aValue,
   return score;
 }
 
-int32_t BenchmarkStorageParent::PrepareStoredValue(int32_t aScore,
-                                                   int32_t aWindow) {
+int32_t PrepareStoredValue(int32_t aScore, int32_t aWindow) {
   MOZ_ASSERT(aScore >= 0);
   MOZ_ASSERT(aScore <= 100);
   MOZ_ASSERT(aWindow > 0);
