@@ -2050,10 +2050,6 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
   MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
   MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
 
-  if (rules->IsLocked()) {
-    return;
-  }
-
   if (aEditSubAction == EditSubAction::eSetText) {
     // SetText replaces all text, so spell checker handles starting from the
     // start of new value.
@@ -2091,14 +2087,12 @@ void TextEditor::OnEndHandlingTopLevelEditSubAction() {
     // Protect the edit rules object from dying
     RefPtr<TextEditRules> rules(mRules);
 
-    if (!rules->IsLocked()) {
-      // post processing
-      DebugOnly<nsresult> rv = rules->AfterEdit(
-          GetTopLevelEditSubAction(), GetDirectionOfTopLevelEditSubAction());
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "TextEditRules::AfterEdit() failed to handle something");
-    }
+    // post processing
+    DebugOnly<nsresult> rv = rules->AfterEdit(
+        GetTopLevelEditSubAction(), GetDirectionOfTopLevelEditSubAction());
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "TextEditRules::AfterEdit() failed to handle something");
   }
   EditorBase::OnEndHandlingTopLevelEditSubAction();
   MOZ_ASSERT(!GetTopLevelEditSubAction());
