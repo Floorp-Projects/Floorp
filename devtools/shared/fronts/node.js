@@ -20,6 +20,13 @@ loader.lazyRequireGetter(
   "devtools/shared/dom-node-constants"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "BrowsingContextTargetFront",
+  "devtools/shared/fronts/targets/browsing-context",
+  true
+);
+
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
 /**
@@ -273,6 +280,9 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   get numChildren() {
     return this._form.numChildren;
   }
+  get remoteFrame() {
+    return this._form.remoteFrame;
+  }
   get hasEventListeners() {
     return this._form.hasEventListeners;
   }
@@ -496,6 +506,20 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       return null;
     }
     return actor.rawNode;
+  }
+
+  async connectToRemoteFrame() {
+    if (this._remoteFrameTarget) {
+      return this._remoteFrameTarget;
+    }
+    // First get the target actor form of this remote frame element
+    const form = await super.connectToRemoteFrame();
+    // Build the related Target object
+    this._remoteFrameTarget = new BrowsingContextTargetFront(this.conn);
+    this._remoteFrameTarget.actorID = form.actor;
+    this._remoteFrameTarget.form(form);
+    this._remoteFrameTarget.manage(this._remoteFrameTarget);
+    return this._remoteFrameTarget;
   }
 }
 
