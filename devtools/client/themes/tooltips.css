@@ -84,7 +84,8 @@ strong {
 
 .devtools-tooltip-inactive-css {
   color: var(--theme-body-color);
-  padding: 5px 13px;
+  padding: 7px 14px 9px;
+  font-size: 12px;
   margin: 0;
 }
 
@@ -96,7 +97,7 @@ strong {
 
 .devtools-tooltip-inactive-css p {
   margin-block-start: 0;
-  margin-block-end: 0.63em;
+  margin-block-end: calc(1em - 4px);
 }
 
 .devtools-tooltip-inactive-css p:last-child {
@@ -106,10 +107,6 @@ strong {
 .devtools-tooltip-inactive-css .link {
   color: var(--theme-highlight-blue);
   cursor: pointer;
-}
-
-.tooltip-bottom .devtools-tooltip-inactive-css {
-  padding: 2px 13px 7px;
 }
 
 /* Tooltip: Tiles */

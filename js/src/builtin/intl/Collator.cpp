@@ -12,6 +12,7 @@
 
 #include "jsapi.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -98,9 +99,8 @@ static bool Collator(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  collator->setReservedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
-  collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                            PrivateValue(nullptr));
+  collator->setFixedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
+  collator->setCollator(nullptr);
 
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
@@ -131,9 +131,7 @@ bool js::intl_Collator(JSContext* cx, unsigned argc, Value* vp) {
 void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
-  const Value& slot =
-      obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
-  if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate())) {
+  if (UCollator* coll = obj->as<CollatorObject>().getCollator()) {
     ucol_close(coll);
   }
 }
@@ -218,15 +216,12 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  uint32_t index = 0;
-
   // The first element of the collations array must be |null| per
   // ES2017 Intl, 10.2.3 Internal Slots.
-  if (!DefineDataElement(cx, collations, index++, NullHandleValue)) {
+  if (!NewbornArrayPush(cx, collations, NullValue())) {
     return false;
   }
 
-  RootedValue element(cx);
   for (uint32_t i = 0; i < count; i++) {
     const char* collation = uenum_next(values, nullptr, &status);
     if (U_FAILURE(status)) {
@@ -254,8 +249,7 @@ bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
     if (!jscollation) {
       return false;
     }
-    element = StringValue(jscollation);
-    if (!DefineDataElement(cx, collations, index++, element)) {
+    if (!NewbornArrayPush(cx, collations, StringValue(jscollation))) {
       return false;
     }
   }
@@ -481,16 +475,13 @@ bool js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp) {
                                    &args[0].toObject().as<CollatorObject>());
 
   // Obtain a cached UCollator object.
-  void* priv =
-      collator->getReservedSlot(CollatorObject::UCOLLATOR_SLOT).toPrivate();
-  UCollator* coll = static_cast<UCollator*>(priv);
+  UCollator* coll = collator->getCollator();
   if (!coll) {
     coll = NewUCollator(cx, collator);
     if (!coll) {
       return false;
     }
-    collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                              PrivateValue(coll));
+    collator->setCollator(coll);
   }
 
   // Use the UCollator to actually compare the strings.

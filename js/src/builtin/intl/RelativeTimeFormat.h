@@ -15,6 +15,8 @@
 #include "js/Class.h"
 #include "vm/NativeObject.h"
 
+struct URelativeDateTimeFormatter;
+
 namespace js {
 
 class RelativeTimeFormatObject : public NativeObject {
@@ -28,6 +30,18 @@ class RelativeTimeFormatObject : public NativeObject {
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
+
+  URelativeDateTimeFormatter* getRelativeDateTimeFormatter() const {
+    const auto& slot = getFixedSlot(URELATIVE_TIME_FORMAT_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<URelativeDateTimeFormatter*>(slot.toPrivate());
+  }
+
+  void setRelativeDateTimeFormatter(URelativeDateTimeFormatter* rtf) {
+    setFixedSlot(URELATIVE_TIME_FORMAT_SLOT, PrivateValue(rtf));
+  }
 
  private:
   static const ClassOps classOps_;

@@ -638,6 +638,21 @@ class EditorBase : public nsIEditor,
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
 
+    template <typename PT, typename CT>
+    void SetSpellCheckRestartPoint(const EditorDOMPointBase<PT, CT>& aPoint) {
+      MOZ_ASSERT(aPoint.IsSet());
+      // We should store only container and offset because new content may
+      // be inserted before referring child.
+      // XXX Shouldn't we compare whether aPoint is before
+      //     mSpellCheckRestartPoint if it's set.
+      mSpellCheckRestartPoint =
+          EditorDOMPoint(aPoint.GetContainer(), aPoint.Offset());
+    }
+    void ClearSpellCheckRestartPoint() { mSpellCheckRestartPoint.Clear(); }
+    const EditorDOMPoint& GetSpellCheckRestartPoint() const {
+      return mSpellCheckRestartPoint;
+    }
+
     void SetData(const nsAString& aData) { mData = aData; }
     const nsString& GetData() const { return mData; }
 
@@ -783,6 +798,10 @@ class EditorBase : public nsIEditor,
     // The dataTransfer should be set to InputEvent.dataTransfer.
     RefPtr<dom::DataTransfer> mDataTransfer;
 
+    // Start point where spell checker should check from.  This is used only
+    // by TextEditor.
+    EditorDOMPoint mSpellCheckRestartPoint;
+
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
     EDirection mDirectionOfTopLevelEditSubAction;
@@ -894,6 +913,22 @@ class EditorBase : public nsIEditor,
   const RangeUpdater& RangeUpdaterRef() const {
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->RangeUpdaterRef();
+  }
+
+  template <typename PT, typename CT>
+  void SetSpellCheckRestartPoint(const EditorDOMPointBase<PT, CT>& aPoint) {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->SetSpellCheckRestartPoint(aPoint);
+  }
+
+  void ClearSpellCheckRestartPoint() {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->ClearSpellCheckRestartPoint();
+  }
+
+  const EditorDOMPoint& GetSpellCheckRestartPoint() const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->GetSpellCheckRestartPoint();
   }
 
   /**
@@ -1794,8 +1829,7 @@ class EditorBase : public nsIEditor,
     mAllowsTransactionsToChangeSelection = aAllow;
   }
 
-  nsresult HandleInlineSpellCheck(EditSubAction aEditSubAction,
-                                  nsINode* previousSelectedNode,
+  nsresult HandleInlineSpellCheck(nsINode* previousSelectedNode,
                                   uint32_t previousSelectedOffset,
                                   nsINode* aStartContainer,
                                   uint32_t aStartOffset, nsINode* aEndContainer,

@@ -105,14 +105,16 @@ void MobileViewportManager::RequestReflow(bool aForceAdjustResolution) {
   RefreshViewportSize(aForceAdjustResolution);
 }
 
-void MobileViewportManager::ResolutionUpdated() {
+void MobileViewportManager::ResolutionUpdated(
+    mozilla::ResolutionChangeOrigin aOrigin) {
   MVM_LOG("%p: resolution updated\n", this);
 
   if (!mContext) {
     return;
   }
 
-  if (!mPainted) {
+  if (!mPainted &&
+      aOrigin == mozilla::ResolutionChangeOrigin::MainThreadRestore) {
     // Save the value, so our default zoom calculation
     // can take it into account later on.
     SetRestoreResolution(mContext->GetResolution());
@@ -126,8 +128,7 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
   event->GetType(type);
 
   if (type.Equals(DOM_META_ADDED)) {
-    MVM_LOG("%p: got a dom-meta-added event\n", this);
-    RefreshViewportSize(mPainted);
+    HandleDOMMetaAdded();
   } else if (type.Equals(DOM_META_CHANGED)) {
     MVM_LOG("%p: got a dom-meta-changed event\n", this);
     RefreshViewportSize(mPainted);
@@ -142,6 +143,11 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
     }
   }
   return NS_OK;
+}
+
+void MobileViewportManager::HandleDOMMetaAdded() {
+  MVM_LOG("%p: got a dom-meta-added event\n", this);
+  RefreshViewportSize(mPainted);
 }
 
 NS_IMETHODIMP
@@ -410,6 +416,8 @@ void MobileViewportManager::UpdateResolution(
   }
 
   // If the zoom has changed, update the pres shell resolution accordingly.
+  // We characterize this as MainThreadAdjustment, because we don't want our
+  // change here to be remembered as a restore resolution.
   if (newZoom) {
     // Non-positive zoom factors can produce NaN or negative viewport sizes,
     // so we better be sure we've got a positive zoom factor.
@@ -417,7 +425,8 @@ void MobileViewportManager::UpdateResolution(
                "zoom factor must be positive");
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    mContext->SetResolutionAndScaleTo(resolution.scale);
+    mContext->SetResolutionAndScaleTo(
+        resolution.scale, ResolutionChangeOrigin::MainThreadAdjustment);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
   }

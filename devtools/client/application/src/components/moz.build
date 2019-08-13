@@ -4,6 +4,7 @@
 
 DIRS += [
     'layout',
+    'manifest',
     'service-workers',
     'ui',
 ]

@@ -3376,6 +3376,8 @@ nsresult HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode) {
 }
 
 nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
@@ -3709,7 +3711,7 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
 
   MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
   MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
-  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, aDirection);
+  DebugOnly<nsresult> rv = rules->BeforeEdit();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "HTMLEditRules::BeforeEdit() failed to handle something");
@@ -3720,10 +3722,7 @@ void HTMLEditor::OnEndHandlingTopLevelEditSubAction() {
   RefPtr<TextEditRules> rules(mRules);
 
   // post processing
-  DebugOnly<nsresult> rv =
-      rules ? rules->AfterEdit(GetTopLevelEditSubAction(),
-                               GetDirectionOfTopLevelEditSubAction())
-            : NS_OK;
+  DebugOnly<nsresult> rv = rules ? rules->AfterEdit() : NS_OK;
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditRules::AfterEdit() failed to handle something");
   EditorBase::OnEndHandlingTopLevelEditSubAction();

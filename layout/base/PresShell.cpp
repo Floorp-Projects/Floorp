@@ -5185,7 +5185,7 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   state.mResolution = Some(aResolution);
   SetRenderingState(state);
   if (mMobileViewportManager) {
-    mMobileViewportManager->ResolutionUpdated();
+    mMobileViewportManager->ResolutionUpdated(aOrigin);
   }
   if (aOrigin == ResolutionChangeOrigin::Apz) {
     mResolutionUpdatedByApz = true;

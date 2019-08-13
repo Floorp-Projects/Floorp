@@ -63,7 +63,6 @@ using namespace dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocChangeRange)
@@ -74,7 +73,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocChangeRange)
@@ -90,25 +88,15 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TextEditRules, Release)
 TextEditRules::TextEditRules()
     : mTextEditor(nullptr),
       mData(nullptr),
-      mCachedSelectionOffset(0),
-      mActionNesting(0),
-      mLockRulesSniffing(false),
-      mDidExplicitlySetInterline(false),
-      mDeleteBidiImmediately(false),
-      mIsHTMLEditRules(false),
-      mTopLevelEditSubAction(EditSubAction::eNone) {
+#ifdef DEBUG
+      mIsHandling(false),
+#endif  // #ifdef DEBUG
+      mIsHTMLEditRules(false) {
   InitFields();
 }
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mCachedSelectionNode = nullptr;
-  mCachedSelectionOffset = 0;
-  mActionNesting = 0;
-  mLockRulesSniffing = false;
-  mDidExplicitlySetInterline = false;
-  mDeleteBidiImmediately = false;
-  mTopLevelEditSubAction = EditSubAction::eNone;
 }
 
 HTMLEditRules* TextEditRules::AsHTMLEditRules() {
@@ -158,10 +146,6 @@ nsresult TextEditRules::Init(TextEditor* aTextEditor) {
     }
   }
 
-  // XXX We should use AddBoolVarCache and use "current" value at initializing.
-  mDeleteBidiImmediately =
-      Preferences::GetBool("bidi.edit.delete_immediately", false);
-
   return NS_OK;
 }
 
@@ -170,106 +154,60 @@ nsresult TextEditRules::DetachEditor() {
   return NS_OK;
 }
 
-nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
-                                   nsIEditor::EDirection aDirection) {
+nsresult TextEditRules::BeforeEdit() {
+  MOZ_ASSERT(!mIsHandling);
+
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (mLockRulesSniffing) {
-    return NS_OK;
-  }
-
-  AutoLockRulesSniffing lockIt(this);
-  mDidExplicitlySetInterline = false;
-  if (!mActionNesting) {
-    // let rules remember the top level action
-    mTopLevelEditSubAction = aEditSubAction;
-  }
-  mActionNesting++;
-
-  if (aEditSubAction == EditSubAction::eSetText) {
-    // setText replaces all text, so mCachedSelectionNode might be invalid on
-    // AfterEdit.
-    // Since this will be used as start position of spellchecker, we should
-    // use root instead.
-    mCachedSelectionNode = mTextEditor->GetRoot();
-    mCachedSelectionOffset = 0;
-    return NS_OK;
-  }
-
-  Selection* selection = mTextEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aEditSubAction == EditSubAction::eInsertText ||
-      aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    // For spell checker, previous selected node should be text node if
-    // possible. If anchor is root of editor, it may become invalid offset
-    // after inserting text.
-    EditorRawDOMPoint point = mTextEditor->FindBetterInsertionPoint(
-        EditorRawDOMPoint(selection->AnchorRef()));
-    if (point.IsSet()) {
-      mCachedSelectionNode = point.GetContainer();
-      mCachedSelectionOffset = point.Offset();
-      return NS_OK;
-    }
-  }
-
-  mCachedSelectionNode = selection->GetAnchorNode();
-  mCachedSelectionOffset = selection->AnchorOffset();
+#ifdef DEBUG
+  mIsHandling = true;
+#endif  // #ifdef DEBUG
 
   return NS_OK;
 }
 
-nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
-                                  nsIEditor::EDirection aDirection) {
+nsresult TextEditRules::AfterEdit() {
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (mLockRulesSniffing) {
-    return NS_OK;
+#ifdef DEBUG
+  MOZ_ASSERT(mIsHandling);
+  mIsHandling = false;
+#endif  // #ifdef DEBUG
+
+  AutoSafeEditorData setData(*this, *mTextEditor);
+
+  // XXX Probably, we should spellcheck again after edit action (not top-level
+  //     sub-action) is handled because the ranges can be referred only by
+  //     users.
+  nsresult rv = TextEditorRef().HandleInlineSpellCheckAfterEdit();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  AutoLockRulesSniffing lockIt(this);
-
-  MOZ_ASSERT(mActionNesting > 0, "bad action nesting!");
-  if (!--mActionNesting) {
-    AutoSafeEditorData setData(*this, *mTextEditor);
-
-    nsresult rv = TextEditorRef().HandleInlineSpellCheck(
-        aEditSubAction, mCachedSelectionNode, mCachedSelectionOffset, nullptr,
-        0, nullptr, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // no longer uses mCachedSelectionNode, so release it.
-    mCachedSelectionNode = nullptr;
-
-    rv = MOZ_KnownLive(TextEditorRef()).EnsurePaddingBRElementForEmptyEditor();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // ensure trailing br node
-    rv = CreateTrailingBRIfNeeded();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Collapse the selection to the trailing padding <br> element for empty
-    // last line if it's at the end of our text node.
-    rv = CollapseSelectionToTrailingBRIfNeeded();
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "Failed to selection to after the text node in TextEditor");
+  rv = MOZ_KnownLive(TextEditorRef()).EnsurePaddingBRElementForEmptyEditor();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
+  // ensure trailing br node
+  rv = CreateTrailingBRIfNeeded();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Collapse the selection to the trailing padding <br> element for empty
+  // last line if it's at the end of our text node.
+  rv = CollapseSelectionToTrailingBRIfNeeded();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "Failed to selection to after the text node in TextEditor");
   return NS_OK;
 }
 
@@ -354,7 +292,8 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
-      return DidDeleteSelection();
+      MOZ_ASSERT(!mIsHTMLEditRules);
+      return DidDeleteSelection(SetSelectionInterLinePosition::Yes);
     case EditSubAction::eInsertElement:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -841,6 +780,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
                                     const nsAString* aString,
                                     int32_t aMaxLength) {
   MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(!mIsHTMLEditRules);
   MOZ_ASSERT(aCancel);
   MOZ_ASSERT(aHandled);
   MOZ_ASSERT(aString);
@@ -955,7 +895,8 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   // If we replaced non-empty value with empty string, we need to delete the
   // text node.
   if (tString.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored = DidDeleteSelection();
+    DebugOnly<nsresult> rvIgnored =
+        DidDeleteSelection(SetSelectionInterLinePosition::Yes);
     MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_DESTROYED);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "DidDeleteSelection() failed");
@@ -1081,7 +1022,8 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
   return NS_OK;
 }
 
-nsresult TextEditRules::DidDeleteSelection() {
+nsresult TextEditRules::DidDeleteSelection(
+    SetSelectionInterLinePosition aSetSelectionInterLinePosition) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   EditorDOMPoint selectionStartPoint(
@@ -1104,7 +1046,7 @@ nsresult TextEditRules::DidDeleteSelection() {
     }
   }
 
-  if (mDidExplicitlySetInterline) {
+  if (aSetSelectionInterLinePosition != SetSelectionInterLinePosition::Yes) {
     return NS_OK;
   }
   // We prevent the caret from sticking on the left of prior BR

@@ -172,6 +172,8 @@ const SymbolicAddressSignature SASigTableSet = {SymbolicAddress::TableSet,
                                                 {_PTR, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigTableSize = {
     SymbolicAddress::TableSize, _I32, _Infallible, 2, {_PTR, _I32, _END}};
+const SymbolicAddressSignature SASigFuncRef = {
+    SymbolicAddress::FuncRef, _RoN, _FailOnInvalidRef, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigPostBarrier = {
     SymbolicAddress::PostBarrier, _VOID, _Infallible, 2, {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigPostBarrierFiltering = {
@@ -836,6 +838,9 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::TableSize:
       *abiType = Args_General2;
       return FuncCast(Instance::tableSize, *abiType);
+    case SymbolicAddress::FuncRef:
+      *abiType = Args_General2;
+      return FuncCast(Instance::funcRef, *abiType);
     case SymbolicAddress::PostBarrier:
       *abiType = Args_General2;
       return FuncCast(Instance::postBarrier, *abiType);
@@ -957,6 +962,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::TableInit:
     case SymbolicAddress::TableSet:
     case SymbolicAddress::TableSize:
+    case SymbolicAddress::FuncRef:
     case SymbolicAddress::PostBarrier:
     case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:

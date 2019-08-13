@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 extern crate ini;
 extern crate regex;
 extern crate semver;
