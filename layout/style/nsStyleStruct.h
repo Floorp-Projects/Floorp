@@ -2376,6 +2376,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
 
   bool HasFilters() const { return !mFilters.IsEmpty(); }
 
+  bool HasBackdropFilters() const { return !mBackdropFilters.IsEmpty(); }
+
   bool HasBoxShadowWithInset(bool aInset) const {
     for (auto& shadow : mBoxShadow.AsSpan()) {
       if (shadow.inset == aInset) {
@@ -2383,6 +2385,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
       }
     }
     return false;
+  }
+
+  bool HasMixBlendMode() const {
+    return mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   }
 
   mozilla::StyleOwnedSlice<mozilla::StyleFilter> mFilters;

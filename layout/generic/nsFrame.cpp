@@ -2531,6 +2531,35 @@ inline static bool IsSVGContentWithCSSClip(const nsIFrame* aFrame) {
                                                   nsGkAtoms::foreignObject);
 }
 
+bool nsIFrame::FormsBackdropRoot(const nsStyleDisplay* aStyleDisplay,
+                                 const nsStyleEffects* aStyleEffects,
+                                 const nsStyleSVGReset* aStyleSVGReset) {
+  // Check if this is a root frame.
+  if (!GetParent()) {
+    return true;
+  }
+
+  // Check for filter effects.
+  if (aStyleEffects->HasFilters() || aStyleEffects->HasBackdropFilters() ||
+      aStyleEffects->HasMixBlendMode()) {
+    return true;
+  }
+
+  // Check for opacity.
+  if (HasOpacity(aStyleDisplay, aStyleEffects)) {
+    return true;
+  }
+
+  // Check for mask or clip path.
+  if (aStyleSVGReset->HasMask() || aStyleSVGReset->HasClipPath()) {
+    return true;
+  }
+
+  // TODO(cbrewster): Check will-change attributes
+
+  return false;
+}
+
 Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
                                             const nsStyleEffects* aEffects,
                                             const nsSize& aSize) const {
@@ -3092,9 +3121,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  bool usingFilter = StyleEffects()->HasFilters();
+  bool backdropFilterEnabled =
+      StaticPrefs::layout_css_backdrop_filter_enabled();
+  bool usingBackdropFilter =
+      backdropFilterEnabled && effects->HasBackdropFilters() &&
+      nsDisplayBackdropFilters::CanCreateWebRenderCommands(aBuilder, this);
+  bool usingFilter = effects->HasFilters();
   bool usingMask = nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
+
+  bool formsBackdropRoot = backdropFilterEnabled &&
+                           FormsBackdropRoot(disp, effects, StyleSVGReset());
 
   nsRect visibleRectOutsideSVGEffects = visibleRect;
   nsDisplayList hoistedScrollInfoItemsStorage;
@@ -3344,6 +3381,23 @@ void nsIFrame::BuildDisplayListForStackingContext(
     DisplayListClipState::AutoSaveRestore blendContainerClipState(aBuilder);
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
         aBuilder, this, &resultList, containerItemASR));
+    ct.TrackContainer(resultList.GetTop());
+  }
+
+  if (formsBackdropRoot) {
+    DisplayListClipState::AutoSaveRestore backdropRootContainerClipState(
+        aBuilder);
+    resultList.AppendNewToTop<nsDisplayBackdropRootContainer>(
+        aBuilder, this, &resultList, containerItemASR);
+    ct.TrackContainer(resultList.GetTop());
+  }
+
+  if (usingBackdropFilter) {
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    nsRect backdropRect =
+        GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+    resultList.AppendNewToTop<nsDisplayBackdropFilters>(
+        aBuilder, this, &resultList, backdropRect);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -10779,7 +10833,8 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                             aStylePosition->mZIndex.IsInteger())) ||
          (aStyleDisplay->mWillChange.bits &
           StyleWillChangeBits_STACKING_CONTEXT) ||
-         aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO;
+         aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO ||
+         aStyleEffects->HasBackdropFilters();
 }
 
 bool nsIFrame::IsStackingContext() {
