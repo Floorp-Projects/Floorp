@@ -32,8 +32,6 @@ public interface MmaInterface {
 
     void stop();
 
-    void setToken(String token);
-
     @CheckResult boolean handleGcmMessage(Context context, String from, Bundle bundle);
 
     void setDeviceId(@NonNull String deviceId);

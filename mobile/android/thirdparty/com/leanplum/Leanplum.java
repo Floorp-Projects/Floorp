@@ -104,7 +104,6 @@ public class Leanplum {
   private static RegisterDeviceFinishedCallback registerDeviceFinishedHandler;
   private static LeanplumDeviceIdMode deviceIdMode = LeanplumDeviceIdMode.MD5_MAC_ADDRESS;
   private static String customDeviceId;
-  private static String customToken;
   private static String defaultChannelId;
   private static boolean userSpecifiedDeviceId;
   private static boolean initializedMessageTemplates = false;
@@ -172,10 +171,6 @@ public class Leanplum {
    */
   public static void setFileHashingEnabledInDevelopmentMode(boolean enabled) {
     Constants.hashFilesToDetermineModifications = enabled;
-  }
-
-  public static void setToken(String token) {
-    customToken = token;
   }
 
   /**
@@ -639,7 +634,11 @@ public class Leanplum {
    */
   private static void checkAndStartNotificationsModules() {
     if (Util.hasPlayServices()) {
-      LeanplumPushService.onStart();
+      try {
+        Class.forName(LEANPLUM_PUSH_SERVICE).getDeclaredMethod("onStart")
+            .invoke(null);
+      } catch (Throwable ignored) {
+      }
     } else {
       Log.i("No valid Google Play Services APK found.");
     }
@@ -697,8 +696,6 @@ public class Leanplum {
     params.put(Constants.Params.DEVICE_SYSTEM_VERSION, Util.getSystemVersion());
     if (!TextUtils.isEmpty(registrationId)) {
       params.put(Constants.Params.DEVICE_PUSH_TOKEN, registrationId);
-    } else if (!TextUtils.isEmpty(customToken)) {
-      params.put(Constants.Params.DEVICE_PUSH_TOKEN, customToken);
     }
     params.put(Constants.Keys.TIMEZONE, localTimeZone.getID());
     params.put(Constants.Keys.TIMEZONE_OFFSET_SECONDS, Integer.toString(timezoneOffsetSeconds));
@@ -851,8 +848,10 @@ public class Leanplum {
               }
 
               try {
-                LeanplumNotificationChannel.configureChannels(context, notificationGroups,
-                        notificationChannels, defaultNotificationChannel);
+                Class.forName(LEANPLUM_NOTIFICATION_CHANNEL)
+                    .getDeclaredMethod("configureChannels", Context.class, JSONArray.class,
+                        JSONArray.class, String.class).invoke(new Object(), context,
+                    notificationGroups, notificationChannels, defaultNotificationChannel);
               } catch (Throwable ignored) {
               }
             }
@@ -881,6 +880,8 @@ public class Leanplum {
             parseVariantDebugInfo(response);
 
             // Allow bidirectional realtime variable updates.
+            if (Constants.isDevelopmentModeEnabled) {
+
               final Context currentContext = (
                   LeanplumActivityHelper.currentActivity != context &&
                       LeanplumActivityHelper.currentActivity != null) ?
@@ -939,7 +940,7 @@ public class Leanplum {
 
               // Check for updates.
               final String latestVersion = response.optString(Constants.Keys.LATEST_VERSION, null);
-              if (isRegistered && latestVersion != null && Constants.isDevelopmentModeEnabled) {
+              if (isRegistered && latestVersion != null) {
                 Log.i("An update to Leanplum Android SDK, " + latestVersion +
                     ", is available. Go to leanplum.com to download it.");
               }
@@ -968,6 +969,7 @@ public class Leanplum {
               if (isRegistered) {
                 LeanplumInternal.onHasStartedAndRegisteredAsDeveloper();
               }
+            }
             LeanplumInternal.moveToForeground();
             startHeartbeat();
           } catch (Throwable t) {
