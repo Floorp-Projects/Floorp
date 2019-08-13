@@ -32,7 +32,3 @@
   right: 0;
   bottom: 0;
 }
-
-:host(.warning) {
-  border: 2px solid var(--yellow-50);
-}

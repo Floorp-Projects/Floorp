@@ -22,19 +22,6 @@ export class InfoGroup extends HTMLElement {
     let title = this.shadowRoot.querySelector(".info-group-title");
     title.textContent = this.item.sectionTitle;
 
-    // Adds an id with the section title's name, to make
-    // it easier to find when highlighting errors.
-    this.setAttribute(
-      "id",
-      this.item.sectionTitle.replace(/\s+/g, "-").toLowerCase()
-    );
-
-    // Adds a class with the section title's name, to make
-    // it easier to find when highlighting errors.
-    this.classList.add(
-      this.item.sectionTitle.replace(/\s+/g, "-").toLowerCase()
-    );
-
     for (let i = 0; i < this.item.sectionItems.length; i++) {
       this.shadowRoot.append(new InfoItem(this.item.sectionItems[i]));
     }

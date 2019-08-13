@@ -5,14 +5,12 @@
 import { updateSelectedItem } from "../certviewer.js";
 import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
-import { WarningSection } from "./warning-section.js";
 
 class CertificateSection extends HTMLElement {
-  constructor(certs, error, errorCode) {
+  constructor(certs, error) {
     super();
     this.certs = certs;
     this.error = error;
-    this.errorCode = errorCode;
   }
 
   connectedCallback() {
@@ -37,10 +35,6 @@ class CertificateSection extends HTMLElement {
       "certificate-viewer-certificate-section-title"
     );
 
-    if (this.errorCode) {
-      this.shadowRoot.prepend(new WarningSection(this.errorCode));
-    }
-
     this.infoGroupContainer = this.shadowRoot.querySelector(".info-groups");
 
     if (this.error) {
@@ -53,20 +47,6 @@ class CertificateSection extends HTMLElement {
       this.createTabSection(this.certs[i].tabName, i, certificateTabs);
     }
     this.setAccessibilityEventListeners();
-    this.addClassForPadding();
-  }
-
-  // Adds class selector for items that need padding,
-  // as nth-child/parent-based selectors aren't supported
-  // due to the encapsulation of custom-element CSS.
-  addClassForPadding() {
-    let items = this.shadowRoot
-      .querySelector(".embedded-scts")
-      .shadowRoot.querySelectorAll(".version");
-
-    for (let i = 0; i < items.length; i++) {
-      items[i].classList.add("padding");
-    }
   }
 
   /* Information on setAccessibilityEventListeners() can be found
