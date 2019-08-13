@@ -20,7 +20,7 @@ pref(layout.viewport_contains_no_contents_area,true) == position-fixed-on-square
 pref(layout.viewport_contains_no_contents_area,true) fails-if(webrender) == async-scroll-to-no-content-area.html async-scroll-to-no-content-area-ref.html # bug 1571623 to track down the failure on WebRender
 pref(layout.viewport_contains_no_contents_area,true) == resolution-change-on-landscape-content.html resolution-change-on-landscape-content-ref.html
 == scrollbars-in-half-height-content.html scrollbars-in-half-height-content-ref.html
-pref(layout.viewport_contains_no_contents_area,true) fails-if(usesOverlayScrollbars) == scrollbars-in-landscape-content.html scrollbars-in-landscape-content-ref.html
+pref(layout.viewport_contains_no_contents_area,true) == scrollbars-in-landscape-content.html scrollbars-in-landscape-content-ref.html
 
 skip-if(!Android) fails-if(geckoview&&webrender) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
 == position-fixed-out-of-view.html about:blank
