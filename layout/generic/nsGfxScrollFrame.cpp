@@ -6152,8 +6152,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
   bool overlayScrollBars =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
-      presShell->GetDocument()->InRDMPane();
+      Document::UseOverlayScrollbars(presShell->GetDocument());
   bool overlayScrollBarsWithZoom =
       overlayScrollBars && mIsRoot && presShell->IsVisualViewportSizeSet();
 

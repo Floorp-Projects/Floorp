@@ -15819,6 +15819,12 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   }
 }
 
+// static
+bool Document::UseOverlayScrollbars(const Document* aDocument) {
+  return LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
+         (aDocument && aDocument->InRDMPane());
+}
+
 bool Document::HasRecentlyStartedForegroundLoads() {
   if (!sLoadingForegroundTopLevelContentDocument) {
     return false;

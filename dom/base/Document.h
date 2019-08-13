@@ -4123,6 +4123,10 @@ class Document : public nsINode,
   bool InRDMPane() const { return mInRDMPane; }
   void SetInRDMPane(bool aInRDMPane) { mInRDMPane = aInRDMPane; }
 
+  // Returns true if we use overlay scrollbars on the system wide or on the
+  // given document.
+  static bool UseOverlayScrollbars(const Document* aDocument);
+
   static bool HasRecentlyStartedForegroundLoads();
 
  protected:
