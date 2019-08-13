@@ -160,7 +160,7 @@ static Result<nsCString, nsresult> DecodeLZ4(const nsACString& lz4,
 
   MOZ_DIAGNOSTIC_ASSERT(size == outputSize);
 
-  return result;
+  return std::move(result);
 }
 
 // Our zlib headers redefine this to MOZ_Z_compress, which breaks LZ4::compress
@@ -194,7 +194,7 @@ static Result<nsCString, nsresult> EncodeLZ4(const nsACString& data,
   if (!result.SetLength(off + size, fallible)) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
-  return result;
+  return std::move(result);
 }
 
 static_assert(sizeof STRUCTURED_CLONE_MAGIC % 8 == 0,
@@ -498,7 +498,7 @@ nsresult AddonManagerStartup::ReadStartupData(
   auto res = ReadFileLZ4(file);
   if (res.isOk()) {
     data = res.unwrap();
-  } else if (res.unwrapErr() != NS_ERROR_FILE_NOT_FOUND) {
+  } else if (res.inspectErr() != NS_ERROR_FILE_NOT_FOUND) {
     return res.unwrapErr();
   }
 
