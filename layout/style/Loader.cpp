@@ -12,6 +12,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
@@ -372,10 +373,6 @@ Loader::Loader()
       mCompatMode(eCompatibility_FullStandards),
       mEnabled(true),
       mReporter(new ConsoleReportCollector())
-#ifdef DEBUG
-      ,
-      mSyncCallback(false)
-#endif
 {
 }
 
@@ -1368,7 +1365,9 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
 
     cookieSettings = mDocument->CookieSettings();
   }
+
 #ifdef DEBUG
+  AutoRestore<bool> syncCallbackGuard(mSyncCallback);
   mSyncCallback = true;
 #endif
 
@@ -1412,9 +1411,6 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
   }
 
   if (NS_FAILED(rv)) {
-#ifdef DEBUG
-    mSyncCallback = false;
-#endif
     LOG_ERROR(("  Failed to create channel"));
     SheetComplete(aLoadData, rv);
     return rv;
@@ -1514,10 +1510,6 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
   }
 
   rv = channel->AsyncOpen(streamLoader);
-
-#ifdef DEBUG
-  mSyncCallback = false;
-#endif
 
   if (NS_FAILED(rv)) {
     LOG_ERROR(("  Failed to create stream loader"));
