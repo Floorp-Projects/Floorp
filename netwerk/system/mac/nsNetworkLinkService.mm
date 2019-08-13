@@ -394,6 +394,7 @@ void nsNetworkLinkService::IPConfigChanged(SCDynamicStoreRef aStoreREf, CFArrayR
                                            void* aInfo) {
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
   service->SendEvent(true);
+  service->calculateNetworkId();
 }
 
 nsresult nsNetworkLinkService::Init(void) {
