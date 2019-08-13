@@ -741,6 +741,71 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
   return newIdentity;
 }
 
+JS_FRIEND_API void js::RemapRemoteWindowProxies(
+    JSContext* cx, CompartmentTransplantCallback* callback,
+    MutableHandleObject target) {
+  AssertHeapIsIdle();
+  CheckTransplantObject(target);
+  ReleaseAssertObjectHasNoWrappers(cx, target);
+
+  // |target| can't be a remote proxy, because we expect it to get a CCW when
+  // wrapped across compartments.
+  MOZ_ASSERT(!js::IsDOMRemoteProxyObject(target));
+
+  // Don't allow a compacting GC to observe any intermediate state.
+  AutoDisableCompactingGC nocgc(cx);
+
+  AutoDisableProxyCheck adpc;
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!CheckSystemRecursionLimit(cx)) {
+    oomUnsafe.crash("js::RemapRemoteWindowProxies");
+  }
+
+  RootedObject targetCompartmentProxy(cx);
+  JS::RootedVector<JSObject*> otherProxies(cx);
+
+  // Use the callback to find remote proxies in all compartments that match
+  // whatever criteria callback uses.
+  for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
+    RootedObject remoteProxy(cx, callback->getObjectToTransplant(c));
+    if (!remoteProxy) {
+      continue;
+    }
+    // The object the callback returns should be a DOM remote proxy object in
+    // the compartment c. We rely on it being a DOM remote proxy because that
+    // means that it won't have any cross-compartment wrappers.
+    MOZ_ASSERT(js::IsDOMRemoteProxyObject(remoteProxy));
+    MOZ_ASSERT(remoteProxy->compartment() == c);
+    CheckTransplantObject(remoteProxy);
+
+    // Immediately turn the DOM remote proxy object into a dead proxy object
+    // so we don't have to worry about anything weird going on with it.
+    js::NukeNonCCWProxy(cx, remoteProxy);
+
+    if (remoteProxy->compartment() == target->compartment()) {
+      targetCompartmentProxy = remoteProxy;
+    } else if (!otherProxies.append(remoteProxy)) {
+      oomUnsafe.crash("js::RemapRemoteWindowProxies");
+    }
+  }
+
+  // If there was a remote proxy in |target|'s compartment, we need to use it
+  // instead of |target|, in case it had any references, so swap it. Do this
+  // before any other compartment so that the target object will be set up
+  // correctly before we start wrapping it into other compartments.
+  if (targetCompartmentProxy) {
+    AutoRealm ar(cx, targetCompartmentProxy);
+    JSObject::swap(cx, targetCompartmentProxy, target);
+    target.set(targetCompartmentProxy);
+  }
+
+  for (JSObject*& obj : otherProxies) {
+    RootedObject deadWrapper(cx, obj);
+    js::RemapDeadWrapper(cx, deadWrapper, target);
+  }
+}
+
 /*
  * Recompute all cross-compartment wrappers for an object, resetting state.
  * Gecko uses this to clear Xray wrappers when doing a navigation that reuses
