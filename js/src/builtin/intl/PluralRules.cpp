@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/NumberFormat.h"
@@ -412,9 +413,6 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedValue element(cx);
-  uint32_t i = 0;
-
   do {
     int32_t catSize;
     const char* cat = uenum_next(ue, &catSize, &status);
@@ -433,8 +431,7 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    element.setString(str);
-    if (!DefineDataElement(cx, res, i++, element)) {
+    if (!NewbornArrayPush(cx, res, StringValue(str))) {
       return false;
     }
   } while (true);

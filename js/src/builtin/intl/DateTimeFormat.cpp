@@ -13,6 +13,7 @@
 
 #include "jsfriendapi.h"
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -284,15 +285,14 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
   if (!calendars) {
     return false;
   }
-  uint32_t index = 0;
 
   // We need the default calendar for the locale as the first result.
-  RootedValue element(cx);
-  if (!DefaultCalendar(cx, locale, &element)) {
+  RootedValue defaultCalendar(cx);
+  if (!DefaultCalendar(cx, locale, &defaultCalendar)) {
     return false;
   }
 
-  if (!DefineDataElement(cx, calendars, index++, element)) {
+  if (!NewbornArrayPush(cx, calendars, defaultCalendar)) {
     return false;
   }
 
@@ -331,8 +331,7 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
     if (!jscalendar) {
       return false;
     }
-    element = StringValue(jscalendar);
-    if (!DefineDataElement(cx, calendars, index++, element)) {
+    if (!NewbornArrayPush(cx, calendars, StringValue(jscalendar))) {
       return false;
     }
 
@@ -343,8 +342,7 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
         if (!jscalendar) {
           return false;
         }
-        element = StringValue(jscalendar);
-        if (!DefineDataElement(cx, calendars, index++, element)) {
+        if (!NewbornArrayPush(cx, calendars, StringValue(jscalendar))) {
           return false;
         }
       }
@@ -854,9 +852,7 @@ static bool intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df,
 
   size_t lastEndIndex = 0;
 
-  uint32_t partIndex = 0;
   RootedObject singlePart(cx);
-  RootedValue partType(cx);
   RootedValue val(cx);
 
   auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex) {
@@ -865,8 +861,8 @@ static bool intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df,
       return false;
     }
 
-    partType = StringValue(cx->names().*type);
-    if (!DefineDataProperty(cx, singlePart, cx->names().type, partType)) {
+    val = StringValue(cx->names().*type);
+    if (!DefineDataProperty(cx, singlePart, cx->names().type, val)) {
       return false;
     }
 
@@ -881,13 +877,11 @@ static bool intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df,
       return false;
     }
 
-    val = ObjectValue(*singlePart);
-    if (!DefineDataElement(cx, partsArray, partIndex, val)) {
+    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
       return false;
     }
 
     lastEndIndex = endIndex;
-    partIndex++;
     return true;
   };
 
