@@ -3553,7 +3553,7 @@ bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
   return true;
 }
 
-void GCRuntime::maybeGC(Zone* zone) {
+void GCRuntime::maybeGC() {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
 #ifdef JS_GC_ZEAL
@@ -3568,13 +3568,20 @@ void GCRuntime::maybeGC(Zone* zone) {
     return;
   }
 
-  if (isIncrementalGCInProgress() || isBackgroundSweeping()) {
+  if (isIncrementalGCInProgress()) {
     return;
   }
 
-  if (checkEagerAllocTrigger(zone->zoneSize, zone->threshold) ||
-      checkEagerAllocTrigger(zone->gcMallocBytes, zone->gcMallocThreshold)) {
-    PrepareZoneForGC(zone);
+  bool scheduledZones = false;
+  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    if (checkEagerAllocTrigger(zone->zoneSize, zone->threshold) ||
+        checkEagerAllocTrigger(zone->gcMallocBytes, zone->gcMallocThreshold)) {
+      zone->scheduleGC();
+      scheduledZones = true;
+    }
+  }
+
+  if (scheduledZones) {
     startGC(GC_NORMAL, JS::GCReason::EAGER_ALLOC_TRIGGER);
   }
 }
