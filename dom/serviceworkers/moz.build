@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerManager.h',
     'ServiceWorkerManagerChild.h',
     'ServiceWorkerManagerParent.h',
+    'ServiceWorkerOpPromise.h',
     'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
     'ServiceWorkerRegistrationDescriptor.h',
@@ -80,6 +81,7 @@ IPDL_SOURCES += [
     'PServiceWorkerManager.ipdl',
     'PServiceWorkerRegistration.ipdl',
     'PServiceWorkerUpdater.ipdl',
+    'ServiceWorkerOpArgs.ipdlh',
     'ServiceWorkerRegistrarTypes.ipdlh',
 ]
 
