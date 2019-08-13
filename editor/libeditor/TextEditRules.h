@@ -77,6 +77,8 @@ class TextEditRules {
   HTMLEditRules* AsHTMLEditRules();
   const HTMLEditRules* AsHTMLEditRules() const;
 
+  bool IsLocked() const { return mLockRulesSniffing; }
+
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor);
   virtual nsresult DetachEditor();
@@ -363,10 +365,6 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // Cached selected node.
-  nsCOMPtr<nsINode> mCachedSelectionNode;
-  // Cached selected offset.
-  uint32_t mCachedSelectionOffset;
   uint32_t mActionNesting;
   bool mLockRulesSniffing;
   bool mDidExplicitlySetInterline;

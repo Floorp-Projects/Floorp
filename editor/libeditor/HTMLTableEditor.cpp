@@ -170,6 +170,8 @@ HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
 
 nsresult HTMLEditor::InsertTableCellsWithTransaction(
     int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   RefPtr<Element> table;
   RefPtr<Element> curCell;
   nsCOMPtr<nsINode> cellParent;
@@ -587,6 +589,8 @@ HTMLEditor::InsertTableRow(int32_t aNumberOfRowsToInsert,
 
 nsresult HTMLEditor::InsertTableRowsWithTransaction(
     int32_t aNumberOfRowsToInsert, InsertPosition aInsertPosition) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   RefPtr<Element> table;
   RefPtr<Element> curCell;
 
@@ -1220,6 +1224,8 @@ HTMLEditor::DeleteTableColumn(int32_t aNumberOfColumnsToDelete) {
 
 nsresult HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
     int32_t aNumberOfColumnsToDelete) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   RefPtr<Element> table;
   RefPtr<Element> cell;
   int32_t startRowIndex, startColIndex;
@@ -1569,6 +1575,8 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
 // Helper that doesn't batch or change the selection
 nsresult HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
                                                    int32_t aRowIndex) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   ErrorResult error;
   TableSize tableSize(*this, aTableElement, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -2761,7 +2769,11 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
 nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
                                 RefPtr<Element> aCellToMerge,
                                 bool aDeleteCellToMerge) {
-  NS_ENSURE_TRUE(aTargetCell && aCellToMerge, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aTargetCell) || NS_WARN_IF(!aCellToMerge)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
