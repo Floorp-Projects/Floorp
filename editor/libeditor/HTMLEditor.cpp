@@ -4147,8 +4147,8 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
                           : GetNextElementOrText(aPoint);
 }
 
-nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode,
-                                                        bool aNoBlockCrossing) {
+nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
+    nsINode& aNode, bool aNoBlockCrossing) const {
   if (!GetActiveEditingHost()) {
     return nullptr;
   }
@@ -4158,7 +4158,7 @@ nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode,
 
 template <typename PT, typename CT>
 nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
-    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) {
+    const EditorDOMPointBase<PT, CT>& aPoint, bool aNoBlockCrossing) const {
   if (!GetActiveEditingHost()) {
     return nullptr;
   }

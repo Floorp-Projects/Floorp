@@ -3406,7 +3406,7 @@ nsINode* EditorBase::GetNodeLocation(nsINode* aChild, int32_t* aOffset) {
 nsIContent* EditorBase::GetPreviousNodeInternal(nsINode& aNode,
                                                 bool aFindEditableNode,
                                                 bool aFindAnyDataNode,
-                                                bool aNoBlockCrossing) {
+                                                bool aNoBlockCrossing) const {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
@@ -3417,7 +3417,7 @@ nsIContent* EditorBase::GetPreviousNodeInternal(nsINode& aNode,
 nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
                                                 bool aFindEditableNode,
                                                 bool aFindAnyDataNode,
-                                                bool aNoBlockCrossing) {
+                                                bool aNoBlockCrossing) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -3462,7 +3462,7 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
 nsIContent* EditorBase::GetNextNodeInternal(nsINode& aNode,
                                             bool aFindEditableNode,
                                             bool aFindAnyDataNode,
-                                            bool aNoBlockCrossing) {
+                                            bool aNoBlockCrossing) const {
   if (!IsDescendantOfEditorRoot(&aNode)) {
     return nullptr;
   }
@@ -3473,7 +3473,7 @@ nsIContent* EditorBase::GetNextNodeInternal(nsINode& aNode,
 nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
                                             bool aFindEditableNode,
                                             bool aFindAnyDataNode,
-                                            bool aNoBlockCrossing) {
+                                            bool aNoBlockCrossing) const {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -3528,7 +3528,7 @@ nsIContent* EditorBase::GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
 }
 
 nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
-                                         bool bNoBlockCrossing) {
+                                         bool bNoBlockCrossing) const {
   // called only by GetPriorNode so we don't need to check params.
   MOZ_ASSERT(
       IsDescendantOfEditorRoot(aCurrentNode) && !IsEditorRoot(aCurrentNode),
@@ -3577,7 +3577,7 @@ nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
 
 nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
                                  bool aEditableNode, bool aFindAnyDataNode,
-                                 bool bNoBlockCrossing) {
+                                 bool bNoBlockCrossing) const {
   if (IsEditorRoot(aCurrentNode)) {
     // Don't allow traversal above the root node! This helps
     // prevent us from accidentally editing browser content
