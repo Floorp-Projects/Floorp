@@ -14,7 +14,7 @@
             context.getDrawable(
                 TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE
             )
-        )): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L226)
+        )): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L234)
 
 Sets the different icons that the tracking protection icon could has depending of its
 [Toolbar.siteTrackingProtection](../../mozilla.components.concept.toolbar/-toolbar/site-tracking-protection.md)

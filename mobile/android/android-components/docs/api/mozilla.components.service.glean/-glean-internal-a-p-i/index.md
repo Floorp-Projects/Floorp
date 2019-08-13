@@ -2,7 +2,7 @@
 
 # GleanInternalAPI
 
-`open class GleanInternalAPI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L44)
+`open class GleanInternalAPI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L42)
 
 ### Functions
 

@@ -2,7 +2,7 @@
 
 # Glean
 
-`object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L588)
+`object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L586)
 
 ### Inherited Functions
 
