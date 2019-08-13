@@ -4,9 +4,6 @@
 
 package mozilla.components.feature.media.focus
 
-import android.content.Context
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import mozilla.components.feature.media.ext.getMedia
@@ -23,19 +20,34 @@ import mozilla.components.support.base.log.logger.Logger
  * https://developer.android.com/guide/topics/media-apps/audio-focus
  */
 internal class AudioFocus(
-    private val context: Context
+    val audioManager: AudioManager
 ) : AudioManager.OnAudioFocusChangeListener {
     private val logger = Logger("AudioFocus")
     private var playDelayed = false
     private var resumeOnFocusGain = false
 
+    private val audioFocusController = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        AudioFocusControllerV26(audioManager, this)
+    } else {
+        AudioFocusControllerV21(audioManager, this)
+    }
+
     @Synchronized
     fun request(state: MediaState) {
-        val result = requestAudioFocusCompat(context, this)
+        val result = audioFocusController.request()
         processAudioFocusResult(state, result)
     }
 
+    @Synchronized
+    fun abandon() {
+        audioFocusController.abandon()
+        playDelayed = false
+        resumeOnFocusGain = false
+    }
+
     private fun processAudioFocusResult(state: MediaState, result: Int) {
+        logger.debug("processAudioFocusResult($result)")
+
         when (result) {
             AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
                 // Granted: Gecko already started playing media.
@@ -60,6 +72,8 @@ internal class AudioFocus(
 
     @Synchronized
     override fun onAudioFocusChange(focusChange: Int) {
+        logger.debug("onAudioFocusChange($focusChange)")
+
         val state = MediaStateMachine.state
 
         when (focusChange) {
@@ -91,34 +105,5 @@ internal class AudioFocus(
             // duck and restore the volume automatically
             // https://github.com/mozilla-mobile/android-components/issues/3936
         }
-    }
-}
-
-private fun requestAudioFocusCompat(
-    context: Context,
-    listener: AudioManager.OnAudioFocusChangeListener
-): Int {
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-        @Suppress("DEPRECATION")
-        audioManager.requestAudioFocus(
-            listener,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-    } else {
-        audioManager.requestAudioFocus(
-            AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                .setWillPauseWhenDucked(false)
-                .setOnAudioFocusChangeListener(listener)
-                .build()
-        )
     }
 }

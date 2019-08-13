@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.media.focus
 
-import android.content.Context
 import android.media.AudioManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
@@ -14,7 +13,6 @@ import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,18 +20,14 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
 class AudioFocusTest {
-    private lateinit var context: Context
     private lateinit var audioManager: AudioManager
 
     @Before
     fun setUp() {
-        context = spy(testContext)
         audioManager = mock()
-        doReturn(audioManager).`when`(context).getSystemService(Context.AUDIO_SERVICE)
     }
 
     @Test
@@ -45,7 +39,7 @@ class AudioFocusTest {
             Session("https://www.mozilla.org"),
             listOf(MockMedia(Media.PlaybackState.PLAYING))))
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
@@ -63,7 +57,7 @@ class AudioFocusTest {
             Session("https://www.mozilla.org"),
             listOf(media)))
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
@@ -81,7 +75,7 @@ class AudioFocusTest {
             Session("https://www.mozilla.org"),
             listOf(media)))
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(state)
 
         verify(audioManager).requestAudioFocus(any())
@@ -95,7 +89,7 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
 
         verifyNoMoreInteractions(media.controller)
 
@@ -125,7 +119,7 @@ class AudioFocusTest {
 
         val media = MockMedia(Media.PlaybackState.PLAYING)
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(MediaState.Playing(
             Session("https://www.mozilla.org"),
             listOf(media)))
@@ -150,7 +144,7 @@ class AudioFocusTest {
             Session("https://www.mozilla.org"),
             listOf(MockMedia(Media.PlaybackState.PLAYING))))
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(state)
     }
 
@@ -161,7 +155,7 @@ class AudioFocusTest {
         doReturn(AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             .`when`(audioManager).requestAudioFocus(any())
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
 
         verifyNoMoreInteractions(media.controller)
 
@@ -179,7 +173,7 @@ class AudioFocusTest {
 
         val media = MockMedia(Media.PlaybackState.PLAYING)
 
-        val audioFocus = AudioFocus(context)
+        val audioFocus = AudioFocus(audioManager)
         audioFocus.request(MediaState.Playing(
             Session("https://www.mozilla.org"),
             listOf(media)))
