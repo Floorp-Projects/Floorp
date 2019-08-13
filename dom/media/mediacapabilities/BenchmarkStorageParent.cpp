@@ -100,4 +100,25 @@ IPCResult BenchmarkStorageParent::RecvGet(const nsCString& aDbName,
   return IPC_OK();
 }
 
+IPCResult BenchmarkStorageParent::RecvCheckVersion(const nsCString& aDbName,
+                                                   int32_t aVersion) {
+  mStorage->Get(aDbName, NS_LITERAL_CSTRING("Version"))
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [storage = mStorage, aDbName, aVersion](int32_t aResult) {
+            if (aVersion != aResult) {
+              storage->Clear(aDbName)->Then(
+                  GetCurrentThreadSerialEventTarget(), __func__,
+                  [storage, aDbName, aVersion](bool) {
+                    storage->Put(aDbName, NS_LITERAL_CSTRING("Version"),
+                                 aVersion);
+                  },
+                  [](nsresult rv) { /*do nothing*/ });
+            }
+          },
+          [](nsresult rv) { /*do nothing*/ });
+
+  return IPC_OK();
+}
+
 };  // namespace mozilla
