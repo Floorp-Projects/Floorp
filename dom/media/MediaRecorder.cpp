@@ -431,13 +431,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     if (mRunningState.isOk() &&
-        mRunningState.unwrap() == RunningState::Idling) {
+        mRunningState.inspect() == RunningState::Idling) {
       LOG(LogLevel::Debug, ("Session.Stop Explicit end task %p", this));
       // End the Session directly if there is no encoder.
       DoSessionEndTask(NS_OK);
     } else if (mRunningState.isOk() &&
-               (mRunningState.unwrap() == RunningState::Starting ||
-                mRunningState.unwrap() == RunningState::Running)) {
+               (mRunningState.inspect() == RunningState::Starting ||
+                mRunningState.inspect() == RunningState::Running)) {
       mRunningState = RunningState::Stopping;
     }
   }
@@ -632,7 +632,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     if (!mRunningState.isOk() ||
-        mRunningState.unwrap() != RunningState::Idling) {
+        mRunningState.inspect() != RunningState::Idling) {
       return;
     }
 
@@ -749,7 +749,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!mRunningState.isOk() ||
-        mRunningState.unwrap() != RunningState::Idling) {
+        mRunningState.inspect() != RunningState::Idling) {
       MOZ_ASSERT_UNREACHABLE("Double-init");
       return;
     }
@@ -894,15 +894,15 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     if (mRunningState.isOk() &&
-        mRunningState.unwrap() == RunningState::Stopped) {
+        mRunningState.inspect() == RunningState::Stopped) {
       // We have already ended gracefully.
       return;
     }
 
     bool needsStartEvent = false;
     if (mRunningState.isOk() &&
-        (mRunningState.unwrap() == RunningState::Idling ||
-         mRunningState.unwrap() == RunningState::Starting)) {
+        (mRunningState.inspect() == RunningState::Idling ||
+         mRunningState.inspect() == RunningState::Starting)) {
       needsStartEvent = true;
     }
 
@@ -985,7 +985,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
       mMimeType = mime;
       mRecorder->SetMimeType(mime);
-      auto state = mRunningState.unwrap();
+      RunningState state = mRunningState.inspect();
       if (state == RunningState::Starting || state == RunningState::Stopping) {
         if (state == RunningState::Starting) {
           // We set it to Running in the runnable since we can only assign

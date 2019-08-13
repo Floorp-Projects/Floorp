@@ -47,16 +47,27 @@ class ResultImplementation<V, E, PackingStrategy::Variant> {
   mozilla::Variant<V, E> mStorage;
 
  public:
+  ResultImplementation(ResultImplementation&&) = default;
+  ResultImplementation(const ResultImplementation&) = default;
+  ResultImplementation& operator=(const ResultImplementation&) = default;
+  ResultImplementation& operator=(ResultImplementation&&) = default;
+
+  explicit ResultImplementation(V&& aValue)
+      : mStorage(std::forward<V>(aValue)) {}
   explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
-  explicit ResultImplementation(E aErrorValue) : mStorage(aErrorValue) {}
+  explicit ResultImplementation(E aErrorValue)
+      : mStorage(std::forward<E>(aErrorValue)) {}
 
   bool isOk() const { return mStorage.template is<V>(); }
 
   // The callers of these functions will assert isOk() has the proper value, so
   // these functions (in all ResultImplementation specializations) don't need
   // to do so.
-  V unwrap() const { return mStorage.template as<V>(); }
-  E unwrapErr() const { return mStorage.template as<E>(); }
+  V unwrap() { return std::move(mStorage.template as<V>()); }
+  const V& inspect() const { return mStorage.template as<V>(); }
+
+  E unwrapErr() { return std::move(mStorage.template as<E>()); }
+  const E& inspectErr() const { return mStorage.template as<E>(); }
 };
 
 /**
@@ -68,12 +79,18 @@ class ResultImplementation<V, E&, PackingStrategy::Variant> {
   mozilla::Variant<V, E*> mStorage;
 
  public:
+  explicit ResultImplementation(V&& aValue)
+      : mStorage(std::forward<V>(aValue)) {}
   explicit ResultImplementation(const V& aValue) : mStorage(aValue) {}
   explicit ResultImplementation(E& aErrorValue) : mStorage(&aErrorValue) {}
 
   bool isOk() const { return mStorage.template is<V>(); }
-  V unwrap() const { return mStorage.template as<V>(); }
-  E& unwrapErr() const { return *mStorage.template as<E*>(); }
+
+  const V& inspect() const { return mStorage.template as<V>(); }
+  V unwrap() { return std::move(mStorage.template as<V>()); }
+
+  E& unwrapErr() { return *mStorage.template as<E*>(); }
+  const E& inspectErr() const { return *mStorage.template as<E*>(); }
 };
 
 /**
@@ -90,8 +107,11 @@ class ResultImplementation<V, E&, PackingStrategy::NullIsOk> {
 
   bool isOk() const { return mErrorValue == nullptr; }
 
-  V unwrap() const { return V(); }
-  E& unwrapErr() const { return *mErrorValue; }
+  const V& inspect() const = delete;
+  V unwrap() { return V(); }
+
+  const E& inspectErr() const { return *mErrorValue; }
+  E& unwrapErr() { return *mErrorValue; }
 };
 
 /**
@@ -113,8 +133,11 @@ class ResultImplementation<V, E, PackingStrategy::NullIsOk> {
 
   bool isOk() const { return mErrorValue == NullValue; }
 
-  V unwrap() const { return V(); }
-  E unwrapErr() const { return mErrorValue; }
+  const V& inspect() const = delete;
+  V unwrap() { return V(); }
+
+  const E& inspectErr() const { return mErrorValue; }
+  E unwrapErr() { return std::move(mErrorValue); }
 };
 
 /**
@@ -139,8 +162,11 @@ class ResultImplementation<V*, E&, PackingStrategy::LowBitTagIsError> {
 
   bool isOk() const { return (mBits & 1) == 0; }
 
-  V* unwrap() const { return reinterpret_cast<V*>(mBits); }
-  E& unwrapErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
+  V* inspect() const { return reinterpret_cast<V*>(mBits); }
+  V* unwrap() { return inspect(); }
+
+  E& inspectErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
+  E& unwrapErr() { return inspectErr(); }
 };
 
 // Return true if any of the struct can fit in a word.
@@ -174,18 +200,21 @@ class ResultImplementation<V, E, PackingStrategy::PackedVariant> {
 
  public:
   explicit ResultImplementation(V aValue) {
-    data.v = aValue;
+    data.v = std::move(aValue);
     data.ok = true;
   }
   explicit ResultImplementation(E aErrorValue) {
-    data.e = aErrorValue;
+    data.e = std::move(aErrorValue);
     data.ok = false;
   }
 
   bool isOk() const { return data.ok; }
 
-  V unwrap() const { return data.v; }
-  E unwrapErr() const { return data.e; }
+  const V& inspect() const { return data.v; }
+  V unwrap() { return std::move(data.v); }
+
+  const E& inspectErr() const { return data.e; }
+  E unwrapErr() { return std::move(data.e); }
 };
 
 // To use nullptr as a special value, we need the counter part to exclude zero
@@ -297,15 +326,18 @@ class MOZ_MUST_USE_TYPE Result final {
   Impl mImpl;
 
  public:
-  /**
-   * Create a success result.
-   */
+  /** Create a success result. */
+  MOZ_IMPLICIT Result(V&& aValue) : mImpl(std::forward<V>(aValue)) {
+    MOZ_ASSERT(isOk());
+  }
+
+  /** Create a success result. */
   MOZ_IMPLICIT Result(const V& aValue) : mImpl(aValue) { MOZ_ASSERT(isOk()); }
 
-  /**
-   * Create an error result.
-   */
-  explicit Result(E aErrorValue) : mImpl(aErrorValue) { MOZ_ASSERT(isErr()); }
+  /** Create an error result. */
+  explicit Result(E aErrorValue) : mImpl(std::forward<E>(aErrorValue)) {
+    MOZ_ASSERT(isErr());
+  }
 
   /**
    * Implementation detail of MOZ_TRY().
@@ -320,7 +352,9 @@ class MOZ_MUST_USE_TYPE Result final {
   }
 
   Result(const Result&) = default;
+  Result(Result&&) = default;
   Result& operator=(const Result&) = default;
+  Result& operator=(Result&&) = default;
 
   /** True if this Result is a success result. */
   bool isOk() const { return mImpl.isOk(); }
@@ -328,22 +362,32 @@ class MOZ_MUST_USE_TYPE Result final {
   /** True if this Result is an error result. */
   bool isErr() const { return !mImpl.isOk(); }
 
-  /** Get the success value from this Result, which must be a success result. */
-  V unwrap() const {
+  /** Take the success value from this Result, which must be a success result.
+   */
+  V unwrap() {
     MOZ_ASSERT(isOk());
     return mImpl.unwrap();
   }
 
   /**
-   *  Get the success value from this Result, which must be a success result.
-   *  If it is an error result, then return the aValue.
+   * Take the success value from this Result, which must be a success result.
+   * If it is an error result, then return the aValue.
    */
-  V unwrapOr(V aValue) const { return isOk() ? mImpl.unwrap() : aValue; }
+  V unwrapOr(V aValue) { return isOk() ? mImpl.unwrap() : std::move(aValue); }
 
-  /** Get the error value from this Result, which must be an error result. */
-  E unwrapErr() const {
+  /** Take the error value from this Result, which must be an error result. */
+  E unwrapErr() {
     MOZ_ASSERT(isErr());
     return mImpl.unwrapErr();
+  }
+
+  /** See the success value from this Result, which must be a success result. */
+  const V& inspect() const { return mImpl.inspect(); }
+
+  /** See the error value from this Result, which must be an error result. */
+  const E& inspectErr() const {
+    MOZ_ASSERT(isErr());
+    return mImpl.inspectErr();
   }
 
   /**
@@ -372,7 +416,7 @@ class MOZ_MUST_USE_TYPE Result final {
    *     MOZ_ASSERT(res2.unwrapErr() == 5);
    */
   template <typename F>
-  auto map(F f) const -> Result<decltype(f(*((V*)nullptr))), E> {
+  auto map(F f) -> Result<decltype(f(*((V*)nullptr))), E> {
     using RetResult = Result<decltype(f(*((V*)nullptr))), E>;
     return isOk() ? RetResult(f(unwrap())) : RetResult(unwrapErr());
   }
@@ -407,7 +451,7 @@ class MOZ_MUST_USE_TYPE Result final {
    */
   template <typename F, typename = typename EnableIf<detail::IsResult<decltype(
                             (*((F*)nullptr))(*((V*)nullptr)))>::value>::Type>
-  auto andThen(F f) const -> decltype(f(*((V*)nullptr))) {
+  auto andThen(F f) -> decltype(f(*((V*)nullptr))) {
     return isOk() ? f(unwrap()) : GenericErrorResult<E>(unwrapErr());
   }
 };

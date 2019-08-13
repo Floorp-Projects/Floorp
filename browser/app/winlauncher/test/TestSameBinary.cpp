@@ -50,7 +50,7 @@ inline void PrintLauncherError(const mozilla::LauncherResult<T>& aResult,
                                const char* aMsg = nullptr) {
   const char* const kSep = aMsg ? ": " : "";
   const char* msg = aMsg ? aMsg : "";
-  mozilla::LauncherError err = aResult.unwrapErr();
+  const mozilla::LauncherError& err = aResult.inspectErr();
   printf("%s%s%s%S (%s:%d)\n", kMsgStart, msg, kSep,
          err.mError.AsString().get(), err.mFile, err.mLine);
 }
@@ -62,13 +62,13 @@ static int ChildMain(DWORD aExpectedParentPid) {
     return 1;
   }
 
-  if (parentPid.unwrap() != aExpectedParentPid) {
+  if (parentPid.inspect() != aExpectedParentPid) {
     PrintErrorMsg("Unexpected mismatch of parent PIDs");
     return 1;
   }
 
   const DWORD kAccess = PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE;
-  nsAutoHandle parentProcess(::OpenProcess(kAccess, FALSE, parentPid.unwrap()));
+  nsAutoHandle parentProcess(::OpenProcess(kAccess, FALSE, parentPid.inspect()));
   if (!parentProcess) {
     PrintWinError("Unexpectedly failed to call OpenProcess on parent");
     return 1;
@@ -104,7 +104,7 @@ static int ChildMain(DWORD aExpectedParentPid) {
   const uint32_t kMaxAttempts = 100;
   uint32_t curAttempt = 0;
   while (HANDLE p = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE,
-                                  parentPid.unwrap())) {
+                                  parentPid.inspect())) {
     ::CloseHandle(p);
     ::Sleep(100);
     ++curAttempt;
