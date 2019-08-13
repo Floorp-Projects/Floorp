@@ -68,6 +68,10 @@ Other notable differences between JSWindowActor's and Message Manager / framescr
 
    A ``JSWindowActorParent / ``JSWindowActorChild`` pair instantiated for either of the ``iframe``'s would only be sending messages to and from that ``iframe``.
 
+#. There's only one pair per actor type, per frame.
+
+   For example, suppose we have a ``ContextMenu`` actor. The parent process can have up to N instances of the ``ContextMenuParent`` actor, where N is the number of frames that are currently loaded. For any individual frame though, there's only ever one `ContextMenuChild` associated with that frame.
+
 #. We can no longer assume full, synchronous access to the frame tree, even in content processes.
 
    This is a natural consequence of splitting frames to run out-of-process.
@@ -98,7 +102,7 @@ This has a similar signature as the ``sendAsyncMessage`` method for Message Mana
 
     sendAsyncMessage("SomeMessage", { key: "value" }, { transferredObject });
 
-The second argument is serialized and sent down to the receiver (this can include ``nsIPrincipal``s), and the third object sends `Transferrables`_ to the receiver. Note that CPOWs cannot be sent.
+The second argument is serialized and sent down to the receiver (this can include ``nsIPrincipal``s), and the third object sends `Transferables`_ to the receiver. Note that CPOWs cannot be sent.
 
 .. note::
     Notably absent is ``sendSyncMessage`` or ``sendRPCMessage``. Sync IPC is not supported on JSWindowActors, and code which needs to send sync messages should be modified to use async messages, or must send them over the per-process message manager.
@@ -116,8 +120,22 @@ This is identical to the Message Manager implementation of ``receiveMessage``. T
 .. hint::
     Using ``sendQuery``, and the ``receiveMessage`` is able to return a value right away? Try using ``Promise.resolve(value);`` to return ``value``.
 
-JSWindowActor destroy methods
------------------------------
+Other JSWindowActor methods that can be overridden
+--------------------------------------------------
+
+``constructor()``
+
+If there's something you need to do as soon as the JSWindowActor is instantiated, the ``constructor`` function is a great place to do that.
+
+``observe(subject, topic, data)``
+`````````````````````````````````
+
+If you register your Actor to listen for ``nsIObserver`` notifications, implement an ``observe`` method with the above signature to handle the notification.
+
+``handleEvent(event)`
+`````````````````````
+
+If you register your Actor to listen for content events, implement a ``handleEvent`` method with the above signature to handle the event.
 
 ``willDestroy``
 ```````````````
@@ -158,6 +176,7 @@ TODO
 
 TODO
 
+
 Helpful getters
 ```````````````
 
@@ -183,10 +202,178 @@ See `JSWindowActor.webidl <https://searchfox.org/mozilla-central/source/dom/chro
 How to port from message manager and framescripts to JS Window Actors
 ---------------------------------------------------------------------
 
-TBD
+.. _fission.message-manager-actors:
 
-Example
--------
+Message Manager Actors
+``````````````````````
+
+While the JSWindowActor mechanism was being designed and developed, large sections of our framescripts were converted to an "actor style" pattern to make eventual porting to JSWindowActors easier. These Actors use the Message Manager under the hood, but made it much easier to shrink our framescripts, and also allowed us to gain significant memory savings by having the actors be lazily instantiated.
+
+You can find the list of Message Manager Actors (or "Legacy Actors") in `BrowserGlue.jsm <https://searchfox.org/mozilla-central/source/browser/components/BrowserGlue.jsm>`_ and `ActorManagerParent.jsm <https://searchfox.org/mozilla-central/source/toolkit/modules/ActorManagerParent.jsm>`_, in the ``LEGACY_ACTORS`` lists.
+
+.. note::
+  The split in Message Manager Actors defined between ``BrowserGlue`` and ``ActorManagerParent`` is mainly to keep Firefox Desktop specific Actors separate from Actors that can (in theory) be instantiated for non-Desktop browsers (like Fennec and GeckoView-based browsers). Firefox Desktop-specific Actors should be registered in ``BrowserGlue``. Shared "toolkit" Actors should go into ``ActorManagerParent``.
+
+"Porting" these Actors often means doing what is necessary in order to move their registration entries from ``LEGACY_ACTORS`` to the ``ACTORS`` list.
+
+Figuring out the lifetime of a new Actor pair
+`````````````````````````````````````````````
+
+In the old model, framescript were loaded and executed as soon as possible by the top-level frame. In the JSWindowActor model, the Actors are much lazier, and only instantiate when:
+
+1. They're instantiated explicitly by calling ``getActor`` on a ``WindowGlobal``, and passing in the name of the Actor.
+2. A message is sent to them.
+3. A pre-defined ``nsIObserver`` observer notification fires
+4. A pre-defined content Event fires
+
+Making the Actors lazy like this saves on processing time to get a frame ready to load web pages, as well as the overhead of loading the Actor into memory.
+
+When porting a framescript to JSWindowActors, often the first question to ask is: what's the entrypoint? At what point should the Actors instantiate and become active?
+
+For example, when porting the content area context menu for Firefox, it was noted that the ``contextmenu`` event firing in content was a natural event to wait for to instantiate the Actor pair. Once the ``ContextMenuChild`` instantiated, the ``handleEvent`` method was used to inspect the event and prepare a message to be sent to the ``ContextMenuParent``. This example can be found by looking at the patch for the `Context Menu Fission Port`_.
+
+.. _fission.registering-a-new-jswindowactor:
+
+Registering a new JSWindowActor
+```````````````````````````````
+
+``ChromeUtils`` exposes an API for registering window actors, but both ``BrowserGlue`` and ``ActorManagerParent`` are the main entry points where the registration occurs. If you want to register an actor, you should put them in one of the ``ACTORS`` lists in one of those two files. See :ref:`fission.message-manager-actors` for details.
+
+The ``ACTORS`` lists expect a key-value pair, where the key is the name of the actor pair (example: ``ContextMenu``), and the value is an ``Object`` of registration parameters.
+
+The full list of registration parameters can be found in the `JSWindowActor.webidl <https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSWindowActor.webidl>`_ file as ``WindowActorOptions``, ``WindowActorSidedOptions`` and ``WindowActorChildOptions``.
+
+Here's an example JSWindowActor registration pulled from ``BrowserGlue.jsm``:
+
+.. code-block:: javascript
+   Plugin: {
+      parent: {
+        moduleURI: "resource:///actors/PluginParent.jsm",
+      },
+      child: {
+        moduleURI: "resource:///actors/PluginChild.jsm",
+        events: {
+          PluginBindingAttached: { capture: true, wantUntrusted: true },
+          PluginCrashed: { capture: true },
+          PluginOutdated: { capture: true },
+          PluginInstantiated: { capture: true },
+          PluginRemoved: { capture: true },
+          HiddenPlugin: { capture: true },
+        },
+
+        observers: ["decoder-doctor-notification"],
+      },
+
+      allFrames: true,
+    },
+
+This example is for the JSWindowActor implementation of click-to-play for Flash.
+
+Let's examine the first chunk:
+
+.. code-block:: javascript
+
+      parent: {
+        moduleURI: "resource:///actors/PluginParent.jsm",
+      },
+
+Here, we're declaring that the ``PluginParent`` subclassing ``JSWindowActorParent`` will be defined and exported inside the ``PluginParent.jsm`` file. That's all we have to say for the parent (main process) side of things.
+
+.. note::
+    It's not sufficient to just add a new .jsm file to the actors subdirectories. You also need to update the ``moz.build`` files in the same directory to get the ``resource://`` linkages set up correctly.
+
+Let's look at the second chunk:
+
+.. code-block:: javascript
+
+      child: {
+        moduleURI: "resource:///actors/PluginChild.jsm",
+        events: {
+          PluginBindingAttached: { capture: true, wantUntrusted: true },
+          PluginCrashed: { capture: true },
+          PluginOutdated: { capture: true },
+          PluginInstantiated: { capture: true },
+          PluginRemoved: { capture: true },
+          HiddenPlugin: { capture: true },
+        },
+
+        observers: ["decoder-doctor-notification"],
+      },
+
+We're similarly declaring where the ``PluginChild`` subclassing ``JSWindowActorChild`` can be found.
+
+Next, we declare the content events, if fired in a BrowsingContext, will cause the JSWindowActor pair to instantiate if it doesn't already exist, and then have ``handleEvent`` called on the ``PluginChild`` instance. For each event name, an Object of event listener options can be passed. You can use the same event listener options as accepted by ``addEventListener``.
+
+Finally, we declare that ``PluginChild`` should observe the ``decoder-doctor-notification`` ``nsIObserver`` notification. When that observer notification fires, the ``PluginChild`` will be instantiated for all ``BrowsingContext``'s, and the ``observe`` method on the ``PluginChild`` implementation will be called.
+
+Using ContentDOMReference instead of CPOWs
+``````````````````````````````````````````
+
+Despite being outlawed as a way of synchronously accessing the properties of objects in other processes, CPOWs ended up being useful as a way of passing handles for DOM elements between processes.
+
+CPOW messages, however, cannot be sent over the JSWindowActor communications pipe, so this handy mechanism will no longer work.
+
+Instead, a new module called ``ContentDOMReference.jsm``_ has been created which supplies the same capability. See that file for documentation.
+
+How to start porting parent-process browser code to use JSWindowActors
+``````````````````````````````````````````````````````````````````````
+
+The :ref:`fission.message-manager-actors` work made it much easier to migrate away from framescripts towards something that is similar to ``JSWindowActors``. It did not, however, substantially change how the parent process interacted with those framescripts.
+
+So when porting code to work with ``JSWindowActors``, we find that this is often where the time goes - refactoring the parent process browser code to accomodate the new ``JSWindowActor`` model.
+
+Usually, the first thing to do is to find a reasonable name for your actor pair, and get them registered (see :ref:`fission.registering-a-new-jswindowactor`), even if the actors implementations themselves are nothing but unmodified subclasses of ``JSWindowActorParent`` and ``JSWindowActorChild``.
+
+Next, it's often helpful to find and note all of the places where ``sendAsyncMessage`` is being used to send messages through the old message manager interface for the component you're porting, and where any messages listeners are defined.
+
+Let's look at a hypothetical example. Suppose we're porting part of the Page Info dialog, which scans each frame for useful information to display in the dialog. Given a chunk of code like this:
+
+.. code-block:: javascript
+
+    // This is some hypothetical Page Info dialog code.
+
+    let mm = browser.messageManager;
+    mm.sendAsyncMessage("PageInfo:getInfoFromAllFrames", { someArgument: 123 });
+
+    // ... and then later on
+
+    mm.addMessageListener("PageInfo:info", async function onmessage(message) {
+      // ...
+    });
+
+If a ``PageInfo`` pair of ``JSWindowActor``s is registered, it might be tempting to simply replace the first part with:
+
+.. code-block:: javascript
+
+    let actor = browser.browsingContext.currentWindowGlobal.getActor("PageInfo");
+    actor.sendAsyncMessage("PageInfo:getInfoFromAllFrames", { someArgument: 123 });
+
+However, if any of the frames on the page are running in their own process, they're not going to receive that ``PageInfo:getInfoFromAllFrames`` message. Instead, in this case, we should walk the ``BrowsingContext`` tree, and instantiate a ``PageInfo`` actor for each global, and send one message each to get information for each frame. Perhaps something like this:
+
+.. code-block:: javascript
+
+    let contextsToVisit = [browser.browsingContext];
+    while (contextsToVisit.length) {
+      let currentContext = contextsToVisit.pop();
+      let global = currentContext.currentWindowGlobal;
+
+      if (!global) {
+        continue;
+      }
+
+      let actor = global.getActor("PageInfo");
+      actor.sendAsyncMessage("PageInfo:getInfoForFrame", { someArgument: 123 });
+
+      contextsToVisit.push(...currentContext.getChildren());
+    }
+
+The original ``"PageInfo:info"`` message listener will need to be updated, too. Any responses from the ``PageInfoChild`` actor will end up being passed to the ``receiveMessage`` method of the ``PageInfoParent`` actor. It will be necessary to pass that information along to the interested party (in this case, the dialog code which is showing the table of interesting Page Info).
+
+It might be necessary to refactor or rearchitect the original senders and consumers of message manager messages in order to accommodate the ``JSWindowActor`` model. Sometimes it's also helpful to have a singleton management object that manages all ``JSWindowActorParent`` instances and does something with their results. See ``PermitUnloader`` inside the implementation of `BrowserElementParent.jsm <https://searchfox.org/mozilla-central/rev/ec806131cb7bcd1c26c254d25cd5ab8a61b2aeb6/toolkit/actors/BrowserElementParent.jsm>`_ for example.
+
+
+Minimal Example Actors
+----------------------
 
 **Define an Actor**
 
@@ -213,30 +400,6 @@ Example
   }
 
 
-**Registering an Actor**
-
-.. code-block:: javascript
-
-    ChromeUtils.registerWindowActor("Test", {
-      parent: {
-        moduleURI: "resource://testing-common/TestParent.jsm",
-      },
-      child: {
-        moduleURI: "resource://testing-common/TestChild.jsm",
-
-        events: {
-          "mozshowdropdown": {},
-        },
-
-        observers: [
-          "test-js-window-actor-child-observer",
-        ],
-      },
-
-      allFrames: true,
-    });
-
-
 **Get a JS window actor for a specific window**
 
 .. code-block:: javascript
@@ -249,4 +412,6 @@ Example
 
 .. _Electrolysis Project: https://wiki.mozilla.org/Electrolysis
 .. _IPC Actors: https://developer.mozilla.org/en-US/docs/Mozilla/IPDL/Tutorial
-.. _Transferrables https://developer.mozilla.org/en-US/docs/Web/API/Transferable
+.. _Transferables: https://developer.mozilla.org/en-US/docs/Web/API/Transferable
+.. _Context Menu Fission Port: https://hg.mozilla.org/mozilla-central/rev/adc60720b7b8
+.. _ContentDOMReference.jsm: https://searchfox.org/mozilla-central/source/toolkit/modules/ContentDOMReference.jsm
