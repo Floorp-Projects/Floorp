@@ -26,6 +26,8 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   void SetController(RemoteWorkerController* aController);
 
+  void MaybeSendDelete();
+
  private:
   ~RemoteWorkerParent();
 
@@ -37,6 +39,7 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   mozilla::ipc::IPCResult RecvCreated(const bool& aStatus);
 
+  bool mDeleteSent = false;
   RefPtr<RemoteWorkerController> mController;
 };
 
