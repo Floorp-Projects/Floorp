@@ -1413,7 +1413,8 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
       continue;
     }
 
-#  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
+#  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || \
+      defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
     // There's no RuleSet for the specified address.  On amd64/x86_linux, see if
     // it's possible to recover the caller's frame by using the frame pointer.
 
@@ -1523,7 +1524,8 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
         }
       }
     }
-#  endif  // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
+#  endif  // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||
+          // defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
 
     // We failed to recover a frame either using CFI or FP chasing, and we
     // have no other ways to recover the frame.  So we have to give up.
