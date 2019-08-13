@@ -56,7 +56,10 @@ add_task(async function test_create_login() {
         "none",
         "the blank login list item should be hidden initially"
       );
-      ok(!createButton.disabled, "Create button should not be disabled initially");
+      ok(
+        !createButton.disabled,
+        "Create button should not be disabled initially"
+      );
 
       createButton.click();
 
@@ -65,7 +68,10 @@ add_task(async function test_create_login() {
         "none",
         "the blank login list item should be visible after clicking on the create button"
       );
-      ok(createButton.disabled, "Create button should be disabled after being clicked");
+      ok(
+        createButton.disabled,
+        "Create button should be disabled after being clicked"
+      );
 
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
