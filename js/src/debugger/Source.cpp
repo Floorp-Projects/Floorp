@@ -49,17 +49,19 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-const ClassOps DebuggerSource::classOps_ = {nullptr, /* addProperty */
-                                            nullptr, /* delProperty */
-                                            nullptr, /* enumerate   */
-                                            nullptr, /* newEnumerate */
-                                            nullptr, /* resolve     */
-                                            nullptr, /* mayResolve  */
-                                            nullptr, /* finalize    */
-                                            nullptr, /* call        */
-                                            nullptr, /* hasInstance */
-                                            nullptr, /* construct   */
-                                            trace};
+const ClassOps DebuggerSource::classOps_ = {
+    nullptr,                         /* addProperty */
+    nullptr,                         /* delProperty */
+    nullptr,                         /* enumerate   */
+    nullptr,                         /* newEnumerate */
+    nullptr,                         /* resolve     */
+    nullptr,                         /* mayResolve  */
+    nullptr,                         /* finalize    */
+    nullptr,                         /* call        */
+    nullptr,                         /* hasInstance */
+    nullptr,                         /* construct   */
+    CallTraceMethod<DebuggerSource>, /* trace */
+};
 
 const Class DebuggerSource::class_ = {
     "Source", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
@@ -105,15 +107,14 @@ DebuggerSourceReferent DebuggerSource::getReferent() const {
   return AsVariant(static_cast<ScriptSourceObject*>(nullptr));
 }
 
-/* static */
-void DebuggerSource::trace(JSTracer* trc, JSObject* obj) {
-  DebuggerSource* sourceObj = &obj->as<DebuggerSource>();
+void DebuggerSource::trace(JSTracer* trc) {
   // There is a barrier on private pointers, so the Unbarriered marking
   // is okay.
-  if (JSObject* referent = sourceObj->getReferentRawObject()) {
-    TraceManuallyBarrieredCrossCompartmentEdge(trc, sourceObj, &referent,
-                                               "Debugger.Source referent");
-    sourceObj->setPrivateUnbarriered(referent);
+  if (JSObject* referent = getReferentRawObject()) {
+    TraceManuallyBarrieredCrossCompartmentEdge(
+        trc, static_cast<JSObject*>(this), &referent,
+        "Debugger.Source referent");
+    setPrivateUnbarriered(referent);
   }
 }
 
