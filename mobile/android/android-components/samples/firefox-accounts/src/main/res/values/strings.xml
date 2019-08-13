@@ -10,5 +10,5 @@
     <string name="signed_in">Signed in: %1$s</string>
     <string name="log_out">FxA Log Out</string>
     <string name="logged_out">Logged out!</string>
-    <string name="wants_keys">Get keys?</string>
+    <string name="wants_keys">Request sync scope?</string>
 </resources>
