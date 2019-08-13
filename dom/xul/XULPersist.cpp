@@ -10,6 +10,7 @@
 #  include "mozilla/XULStore.h"
 #else
 #  include "nsIXULStore.h"
+#  include "nsIStringEnumerator.h"
 #endif
 
 #include "nsIXULWindow.h"

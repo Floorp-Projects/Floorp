@@ -60,7 +60,7 @@ extern bool str_endsWith(JSContext* cx, unsigned argc, Value* vp);
  * Returns the input string converted to lower case based on the language
  * specific case mappings for the input locale.
  *
- * This function only works #if EXPOSE_INTL_API; if not, it will *crash*.
+ * This function only works #if ENABLE_INTL_API; if not, it will *crash*.
  * Govern yourself accordingly.
  *
  * Usage: lowerCase = intl_toLocaleLowerCase(string, locale)
@@ -72,7 +72,7 @@ extern MOZ_MUST_USE bool intl_toLocaleLowerCase(JSContext* cx, unsigned argc,
  * Returns the input string converted to upper case based on the language
  * specific case mappings for the input locale.
  *
- * This function only works #if EXPOSE_INTL_API; if not, it will *crash*.
+ * This function only works #if ENABLE_INTL_API; if not, it will *crash*.
  * Govern yourself accordingly.
  *
  * Usage: upperCase = intl_toLocaleUpperCase(string, locale)

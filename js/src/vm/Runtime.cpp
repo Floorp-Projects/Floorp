@@ -40,7 +40,7 @@
 #include "js/SliceBudget.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
 #  include "unicode/uloc.h"
 #endif
 #include "util/Windows.h"
@@ -137,7 +137,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       gcInitialized(false),
       emptyString(nullptr),
       defaultFreeOp_(nullptr),
-#if !EXPOSE_INTL_API
+#if !ENABLE_INTL_API
       thousandsSeparator(nullptr),
       decimalSeparator(nullptr),
       numGrouping(nullptr),
@@ -293,7 +293,7 @@ void JSRuntime::destroyRuntime() {
    */
   FreeScriptData(this);
 
-#if !EXPOSE_INTL_API
+#if !ENABLE_INTL_API
   FinishRuntimeNumberState(this);
 #endif
 
@@ -535,7 +535,7 @@ const char* JSRuntime::getDefaultLocale() {
 
   // Use ICU if available to retrieve the default locale, this ensures ICU's
   // default locale matches our default locale.
-#if EXPOSE_INTL_API
+#if ENABLE_INTL_API
   const char* locale = uloc_getDefault();
 #else
   const char* locale = setlocale(LC_ALL, nullptr);

@@ -8,7 +8,6 @@
 # clone and somewhat expensive compilation of the Android
 # intermediates just once.
 lints:
-    always-target: true
     attributes:
         build_platform: android
         build_type: opt
