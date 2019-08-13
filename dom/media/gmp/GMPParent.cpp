@@ -424,29 +424,21 @@ bool GMPParent::EnsureProcessLoaded() {
 }
 
 void GMPParent::AddCrashAnnotations() {
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::GMPPlugin, true);
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginFilename,
-                                NS_ConvertUTF16toUTF8(mName));
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginName,
-                                mDisplayName);
-  mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginVersion,
-                                mVersion);
+  if (mCrashReporter) {
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::GMPPlugin, true);
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginFilename,
+                                  NS_ConvertUTF16toUTF8(mName));
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginName,
+                                  mDisplayName);
+    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginVersion,
+                                  mVersion);
+  }
 }
 
 bool GMPParent::GetCrashID(nsString& aResult) {
-  if (!mCrashReporter) {
-    CrashReporter::FinalizeOrphanedMinidump(OtherPid(),
-                                            GeckoProcessType_GMPlugin);
-    return false;
-  }
-
   AddCrashAnnotations();
-  if (!mCrashReporter->GenerateCrashReport(OtherPid())) {
-    return false;
-  }
 
-  aResult = mCrashReporter->MinidumpID();
-  return true;
+  return GenerateCrashReport(OtherPid(), &aResult);
 }
 
 static void GMPNotifyObservers(const uint32_t aPluginID,
@@ -506,14 +498,6 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     // Note: final destruction will be Dispatched to ourself
     mService->ReAddOnGMPThread(self);
   }
-}
-
-mozilla::ipc::IPCResult GMPParent::RecvInitCrashReporter(
-    Shmem&& aShmem, const NativeThreadId& aThreadId) {
-  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GMPlugin,
-                                                      aShmem, aThreadId);
-
-  return IPC_OK();
 }
 
 PGMPStorageParent* GMPParent::AllocPGMPStorageParent() {
