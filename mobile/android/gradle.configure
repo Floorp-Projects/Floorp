@@ -309,6 +309,25 @@ set_config('GRADLE_ANDROID_GECKOVIEW_DOCS_ARCHIVE_TASKS', gradle_android_geckovi
 
 
 @depends(gradle_android_build_config)
+def gradle_android_geckoview_docs_output_files(build_config):
+    '''Output files for GeckoView javadoc.'''
+
+    def uncapitalize(s):
+        if s:
+            return s[0].lower() + s[1:]
+        else:
+            return s
+
+    variant = uncapitalize(build_config.geckoview.variant.name)
+
+    return [
+        'gradle/build/mobile/android/geckoview/reports/javadoc-results-{}.json'.format(variant),
+    ]
+
+set_config('GRADLE_ANDROID_GECKOVIEW_DOCS_OUTPUT_FILES', gradle_android_geckoview_docs_output_files)
+
+
+@depends(gradle_android_build_config)
 def gradle_android_archive_coverage_artifacts_tasks(build_config):
     '''Gradle tasks run by |mach android archive-coverage-artifacts|.'''
     return [
