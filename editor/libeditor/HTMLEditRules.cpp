@@ -11118,38 +11118,9 @@ void HTMLEditRules::DocumentModifiedWorker() {
   }
 
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
-  htmlEditor->OnModifyDocument();
-}
-
-void HTMLEditRules::OnModifyDocument() {
-  MOZ_ASSERT(mHTMLEditor);
-
-  AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-  // DeleteNodeWithTransaction() below may cause a flush, which could destroy
-  // the editor
-  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
-
-  // Delete our padding <br> element for empty editor, if we have one, since
-  // the document might not be empty any more.
-  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
-    // A mutation event listener may recreate padding <br> element for empty
-    // editor again during the call of DeleteNodeWithTransaction().  So, move
-    // it first.
-    RefPtr<HTMLBRElement> paddingBRElement(
-        std::move(HTMLEditorRef().mPaddingBRElementForEmptyEditor));
-    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
-                                 .DeleteNodeWithTransaction(*paddingBRElement);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to remove the padding <br> element");
-  }
-
-  // Try to recreate the padding <br> element for empty editor if needed.
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .MaybeCreatePaddingBRElementForEmptyEditor();
-  NS_WARNING_ASSERTION(
-      rv != NS_ERROR_EDITOR_DESTROYED,
-      "The editor has been destroyed during creating a padding <br> element");
+  nsresult rv = htmlEditor->OnModifyDocument();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::OnModifyDocument() failed");
   Unused << rv;
 }
 

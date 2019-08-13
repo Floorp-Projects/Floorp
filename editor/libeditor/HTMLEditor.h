@@ -1092,7 +1092,7 @@ class HTMLEditor final : public TextEditor,
    * HTMLEditRules::OnModifyDocument() with AutoEditActionDataSetter
    * instance.
    */
-  MOZ_CAN_RUN_SCRIPT void OnModifyDocument();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnModifyDocument();
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -2537,6 +2537,11 @@ class HTMLEditor final : public TextEditor,
    */
   static nsresult SlurpBlob(dom::Blob* aBlob, nsPIDOMWindowOuter* aWindow,
                             BlobReader* aBlobReader);
+
+  /**
+   * OnModifyDocumentInternal() is called by OnModifyDocument().
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnModifyDocumentInternal();
 
  protected:
   RefPtr<TypeInState> mTypeInState;
