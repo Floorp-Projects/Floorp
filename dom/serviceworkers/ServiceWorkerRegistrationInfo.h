@@ -201,7 +201,7 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t Version() const;
 
-  uint32_t GetUpdateDelay();
+  uint32_t GetUpdateDelay(const bool aWithMultiplier = true);
 
   void FireUpdateFound();
 
