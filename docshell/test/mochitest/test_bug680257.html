@@ -17,38 +17,23 @@ SimpleTest.waitForExplicitFinish();
 
 var popup = window.open("file_bug680257.html");
 
-var gTestContinuation = null;
-function continueAsync() {
-  setTimeout(function() { gTestContinuation.next(); })
-}
-
 // The popup will call into popupLoaded() once it loads.
 function popupLoaded() {
   // runTests() needs to be called from outside popupLoaded's onload handler.
   // Otherwise, the navigations we do in runTests won't create new SHEntries.
-  SimpleTest.executeSoon(function() {
-    if (!gTestContinuation) {
-      gTestContinuation = runTests();
-    }
-    gTestContinuation.next();
-  });
+  SimpleTest.executeSoon(runTests);
 }
 
-function* runTests() {
+function runTests() {
   checkPopupLinkStyle(false, "Initial");
 
   popup.location.hash = "a";
   checkPopupLinkStyle(true, "After setting hash");
 
   popup.history.back();
-  continueAsync();
-  yield;
-
   checkPopupLinkStyle(false, "After going back");
 
   popup.history.forward();
-  continueAsync();
-  yield;
   checkPopupLinkStyle(true, "After going forward");
 
   popup.close();
