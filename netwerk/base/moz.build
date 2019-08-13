@@ -187,7 +187,6 @@ UNIFIED_SOURCES += [
     'ChannelDiverterParent.cpp',
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
-    'FuzzyLayer.cpp',
     'IOActivityMonitor.cpp',
     'LoadContextInfo.cpp',
     'LoadInfo.cpp',
@@ -250,6 +249,12 @@ UNIFIED_SOURCES += [
     'Tickler.cpp',
     'TLSServerSocket.cpp',
 ]
+
+if CONFIG['FUZZING_INTERFACES']:
+    SOURCES += [
+        'FuzzyLayer.cpp',
+        'FuzzySecurityInfo.cpp',
+    ]
 
 if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
     include('/tools/fuzzing/libfuzzer-flags.mozbuild')
