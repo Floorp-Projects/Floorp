@@ -9,7 +9,7 @@ import React from "react";
 // Animation time is mirrored in DSContextFooter.scss
 const ANIMATION_DURATION = 3000;
 
-const StatusMessage = ({ icon, fluentID }) => (
+export const StatusMessage = ({ icon, fluentID }) => (
   <div className="status-message">
     <span
       aria-haspopup="true"
@@ -26,7 +26,7 @@ export class DSContextFooter extends React.PureComponent {
 
     return (
       <div className="story-footer">
-        {context && <p className="story-sponsored-label">{context}</p>}
+        {context && <p className="story-sponsored-label clamp">{context}</p>}
         <TransitionGroup component={null}>
           {!context && context_type && (
             <CSSTransition

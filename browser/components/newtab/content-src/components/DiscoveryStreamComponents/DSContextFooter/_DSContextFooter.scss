@@ -5,6 +5,7 @@ $status-dark-green: #7C6;
   color: var(--newtab-text-secondary-color);
   inset-inline-start: 0;
   margin-top: 12px;
+  position: relative;
 
   .story-sponsored-label,
   .status-message {
@@ -12,6 +13,7 @@ $status-dark-green: #7C6;
       color: $grey-40;
     }
 
+    -webkit-line-clamp: 1;
     font-size: 13px;
     line-height: 24px;
     color: $grey-50;

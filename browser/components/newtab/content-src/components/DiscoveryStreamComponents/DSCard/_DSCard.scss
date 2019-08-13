@@ -104,7 +104,7 @@ $excerpt-line-height: 20;
     .excerpt {
       // show only 3 lines of copy
       @include limit-visibile-lines(
-        3,
+        4,
         $excerpt-line-height,
         $excerpt-font-size
       );
@@ -119,6 +119,92 @@ $excerpt-line-height: 20;
       margin-bottom: 2px;
       font-size: 13px;
       color: $grey-50;
+    }
+
+    .cta-button {
+      @include dark-theme-only {
+        color: $grey-10;
+        background: $grey-90-30;
+      }
+      width: 100%;
+      margin: 12px 0 4px;
+      box-shadow: none;
+      border-radius: 4px;
+      height: 32px;
+      font-size: 14px;
+      padding: 5px 8px 7px;
+      border: 0;
+      color: $grey-90;
+      background: $grey-90-10;
+
+
+      &:active {
+        @include dark-theme-only {
+          background: $grey-90-70;
+        }
+
+        background: $grey-90-30;
+      }
+
+      &:hover {
+        @include dark-theme-only {
+          background: $grey-90-50;
+        }
+
+        background: $grey-90-30;
+      }
+
+      &:focus {
+        @include dark-theme-only {
+          background: $grey-90-30;
+          box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
+        }
+
+        box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
+      }
+    }
+
+    .cta-link {
+      @include dark-theme-only {
+        color: $blue-40;
+        fill: $blue-40;
+      }
+
+      font-size: 15px;
+      line-height: 24px;
+      height: 24px;
+      width: auto;
+      background-size: auto;
+      background-position: right 1.5px;
+      padding-right: 9px;
+      color: $blue-60;
+      fill: $blue-60;
+
+      &:focus {
+        @include dark-theme-only {
+          box-shadow: 0 0 0 1px $grey-80, 0 0 0 4px $blue-50-50;
+        }
+
+        box-shadow: 0 0 0 1px $white, 0 0 0 4px $blue-50-50;
+        border-radius: 4px;
+        outline: 0;
+      }
+
+      &:active {
+        @include dark-theme-only {
+          color: $blue-50;
+          fill: $blue-50;
+          box-shadow: none;
+        }
+
+        color: $blue-70;
+        fill: $blue-70;
+        box-shadow: none;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 

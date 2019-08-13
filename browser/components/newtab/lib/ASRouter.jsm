@@ -1644,10 +1644,8 @@ class _ASRouter {
         "webextension-install-notify"
       );
       this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
-        type: "CLEAR_MESSAGE",
-        data: { id: "RETURN_TO_AMO_1" },
+        type: "CLEAR_INTERRUPT",
       });
-      this.blockMessageById("RETURN_TO_AMO_1");
     };
     Services.obs.addObserver(addonInstallObs, "webextension-install-notify");
   }
