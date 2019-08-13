@@ -14,6 +14,7 @@ async protocol PBenchmarkStorage
 parent:
   async Put(nsCString aDbName, nsCString aKey, int32_t aValue);
   async Get(nsCString aDbName, nsCString aKey) returns(int32_t aValue);
+  async CheckVersion(nsCString aDbName, int32_t aVersion);
   async __delete__();
 
 };
