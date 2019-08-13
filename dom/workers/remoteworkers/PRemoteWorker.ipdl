@@ -75,6 +75,9 @@ child:
   async __delete__();
 
   async ExecOp(RemoteWorkerOp op);
+
+  async ExecServiceWorkerOp(ServiceWorkerOpArgs aArgs)
+      returns (ServiceWorkerOpResult aResult);
 };
 
 } // namespace dom
