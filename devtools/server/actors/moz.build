@@ -39,6 +39,7 @@ DevToolsModules(
     'highlighters.css',
     'highlighters.js',
     'layout.js',
+    'manifest.js',
     'memory.js',
     'object.js',
     'pause-scoped.js',
