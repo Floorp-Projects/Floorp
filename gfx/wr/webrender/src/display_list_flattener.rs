@@ -1311,6 +1311,9 @@ impl<'a> DisplayListFlattener<'a> {
                     parent_space,
                 );
             }
+            DisplayItem::BackdropFilter(ref info) => {
+                unimplemented!();
+            }
 
             // Do nothing; these are dummy items for the display list parser
             DisplayItem::SetGradientStops |
