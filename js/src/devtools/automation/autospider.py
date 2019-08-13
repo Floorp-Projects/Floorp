@@ -21,7 +21,7 @@ from os import environ as env
 from subprocess import Popen
 from threading import Timer
 
-Dirs = namedtuple('Dirs', ['scripts', 'js_src', 'source', 'tooltool'])
+Dirs = namedtuple('Dirs', ['scripts', 'js_src', 'source', 'tooltool', 'fetches'])
 
 
 def directories(pathmodule, cwd, fixup=lambda s: s):
@@ -30,7 +30,9 @@ def directories(pathmodule, cwd, fixup=lambda s: s):
     source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
     tooltool = pathmodule.abspath(env.get('TOOLTOOL_CHECKOUT',
                                           pathmodule.join(source, "..", "..")))
-    return Dirs(scripts, js_src, source, tooltool)
+    fetches = pathmodule.abspath(env.get('MOZ_FETCHES_DIR',
+                                         pathmodule.join(source, "..", "..")))
+    return Dirs(scripts, js_src, source, tooltool, fetches)
 
 
 # Some scripts will be called with sh, which cannot use backslashed
@@ -109,7 +111,7 @@ POBJDIR = posixpath.join(PDIR.source, args.objdir)
 MAKE = env.get('MAKE', 'make')
 MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 
-for d in ('scripts', 'js_src', 'source', 'tooltool'):
+for d in ('scripts', 'js_src', 'source', 'tooltool', 'fetches'):
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
 
 
@@ -228,7 +230,7 @@ info("using compiler '{}'".format(compiler))
 
 cxx = {'clang': 'clang++', 'gcc': 'g++', 'cl': 'cl'}.get(compiler)
 
-compiler_dir = env.get('GCCDIR', os.path.join(DIR.tooltool, compiler))
+compiler_dir = env.get('GCCDIR', os.path.join(DIR.fetches, compiler))
 info("looking for compiler under {}/".format(compiler_dir))
 if os.path.exists(os.path.join(compiler_dir, 'bin', compiler)):
     env.setdefault('CC', os.path.join(compiler_dir, 'bin', compiler))
@@ -249,7 +251,7 @@ env['LD_LIBRARY_PATH'] = ':'.join(
 for v in ('CC', 'CXX', 'LD_LIBRARY_PATH'):
     info("default {name} = {value}".format(name=v, value=env[v]))
 
-rust_dir = os.path.join(DIR.tooltool, 'rustc')
+rust_dir = os.path.join(DIR.fetches, 'rustc')
 if os.path.exists(os.path.join(rust_dir, 'bin', 'rustc')):
     env.setdefault('RUSTC', os.path.join(rust_dir, 'bin', 'rustc'))
     env.setdefault('CARGO', os.path.join(rust_dir, 'bin', 'cargo'))
@@ -337,6 +339,7 @@ def run_command(command, check=False, **kwargs):
 REPLACEMENTS = {
     'DIR': DIR.scripts,
     'TOOLTOOL_CHECKOUT': DIR.tooltool,
+    'MOZ_FETCHES_DIR': DIR.fetches,
     'MOZ_UPLOAD_DIR': env['MOZ_UPLOAD_DIR'],
     'OUTDIR': OUTDIR,
 }

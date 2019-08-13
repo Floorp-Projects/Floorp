@@ -4,7 +4,7 @@
     "debug": false,
     "compiler": "clang",
     "env": {
-        "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer"
+        "LLVM_SYMBOLIZER": "{MOZ_FETCHES_DIR}/clang/bin/llvm-symbolizer"
     },
     "use_minidump": false
 }

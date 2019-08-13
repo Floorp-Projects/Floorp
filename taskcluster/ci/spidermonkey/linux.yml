@@ -141,10 +141,11 @@ sm-tsan-linux64/opt:
         platform: linux64/opt
     run:
         spidermonkey-variant: tsan
-    toolchains:
-        - linux64-binutils
-        - linux64-clang
-        - linux64-rust
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust
 
 sm-rootanalysis-linux64/debug:
     description: "Spidermonkey Root Analysis"
