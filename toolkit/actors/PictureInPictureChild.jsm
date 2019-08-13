@@ -59,11 +59,31 @@ class PictureInPictureToggleChild extends ActorChild {
     // itself.
     this.weakDocStates = new WeakMap();
     this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+
+    Services.prefs.addObserver(TOGGLE_ENABLED_PREF, this);
     this.toggleTesting = Services.prefs.getBoolPref(TOGGLE_TESTING_PREF, false);
   }
 
   cleanup() {
     this.removeMouseButtonListeners();
+    Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this);
+  }
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == TOGGLE_ENABLED_PREF) {
+      this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+
+      if (this.toggleEnabled) {
+        // We have enabled the Picture-in-Picture toggle, so we need to make
+        // sure we register all of the videos that might already be on the page.
+        this.content.requestIdleCallback(() => {
+          let videos = this.content.document.querySelectorAll("video");
+          for (let video of videos) {
+            this.registerVideo(video);
+          }
+        });
+      }
+    }
   }
 
   /**
