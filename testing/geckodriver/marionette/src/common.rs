@@ -58,6 +58,13 @@ where
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Date(pub u64);
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Frame {
+    Index(u16),
+    Element(WebElement),
+}
+
 // TODO(nupur): Bug 1567165 - Make WebElement in Marionette a unit struct
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WebElement {
@@ -126,6 +133,20 @@ mod tests {
             expiry: None,
         };
         assert_de(&data, json!({"name":"hello", "value":"world"}));
+    }
+
+    #[test]
+    fn test_json_frame_id_short() {
+        assert_ser_de(&Frame::Index(1234), json!(1234));
+    }
+
+    #[test]
+    fn test_json_frame_id_webelement() {
+        let json = json!({"element-6066-11e4-a52e-4f735466cecf":"elem"});
+        let data = Frame::Element(WebElement {
+            element: "elem".into(),
+        });
+        assert_ser_de(&data, json);
     }
 
     #[test]
