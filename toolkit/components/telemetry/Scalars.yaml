@@ -1281,9 +1281,10 @@ media:
     bug_numbers:
       - 1476456
       - 1499803
+      - 1570634
     description: >
       The number of times a top level document is loaded.
-    expires: "68"
+    expires: "74"
     kind: uint
     notification_emails:
       - cpearce@mozilla.com
@@ -1292,19 +1293,18 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
       - 'geckoview'
     record_in_processes:
-      - main
       - content
 
   page_had_media_count:
     bug_numbers:
       - 1476456
       - 1499803
+      - 1570634
     description: >
       The number of times a document hierarchy contained at least one audible HTMLMediaElement that had play() called upon it.
-    expires: "68"
+    expires: "74"
     kind: uint
     notification_emails:
       - cpearce@mozilla.com
@@ -1313,19 +1313,18 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
       - 'geckoview'
     record_in_processes:
-      - main
       - content
 
   autoplay_would_not_be_allowed_count:
     bug_numbers:
       - 1476456
       - 1499803
+      - 1570634
     description: >
       The number of HTMLMediaElement autoplays on audible HTMLMediaElements which would not be allowed to play if block autoplay was enabled; we'd either prompt for permission to play or block outright depending on user preferences.
-    expires: "68"
+    expires: "74"
     kind: uint
     notification_emails:
       - cpearce@mozilla.com
@@ -1334,19 +1333,18 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
       - 'geckoview'
     record_in_processes:
-      - main
       - content
 
   autoplay_would_be_allowed_count:
     bug_numbers:
       - 1476456
       - 1499803
+      - 1570634
     description: >
       The number of HTMLMediaElement autoplays on audible HTMLMediaElements that would have been allowed (not blocked) by the autoplay policy if block autoplay was enabled.
-    expires: "68"
+    expires: "74"
     kind: uint
     notification_emails:
       - cpearce@mozilla.com
@@ -1355,10 +1353,8 @@ media:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
       - 'geckoview'
     record_in_processes:
-      - main
       - content
 
 # The following section contains content process base counters.
