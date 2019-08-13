@@ -195,15 +195,6 @@ nsresult ServiceWorkerPrivate::CheckScriptEvaluation(
 
 namespace {
 
-enum ExtendableEventResult { Rejected = 0, Resolved };
-
-class ExtendableEventCallback {
- public:
-  virtual void FinishedWithResult(ExtendableEventResult aResult) = 0;
-
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-};
-
 class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler,
                                public PromiseNativeHandler {
   // This class manages lifetime extensions added by calling WaitUntil()

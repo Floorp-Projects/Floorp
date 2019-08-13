@@ -18,6 +18,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
+#include "mozilla/dom/ServiceWorkerOp.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -54,6 +55,7 @@ nsresult GetIPCSynthesizeResponseArgs(
 void FetchEventOpProxyChild::Initialize(
     const ServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
+  MOZ_ASSERT(!mOp);
 
   mInternalRequest = new InternalRequest(aArgs.internalRequest());
 
@@ -77,6 +79,60 @@ void FetchEventOpProxyChild::Initialize(
 
     Unused << self->Send__delete__(self, aResult);
   };
+
+  RefPtr<FetchEventOp> op = ServiceWorkerOp::Create(aArgs, std::move(callback))
+                                .template downcast<FetchEventOp>();
+
+  MOZ_ASSERT(op);
+
+  op->SetActor(this);
+  mOp = op;
+
+  op->GetRespondWithPromise()
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [self = std::move(self)](
+                 FetchEventRespondWithPromise::ResolveOrRejectValue&& aResult) {
+               self->mRespondWithPromiseRequestHolder.Complete();
+
+               if (NS_WARN_IF(aResult.IsReject())) {
+                 MOZ_ASSERT(NS_FAILED(aResult.RejectValue()));
+
+                 Unused << self->SendRespondWith(
+                     CancelInterceptionArgs(aResult.RejectValue()));
+                 return;
+               }
+
+               auto& result = aResult.ResolveValue();
+
+               if (result.is<SynthesizeResponseArgs>()) {
+                 IPCSynthesizeResponseArgs ipcArgs;
+                 UniquePtr<AutoIPCStream> autoBodyStream =
+                     MakeUnique<AutoIPCStream>();
+                 UniquePtr<AutoIPCStream> autoAlternativeBodyStream =
+                     MakeUnique<AutoIPCStream>();
+                 nsresult rv = GetIPCSynthesizeResponseArgs(
+                     &ipcArgs, result.extract<SynthesizeResponseArgs>(),
+                     autoBodyStream, autoAlternativeBodyStream);
+
+                 if (NS_WARN_IF(NS_FAILED(rv))) {
+                   Unused << self->SendRespondWith(CancelInterceptionArgs(rv));
+                   return;
+                 }
+
+                 Unused << self->SendRespondWith(ipcArgs);
+                 autoBodyStream->TakeOptionalValue();
+                 autoAlternativeBodyStream->TakeOptionalValue();
+               } else if (result.is<ResetInterceptionArgs>()) {
+                 Unused << self->SendRespondWith(
+                     result.extract<ResetInterceptionArgs>());
+               } else {
+                 Unused << self->SendRespondWith(
+                     result.extract<CancelInterceptionArgs>());
+               }
+             })
+      ->Track(mRespondWithPromiseRequestHolder);
+
+  manager->MaybeStartOp(std::move(op));
 }
 
 RefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
@@ -89,6 +145,9 @@ RefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
   Unused << NS_WARN_IF(mRespondWithPromiseRequestHolder.Exists());
   mRespondWithPromiseRequestHolder.DisconnectIfExists();
+
+  mOp->RevokeActor(this);
+  mOp = nullptr;
 }
 
 }  // namespace dom

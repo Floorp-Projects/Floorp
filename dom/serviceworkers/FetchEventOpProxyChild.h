@@ -9,6 +9,7 @@
 
 #include "nsISupportsImpl.h"
 
+#include "ServiceWorkerOp.h"
 #include "ServiceWorkerOpPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/InternalRequest.h"
@@ -40,6 +41,8 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
 
   MozPromiseRequestHolder<FetchEventRespondWithPromise>
       mRespondWithPromiseRequestHolder;
+
+  RefPtr<FetchEventOp> mOp;
 
   // Initialized on RemoteWorkerService::Thread, read on a worker thread.
   RefPtr<InternalRequest> mInternalRequest;
