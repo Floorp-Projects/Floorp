@@ -3780,6 +3780,18 @@
 #endif
   mirror: once
 
+# Whether to animate simple opacity and transforms on the compositor.
+- name: layers.offmainthreadcomposition.async-animations
+  type: bool
+  value: true
+  mirror: always
+
+# Whether to log information about off main thread animations to stderr.
+- name: layers.offmainthreadcomposition.log-animations
+  type: bool
+  value: false
+  mirror: always
+
 - name: layers.offmainthreadcomposition.force-disabled
   type: bool
   value: false
