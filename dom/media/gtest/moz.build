@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'TestAudioPacketizer.cpp',
     'TestAudioSegment.cpp',
     'TestAudioTrackEncoder.cpp',
+    'TestBenchmarkStorage.cpp',
     'TestBitWriter.cpp',
     'TestBlankVideoDataCreator.cpp',
     'TestBufferReader.cpp',
