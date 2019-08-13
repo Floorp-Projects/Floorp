@@ -138,7 +138,9 @@ describe("BookmarkPanelHub", () => {
       await instance.messageRequest(fakeTarget, {});
 
       assert.calledOnce(fakeHandleMessageRequest);
-      assert.calledWithExactly(fakeHandleMessageRequest, instance._trigger);
+      assert.calledWithExactly(fakeHandleMessageRequest, {
+        triggerId: instance._trigger.id,
+      });
     });
     it("should call onResponse", async () => {
       fakeHandleMessageRequest.resolves(fakeMessage);

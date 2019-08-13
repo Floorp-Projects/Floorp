@@ -42,7 +42,7 @@ const TEST_GLOBAL = {
       return Promise.resolve({ addons: [], fullData: false });
     },
   },
-  AppConstants: { MOZILLA_OFFICIAL: true },
+  AppConstants: { MOZILLA_OFFICIAL: true, MOZ_APP_VERSION: "69.0a1" },
   UpdateUtils: { getUpdateChannel() {} },
   BrowserWindowTracker: { getTopWindow() {} },
   ChromeUtils: {
@@ -282,9 +282,13 @@ const TEST_GLOBAL = {
       createNullPrincipal() {},
       getSystemPrincipal() {},
     },
-    wm: { getMostRecentWindow: () => window, getEnumerator: () => [] },
+    wm: {
+      getMostRecentWindow: () => window,
+      getMostRecentBrowserWindow: () => window,
+      getEnumerator: () => [],
+    },
     ww: { registerNotification() {}, unregisterNotification() {} },
-    appinfo: { appBuildID: "20180710100040" },
+    appinfo: { appBuildID: "20180710100040", version: "69.0a1" },
   },
   XPCOMUtils: {
     defineLazyGetter(object, name, f) {
