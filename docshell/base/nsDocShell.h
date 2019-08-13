@@ -1034,12 +1034,25 @@ class nsDocShell final : public nsDocLoader,
   nsresult MaybeHandleLoadDelegate(nsDocShellLoadState* aLoadState,
                                    uint32_t aWindowType, bool* aDidHandleLoad);
 
-  // Check to see if we're loading a prior history entry in the same document.
-  // If so, handle the scrolling or other action required instead of continuing
-  // with new document navigation.
+  struct SameDocumentNavigationState {
+    nsAutoCString mCurrentHash;
+    nsAutoCString mNewHash;
+    bool mCurrentURIHasRef = false;
+    bool mNewURIHasRef = false;
+    bool mSameExceptHashes = false;
+    bool mHistoryNavBetweenSameDoc = false;
+  };
+
+  // Check to see if we're loading a prior history entry or doing a fragment
+  // navigation in the same document.
+  bool IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
+                                SameDocumentNavigationState& aState);
+
+  // ... If so, handle the scrolling or other action required instead of
+  // continuing with new document navigation.
   MOZ_CAN_RUN_SCRIPT
-  nsresult MaybeHandleSameDocumentNavigation(nsDocShellLoadState* aLoadState,
-                                             bool* aWasSameDocument);
+  nsresult HandleSameDocumentNavigation(nsDocShellLoadState* aLoadState,
+                                        SameDocumentNavigationState& aState);
 
  private:  // data members
   static nsIURIFixup* sURIFixup;
