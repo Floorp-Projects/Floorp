@@ -184,8 +184,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */
-uint32_t nsLayoutUtils::sFontSizeInflationLineThreshold;
-/* static */
 bool nsLayoutUtils::sFontSizeInflationForceEnabled;
 /* static */
 bool nsLayoutUtils::sFontSizeInflationDisabledInMasterProcess;
@@ -7979,8 +7977,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddUintVarCache(&sFontSizeInflationLineThreshold,
-                               "font.size.inflation.lineThreshold");
   Preferences::AddBoolVarCache(&sFontSizeInflationForceEnabled,
                                "font.size.inflation.forceEnabled");
   Preferences::AddBoolVarCache(&sFontSizeInflationDisabledInMasterProcess,
