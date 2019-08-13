@@ -2380,11 +2380,6 @@
   value: true
   mirror: always
 
-- name: dom.window.history.async
-  type: bool
-  value: true
-  mirror: always
-
 # Enable the "noreferrer" feature argument for window.open()
 - name: dom.window.open.noreferrer.enabled
   type: bool

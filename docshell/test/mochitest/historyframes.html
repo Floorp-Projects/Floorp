@@ -67,11 +67,6 @@ function end_test() {
   testWin.done();
 }
 
-var gTestContinuation = null;
-function continueAsync() {
-  setTimeout(function() { gTestContinuation.next(); })
-}
-
 function test_basic_inner_navigation() {
   // Navigate the inner frame a few times
   loadContent(URL1, function() {
@@ -91,8 +86,7 @@ function test_basic_inner_navigation() {
           is(getURL(), URL2, "URL should be correct");
           is(getContent(), "Test2", "Page should be correct");
 
-          gTestContinuation = test_state_navigation();
-          gTestContinuation.next();
+          test_state_navigation();
         });
         window.history.forward();
       });
@@ -101,7 +95,7 @@ function test_basic_inner_navigation() {
   });
 }
 
-function* test_state_navigation() {
+function test_state_navigation() {
   window.location.hash = "STATE1";
 
   is(getURL(), URL2, "URL should be correct");
@@ -113,27 +107,19 @@ function* test_state_navigation() {
   is(getContent(), "Test2", "Page should be correct");
 
   window.history.back();
-  continueAsync();
-  yield;
 
   is(gState(), "STATE1", "State should be correct after going back");
   is(getURL(), URL2, "URL should be correct");
   is(getContent(), "Test2", "Page should be correct");
 
   window.history.forward();
-  continueAsync();
-  yield;
 
   is(gState(), "STATE2", "State should be correct after going forward");
   is(getURL(), URL2, "URL should be correct");
   is(getContent(), "Test2", "Page should be correct");
 
   window.history.back();
-  continueAsync();
-  yield;
   window.history.back();
-  continueAsync();
-  yield;
 
   is(gState(), "START", "State should be correct");
   is(getURL(), URL2, "URL should be correct");
@@ -157,8 +143,6 @@ function* test_state_navigation() {
   });
 
   window.history.back();
-  continueAsync();
-  yield;
   is(gState(), "START", "State should be correct");
 }
 </script>
