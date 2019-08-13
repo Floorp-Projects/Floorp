@@ -45,7 +45,6 @@
 
 #if defined(FUZZING)
 #  include "FuzzyLayer.h"
-#  include "FuzzySecurityInfo.h"
 #  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
@@ -1363,11 +1362,6 @@ nsresult nsSocketTransport::InitiateSocket() {
       return rv;
     }
     SOCKET_LOG(("Successfully attached fuzzing IOLayer.\n"));
-
-    if (usingSSL) {
-      mSecInfo = static_cast<nsISupports*>(
-          static_cast<nsISSLSocketControl*>(new FuzzySecurityInfo()));
-    }
   }
 #endif
 
