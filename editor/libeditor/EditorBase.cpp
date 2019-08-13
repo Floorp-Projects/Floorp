@@ -4623,17 +4623,19 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   return NS_OK;
 }
 
-nsresult EditorBase::HandleInlineSpellCheck(
-    EditSubAction aEditSubAction, nsINode* previousSelectedNode,
-    uint32_t previousSelectedOffset, nsINode* aStartContainer,
-    uint32_t aStartOffset, nsINode* aEndContainer, uint32_t aEndOffset) {
+nsresult EditorBase::HandleInlineSpellCheck(nsINode* previousSelectedNode,
+                                            uint32_t previousSelectedOffset,
+                                            nsINode* aStartContainer,
+                                            uint32_t aStartOffset,
+                                            nsINode* aEndContainer,
+                                            uint32_t aEndOffset) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!mInlineSpellChecker) {
     return NS_OK;
   }
   return mInlineSpellChecker->SpellCheckAfterEditorChange(
-      aEditSubAction, *SelectionRefPtr(), previousSelectedNode,
+      GetTopLevelEditSubAction(), *SelectionRefPtr(), previousSelectedNode,
       previousSelectedOffset, aStartContainer, aStartOffset, aEndContainer,
       aEndOffset);
 }

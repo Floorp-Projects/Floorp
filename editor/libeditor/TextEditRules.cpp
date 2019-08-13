@@ -162,8 +162,7 @@ nsresult TextEditRules::DetachEditor() {
   return NS_OK;
 }
 
-nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
-                                   nsIEditor::EDirection aDirection) {
+nsresult TextEditRules::BeforeEdit() {
   MOZ_ASSERT(!mIsHandling);
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -179,8 +178,7 @@ nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
   return NS_OK;
 }
 
-nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
-                                  nsIEditor::EDirection aDirection) {
+nsresult TextEditRules::AfterEdit() {
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -195,7 +193,7 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
   // XXX Probably, we should spellcheck again after edit action (not top-level
   //     sub-action) is handled because the ranges can be referred only by
   //     users.
-  nsresult rv = TextEditorRef().HandleInlineSpellCheckAfterEdit(aEditSubAction);
+  nsresult rv = TextEditorRef().HandleInlineSpellCheckAfterEdit();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
