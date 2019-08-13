@@ -49,3 +49,7 @@ label:dir(rtl) {
   border-bottom: 2px solid var(--yellow-50);
   top: -2px;
 }
+
+.download-link-chain {
+  margin: 0 5px;
+}
