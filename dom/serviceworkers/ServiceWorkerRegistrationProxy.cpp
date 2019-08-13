@@ -31,6 +31,9 @@ class ServiceWorkerRegistrationProxy::DelayedUpdate final
   DelayedUpdate(RefPtr<ServiceWorkerRegistrationProxy>&& aProxy,
                 RefPtr<ServiceWorkerRegistrationPromise::Private>&& aPromise,
                 uint32_t delay);
+
+  void ChainTo(RefPtr<ServiceWorkerRegistrationPromise::Private> aPromise);
+
   void Reject();
 };
 
@@ -264,6 +267,15 @@ ServiceWorkerRegistrationProxy::DelayedUpdate::DelayedUpdate(
   MOZ_DIAGNOSTIC_ASSERT(mTimer);
 }
 
+void ServiceWorkerRegistrationProxy::DelayedUpdate::ChainTo(
+    RefPtr<ServiceWorkerRegistrationPromise::Private> aPromise) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mProxy->mDelayedUpdate == this);
+  MOZ_ASSERT(mPromise);
+
+  mPromise->ChainTo(aPromise.forget(), __func__);
+}
+
 void ServiceWorkerRegistrationProxy::DelayedUpdate::Reject() {
   MOZ_DIAGNOSTIC_ASSERT(mPromise);
   if (mTimer) {
@@ -275,9 +287,13 @@ void ServiceWorkerRegistrationProxy::DelayedUpdate::Reject() {
 
 NS_IMETHODIMP
 ServiceWorkerRegistrationProxy::DelayedUpdate::Notify(nsITimer* aTimer) {
+  // Already shutting down.
+  if (mProxy->mDelayedUpdate != this) {
+    return NS_OK;
+  }
+
   auto scopeExit = MakeScopeExit(
       [&] { mPromise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
-  MOZ_DIAGNOSTIC_ASSERT((mProxy->mDelayedUpdate == this));
 
   NS_ENSURE_TRUE(mProxy->mReg, NS_ERROR_FAILURE);
 
@@ -309,14 +325,21 @@ ServiceWorkerRegistrationProxy::Update() {
 
         // Get the delay value for the update
         NS_ENSURE_TRUE_VOID(self->mReg);
-        uint32_t delay = self->mReg->GetUpdateDelay();
+        uint32_t delay = self->mReg->GetUpdateDelay(false);
 
         // If the delay value does not equal to 0, create a timer and a timer
         // callback to perform the delayed update. Otherwise, update directly.
         if (delay) {
-          RefPtr<ServiceWorkerRegistrationProxy::DelayedUpdate> du =
-              new ServiceWorkerRegistrationProxy::DelayedUpdate(
-                  std::move(self), std::move(promise), delay);
+          if (self->mDelayedUpdate) {
+            // NOTE: if we `ChainTo(),` there will ultimately be a single
+            // update, and this update will resolve all promises that were
+            // issued while the update's timer was ticking down.
+            self->mDelayedUpdate->ChainTo(std::move(promise));
+          } else {
+            RefPtr<ServiceWorkerRegistrationProxy::DelayedUpdate> du =
+                new ServiceWorkerRegistrationProxy::DelayedUpdate(
+                    std::move(self), std::move(promise), delay);
+          }
         } else {
           RefPtr<ServiceWorkerManager> swm =
               ServiceWorkerManager::GetInstance();
