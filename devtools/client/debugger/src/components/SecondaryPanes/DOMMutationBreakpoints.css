@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+ .dom-mutation-empty {
+  padding: 6px 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--theme-body-color);
+ }
+
+.dom-mutation-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.dom-mutation-list {
+  padding: 4px 0;
+  list-style-type: none;
+}
+
+.dom-mutation-list li {
+  position: relative;
+
+  display: flex;
+  align-items: start;
+  overflow: hidden;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-inline-start: 20px;
+  padding-inline-end: 12px;
+}
+
+.dom-mutation-list input {
+  margin: 2px 3px;
+
+  padding-inline-start: 2px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-inline-start: 0;
+  margin-inline-end: 2px;
+  vertical-align: text-bottom;
+}
+
+.dom-mutation-info {
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-inline-end: 20px;
+}
+
+.dom-mutation-list .close-btn {
+  position: absolute;
+  /* hide button outside of row until hovered or focused */
+  top: -100px;
+}
+
+/* Reveal the remove button on hover/focus */
+.dom-mutation-list li:hover .close-btn,
+.dom-mutation-list li .close-btn:focus {
+  top: calc(50% - 8px);
+}
+
+[dir="ltr"] .dom-mutation-list .close-btn {
+  right: 12px;
+}
+
+[dir="rtl"] .dom-mutation-list .close-btn {
+  left: 12px;
+}
