@@ -1068,3 +1068,21 @@ This reports an enrollment ping when a user gets enrolled in a Trailhead experim
   }
 }
 ```
+
+## Feature Callouts interaction pings
+
+This reports when a user has seen or clicked a badge/notification in the browser toolbar in a non-PBM window
+
+```
+{
+  "locale": "en-US",
+  "client_id": "9da773d8-4356-f54f-b7cf-6134726bcf3d",
+  "version": "70.0a1",
+  "release_channel": "default",
+  "addon_version": "20190712095934",
+  "action": "cfr_user_event",
+  "source": "CFR",
+  "message_id": "FXA_ACCOUNTS_BADGE",
+  "event": ["CLICK" | "IMPRESSION"],
+}
+```
