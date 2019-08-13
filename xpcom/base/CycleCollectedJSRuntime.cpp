@@ -535,12 +535,35 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
 #endif  // MOZ_JS_DEV_ERROR_INTERCEPTOR
 }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+class JSLeakTracer : public JS::CallbackTracer {
+ public:
+  explicit JSLeakTracer(JSRuntime* aRuntime)
+      : JS::CallbackTracer(aRuntime, TraceWeakMapKeysValues) {}
+
+ private:
+  bool onChild(const JS::GCCellPtr& thing) override {
+    const char* kindName = JS::GCTraceKindToAscii(thing.kind());
+    size_t size = JS::GCTraceKindSize(thing.kind());
+    MOZ_LOG_CTOR(thing.asCell(), kindName, size);
+    return true;
+  }
+};
+#endif
+
 void CycleCollectedJSRuntime::Shutdown(JSContext* cx) {
 #ifdef MOZ_JS_DEV_ERROR_INTERCEPTOR
   mErrorInterceptor.Shutdown(mJSRuntime);
 #endif  // MOZ_JS_DEV_ERROR_INTERCEPTOR
-  JS_RemoveExtraGCRootsTracer(cx, TraceBlackJS, this);
-  JS_RemoveExtraGCRootsTracer(cx, TraceGrayJS, this);
+
+  // There should not be any roots left to trace at this point. Ensure any that
+  // remain are flagged as leaks.
+#ifdef NS_BUILD_REFCNT_LOGGING
+  JSLeakTracer tracer(Runtime());
+  TraceNativeBlackRoots(&tracer);
+  TraceNativeGrayRoots(&tracer);
+#endif
+
 #ifdef DEBUG
   mShutdownCalled = true;
 #endif
@@ -618,7 +641,7 @@ void CycleCollectedJSRuntime::DescribeGCThing(
       SprintfLiteral(name, "JS Object (%s)", clasp->name);
     }
   } else {
-    SprintfLiteral(name, "JS %s", JS::GCTraceKindToAscii(aThing.kind()));
+    SprintfLiteral(name, "%s", JS::GCTraceKindToAscii(aThing.kind()));
   }
 
   // Disable printing global for objects while we figure out ObjShrink fallout.

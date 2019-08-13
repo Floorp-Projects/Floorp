@@ -13,6 +13,7 @@
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompiler.h"
+#include "gc/ClearEdgesTracer.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "jit/MacroAssembler.h"
@@ -270,12 +271,6 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
                                                AutoGCSession& session) {
   MOZ_ASSERT(!TlsContext.get()->suppressGC);
 
-  // FinishRoots will have asserted that every root that we do not expect
-  // is gone, so we can simply skip traceRuntime here.
-  if (rt->isBeingDestroyed()) {
-    return;
-  }
-
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
   if (atomsZone->isCollecting()) {
     traceRuntimeAtoms(trc, session.checkAtomsAccess());
@@ -390,9 +385,6 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
   if (!JS::RuntimeHeapIsMinorCollecting()) {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_EMBEDDING);
 
-    // The analysis doesn't like the function pointers below.
-    JS::AutoSuppressGCAnalysis nogc;
-
     /*
      * The embedding can register additional roots here.
      *
@@ -400,30 +392,44 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
      * the nursery should be in the store buffer, and we want to avoid the
      * time taken to trace all these roots.
      */
-    for (size_t i = 0; i < blackRootTracers.ref().length(); i++) {
-      const Callback<JSTraceDataOp>& e = blackRootTracers.ref()[i];
-      (*e.op)(trc, e.data);
-    }
+    traceEmbeddingBlackRoots(trc);
 
     /* During GC, we don't trace gray roots at this stage. */
-    if (JSTraceDataOp op = grayRootTracer.op) {
-      if (traceOrMark == TraceRuntime) {
-        (*op)(trc, grayRootTracer.data);
-      }
+    if (traceOrMark == TraceRuntime) {
+      traceEmbeddingGrayRoots(trc);
     }
+  }
+}
+
+void GCRuntime::traceEmbeddingBlackRoots(JSTracer* trc) {
+  // The analysis doesn't like the function pointer below.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  for (size_t i = 0; i < blackRootTracers.ref().length(); i++) {
+    const Callback<JSTraceDataOp>& e = blackRootTracers.ref()[i];
+    (*e.op)(trc, e.data);
+  }
+}
+
+void GCRuntime::traceEmbeddingGrayRoots(JSTracer* trc) {
+  // The analysis doesn't like the function pointer below.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  if (JSTraceDataOp op = grayRootTracer.op) {
+    (*op)(trc, grayRootTracer.data);
   }
 }
 
 #ifdef DEBUG
 class AssertNoRootsTracer final : public JS::CallbackTracer {
   bool onChild(const JS::GCCellPtr& thing) override {
-    MOZ_CRASH("There should not be any roots after finishRoots");
+    MOZ_CRASH("There should not be any roots during runtime shutdown");
     return true;
   }
 
  public:
-  AssertNoRootsTracer(JSRuntime* rt, WeakMapTraceKind weakTraceKind)
-      : JS::CallbackTracer(rt, weakTraceKind) {}
+  explicit AssertNoRootsTracer(JSRuntime* rt)
+      : JS::CallbackTracer(rt, TraceWeakMapKeysValues) {}
 };
 #endif  // DEBUG
 
@@ -442,20 +448,18 @@ void js::gc::GCRuntime::finishRoots() {
     r->finishRoots();
   }
 
+  // Clear any remaining roots from the embedding (as otherwise they will be
+  // left dangling after we shut down) and remove the callbacks.
+  ClearEdgesTracer trc(rt);
+  traceEmbeddingBlackRoots(&trc);
+  traceEmbeddingGrayRoots(&trc);
+  clearBlackAndGrayRootTracers();
+}
+
+void js::gc::GCRuntime::checkNoRuntimeRoots(AutoGCSession& session) {
 #ifdef DEBUG
-  // The nsWrapperCache may not be empty before our shutdown GC, so we have
-  // to skip that table when verifying that we are fully unrooted.
-  auto prior = grayRootTracer;
-  grayRootTracer = Callback<JSTraceDataOp>(nullptr, nullptr);
-
-  AssertNoRootsTracer trc(rt, TraceWeakMapKeysValues);
-  AutoTraceSession session(rt);
-  gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-  traceRuntime(&trc, session);
-
-  // Restore the wrapper tracing so that we leak instead of leaving dangling
-  // pointers.
-  grayRootTracer = prior;
+  AssertNoRootsTracer trc(rt);
+  traceRuntimeForMajorGC(&trc, session);
 #endif  // DEBUG
 }
 
