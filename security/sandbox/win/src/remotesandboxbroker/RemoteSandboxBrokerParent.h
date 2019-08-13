@@ -9,11 +9,13 @@
 
 #include "mozilla/PRemoteSandboxBrokerParent.h"
 #include "RemoteSandboxBrokerProcessParent.h"
-#include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/ipc/CrashReporterHelper.h"
 
 namespace mozilla {
 
-class RemoteSandboxBrokerParent : public PRemoteSandboxBrokerParent {
+class RemoteSandboxBrokerParent
+    : public PRemoteSandboxBrokerParent,
+      public CrashReporterHelper<GeckoProcessType_RemoteSandboxBroker> {
   friend class PRemoteSandboxBrokerParent;
 
  public:
@@ -27,15 +29,11 @@ class RemoteSandboxBrokerParent : public PRemoteSandboxBrokerParent {
   RefPtr<GenericPromise> Launch(const nsTArray<uint64_t>& aHandlesToShare);
 
  private:
-  mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& aShmem, const NativeThreadId& aThreadId);
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RemoteSandboxBrokerProcessParent* mProcess = nullptr;
 
   bool mOpened = false;
-  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 };
 
 }  // namespace mozilla

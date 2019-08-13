@@ -7,6 +7,7 @@
 #define mozilla_net_SocketProcessParent_h
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/net/PSocketProcessParent.h"
 
 namespace mozilla {
@@ -26,7 +27,9 @@ class SocketProcessHost;
 
 // IPC actor of socket process in parent process. This is allocated and managed
 // by SocketProcessHost.
-class SocketProcessParent final : public PSocketProcessParent {
+class SocketProcessParent final
+    : public PSocketProcessParent,
+      public ipc::CrashReporterHelper<GeckoProcessType_Content> {
  public:
   friend class SocketProcessHost;
 
@@ -35,8 +38,6 @@ class SocketProcessParent final : public PSocketProcessParent {
 
   static SocketProcessParent* GetSingleton();
 
-  mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& aShmem, const NativeThreadId& aThreadId);
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport);
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration);
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
@@ -72,7 +73,6 @@ class SocketProcessParent final : public PSocketProcessParent {
 
  private:
   SocketProcessHost* mHost;
-  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
 
   static void Destroy(UniquePtr<SocketProcessParent>&& aParent);
