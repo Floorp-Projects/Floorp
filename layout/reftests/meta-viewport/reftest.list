@@ -18,6 +18,7 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 fails == position-fixed-on-landscape-content.html position-fixed-on-half-height-content-ref.html
 fails == position-fixed-on-square-content.html position-fixed-on-square-content-ref.html
 fails == async-scroll-to-no-content-area.html async-scroll-to-no-content-area-ref.html
+fails == resolution-change-on-landscape-content.html resolution-change-on-landscape-content-ref.html
 
 skip-if(!Android) fails-if(geckoview&&webrender) == position-fixed-on-minimum-scale-size.html position-fixed-on-minimum-scale-size-ref.html
 == position-fixed-out-of-view.html about:blank
