@@ -7,7 +7,7 @@ set -ex
 
 # Get token for uploading to codecov and append it to codecov.yml
 python automation/taskcluster/helper/get-secret.py \
-    -s project/mobile/fenix/pr \
+    -s project/mobile/fenix/public-tokens \
     -k codecov \
     -f .cc_token \
 

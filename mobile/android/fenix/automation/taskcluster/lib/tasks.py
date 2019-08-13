@@ -183,10 +183,10 @@ class TaskBuilder(object):
                 'tier': 1,
             },
             scopes=[
-                'secrets:get:project/mobile/fenix/pr'
+                'secrets:get:project/mobile/fenix/public-tokens'
             ]
         )
-   
+
     def craft_ui_tests_task(self):
         artifacts = {
             "public": {
@@ -226,7 +226,7 @@ class TaskBuilder(object):
             artifacts=artifacts,
             env_vars=env_vars,
         )
-    
+
     def craft_upload_apk_nimbledroid_task(self, assemble_task_id):
         # For GeckoView, upload nightly (it has release config) by default, all Release builds have WV
         return self._craft_build_ish_task(
