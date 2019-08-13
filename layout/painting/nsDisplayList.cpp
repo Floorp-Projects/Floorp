@@ -1273,13 +1273,14 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mPartialBuildFailed(false),
       mIsInActiveDocShell(false),
       mBuildAsyncZoomContainer(false),
+      mBuildBackdropRootContainer(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
-  UpdateShouldBuildAsyncZoomContainer();
+  ShouldRebuildDisplayListDueToPrefChange();
 
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
@@ -1507,6 +1508,38 @@ void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   mBuildAsyncZoomContainer =
       nsLayoutUtils::AllowZoomingForDocument(document) &&
       !StaticPrefs::layout_scroll_root_frame_containers();
+}
+
+void nsDisplayListBuilder::UpdateShouldBuildBackdropRootContainer() {
+  mBuildBackdropRootContainer =
+      StaticPrefs::layout_css_backdrop_filter_enabled();
+}
+
+// Certain prefs may cause display list items to be added or removed when they
+// are toggled. In those cases, we need to fully rebuild the display list.
+bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
+  bool shouldRebuild = false;
+
+  // If we transition between wrapping the RCD-RSF contents into an async
+  // zoom container vs. not, we need to rebuild the display list. This only
+  // happens when the zooming or container scrolling prefs are toggled
+  // (manually by the user, or during test setup).
+  bool didBuildAsyncZoomContainer = mBuildAsyncZoomContainer;
+  UpdateShouldBuildAsyncZoomContainer();
+  if (didBuildAsyncZoomContainer != mBuildAsyncZoomContainer) {
+    shouldRebuild = true;
+  }
+
+  // If backdrop-filter is enabled, backdrop root containers are added to the
+  // display list. When the pref is toggled these containers may be added or
+  // removed, so the display list should be rebuilt.
+  bool didBuildBackdropRootContainer = mBuildBackdropRootContainer;
+  UpdateShouldBuildBackdropRootContainer();
+  if (didBuildBackdropRootContainer != mBuildBackdropRootContainer) {
+    shouldRebuild = true;
+  }
+
+  return shouldRebuild;
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,

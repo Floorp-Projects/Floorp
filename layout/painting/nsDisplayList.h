@@ -1743,6 +1743,10 @@ class nsDisplayListBuilder {
   }
   void UpdateShouldBuildAsyncZoomContainer();
 
+  void UpdateShouldBuildBackdropRootContainer();
+
+  bool ShouldRebuildDisplayListDueToPrefChange();
+
   /**
    * Represents a region composed of frame/rect pairs.
    * WeakFrames are used to track whether a rect still belongs to the region.
@@ -2020,6 +2024,7 @@ class nsDisplayListBuilder {
   bool mPartialBuildFailed;
   bool mIsInActiveDocShell;
   bool mBuildAsyncZoomContainer;
+  bool mBuildBackdropRootContainer;
 
   nsRect mHitTestArea;
   CompositorHitTestInfo mHitTestInfo;
