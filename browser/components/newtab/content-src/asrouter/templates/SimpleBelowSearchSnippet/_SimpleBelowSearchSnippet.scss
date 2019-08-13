@@ -1,13 +1,69 @@
+
+.below-search-snippet {
+  margin: 0 auto 16px;
+
+  &.withButton {
+    padding: 0 25px;
+    margin: auto;
+    min-height: 60px;
+    background-color: transparent;
+
+    // Add more padding if discovery stream is enabled.
+    .ds-outer-wrapper-breakpoint-override & {
+      padding: 0 50px;
+
+      @media (max-width: 865px) {
+
+        .buttonContainer {
+          margin: auto;
+        }
+      }
+    }
+
+    .snippet-hover-wrapper {
+      min-height: 60px;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: var(--newtab-element-hover-color);
+
+        .blockButton {
+          display: block;
+
+          // larger inset if discovery stream is enabled.
+          .ds-outer-wrapper-breakpoint-override & {
+            inset-inline-end: -8%;
+
+            @media (max-width: 865px) {
+              inset-inline-end: 2%;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 .SimpleBelowSearchSnippet {
-  background-color: inherit;
+  background-color: transparent;
   border: 0;
   box-shadow: none;
   position: relative;
+  margin: auto;
   z-index: auto;
+
+  @media (min-width: $break-point-large) {
+    width: 736px;
+  }
+
+  &.active {
+    background-color: var(--newtab-element-hover-color);
+    border-radius: 4px;
+  }
 
   .innerWrapper {
     align-items: center;
-    background-color: var(--newtab-card-background-color);
+    background-color: transparent;
     border-radius: 4px;
     box-shadow: var(--newtab-card-shadow);
     flex-direction: column;
@@ -17,11 +73,11 @@
 
     @mixin full-width-styles {
       align-items: flex-start;
-      background-color: inherit;
+      background-color: transparent;
+      border-radius: 4px;
       box-shadow: none;
       flex-direction: row;
       padding: 0;
-      padding-inline-end: 36px;
       text-align: inherit;
     }
 
@@ -29,33 +85,50 @@
       @include full-width-styles;
     }
 
+    @media (max-width: 1120px) {
+      margin: 0 60px;
+    }
+
+    @media (max-width: 865px) {
+      margin: 0 60px 0 0;
+    }
+
     // Disable breakpoints for now if discovery stream is enabled.
     .ds-outer-wrapper-breakpoint-override & {
       @include full-width-styles;
-    }
-  }
-
-  &.active {
-    .innerWrapper {
-      background-color: var(--newtab-element-hover-color);
+      margin: auto;
     }
   }
 
   .blockButton {
     display: block;
-    inset-inline-end: 15px;
+    inset-inline-end: 20px;
     opacity: 1;
-    top: 24px;
+    top: 50%;
+  }
+
+  .title {
+    font-size: inherit;
+    margin: 0;
+  }
+
+  .title-inline {
+    display: inline;
+  }
+
+  .textContainer {
+    margin: 10px;
+    margin-inline-start: 0;
   }
 
   .icon {
-    height: 32px;
+    margin-top: 8px;
     margin-inline-start: 12px;
+    height: 32px;
     width: 32px;
 
     @mixin full-width-styles {
       height: 24px;
-      margin-top: 10px;
       width: 24px;
     }
 
@@ -69,7 +142,55 @@
     }
   }
 
+  &.withButton {
+    line-height: 20px;
+    margin-bottom: 10px;
+    min-height: 60px;
+    background-color: transparent;
+
+    .blockButton {
+      display: none;
+      inset-inline-end: -15%;
+      opacity: 1;
+      margin: auto;
+      top: unset;
+
+      @media (max-width: 1120px) {
+        inset-inline-end: 2%;
+      }
+
+      @media (max-width: 865px) {
+        margin-top: 10px;
+      }
+
+      .ds-outer-wrapper-breakpoint-override & {
+        inset-inline-end: -10%;
+        margin: auto;
+
+        @media (max-width: 865px) {
+          inset-inline-end: 2%;
+        }
+      }
+    }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      margin: auto 0;
+      margin-inline-end: 10px;
+    }
+
+    .buttonContainer {
+      margin: auto;
+      margin-inline-end: 0;
+    }
+  }
+
   .body {
+    display: inline;
+    position: sticky;
+    transform: translateY(-50%);
     margin: 8px 0 0;
 
     @media (min-width: $break-point-medium) {

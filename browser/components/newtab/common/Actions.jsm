@@ -157,6 +157,7 @@ for (const type of [
   "OPEN_PREFERENCES_PAGE",
   "SHOW_FIREFOX_ACCOUNTS",
   "PIN_CURRENT_TAB",
+  "ENABLE_FIREFOX_MONITOR",
 ]) {
   ASRouterActions[type] = type;
 }
