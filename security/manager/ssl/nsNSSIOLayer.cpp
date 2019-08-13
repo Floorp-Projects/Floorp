@@ -227,14 +227,20 @@ nsNSSSocketInfo::GetFailedVerification(bool* arg) {
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
-  nsCOMPtr<nsIInterfaceRequestor> ir(mCallbacks);
-  ir.forget(aCallbacks);
+  *aCallbacks = mCallbacks;
+  NS_IF_ADDREF(*aCallbacks);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
+  if (!aCallbacks) {
+    mCallbacks = nullptr;
+    return NS_OK;
+  }
+
   mCallbacks = aCallbacks;
+
   return NS_OK;
 }
 
