@@ -302,9 +302,13 @@ a.hidden,
   z-index: -1;
 }
 
-input {
+input[type="radio"] {
   position: absolute;
   left: -100px;
+}
+
+[dir="rtl"] input[type="radio"] {
+  right: -100px;
 }
 
 #legend input:focus + label {
