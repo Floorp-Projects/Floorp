@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include protocol PFetchEventOp;
 
 include RemoteWorkerTypes;
 include ServiceWorkerOpArgs;
@@ -12,6 +13,8 @@ namespace dom {
 
 protocol PRemoteWorkerController {
   manager PBackground;
+
+  manages PFetchEventOp;
 
  child:
   async CreationFailed();
@@ -23,6 +26,8 @@ protocol PRemoteWorkerController {
   async Terminated();
 
  parent:
+  async PFetchEventOp(ServiceWorkerFetchEventOpArgs aArgs);
+
   async __delete__();
 
   async Shutdown() returns (bool aOk);
