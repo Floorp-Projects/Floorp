@@ -252,7 +252,6 @@ modules/libpref/test/unit/*data/**
 python/**
 
 # Remote agent
-remote/pref/remote.js
 remote/Protocol.jsm
 remote/server/HTTPD.jsm
 remote/server/Packet.jsm
