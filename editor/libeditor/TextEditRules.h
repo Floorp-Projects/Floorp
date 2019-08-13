@@ -365,15 +365,16 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  uint32_t mActionNesting;
+#ifdef DEBUG
+  bool mIsHandling;
+#endif  // #ifdef DEBUG
+
   bool mLockRulesSniffing;
   bool mDidExplicitlySetInterline;
   // In bidirectional text, delete characters not visually adjacent to the
   // caret without moving the caret first.
   bool mDeleteBidiImmediately;
   bool mIsHTMLEditRules;
-  // The top level editor action.
-  EditSubAction mTopLevelEditSubAction;
 
   // friends
   friend class AutoLockRulesSniffing;
