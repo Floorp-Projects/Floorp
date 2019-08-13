@@ -189,6 +189,7 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
 
 HTMLEditRules::HTMLEditRules()
     : mHTMLEditor(nullptr),
+      mInitialized(false),
       mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false),
       mDidDeleteSelection(false),
@@ -283,9 +284,6 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
 
   mUtilRange = new nsRange(node);
 
-  // set up mDocChangeRange to be whole doc
-  // temporarily turn off rules sniffing
-  AutoLockRulesSniffing lockIt(this);
   if (!mDocChangeRange) {
     mDocChangeRange = new nsRange(node);
   }
@@ -307,6 +305,8 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
 
   StartToListenToEditSubActions();
 
+  mInitialized = true;  // Start to handle edit sub-actions.
+
   return NS_OK;
 }
 
@@ -324,11 +324,10 @@ nsresult HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (mLockRulesSniffing) {
-    return NS_OK;
+  if (!mInitialized) {
+    return NS_OK;  // We should do nothing if we're being initialized.
   }
 
-  AutoLockRulesSniffing lockIt(this);
   mDidExplicitlySetInterline = false;
 
 #ifdef DEBUG
@@ -410,11 +409,9 @@ nsresult HTMLEditRules::AfterEdit(EditSubAction aEditSubAction,
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (mLockRulesSniffing) {
-    return NS_OK;
+  if (!mInitialized) {
+    return NS_OK;  // We should do nothing if we're being initialized.
   }
-
-  AutoLockRulesSniffing lockIt(this);
 
 #ifdef DEBUG
   MOZ_ASSERT(mIsHandling);
