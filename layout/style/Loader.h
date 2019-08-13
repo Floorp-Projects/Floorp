@@ -548,7 +548,8 @@ class Loader final {
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
 #ifdef DEBUG
-  bool mSyncCallback;
+  // Whether we're in a necko callback atm.
+  bool mSyncCallback = false;
 #endif
 };
 
