@@ -472,6 +472,7 @@ JS_FRIEND_API void NukeCrossCompartmentWrapperIfExists(JSContext* cx,
                                                        JSObject* target);
 
 void RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
+void RemapDeadWrapper(JSContext* cx, HandleObject wobj, HandleObject newTarget);
 
 JS_FRIEND_API bool RemapAllWrappersForObject(JSContext* cx,
                                              HandleObject oldTarget,

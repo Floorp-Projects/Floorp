@@ -547,9 +547,21 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   // When we remove origv from the wrapper map, its wrapper, wobj, must
   // immediately cease to be a cross-compartment wrapper. Nuke it.
   NukeCrossCompartmentWrapper(cx, wobj);
+  js::RemapDeadWrapper(cx, wobj, newTarget);
+}
 
-  // wobj is no longer a cross-compartment wrapper after nuking it, so we can
-  // now use nonCCWRealm.
+// Given a dead proxy object |wobj|, turn it into a cross-compartment wrapper
+// pointing at |newTarget|.
+// This operation crashes on failure rather than leaving the heap in an
+// inconsistent state.
+void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
+                          HandleObject newTarget) {
+  MOZ_ASSERT(IsDeadProxyObject(wobj));
+  MOZ_ASSERT(!newTarget->is<CrossCompartmentWrapperObject>());
+
+  AutoDisableProxyCheck adpc;
+
+  // wobj is not a cross-compartment wrapper, so we can use nonCCWRealm.
   Realm* wrealm = wobj->nonCCWRealm();
 
   // First, we wrap it in the new compartment. We try to use the existing
@@ -558,6 +570,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   RootedObject tobj(cx, newTarget);
   AutoRealmUnchecked ar(cx, wrealm);
   AutoEnterOOMUnsafeRegion oomUnsafe;
+  JS::Compartment* wcompartment = wobj->compartment();
   if (!wcompartment->rewrap(cx, &tobj, wobj)) {
     oomUnsafe.crash("js::RemapWrapper");
   }
