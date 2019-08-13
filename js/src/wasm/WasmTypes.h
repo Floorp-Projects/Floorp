@@ -1899,6 +1899,7 @@ enum class SymbolicAddress {
   TableInit,
   TableSet,
   TableSize,
+  FuncRef,
   PostBarrier,
   PostBarrierFiltering,
   StructNew,
