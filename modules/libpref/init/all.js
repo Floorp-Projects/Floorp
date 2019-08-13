@@ -3216,10 +3216,6 @@ pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 // full domains: any subdomains of the domains listed will also be allowed.
 pref("browser.tabs.remote.separatedMozillaDomains", "addons.mozilla.org,accounts.firefox.com");
 
-// Enable the use of display-lists for SVG hit-testing and painting.
-pref("svg.display-lists.hit-testing.enabled", true);
-pref("svg.display-lists.painting.enabled", true);
-
 // Is support for the new getBBox method from SVG 2 enabled?
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 pref("svg.new-getBBox.enabled", false);
