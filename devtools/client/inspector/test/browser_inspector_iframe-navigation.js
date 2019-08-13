@@ -18,15 +18,17 @@ add_task(async function() {
   info("Starting element picker.");
   await startPicker(toolbox);
 
-  info("Waiting for highlighter to activate.");
-  const highlighterShowing = toolbox.once("highlighter-ready");
+  info("Waiting for body to be hovered.");
+  const onHovered = inspector.inspectorFront.nodePicker.once(
+    "picker-node-hovered"
+  );
   testActor.synthesizeMouse({
     selector: "body",
     options: { type: "mousemove" },
     x: 1,
     y: 1,
   });
-  await highlighterShowing;
+  await onHovered;
 
   let isVisible = await testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
