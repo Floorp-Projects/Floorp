@@ -97,6 +97,78 @@ function add_bookmark_test(task) {
   });
 }
 
+add_task(async function test_buffer_timeout() {
+  await Service.recordManager.clearCache();
+  await PlacesSyncUtils.bookmarks.reset();
+  let engine = new BufferedBookmarksEngine(Service);
+  // Abort merges immediately.
+  engine._applyTimeout = 0;
+  await engine.initialize();
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let collection = server.user("foo").collection("bookmarks");
+
+  try {
+    info("Insert local bookmarks");
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      children: [
+        {
+          guid: "bookmarkAAAA",
+          url: "http://example.com/a",
+          title: "A",
+        },
+        {
+          guid: "bookmarkBBBB",
+          url: "http://example.com/b",
+          title: "B",
+        },
+      ],
+    });
+
+    info("Insert remote bookmarks");
+    collection.insert(
+      "menu",
+      encryptPayload({
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        title: "menu",
+        children: ["bookmarkCCCC", "bookmarkDDDD"],
+      })
+    );
+    collection.insert(
+      "bookmarkCCCC",
+      encryptPayload({
+        id: "bookmarkCCCC",
+        type: "bookmark",
+        parentid: "menu",
+        bmkUri: "http://example.com/c",
+        title: "C",
+      })
+    );
+    collection.insert(
+      "bookmarkDDDD",
+      encryptPayload({
+        id: "bookmarkDDDD",
+        type: "bookmark",
+        parentid: "menu",
+        bmkUri: "http://example.com/d",
+        title: "D",
+      })
+    );
+
+    info("We expect this sync to fail");
+    await Assert.rejects(
+      sync_engine_and_validate_telem(engine, true),
+      ex => ex.name == "InterruptedError"
+    );
+  } finally {
+    await cleanup(engine, server);
+    await engine.finalize();
+  }
+});
+
 add_bookmark_test(async function test_maintenance_after_failure(engine) {
   _("Ensure we try to run maintenance if the engine fails to sync");
 
