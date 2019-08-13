@@ -21,7 +21,13 @@ const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
   Ci.nsIX509CertDB
 );
 
-add_tls_server_setup("SymantecSanctionsServer", "test_symantec_apple_google");
+add_tls_server_setup(
+  "SanctionsTestServer",
+  "test_sanctions",
+  /* Don't try to load non-existent test-ca.pem */ false
+);
+
+addCertFromFile(certDB, "test_sanctions/symantec-test-ca.pem", "CTu,u,u");
 
 // Add the necessary intermediates. This is important because the test server,
 // though it will attempt to send along an intermediate, isn't able to reliably
@@ -29,12 +35,12 @@ add_tls_server_setup("SymantecSanctionsServer", "test_symantec_apple_google");
 add_test(function() {
   addCertFromFile(
     certDB,
-    "test_symantec_apple_google/intermediate-whitelisted.pem",
+    "test_sanctions/symantec-intermediate-whitelisted.pem",
     ",,"
   );
   addCertFromFile(
     certDB,
-    "test_symantec_apple_google/intermediate-other.pem",
+    "test_sanctions/symantec-intermediate-other.pem",
     ",,"
   );
   Services.prefs.setIntPref(
@@ -113,7 +119,7 @@ add_test(function() {
 add_test(function() {
   addCertFromFile(
     certDB,
-    "test_symantec_apple_google/intermediate-other-crossigned.pem",
+    "test_sanctions/symantec-intermediate-other-crossigned.pem",
     ",,"
   );
   run_next_test();
@@ -131,11 +137,11 @@ add_connection_test(
 add_task(async function() {
   addCertFromFile(
     certDB,
-    "test_symantec_apple_google/real-google-g2-intermediate.pem",
+    "test_sanctions/symantec-real-google-g2-intermediate.pem",
     ",,"
   );
   let whitelistedCert = constructCertFromFile(
-    "test_symantec_apple_google/real-googlecom.pem"
+    "test_sanctions/symantec-real-googlecom.pem"
   );
 
   // Since we don't want to actually try to fetch OCSP for this certificate,
