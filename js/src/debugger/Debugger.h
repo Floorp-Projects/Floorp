@@ -363,10 +363,9 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
   }
 
  public:
-  template <void(traceValueEdges)(JSTracer*, JSObject*)>
   void traceCrossCompartmentEdges(JSTracer* tracer) {
     for (Enum e(*this); !e.empty(); e.popFront()) {
-      traceValueEdges(tracer, e.front().value());
+      e.front().value()->trace(tracer);
       Key key = e.front().key();
       TraceEdge(tracer, &key, "Debugger WeakMap key");
       if (key != e.front().key()) {

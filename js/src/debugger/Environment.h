@@ -45,7 +45,7 @@ class DebuggerEnvironment : public NativeObject {
                                      HandleObject referent,
                                      HandleNativeObject debugger);
 
-  static void trace(JSTracer* trc, JSObject* obj);
+  void trace(JSTracer* trc);
 
   DebuggerEnvironmentType type() const;
   mozilla::Maybe<ScopeKind> scopeKind() const;

@@ -44,7 +44,7 @@ class DebuggerObject : public NativeObject {
                                 HandleObject referent,
                                 HandleNativeObject debugger);
 
-  static void trace(JSTracer* trc, JSObject* obj);
+  void trace(JSTracer* trc);
 
   // Properties
   static MOZ_MUST_USE bool getClassName(JSContext* cx,

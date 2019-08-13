@@ -3476,14 +3476,14 @@ void Debugger::removeAllocationsTrackingForAllDebuggees() {
 /*** Debugger JSObjects *****************************************************/
 
 void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
-  generatorFrames.traceCrossCompartmentEdges<DebuggerFrame::trace>(trc);
-  objects.traceCrossCompartmentEdges<DebuggerObject::trace>(trc);
-  environments.traceCrossCompartmentEdges<DebuggerEnvironment::trace>(trc);
-  scripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
-  lazyScripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
-  sources.traceCrossCompartmentEdges<DebuggerSource::trace>(trc);
-  wasmInstanceScripts.traceCrossCompartmentEdges<DebuggerScript::trace>(trc);
-  wasmInstanceSources.traceCrossCompartmentEdges<DebuggerSource::trace>(trc);
+  generatorFrames.traceCrossCompartmentEdges(trc);
+  objects.traceCrossCompartmentEdges(trc);
+  environments.traceCrossCompartmentEdges(trc);
+  scripts.traceCrossCompartmentEdges(trc);
+  lazyScripts.traceCrossCompartmentEdges(trc);
+  sources.traceCrossCompartmentEdges(trc);
+  wasmInstanceScripts.traceCrossCompartmentEdges(trc);
+  wasmInstanceSources.traceCrossCompartmentEdges(trc);
 }
 
 /*
