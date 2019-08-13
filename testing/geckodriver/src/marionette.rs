@@ -11,7 +11,8 @@ use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
     Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, Script as MarionetteScript,
-    Selector as MarionetteSelector, SwitchToFrame as MarionetteSwitchToFrame, Url as MarionetteUrl,
+    Selector as MarionetteSelector, SwitchToFrame as MarionetteSwitchToFrame,
+    SwitchToWindow as MarionetteSwitchToWindow, Url as MarionetteUrl,
     WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
@@ -1034,9 +1035,6 @@ impl MarionetteCommand {
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
                 }
-                SwitchToWindow(ref x) => {
-                    (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette()))
-                }
                 TakeElementScreenshot(ref e) => {
                     let mut data = Map::new();
                     data.insert("id".to_string(), Value::String(e.to_string()));
@@ -1574,18 +1572,12 @@ impl ToMarionette<MarionetteSwitchToFrame> for SwitchToFrameParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        data.insert(
-            "name".to_string(),
-            serde_json::to_value(self.handle.clone())?,
-        );
-        data.insert(
-            "handle".to_string(),
-            serde_json::to_value(self.handle.clone())?,
-        );
-        Ok(data)
+impl ToMarionette<MarionetteSwitchToWindow> for SwitchToWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteSwitchToWindow> {
+        Ok(MarionetteSwitchToWindow {
+            name: self.handle.clone(),
+            handle: self.handle.clone(),
+        })
     }
 }
 
