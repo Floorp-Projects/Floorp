@@ -120,6 +120,12 @@ pub enum Command {
     GetAlertText,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
+    #[serde(rename = "WebDriver:GetElementCSSValue")]
+    GetCSSValue {
+        id: String,
+        #[serde(rename = "propertyName")]
+        property: String,
+    },
     #[serde(rename = "WebDriver:GetCurrentURL")]
     GetCurrentUrl,
     #[serde(rename = "WebDriver:GetElementAttribute")]
@@ -314,6 +320,17 @@ mod tests {
                 value: "bar".into(),
             },
             json!({"WebDriver:FindElement": {"element": "foo", "using": "xpath", "value": "bar" }}),
+        );
+    }
+
+    #[test]
+    fn test_json_get_css_value() {
+        assert_ser_de(
+            &Command::GetCSSValue {
+                id: "foo".into(),
+                property: "bar".into(),
+            },
+            json!({"WebDriver:GetElementCSSValue": {"id": "foo", "propertyName": "bar"}}),
         );
     }
 }
