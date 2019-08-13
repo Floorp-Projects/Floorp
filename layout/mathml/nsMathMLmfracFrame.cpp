@@ -316,10 +316,6 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
                          : gfxMathTable::StackGapMin,
             oneDevPixel);
       }
-      // Factor in axis height
-      // http://www.mathml-association.org/MathMLinHTML5/S3.html#SS3.SSS2
-      numShift += axisHeight;
-      denShift += axisHeight;
 
       nscoord actualClearance =
           (numShift - bmNum.descent) - (bmDen.ascent - denShift);
