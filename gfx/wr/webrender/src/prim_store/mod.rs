@@ -28,6 +28,7 @@ use crate::intern;
 use malloc_size_of::MallocSizeOf;
 use crate::picture::{PictureCompositeMode, PicturePrimitive};
 use crate::picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
+use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle};
@@ -54,6 +55,7 @@ use crate::util::{clamp_to_scale_factor, pack_as_float, project_rect, raster_rec
 use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use smallvec::SmallVec;
 
+pub mod backdrop;
 pub mod borders;
 pub mod gradient;
 pub mod image;
@@ -271,7 +273,7 @@ impl ClipTaskIndex {
     pub const INVALID: ClipTaskIndex = ClipTaskIndex(0);
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, MallocSizeOf, Ord, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureIndex(pub usize);
@@ -1325,6 +1327,10 @@ pub enum PrimitiveInstanceKind {
         /// Handle to the common interned data for this primitive.
         data_handle: PrimitiveDataHandle,
     },
+    /// Render a portion of a specified backdrop.
+    Backdrop {
+        data_handle: BackdropDataHandle,
+    },
     /// These are non-visual instances. They are used during the
     /// visibility pass to allow pushing/popping a clip chain
     /// without the presence of a stacking context / picture.
@@ -1539,6 +1545,9 @@ impl PrimitiveInstance {
                 data_handle.uid()
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
+                data_handle.uid()
+            }
+            PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
                 data_handle.uid()
             }
             PrimitiveInstanceKind::PushClipChain |
@@ -1954,6 +1963,43 @@ impl PrimitiveStore {
 
                     (pic.raster_config.is_none(), false, pic.snapped_local_rect, shadow_rect)
                 }
+                PrimitiveInstanceKind::Backdrop { data_handle } => {
+                    // The actual size and clip rect of this primitive are determined by computing the bounding
+                    // box of the projected rect of the backdrop-filter element onto the backdrop.
+                    let prim_data = &mut frame_state.data_stores.backdrop[data_handle];
+                    let spatial_node_index = prim_data.kind.spatial_node_index;
+
+                    // We cannot use the relative transform between the backdrop and the element because
+                    // that doesn't take into account any projection transforms that both spatial nodes are children of.
+                    // Instead, we first project from the element to the world space and get a flattened 2D bounding rect
+                    // in the screen space, we then map this rect from the world space to the backdrop space to get the
+                    // proper bounding box where the backdrop-filter needs to be processed.
+
+                    let prim_to_world_mapper = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        spatial_node_index,
+                        LayoutRect::max_rect(),
+                        frame_context.clip_scroll_tree,
+                    );
+
+                    let backdrop_to_world_mapper = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        prim_instance.spatial_node_index,
+                        LayoutRect::max_rect(),
+                        frame_context.clip_scroll_tree,
+                    );
+
+                    // First map to the screen and get a flattened rect
+                    let prim_rect = prim_to_world_mapper.map(&prim_data.kind.border_rect).unwrap_or_else(LayoutRect::zero);
+                    // Backwards project the flattened rect onto the backdrop
+                    let prim_rect = backdrop_to_world_mapper.unmap(&prim_rect).unwrap_or_else(LayoutRect::zero);
+
+                    prim_instance.prim_origin = prim_rect.origin;
+                    prim_data.common.prim_size = prim_rect.size;
+                    prim_instance.local_clip_rect = prim_rect;
+
+                    (false, true, prim_rect, LayoutRect::zero())
+                }
                 _ => {
                     let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
 
@@ -2188,6 +2234,7 @@ impl PrimitiveStore {
                         PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
+                        PrimitiveInstanceKind::Backdrop { .. } => debug_colors::MEDIUMAQUAMARINE,
                     };
                     if debug_color.a != 0.0 {
                         let debug_rect = clipped_world_rect * frame_context.global_device_pixel_scale;
@@ -2241,7 +2288,9 @@ impl PrimitiveStore {
         if let Some(ref raster_config) = pic.raster_config {
             // Inflate the local bounding rect if required by the filter effect.
             // This inflaction factor is to be applied to the surface itself.
-            surface_rect = raster_config.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
+            if pic.options.inflate_if_required {
+                surface_rect = raster_config.composite_mode.inflate_picture_rect(surface_rect, surface.inflation_factor);
+            }
 
             // Layout space for the picture is picture space from the
             // perspective of its child primitives.
@@ -2474,7 +2523,8 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
-            PrimitiveInstanceKind::LineDecoration { .. } => {
+            PrimitiveInstanceKind::LineDecoration { .. } |
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 // These prims don't support opacity collapse
             }
             PrimitiveInstanceKind::Picture { pic_index, .. } => {
@@ -2612,7 +2662,8 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::RadialGradient { .. } |
                 PrimitiveInstanceKind::PushClipChain |
                 PrimitiveInstanceKind::PopClipChain |
-                PrimitiveInstanceKind::Clear { .. } => {
+                PrimitiveInstanceKind::Clear { .. } |
+                PrimitiveInstanceKind::Backdrop { .. } => {
                     None
                 }
             }
@@ -3289,6 +3340,21 @@ impl PrimitiveStore {
                     prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                 }
             }
+            PrimitiveInstanceKind::Backdrop { data_handle } => {
+                let backdrop_pic_index = data_stores.backdrop[*data_handle].kind.pic_index;
+
+                // Setup a dependency on the backdrop picture to ensure it is rendered prior to rendering this primitive.
+                let backdrop_surface_index = self.pictures[backdrop_pic_index.0].raster_config.as_ref().unwrap().surface_index;
+                if let Some(backdrop_tasks) = frame_state.surfaces[backdrop_surface_index.0].render_tasks {
+                    let picture_task_id = frame_state.surfaces[pic_context.surface_index.0].render_tasks.as_ref().unwrap().port;
+                    frame_state.render_tasks.add_dependency(picture_task_id, backdrop_tasks.root);
+                } else {
+                    if prim_instance.is_chased() {
+                        println!("\tBackdrop primitive culled because backdrop task was not assigned render tasks");
+                    }
+                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                }
+            }
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain => {}
         };
@@ -3619,7 +3685,8 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
-            PrimitiveInstanceKind::LineDecoration { .. } => {
+            PrimitiveInstanceKind::LineDecoration { .. } |
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 // These primitives don't support / need segments.
                 return;
             }
@@ -3685,7 +3752,8 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
-            PrimitiveInstanceKind::LineDecoration { .. } => {
+            PrimitiveInstanceKind::LineDecoration { .. } |
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 return false;
             }
             PrimitiveInstanceKind::Image { image_instance_index, .. } => {

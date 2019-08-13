@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter};
-use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, RasterSpace};
-use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId};
+use api::{ClipId, ColorF, CommonItemProperties, ComplexClipRegion, ComponentTransferFuncType, RasterSpace};
+use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData};
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
@@ -21,12 +21,13 @@ use crate::image::simplify_repeated_primitive;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, FastHashSet, LayoutPrimitiveInfo, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
-use crate::picture::{BlitReason, PrimitiveList, TileCacheInstance};
+use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCacheInstance};
 use crate::prim_store::{PrimitiveInstance, PrimitiveSceneData};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{ScrollNodeAndClipChain, PictureIndex};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex};
 use crate::prim_store::{register_prim_chase_id, get_line_decoration_sizes};
+use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams};
 use crate::prim_store::image::{Image, YuvImage};
@@ -331,6 +332,7 @@ impl<'a> DisplayListFlattener<'a> {
             ROOT_SPATIAL_NODE_INDEX,
             ClipChainId::NONE,
             RasterSpace::Screen,
+            /* is_backdrop_root = */ true,
         );
 
         flattener.flatten_items(
@@ -808,9 +810,9 @@ impl<'a> DisplayListFlattener<'a> {
 
         let composition_operations = {
             CompositeOps::new(
-                stacking_context.filter_ops_for_compositing(filters),
-                stacking_context.filter_datas_for_compositing(filter_datas),
-                stacking_context.filter_primitives_for_compositing(filter_primitives),
+                filter_ops_for_compositing(filters),
+                filter_datas_for_compositing(filter_datas),
+                filter_primitives_for_compositing(filter_primitives),
                 stacking_context.mix_blend_mode_for_compositing(),
             )
         };
@@ -829,6 +831,7 @@ impl<'a> DisplayListFlattener<'a> {
             spatial_node_index,
             clip_chain_id,
             stacking_context.raster_space,
+            stacking_context.is_backdrop_root,
         );
 
         if cfg!(debug_assertions) && apply_pipeline_clip && clip_chain_id != ClipChainId::NONE {
@@ -1312,7 +1315,22 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::BackdropFilter(ref info) => {
-                unimplemented!();
+                let (layout, clip_and_scroll) = self.process_common_properties(
+                    &info.common,
+                    apply_pipeline_clip,
+                );
+
+                let filters = filter_ops_for_compositing(item.filters());
+                let filter_datas = filter_datas_for_compositing(item.filter_datas());
+                let filter_primitives = filter_primitives_for_compositing(item.filter_primitives());
+
+                self.add_backdrop_filter(
+                    clip_and_scroll,
+                    &layout,
+                    filters,
+                    filter_datas,
+                    filter_primitives,
+                );
             }
 
             // Do nothing; these are dummy items for the display list parser
@@ -1574,6 +1592,7 @@ impl<'a> DisplayListFlattener<'a> {
         spatial_node_index: SpatialNodeIndex,
         clip_chain_id: ClipChainId,
         requested_raster_space: RasterSpace,
+        is_backdrop_root: bool,
     ) {
         // Check if this stacking context is the root of a pipeline, and the caller
         // has requested it as an output frame.
@@ -1597,16 +1616,25 @@ impl<'a> DisplayListFlattener<'a> {
         // which determines if we *might* need to draw this on
         // an intermediate surface for plane splitting purposes.
         let (parent_is_3d, extra_3d_instance) = match self.sc_stack.last_mut() {
-            Some(sc) => {
+            Some(ref mut sc) if sc.is_3d() => {
+                let flat_items_context_3d = match sc.context_3d {
+                    Picture3DContext::In { ancestor_index, .. } => Picture3DContext::In {
+                        root_data: None,
+                        ancestor_index,
+                    },
+                    Picture3DContext::Out => panic!("Unexpected out of 3D context"),
+                };
                 // Cut the sequence of flat children before starting a child stacking context,
                 // so that the relative order between them and our current SC is preserved.
-                let extra_instance = sc.cut_flat_item_sequence(
+                let extra_instance = sc.cut_item_sequence(
                     &mut self.prim_store,
                     &mut self.interners,
+                    Some(PictureCompositeMode::Blit(BlitReason::PRESERVE3D)),
+                    flat_items_context_3d,
                 );
-                (sc.is_3d(), extra_instance)
+                (true, extra_instance.map(|(_, instance)| instance))
             },
-            None => (false, None),
+            _ => (false, None),
         };
 
         if let Some(instance) = extra_3d_instance {
@@ -1680,6 +1708,7 @@ impl<'a> DisplayListFlattener<'a> {
             transform_style,
             context_3d,
             create_tile_cache,
+            is_backdrop_root,
         });
     }
 
@@ -1910,145 +1939,20 @@ impl<'a> DisplayListFlattener<'a> {
             );
         }
 
-        // For each filter, create a new image with that composite mode.
-        let mut current_filter_data_index = 0;
-        for filter in &mut stacking_context.composite_ops.filters {
-            filter.sanitize();
+        let (filtered_pic_index, filtered_instance) = self.wrap_prim_with_filters(
+            cur_instance,
+            current_pic_index,
+            stacking_context.composite_ops.filters,
+            stacking_context.composite_ops.filter_primitives,
+            stacking_context.composite_ops.filter_datas,
+            stacking_context.is_backface_visible,
+            stacking_context.requested_raster_space,
+            stacking_context.spatial_node_index,
+            true,
+        );
 
-            let composite_mode = Some(match *filter {
-                Filter::ComponentTransfer => {
-                    let filter_data =
-                        &stacking_context.composite_ops.filter_datas[current_filter_data_index];
-                    let filter_data = filter_data.sanitize();
-                    current_filter_data_index = current_filter_data_index + 1;
-                    if filter_data.is_identity() {
-                        continue
-                    } else {
-                        let filter_data_key = SFilterDataKey {
-                            data:
-                                SFilterData {
-                                    r_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_r_type, &filter_data.r_values),
-                                    g_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_g_type, &filter_data.g_values),
-                                    b_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_b_type, &filter_data.b_values),
-                                    a_func: SFilterDataComponent::from_functype_values(
-                                        filter_data.func_a_type, &filter_data.a_values),
-                                },
-                        };
-
-                        let handle = self.interners
-                            .filter_data
-                            .intern(&filter_data_key, || ());
-                        PictureCompositeMode::ComponentTransferFilter(handle)
-                    }
-                }
-                _ => PictureCompositeMode::Filter(filter.clone()),
-            });
-
-            let filter_pic_index = PictureIndex(self.prim_store.pictures
-                .alloc()
-                .init(PicturePrimitive::new_image(
-                    composite_mode.clone(),
-                    Picture3DContext::Out,
-                    None,
-                    true,
-                    stacking_context.is_backface_visible,
-                    stacking_context.requested_raster_space,
-                    PrimitiveList::new(
-                        vec![cur_instance.clone()],
-                        &self.interners,
-                    ),
-                    stacking_context.spatial_node_index,
-                    None,
-                    PictureOptions::default(),
-                ))
-            );
-
-            current_pic_index = filter_pic_index;
-            cur_instance = create_prim_instance(
-                current_pic_index,
-                composite_mode.into(),
-                stacking_context.is_backface_visible,
-                ClipChainId::NONE,
-                stacking_context.spatial_node_index,
-                &mut self.interners,
-            );
-
-            if cur_instance.is_chased() {
-                println!("\tis a composite picture for a stacking context with {:?}", filter);
-            }
-
-            // Run the optimize pass on this picture, to see if we can
-            // collapse opacity and avoid drawing to an off-screen surface.
-            self.prim_store.optimize_picture_if_possible(current_pic_index);
-        }
-
-        if !stacking_context.composite_ops.filter_primitives.is_empty() {
-            let filter_datas = stacking_context.composite_ops.filter_datas.iter()
-                .map(|filter_data| filter_data.sanitize())
-                .map(|filter_data| {
-                    SFilterData {
-                        r_func: SFilterDataComponent::from_functype_values(
-                            filter_data.func_r_type, &filter_data.r_values),
-                        g_func: SFilterDataComponent::from_functype_values(
-                            filter_data.func_g_type, &filter_data.g_values),
-                        b_func: SFilterDataComponent::from_functype_values(
-                            filter_data.func_b_type, &filter_data.b_values),
-                        a_func: SFilterDataComponent::from_functype_values(
-                            filter_data.func_a_type, &filter_data.a_values),
-                    }
-                })
-                .collect();
-
-            // Sanitize filter inputs
-            for primitive in &mut stacking_context.composite_ops.filter_primitives {
-                primitive.sanitize();
-            }
-
-            let composite_mode = PictureCompositeMode::SvgFilter(
-                stacking_context.composite_ops.filter_primitives,
-                filter_datas,
-            );
-
-            let filter_pic_index = PictureIndex(self.prim_store.pictures
-                .alloc()
-                .init(PicturePrimitive::new_image(
-                    Some(composite_mode.clone()),
-                    Picture3DContext::Out,
-                    None,
-                    true,
-                    stacking_context.is_backface_visible,
-                    stacking_context.requested_raster_space,
-                    PrimitiveList::new(
-                        vec![cur_instance.clone()],
-                        &self.interners,
-                    ),
-                    stacking_context.spatial_node_index,
-                    None,
-                    PictureOptions::default(),
-                ))
-            );
-
-            current_pic_index = filter_pic_index;
-            cur_instance = create_prim_instance(
-                current_pic_index,
-                Some(composite_mode).into(),
-                stacking_context.is_backface_visible,
-                ClipChainId::NONE,
-                stacking_context.spatial_node_index,
-                &mut self.interners,
-            );
-
-            if cur_instance.is_chased() {
-                println!("\tis a composite picture for a stacking context with an SVG filter");
-            }
-
-            // Run the optimize pass on this picture, to see if we can
-            // collapse opacity and avoid drawing to an off-screen surface.
-            self.prim_store.optimize_picture_if_possible(current_pic_index);
-        }
+        current_pic_index = filtered_pic_index;
+        cur_instance = filtered_instance;
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
         // stacking context.
@@ -3061,6 +2965,313 @@ impl<'a> DisplayListFlattener<'a> {
             }
         }
     }
+
+    pub fn add_backdrop_filter(
+        &mut self,
+        clip_and_scroll: ScrollNodeAndClipChain,
+        info: &LayoutPrimitiveInfo,
+        filters: Vec<Filter>,
+        filter_datas: Vec<FilterData>,
+        filter_primitives: Vec<FilterPrimitive>,
+    ) {
+        let mut backdrop_pic_index = match self.cut_backdrop_picture() {
+            // Backdrop contains no content, so no need to add backdrop-filter
+            None => return,
+            Some(backdrop_pic_index) => backdrop_pic_index,
+        };
+
+        let backdrop_spatial_node_index = self.prim_store.pictures[backdrop_pic_index.0].spatial_node_index;
+        let requested_raster_space = self.sc_stack.last().expect("no active stacking context").requested_raster_space;
+
+        let mut instance = self.create_primitive(
+            info,
+            // TODO(cbrewster): This is a bit of a hack to help figure out the correct sizing of the backdrop
+            // region. By makings sure to include this, the clip chain instance computes the correct clip rect,
+            // but we don't actually apply the filtered backdrop clip yet (this is done to the last instance in
+            // the filter chain below).
+            clip_and_scroll.clip_chain_id,
+            backdrop_spatial_node_index,
+            Backdrop {
+                pic_index: backdrop_pic_index,
+                spatial_node_index: clip_and_scroll.spatial_node_index,
+                border_rect: info.rect.into(),
+            },
+        );
+
+        // We will append the filtered backdrop to the backdrop root, but we need to
+        // make sure all clips between the current stacking context and backdrop root
+        // are taken into account. So we wrap the backdrop filter instance with a picture with
+        // a clip for each stacking context.
+        for stacking_context in self.sc_stack.iter().rev().take_while(|sc| !sc.is_backdrop_root) {
+            let clip_chain_id = stacking_context.clip_chain_id;
+            let is_backface_visible = stacking_context.is_backface_visible;
+            let composite_mode = None;
+
+            backdrop_pic_index = PictureIndex(self.prim_store.pictures
+                .alloc()
+                .init(PicturePrimitive::new_image(
+                    composite_mode.clone(),
+                    Picture3DContext::Out,
+                    None,
+                    true,
+                    is_backface_visible,
+                    requested_raster_space,
+                    PrimitiveList::new(
+                        vec![instance],
+                        &mut self.interners,
+                    ),
+                    backdrop_spatial_node_index,
+                    None,
+                    PictureOptions {
+                       inflate_if_required: false,
+                    },
+                ))
+            );
+
+            instance = create_prim_instance(
+                backdrop_pic_index,
+                composite_mode.into(),
+                is_backface_visible,
+                clip_chain_id,
+                backdrop_spatial_node_index,
+                &mut self.interners,
+            );
+        }
+
+        let (mut filtered_pic_index, mut filtered_instance) = self.wrap_prim_with_filters(
+            instance,
+            backdrop_pic_index,
+            filters,
+            filter_primitives,
+            filter_datas,
+            info.is_backface_visible,
+            requested_raster_space,
+            backdrop_spatial_node_index,
+            false,
+        );
+
+        // Apply filters from all stacking contexts up to, but not including the backdrop root.
+        // Gecko pushes separate stacking contexts for filters and opacity,
+        // so we must iterate through multiple stacking contexts to find all effects
+        // that need to be applied to the filtered backdrop.
+        let backdrop_root_pos = self.sc_stack.iter().rposition(|sc| sc.is_backdrop_root).expect("no backdrop root?");
+        for i in ((backdrop_root_pos + 1)..self.sc_stack.len()).rev() {
+            let stacking_context = &self.sc_stack[i];
+            let filters = stacking_context.composite_ops.filters.clone();
+            let filter_primitives = stacking_context.composite_ops.filter_primitives.clone();
+            let filter_datas = stacking_context.composite_ops.filter_datas.clone();
+
+            let (pic_index, instance) = self.wrap_prim_with_filters(
+                filtered_instance,
+                filtered_pic_index,
+                filters,
+                filter_primitives,
+                filter_datas,
+                info.is_backface_visible,
+                requested_raster_space,
+                backdrop_spatial_node_index,
+                false,
+            );
+
+            filtered_instance = instance;
+            filtered_pic_index = pic_index;
+        }
+
+        filtered_instance.clip_chain_id = clip_and_scroll.clip_chain_id;
+
+        self.sc_stack.iter_mut().rev().find(|sc| sc.is_backdrop_root).unwrap().primitives.push(filtered_instance);
+    }
+
+    pub fn cut_backdrop_picture(&mut self) -> Option<PictureIndex> {
+        let mut flattened_items = None;
+        let mut backdrop_root =  None;
+        for sc in self.sc_stack.iter_mut().rev() {
+            // Add child contents to parent stacking context
+            if let Some((_, flattened_instance)) = flattened_items.take() {
+                sc.primitives.push(flattened_instance);
+            }
+            flattened_items = sc.cut_item_sequence(
+                &mut self.prim_store,
+                &mut self.interners,
+                None,
+                Picture3DContext::Out,
+            );
+            if sc.is_backdrop_root {
+                backdrop_root = Some(sc);
+                break;
+            }
+        }
+
+        let (pic_index, instance) = flattened_items?;
+        self.prim_store.pictures[pic_index.0].requested_composite_mode = Some(PictureCompositeMode::Blit(BlitReason::BACKDROP));
+        backdrop_root.expect("no backdrop root found").primitives.push(instance);
+
+        Some(pic_index)
+    }
+
+    fn wrap_prim_with_filters(
+        &mut self,
+        mut cur_instance: PrimitiveInstance,
+        mut current_pic_index: PictureIndex,
+        mut filter_ops: Vec<Filter>,
+        mut filter_primitives: Vec<FilterPrimitive>,
+        filter_datas: Vec<FilterData>,
+        is_backface_visible: bool,
+        requested_raster_space: RasterSpace,
+        spatial_node_index: SpatialNodeIndex,
+        inflate_if_required: bool,
+    ) -> (PictureIndex, PrimitiveInstance) {
+        // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
+        // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
+        // At some point, these two should be combined and CSS filters should be expressed in terms of SVG filters.
+        assert!(filter_ops.is_empty() || filter_primitives.is_empty(),
+            "Filter ops and filter primitives are not allowed on the same stacking context.");
+
+        // For each filter, create a new image with that composite mode.
+        let mut current_filter_data_index = 0;
+        for filter in &mut filter_ops {
+            filter.sanitize();
+
+            let composite_mode = Some(match *filter {
+                Filter::ComponentTransfer => {
+                    let filter_data =
+                        &filter_datas[current_filter_data_index];
+                    let filter_data = filter_data.sanitize();
+                    current_filter_data_index = current_filter_data_index + 1;
+                    if filter_data.is_identity() {
+                        continue
+                    } else {
+                        let filter_data_key = SFilterDataKey {
+                            data:
+                                SFilterData {
+                                    r_func: SFilterDataComponent::from_functype_values(
+                                        filter_data.func_r_type, &filter_data.r_values),
+                                    g_func: SFilterDataComponent::from_functype_values(
+                                        filter_data.func_g_type, &filter_data.g_values),
+                                    b_func: SFilterDataComponent::from_functype_values(
+                                        filter_data.func_b_type, &filter_data.b_values),
+                                    a_func: SFilterDataComponent::from_functype_values(
+                                        filter_data.func_a_type, &filter_data.a_values),
+                                },
+                        };
+
+                        let handle = self.interners
+                            .filter_data
+                            .intern(&filter_data_key, || ());
+                        PictureCompositeMode::ComponentTransferFilter(handle)
+                    }
+                }
+                _ => PictureCompositeMode::Filter(filter.clone()),
+            });
+
+            let filter_pic_index = PictureIndex(self.prim_store.pictures
+                .alloc()
+                .init(PicturePrimitive::new_image(
+                    composite_mode.clone(),
+                    Picture3DContext::Out,
+                    None,
+                    true,
+                    is_backface_visible,
+                    requested_raster_space,
+                    PrimitiveList::new(
+                        vec![cur_instance.clone()],
+                        &mut self.interners,
+                    ),
+                    spatial_node_index,
+                    None,
+                    PictureOptions {
+                       inflate_if_required,
+                    },
+                ))
+            );
+
+            current_pic_index = filter_pic_index;
+            cur_instance = create_prim_instance(
+                current_pic_index,
+                composite_mode.into(),
+                is_backface_visible,
+                ClipChainId::NONE,
+                spatial_node_index,
+                &mut self.interners,
+            );
+
+            if cur_instance.is_chased() {
+                println!("\tis a composite picture for a stacking context with {:?}", filter);
+            }
+
+            // Run the optimize pass on this picture, to see if we can
+            // collapse opacity and avoid drawing to an off-screen surface.
+            self.prim_store.optimize_picture_if_possible(current_pic_index);
+        }
+
+        if !filter_primitives.is_empty() {
+            let filter_datas = filter_datas.iter()
+                .map(|filter_data| filter_data.sanitize())
+                .map(|filter_data| {
+                    SFilterData {
+                        r_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_r_type, &filter_data.r_values),
+                        g_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_g_type, &filter_data.g_values),
+                        b_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_b_type, &filter_data.b_values),
+                        a_func: SFilterDataComponent::from_functype_values(
+                            filter_data.func_a_type, &filter_data.a_values),
+                    }
+                })
+                .collect();
+
+            // Sanitize filter inputs
+            for primitive in &mut filter_primitives {
+                primitive.sanitize();
+            }
+
+            let composite_mode = PictureCompositeMode::SvgFilter(
+                filter_primitives,
+                filter_datas,
+            );
+
+            let filter_pic_index = PictureIndex(self.prim_store.pictures
+                .alloc()
+                .init(PicturePrimitive::new_image(
+                    Some(composite_mode.clone()),
+                    Picture3DContext::Out,
+                    None,
+                    true,
+                    is_backface_visible,
+                    requested_raster_space,
+                    PrimitiveList::new(
+                        vec![cur_instance.clone()],
+                        &mut self.interners,
+                    ),
+                    spatial_node_index,
+                    None,
+                    PictureOptions {
+                        inflate_if_required,
+                    },
+                ))
+            );
+
+            current_pic_index = filter_pic_index;
+            cur_instance = create_prim_instance(
+                current_pic_index,
+                Some(composite_mode).into(),
+                is_backface_visible,
+                ClipChainId::NONE,
+                spatial_node_index,
+                &mut self.interners,
+            );
+
+            if cur_instance.is_chased() {
+                println!("\tis a composite picture for a stacking context with an SVG filter");
+            }
+
+            // Run the optimize pass on this picture, to see if we can
+            // collapse opacity and avoid drawing to an off-screen surface.
+            self.prim_store.optimize_picture_if_possible(current_pic_index);
+        }
+        (current_pic_index, cur_instance)
+    }
 }
 
 
@@ -3115,6 +3326,9 @@ struct FlattenedStackingContext {
 
     /// If true, create a tile cache for this stacking context.
     create_tile_cache: bool,
+
+    /// True if this stacking context is a backdrop root.
+    is_backdrop_root: bool,
 }
 
 impl FlattenedStackingContext {
@@ -3174,28 +3388,22 @@ impl FlattenedStackingContext {
         true
     }
 
-    /// For a Preserve3D context, cut the sequence of the immediate flat children
-    /// recorded so far and generate a picture from them.
-    pub fn cut_flat_item_sequence(
+    /// Cut the sequence of the immediate children recorded so far and generate a picture from them.
+    pub fn cut_item_sequence(
         &mut self,
         prim_store: &mut PrimitiveStore,
         interners: &mut Interners,
-    ) -> Option<PrimitiveInstance> {
-        if !self.is_3d() || self.primitives.is_empty() {
+        composite_mode: Option<PictureCompositeMode>,
+        flat_items_context_3d: Picture3DContext<OrderedPictureChild>,
+    ) -> Option<(PictureIndex, PrimitiveInstance)> {
+        if self.primitives.is_empty() {
             return None
         }
-        let flat_items_context_3d = match self.context_3d {
-            Picture3DContext::In { ancestor_index, .. } => Picture3DContext::In {
-                root_data: None,
-                ancestor_index,
-            },
-            Picture3DContext::Out => panic!("Unexpected out of 3D context"),
-        };
 
         let pic_index = PictureIndex(prim_store.pictures
             .alloc()
             .init(PicturePrimitive::new_image(
-                Some(PictureCompositeMode::Blit(BlitReason::PRESERVE3D)),
+                composite_mode.clone(),
                 flat_items_context_3d,
                 None,
                 true,
@@ -3213,14 +3421,14 @@ impl FlattenedStackingContext {
 
         let prim_instance = create_prim_instance(
             pic_index,
-            PictureCompositeKey::Identity,
+            composite_mode.into(),
             self.is_backface_visible,
             self.clip_chain_id,
             self.spatial_node_index,
             interners,
         );
 
-        Some(prim_instance)
+        Some((pic_index, prim_instance))
     }
 }
 
@@ -3329,4 +3537,48 @@ fn create_clip_prim_instance(
         clip_chain_id,
         spatial_node_index,
     )
+}
+
+
+fn filter_ops_for_compositing(
+    input_filters: ItemRange<FilterOp>,
+) -> Vec<Filter> {
+    // TODO(gw): Now that we resolve these later on,
+    //           we could probably make it a bit
+    //           more efficient than cloning these here.
+    input_filters.iter().map(|filter| filter.into()).collect()
+}
+
+fn filter_datas_for_compositing(
+    input_filter_datas: &[TempFilterData],
+) -> Vec<FilterData> {
+    // TODO(gw): Now that we resolve these later on,
+    //           we could probably make it a bit
+    //           more efficient than cloning these here.
+    let mut filter_datas = vec![];
+    for temp_filter_data in input_filter_datas {
+        let func_types : Vec<ComponentTransferFuncType> = temp_filter_data.func_types.iter().collect();
+        debug_assert!(func_types.len() == 4);
+        filter_datas.push( FilterData {
+            func_r_type: func_types[0],
+            r_values: temp_filter_data.r_values.iter().collect(),
+            func_g_type: func_types[1],
+            g_values: temp_filter_data.g_values.iter().collect(),
+            func_b_type: func_types[2],
+            b_values: temp_filter_data.b_values.iter().collect(),
+            func_a_type: func_types[3],
+            a_values: temp_filter_data.a_values.iter().collect(),
+        });
+    }
+    filter_datas
+}
+
+fn filter_primitives_for_compositing(
+    input_filter_primitives: ItemRange<FilterPrimitive>,
+) -> Vec<FilterPrimitive> {
+    // Resolve these in the flattener?
+    // TODO(gw): Now that we resolve these later on,
+    //           we could probably make it a bit
+    //           more efficient than cloning these here.
+    input_filter_primitives.iter().map(|primitive| primitive.into()).collect()
 }
