@@ -115,6 +115,32 @@ def api_lint(config, **lintargs):
     return results
 
 
+def javadoc(config, **lintargs):
+    topsrcdir = lintargs['root']
+    topobjdir = lintargs['topobjdir']
+
+    gradle(topsrcdir=topsrcdir, topobjdir=topobjdir,
+           tasks=lintargs['substs']['GRADLE_ANDROID_GECKOVIEW_DOCS_TASKS'],
+           extra_args=lintargs.get('extra_args') or [])
+
+    output_files = lintargs['substs']['GRADLE_ANDROID_GECKOVIEW_DOCS_OUTPUT_FILES']
+
+    results = []
+
+    for output_file in output_files:
+        with open(os.path.join(topobjdir, output_file)) as f:
+            # Like: '[{"path":"/absolute/path/to/topsrcdir/mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java","lineno":"462","level":"warning","message":"no @return"}]'.  # NOQA: E501
+            issues = json.load(f)
+
+            for issue in issues:
+                issue['path'] = issue['path'].replace(lintargs['root'], '')
+                # We want warnings to be errors for linting purposes.
+                issue['level'] = 'error'
+                results.append(result.from_config(config, **issue))
+
+    return results
+
+
 def lint(config, **lintargs):
     topsrcdir = lintargs['root']
     topobjdir = lintargs['topobjdir']

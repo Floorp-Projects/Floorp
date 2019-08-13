@@ -38,6 +38,9 @@ lints:
             - name: public/android/geckoview/apilint-result.json
               path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/classes/withGeckoBinaries/debug/apilint-result.json
               type: file
+            - name: public/android/geckoview/javadoc-results.json
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/reports/javadoc-results-withGeckoBinariesDebug.json
+              type: file
             - name: public/app/unittest
               path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/tests
               type: directory
@@ -75,6 +78,7 @@ lints:
             ./mach --log-no-times build &&
             ./mach --log-no-times lint -f treeherder -f json:/builds/worker/mozlint.json
             --linter android-api-lint
+            --linter android-javadoc
             --linter android-checkstyle
             --linter android-findbugs
             --linter android-lint
