@@ -8,12 +8,12 @@
 }
 
 .sidebar-toggle::before,
-.sidebar-toggle.pane-collapsed:dir(rtl)::before {
+.sidebar-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
   background-image: url(chrome://devtools/skin/images/pane-collapse.svg);
 }
 
 .sidebar-toggle.pane-collapsed::before,
-.sidebar-toggle:dir(rtl)::before {
+.sidebar-toggle:-moz-locale-dir(rtl)::before {
   background-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
