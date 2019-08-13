@@ -12663,7 +12663,8 @@
     "kind": "exponential",
     "high": 7200000,
     "n_buckets": 100,
-    "bug_numbers": [1261955, 1127646, 1570634]
+    "bug_numbers": [1261955, 1127646, 1570634, 1567604],
+    "releaseChannelCollection": "opt-out"
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
     "record_in_processes": ["content"],
