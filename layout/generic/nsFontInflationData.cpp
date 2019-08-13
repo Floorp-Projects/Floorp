@@ -194,7 +194,7 @@ void nsFontInflationData::UpdateISize(const ReflowInput& aReflowInput) {
   nscoord newNCAISize = ComputeDescendantISize(aReflowInput, nca);
 
   // See comment above "font.size.inflation.lineThreshold" in
-  // modules/libpref/src/init/all.js .
+  // modules/libpref/src/init/StaticPrefList.yaml .
   PresShell* presShell = bfc->PresShell();
   uint32_t lineThreshold = presShell->FontSizeInflationLineThreshold();
   nscoord newTextThreshold = (newNCAISize * lineThreshold) / 100;
