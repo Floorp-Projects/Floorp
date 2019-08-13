@@ -8,14 +8,14 @@ HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
 JSBIN="$HAZARD_SHELL_OBJDIR/dist/bin/js"
 JS_SRCDIR=$GECKO_PATH/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
-GCCDIR="$TOOLTOOL_DIR/gcc"
+GCCDIR="$MOZ_FETCHES_DIR/gcc"
 
 export CC="$GCCDIR/bin/gcc"
 export CXX="$GCCDIR/bin/g++"
-export PATH="$GCCDIR/bin:$TOOLTOOL_DIR/clang/bin:$PATH"
+export PATH="$GCCDIR/bin:$MOZ_FETCHES_DIR/clang/bin:$PATH"
 export LD_LIBRARY_PATH="$GCCDIR/lib64"
-export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
-export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
+export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
+export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
 
 PYTHON=python2.7
 if ! which $PYTHON; then
@@ -72,8 +72,8 @@ js = "$JSBIN"
 analysis_scriptdir = "$ANALYSIS_SRCDIR"
 objdir = "$MOZ_OBJDIR"
 source = "$GECKO_PATH"
-sixgill = "$TOOLTOOL_DIR/sixgill/usr/libexec/sixgill"
-sixgill_bin = "$TOOLTOOL_DIR/sixgill/usr/bin"
+sixgill = "$MOZ_FETCHES_DIR/sixgill/usr/libexec/sixgill"
+sixgill_bin = "$MOZ_FETCHES_DIR/sixgill/usr/bin"
 EOF
 
         local rev
@@ -108,7 +108,7 @@ function run_analysis () {
 }
 
 function analysis_self_test () {
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$TOOLTOOL_DIR/sixgill" --gccdir "$GCCDIR"
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$MOZ_FETCHES_DIR/sixgill" --gccdir "$GCCDIR"
 }
 
 function grab_artifacts () {
