@@ -154,6 +154,9 @@ def main(args):
                       'instead of using the default interactive prompt.')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Answer yes to any (Y/n) interactive prompts.')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='Print extra runtime information useful for debugging and '
+                      'bug reports.')
 
     options, leftover = parser.parse_args(args)
 
@@ -165,6 +168,11 @@ def main(args):
             print('Could not load the bootstrap Python environment.\n')
             print('This should never happen. Consider filing a bug.\n')
             print('\n')
+
+            if options.debug:
+                # Raise full tracebacks during debugging and for bug reporting.
+                raise
+
             print(e)
             return 1
         dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive,
