@@ -26,3 +26,9 @@ label:dir(rtl) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+:host(.value) *,
+:host(.method) *,
+:host(.padding) * {
+  padding-bottom: 10px;
+}
