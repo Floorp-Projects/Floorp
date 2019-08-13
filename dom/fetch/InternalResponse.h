@@ -26,7 +26,6 @@ class AutoIPCStream;
 
 namespace dom {
 
-class IPCInternalResponse;
 class InternalHeaders;
 
 class InternalResponse final {
@@ -38,15 +37,6 @@ class InternalResponse final {
   InternalResponse(
       uint16_t aStatus, const nsACString& aStatusText,
       RequestCredentials aCredentialsMode = RequestCredentials::Omit);
-
-  static RefPtr<InternalResponse> FromIPC(
-      const IPCInternalResponse& aIPCResponse);
-
-  template <typename M>
-  void ToIPC(
-      IPCInternalResponse* aIPCResponse, M* aManager,
-      UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
-      UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
 
   enum CloneType {
     eCloneInputStream,
@@ -221,24 +211,6 @@ class InternalResponse final {
 
   void SetPaddingSize(int64_t aPaddingSize);
 
-  void SetAlternativeDataType(const nsACString& aAltDataType) {
-    if (mWrappedResponse) {
-      return mWrappedResponse->SetAlternativeDataType(aAltDataType);
-    }
-
-    MOZ_DIAGNOSTIC_ASSERT(mAlternativeDataType.IsEmpty());
-
-    mAlternativeDataType.Assign(aAltDataType);
-  }
-
-  const nsCString& GetAlternativeDataType() {
-    if (mWrappedResponse) {
-      return mWrappedResponse->GetAlternativeDataType();
-    }
-
-    return mAlternativeDataType;
-  }
-
   void SetAlternativeBody(nsIInputStream* aAlternativeBody) {
     if (mWrappedResponse) {
       return mWrappedResponse->SetAlternativeBody(aAlternativeBody);
@@ -351,7 +323,6 @@ class InternalResponse final {
   RequestCredentials mCredentialsMode;
 
   // For alternative data such as JS Bytecode cached in the HTTP cache.
-  nsCString mAlternativeDataType;
   nsCOMPtr<nsIInputStream> mAlternativeBody;
   nsMainThreadPtrHandle<nsICacheInfoChannel> mCacheInfoChannel;
 

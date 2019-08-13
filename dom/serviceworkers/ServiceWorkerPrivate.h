@@ -24,10 +24,9 @@ class JSObjectHolder;
 namespace dom {
 
 class ClientInfoAndState;
+class KeepAliveToken;
 class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
-class ServiceWorkerPrivate;
-class ServiceWorkerPrivateImpl;
 class ServiceWorkerRegistrationInfo;
 
 namespace ipc {
@@ -40,20 +39,6 @@ class LifeCycleEventCallback : public Runnable {
 
   // Called on the worker thread.
   virtual void SetResult(bool aResult) = 0;
-};
-
-// Used to keep track of pending waitUntil as well as in-flight extendable
-// events. When the last token is released, we attempt to terminate the worker.
-class KeepAliveToken final : public nsISupports {
- public:
-  NS_DECL_ISUPPORTS
-
-  explicit KeepAliveToken(ServiceWorkerPrivate* aPrivate);
-
- private:
-  ~KeepAliveToken();
-
-  RefPtr<ServiceWorkerPrivate> mPrivate;
 };
 
 // ServiceWorkerPrivate is a wrapper for managing the on-demand aspect of
@@ -89,7 +74,6 @@ class KeepAliveToken final : public nsISupports {
 // ExtendableEventWorkerRunnable.
 class ServiceWorkerPrivate final {
   friend class KeepAliveToken;
-  friend class ServiceWorkerPrivateImpl;
 
  public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
@@ -103,48 +87,6 @@ class ServiceWorkerPrivate final {
   NS_DECL_OWNINGTHREAD
 
  public:
-  class Inner {
-   public:
-    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-    virtual nsresult SendMessageEvent(
-        RefPtr<ServiceWorkerCloneData>&& aData,
-        const ClientInfoAndState& aClientInfoAndState) = 0;
-
-    virtual nsresult CheckScriptEvaluation(
-        RefPtr<LifeCycleEventCallback> aScriptEvaluationCallback) = 0;
-
-    virtual nsresult SendLifeCycleEvent(
-        const nsAString& aEventName,
-        RefPtr<LifeCycleEventCallback> aCallback) = 0;
-
-    virtual nsresult SendPushEvent(
-        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
-        const nsAString& aMessageId, const Maybe<nsTArray<uint8_t>>& aData) = 0;
-
-    virtual nsresult SendPushSubscriptionChangeEvent() = 0;
-
-    virtual nsresult SendNotificationEvent(
-        const nsAString& aEventName, const nsAString& aID,
-        const nsAString& aTitle, const nsAString& aDir, const nsAString& aLang,
-        const nsAString& aBody, const nsAString& aTag, const nsAString& aIcon,
-        const nsAString& aData, const nsAString& aBehavior,
-        const nsAString& aScope, uint32_t aDisableOpenClickDelay) = 0;
-
-    virtual nsresult SendFetchEvent(
-        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
-        nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
-        const nsAString& aResultingClientId, bool aIsReload) = 0;
-
-    virtual void TerminateWorker() = 0;
-
-    virtual void UpdateState(ServiceWorkerState aState) = 0;
-
-    virtual void NoteDeadOuter() = 0;
-
-    virtual bool WorkerIsDead() const = 0;
-  };
-
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
   nsresult SendMessageEvent(RefPtr<ServiceWorkerCloneData>&& aData,
@@ -213,8 +155,7 @@ class ServiceWorkerPrivate final {
     NotificationClickEvent,
     NotificationCloseEvent,
     LifeCycleEvent,
-    AttachEvent,
-    Unknown
+    AttachEvent
   };
 
   // Timer callbacks
@@ -267,8 +208,6 @@ class ServiceWorkerPrivate final {
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
   nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
-
-  RefPtr<Inner> mInner;
 
   // Used by the owning `ServiceWorkerRegistrationInfo` when it wants to call
   // `Clear` after being unregistered and isn't controlling any clients but this
