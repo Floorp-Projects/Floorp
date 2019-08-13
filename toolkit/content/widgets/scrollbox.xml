@@ -357,11 +357,16 @@
 
       <method name="_getScrollableElements">
         <body><![CDATA[
-          var nodes = this.children;
-          if (nodes.length == 1 &&
-              nodes[0].localName == "children" &&
-              nodes[0].namespaceURI == "http://www.mozilla.org/xbl") {
-            nodes = document.getBindingParent(this).children;
+          let nodes = this.children;
+          if (nodes.length == 1) {
+            let node = nodes[0];
+            if (node.localName == "children" &&
+                node.namespaceURI == "http://www.mozilla.org/xbl") {
+              nodes = document.getBindingParent(this).children;
+            } else if (node.localName == "slot" &&
+                       node.namespaceURI == "http://www.w3.org/1999/xhtml") {
+              nodes = node.getRootNode().host.children;
+            }
           }
 
           return Array.prototype.filter.call(nodes, this._canScrollToElement, this);

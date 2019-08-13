@@ -134,7 +134,7 @@
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
       <html:style>${this.commonStyles}${this.styles}</html:style>
       <hbox flex="1" part="innerbox">
         <vbox class="menupopup-drop-indicator-bar" hidden="true">
@@ -697,7 +697,7 @@
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
       <html:style>${this.commonStyles}</html:style>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox">

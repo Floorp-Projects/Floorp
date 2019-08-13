@@ -11,11 +11,17 @@
 
 #identity-popup,
 #protections-popup {
-  font-size: 1.1em;
-  --popup-width: 33em;
+  font-size: 1.18rem;
+  --popup-width: 36.36rem;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
+  --horizontal-padding: 2.1rem;
+  --vertical-section-padding: 0.9em;
+}
+
+#protections-popup[toast] {
+  --popup-width: 32rem;
 }
 
 /* This is used by screenshots tests to hide intermittently different
@@ -198,13 +204,14 @@
 .protections-popup-category-state-label,
 #protections-popup-content > description,
 .protections-popup-footer-button-label,
-#protections-popup-trackers-blocked-counter-description {
+#protections-popup-trackers-blocked-counter-description,
+#protections-popup-sendReportView-heading > description {
   margin: 0;
 }
 
 #identity-popup-mainView-panel-header,
 #protections-popup-mainView-panel-header {
-  padding: 4px 1em;
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
   min-height: 40px;
   -moz-box-pack: center;
   -moz-box-align: center;
@@ -242,26 +249,40 @@
 }
 
 #identity-popup-mainView-panel-header-span,
+#protections-popup-mainView-panel-header-span {
+  font-weight: 600;
+}
+
+#identity-popup-mainView-panel-header-span,
 #protections-popup-mainView-panel-header-span,
 #protections-popup-toast-panel-tp-on-desc,
 #protections-popup-toast-panel-tp-off-desc {
   display: inline-block;
-  font-weight: 600;
   text-align: center;
   overflow-wrap: break-word;
   /* This is needed for the overflow-wrap to work correctly.
-   * 33em is the panel width, panel-header has 1em padding on each side. */
-  max-width: calc(var(--popup-width) - 2em);
-}
-
-#protections-popup-mainView-panel-header-span,
-#protections-popup-toast-panel-tp-on-desc,
-#protections-popup-toast-panel-tp-off-desc {
-  max-width: calc(var(--popup-width) - 2em);
+   * The panel-header has 1em padding on each side. */
+  max-width: calc(var(--popup-width) - 2 * var(--horizontal-padding));
 }
 
 #protections-popup[toast] #protections-popup-info-button {
   display: none;
+}
+
+#protections-popup-info-button {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  outline: 3px solid transparent;
+  -moz-outline-radius: var(--toolbarbutton-border-radius);
+}
+
+#protections-popup-info-button:hover {
+  outline-color: var(--toolbarbutton-hover-background);
+}
+
+#protections-popup-info-button:not(:hover)[checked] {
+  outline-color: var(--toolbarbutton-active-background);
 }
 
 #identity-popup-permissions-content > description,
@@ -392,7 +413,7 @@ description#identity-popup-content-verifier,
 #identity-popup-breakageReportView-body,
 #protections-popup-sendReportView-heading,
 #protections-popup-sendReportView-body {
-  padding: 16px;
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
 .identity-popup-breakageReportView-collection-section,
@@ -612,14 +633,13 @@ description#identity-popup-content-verifier,
 
 #protections-popup-content {
   padding: 0;
-  margin: 0 0 10px 0;
+  margin: 0 0 var(--vertical-section-padding) 0;
 }
 
 #protections-popup-blocking-section-header,
 #protections-popup-not-blocking-section-header {
-  font-weight: 500;
   margin: 0;
-  padding: 10px calc(10px + 1em);
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
   color: #737373;
   display: none;
 }
@@ -652,7 +672,7 @@ description#identity-popup-content-verifier,
   grid-row: 1;
 }
 
-.protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
+#protections-popup:not([hasException]) .protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
 .protections-popup-category:not(.blocked):not([hidden]) ~ #protections-popup-not-blocking-section-header {
   display: flex;
 }
@@ -798,7 +818,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-category {
-  padding: 0 calc(10px + 1em);
+  padding: 0 var(--horizontal-padding);
 }
 
 .identity-popup-permission-item {
@@ -914,8 +934,18 @@ description#identity-popup-content-verifier,
   display: unset;
 }
 
+#protections-popup-siteNotWorkingView-header,
 #protections-popup-tp-switch-section {
-  padding: 4px;
+  padding: var(--vertical-section-padding) var(--horizontal-padding);
+}
+
+#protections-popup-siteNotWorkingView-body > label,
+.protections-popup-tp-switch-label-box > label {
+  margin: 0;
+}
+
+#protections-popup-tp-switch-breakage-link {
+  margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
 }
 
 #protections-popup[hasException] #protections-popup-tp-switch-section {
@@ -932,10 +962,13 @@ description#identity-popup-content-verifier,
   border-bottom: 1px solid var(--panel-separator-color);
 }
 
+#protections-popup-siteNotWorkingView-body {
+    padding: var(--vertical-section-padding) var(--horizontal-padding);
+}
+
 #protections-popup-siteNotWorkingView-body,
 .protections-popup-tp-switch-label-box,
 .protections-popup-tp-switch-box {
-  padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
   /* This is needed in order to make 'position' working for the badge alongside
@@ -952,7 +985,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-tp-switch-on-header,
 .protections-popup-tp-switch-off-header {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .protections-popup-tp-switch {
@@ -1005,7 +1038,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-footer-button {
   min-height: 24px;
-  padding-inline-start: 2em;
+  padding-inline-start: var(--horizontal-padding);
   margin: 0;
 }
 
@@ -1024,11 +1057,11 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-footer {
-  padding: 6px 0;
+  padding: var(--vertical-section-padding) 0;
 }
 
 #protections-popup-trackers-blocked-counter-box {
-  margin-inline-end: calc(4px + 1em);
+  margin-inline-end: var(--horizontal-padding);
   visibility: hidden;
   opacity: 0;
   transition: opacity 200ms linear;
@@ -1056,14 +1089,14 @@ description#identity-popup-content-verifier,
   margin: auto;
   top: 0;
   bottom: 12px;
-  left: calc(1em + 21px);
+  left: 21px;
   height: 6px;
   width: 6px;
 }
 
 #protections-popup-tp-switch:not([enabled])[showdotindicator]:-moz-locale-dir(rtl)::after {
   left: unset;
-  right: calc(1em + 20px);
+  right: 21px;
 }
 
 .protections-popup-description {

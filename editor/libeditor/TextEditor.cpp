@@ -2037,6 +2037,8 @@ nsresult TextEditor::SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
 
 void TextEditor::OnStartToHandleTopLevelEditSubAction(
     EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
@@ -2047,23 +2049,50 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
 
   MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
   MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
-  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, aDirection);
+
+  if (aEditSubAction == EditSubAction::eSetText) {
+    // SetText replaces all text, so spell checker handles starting from the
+    // start of new value.
+    SetSpellCheckRestartPoint(EditorDOMPoint(mRootElement, 0));
+  } else {
+    bool useSelectionAnchor = true;
+    if (aEditSubAction == EditSubAction::eInsertText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
+      // For spell checker, previous selected node should be text node if
+      // possible. If anchor is root of editor, it may become invalid offset
+      // after inserting text.
+      EditorRawDOMPoint point = FindBetterInsertionPoint(
+          EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
+      if (point.IsSet()) {
+        SetSpellCheckRestartPoint(point);
+        useSelectionAnchor = false;
+      }
+    }
+    if (useSelectionAnchor && SelectionRefPtr()->AnchorRef().IsSet()) {
+      SetSpellCheckRestartPoint(
+          EditorRawDOMPoint(SelectionRefPtr()->AnchorRef()));
+    }
+  }
+
+  DebugOnly<nsresult> rv = rules->BeforeEdit();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "TextEditRules::BeforeEdit() failed to handle something");
 }
 
 void TextEditor::OnEndHandlingTopLevelEditSubAction() {
-  // Protect the edit rules object from dying
-  RefPtr<TextEditRules> rules(mRules);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  // post processing
-  DebugOnly<nsresult> rv =
-      rules ? rules->AfterEdit(GetTopLevelEditSubAction(),
-                               GetDirectionOfTopLevelEditSubAction())
-            : NS_OK;
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditRules::AfterEdit() failed to handle something");
+  if (mRules) {
+    // Protect the edit rules object from dying
+    RefPtr<TextEditRules> rules(mRules);
+
+    // post processing
+    DebugOnly<nsresult> rv = rules->AfterEdit();
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "TextEditRules::AfterEdit() failed to handle something");
+  }
   EditorBase::OnEndHandlingTopLevelEditSubAction();
   MOZ_ASSERT(!GetTopLevelEditSubAction());
   MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);

@@ -81,3 +81,12 @@ async function waitForWorkerRegistration(swTab) {
     })
   );
 }
+
+// TODO: update this function once the sidebar links are implemented (See bug
+// https: //bugzilla.mozilla.org/show_bug.cgi?id=1565213), and switch to to
+// click those links instead, since it's more representative of what users do
+function selectPage(panel, page) {
+  info(`Selecting application page: ${page}`);
+  const actions = panel.panelWin.Application.actions;
+  actions.updateSelectedPage(page);
+}

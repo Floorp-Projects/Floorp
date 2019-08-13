@@ -35,6 +35,8 @@ const mappings = Object.assign(
     "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
     "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
     "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
+    "framework-actions": "devtools/client/framework/actions/index",
+    "inspector-shared-utils": "devtools/client/inspector/shared/utils",
   },
   EXCLUDED_FILES
 );

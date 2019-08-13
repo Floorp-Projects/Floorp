@@ -549,6 +549,7 @@ class MarkupContextMenu {
 
     menu.append(
       new MenuItem({
+        id: "node-menu-mutation-breakpoint-attribute",
         checked: mutationBreakpoints.attribute,
         click: () => this.markup.toggleMutationBreakpoint("attribute"),
         disabled: !isSelectionElement,
@@ -814,6 +815,7 @@ class MarkupContextMenu {
         new MenuItem({
           label: INSPECTOR_L10N.getStr("inspectorBreakpointSubmenu.label"),
           submenu: this._getDOMBreakpointSubmenu(isSelectionElement),
+          id: "node-menu-mutation-breakpoint",
         })
       );
     }

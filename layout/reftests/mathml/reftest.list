@@ -121,11 +121,11 @@ fails-if(gtkWidget||Android) random-if(winWidget) == semantics-1.xhtml semantics
 != mathcolor-1.xml mathcolor-1-ref.xml
 != mathcolor-2.xml mathcolor-2-ref.xml
 != mathcolor-3.xml mathcolor-3-ref.xml
-== mathcolor-4.xml mathcolor-4-ref.xml
+!= mathcolor-4.xml mathcolor-4-ref.xml
 != mathbackground-1.xml mathbackground-1-ref.xml
 != mathbackground-2.xml mathbackground-2-ref.xml
 != mathbackground-3.xml mathbackground-3-ref.xml
-== mathbackground-4.xml mathbackground-4-ref.xml
+!= mathbackground-4.xml mathbackground-4-ref.xml
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mstyle-3.xhtml mstyle-3-ref.xhtml # Bug 1392106

@@ -429,6 +429,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readI64Const(int64_t* i64);
   MOZ_MUST_USE bool readF32Const(float* f32);
   MOZ_MUST_USE bool readF64Const(double* f64);
+  MOZ_MUST_USE bool readRefFunc(uint32_t* funcTypeIndex);
   MOZ_MUST_USE bool readRefNull();
   MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
   MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex,
@@ -1470,6 +1471,22 @@ inline bool OpIter<Policy>::readF64Const(double* f64) {
   MOZ_ASSERT(Classify(op_) == OpKind::F64);
 
   return readFixedF64(f64) && push(ValType::F64);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRefFunc(uint32_t* funcTypeIndex) {
+  MOZ_ASSERT(Classify(op_) == OpKind::RefFunc);
+
+  if (!readVarU32(funcTypeIndex)) {
+    return fail("unable to read function index");
+  }
+  if (*funcTypeIndex >= env_.funcTypes.length()) {
+    return fail("function index out of range");
+  }
+  if (!env_.validForRefFunc.getBit(*funcTypeIndex)) {
+    return fail("function index is not in an element segment");
+  }
+  return push(StackType(ValType::FuncRef));
 }
 
 template <typename Policy>

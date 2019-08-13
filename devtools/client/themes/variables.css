@@ -116,7 +116,6 @@
  * system colors.
  */
 :root[platform="mac"].theme-light {
-  --theme-popup-background: hsla(0,0%,99%,.975);
   --theme-popup-color: hsl(0,0%,10%);
   --theme-popup-border-color: var(--grey-90-a20);
 }

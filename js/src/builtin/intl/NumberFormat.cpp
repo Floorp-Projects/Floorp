@@ -22,6 +22,7 @@
 #include <string>
 #include <type_traits>
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
@@ -1342,7 +1343,6 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
 
   // Finally, generate the result array.
   size_t lastEndIndex = 0;
-  uint32_t partIndex = 0;
   RootedObject singlePart(cx);
   RootedValue propVal(cx);
 
@@ -1396,13 +1396,11 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
       }
     }
 
-    propVal.setObject(*singlePart);
-    if (!DefineDataElement(cx, partsArray, partIndex, propVal)) {
+    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
       return nullptr;
     }
 
     lastEndIndex = endIndex;
-    partIndex++;
   } while (true);
 
   MOZ_ASSERT(lastEndIndex == overallResult->length(),

@@ -560,7 +560,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution) {
   }
 
   presShell->SetResolutionAndScaleTo(aResolution,
-                                     ResolutionChangeOrigin::MainThread);
+                                     ResolutionChangeOrigin::MainThreadRestore);
 
   return NS_OK;
 }

@@ -78,11 +78,8 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
-  virtual nsresult BeforeEdit(EditSubAction aEditSubAction,
-                              nsIEditor::EDirection aDirection) override;
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult AfterEdit(EditSubAction aEditSubAction,
-                             nsIEditor::EDirection aDirection) override;
+  virtual nsresult BeforeEdit() override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit() override;
   // NOTE: Don't mark WillDoAction() nor DidDoAction() as MOZ_CAN_RUN_SCRIPT
   //       because they are too generic and doing it makes a lot of public
   //       editor methods marked as MOZ_CAN_RUN_SCRIPT too, but some of them
@@ -701,9 +698,7 @@ class HTMLEditRules : public TextEditRules {
    * Called after handling edit action.  This may adjust Selection, remove
    * unnecessary empty nodes, create <br> elements if needed, etc.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult AfterEditInner(EditSubAction aEditSubAction,
-                                       nsIEditor::EDirection aDirection);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult AfterEditInner();
 
   /**
    * IndentAroundSelectionWithCSS() indents around Selection with CSS.
@@ -1353,9 +1348,11 @@ class HTMLEditRules : public TextEditRules {
  protected:
   HTMLEditor* mHTMLEditor;
   RefPtr<nsRange> mDocChangeRange;
+  bool mInitialized;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
   bool mDidDeleteSelection;
+  bool mDidExplicitlySetInterline;
   bool mDidRangedDelete;
   bool mDidEmptyParentBlocksRemoved;
   bool mRestoreContentEditableCount;

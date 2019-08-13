@@ -15,6 +15,8 @@
 #include "js/Class.h"
 #include "vm/NativeObject.h"
 
+struct UCollator;
+
 namespace js {
 
 class GlobalObject;
@@ -32,6 +34,18 @@ class CollatorObject : public NativeObject {
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
+
+  UCollator* getCollator() const {
+    const auto& slot = getFixedSlot(UCOLLATOR_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return static_cast<UCollator*>(slot.toPrivate());
+  }
+
+  void setCollator(UCollator* collator) {
+    setFixedSlot(UCOLLATOR_SLOT, PrivateValue(collator));
+  }
 
  private:
   static const ClassOps classOps_;

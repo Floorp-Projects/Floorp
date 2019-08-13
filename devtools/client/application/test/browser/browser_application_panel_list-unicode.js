@@ -18,6 +18,9 @@ add_task(async function() {
   const { panel, target } = await openNewTabAndApplicationPanel(TAB_URL);
   const doc = panel.panelWin.document;
 
+  // select service worker view
+  selectPage(panel, "service-workers");
+
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 

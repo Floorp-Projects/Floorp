@@ -142,65 +142,42 @@ bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 static Element::MappedAttributeEntry sMtableStyles[] = {{nsGkAtoms::width},
                                                         {nullptr}};
 
-static Element::MappedAttributeEntry sTokenStyles[] = {
-    {nsGkAtoms::mathsize_},    {nsGkAtoms::fontsize_},
-    {nsGkAtoms::color},        {nsGkAtoms::fontfamily_},
-    {nsGkAtoms::fontstyle_},   {nsGkAtoms::fontweight_},
-    {nsGkAtoms::mathvariant_}, {nullptr}};
-
-static Element::MappedAttributeEntry sEnvironmentStyles[] = {
+// https://mathml-refresh.github.io/mathml-core/#global-attributes
+static Element::MappedAttributeEntry sGlobalAttributes[] = {
+    {nsGkAtoms::dir},
+    {nsGkAtoms::mathbackground_},
+    {nsGkAtoms::mathcolor_},
+    {nsGkAtoms::mathsize_},
+    {nsGkAtoms::mathvariant_},
     {nsGkAtoms::scriptlevel_},
-    {nsGkAtoms::scriptminsize_},
-    {nsGkAtoms::scriptsizemultiplier_},
-    {nsGkAtoms::background},
+    // XXXfredw: Also map displaystyle to CSS math-style?
     {nullptr}};
 
-static Element::MappedAttributeEntry sCommonPresStyles[] = {
-    {nsGkAtoms::mathcolor_}, {nsGkAtoms::mathbackground_}, {nullptr}};
-
-static Element::MappedAttributeEntry sDirStyles[] = {{nsGkAtoms::dir},
-                                                     {nullptr}};
+// XXXfredw: Add a runtime flag to disable these attributes.
+static Element::MappedAttributeEntry sMathML3Attributes[] = {
+    // XXXfredw(bug 1548471)
+    {nsGkAtoms::scriptminsize_},
+    {nsGkAtoms::scriptsizemultiplier_},
+    // XXXfredw(bug 1548524)
+    {nsGkAtoms::background},
+    {nsGkAtoms::color},
+    {nsGkAtoms::fontfamily_},
+    {nsGkAtoms::fontsize_},
+    {nsGkAtoms::fontstyle_},
+    {nsGkAtoms::fontweight_},
+    {nullptr}};
 
 bool nsMathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
 
-  static const MappedAttributeEntry* const mtableMap[] = {sMtableStyles,
-                                                          sCommonPresStyles};
-  static const MappedAttributeEntry* const tokenMap[] = {
-      sTokenStyles, sCommonPresStyles, sDirStyles};
-  static const MappedAttributeEntry* const mstyleMap[] = {
-      sTokenStyles, sEnvironmentStyles, sCommonPresStyles, sDirStyles};
-  static const MappedAttributeEntry* const commonPresMap[] = {
-      sCommonPresStyles};
-  static const MappedAttributeEntry* const mrowMap[] = {sCommonPresStyles,
-                                                        sDirStyles};
-
-  // We don't support mglyph (yet).
-  if (IsAnyOfMathMLElements(nsGkAtoms::ms_, nsGkAtoms::mi_, nsGkAtoms::mn_,
-                            nsGkAtoms::mo_, nsGkAtoms::mtext_,
-                            nsGkAtoms::mspace_))
-    return FindAttributeDependence(aAttribute, tokenMap);
-  if (IsAnyOfMathMLElements(nsGkAtoms::mstyle_, nsGkAtoms::math))
-    return FindAttributeDependence(aAttribute, mstyleMap);
-
+  static const MappedAttributeEntry* const mtableMap[] = {
+      sMtableStyles, sGlobalAttributes, sMathML3Attributes};
   if (mNodeInfo->Equals(nsGkAtoms::mtable_))
     return FindAttributeDependence(aAttribute, mtableMap);
 
-  if (mNodeInfo->Equals(nsGkAtoms::mrow_))
-    return FindAttributeDependence(aAttribute, mrowMap);
-
-  if (IsAnyOfMathMLElements(
-          nsGkAtoms::maction_, nsGkAtoms::maligngroup_, nsGkAtoms::malignmark_,
-          nsGkAtoms::menclose_, nsGkAtoms::merror_, nsGkAtoms::mfenced_,
-          nsGkAtoms::mfrac_, nsGkAtoms::mover_, nsGkAtoms::mpadded_,
-          nsGkAtoms::mphantom_, nsGkAtoms::mprescripts_, nsGkAtoms::mroot_,
-          nsGkAtoms::msqrt_, nsGkAtoms::msub_, nsGkAtoms::msubsup_,
-          nsGkAtoms::msup_, nsGkAtoms::mtd_, nsGkAtoms::mtr_,
-          nsGkAtoms::munder_, nsGkAtoms::munderover_, nsGkAtoms::none)) {
-    return FindAttributeDependence(aAttribute, commonPresMap);
-  }
-
-  return false;
+  static const MappedAttributeEntry* const mathmlMap[] = {sGlobalAttributes,
+                                                          sMathML3Attributes};
+  return FindAttributeDependence(aAttribute, mathmlMap);
 }
 
 nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
@@ -881,14 +858,6 @@ bool nsMathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
 }
 
 bool nsMathMLElement::IsLink(nsIURI** aURI) const {
-  // http://www.w3.org/TR/2010/REC-MathML3-20101021/chapter6.html#interf.link
-  // The REC says that the following elements should not be linking elements:
-  if (IsAnyOfMathMLElements(nsGkAtoms::mprescripts_, nsGkAtoms::none,
-                            nsGkAtoms::malignmark_, nsGkAtoms::maligngroup_)) {
-    *aURI = nullptr;
-    return false;
-  }
-
   bool hasHref = false;
   const nsAttrValue* href = mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None);
   if (href) {

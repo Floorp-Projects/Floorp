@@ -24,6 +24,7 @@ from mach.decorators import (
 here = os.path.abspath(os.path.dirname(__file__))
 THIRD_PARTY_PATHS = os.path.join('tools', 'rewriting', 'ThirdPartyPaths.txt')
 GLOBAL_EXCLUDES = [
+    'node_modules',
     'tools/lint/test/files',
 ]
 
