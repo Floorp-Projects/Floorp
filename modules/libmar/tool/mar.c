@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
       argc -= 2;
     }
 #if !defined(NO_SIGN_VERIFY)
-#if (!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX)
+#  if (!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX)
     /* -D DERFilePath, also matches -D[index] DERFilePath
        We allow an index for verifying to be symmetric
        with the import and export command line arguments. */
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
       argv += 2;
       argc -= 2;
     }
-#endif
+#  endif
     /* -d NSSConfigdir */
     else if (argv[1][0] == '-' && argv[1][1] == 'd') {
       NSSConfigDir = argv[2];

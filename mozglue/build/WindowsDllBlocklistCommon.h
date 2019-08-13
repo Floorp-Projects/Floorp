@@ -87,7 +87,6 @@ static inline constexpr uint64_t MAKE_VERSION(uint16_t a, uint16_t b,
 #define DLL_BLOCKLIST_DEFINITIONS_BEGIN_NAMED(name)                       \
   using DllBlockInfo = mozilla::DllBlockInfoT<DLL_BLOCKLIST_STRING_TYPE>; \
   static const DllBlockInfo name[] = {
-
 #define DLL_BLOCKLIST_DEFINITIONS_BEGIN \
   DLL_BLOCKLIST_DEFINITIONS_BEGIN_NAMED(gWindowsDllBlocklist)
 

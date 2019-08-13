@@ -17,7 +17,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsFilePickerProxy, nsIFilePicker)
 
-nsFilePickerProxy::nsFilePickerProxy() 
+nsFilePickerProxy::nsFilePickerProxy()
     : mSelectedType(0), mCapture(captureNone), mIPCActive(false) {}
 
 nsFilePickerProxy::~nsFilePickerProxy() {}

@@ -139,9 +139,7 @@ class StackTrace : public phc::StackTrace {
  public:
   StackTrace() : phc::StackTrace() {}
 
-  void Clear() {
-    mLength = 0;
-  }
+  void Clear() { mLength = 0; }
 
   void Fill();
 

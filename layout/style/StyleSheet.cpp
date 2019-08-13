@@ -1194,10 +1194,9 @@ void StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv) {
   if (aIndex >= mRuleList->Length()) {
     aRv.ThrowDOMException(
         NS_ERROR_DOM_INDEX_SIZE_ERR,
-        nsPrintfCString(
-            "Cannot delete rule at index %u"
-            " because the number of rules is only %u",
-            aIndex, mRuleList->Length()));
+        nsPrintfCString("Cannot delete rule at index %u"
+                        " because the number of rules is only %u",
+                        aIndex, mRuleList->Length()));
     return;
   }
 

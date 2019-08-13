@@ -42,7 +42,7 @@ static int FuzzingInitMedia(int* argc, char*** argv) {
 #define MOZ_MEDIA_FUZZER(_name)                                         \
   static int FuzzingRunMedia##_name(const uint8_t* data, size_t size) { \
     if (!size) {                                                        \
-        return 0;                                                       \
+      return 0;                                                         \
     }                                                                   \
     RefPtr<BufferMediaResource> resource =                              \
         new BufferMediaResource(data, size);                            \

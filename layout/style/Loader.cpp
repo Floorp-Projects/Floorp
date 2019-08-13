@@ -843,7 +843,8 @@ nsresult Loader::CreateSheet(
     css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
     nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
     bool aSyncLoad, StyleSheetState& aSheetState, RefPtr<StyleSheet>* aSheet) {
-  LOG(("css::Loader::CreateSheet(%s)", aURI ? aURI->GetSpecOrDefault().get() : "inline"));
+  LOG(("css::Loader::CreateSheet(%s)",
+       aURI ? aURI->GetSpecOrDefault().get() : "inline"));
   MOZ_ASSERT(aSheet, "Null out param!");
 
   if (!mSheets) {

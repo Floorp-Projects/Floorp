@@ -18,9 +18,9 @@
 #include "mozilla/DebugOnly.h"    // for DebugOnly
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/gfx/2D.h"       // for DrawTarget
-#include "mozilla/gfx/Point.h"    // for IntSize
-#include "mozilla/gfx/Rect.h"     // for IntSize
+#include "mozilla/gfx/2D.h"     // for DrawTarget
+#include "mozilla/gfx/Point.h"  // for IntSize
+#include "mozilla/gfx/Rect.h"   // for IntSize
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/mozalloc.h"  // for operator new, etc

@@ -24,11 +24,11 @@
 #include "gfxMatrix.h"            // for gfxMatrix
 #include "gfxPlatform.h"          // for gfxPlatform
 
-#include "gfxPoint.h"               // for IntSize, gfxPoint
-#include "gfxRect.h"                // for gfxRect
-#include "gfxUtils.h"               // for gfxUtils
-#include "gfx2DGlue.h"              // for thebes --> moz2d transition
-#include "mozilla/Assertions.h"     // for MOZ_ASSERT, etc
+#include "gfxPoint.h"            // for IntSize, gfxPoint
+#include "gfxRect.h"             // for gfxRect
+#include "gfxUtils.h"            // for gfxUtils
+#include "gfx2DGlue.h"           // for thebes --> moz2d transition
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/WidgetUtils.h"    // for ScreenRotation
 #include "mozilla/gfx/2D.h"         // for DrawTarget

@@ -573,7 +573,6 @@ nsresult nsPrefetchService::CheckURIScheme(nsIURI* aURI,
     return NS_ERROR_ABORT;
   }
 
-
   if (!referrer->SchemeIs("http") && !referrer->SchemeIs("https")) {
     LOG(("rejected: referrer URL is neither http nor https\n"));
     return NS_ERROR_ABORT;

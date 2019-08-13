@@ -3935,9 +3935,9 @@ bool HttpChannelChild::ShouldInterceptURI(nsIURI* aURI, bool& aShouldUpgrade) {
   OriginAttributes originAttributes;
   NS_ENSURE_TRUE(NS_GetOriginAttributes(this, originAttributes), false);
   bool notused = false;
-  nsresult rv = NS_ShouldSecureUpgrade(aURI, mLoadInfo, resultPrincipal,
-                              mPrivateBrowsing, mAllowSTS, originAttributes,
-                              aShouldUpgrade, nullptr, notused);
+  nsresult rv = NS_ShouldSecureUpgrade(
+      aURI, mLoadInfo, resultPrincipal, mPrivateBrowsing, mAllowSTS,
+      originAttributes, aShouldUpgrade, nullptr, notused);
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsIURI> upgradedURI;

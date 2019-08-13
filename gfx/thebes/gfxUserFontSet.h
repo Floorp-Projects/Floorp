@@ -60,8 +60,8 @@ struct gfxFontFaceSrc {
   // see FLAG_FORMAT_* enum values below
   uint32_t mFormatFlags;
 
-  nsCString mLocalName;        // full font name if local
-  RefPtr<gfxFontSrcURI> mURI;  // uri if url
+  nsCString mLocalName;                          // full font name if local
+  RefPtr<gfxFontSrcURI> mURI;                    // uri if url
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;       // referrer info if url
   RefPtr<gfxFontSrcPrincipal> mOriginPrincipal;  // principal if url
 

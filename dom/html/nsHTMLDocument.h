@@ -114,7 +114,8 @@ class nsHTMLDocument : public mozilla::dom::Document {
                    mozilla::ErrorResult& rv) {
     JS::Rooted<JS::Value> v(cx);
     if ((aFound = ResolveName(cx, aName, &v, rv))) {
-      SetDocumentAndPageUseCounter(mozilla::eUseCounter_custom_HTMLDocumentNamedGetterHit);
+      SetDocumentAndPageUseCounter(
+          mozilla::eUseCounter_custom_HTMLDocumentNamedGetterHit);
       aRetval.set(v.toObjectOrNull());
     }
   }

@@ -156,11 +156,7 @@ enum class ColorDepth : uint8_t {
   UNKNOWN
 };
 
-enum class ColorRange : uint8_t {
-  LIMITED,
-  FULL,
-  UNKNOWN
-};
+enum class ColorRange : uint8_t { LIMITED, FULL, UNKNOWN };
 
 static inline SurfaceFormat SurfaceFormatForColorDepth(ColorDepth aColorDepth) {
   SurfaceFormat format = SurfaceFormat::A8;
