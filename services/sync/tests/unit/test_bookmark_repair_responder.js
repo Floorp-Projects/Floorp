@@ -346,9 +346,6 @@ add_task(async function test_folder_descendants() {
   );
 
   _("Insert missing bookmarks locally to request later");
-  // Note that the fact we insert the bookmarks via PlacesSyncUtils.bookmarks.insert
-  // means that we are pretending Sync itself wrote them, hence they aren't
-  // considered "changed" locally so never get uploaded.
   let childBmk = await PlacesSyncUtils.bookmarks.insert({
     kind: "bookmark",
     recordId: Utils.makeGUID(),
@@ -371,15 +368,22 @@ add_task(async function test_folder_descendants() {
     url: "https://mozilla.org",
   });
 
-  _("Sync again; server contents shouldn't change");
+  _("Sync again");
   await Service.sync();
-  deepEqual(
-    getServerBookmarks(server)
-      .keys()
-      .sort(),
-    initialRecordIds,
-    "Second sync should not upload missing bookmarks"
-  );
+  {
+    // The buffered engine will upload the missing records, since it does a full
+    // tree merge. The old engine won't, since it relies on the Sync status
+    // flag, and we used `PSU.b.i` to pretend that Sync added the bookmarks.
+    let collection = getServerBookmarks(server);
+    collection.remove(childBmk.recordId);
+    collection.remove(grandChildBmk.recordId);
+    collection.remove(grandChildSiblingBmk.recordId);
+    deepEqual(
+      collection.keys().sort(),
+      initialRecordIds,
+      "Second sync should not upload missing bookmarks"
+    );
+  }
 
   // This assumes the parent record on the server is correct, and the server
   // is just missing the children. This isn't a correct assumption if the
