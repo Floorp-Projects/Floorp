@@ -10,7 +10,7 @@ use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
     Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, Script as MarionetteScript,
-    Selector as MarionetteSelector, WindowRect as MarionetteWindowRect,
+    Selector as MarionetteSelector, Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -858,6 +858,9 @@ fn try_convert_to_marionette_message(
         FullscreenWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FullscreenWindow,
         )),
+        Get(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::Get(
+            x.to_marionette()?,
+        ))),
         GetActiveElement => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetActiveElement,
         )),
@@ -865,6 +868,9 @@ fn try_convert_to_marionette_message(
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
+        GetCurrentUrl => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetCurrentUrl,
+        )),
         GetElementAttribute(ref e, ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementAttribute {
                 id: e.clone().to_string(),
@@ -886,6 +892,10 @@ fn try_convert_to_marionette_message(
         GetElementText(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementText(x.to_marionette()?),
         )),
+        GetPageSource => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetPageSource,
+        )),
+        GetTitle => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTitle)),
         GetWindowHandle => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetWindowHandle,
         )),
@@ -992,16 +1002,12 @@ impl MarionetteCommand {
                     );
                     (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
                 }
-                Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
-                GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
                 GetCSSValue(ref e, ref x) => {
                     let mut data = Map::new();
                     data.insert("id".to_string(), Value::String(e.to_string()));
                     data.insert("propertyName".to_string(), Value::String(x.clone()));
                     (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
                 }
-                GetPageSource => (Some("WebDriver:GetPageSource"), None),
-                GetTitle => (Some("WebDriver:GetTitle"), None),
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
@@ -1493,14 +1499,11 @@ impl ToMarionette<Map<String, Value>> for GetNamedCookieParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for GetParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionetteUrl> for GetParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteUrl> {
+        Ok(MarionetteUrl {
+            url: self.url.clone(),
+        })
     }
 }
 
