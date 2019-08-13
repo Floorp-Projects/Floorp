@@ -95,8 +95,10 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   AutoCFRelease<CFDictionaryRef> srcBufferAttr(
       BuildSourceImageBufferAttributes());
   if (!srcBufferAttr) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                                        __func__);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                    "fail to create source buffer attributes"),
+        __func__);
   }
 
   OSStatus status = VTCompressionSessionCreate(
@@ -104,28 +106,35 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
       kCMVideoCodecType_H264, spec, srcBufferAttr, kCFAllocatorDefault,
       &FrameCallback, this, &mSession);
   if (status != noErr) {
-    VTENC_LOGE("fail to create encoder session");
-    // TODO: new error codes for encoder
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    "fail to create encoder session"),
+        __func__);
   }
 
   if (!SetAverageBitrate(mSession, mConfig.mBitsPerSec)) {
-    VTENC_LOGE("fail to configurate average bitrate");
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    "fail to configurate average bitrate"),
+        __func__);
   }
 
   if (mConfig.mUsage == Usage::Realtime && !SetRealtimeProperties(mSession)) {
     VTENC_LOGE("fail to configurate realtime properties");
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    "fail to configurate average bitrate"),
+        __func__);
   }
 
   if (mConfig.mCodecSpecific) {
     const H264Specific& specific = mConfig.mCodecSpecific.ref();
     if (!SetProfileLevel(mSession, specific.mProfileLevel)) {
-      VTENC_LOGE("fail to configurate profile level:%d",
-                 specific.mProfileLevel);
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR,
-                                          __func__);
+      return InitPromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      nsPrintfCString("fail to configurate profile level:%d",
+                                      specific.mProfileLevel)),
+          __func__);
     }
 
     int64_t interval = specific.mKeyframeInterval;
@@ -134,9 +143,12 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
     if (VTSessionSetProperty(mSession,
                              kVTCompressionPropertyKey_MaxKeyFrameInterval,
                              cf) != noErr) {
-      VTENC_LOGE("fail to configurate keyframe interval");
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_ABORT_ERR,
-                                          __func__);
+      return InitPromise::CreateAndReject(
+          MediaResult(
+              NS_ERROR_DOM_MEDIA_FATAL_ERR,
+              nsPrintfCString("fail to configurate keyframe interval:%" PRId64,
+                              interval)),
+          __func__);
     }
   }
 
