@@ -51,8 +51,8 @@ ${err}`);
 }
 
 let assert_equals = assertEq;
-let assert_true = (x, errMsg) => { assertEq(x, true); }
-let assert_false = (x, errMsg) => { assertEq(x, false); }
+let assert_true = (x, errMsg) => { assertEq(x, true, errMsg || ''); }
+let assert_false = (x, errMsg) => { assertEq(x, false, errMsg || ''); }
 
 function assert_unreached(description) {
     throw new Error(`unreachable:\n${description}`);
