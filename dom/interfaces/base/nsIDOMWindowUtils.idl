@@ -1999,6 +1999,9 @@ interface nsIDOMWindowUtils : nsISupports {
   void syncFlushCompositor();
 
   unsigned long long getLayersId();
+
+  // Returns true if we are using overlay scrollbars.
+  readonly attribute bool usesOverlayScrollbars;
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
