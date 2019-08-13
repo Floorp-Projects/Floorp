@@ -21,9 +21,6 @@ import kotlin.math.log
  *
  * In other words, there are n buckets for each power of 2 magnitude.
  *
- * The value of 8 for n was determined experimentally based on existing data to have sufficient
- * resolution.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1565253
- *
  * @param values a map containing the minimum bucket value mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the histogram
  */
