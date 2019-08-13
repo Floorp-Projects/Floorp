@@ -417,6 +417,7 @@ enum class AstExprKind {
   MemorySize,
   Nop,
   Pop,
+  RefFunc,
   RefNull,
   Return,
   SetGlobal,
@@ -1574,6 +1575,17 @@ class AstExtraConversionOperator final : public AstExpr {
 
   MiscOp op() const { return op_; }
   AstExpr* operand() const { return operand_; }
+};
+
+class AstRefFunc final : public AstExpr {
+  AstRef func_;
+
+ public:
+  static const AstExprKind Kind = AstExprKind::RefFunc;
+  explicit AstRefFunc(AstRef func)
+      : AstExpr(Kind, ExprType::FuncRef), func_(func) {}
+
+  AstRef& func() { return func_; }
 };
 
 class AstRefNull final : public AstExpr {

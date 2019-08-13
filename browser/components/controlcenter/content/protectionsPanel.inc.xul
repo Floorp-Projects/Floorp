@@ -18,7 +18,6 @@
                role="document"
                descriptionheightworkaround="true">
       <hbox id="protections-popup-mainView-panel-header"
-            flex="1"
             onclick="gProtectionsHandler.onHeaderClicked(event);">
         <label id="protections-popup-main-header-label" flex="1"
                role="heading" aria-level="1">

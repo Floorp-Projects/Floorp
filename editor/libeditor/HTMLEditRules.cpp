@@ -189,9 +189,11 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
 
 HTMLEditRules::HTMLEditRules()
     : mHTMLEditor(nullptr),
+      mInitialized(false),
       mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false),
       mDidDeleteSelection(false),
+      mDidExplicitlySetInterline(false),
       mDidRangedDelete(false),
       mDidEmptyParentBlocksRemoved(false),
       mRestoreContentEditableCount(false),
@@ -205,6 +207,7 @@ void HTMLEditRules::InitFields() {
   mDocChangeRange = nullptr;
   mReturnInEmptyLIKillsList = true;
   mDidDeleteSelection = false;
+  mDidExplicitlySetInterline = false;
   mDidRangedDelete = false;
   mDidEmptyParentBlocksRemoved = false;
   mRestoreContentEditableCount = false;
@@ -283,9 +286,6 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
 
   mUtilRange = new nsRange(node);
 
-  // set up mDocChangeRange to be whole doc
-  // temporarily turn off rules sniffing
-  AutoLockRulesSniffing lockIt(this);
   if (!mDocChangeRange) {
     mDocChangeRange = new nsRange(node);
   }
@@ -307,6 +307,8 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
 
   StartToListenToEditSubActions();
 
+  mInitialized = true;  // Start to handle edit sub-actions.
+
   return NS_OK;
 }
 
@@ -316,141 +318,146 @@ nsresult HTMLEditRules::DetachEditor() {
   return TextEditRules::DetachEditor();
 }
 
-nsresult HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
-                                   nsIEditor::EDirection aDirection) {
+nsresult HTMLEditRules::BeforeEdit() {
+  MOZ_ASSERT(!mIsHandling);
+
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  if (mLockRulesSniffing) {
-    return NS_OK;
+  if (!mInitialized) {
+    return NS_OK;  // We should do nothing if we're being initialized.
   }
 
-  AutoLockRulesSniffing lockIt(this);
   mDidExplicitlySetInterline = false;
 
-  if (!mActionNesting) {
-    mActionNesting++;
+#ifdef DEBUG
+  mIsHandling = true;
+#endif  // #ifdef DEBUG
 
-    // Clear our flag about if just deleted a range
-    mDidRangedDelete = false;
+  // Clear our flag about if just deleted a range
+  mDidRangedDelete = false;
 
-    AutoSafeEditorData setData(*this, *mHTMLEditor);
+  AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-    // Remember where our selection was before edit action took place:
-    if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
-      // If there is composition string, let's remember current composition
-      // range.
-      mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(),
-                             HTMLEditorRef().GetCompositionEndPoint());
-    } else {
-      // Get the selection location
-      if (!SelectionRefPtr()->RangeCount()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      mRangeItem->StoreRange(SelectionRefPtr()->GetRangeAt(0));
+  // Remember where our selection was before edit action took place:
+  if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
+    // If there is composition string, let's remember current composition
+    // range.
+    mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(),
+                           HTMLEditorRef().GetCompositionEndPoint());
+  } else {
+    // Get the selection location
+    if (!SelectionRefPtr()->RangeCount()) {
+      return NS_ERROR_UNEXPECTED;
     }
-    nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
-    nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
+    mRangeItem->StoreRange(SelectionRefPtr()->GetRangeAt(0));
+  }
+  nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
+  nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
 
-    // Register with range updater to track this as we perturb the doc
-    HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(mRangeItem);
+  // Register with range updater to track this as we perturb the doc
+  HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(mRangeItem);
 
-    // Clear deletion state bool
-    mDidDeleteSelection = false;
+  // Clear deletion state bool
+  mDidDeleteSelection = false;
 
-    // Clear out mDocChangeRange and mUtilRange
-    if (mDocChangeRange) {
-      // Clear out our accounting of what changed
-      mDocChangeRange->Reset();
+  // Clear out mDocChangeRange and mUtilRange
+  if (mDocChangeRange) {
+    // Clear out our accounting of what changed
+    mDocChangeRange->Reset();
+  }
+  if (mUtilRange) {
+    // Ditto for mUtilRange.
+    mUtilRange->Reset();
+  }
+
+  // Remember current inline styles for deletion and normal insertion ops
+  bool cacheInlineStyles;
+  switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+    case EditSubAction::eInsertText:
+    case EditSubAction::eInsertTextComingFromIME:
+    case EditSubAction::eDeleteSelectedContent:
+      cacheInlineStyles = true;
+      break;
+    default:
+      cacheInlineStyles = IsStyleCachePreservingSubAction(
+          HTMLEditorRef().GetTopLevelEditSubAction());
+      break;
+  }
+  if (cacheInlineStyles) {
+    nsCOMPtr<nsINode> selNode =
+        HTMLEditorRef().GetDirectionOfTopLevelEditSubAction() ==
+                nsIEditor::eNext
+            ? selEndNode
+            : selStartNode;
+    nsresult rv = CacheInlineStyles(selNode);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
-    if (mUtilRange) {
-      // Ditto for mUtilRange.
-      mUtilRange->Reset();
-    }
+  }
 
-    // Remember current inline styles for deletion and normal insertion ops
-    if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-        IsStyleCachePreservingSubAction(aEditSubAction)) {
-      nsCOMPtr<nsINode> selNode =
-          aDirection == nsIEditor::eNext ? selEndNode : selStartNode;
-      nsresult rv = CacheInlineStyles(selNode);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+  // Stabilize the document against contenteditable count changes
+  Document* doc = HTMLEditorRef().GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
+    doc->ChangeContentEditableCount(nullptr, +1);
+    mRestoreContentEditableCount = true;
+  }
 
-    // Stabilize the document against contenteditable count changes
+  // Check that selection is in subtree defined by body node
+  nsresult rv = ConfirmSelectionInBody();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
+  return NS_OK;
+}
+
+nsresult HTMLEditRules::AfterEdit() {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
+  if (!mInitialized) {
+    return NS_OK;  // We should do nothing if we're being initialized.
+  }
+
+#ifdef DEBUG
+  MOZ_ASSERT(mIsHandling);
+  mIsHandling = false;
+#endif  // #ifdef DEBUG
+
+  AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  // Do all the tricky stuff
+  nsresult rv = AfterEditInner();
+  // Perhaps, we need to do the following jobs even if the editor has been
+  // destroyed since they adjust some states of HTML document but don't
+  // modify the DOM tree nor Selection.
+
+  // Free up selectionState range item
+  HTMLEditorRef().RangeUpdaterRef().DropRangeItem(mRangeItem);
+
+  // Reset the contenteditable count to its previous value
+  if (mRestoreContentEditableCount) {
     Document* doc = HTMLEditorRef().GetDocument();
     if (NS_WARN_IF(!doc)) {
       return NS_ERROR_FAILURE;
     }
     if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
-      doc->ChangeContentEditableCount(nullptr, +1);
-      mRestoreContentEditableCount = true;
+      doc->ChangeContentEditableCount(nullptr, -1);
     }
-
-    // Check that selection is in subtree defined by body node
-    nsresult rv = ConfirmSelectionInBody();
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    // Let rules remember the top level action
-    mTopLevelEditSubAction = aEditSubAction;
+    mRestoreContentEditableCount = false;
   }
-  return NS_OK;
+
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AfterEditInner() failed");
+  return rv;
 }
 
-nsresult HTMLEditRules::AfterEdit(EditSubAction aEditSubAction,
-                                  nsIEditor::EDirection aDirection) {
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  if (mLockRulesSniffing) {
-    return NS_OK;
-  }
-
-  AutoLockRulesSniffing lockIt(this);
-
-  MOZ_ASSERT(mActionNesting > 0);
-  nsresult rv = NS_OK;
-  mActionNesting--;
-  if (!mActionNesting) {
-    AutoSafeEditorData setData(*this, *mHTMLEditor);
-
-    // Do all the tricky stuff
-    rv = AfterEditInner(aEditSubAction, aDirection);
-    // Perhaps, we need to do the following jobs even if the editor has been
-    // destroyed since they adjust some states of HTML document but don't
-    // modify the DOM tree nor Selection.
-
-    // Free up selectionState range item
-    HTMLEditorRef().RangeUpdaterRef().DropRangeItem(mRangeItem);
-
-    // Reset the contenteditable count to its previous value
-    if (mRestoreContentEditableCount) {
-      Document* doc = HTMLEditorRef().GetDocument();
-      if (NS_WARN_IF(!doc)) {
-        return NS_ERROR_FAILURE;
-      }
-      if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
-        doc->ChangeContentEditableCount(nullptr, -1);
-      }
-      mRestoreContentEditableCount = false;
-    }
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
-                                       nsIEditor::EDirection aDirection) {
+nsresult HTMLEditRules::AfterEditInner() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   nsresult rv = ConfirmSelectionInBody();
@@ -458,9 +465,12 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
-  if (aEditSubAction == EditSubAction::eReplaceHeadWithHTMLSource ||
-      aEditSubAction == EditSubAction::eCreatePaddingBRElementForEmptyEditor) {
-    return NS_OK;
+  switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+    case EditSubAction::eReplaceHeadWithHTMLSource:
+    case EditSubAction::eCreatePaddingBRElementForEmptyEditor:
+      return NS_OK;
+    default:
+      break;
   }
 
   nsCOMPtr<nsINode> rangeStartContainer, rangeEndContainer;
@@ -477,14 +487,15 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     }
   }
 
-  if (bDamagedRange && !((aEditSubAction == EditSubAction::eUndo) ||
-                         (aEditSubAction == EditSubAction::eRedo))) {
+  if (bDamagedRange &&
+      HTMLEditorRef().GetTopLevelEditSubAction() != EditSubAction::eUndo &&
+      HTMLEditorRef().GetTopLevelEditSubAction() != EditSubAction::eRedo) {
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
     AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // expand the "changed doc range" as needed
-    PromoteRange(*mDocChangeRange, aEditSubAction);
+    PromoteRange(*mDocChangeRange, HTMLEditorRef().GetTopLevelEditSubAction());
 
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
@@ -495,7 +506,8 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     // However, we shouldn't insert <br> elements if we've already removed
     // empty block parents because users may want to disappear the line by
     // the deletion.
-    if (aEditSubAction == EditSubAction::eDeleteSelectedContent &&
+    if (HTMLEditorRef().GetTopLevelEditSubAction() ==
+            EditSubAction::eDeleteSelectedContent &&
         mDidRangedDelete && !mDidEmptyParentBlocksRemoved) {
       nsresult rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -513,16 +525,21 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
         "Failed to insert <br> elements to empty list items and table cells");
 
     // merge any adjacent text nodes
-    if (aEditSubAction != EditSubAction::eInsertText &&
-        aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
-      RefPtr<nsRange> docChangeRange = mDocChangeRange;
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .CollapseAdjacentTextNodes(docChangeRange);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+        break;
+      default: {
+        RefPtr<nsRange> docChangeRange = mDocChangeRange;
+        nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                          .CollapseAdjacentTextNodes(docChangeRange);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        break;
       }
     }
 
@@ -534,49 +551,57 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
 
     // attempt to transform any unneeded nbsp's into spaces after doing various
     // operations
-    if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-        aEditSubAction == EditSubAction::eInsertLineBreak ||
-        aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
-        aEditSubAction == EditSubAction::ePasteHTMLContent ||
-        aEditSubAction == EditSubAction::eInsertHTMLSource) {
-      // TODO: Temporarily, WSRunObject replaces ASCII whitespaces with NPSPs
-      //       and then, we'll replace them with ASCII whitespaces here.  We
-      //       should avoid this overwriting things as far as possible because
-      //       replacing characters in text nodes causes running mutation event
-      //       listeners which are really expensive.
-      // Adjust end of composition string if there is composition string.
-      EditorRawDOMPoint pointToAdjust(HTMLEditorRef().GetCompositionEndPoint());
-      if (!pointToAdjust.IsSet()) {
-        // Otherwise, adjust current selection start point.
-        pointToAdjust = EditorBase::GetStartPoint(*SelectionRefPtr());
-        if (NS_WARN_IF(!pointToAdjust.IsSet())) {
+    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eDeleteSelectedContent:
+      case EditSubAction::eInsertLineBreak:
+      case EditSubAction::eInsertParagraphSeparator:
+      case EditSubAction::ePasteHTMLContent:
+      case EditSubAction::eInsertHTMLSource: {
+        // TODO: Temporarily, WSRunObject replaces ASCII whitespaces with NPSPs
+        //       and then, we'll replace them with ASCII whitespaces here.  We
+        //       should avoid this overwriting things as far as possible because
+        //       replacing characters in text nodes causes running mutation
+        //       event listeners which are really expensive.
+        // Adjust end of composition string if there is composition string.
+        EditorRawDOMPoint pointToAdjust(
+            HTMLEditorRef().GetCompositionEndPoint());
+        if (!pointToAdjust.IsSet()) {
+          // Otherwise, adjust current selection start point.
+          pointToAdjust = EditorBase::GetStartPoint(*SelectionRefPtr());
+          if (NS_WARN_IF(!pointToAdjust.IsSet())) {
+            return NS_ERROR_FAILURE;
+          }
+        }
+        rv = WSRunObject(&HTMLEditorRef(), pointToAdjust).AdjustWhitespace();
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        // also do this for original selection endpoints.
+        if (NS_WARN_IF(!mRangeItem->mStartContainer) ||
+            NS_WARN_IF(!mRangeItem->mEndContainer)) {
           return NS_ERROR_FAILURE;
         }
-      }
-      rv = WSRunObject(&HTMLEditorRef(), pointToAdjust).AdjustWhitespace();
-      if (NS_WARN_IF(!CanHandleEditAction())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      // also do this for original selection endpoints.
-      NS_ENSURE_STATE(mRangeItem->mStartContainer);
-      NS_ENSURE_STATE(mRangeItem->mEndContainer);
-      WSRunObject(&HTMLEditorRef(), mRangeItem->mStartContainer,
-                  mRangeItem->mStartOffset)
-          .AdjustWhitespace();
-      // we only need to handle old selection endpoint if it was different from
-      // start
-      if (mRangeItem->mStartContainer != mRangeItem->mEndContainer ||
-          mRangeItem->mStartOffset != mRangeItem->mEndOffset) {
-        WSRunObject(&HTMLEditorRef(), mRangeItem->mEndContainer,
-                    mRangeItem->mEndOffset)
+        WSRunObject(&HTMLEditorRef(), mRangeItem->mStartContainer,
+                    mRangeItem->mStartOffset)
             .AdjustWhitespace();
+        // we only need to handle old selection endpoint if it was different
+        // from start
+        if (mRangeItem->mStartContainer != mRangeItem->mEndContainer ||
+            mRangeItem->mStartOffset != mRangeItem->mEndOffset) {
+          WSRunObject(&HTMLEditorRef(), mRangeItem->mEndContainer,
+                      mRangeItem->mEndOffset)
+              .AdjustWhitespace();
+        }
+        break;
       }
+      default:
+        break;
     }
 
     // if we created a new block, make sure selection lands in it
@@ -595,7 +620,7 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     // are removed, Selection should've been adjusted by the method which
     // did it.
     if (!mDidEmptyParentBlocksRemoved) {
-      switch (aEditSubAction) {
+      switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
         case EditSubAction::eInsertText:
         case EditSubAction::eInsertTextComingFromIME:
         case EditSubAction::eDeleteSelectedContent:
@@ -603,7 +628,8 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
         case EditSubAction::eInsertParagraphSeparator:
         case EditSubAction::ePasteHTMLContent:
         case EditSubAction::eInsertHTMLSource:
-          rv = AdjustSelection(aDirection);
+          rv = AdjustSelection(
+              HTMLEditorRef().GetDirectionOfTopLevelEditSubAction());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -614,10 +640,19 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     }
 
     // check for any styles which were removed inappropriately
-    if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-        aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-        IsStyleCachePreservingSubAction(aEditSubAction)) {
+    bool reapplyCachedStyle;
+    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eDeleteSelectedContent:
+        reapplyCachedStyle = true;
+        break;
+      default:
+        reapplyCachedStyle = IsStyleCachePreservingSubAction(
+            HTMLEditorRef().GetTopLevelEditSubAction());
+        break;
+    }
+    if (reapplyCachedStyle) {
       HTMLEditorRef().mTypeInState->UpdateSelState(SelectionRefPtr());
       rv = ReapplyCachedStyles();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -628,7 +663,7 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
   }
 
   rv = HTMLEditorRef().HandleInlineSpellCheck(
-      aEditSubAction, mRangeItem->mStartContainer, mRangeItem->mStartOffset,
+      mRangeItem->mStartContainer, mRangeItem->mStartOffset,
       rangeStartContainer, rangeStartOffset, rangeEndContainer, rangeEndOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1313,18 +1348,25 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
     }
   }
 
-  if (mDidDeleteSelection &&
-      (mTopLevelEditSubAction == EditSubAction::eInsertText ||
-       mTopLevelEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-       mTopLevelEditSubAction == EditSubAction::eDeleteSelectedContent)) {
-    nsresult rv = ReapplyCachedStyles();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  if (mDidDeleteSelection) {
+    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+      case EditSubAction::eInsertText:
+      case EditSubAction::eInsertTextComingFromIME:
+      case EditSubAction::eDeleteSelectedContent: {
+        nsresult rv = ReapplyCachedStyles();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        break;
+      }
+      default:
+        break;
     }
   }
   // For most actions we want to clear the cached styles, but there are
   // exceptions
-  if (!IsStyleCachePreservingSubAction(mTopLevelEditSubAction)) {
+  if (!IsStyleCachePreservingSubAction(
+          HTMLEditorRef().GetTopLevelEditSubAction())) {
     ClearCachedStyles();
   }
   return NS_OK;
@@ -3891,11 +3933,12 @@ nsresult HTMLEditRules::DidDeleteSelection() {
   }
 
   // call through to base class
-  nsresult rv = TextEditRules::DidDeleteSelection();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = TextEditRules::DidDeleteSelection(
+      mDidExplicitlySetInterline ? SetSelectionInterLinePosition::No
+                                 : SetSelectionInterLinePosition::Yes);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditRules::DidDeleteSelection() failed");
+  return rv;
 }
 
 nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
@@ -9230,7 +9273,8 @@ nsresult HTMLEditRules::ReapplyCachedStyles() {
       }
       // This style has disappeared through deletion.  Let's add the styles to
       // mTypeInState when same style isn't applied to the node already.
-      if ((!bAny || IsStyleCachePreservingSubAction(mTopLevelEditSubAction)) &&
+      if ((!bAny || IsStyleCachePreservingSubAction(
+                        HTMLEditorRef().GetTopLevelEditSubAction())) &&
           (!styleAtInsertionPoint[i].mPresent ||
            styleAtInsertionPoint[i].value != mCachedStyles[i].value)) {
         HTMLEditorRef().mTypeInState->SetProp(mCachedStyles[i].tag,

@@ -6842,6 +6842,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitMemoryGrow();
   MOZ_MUST_USE bool emitMemorySize();
 
+  MOZ_MUST_USE bool emitRefFunc();
   MOZ_MUST_USE bool emitRefNull();
   void emitRefIsNull();
 
@@ -9858,6 +9859,20 @@ bool BaseCompiler::emitMemorySize() {
   return emitInstanceCall(lineOrBytecode, SASigMemorySize);
 }
 
+bool BaseCompiler::emitRefFunc() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  uint32_t funcIndex;
+  if (!iter_.readRefFunc(&funcIndex)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  pushI32(funcIndex);
+  return emitInstanceCall(lineOrBytecode, SASigFuncRef);
+}
+
 bool BaseCompiler::emitRefNull() {
   if (!iter_.readRefNull()) {
     return false;
@@ -11487,6 +11502,9 @@ bool BaseCompiler::emitBody() {
             emitComparison(emitCompareRef, ValType::AnyRef, Assembler::Equal));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+      case uint16_t(Op::RefFunc):
+        CHECK_NEXT(emitRefFunc());
+        break;
       case uint16_t(Op::RefNull):
         CHECK_NEXT(emitRefNull());
         break;

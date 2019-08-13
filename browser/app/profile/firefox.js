@@ -329,9 +329,6 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
-// Enable the new Address Bar code.
-pref("browser.urlbar.quantumbar", true);
-
 pref("browser.urlbar.openViewOnFocus", false);
 
 pref("browser.altClickSave", false);

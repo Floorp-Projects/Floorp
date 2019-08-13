@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![forbid(unsafe_code)]
 
 extern crate base64;
 extern crate cookie;
