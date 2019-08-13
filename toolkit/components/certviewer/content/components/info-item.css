@@ -13,7 +13,6 @@ label {
   color: var(--in-content-text-color);
   font-weight: 700;
   font-size: 1em;
-  position: relative;
 }
 
 label:dir(rtl) {
@@ -26,36 +25,4 @@ label:dir(rtl) {
   word-break: break-all;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-:host(.value) *,
-:host(.method) *,
-:host(.padding) * {
-  padding-bottom: 10px;
-}
-
-:host(.warning) * {
-  border: 2px solid var(--yellow-50);
-}
-
-:host(.warning) label {
-  border-right: 0;
-}
-:host(.warning) span {
-  border-left: 0;
-}
-
-:host(.warning) label::after {
-  content: "";
-  display: inline;
-  position: absolute;
-  height: 100%;
-  width: 15px;
-  border-top: 2px solid var(--yellow-50);
-  border-bottom: 2px solid var(--yellow-50);
-  top: -2px;
-}
-
-.download-link-chain {
-  margin: 0 5px;
 }

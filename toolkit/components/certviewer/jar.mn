@@ -21,5 +21,3 @@ toolkit.jar:
   content/global/certviewer/pvutils_bundle.js                       (content/vendor/pvutils_bundle.js)
   content/global/certviewer/asn1js_bundle.js                        (content/vendor/asn1js_bundle.js)
   content/global/certviewer/pkijs_bundle.js                         (content/vendor/pkijs_bundle.js)
-  content/global/certviewer/components/warning-section.css          (content/components/warning-section.css)
-  content/global/certviewer/components/warning-section.js           (content/components/warning-section.js)

@@ -9,80 +9,16 @@
 import { parse } from "./certDecoder.js";
 import { pemToDER } from "./utils.js";
 
-let errorCode;
-
 document.addEventListener("DOMContentLoaded", async e => {
   let url = new URL(document.URL);
   let certInfo = url.searchParams.getAll("cert");
   if (certInfo.length === 0) {
-    await render(false, true);
+    await render(true);
     return;
   }
   certInfo = certInfo.map(cert => decodeURIComponent(cert));
-  errorCode = url.searchParams.get("error");
-
   await buildChain(certInfo);
 });
-
-async function highlightErrorInfoItem(error) {
-  let infoItems = [];
-  switch (error) {
-    case "SEC_ERROR_EXPIRED_CERTIFICATE":
-      infoItems.push({
-        group: "validity",
-        infoItem: "not-after",
-      });
-      break;
-    case "SSL_ERROR_BAD_CERT_DOMAIN":
-      infoItems.push({
-        group: "subject-name",
-        infoItem: "common-name",
-      });
-      infoItems.push({
-        group: "subject-alt-names",
-      });
-      break;
-    case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
-      infoItems.push({
-        group: "issuer-name",
-      });
-      break;
-    case "SEC_ERROR_UNKNOWN_ISSUER":
-      infoItems.push({
-        group: "issuer-name",
-      });
-      break;
-    case "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED":
-      infoItems.push({
-        group: "embedded-scts",
-        infoItem: "signature-algorithm",
-      });
-      break;
-    case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
-      infoItems.push({
-        group: "issuer-name",
-      });
-      break;
-  }
-
-  if (infoItems.length) {
-    customElements.whenDefined("info-group").then(() => {
-      let certSection = document.querySelector("certificate-section");
-      for (let i = 0; i < infoItems.length; i++) {
-        let item = infoItems[i];
-        let groupItem = certSection.shadowRoot.getElementById(item.group);
-        if (item.infoItem) {
-          let infoItem = groupItem.shadowRoot.querySelector(
-            "." + item.infoItem
-          );
-          infoItem.classList.add("warning");
-        } else {
-          groupItem.classList.add("warning");
-        }
-      }
-    });
-  }
-}
 
 export const updateSelectedItem = (() => {
   let state;
@@ -348,14 +284,7 @@ const adjustCertInformation = cert => {
 const render = async (certs, error) => {
   await customElements.whenDefined("certificate-section");
   const CertificateSection = customElements.get("certificate-section");
-  if (errorCode) {
-    document
-      .querySelector("body")
-      .append(new CertificateSection(certs, error, errorCode));
-    highlightErrorInfoItem(errorCode);
-  } else {
-    document.querySelector("body").append(new CertificateSection(certs, error));
-  }
+  document.querySelector("body").append(new CertificateSection(certs, error));
   return Promise.resolve();
 };
 
