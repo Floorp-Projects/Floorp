@@ -120,7 +120,6 @@ function processFlagFilter(type, value) {
   }
 }
 
-/* eslint-disable complexity */
 function isFlagFilterMatch(item, { type, value, negative }) {
   if (value == null) {
     return false;
@@ -134,112 +133,92 @@ function isFlagFilterMatch(item, { type, value, negative }) {
   let match = true;
   let { responseCookies = { cookies: [] } } = item;
   responseCookies = responseCookies.cookies || responseCookies;
-  switch (type) {
-    case "status-code":
-      match = item.status && item.status.toString() === value;
-      break;
-    case "method":
-      match = item.method.toLowerCase() === value;
-      break;
-    case "protocol":
+
+  const matchers = {
+    "status-code": () => item.status && item.status.toString() === value,
+    method: () => item.method.toLowerCase() === value,
+    protocol: () => {
       const protocol = item.httpVersion;
-      match =
-        typeof protocol === "string"
-          ? protocol.toLowerCase().includes(value)
-          : false;
-      break;
-    case "domain":
-      match = item.urlDetails.host.toLowerCase().includes(value);
-      break;
-    case "remote-ip":
+      return typeof protocol === "string"
+        ? protocol.toLowerCase().includes(value)
+        : false;
+    },
+    domain: () => item.urlDetails.host.toLowerCase().includes(value),
+    "remote-ip": () => {
       const data = getFormattedIPAndPort(item.remoteAddress, item.remotePort);
-      match = data ? data.toLowerCase().includes(value) : false;
-      break;
-    case "has-response-header":
+      return data ? data.toLowerCase().includes(value) : false;
+    },
+    "has-response-header": () => {
       if (typeof item.responseHeaders === "object") {
         const { headers } = item.responseHeaders;
-        match = headers.findIndex(h => h.name.toLowerCase() === value) > -1;
-      } else {
-        match = false;
+        return headers.findIndex(h => h.name.toLowerCase() === value) > -1;
       }
-      break;
-    case "cause":
+      return false;
+    },
+    cause: () => {
       const causeType = item.cause.type;
-      match =
-        typeof causeType === "string"
-          ? causeType.toLowerCase().includes(value)
-          : false;
-      break;
-    case "transferred":
+      return typeof causeType === "string"
+        ? causeType.toLowerCase().includes(value)
+        : false;
+    },
+    transferred: () => {
       if (item.fromCache) {
-        match = false;
-      } else {
-        match = isSizeMatch(value, item.transferredSize);
+        return false;
       }
-      break;
-    case "size":
-      match = isSizeMatch(value, item.contentSize);
-      break;
-    case "larger-than":
-      match = item.contentSize > value;
-      break;
-    case "transferred-larger-than":
+      return isSizeMatch(value, item.transferredSize);
+    },
+    size: () => isSizeMatch(value, item.contentSize),
+    "larger-than": () => item.contentSize > value,
+    "transferred-larger-than": () => {
       if (item.fromCache) {
-        match = false;
-      } else {
-        match = item.transferredSize > value;
+        return false;
       }
-      break;
-    case "mime-type":
-      match = item.mimeType.includes(value);
-      break;
-    case "is":
+      return item.transferredSize > value;
+    },
+    "mime-type": () => item.mimeType.includes(value),
+    is: () => {
       if (value === "from-cache" || value === "cached") {
-        match = item.fromCache || item.status === "304";
-      } else if (value === "running") {
-        match = !item.status;
+        return item.fromCache || item.status === "304";
       }
-      break;
-    case "scheme":
-      match = item.urlDetails.scheme === value;
-      break;
-    case "regexp":
+      if (value === "running") {
+        return !item.status;
+      }
+      return match;
+    },
+    scheme: () => item.urlDetails.scheme === value,
+    regexp: () => {
       try {
         const pattern = new RegExp(value);
-        match = pattern.test(item.url);
+        return pattern.test(item.url);
       } catch (e) {
-        match = false;
+        return false;
       }
-      break;
-    case "set-cookie-domain":
+    },
+    "set-cookie-domain": () => {
       if (responseCookies.length > 0) {
         const host = item.urlDetails.host;
         const i = responseCookies.findIndex(c => {
           const domain = c.hasOwnProperty("domain") ? c.domain : host;
           return domain.includes(value);
         });
-        match = i > -1;
-      } else {
-        match = false;
+        return i > -1;
       }
-      break;
-    case "set-cookie-name":
-      match =
-        responseCookies.findIndex(c => c.name.toLowerCase().includes(value)) >
-        -1;
-      break;
-    case "set-cookie-value":
-      match =
-        responseCookies.findIndex(c => c.value.toLowerCase().includes(value)) >
-        -1;
-      break;
+      return false;
+    },
+    "set-cookie-name": () =>
+      responseCookies.findIndex(c => c.name.toLowerCase().includes(value)) > -1,
+    "set-cookie-value": () =>
+      responseCookies.findIndex(c => c.value.toLowerCase().includes(value)) >
+      -1,
+  };
+
+  const matcher = matchers[type];
+  if (matcher) {
+    match = matcher();
   }
-  if (negative) {
-    return !match;
-  }
-  return match;
+
+  return negative ? !match : match;
 }
-/* eslint-enable complexity */
 
 function isSizeMatch(value, size) {
   return value >= size - size / 10 && value <= size + size / 10;
