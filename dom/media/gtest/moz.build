@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'TestBlankVideoDataCreator.cpp',
     'TestBufferReader.cpp',
     'TestDataMutex.cpp',
+    'TestDecoderBenchmark.cpp',
     'TestDriftCompensation.cpp',
     'TestGMPUtils.cpp',
     'TestGroupId.cpp',
