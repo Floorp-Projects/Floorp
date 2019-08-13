@@ -9,9 +9,9 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/dom/SVGDocument.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/SVGDocument.h"
+#include "mozilla/StaticPrefs_svg.h"
 #include "nsSVGPaintServerFrame.h"
 #include "SVGObserverUtils.h"
 
@@ -24,16 +24,7 @@ using image::imgDrawingParams;
 
 /* static */
 bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
-  static bool sEnabledForContent = false;
-  static bool sEnabledForContentCached = false;
-
-  if (!sEnabledForContentCached) {
-    Preferences::AddBoolVarCache(
-        &sEnabledForContent, "svg.context-properties.content.enabled", false);
-    sEnabledForContentCached = true;
-  }
-
-  if (sEnabledForContent) {
+  if (StaticPrefs::svg_context_properties_content_enabled()) {
     return true;
   }
 
