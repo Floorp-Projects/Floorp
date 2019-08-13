@@ -352,6 +352,16 @@ bool LoaderReusableStyleSheets::FindReusableStyleSheet(
   return false;
 }
 
+// A struct keeping alive various records of sheets that are loading, deferred,
+// or already loaded (the later one for caching purposes).
+struct Loader::Sheets {
+  nsBaseHashtable<SheetLoadDataHashKey, RefPtr<StyleSheet>, StyleSheet*>
+      mCompleteSheets;
+  // The SheetLoadData pointers below are weak references.
+  nsDataHashtable<SheetLoadDataHashKey, SheetLoadData*> mLoadingDatas;
+  nsDataHashtable<SheetLoadDataHashKey, SheetLoadData*> mPendingDatas;
+};
+
 /*************************
  * Loader Implementation *
  *************************/
