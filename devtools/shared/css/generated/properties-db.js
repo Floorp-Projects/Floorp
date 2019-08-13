@@ -9922,6 +9922,7 @@ exports.CSS_PROPERTIES = {
       "dashed",
       "dotted",
       "double",
+      "from-font",
       "hsl",
       "hsla",
       "inherit",

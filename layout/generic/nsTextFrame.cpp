@@ -5353,9 +5353,11 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
 
 // helper function for implementing text-decoration-thickness
 // https://drafts.csswg.org/css-text-decor-4/#text-decoration-width-property
-static void SetWidthIfLength(const LengthOrAuto& aDecorationThickness,
-                             Float* aLineThickness,
-                             const gfxFloat aAppUnitsPerDevPixel) {
+static void SetWidthIfLength(
+    const StyleTextDecorationLength& aDecorationThickness,
+    Float* aLineThickness, const gfxFloat aAppUnitsPerDevPixel) {
+  // auto is from-font (the automatic thickness is derived from font metrics) so
+  // we only change the value if it is a length
   if (aDecorationThickness.IsLength()) {
     *aLineThickness =
         aDecorationThickness.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
@@ -5366,10 +5368,12 @@ static void SetWidthIfLength(const LengthOrAuto& aDecorationThickness,
 // https://drafts.csswg.org/css-text-decor-4/#underline-offset
 // params.defaultLineThickness should be set before calling
 // this function
-static void SetOffsetIfLength(const LengthOrAuto& aOffset,
+static void SetOffsetIfLength(const StyleTextDecorationLength& aOffset,
                               nsCSSRendering::DecorationRectParams& aParams,
                               const gfxFloat aAppUnitsPerDevPixel,
                               bool aIsSideways, bool aRightUnderline) {
+  // auto is from-font (the automatic offset is derived from font metrics) so we
+  // don't change the value unless it is a length
   if (!aOffset.IsLength()) {
     return;
   }
@@ -5420,10 +5424,10 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nscoord underlineOffset, underlineSize;
     fontMetrics->GetUnderline(underlineOffset, underlineSize);
 
-    const LengthOrAuto& textUnderlineOffset =
+    const StyleTextDecorationLength& textUnderlineOffset =
         aBlock->Style()->StyleText()->mTextUnderlineOffset;
 
-    const LengthOrAuto& textDecorationThickness =
+    const StyleTextDecorationLength& textDecorationThickness =
         aBlock->Style()->StyleTextReset()->mTextDecorationThickness;
 
     if (textUnderlineOffset.IsLength()) {
@@ -5724,7 +5728,7 @@ void nsTextFrame::DrawSelectionDecorations(
       aTextPaintStyle.PresContext(), aFontMetrics);
 
   float relativeSize;
-  const LengthOrAuto& decThickness = StyleTextReset()->mTextDecorationThickness;
+  const auto& decThickness = StyleTextReset()->mTextDecorationThickness;
   const gfxFloat appUnitsPerDevPixel =
       aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
@@ -7377,8 +7381,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     }
     nsRect decorationArea;
 
-    const LengthOrAuto& decThickness =
-        StyleTextReset()->mTextDecorationThickness;
+    const auto& decThickness = StyleTextReset()->mTextDecorationThickness;
     params.lineSize.width = aPresContext->AppUnitsToGfxUnits(aRect.width);
     params.defaultLineThickness = ComputeSelectionUnderlineHeight(
         aPresContext, metrics, sd->mSelectionType);
