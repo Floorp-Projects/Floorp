@@ -188,6 +188,14 @@ class DisplayToolbarTest {
 
         // Tracking protection views MUST be measured
         assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.OFF_FOR_A_SITE)
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
+
+        // Tracking protection views MUST be measured
+        assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
     }
 
     @Test
