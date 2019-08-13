@@ -11,7 +11,7 @@ sed -e "s|@top_srcdir@|$SRCDIR|" -e 's|@[^@]*@||g' < config.in > config
 
 cd "$SRCDIR/js/src"
 
-export PATH="$PATH:$TOOLTOOL_CHECKOUT/cargo/bin:$TOOLTOOL_CHECKOUT/rustc/bin"
+export PATH="$PATH:$MOZ_FETCHES_DIR/cargo/bin:$MOZ_FETCHES_DIR/rustc/bin"
 export RUST_BACKTRACE=1
 export AUTOMATION=1
 
