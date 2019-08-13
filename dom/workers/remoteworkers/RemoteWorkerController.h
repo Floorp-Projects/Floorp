@@ -132,6 +132,9 @@ class RemoteWorkerController final {
 
   void Thaw();
 
+  RefPtr<ServiceWorkerOpPromise> ExecServiceWorkerOp(
+      ServiceWorkerOpArgs&& aArgs);
+
  private:
   RemoteWorkerController(const RemoteWorkerData& aData,
                          RemoteWorkerObserver* aObserver);
