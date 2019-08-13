@@ -3645,6 +3645,10 @@ var BrowserOnClick = {
           let certsStringURL = certs.map(elem => `cert=${elem}`);
           certsStringURL = certsStringURL.join("&");
           let url = `about:certificate?${certsStringURL}`;
+          let error = securityInfo.errorCodeString;
+          if (error) {
+              url = `${url}&error=${error}`;
+          }
           openTrustedLinkIn(url, "tab", {
             triggeringPrincipal: browser.contentPrincipal,
           });

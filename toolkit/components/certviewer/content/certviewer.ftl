@@ -59,4 +59,16 @@ certificate-viewer-signature-scheme = Signature Scheme
 certificate-viewer-timestamp = Timestamp
 certificate-viewer-value = Value
 certificate-viewer-version = Version
+
+## Error codes
+
+certificate-viewer-warning-section-title = Warning
+certificate-viewer-sec-error-expired-certificate = This certificate has expired.
+certificate-viewer-ssl-error-bad-cert-domain = This certificate is not valid for this host.
+certificate-viewer-mozilla-pkix-error-self-signed-cert = This certificate is not trusted because it is self-signed.
+certificate-viewer-mozilla-pkix-error-key-pinning-failure = No trusted certificate chain could be constructed that matches the pinset.
+certificate-viewer-mozilla-pkix-error-mitm-detected = MITM software has been detected.
+certificate-viewer-sec-error-unknown-issuer = This certificate’s issuer is unknown.
+certificate-viewer-sec-error-revoked-certificate = Peer’s certificate has been revoked.
+certificate-viewer-sec-error-cert-signature-algorithm-disabled = The certificate is not trusted because it was signed using a signature algorithm that was disabled because that algorithm is not secure.
 certificate-viewer-business-category = Business Category
