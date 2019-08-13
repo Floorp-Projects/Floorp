@@ -40,6 +40,7 @@
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
+#include "mozilla/dom/RemoteWorkerControllerParent.h"
 #include "mozilla/dom/RemoteWorkerServiceParent.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/SharedWorkerParent.h"
@@ -494,6 +495,29 @@ bool BackgroundParentImpl::DeallocPRemoteWorkerParent(
     mozilla::dom::PRemoteWorkerParent* aActor) {
   RefPtr<mozilla::dom::RemoteWorkerParent> actor =
       dont_AddRef(static_cast<mozilla::dom::RemoteWorkerParent*>(aActor));
+  return true;
+}
+
+dom::PRemoteWorkerControllerParent*
+BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
+    const dom::RemoteWorkerData& aRemoteWorkerData) {
+  RefPtr<dom::RemoteWorkerControllerParent> actor =
+      new dom::RemoteWorkerControllerParent(aRemoteWorkerData);
+  return actor.forget().take();
+}
+
+IPCResult BackgroundParentImpl::RecvPRemoteWorkerControllerConstructor(
+    dom::PRemoteWorkerControllerParent* aActor,
+    const dom::RemoteWorkerData& aRemoteWorkerData) {
+  MOZ_ASSERT(aActor);
+
+  return IPC_OK();
+}
+
+bool BackgroundParentImpl::DeallocPRemoteWorkerControllerParent(
+    dom::PRemoteWorkerControllerParent* aActor) {
+  RefPtr<dom::RemoteWorkerControllerParent> actor =
+      dont_AddRef(static_cast<dom::RemoteWorkerControllerParent*>(aActor));
   return true;
 }
 
