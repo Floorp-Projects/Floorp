@@ -8,6 +8,13 @@
 #define mozilla_dom_RemoteWorkerController_h
 
 #include "nsISupportsImpl.h"
+#include "nsTArray.h"
+
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/dom/DOMTypes.h"
+#include "mozilla/dom/ServiceWorkerOpArgs.h"
+#include "mozilla/dom/ServiceWorkerOpPromise.h"
 
 namespace mozilla {
 namespace dom {
@@ -79,7 +86,6 @@ namespace dom {
  */
 
 class ErrorValue;
-class MessagePortIdentifier;
 class RemoteWorkerControllerParent;
 class RemoteWorkerData;
 class RemoteWorkerManager;
@@ -134,17 +140,24 @@ class RemoteWorkerController final {
 
   void SetWorkerActor(RemoteWorkerParent* aActor);
 
+  void NoteDeadWorkerActor();
+
   void ErrorPropagation(const ErrorValue& aValue);
 
   void WorkerTerminated();
-
-  void ForgetActorAndTerminate();
 
   void Shutdown();
 
   void CreationFailed();
 
   void CreationSucceeded();
+
+  void CancelAllPendingOps();
+
+  template <typename... Args>
+  void MaybeStartSharedWorkerOp(Args&&... aArgs);
+
+  void NoteDeadWorker();
 
   RefPtr<RemoteWorkerObserver> mObserver;
   RefPtr<RemoteWorkerParent> mActor;
@@ -157,7 +170,33 @@ class RemoteWorkerController final {
 
   const bool mIsServiceWorker;
 
-  struct Op {
+  /**
+   * `PendingOp` is responsible for encapsulating logic for starting and
+   * canceling pending remote worker operations, as this logic may vary
+   * depending on the type of the remote worker and the type of the operation.
+   */
+  class PendingOp {
+   public:
+    PendingOp() = default;
+
+    PendingOp(const PendingOp&) = delete;
+
+    PendingOp& operator=(const PendingOp&) = delete;
+
+    virtual ~PendingOp() = default;
+
+    /**
+     * Returns `true` if execution has started and `false` otherwise.
+     *
+     * Starting execution may depend the state of `aOwner.`
+     */
+    virtual bool MaybeStart(RemoteWorkerController* const aOwner) = 0;
+
+    virtual void Cancel() = 0;
+  };
+
+  class PendingSharedWorkerOp final : public PendingOp {
+   public:
     enum Type {
       eTerminate,
       eSuspend,
@@ -169,34 +208,41 @@ class RemoteWorkerController final {
       eRemoveWindowID,
     };
 
-    explicit Op(Type aType, uint64_t aWindowID = 0)
-        : mType(aType), mWindowID(aWindowID), mCompleted(false) {
-      MOZ_COUNT_CTOR(Op);
-    }
+    explicit PendingSharedWorkerOp(Type aType, uint64_t aWindowID = 0);
 
-    explicit Op(const MessagePortIdentifier& aPortIdentifier)
-        : mType(ePortIdentifier),
-          mPortIdentifier(aPortIdentifier),
-          mCompleted(false) {
-      MOZ_COUNT_CTOR(Op);
-    }
+    explicit PendingSharedWorkerOp(
+        const MessagePortIdentifier& aPortIdentifier);
 
-    // This object cannot be copied.
-    Op(Op const&) = delete;
-    Op& operator=(Op const&) = delete;
+    ~PendingSharedWorkerOp();
 
-    ~Op();
+    bool MaybeStart(RemoteWorkerController* const aOwner) override;
 
-    void Completed() { mCompleted = true; }
+    void Cancel() override;
 
-    Type mType;
-
-    MessagePortIdentifier mPortIdentifier;
-    uint64_t mWindowID;
-    bool mCompleted;
+   private:
+    const Type mType;
+    const MessagePortIdentifier mPortIdentifier;
+    const uint64_t mWindowID = 0;
+    bool mCompleted = false;
   };
 
-  nsTArray<UniquePtr<Op>> mPendingOps;
+  class PendingServiceWorkerOp final : public PendingOp {
+   public:
+    PendingServiceWorkerOp(ServiceWorkerOpArgs&& aArgs,
+                           RefPtr<ServiceWorkerOpPromise::Private> aPromise);
+
+    ~PendingServiceWorkerOp();
+
+    bool MaybeStart(RemoteWorkerController* const aOwner) override;
+
+    void Cancel() override;
+
+   private:
+    ServiceWorkerOpArgs mArgs;
+    RefPtr<ServiceWorkerOpPromise::Private> mPromise;
+  };
+
+  nsTArray<UniquePtr<PendingOp>> mPendingOps;
 };
 
 }  // namespace dom
