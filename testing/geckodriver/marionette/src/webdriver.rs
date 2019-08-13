@@ -58,6 +58,13 @@ pub struct Keys {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ScreenshotOptions {
+    pub id: Option<String>,
+    pub highlights: Vec<Option<String>>,
+    pub full: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Script {
     pub script: String,
     pub args: Option<Vec<Value>>,
@@ -193,6 +200,12 @@ pub enum Command {
     SwitchToParentFrame,
     #[serde(rename = "WebDriver:SwitchToWindow")]
     SwitchToWindow(SwitchToWindow),
+    #[serde(rename = "WebDriver:TakeScreenshot")]
+    TakeElementScreenshot(ScreenshotOptions),
+    #[serde(rename = "WebDriver:TakeScreenshot")]
+    TakeFullScreenshot(ScreenshotOptions),
+    #[serde(rename = "WebDriver:TakeScreenshot")]
+    TakeScreenshot(ScreenshotOptions),
 }
 
 #[cfg(test)]
@@ -201,6 +214,17 @@ mod tests {
     use crate::common::Date;
     use crate::test::{assert_ser, assert_ser_de};
     use serde_json::json;
+
+    #[test]
+    fn test_json_screenshot() {
+        let data = ScreenshotOptions {
+            id: None,
+            highlights: vec![],
+            full: false,
+        };
+        let json = json!({"full":false,"highlights":[],"id":null});
+        assert_ser_de(&data, json);
+    }
 
     #[test]
     fn test_json_selector_css() {
