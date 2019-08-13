@@ -344,7 +344,8 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
                                 nullptr,
                                 /* is_backface_visible = */ true,
                                 /* cache_tiles = */ false,
-                                wr::MixBlendMode::Normal} {}
+                                wr::MixBlendMode::Normal,
+                                /* is_backdrop_root = */ false} {}
 
   void SetPreserve3D(bool aPreserve) {
     transform_style =

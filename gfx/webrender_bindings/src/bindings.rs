@@ -2085,6 +2085,9 @@ pub struct WrStackingContextParams {
     /// True if picture caching should be enabled for this stacking context.
     pub cache_tiles: bool,
     pub mix_blend_mode: MixBlendMode,
+    /// True if this stacking context is a backdrop root.
+    /// https://drafts.fxtf.org/filter-effects-2/#BackdropRoot
+    pub is_backdrop_root: bool,
 }
 
 #[no_mangle]
@@ -2206,7 +2209,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                 &r_filter_datas,
                                 &[],
                                 glyph_raster_space,
-                                params.cache_tiles);
+                                params.cache_tiles,
+                                params.is_backdrop_root);
 
     result
 }
