@@ -25,7 +25,6 @@
 #include "nsDebug.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPermissionManager.h"
-#include "nsXULAppAPI.h"
 
 #include "jsapi.h"
 
@@ -77,7 +76,6 @@
 #include "ServiceWorkerRegistrar.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerScriptCache.h"
-#include "ServiceWorkerShutdownBlocker.h"
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerUnregisterJob.h"
 #include "ServiceWorkerUpdateJob.h"
@@ -261,36 +259,6 @@ class TeardownRunnable final : public Runnable {
   RefPtr<ServiceWorkerManagerChild> mActor;
 };
 
-bool ServiceWorkersAreCrossProcess() {
-  return ServiceWorkerParentInterceptEnabled() && XRE_IsE10sParentProcess();
-}
-
-const char* GetXPCOMShutdownTopic() {
-  if (ServiceWorkersAreCrossProcess()) {
-    return "profile-change-teardown";
-  }
-
-  return NS_XPCOM_SHUTDOWN_OBSERVER_ID;
-}
-
-already_AddRefed<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() {
-  AssertIsOnMainThread();
-
-  if (!ServiceWorkersAreCrossProcess()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-  MOZ_ASSERT(svc);
-
-  nsCOMPtr<nsIAsyncShutdownClient> barrier;
-  DebugOnly<nsresult> rv =
-      svc->GetProfileChangeTeardown(getter_AddRefs(barrier));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  return barrier.forget();
-}
-
 }  // namespace
 
 //////////////////////////
@@ -312,40 +280,15 @@ ServiceWorkerManager::ServiceWorkerManager()
 ServiceWorkerManager::~ServiceWorkerManager() {
   // The map will assert if it is not empty when destroyed.
   mRegistrationInfos.Clear();
-
-  if (!ServiceWorkersAreCrossProcess()) {
-    MOZ_ASSERT(!mActor);
-  }
-}
-
-void ServiceWorkerManager::BlockShutdownOn(
-    GenericNonExclusivePromise* aPromise) {
-  AssertIsOnMainThread();
-
-  // This may be called when in non-e10s mode with parent-intercept enabled.
-  if (!ServiceWorkersAreCrossProcess()) {
-    return;
-  }
-
-  MOZ_ASSERT(mShutdownBlocker);
-  MOZ_ASSERT(aPromise);
-
-  mShutdownBlocker->WaitOnPromise(aPromise);
+  MOZ_ASSERT(!mActor);
 }
 
 void ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar) {
-  nsCOMPtr<nsIAsyncShutdownClient> shutdownBarrier = GetAsyncShutdownBarrier();
-
-  if (shutdownBarrier) {
-    mShutdownBlocker =
-        ServiceWorkerShutdownBlocker::CreateAndRegisterOn(shutdownBarrier);
-    MOZ_ASSERT(mShutdownBlocker);
-  }
-
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     DebugOnly<nsresult> rv;
-    rv = obs->AddObserver(this, GetXPCOMShutdownTopic(), false /* ownsWeak */);
+    rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                          false /* ownsWeak */);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -508,13 +451,9 @@ void ServiceWorkerManager::MaybeStartShutdown() {
     it1.UserData()->mInfos.Clear();
   }
 
-  if (mShutdownBlocker) {
-    mShutdownBlocker->StopAcceptingPromises();
-  }
-
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->RemoveObserver(this, GetXPCOMShutdownTopic());
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
     if (XRE_IsParentProcess()) {
       obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
@@ -2336,6 +2275,19 @@ void ServiceWorkerManager::Update(
       actor, aPrincipal->OriginAttributesRef(), nsCString(aScope));
 }
 
+namespace {
+
+void RejectUpdateWithInvalidStateError(
+    ServiceWorkerUpdateFinishCallback& aCallback) {
+  ErrorResult error(NS_ERROR_DOM_INVALID_STATE_ERR);
+  aCallback.UpdateFailed(error);
+
+  // In case the callback does not consume the exception
+  error.SuppressException();
+}
+
+}  // namespace
+
 void ServiceWorkerManager::UpdateInternal(
     nsIPrincipal* aPrincipal, const nsACString& aScope,
     ServiceWorkerUpdateFinishCallback* aCallback) {
@@ -2351,20 +2303,22 @@ void ServiceWorkerManager::UpdateInternal(
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(scopeKey, aScope);
   if (NS_WARN_IF(!registration)) {
-    ErrorResult error;
-    error.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(
-        NS_ConvertUTF8toUTF16(aScope), NS_LITERAL_STRING("uninstalled"));
-    aCallback->UpdateFailed(error);
-
-    // In case the callback does not consume the exception
-    error.SuppressException();
     return;
   }
 
+  // "Let newestWorker be the result of running Get Newest Worker algorithm
+  // passing registration as its argument.
+  // If newestWorker is null, return a promise rejected with "InvalidStateError"
   RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-  MOZ_DIAGNOSTIC_ASSERT(newest,
-                        "The Update algorithm should have been aborted already "
-                        "if there wasn't a newest worker");
+  if (!newest) {
+    RejectUpdateWithInvalidStateError(*aCallback);
+    return;
+  }
+
+  if (newest->State() == ServiceWorkerState::Installing) {
+    RejectUpdateWithInvalidStateError(*aCallback);
+    return;
+  }
 
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey, aScope);
 
@@ -2783,7 +2737,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (strcmp(aTopic, GetXPCOMShutdownTopic()) == 0) {
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     MaybeStartShutdown();
     return NS_OK;
   }
