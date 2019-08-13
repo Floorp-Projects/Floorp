@@ -116,7 +116,7 @@ export class ASRouterUISurface extends React.PureComponent {
     this.onUserAction = this.onUserAction.bind(this);
     this.fetchFlowParams = this.fetchFlowParams.bind(this);
 
-    this.state = { message: {} };
+    this.state = { message: {}, interruptCleared: false };
     if (props.document) {
       this.headerPortal = props.document.getElementById(
         "header-asrouter-container"
@@ -238,6 +238,9 @@ export class ASRouterUISurface extends React.PureComponent {
     switch (action.type) {
       case "SET_MESSAGE":
         this.setState({ message: action.data });
+        break;
+      case "CLEAR_INTERRUPT":
+        this.setState({ interruptCleared: true });
         break;
       case "CLEAR_MESSAGE":
         this.clearMessage(action.data.id);
@@ -373,6 +376,7 @@ export class ASRouterUISurface extends React.PureComponent {
         >
           <FirstRun
             document={this.props.document}
+            interruptCleared={this.state.interruptCleared}
             message={message}
             sendUserActionTelemetry={this.sendUserActionTelemetry}
             executeAction={ASRouterUtils.executeAction}
