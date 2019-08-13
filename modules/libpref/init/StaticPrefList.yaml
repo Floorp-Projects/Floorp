@@ -6138,6 +6138,13 @@
   value: true
   mirror: always
 
+# Is support for the new getBBox method from SVG 2 enabled?
+# See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
+- name: svg.new-getBBox.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "telemetry."
 #---------------------------------------------------------------------------

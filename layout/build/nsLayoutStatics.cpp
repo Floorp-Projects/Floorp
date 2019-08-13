@@ -254,7 +254,6 @@ nsresult nsLayoutStatics::Initialize() {
   nsWindowMemoryReporter::Init();
 
   SVGElementFactory::Init();
-  nsSVGUtils::Init();
 
   ProcessPriorityManager::Init();
 
