@@ -1006,7 +1006,7 @@ nsresult TextEditRules::WillDeleteSelection(
 
   // if there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().HasPaddingBRElementForEmptyEditor()) {
     *aCancel = true;
     return NS_OK;
   }
@@ -1136,7 +1136,7 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
 
   // If there is a padding <br> element, there's no content.  So output empty
   // string.
-  if (TextEditorRef().mPaddingBRElementForEmptyEditor) {
+  if (TextEditorRef().HasPaddingBRElementForEmptyEditor()) {
     aOutString->Truncate();
     *aHandled = true;
     return NS_OK;

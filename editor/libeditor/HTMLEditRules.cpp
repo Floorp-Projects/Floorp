@@ -823,7 +823,9 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
 }
 
 bool HTMLEditRules::DocumentIsEmpty() const {
-  return !!HTMLEditorRef().mPaddingBRElementForEmptyEditor;
+  // XXX This is wrong.  Even if there is no padding <br> element for empty
+  //     editor, the editor may be empty.
+  return HTMLEditorRef().HasPaddingBRElementForEmptyEditor();
 }
 
 nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
@@ -2292,7 +2294,7 @@ nsresult HTMLEditRules::WillDeleteSelection(
 
   // If there is only padding <br> element for empty editor, cancel the
   // operation.
-  if (HTMLEditorRef().mPaddingBRElementForEmptyEditor) {
+  if (HTMLEditorRef().HasPaddingBRElementForEmptyEditor()) {
     *aCancel = true;
     return NS_OK;
   }
