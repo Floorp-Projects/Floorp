@@ -150,6 +150,7 @@ void ServiceWorkerInfo::UpdateState(ServiceWorkerState aState) {
   mDescriptor.SetState(aState);
   if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
+    mServiceWorkerPrivate->NoteDeadServiceWorkerInfo();
   }
 }
 
