@@ -1255,6 +1255,8 @@ inline bool DOMProxyIsShadowing(DOMProxyShadowsResult result) {
 
 const void* GetDOMRemoteProxyHandlerFamily();
 
+extern JS_FRIEND_API bool IsDOMRemoteProxyObject(JSObject* object);
+
 // Callbacks and other information for use by the JITs when optimizing accesses
 // on xray wrappers.
 struct XrayJitInfo {
