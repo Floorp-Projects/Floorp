@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "nsThreadUtils.h"
 
+#include "ServiceWorkerPrivateImpl.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
@@ -92,6 +93,27 @@ IPCResult RemoteWorkerControllerChild::RecvTerminated() {
   if (mObserver) {
     mObserver->Terminated();
   }
+
+  return IPC_OK();
+}
+
+IPCResult RemoteWorkerControllerChild::RecvSetServiceWorkerSkipWaitingFlag(
+    SetServiceWorkerSkipWaitingFlagResolver&& aResolve) {
+  AssertIsOnMainThread();
+
+  if (mObserver) {
+    static_cast<ServiceWorkerPrivateImpl*>(mObserver.get())
+        ->SetSkipWaitingFlag()
+        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+               [resolve = std::move(aResolve)](
+                   const GenericPromise::ResolveOrRejectValue& aResult) {
+                 resolve(aResult.IsResolve() ? aResult.ResolveValue() : false);
+               });
+
+    return IPC_OK();
+  }
+
+  aResolve(false);
 
   return IPC_OK();
 }

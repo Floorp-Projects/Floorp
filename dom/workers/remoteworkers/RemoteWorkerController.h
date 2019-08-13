@@ -135,6 +135,8 @@ class RemoteWorkerController final {
   RefPtr<ServiceWorkerOpPromise> ExecServiceWorkerOp(
       ServiceWorkerOpArgs&& aArgs);
 
+  RefPtr<GenericPromise> SetServiceWorkerSkipWaitingFlag() const;
+
  private:
   RemoteWorkerController(const RemoteWorkerData& aData,
                          RemoteWorkerObserver* aObserver);
