@@ -828,6 +828,16 @@ fn try_convert_to_marionette_message(
         ElementClick(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ElementClick(e.to_marionette()?),
         )),
+        ElementSendKeys(ref e, ref x) => {
+            let keys = x.to_marionette()?;
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::ElementSendKeys {
+                    id: e.clone().to_string(),
+                    text: keys.text.clone(),
+                    value: keys.value.clone(),
+                },
+            ))
+        }
         ExecuteAsyncScript(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ExecuteAsyncScript(x.to_marionette()?),
         )),
@@ -1041,21 +1051,6 @@ impl MarionetteCommand {
         } else {
             let (opt_name, opt_parameters) = match msg.command {
                 Status => panic!("Got status command that should already have been handled"),
-                ElementSendKeys(ref e, ref x) => {
-                    let mut data = Map::new();
-                    data.insert("id".to_string(), Value::String(e.to_string()));
-                    data.insert("text".to_string(), Value::String(x.text.clone()));
-                    data.insert(
-                        "value".to_string(),
-                        serde_json::to_value(
-                            x.text
-                                .chars()
-                                .map(|x| x.to_string())
-                                .collect::<Vec<String>>(),
-                        )?,
-                    );
-                    (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
-                }
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
