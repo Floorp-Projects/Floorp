@@ -91,7 +91,6 @@ TextEditRules::TextEditRules()
 #ifdef DEBUG
       mIsHandling(false),
 #endif  // #ifdef DEBUG
-      mLockRulesSniffing(false),
       mDidExplicitlySetInterline(false),
       mDeleteBidiImmediately(false),
       mIsHTMLEditRules(false) {
@@ -100,7 +99,6 @@ TextEditRules::TextEditRules()
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mLockRulesSniffing = false;
   mDidExplicitlySetInterline = false;
   mDeleteBidiImmediately = false;
 }
@@ -183,8 +181,6 @@ nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
 
 nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
                                   nsIEditor::EDirection aDirection) {
-  MOZ_ASSERT(!mLockRulesSniffing);
-
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -193,8 +189,6 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
   MOZ_ASSERT(mIsHandling);
   mIsHandling = false;
 #endif  // #ifdef DEBUG
-
-  AutoLockRulesSniffing lockIt(this);
 
   AutoSafeEditorData setData(*this, *mTextEditor);
 

@@ -1353,6 +1353,7 @@ class HTMLEditRules : public TextEditRules {
  protected:
   HTMLEditor* mHTMLEditor;
   RefPtr<nsRange> mDocChangeRange;
+  bool mInitialized;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
   bool mDidDeleteSelection;
