@@ -4,6 +4,11 @@ use serde_json::Value;
 use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Timeouts};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Url {
+    pub url: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LegacyWebElement {
     pub id: String,
 }
@@ -107,12 +112,16 @@ pub enum Command {
     },
     #[serde(rename = "WebDriver:FullscreenWindow")]
     FullscreenWindow,
+    #[serde(rename = "WebDriver:Navigate")]
+    Get(Url),
     #[serde(rename = "WebDriver:GetActiveElement")]
     GetActiveElement,
     #[serde(rename = "WebDriver:GetAlertText")]
     GetAlertText,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
+    #[serde(rename = "WebDriver:GetCurrentURL")]
+    GetCurrentUrl,
     #[serde(rename = "WebDriver:GetElementAttribute")]
     GetElementAttribute { id: String, name: String },
     #[serde(rename = "WebDriver:GetElementProperty")]
@@ -123,8 +132,12 @@ pub enum Command {
     GetElementTagName(LegacyWebElement),
     #[serde(rename = "WebDriver:GetElementText")]
     GetElementText(LegacyWebElement),
+    #[serde(rename = "WebDriver:GetPageSource")]
+    GetPageSource,
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
+    #[serde(rename = "WebDriver:GetTitle")]
+    GetTitle,
     #[serde(rename = "WebDriver:GetWindowHandle")]
     GetWindowHandle,
     #[serde(rename = "WebDriver:GetWindowHandles")]
