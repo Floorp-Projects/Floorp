@@ -18,7 +18,6 @@
 #include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/DataMutex.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
@@ -115,7 +114,6 @@ class MemoryReport;
 class TabContext;
 class GetFilesHelper;
 class MemoryReportRequestHost;
-class RemoteWorkerManager;
 struct CancelContentJSOptions;
 
 #define NS_CONTENTPARENT_IID                         \
@@ -147,7 +145,6 @@ class ContentParent final : public PContentParent,
 
   friend class mozilla::PreallocatedProcessManagerImpl;
   friend class PContentParent;
-  friend class mozilla::dom::RemoteWorkerManager;
 #ifdef FUZZING
   friend class mozilla::ipc::ProtocolFuzzerHelper;
 #endif
@@ -751,7 +748,7 @@ class ContentParent final : public PContentParent,
    * Decide whether the process should be kept alive even when it would normally
    * be shut down, for example when all its tabs are closed.
    */
-  bool ShouldKeepProcessAlive();
+  bool ShouldKeepProcessAlive() const;
 
   /**
    * Mark this ContentParent as "troubled". This means that it is still alive,
@@ -776,8 +773,6 @@ class ContentParent final : public PContentParent,
     // Close the channel with error and let the subprocess clean up itself.
     CLOSE_CHANNEL_WITH_ERROR,
   };
-
-  void MaybeAsyncSendShutDownMessage();
 
   /**
    * Exit the subprocess and vamoose.  After this call IsAlive()
@@ -1241,24 +1236,11 @@ class ContentParent final : public PContentParent,
   // timer.
   nsCOMPtr<nsITimer> mForceKillTimer;
 
-  // `mCount` is increased when a RemoteWorkerParent actor is created for this
-  // ContentProcess and it is decreased when the actor is destroyed.
-  //
-  // `mShutdownStarted` is flipped to `true` when a runnable that calls
-  // `ShutDownProcess` is dispatched; it's needed because the corresponding
-  // Content Process may be shutdown if there's no remote worker actors, and
-  // decrementing `mCount` and the call to `ShutDownProcess` are async. So,
-  // when a worker is going to be spawned and we see that `mCount` is 0,
-  // we can decide whether or not to use that process based on the value of
-  // `mShutdownStarted.`
-  //
+  // Number of active remote workers. This value is increased when a
+  // RemoteWorkerParent actor is created for this ContentProcess and it is
+  // decreased when the actor is destroyed.
   // It's touched on PBackground thread and on main-thread.
-  struct RemoteWorkerActorData {
-    uint32_t mCount = 0;
-    bool mShutdownStarted = false;
-  };
-
-  DataMutex<RemoteWorkerActorData> mRemoteWorkerActorData;
+  Atomic<uint32_t> mRemoteWorkerActors;
 
   // How many tabs we're waiting to finish their destruction
   // sequence.  Precisely, how many BrowserParents have called
