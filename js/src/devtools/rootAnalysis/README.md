@@ -76,7 +76,7 @@ dragons. To use it on SpiderMonkey:
 
         mkdir work
         cd work
-        ( export GECKO_DIR=$SRCDIR; $GECKO_DIR/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep )
+        ( export GECKO_PATH=$SRCDIR; $GECKO_PATH/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep )
 
 The `--dep` is optional, and will avoid rebuilding the JS shell used to run the
 analysis later.
@@ -89,7 +89,7 @@ If you see the error ``/lib/../lib64/crti.o: unrecognized relocation (0x2a) in s
 Output goes to `analysis/hazards.txt`. This will run the
 analysis on the js/src tree only; if you wish to analyze the full browser, use
 
-    ( export GECKO_DIR=$SRCDIR; $GECKO_DIR/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd) )
+    ( export GECKO_PATH=$SRCDIR; $GECKO_PATH/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd) )
 
 After running the analysis once, you can reuse the `*.xdb` database files
 generated, using modified analysis scripts, by running
