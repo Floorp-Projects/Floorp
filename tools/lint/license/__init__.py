@@ -48,6 +48,10 @@ def is_valid_license(licenses, filename):
     nb_lines = 10
     with open(filename) as myfile:
         head = myfile.readlines(nb_lines)
+        # Empty files don't need a license.
+        if not head:
+            return True
+
         for l in licenses:
             if l.lower().strip() in ''.join(head).lower():
                 return True
