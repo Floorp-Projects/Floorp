@@ -85,6 +85,7 @@ textbox:not([searchbutton]) > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
+.textbox-search-sign:-moz-locale-dir(rtl),
 .textbox-search-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
