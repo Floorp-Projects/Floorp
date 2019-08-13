@@ -1352,6 +1352,7 @@ class HTMLEditRules : public TextEditRules {
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
   bool mDidDeleteSelection;
+  bool mDidExplicitlySetInterline;
   bool mDidRangedDelete;
   bool mDidEmptyParentBlocksRemoved;
   bool mRestoreContentEditableCount;
