@@ -15,6 +15,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla {
@@ -44,6 +45,34 @@ RemoteWorkerControllerParent::~RemoteWorkerControllerParent() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mIPCActive);
   MOZ_ASSERT(!mRemoteWorkerController);
+}
+
+PFetchEventOpParent* RemoteWorkerControllerParent::AllocPFetchEventOpParent(
+    const ServiceWorkerFetchEventOpArgs& aArgs) {
+  AssertIsOnBackgroundThread();
+
+  RefPtr<FetchEventOpParent> actor = new FetchEventOpParent();
+  return actor.forget().take();
+}
+
+IPCResult RemoteWorkerControllerParent::RecvPFetchEventOpConstructor(
+    PFetchEventOpParent* aActor, const ServiceWorkerFetchEventOpArgs& aArgs) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  (static_cast<FetchEventOpParent*>(aActor))->Initialize(aArgs);
+
+  return IPC_OK();
+}
+
+bool RemoteWorkerControllerParent::DeallocPFetchEventOpParent(
+    PFetchEventOpParent* aActor) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  RefPtr<FetchEventOpParent> actor =
+      dont_AddRef(static_cast<FetchEventOpParent*>(aActor));
+  return true;
 }
 
 IPCResult RemoteWorkerControllerParent::RecvShutdown(

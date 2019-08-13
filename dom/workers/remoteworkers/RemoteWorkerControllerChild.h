@@ -33,6 +33,11 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
  private:
   ~RemoteWorkerControllerChild() = default;
 
+  PFetchEventOpChild* AllocPFetchEventOpChild(
+      const ServiceWorkerFetchEventOpArgs& aArgs);
+
+  bool DeallocPFetchEventOpChild(PFetchEventOpChild* aActor);
+
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   mozilla::ipc::IPCResult RecvCreationFailed();
