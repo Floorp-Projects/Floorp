@@ -63,7 +63,6 @@ using namespace dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocChangeRange)
@@ -74,7 +73,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocChangeRange)
@@ -90,7 +88,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TextEditRules, Release)
 TextEditRules::TextEditRules()
     : mTextEditor(nullptr),
       mData(nullptr),
-      mCachedSelectionOffset(0),
       mActionNesting(0),
       mLockRulesSniffing(false),
       mDidExplicitlySetInterline(false),
@@ -102,8 +99,6 @@ TextEditRules::TextEditRules()
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mCachedSelectionNode = nullptr;
-  mCachedSelectionOffset = 0;
   mActionNesting = 0;
   mLockRulesSniffing = false;
   mDidExplicitlySetInterline = false;
@@ -172,12 +167,10 @@ nsresult TextEditRules::DetachEditor() {
 
 nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
                                    nsIEditor::EDirection aDirection) {
+  MOZ_ASSERT(!mLockRulesSniffing);
+
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  if (mLockRulesSniffing) {
-    return NS_OK;
   }
 
   AutoLockRulesSniffing lockIt(this);
@@ -188,49 +181,15 @@ nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
   }
   mActionNesting++;
 
-  if (aEditSubAction == EditSubAction::eSetText) {
-    // setText replaces all text, so mCachedSelectionNode might be invalid on
-    // AfterEdit.
-    // Since this will be used as start position of spellchecker, we should
-    // use root instead.
-    mCachedSelectionNode = mTextEditor->GetRoot();
-    mCachedSelectionOffset = 0;
-    return NS_OK;
-  }
-
-  Selection* selection = mTextEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aEditSubAction == EditSubAction::eInsertText ||
-      aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    // For spell checker, previous selected node should be text node if
-    // possible. If anchor is root of editor, it may become invalid offset
-    // after inserting text.
-    EditorRawDOMPoint point = mTextEditor->FindBetterInsertionPoint(
-        EditorRawDOMPoint(selection->AnchorRef()));
-    if (point.IsSet()) {
-      mCachedSelectionNode = point.GetContainer();
-      mCachedSelectionOffset = point.Offset();
-      return NS_OK;
-    }
-  }
-
-  mCachedSelectionNode = selection->GetAnchorNode();
-  mCachedSelectionOffset = selection->AnchorOffset();
-
   return NS_OK;
 }
 
 nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
                                   nsIEditor::EDirection aDirection) {
+  MOZ_ASSERT(!mLockRulesSniffing);
+
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  if (mLockRulesSniffing) {
-    return NS_OK;
   }
 
   AutoLockRulesSniffing lockIt(this);
@@ -239,15 +198,14 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
   if (!--mActionNesting) {
     AutoSafeEditorData setData(*this, *mTextEditor);
 
-    nsresult rv = TextEditorRef().HandleInlineSpellCheck(
-        aEditSubAction, mCachedSelectionNode, mCachedSelectionOffset, nullptr,
-        0, nullptr, 0);
+    // XXX Probably, we should spellcheck again after edit action (not top-level
+    //     sub-action) is handled because the ranges can be referred only by
+    //     users.
+    nsresult rv =
+        TextEditorRef().HandleInlineSpellCheckAfterEdit(aEditSubAction);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    // no longer uses mCachedSelectionNode, so release it.
-    mCachedSelectionNode = nullptr;
 
     rv = MOZ_KnownLive(TextEditorRef()).EnsurePaddingBRElementForEmptyEditor();
     if (NS_FAILED(rv)) {
