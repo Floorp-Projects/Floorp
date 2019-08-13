@@ -448,17 +448,12 @@ MessageManagerTunnel.prototype = {
     "InPermitUnload",
     "PermitUnload",
     // Messages sent from browser.js
-    "Browser:Reload",
     "PageStyle:Disable",
     "PageStyle:Switch",
-    "Forms:MouseOut",
-    "Forms:MouseOver",
     // Messages sent from SessionStore.jsm
     "SessionStore:flush",
     "SessionStore:restoreHistory",
     "SessionStore:restoreTabContent",
-    // Messages sent from viewZoomOverlay.js.
-    "FullZoom",
   ],
 
   INNER_TO_OUTER_MESSAGES: [
@@ -476,8 +471,6 @@ MessageManagerTunnel.prototype = {
     "ImageDocumentLoaded",
     "InPermitUnload",
     "PermitUnload",
-    // Messages sent to tabbrowser.xml
-    "contextmenu",
     // Messages sent to SessionStore.jsm
     "SessionStore:update",
     // Messages sent to BrowserTestUtils.jsm
@@ -487,35 +480,23 @@ MessageManagerTunnel.prototype = {
   OUTER_TO_INNER_MESSAGE_PREFIXES: [
     // Messages sent from browser.js
     "Autoscroll:",
-    // Messages sent from nsContextMenu.js
-    "ContextMenu:",
     // Messages sent from DevTools
     "debug:",
-    // Messages sent from findbar.xml
-    "Findbar:",
     // Messages sent from RemoteFinder.jsm
     "Finder:",
     // Messages sent from InlineSpellChecker.jsm
-    "InlineSpellChecker:",
-    // Messages sent from MessageChannel.jsm
     "MessageChannel:",
     // Messages sent from pageinfo.js
     "PageInfo:",
     // Messages sent from printUtils.js
     "Printing:",
-    // Messages sent from viewSourceUtils.js
-    "ViewSource:",
   ],
 
   INNER_TO_OUTER_MESSAGE_PREFIXES: [
     // Messages sent to browser.js
     "Autoscroll:",
-    // Messages sent to nsContextMenu.js
-    "ContextMenu:",
     // Messages sent to DevTools
     "debug:",
-    // Messages sent to findbar.xml
-    "Findbar:",
     // Messages sent to RemoteFinder.jsm
     "Finder:",
     // Messages sent to MessageChannel.jsm
@@ -524,8 +505,6 @@ MessageManagerTunnel.prototype = {
     "PageInfo:",
     // Messages sent to printUtils.js
     "Printing:",
-    // Messages sent to viewSourceUtils.js
-    "ViewSource:",
   ],
 
   OUTER_TO_INNER_FRAME_SCRIPTS: [
