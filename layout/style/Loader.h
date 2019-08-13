@@ -517,16 +517,7 @@ class Loader final {
   // directly or indirectly @importing the sheet this SheetLoadData represents.
   void MarkLoadTreeFailed(SheetLoadData* aLoadData);
 
-  struct Sheets {
-    nsBaseHashtable<SheetLoadDataHashKey, RefPtr<StyleSheet>, StyleSheet*>
-        mCompleteSheets;
-    nsDataHashtable<SheetLoadDataHashKey,
-                    SheetLoadData*>
-        mLoadingDatas;  // weak refs
-    nsDataHashtable<SheetLoadDataHashKey,
-                    SheetLoadData*>
-        mPendingDatas;  // weak refs
-  };
+  struct Sheets;
   UniquePtr<Sheets> mSheets;
 
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
