@@ -624,7 +624,7 @@ class HTMLEditRules : public TextEditRules {
   void GetInnerContent(nsINode& aNode,
                        nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
                        int32_t* aIndex, Lists aLists = Lists::yes,
-                       Tables aTables = Tables::yes);
+                       Tables aTables = Tables::yes) const;
 
   /**
    * If aNode is the descendant of a listitem, return that li.  But table
@@ -906,20 +906,20 @@ class HTMLEditRules : public TextEditRules {
    */
   EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
                                   int32_t aOffset,
-                                  EditSubAction aEditSubAction);
+                                  EditSubAction aEditSubAction) const;
 
   /**
    * GetPromotedRanges() runs all the selection range endpoint through
    * GetPromotedPoint().
    */
   void GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
-                         EditSubAction aEditSubAction);
+                         EditSubAction aEditSubAction) const;
 
   /**
    * PromoteRange() expands a range to include any parents for which all
    * editable children are already in range.
    */
-  void PromoteRange(nsRange& aRange, EditSubAction aEditSubAction);
+  void PromoteRange(nsRange& aRange, EditSubAction aEditSubAction) const;
 
   /**
    * GetNodesForOperation() runs through the ranges in the array and construct a
@@ -933,7 +933,7 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult GetNodesForOperation(
       nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-      EditSubAction aEditSubAction, TouchContent aTouchContent);
+      EditSubAction aEditSubAction, TouchContent aTouchContent) const;
 
   void GetChildNodesForOperation(
       nsINode& aNode, nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
@@ -946,7 +946,7 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult
   GetNodesFromPoint(const EditorDOMPoint& aPoint, EditSubAction aEditSubAction,
                     nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-                    TouchContent aTouchContent);
+                    TouchContent aTouchContent) const;
 
   /**
    * GetNodesFromSelection() constructs a list of nodes from the selection that
@@ -956,18 +956,20 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult
   GetNodesFromSelection(EditSubAction aEditSubAction,
                         nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-                        TouchContent aTouchContent);
+                        TouchContent aTouchContent) const;
 
   enum class EntireList { no, yes };
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult
   GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-                     EntireList aEntireList, TouchContent aTouchContent);
-  void GetDefinitionListItemTypes(Element* aElement, bool* aDT, bool* aDD);
+                     EntireList aEntireList, TouchContent aTouchContent) const;
+  void GetDefinitionListItemTypes(Element* aElement, bool* aDT,
+                                  bool* aDD) const;
   MOZ_CAN_RUN_SCRIPT
   nsresult GetParagraphFormatNodes(
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-  void LookInsideDivBQandList(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+  void LookInsideDivBQandList(
+      nsTArray<OwningNonNull<nsINode>>& aNodeArray) const;
 
   /**
    * BustUpInlinesAtRangeEndpoints() splits nodes at both start and end of
@@ -980,7 +982,8 @@ class HTMLEditRules : public TextEditRules {
    *                            split.
    */
   MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem);
+  MOZ_MUST_USE nsresult
+  BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem) const;
 
   /**
    * BustUpInlinesAtBRs() splits before all <br> elements in aNode.  All <br>
@@ -994,15 +997,16 @@ class HTMLEditRules : public TextEditRules {
    *                            aNode itself.
    */
   MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult BustUpInlinesAtBRs(
-      nsIContent& aNode, nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
+  MOZ_MUST_USE nsresult
+  BustUpInlinesAtBRs(nsIContent& aNode,
+                     nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
 
   /**
    * GetHiestInlineParent() returns the highest inline node parent between
    * aNode and the editing host.  Even if the editing host is an inline
    * element, this method never returns the editing host as the result.
    */
-  nsIContent* GetHighestInlineParent(nsINode& aNode);
+  nsIContent* GetHighestInlineParent(nsINode& aNode) const;
 
   /**
    * MakeTransitionList() detects all the transitions in the array, where a

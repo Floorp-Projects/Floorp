@@ -84,7 +84,7 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
 }
 
 already_AddRefed<Element>
-HTMLEditor::GetAbsolutelyPositionedSelectionContainer() {
+HTMLEditor::GetAbsolutelyPositionedSelectionContainer() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return nullptr;
