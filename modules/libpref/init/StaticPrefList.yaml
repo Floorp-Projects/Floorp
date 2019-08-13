@@ -2532,6 +2532,53 @@
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
 
+# A value greater than zero enables font size inflation for
+# pan-and-zoom UIs, so that the fonts in a block are at least the size
+# that, if a block's width is scaled to match the device's width, the
+# fonts in the block are big enough that at most the pref value ems of
+# text fit in *the width of the device*.
+#
+# When both this pref and the next are set, the larger inflation is used.
+- name: font.size.inflation.emPerLine
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# A value greater than zero enables font size inflation for
+# pan-and-zoom UIs, so that if a block's width is scaled to match the
+# device's width, the fonts in a block are at least the given font size.
+# The value given is in twips, i.e., 1/20 of a point, or 1/1440 of an inch.
+#
+# When both this pref and the previous are set, the larger inflation is used.
+- name: font.size.inflation.minTwips
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# Defines the font size inflation mapping intercept parameter.
+#
+# Font size inflation computes a minimum font size, m, based on
+# other preferences (see font.size.inflation.minTwips and
+# font.size.inflation.emPerLine, above) and the width of the
+# frame in which the text resides. Using this minimum, a specified
+# font size, s, is mapped to an inflated font size, i, using an
+# equation that varies depending on the value of the font size
+# inflation mapping intercept parameter, P.
+#
+# If the intercept parameter is negative, then the following mapping
+# function is used:
+#
+# i = m + s
+#
+# If the intercept parameter is non-negative, then the mapping function
+# is a function such that its graph meets the graph of i = s at the
+# point where both i and s are (1 + P/2) * m for values of s that are
+# large enough. This means that when s=0, i is always equal to m.
+- name: font.size.inflation.mappingIntercept
+  type: int32_t
+  value: 1
+  mirror: always
+
 # This controls the percentage that fonts will be inflated, if font
 # size inflation is enabled. Essentially, if we have a specified font
 # size, s, and an inflated font size, i, this specifies that the ratio

@@ -2446,22 +2446,6 @@ class nsLayoutUtils {
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
   /**
-   * See comment above "font.size.inflation.emPerLine" in
-   * modules/libpref/src/init/all.js .
-   */
-  static uint32_t FontSizeInflationEmPerLine() {
-    return sFontSizeInflationEmPerLine;
-  }
-
-  /**
-   * See comment above "font.size.inflation.minTwips" in
-   * modules/libpref/src/init/all.js .
-   */
-  static uint32_t FontSizeInflationMinTwips() {
-    return sFontSizeInflationMinTwips;
-  }
-
-  /**
    * See comment above "font.size.inflation.lineThreshold" in
    * modules/libpref/src/init/all.js .
    */
@@ -2493,14 +2477,6 @@ class nsLayoutUtils {
 
   static uint32_t QuiescentFramesBeforeIdlePeriod() {
     return sQuiescentFramesBeforeIdlePeriod;
-  }
-
-  /**
-   * See comment above "font.size.inflation.mappingIntercept" in
-   * modules/libpref/src/init/all.js .
-   */
-  static int32_t FontSizeInflationMappingIntercept() {
-    return sFontSizeInflationMappingIntercept;
   }
 
   /**
@@ -3049,10 +3025,7 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static uint32_t sFontSizeInflationEmPerLine;
-  static uint32_t sFontSizeInflationMinTwips;
   static uint32_t sFontSizeInflationLineThreshold;
-  static int32_t sFontSizeInflationMappingIntercept;
   static bool sFontSizeInflationForceEnabled;
   static bool sFontSizeInflationDisabledInMasterProcess;
   static uint32_t sSystemFontScale;
