@@ -139,6 +139,15 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   void SetDocShell(nsIDocShell* aDocShell);
   void ClearDocShell() { mDocShell = nullptr; }
 
+  // This cleans up remote outer window proxies that might have been left behind
+  // when the browsing context went from being remote to local. It does this by
+  // turning them into cross-compartment wrappers to aOuter. If there is already
+  // a remote proxy in the compartment of aOuter, then aOuter will get swapped
+  // to it and the value of aOuter will be set to the object that used to be the
+  // remote proxy and is now an OuterWindowProxy.
+  void CleanUpDanglingRemoteOuterWindowProxies(
+      JSContext* aCx, JS::MutableHandle<JSObject*> aOuter);
+
   // Get the embedder element for this BrowsingContext if the embedder is
   // in-process, or null if it's not.
   Element* GetEmbedderElement() const { return mEmbedderElement; }
@@ -491,6 +500,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Has this browsing context been discarded? BrowsingContexts should
   // only be discarded once.
   bool mIsDiscarded : 1;
+
+  // This is true if the BrowsingContext was out of process, but is now in
+  // process, and might have remote window proxies that need to be cleaned up.
+  bool mDanglingRemoteOuterProxies : 1;
 };
 
 /**
