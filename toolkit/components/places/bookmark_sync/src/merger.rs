@@ -5,17 +5,17 @@
 use std::{cell::RefCell, fmt::Write, mem, sync::Arc};
 
 use atomic_refcell::AtomicRefCell;
-use dogear::{AbortSignal, Store};
+use dogear::Store;
 use log::LevelFilter;
 use moz_task::{Task, TaskRunnable, ThreadPtrHandle, ThreadPtrHolder};
-use nserror::{nsresult, NS_ERROR_ABORT, NS_ERROR_NOT_AVAILABLE, NS_OK};
+use nserror::{nsresult, NS_ERROR_NOT_AVAILABLE, NS_OK};
 use nsstring::nsString;
 use storage::Conn;
 use thin_vec::ThinVec;
 use xpcom::{
     interfaces::{
-        mozIStorageConnection, mozISyncedBookmarksMirrorCallback, mozISyncedBookmarksMirrorLogger,
-        mozISyncedBookmarksMirrorProgressListener,
+        mozIPlacesPendingOperation, mozIStorageConnection, mozISyncedBookmarksMirrorCallback,
+        mozISyncedBookmarksMirrorLogger, mozISyncedBookmarksMirrorProgressListener,
     },
     RefPtr, XpCom,
 };
@@ -28,7 +28,6 @@ use crate::store;
 #[xpimplements(mozISyncedBookmarksMerger)]
 #[refcnt = "nonatomic"]
 pub struct InitSyncedBookmarksMerger {
-    controller: Arc<AbortController>,
     db: RefCell<Option<Conn>>,
     logger: RefCell<Option<RefPtr<mozISyncedBookmarksMirrorLogger>>>,
 }
@@ -36,7 +35,6 @@ pub struct InitSyncedBookmarksMerger {
 impl SyncedBookmarksMerger {
     pub fn new() -> RefPtr<SyncedBookmarksMerger> {
         SyncedBookmarksMerger::allocate(InitSyncedBookmarksMerger {
-            controller: Arc::new(AbortController::default()),
             db: RefCell::default(),
             logger: RefCell::default(),
         })
@@ -53,9 +51,6 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(set_db => SetDb(connection: *const mozIStorageConnection));
     fn set_db(&self, connection: Option<&mozIStorageConnection>) -> Result<(), nsresult> {
-        if self.controller.aborted() {
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        }
         self.db
             .replace(connection.map(|connection| Conn::wrap(RefPtr::new(connection))));
         Ok(())
@@ -71,9 +66,6 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(set_logger => SetLogger(logger: *const mozISyncedBookmarksMirrorLogger));
     fn set_logger(&self, logger: Option<&mozISyncedBookmarksMirrorLogger>) -> Result<(), nsresult> {
-        if self.controller.aborted() {
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        }
         self.logger.replace(logger.map(RefPtr::new));
         Ok(())
     }
@@ -84,7 +76,7 @@ impl SyncedBookmarksMerger {
             remote_time_seconds: i64,
             weak_uploads: *const ThinVec<::nsstring::nsString>,
             callback: *const mozISyncedBookmarksMirrorCallback
-        )
+        ) -> *const mozIPlacesPendingOperation
     );
     fn merge(
         &self,
@@ -92,34 +84,18 @@ impl SyncedBookmarksMerger {
         remote_time_seconds: i64,
         weak_uploads: Option<&ThinVec<nsString>>,
         callback: &mozISyncedBookmarksMirrorCallback,
-    ) -> Result<(), nsresult> {
-        if self.controller.aborted() {
-            return unsafe {
-                callback.HandleError(
-                    NS_ERROR_ABORT,
-                    &*nsString::from("Can't merge with finalized merger"),
-                )
-            }
-            .to_result();
-        }
+    ) -> Result<RefPtr<mozIPlacesPendingOperation>, nsresult> {
         let callback = RefPtr::new(callback);
         let db = match *self.db.borrow() {
             Some(ref db) => db.clone(),
-            None => {
-                return unsafe {
-                    callback.HandleError(
-                        NS_ERROR_NOT_AVAILABLE,
-                        &*nsString::from("Can't merge without database connection"),
-                    )
-                }
-                .to_result()
-            }
+            None => return Err(NS_ERROR_NOT_AVAILABLE),
         };
         let logger = &*self.logger.borrow();
         let async_thread = db.thread()?;
+        let controller = Arc::new(AbortController::default());
         let task = MergeTask::new(
             &db,
-            Arc::clone(&self.controller),
+            Arc::clone(&controller),
             logger.as_ref().cloned(),
             local_time_seconds,
             remote_time_seconds,
@@ -132,12 +108,13 @@ impl SyncedBookmarksMerger {
             "bookmark_sync::SyncedBookmarksMerger::merge",
             Box::new(task),
         )?;
-        runnable.dispatch(&async_thread)
+        runnable.dispatch(&async_thread)?;
+        let op = MergeOp::new(controller);
+        Ok(RefPtr::new(op.coerce()))
     }
 
-    xpcom_method!(finalize => Finalize());
-    fn finalize(&self) -> Result<(), nsresult> {
-        self.controller.abort();
+    xpcom_method!(reset => Reset());
+    fn reset(&self) -> Result<(), nsresult> {
         mem::drop(self.db.borrow_mut().take());
         mem::drop(self.logger.borrow_mut().take());
         Ok(())
@@ -243,5 +220,24 @@ impl Task for MergeTask {
             }
         }
         .to_result()
+    }
+}
+
+#[derive(xpcom)]
+#[xpimplements(mozIPlacesPendingOperation)]
+#[refcnt = "atomic"]
+pub struct InitMergeOp {
+    controller: Arc<AbortController>,
+}
+
+impl MergeOp {
+    pub fn new(controller: Arc<AbortController>) -> RefPtr<MergeOp> {
+        MergeOp::allocate(InitMergeOp { controller })
+    }
+
+    xpcom_method!(cancel => Cancel());
+    fn cancel(&self) -> Result<(), nsresult> {
+        self.controller.abort();
+        Ok(())
     }
 }
