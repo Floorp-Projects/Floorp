@@ -572,6 +572,10 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
                 HomeMenu.Item.Help -> {
                     invokePendingDeleteJobs()
+                    if (!onboarding.userHasBeenOnboarded()) {
+                        onboarding.finish()
+                        emitModeChanges()
+                    }
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
@@ -728,7 +732,7 @@ class HomeFragment : Fragment(), AccountObserver {
         Mode.fromBrowsingMode(browsingModeManager.mode)
     }
 
-    private fun emitAccountChanges() {
+    private fun emitModeChanges() {
         context?.let {
             val mode = currentMode(it)
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
@@ -741,12 +745,12 @@ class HomeFragment : Fragment(), AccountObserver {
                 it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
             ).show()
         }
-        emitAccountChanges()
+        emitModeChanges()
     }
 
-    override fun onAuthenticationProblems() = emitAccountChanges()
-    override fun onLoggedOut() = emitAccountChanges()
-    override fun onProfileUpdated(profile: Profile) = emitAccountChanges()
+    override fun onAuthenticationProblems() = emitModeChanges()
+    override fun onLoggedOut() = emitModeChanges()
+    override fun onProfileUpdated(profile: Profile) = emitModeChanges()
 
     private fun scrollAndAnimateCollection(
         tabsAddedToCollectionSize: Int,
