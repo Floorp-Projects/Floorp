@@ -757,7 +757,6 @@ static void DoRegisterManifest(NSLocationType aType, FileLocation& aFile,
   auto result = URLPreloader::Read(aFile);
   if (result.isOk()) {
     nsCString buf(result.unwrap());
-
     ParseManifest(aType, aFile, buf.BeginWriting(), aChromeOnly);
   } else if (NS_BOOTSTRAPPED_LOCATION != aType) {
     nsCString uri;

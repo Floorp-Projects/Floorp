@@ -727,7 +727,7 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
     return loadResultOrErr.unwrapErr();
   }
 
-  if (loadResultOrErr.unwrap().ShouldBlock() && !mRunsToCompletion) {
+  if (loadResultOrErr.inspect().ShouldBlock() && !mRunsToCompletion) {
     ++mPendingSheetCount;
     mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }

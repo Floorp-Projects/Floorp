@@ -1330,8 +1330,8 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       }
 
       // We need to load an absolute address into a particular register
-      tramp.WriteLoadLiteral(pcRelInfo.unwrap().mAbsAddress,
-                             pcRelInfo.unwrap().mDestReg);
+      tramp.WriteLoadLiteral(pcRelInfo.inspect().mAbsAddress,
+                             pcRelInfo.inspect().mDestReg);
     }
 
 #else
