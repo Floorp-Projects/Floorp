@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FuzzyLayer.h"
-#include "nsIRunnable.h"
-#include "nsThreadUtils.h"
-
 #include "prmem.h"
 #include "prio.h"
 #include "mozilla/Logging.h"
@@ -188,7 +185,7 @@ nsresult AttachFuzzyIOLayer(PRFileDesc* fd) {
     return NS_ERROR_FAILURE;
   }
 
-  PRStatus status = PR_PushIOLayer(fd, PR_TOP_IO_LAYER, layer);
+  PRStatus status = PR_PushIOLayer(fd, PR_NSPR_IO_LAYER, layer);
 
   if (status == PR_FAILURE) {
     PR_Free(layer);  // PR_CreateIOLayerStub() uses PR_Malloc().
