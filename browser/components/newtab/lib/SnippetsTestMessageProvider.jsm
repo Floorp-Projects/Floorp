@@ -91,6 +91,19 @@ const MESSAGES = () => [
     },
   },
   {
+    id: "SIMPLE_TEST_BUTTON_ACTION_1",
+    template: "simple_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      button_label: "Open about:config",
+      button_action: "OPEN_ABOUT_PAGE",
+      button_action_args: "config",
+      text: "Testing the OPEN_ABOUT_PAGE action",
+      block_button_text: "Block",
+    },
+  },
+  {
     id: "SIMPLE_WITH_TITLE_TEST_1",
     template: "simple_snippet",
     content: {
@@ -385,6 +398,81 @@ const MESSAGES = () => [
         "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
+      },
+      block_button_text: "Block",
+    },
+  },
+  {
+    id: "SIMPLE_BELOW_SEARCH_TEST_TITLE",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      title: "See if you've been part of an online data breach.",
+      text:
+        "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
+      links: {
+        syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
+      },
+      block_button_text: "Block",
+    },
+  },
+  {
+    id: "SPECIAL_SNIPPET_BUTTON_1",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      button_label: "Find Out Now",
+      button_url: "https://www.mozilla.org/en-US/firefox/accounts",
+      title: "See if you've been part of an online data breach.",
+      text: "Firefox Monitor tells you what hackers already know about you.",
+      block_button_text: "Block",
+    },
+  },
+  {
+    id: "SPECIAL_SNIPPET_LONG_CONTENT",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      button_label: "Find Out Now",
+      button_url: "https://www.mozilla.org/en-US/firefox/accounts",
+      title: "See if you've been part of an online data breach.",
+      text:
+        "Firefox Monitor tells you what hackers already know about you. Here's some extra text to make the content really long.",
+      block_button_text: "Block",
+    },
+  },
+  {
+    id: "SPECIAL_SNIPPET_NO_TITLE",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      icon_dark_theme: TEST_ICON_BW,
+      button_label: "Find Out Now",
+      button_url: "https://www.mozilla.org/en-US/firefox/accounts",
+      text: "Firefox Monitor tells you what hackers already know about you.",
+      block_button_text: "Block",
+    },
+  },
+  {
+    id: "SPECIAL_SNIPPET_MONITOR",
+    template: "simple_below_search_snippet",
+    content: {
+      icon: TEST_ICON,
+      title: "See if you've been part of an online data breach.",
+      text: "Firefox Monitor tells you what hackers already know about you.",
+      button_label: "Get monitor",
+      button_action: "ENABLE_FIREFOX_MONITOR",
+      button_action_args: {
+        url:
+          "https://monitor.firefox.com/oauth/init?utm_source=snippets&utm_campaign=monitor-snippet-test&form_type=email&entrypoint=newtab",
+        flowRequestParams: {
+          entrypoint: "snippets",
+          utm_term: "monitor",
+          form_type: "email",
+        },
       },
       block_button_text: "Block",
     },
