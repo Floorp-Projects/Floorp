@@ -5,12 +5,14 @@
 import { updateSelectedItem } from "../certviewer.js";
 import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
+import { WarningSection } from "./warning-section.js";
 
 class CertificateSection extends HTMLElement {
-  constructor(certs, error) {
+  constructor(certs, error, errorCode) {
     super();
     this.certs = certs;
     this.error = error;
+    this.errorCode = errorCode;
   }
 
   connectedCallback() {
@@ -34,6 +36,10 @@ class CertificateSection extends HTMLElement {
       "data-l10n-id",
       "certificate-viewer-certificate-section-title"
     );
+
+    if (this.errorCode) {
+      this.shadowRoot.prepend(new WarningSection(this.errorCode));
+    }
 
     this.infoGroupContainer = this.shadowRoot.querySelector(".info-groups");
 

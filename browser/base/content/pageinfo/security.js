@@ -35,7 +35,7 @@ var security = {
     viewCertHelper(window, cert);
   },
 
-  _getSecurityInfo() {
+  async _getSecurityInfo() {
     // We don't have separate info for a frame, return null until further notice
     // (see bug 138479)
     if (!this.windowInfo.isTopWindow) {
@@ -56,9 +56,16 @@ var security = {
         Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT);
     var isInsecure = ui.state & Ci.nsIWebProgressListener.STATE_IS_INSECURE;
     var isEV = ui.state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
-    var secInfo = ui.secInfo;
 
-    if (!isInsecure && secInfo) {
+    let secInfo = await window.opener.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getSecurityInfo();
+    secInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+
+    let error = null;
+    if (secInfo.errorCodeString) {
+      error = secInfo.errorCodeString;
+    }
+
+    if (secInfo) {
       var cert = secInfo.serverCert;
       var issuerName = cert.issuerOrganization || cert.issuerName;
 
@@ -73,6 +80,7 @@ var security = {
         isEV,
         cert,
         certificateTransparency: undefined,
+        error,
       };
 
       var version;
@@ -132,6 +140,7 @@ var security = {
       isEV,
       cert: null,
       certificateTransparency: null,
+      error,
     };
   },
 
@@ -204,9 +213,9 @@ var security = {
   /**
    * Open the login manager window
    */
-  viewPasswords() {
+  async viewPasswords() {
     LoginHelper.openPasswordManager(window, {
-      filterString: this._getSecurityInfo().hostName,
+      filterString: await this._getSecurityInfo().hostName,
       entryPoint: "pageinfo",
     });
   },
@@ -214,10 +223,11 @@ var security = {
   _cert: null,
 };
 
-function securityOnLoad(uri, windowInfo) {
+async function securityOnLoad(uri, windowInfo) {
   security.init(uri, windowInfo);
 
-  var info = security._getSecurityInfo();
+  var info = await security._getSecurityInfo();
+
   if (
     !info ||
     (uri.scheme === "about" && !uri.spec.startsWith("about:certerror"))
@@ -276,6 +286,9 @@ function securityOnLoad(uri, windowInfo) {
   /* Manage the View Cert button*/
   var viewCert = document.getElementById("security-view-cert");
   if (info.cert) {
+    if (info.error) {
+      security.error = info.error;
+    }
     security._cert = info.cert;
     viewCert.collapsed = false;
   } else {
@@ -384,21 +397,28 @@ function getCertificateChain(certChain, options = {}) {
   return certificates;
 }
 
-function viewCertHelper(parent, cert) {
+async function viewCertHelper(parent, cert) {
   if (!cert) {
     return;
   }
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-    let ui = security._getSecurityUI();
-    let securityInfo = ui.secInfo;
-    let certChain = getCertificateChain(securityInfo.succeededCertChain);
+    let securityInfo = await window.opener.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getSecurityInfo();
+    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+
+    let certChain = securityInfo.succeededCertChain
+      ? securityInfo.succeededCertChain
+      : securityInfo.failedCertChain;
+    certChain = getCertificateChain(certChain);
     let certs = certChain.map(elem =>
       encodeURIComponent(elem.getBase64DERString())
     );
     let certsStringURL = certs.map(elem => `cert=${elem}`);
     certsStringURL = certsStringURL.join("&");
     let url = `about:certificate?${certsStringURL}`;
+    if (security.error) {
+      url = url + `&error=${security.error}`;
+    }
     openTrustedLinkIn(url, "tab", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
