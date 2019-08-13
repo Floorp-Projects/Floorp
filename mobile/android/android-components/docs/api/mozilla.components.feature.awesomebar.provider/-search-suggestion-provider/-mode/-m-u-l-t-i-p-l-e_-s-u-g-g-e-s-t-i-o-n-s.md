@@ -2,4 +2,4 @@
 
 # MULTIPLE_SUGGESTIONS
 
-`MULTIPLE_SUGGESTIONS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L148)
+`MULTIPLE_SUGGESTIONS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/SearchSuggestionProvider.kt#L196)

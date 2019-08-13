@@ -63,6 +63,7 @@ mozilla.components.browser.domains
 mozilla.components.browser.domains.autocomplete
 mozilla.components.browser.engine.gecko
 mozilla.components.browser.engine.gecko.fetch
+mozilla.components.browser.engine.gecko.glean
 mozilla.components.browser.engine.gecko.integration
 mozilla.components.browser.engine.gecko.permission
 mozilla.components.browser.engine.gecko.prompt
@@ -107,7 +108,6 @@ mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
-mozilla.components.browser.toolbar.display
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.content.blocking

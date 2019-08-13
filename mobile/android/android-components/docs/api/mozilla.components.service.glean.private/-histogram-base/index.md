@@ -17,4 +17,5 @@ supported by the Glean SDK.
 
 | Name | Summary |
 |---|---|
+| [CustomDistributionMetricType](../-custom-distribution-metric-type/index.md) | `data class CustomDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md)`, `[`HistogramBase`](./index.md)<br>This implements the developer facing API for recording custom distribution metrics. |
 | [TimingDistributionMetricType](../-timing-distribution-metric-type/index.md) | `data class TimingDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md)`, `[`HistogramBase`](./index.md)<br>This implements the developer facing API for recording timing distribution metrics. |

@@ -30,6 +30,7 @@ metric types.
 |---|---|
 | [BooleanMetricType](../-boolean-metric-type/index.md) | `data class BooleanMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording boolean metrics. |
 | [CounterMetricType](../-counter-metric-type/index.md) | `data class CounterMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording counter metrics. |
+| [CustomDistributionMetricType](../-custom-distribution-metric-type/index.md) | `data class CustomDistributionMetricType : `[`CommonMetricData`](./index.md)`, `[`HistogramBase`](../-histogram-base/index.md)<br>This implements the developer facing API for recording custom distribution metrics. |
 | [DatetimeMetricType](../-datetime-metric-type/index.md) | `data class DatetimeMetricType : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording datetime metrics. |
 | [EventMetricType](../-event-metric-type/index.md) | `data class EventMetricType<ExtraKeysEnum : `[`Enum`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-enum/index.html)`<`[`ExtraKeysEnum`](../-event-metric-type/index.md#ExtraKeysEnum)`>> : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for recording events. |
 | [LabeledMetricType](../-labeled-metric-type/index.md) | `data class LabeledMetricType<T> : `[`CommonMetricData`](./index.md)<br>This implements the developer facing API for labeled metrics. |

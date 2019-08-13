@@ -2,7 +2,7 @@
 
 # stopAndAccumulate
 
-`fun stopAndAccumulate(timerId: `[`GleanTimerId`](../../mozilla.components.service.glean.timing/-glean-timer-id.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L55)
+`fun stopAndAccumulate(timerId: `[`GleanTimerId`](../../mozilla.components.service.glean.timing/-glean-timer-id.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L62)
 
 Stop tracking time for the provided metric and associated timer id. Add a
 count to the corresponding bucket in the timing distribution.

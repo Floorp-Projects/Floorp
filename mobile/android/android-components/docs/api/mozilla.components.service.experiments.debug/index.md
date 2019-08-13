@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [ExperimentsDebugActivity](-experiments-debug-activity/index.md) | `class ExperimentsDebugActivity` |
+| [ExperimentsDebugActivity](-experiments-debug-activity/index.md) | `class ExperimentsDebugActivity`<br>Debugging activity exported by service-experiments to allow easier debugging. This accepts commands that can force the library to do the following: |

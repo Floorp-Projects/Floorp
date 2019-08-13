@@ -2,7 +2,7 @@
 
 # siteTrackingProtection
 
-`var siteTrackingProtection: `[`SiteTrackingProtection`](../../mozilla.components.concept.toolbar/-toolbar/-site-tracking-protection/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L415)
+`var siteTrackingProtection: `[`SiteTrackingProtection`](../../mozilla.components.concept.toolbar/-toolbar/-site-tracking-protection/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L418)
 
 Overrides [Toolbar.siteTrackingProtection](../../mozilla.components.concept.toolbar/-toolbar/site-tracking-protection.md)
 

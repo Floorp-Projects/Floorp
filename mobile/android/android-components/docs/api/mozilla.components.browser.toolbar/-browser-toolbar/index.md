@@ -2,7 +2,7 @@
 
 # BrowserToolbar
 
-`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L70)
+`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L69)
 
 A customizable toolbar for browsers.
 
@@ -52,7 +52,8 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | [progressBarGravity](progress-bar-gravity.md) | `var progressBarGravity: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Set progress bar to be at the top of the toolbar. It's on bottom by default. |
 | [separatorColor](separator-color.md) | `var separatorColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the vertical separator between the tracking protection icon and the security indicator icon. |
 | [siteSecure](site-secure.md) | `var siteSecure: `[`SiteSecurity`](../../mozilla.components.concept.toolbar/-toolbar/-site-security/index.md)<br>Sets/Gets the site security to be displayed on the toolbar. |
-| [siteSecurityIcons](site-security-icons.md) | `var siteSecurityIcons: `[`SiteSecurityIcons`](../../mozilla.components.browser.toolbar.display/-site-security-icons/index.md)<br>Set/Get the site security icons (usually a lock or globe icon). It uses a pair of drawables which represent the insecure and secure colours respectively. |
+| [siteSecurityColor](site-security-color.md) | `var siteSecurityColor: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Set/Get the site security icon colours. It uses a pair of color integers which represent the insecure and secure colours respectively. |
+| [siteSecurityIcon](site-security-icon.md) | `var siteSecurityIcon: <ERROR CLASS>`<br>Set/Get the site security icon (usually a lock and globe icon). It uses a [android.graphics.drawable.StateListDrawable](#) where "state_site_secure" represents the secure icon and empty state represents the insecure icon. |
 | [siteTrackingProtection](site-tracking-protection.md) | `var siteTrackingProtection: `[`SiteTrackingProtection`](../../mozilla.components.concept.toolbar/-toolbar/-site-tracking-protection/index.md)<br>Sets/Gets the site tracking protection state to be displayed on the toolbar. |
 | [suggestionBackgroundColor](suggestion-background-color.md) | `var suggestionBackgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The background color used for autocomplete suggestions in edit mode. |
 | [suggestionForegroundColor](suggestion-foreground-color.md) | `var suggestionForegroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The foreground color used for autocomplete suggestions in edit mode. |
@@ -91,7 +92,6 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | [setOnUrlCommitListener](set-on-url-commit-listener.md) | `fun setOnUrlCommitListener(listener: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers the given function to be invoked when the user selected a new URL i.e. is done editing. |
 | [setOnUrlLongClickListener](set-on-url-long-click-listener.md) | `fun setOnUrlLongClickListener(handler: (<ERROR CLASS>) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Set a LongClickListener to the urlView of the toolbar. |
 | [setSearchTerms](set-search-terms.md) | `fun setSearchTerms(searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays the currently used search terms as part of this Toolbar. |
-| [setSiteSecurityColor](set-site-security-color.md) | `fun setSiteSecurityColor(colors: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setTrackingProtectionIcons](set-tracking-protection-icons.md) | `fun setTrackingProtectionIcons(iconOnNoTrackersBlocked: <ERROR CLASS> = requireNotNull(
             context.getDrawable(
                 TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
