@@ -85,6 +85,44 @@ class MediaNotificationTest {
 
         assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
     }
+
+    @Test
+    fun `media notification for playing state in private mode`() {
+        val state = MediaState.Playing(
+                Session("https://www.mozilla.org", private = true).apply {
+                    title = "Mozilla"
+                },
+                listOf(
+                    MockMedia(Media.PlaybackState.PLAYING)
+                ))
+
+        val notification = MediaNotification(testContext)
+            .create(state, mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+
+        assertEquals(R.drawable.mozac_feature_media_playing, notification.iconResource)
+    }
+
+    @Test
+    fun `media notification for paused state in private mode`() {
+        val state = MediaState.Paused(
+                Session("https://www.mozilla.org", private = true).apply {
+                    title = "Mozilla"
+                },
+                listOf(
+                        MockMedia(Media.PlaybackState.PAUSE)
+                ))
+
+        val notification = MediaNotification(testContext)
+                .create(state, mock())
+
+        assertEquals("", notification.text)
+        assertEquals("A site is playing media", notification.title)
+
+        assertEquals(R.drawable.mozac_feature_media_paused, notification.iconResource)
+    }
 }
 
 private val Notification.text: String?

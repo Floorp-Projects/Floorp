@@ -60,10 +60,10 @@ internal class MediaNotification(
 private fun MediaState.toNotificationData(context: Context): NotificationData {
     return when (this) {
         is MediaState.Playing -> NotificationData(
-            title = session.titleOrUrl,
-            description = session.url,
+            title = session.getTitleOrUrl(context),
+            description = session.nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_playing,
-            largeIcon = session.icon,
+            largeIcon = session.nonPrivateIcon,
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_pause,
                 context.getString(R.string.mozac_feature_media_notification_action_pause),
@@ -75,10 +75,10 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
             ).build()
         )
         is MediaState.Paused -> NotificationData(
-            title = session.titleOrUrl,
-            description = session.url,
+            title = session.getTitleOrUrl(context),
+            description = session.nonPrivateUrl,
             icon = R.drawable.mozac_feature_media_paused,
-            largeIcon = session.icon,
+            largeIcon = session.nonPrivateIcon,
             action = NotificationCompat.Action.Builder(
                 R.drawable.mozac_feature_media_action_play,
                 context.getString(R.string.mozac_feature_media_notification_action_play),
@@ -93,8 +93,17 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
     }
 }
 
-private val Session.titleOrUrl
-    get() = if (title.isNotEmpty()) title else url
+private fun Session.getTitleOrUrl(context: Context): String = when {
+    private -> context.getString(R.string.mozac_feature_media_notification_private_mode)
+    title.isNotEmpty() -> title
+    else -> url
+}
+
+private val Session.nonPrivateUrl
+    get() = if (private) "" else url
+
+private val Session.nonPrivateIcon: Bitmap?
+    get() = if (private) null else icon
 
 private data class NotificationData(
     val title: String,
