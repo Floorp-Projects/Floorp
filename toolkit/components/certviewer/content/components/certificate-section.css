@@ -21,11 +21,6 @@ h1 {
   display: contents;
 }
 
-.error {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--in-content-box-border-color);
-}
-
 .tab {
   margin: 0;
   border-radius: 0;

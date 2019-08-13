@@ -21,9 +21,8 @@
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certviewer.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-group.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-item.js"></script>
-    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/warning-section.js"></script>
-    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/error-section.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/error-section.js"></script>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://global/content/certviewer/certviewer.css">
     <title>about:certificate</title>
@@ -52,14 +51,6 @@
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/error-section.css">
       <h1 class="title"></h1>
       <span class="error"></span>
-    </template>
-
-    <template id="warning-section-template">
-      <link rel="stylesheet" href="chrome://global/content/certviewer/components/warning-section.css">
-      <div class="warning-container">
-        <h2 class="warning-title" data-l10n-id="certificate-viewer-warning-section-title"></h1>
-        <span class="warning-message"></span>
-      </div>
     </template>
   </body>
 </html>
