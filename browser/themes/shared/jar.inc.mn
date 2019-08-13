@@ -165,6 +165,8 @@
   skin/classic/browser/device-phone.svg               (../shared/icons/device-phone.svg)
   skin/classic/browser/device-tablet.svg              (../shared/icons/device-tablet.svg)
   skin/classic/browser/device-desktop.svg             (../shared/icons/device-desktop.svg)
+  skin/classic/browser/device-tv.svg                  (../shared/icons/device-tv.svg)
+  skin/classic/browser/device-vr.svg                  (../shared/icons/device-vr.svg)
   skin/classic/browser/edit-copy.svg                  (../shared/icons/edit-copy.svg)
   skin/classic/browser/edit-cut.svg                   (../shared/icons/edit-cut.svg)
   skin/classic/browser/edit-paste.svg                 (../shared/icons/edit-paste.svg)

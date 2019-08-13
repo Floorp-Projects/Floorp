@@ -123,6 +123,14 @@ body {
   background-image: url("chrome://browser/skin/device-desktop.svg");
 }
 
+.item.client[clientType=tv] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-tv.svg");
+}
+
+.item.client[clientType=vr] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-vr.svg");
+}
+
 .item.tab > .item-title-container > .item-icon-container {
   background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   -moz-context-properties: fill;
