@@ -5877,11 +5877,16 @@
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
 
+# Enable/disable display list invalidation logging --- useful for debugging.
+- name: nglayout.debug.invalidation
+  type: bool
+  value: false
+  mirror: always
+
 - name: nglayout.debug.widget_update_flashing
   type: RelaxedAtomicBool
   value: false
   mirror: always
-
 
 #---------------------------------------------------------------------------
 # Prefs starting with "page_load."
