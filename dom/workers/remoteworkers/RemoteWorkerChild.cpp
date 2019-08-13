@@ -28,6 +28,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/FetchEventOpProxyChild.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
@@ -911,6 +912,36 @@ IPCResult RemoteWorkerChild::RecvExecOp(RemoteWorkerOp&& aOp) {
   MaybeStartOp(new SharedWorkerOp(std::move(aOp)));
 
   return IPC_OK();
+}
+
+/**
+ * PFetchEventOpProxy methods
+ */
+PFetchEventOpProxyChild* RemoteWorkerChild::AllocPFetchEventOpProxyChild(
+    const ServiceWorkerFetchEventOpArgs& aArgs) {
+  RefPtr<FetchEventOpProxyChild> actor = new FetchEventOpProxyChild();
+
+  return actor.forget().take();
+}
+
+IPCResult RemoteWorkerChild::RecvPFetchEventOpProxyConstructor(
+    PFetchEventOpProxyChild* aActor,
+    const ServiceWorkerFetchEventOpArgs& aArgs) {
+  MOZ_ASSERT(aActor);
+
+  (static_cast<FetchEventOpProxyChild*>(aActor))->Initialize(aArgs);
+
+  return IPC_OK();
+}
+
+bool RemoteWorkerChild::DeallocPFetchEventOpProxyChild(
+    PFetchEventOpProxyChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  RefPtr<FetchEventOpProxyChild> actor =
+      dont_AddRef(static_cast<FetchEventOpProxyChild*>(aActor));
+
+  return true;
 }
 
 }  // namespace dom
