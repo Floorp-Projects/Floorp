@@ -477,8 +477,9 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     BufferInfo::LocalRef info = aSample->Info();
     MOZ_ASSERT(info);
 
-    int32_t flags;
+    int32_t flags = 0;
     bool ok = NS_SUCCEEDED(info->Flags(&flags));
+    bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
 
     int32_t offset;
     ok &= NS_SUCCEEDED(info->Offset(&offset));
@@ -490,7 +491,8 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     ok &= NS_SUCCEEDED(info->Size(&size));
 
     if (!ok ||
-        IsSampleTimeSmallerThanFirstDemuxedSampleTime(presentationTimeUs)) {
+        (IsSampleTimeSmallerThanFirstDemuxedSampleTime(presentationTimeUs) &&
+         !isEOS)) {
       Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
@@ -518,7 +520,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
       UpdateOutputStatus(std::move(data));
     }
 
-    if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
+    if (isEOS) {
       DrainComplete();
     }
   }
