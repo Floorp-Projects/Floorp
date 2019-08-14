@@ -569,10 +569,13 @@ bool Repaint(nsAString& aData) {
   nsCString encoderCID("@mozilla.org/image/encoder;2?type=image/png");
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
 
+  size_t stride = layers::ImageDataSerializer::ComputeRGBStride(gSurfaceFormat,
+                                                                gPaintWidth);
+
   nsString options;
   nsresult rv = encoder->InitFromData(
-      (const uint8_t*)gDrawTargetBuffer, gPaintWidth * gPaintHeight * 4,
-      gPaintWidth, gPaintHeight, gPaintWidth * 4,
+      (const uint8_t*)gDrawTargetBuffer, stride * gPaintHeight,
+      gPaintWidth, gPaintHeight, stride,
       imgIEncoder::INPUT_FORMAT_HOSTARGB, options);
   if (NS_FAILED(rv)) {
     return false;
