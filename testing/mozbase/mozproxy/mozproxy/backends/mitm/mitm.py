@@ -195,7 +195,51 @@ class Mitmproxy(Playback):
         command = [mitmdump_path]
 
         if "playback_tool_args" in self.config:
+            LOG.info("Staring Proxy using provided command line!")
             command.extend(self.config["playback_tool_args"])
+        elif "playback_files" in self.config:
+            script = os.path.join(
+                                os.path.dirname(os.path.realpath(__file__)), "scripts",
+                                "alternate-server-replay-{}.py".format(
+                                    self.config["playback_version"]))
+            recording_paths = self.config["playback_files"]
+            # this part is platform-specific
+            if mozinfo.os == "win":
+                script = script.replace("\\", "\\\\\\")
+                recording_paths = [recording_path.replace("\\", "\\\\\\")
+                                   for recording_path in recording_paths]
+
+            if self.config["playback_version"] == "2.0.2":
+                args = [
+                    "--replay-kill-extra",
+                    "-v",
+                    "--script",
+                    '""{} {}""'.format(script, " ".join(recording_paths)),
+                ]
+
+                if not self.config["playback_upstream_cert"]:
+                    LOG.info("No upstream certificate sniffing")
+                    args.insert(0, "--no-upstream-cert")
+                self.playback.config["playback_tool_args"] = args
+            elif self.config["playback_version"] == "4.0.4":
+                args = [
+                    "-v",
+                    "--set",
+                    "websocket=false",
+                    "--set",
+                    "server_replay_files={}".format(" ".join(recording_paths)),
+                    "--scripts",
+                    script,
+                ]
+                if not self.config["playback_upstream_cert"]:
+                    LOG.info("No upstream certificate sniffing")
+                    args = ["--set", "upstream_cert=false"] + args
+                command.extend(args)
+            else:
+                raise Exception("Mitmproxy version is unknown!")
+
+        else:
+            raise Exception("Mitmproxy can't start playback! Playback settings missing.")
 
         LOG.info("Starting mitmproxy playback using env path: %s" % env["PATH"])
         LOG.info("Starting mitmproxy playback using command: %s" % " ".join(command))

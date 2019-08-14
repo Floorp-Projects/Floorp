@@ -295,6 +295,10 @@ testing/modules/ajv-4.1.1.js
 testing/modules/sinon-7.2.7.js
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
+
+# Mozproxy third party
+testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/**
+
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
@@ -304,8 +308,6 @@ testing/talos/talos/tests/v8_7/**
 testing/talos/talos/tests/kraken/**
 # Runing Talos may extract data here, see bug 1435677.
 testing/talos/talos/tests/tp5n/**
-# Raptor third party
-testing/raptor/raptor/playback/scripts/catapult/**
 
 testing/web-platform/**
 testing/xpcshell/moz-http2/**
