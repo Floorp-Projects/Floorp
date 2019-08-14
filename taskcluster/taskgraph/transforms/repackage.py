@@ -338,11 +338,11 @@ def make_job_description(config, jobs):
         }
 
         if build_platform.startswith('macosx'):
-            task['toolchains'] = [
+            task.setdefault('fetches', {}).setdefault('toolchain', []).extend([
                 'linux64-libdmg',
                 'linux64-hfsplus',
                 'linux64-node',
-            ]
+            ])
         yield task
 
 
