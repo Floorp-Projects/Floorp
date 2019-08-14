@@ -31,7 +31,7 @@ namespace js {
  */
 class ListObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   inline static MOZ_MUST_USE ListObject* create(JSContext* cx);
 

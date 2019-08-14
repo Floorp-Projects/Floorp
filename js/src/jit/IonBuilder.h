@@ -838,11 +838,11 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineToInteger(CallInfo& callInfo);
   InliningResult inlineToString(CallInfo& callInfo);
   InliningResult inlineDump(CallInfo& callInfo);
-  InliningResult inlineHasClass(CallInfo& callInfo, const Class* clasp,
-                                const Class* clasp2 = nullptr,
-                                const Class* clasp3 = nullptr,
-                                const Class* clasp4 = nullptr);
-  InliningResult inlineGuardToClass(CallInfo& callInfo, const Class* clasp);
+  InliningResult inlineHasClass(CallInfo& callInfo, const JSClass* clasp,
+                                const JSClass* clasp2 = nullptr,
+                                const JSClass* clasp3 = nullptr,
+                                const JSClass* clasp4 = nullptr);
+  InliningResult inlineGuardToClass(CallInfo& callInfo, const JSClass* clasp);
   InliningResult inlineIsConstructing(CallInfo& callInfo);
   InliningResult inlineSubstringKernel(CallInfo& callInfo);
   InliningResult inlineObjectHasPrototype(CallInfo& callInfo);

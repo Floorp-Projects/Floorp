@@ -479,7 +479,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
     js::HandleShape shape, js::HandleObjectGroup group) {
   debugCheckNewObject(group, shape, kind, heap);
 
-  const js::Class* clasp = group->clasp();
+  const JSClass* clasp = group->clasp();
   MOZ_ASSERT(clasp->isNative());
   MOZ_ASSERT(!clasp->isJSFunction(), "should use JSFunction::create");
 
@@ -634,21 +634,21 @@ static inline PlainObject* CopyInitializerObject(
 }
 
 inline NativeObject* NewNativeObjectWithGivenTaggedProto(
-    JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     gc::AllocKind allocKind, NewObjectKind newKind) {
   return MaybeNativeObject(
       NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind));
 }
 
 inline NativeObject* NewNativeObjectWithGivenTaggedProto(
-    JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     NewObjectKind newKind = GenericObject) {
   return MaybeNativeObject(
       NewObjectWithGivenTaggedProto(cx, clasp, proto, newKind));
 }
 
 inline NativeObject* NewNativeObjectWithGivenProto(JSContext* cx,
-                                                   const Class* clasp,
+                                                   const JSClass* clasp,
                                                    HandleObject proto,
                                                    gc::AllocKind allocKind,
                                                    NewObjectKind newKind) {
@@ -657,20 +657,20 @@ inline NativeObject* NewNativeObjectWithGivenProto(JSContext* cx,
 }
 
 inline NativeObject* NewNativeObjectWithGivenProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     NewObjectKind newKind = GenericObject) {
   return MaybeNativeObject(NewObjectWithGivenProto(cx, clasp, proto, newKind));
 }
 
 inline NativeObject* NewNativeObjectWithClassProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
   return MaybeNativeObject(
       NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind));
 }
 
 inline NativeObject* NewNativeObjectWithClassProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     NewObjectKind newKind = GenericObject) {
   return MaybeNativeObject(NewObjectWithClassProto(cx, clasp, proto, newKind));
 }

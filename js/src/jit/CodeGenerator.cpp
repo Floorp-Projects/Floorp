@@ -12740,13 +12740,13 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
   // more complicated.
   masm.branchTestClassIsProxy(true, output, failure);
 
-  masm.branchPtr(Assembler::NonZero, Address(output, offsetof(js::Class, cOps)),
+  masm.branchPtr(Assembler::NonZero, Address(output, offsetof(JSClass, cOps)),
                  ImmPtr(nullptr), &hasCOps);
   masm.move32(Imm32(0), output);
   masm.jump(&done);
 
   masm.bind(&hasCOps);
-  masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
+  masm.loadPtr(Address(output, offsetof(JSClass, cOps)), output);
   size_t opsOffset = mode == Callable ? offsetof(JSClassOps, call)
                                       : offsetof(JSClassOps, construct);
   masm.cmpPtrSet(Assembler::NonZero, Address(output, opsOffset),
@@ -12927,13 +12927,13 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   Label done;
 
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
-  const Class* firstTypedArrayClass =
+  const JSClass* firstTypedArrayClass =
       TypedArrayObject::classForType(Scalar::Int8);
 
   static_assert(
       (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
       "BigUint64 is the last typed array class");
-  const Class* lastTypedArrayClass =
+  const JSClass* lastTypedArrayClass =
       TypedArrayObject::classForType(Scalar::BigUint64);
 
   masm.loadObjClassUnsafe(object, output);

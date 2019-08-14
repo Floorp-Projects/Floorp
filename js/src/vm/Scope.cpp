@@ -83,7 +83,7 @@ const char* js::ScopeKindString(ScopeKind kind) {
   MOZ_CRASH("Bad ScopeKind");
 }
 
-static Shape* EmptyEnvironmentShape(JSContext* cx, const Class* cls,
+static Shape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                                     uint32_t numSlots,
                                     uint32_t baseShapeFlags) {
   // Put as many slots into the object header as possible.
@@ -117,7 +117,7 @@ static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
 }
 
 static Shape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
-                                     const Class* cls, uint32_t numSlots,
+                                     const JSClass* cls, uint32_t numSlots,
                                      uint32_t baseShapeFlags) {
   RootedShape shape(cx,
                     EmptyEnvironmentShape(cx, cls, numSlots, baseShapeFlags));
@@ -177,7 +177,7 @@ static UniquePtr<typename ConcreteScope::Data> CopyScopeData(
 template <typename ConcreteScope>
 static bool PrepareScopeData(
     JSContext* cx, BindingIter& bi,
-    Handle<UniquePtr<typename ConcreteScope::Data>> data, const Class* cls,
+    Handle<UniquePtr<typename ConcreteScope::Data>> data, const JSClass* cls,
     uint32_t baseShapeFlags, MutableHandleShape envShape) {
   // Copy a fresh BindingIter for use below.
   BindingIter freshBi(bi);
@@ -594,7 +594,7 @@ LexicalScope* LexicalScope::createWithData(JSContext* cx, ScopeKind kind,
 
 /* static */
 Shape* LexicalScope::getEmptyExtensibleEnvironmentShape(JSContext* cx) {
-  const Class* cls = &LexicalEnvironmentObject::class_;
+  const JSClass* cls = &LexicalEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), BaseShape::DELEGATE);
 }
 
@@ -734,7 +734,7 @@ bool FunctionScope::isSpecialName(JSContext* cx, JSAtom* name) {
 /* static */
 Shape* FunctionScope::getEmptyEnvironmentShape(JSContext* cx,
                                                bool hasParameterExprs) {
-  const Class* cls = &CallObject::class_;
+  const JSClass* cls = &CallObject::class_;
   uint32_t shapeFlags = FunctionScopeEnvShapeFlags(hasParameterExprs);
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls), shapeFlags);
 }
@@ -898,7 +898,7 @@ VarScope* VarScope::createWithData(JSContext* cx, ScopeKind kind,
 
 /* static */
 Shape* VarScope::getEmptyEnvironmentShape(JSContext* cx) {
-  const Class* cls = &VarEnvironmentObject::class_;
+  const JSClass* cls = &VarEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
                                VarScopeEnvShapeFlags);
 }
@@ -1154,7 +1154,7 @@ Scope* EvalScope::nearestVarScopeForDirectEval(Scope* scope) {
 
 /* static */
 Shape* EvalScope::getEmptyEnvironmentShape(JSContext* cx) {
-  const Class* cls = &VarEnvironmentObject::class_;
+  const JSClass* cls = &VarEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
                                EvalScopeEnvShapeFlags);
 }
@@ -1260,7 +1260,7 @@ ModuleScope* ModuleScope::createWithData(JSContext* cx,
 
 /* static */
 Shape* ModuleScope::getEmptyEnvironmentShape(JSContext* cx) {
-  const Class* cls = &ModuleEnvironmentObject::class_;
+  const JSClass* cls = &ModuleEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
                                ModuleScopeEnvShapeFlags);
 }
@@ -1349,7 +1349,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
 
 /* static */
 Shape* WasmInstanceScope::getEmptyEnvironmentShape(JSContext* cx) {
-  const Class* cls = &WasmInstanceEnvironmentObject::class_;
+  const JSClass* cls = &WasmInstanceEnvironmentObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
                                WasmInstanceEnvShapeFlags);
 }
@@ -1404,7 +1404,7 @@ WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
 
 /* static */
 Shape* WasmFunctionScope::getEmptyEnvironmentShape(JSContext* cx) {
-  const Class* cls = &WasmFunctionCallObject::class_;
+  const JSClass* cls = &WasmFunctionCallObject::class_;
   return EmptyEnvironmentShape(cx, cls, JSSLOT_FREE(cls),
                                WasmFunctionEnvShapeFlags);
 }

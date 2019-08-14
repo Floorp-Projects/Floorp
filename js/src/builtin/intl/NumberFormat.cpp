@@ -66,7 +66,7 @@ const JSClassOps NumberFormatObject::classOps_ = {nullptr, /* addProperty */
                                                   nullptr, /* mayResolve */
                                                   NumberFormatObject::finalize};
 
-const Class NumberFormatObject::class_ = {
+const JSClass NumberFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(NumberFormatObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,

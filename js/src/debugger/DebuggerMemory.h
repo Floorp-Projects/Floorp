@@ -30,7 +30,7 @@ class DebuggerMemory : public NativeObject {
   enum { JSSLOT_DEBUGGER, JSSLOT_COUNT };
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
 

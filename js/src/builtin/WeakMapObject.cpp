@@ -277,13 +277,13 @@ const ClassSpec WeakMapObject::classSpec_ = {
     WeakMapObject::properties,
 };
 
-const Class WeakMapObject::class_ = {
+const JSClass WeakMapObject::class_ = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap) |
         JSCLASS_BACKGROUND_FINALIZE,
     &WeakCollectionObject::classOps_, &WeakMapObject::classSpec_};
 
-const Class WeakMapObject::protoClass_ = {
+const JSClass WeakMapObject::protoClass_ = {
     js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap), JS_NULL_CLASS_OPS,
     &WeakMapObject::classSpec_};
 

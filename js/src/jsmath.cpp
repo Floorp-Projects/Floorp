@@ -95,8 +95,8 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
   return math_function<F>(cx, args[0], args.rval());
 }
 
-const Class js::MathClass = {js_Math_str,
-                             JSCLASS_HAS_CACHED_PROTO(JSProto_Math)};
+const JSClass js::MathClass = {js_Math_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_Math)};
 
 bool js::math_abs_handle(JSContext* cx, js::HandleValue v,
                          js::MutableHandleValue r) {

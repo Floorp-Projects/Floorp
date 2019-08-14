@@ -25,7 +25,7 @@ class GlobalObject;
 
 class CollatorObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UCOLLATOR_SLOT = 1;

@@ -539,7 +539,7 @@ static const JSClassOps GlobalDebuggerVectorHolder_classOps = {
     nullptr,
     GlobalDebuggerVectorHolder_finalize};
 
-static const Class GlobalDebuggerVectorHolder_class = {
+static const JSClass GlobalDebuggerVectorHolder_class = {
     "GlobalDebuggerVectorHolder",
     JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &GlobalDebuggerVectorHolder_classOps};
@@ -3866,7 +3866,7 @@ const JSClassOps Debugger::classOps_ = {nullptr, /* addProperty */
                                         nullptr, /* construct   */
                                         Debugger::traceObject};
 
-const Class Debugger::class_ = {
+const JSClass Debugger::class_ = {
     "Debugger",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
     &Debugger::classOps_};

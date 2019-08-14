@@ -462,10 +462,10 @@ JSObject* WrapperNew(JSContext* aCx, JS::HandleObject aObj,
   return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
 }
 
-const js::Class WindowProxyClass = PROXY_CLASS_DEF(
+const JSClass WindowProxyClass = PROXY_CLASS_DEF(
     "Proxy", JSCLASS_HAS_RESERVED_SLOTS(1)); /* additional class flags */
 
-const js::Class* GetWindowProxyClass() { return &WindowProxyClass; }
+const JSClass* GetWindowProxyClass() { return &WindowProxyClass; }
 
 JS::Value GetProxyReservedSlot(JSObject* obj, uint32_t slot) {
   return js::GetProxyReservedSlot(obj, slot);

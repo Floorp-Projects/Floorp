@@ -224,7 +224,7 @@ class TypeNewScriptInitializer {
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode* pc);
 
-bool ClassCanHaveExtraProperties(const Class* clasp);
+bool ClassCanHaveExtraProperties(const JSClass* clasp);
 
 class RecompileInfo {
   JSScript* script_;

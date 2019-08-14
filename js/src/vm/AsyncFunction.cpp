@@ -171,7 +171,7 @@ JSObject* js::AsyncFunctionResolve(
   return promise;
 }
 
-const Class AsyncFunctionGeneratorObject::class_ = {
+const JSClass AsyncFunctionGeneratorObject::class_ = {
     "AsyncFunctionGenerator",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS)};
 

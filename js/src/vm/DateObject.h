@@ -45,8 +45,8 @@ class DateObject : public NativeObject {
   static const uint32_t RESERVED_SLOTS = LOCAL_SECONDS_INTO_YEAR_SLOT + 1;
 
  public:
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
   JS::ClippedTime clippedTime() const {
     double t = getFixedSlot(UTC_TIME_SLOT).toDouble();

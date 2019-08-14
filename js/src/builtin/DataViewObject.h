@@ -62,8 +62,8 @@ class DataViewObject : public ArrayBufferViewObject {
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
  public:
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
   static Value byteOffsetValue(const DataViewObject* view) {
     Value v = view->getFixedSlot(BYTEOFFSET_SLOT);

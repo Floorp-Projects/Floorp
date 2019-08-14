@@ -1002,14 +1002,14 @@ const ClassSpec DataViewObject::classSpec_ = {
     DataViewObject::methods,
     DataViewObject::properties};
 
-const Class DataViewObject::class_ = {
+const JSClass DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
         JSCLASS_HAS_RESERVED_SLOTS(DataViewObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     &DataViewObjectClassOps, &DataViewObject::classSpec_};
 
-const Class DataViewObject::protoClass_ = {
+const JSClass DataViewObject::protoClass_ = {
     js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     JS_NULL_CLASS_OPS, &DataViewObject::classSpec_};
 

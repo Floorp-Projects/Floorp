@@ -27,7 +27,7 @@ class ArrayObject;
 
 class NumberFormatObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 1;

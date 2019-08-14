@@ -1323,11 +1323,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // register but the caller may pass a different register.
 
   inline void branchTestObjClass(Condition cond, Register obj,
-                                 const js::Class* clasp, Register scratch,
+                                 const JSClass* clasp, Register scratch,
                                  Register spectreRegToZero, Label* label);
   inline void branchTestObjClassNoSpectreMitigations(Condition cond,
                                                      Register obj,
-                                                     const js::Class* clasp,
+                                                     const JSClass* clasp,
                                                      Register scratch,
                                                      Label* label);
 

@@ -416,7 +416,7 @@ class FileObject : public NativeObject {
   enum : uint32_t { FILE_SLOT = 0, NUM_SLOTS };
 
  public:
-  static const js::Class class_;
+  static const JSClass class_;
 
   static FileObject* create(JSContext* cx, RCFile* file) {
     FileObject* obj = js::NewBuiltinClassInstance<FileObject>(cx);
@@ -470,7 +470,7 @@ static const JSClassOps FileObjectClassOps = {
     nullptr               /* trace */
 };
 
-const js::Class FileObject::class_ = {
+const JSClass FileObject::class_ = {
     "File",
     JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,

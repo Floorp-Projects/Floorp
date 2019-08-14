@@ -28,7 +28,7 @@ MOZ_ALWAYS_INLINE
 ReceiverGuard::ReceiverGuard(ObjectGroup* group, Shape* shape)
     : group_(group), shape_(shape) {
   if (group_) {
-    const Class* clasp = group_->clasp();
+    const JSClass* clasp = group_->clasp();
     if (IsTypedObjectClass(clasp)) {
       this->shape_ = nullptr;
     } else {

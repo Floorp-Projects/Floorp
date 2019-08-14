@@ -1437,7 +1437,7 @@ template <typename Functor>
 static inline NativeObject* CallTraceHook(Functor&& f, JSTracer* trc,
                                           JSObject* obj,
                                           CheckGeneration check) {
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
   MOZ_ASSERT(clasp);
   MOZ_ASSERT(obj->isNative() == clasp->isNative());
 

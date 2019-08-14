@@ -38,7 +38,7 @@ class ProxyObject : public JSObject {
   }
 
   static JS::Result<ProxyObject*, JS::OOM&> create(JSContext* cx,
-                                                   const js::Class* clasp,
+                                                   const JSClass* clasp,
                                                    Handle<TaggedProto> proto,
                                                    js::gc::AllocKind allocKind,
                                                    js::NewObjectKind newKind);
@@ -109,7 +109,7 @@ class ProxyObject : public JSObject {
 
   void setPrivate(const Value& priv);
 
-  static bool isValidProxyClass(const Class* clasp) {
+  static bool isValidProxyClass(const JSClass* clasp) {
     // Since we can take classes from the outside, make sure that they
     // are "sane". They have to quack enough like proxies for us to belive
     // they should be treated as such.
@@ -132,7 +132,7 @@ class ProxyObject : public JSObject {
   void nuke();
 };
 
-inline bool IsProxyClass(const Class* clasp) { return clasp->isProxy(); }
+inline bool IsProxyClass(const JSClass* clasp) { return clasp->isProxy(); }
 
 bool IsDerivedProxyObject(const JSObject* obj,
                           const js::BaseProxyHandler* handler);

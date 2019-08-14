@@ -214,8 +214,8 @@ struct CopyScriptFrameIterArgs {
 
 ArgumentsObject* ArgumentsObject::createTemplateObject(JSContext* cx,
                                                        bool mapped) {
-  const Class* clasp = mapped ? &MappedArgumentsObject::class_
-                              : &UnmappedArgumentsObject::class_;
+  const JSClass* clasp = mapped ? &MappedArgumentsObject::class_
+                                : &UnmappedArgumentsObject::class_;
 
   RootedObject proto(
       cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
@@ -1005,7 +1005,7 @@ const ObjectOps MappedArgumentsObject::objectOps_ = {
     nullptr, /* lookupProperty */
     MappedArgumentsObject::obj_defineProperty};
 
-const Class MappedArgumentsObject::class_ = {
+const JSClass MappedArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(MappedArgumentsObject::RESERVED_SLOTS) |
@@ -1037,7 +1037,7 @@ const js::ClassExtension UnmappedArgumentsObject::classExt_ = {
     ArgumentsObject::objectMoved /* objectMovedOp */
 };
 
-const Class UnmappedArgumentsObject::class_ = {
+const JSClass UnmappedArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(UnmappedArgumentsObject::RESERVED_SLOTS) |

@@ -136,7 +136,7 @@ static const JSClassOps MapIteratorObjectClassOps = {
 static const ClassExtension MapIteratorObjectClassExtension = {
     MapIteratorObject::objectMoved};
 
-const Class MapIteratorObject::class_ = {
+const JSClass MapIteratorObject::class_ = {
     "Map Iterator",
     JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount) |
         JSCLASS_FOREGROUND_FINALIZE | JSCLASS_SKIP_NURSERY_FINALIZE,
@@ -392,14 +392,14 @@ const ClassSpec MapObject::classSpec_ = {
     MapObject::properties,
 };
 
-const Class MapObject::class_ = {
+const JSClass MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Map) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
     &MapObject::classOps_, &MapObject::classSpec_};
 
-const Class MapObject::protoClass_ = {
+const JSClass MapObject::protoClass_ = {
     js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Map), JS_NULL_CLASS_OPS,
     &MapObject::classSpec_};
 
@@ -918,7 +918,7 @@ static const JSClassOps SetIteratorObjectClassOps = {
 static const ClassExtension SetIteratorObjectClassExtension = {
     SetIteratorObject::objectMoved};
 
-const Class SetIteratorObject::class_ = {
+const JSClass SetIteratorObject::class_ = {
     "Set Iterator",
     JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount) |
         JSCLASS_FOREGROUND_FINALIZE | JSCLASS_SKIP_NURSERY_FINALIZE,
@@ -1142,7 +1142,7 @@ const ClassSpec SetObject::classSpec_ = {
     SetObject::properties,
 };
 
-const Class SetObject::class_ = {
+const JSClass SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Set) | JSCLASS_FOREGROUND_FINALIZE |
@@ -1151,7 +1151,7 @@ const Class SetObject::class_ = {
     &SetObject::classSpec_,
 };
 
-const Class SetObject::protoClass_ = {
+const JSClass SetObject::protoClass_ = {
     js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Set), JS_NULL_CLASS_OPS,
     &SetObject::classSpec_};
 

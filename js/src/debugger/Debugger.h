@@ -837,7 +837,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static const JSClassOps classOps_;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
  private:
   static MOZ_MUST_USE bool getHookImpl(JSContext* cx, CallArgs& args,

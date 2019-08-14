@@ -41,7 +41,7 @@ const JSClassOps RelativeTimeFormatObject::classOps_ = {
     nullptr, /* mayResolve */
     RelativeTimeFormatObject::finalize};
 
-const Class RelativeTimeFormatObject::class_ = {
+const JSClass RelativeTimeFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(RelativeTimeFormatObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,

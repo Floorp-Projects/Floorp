@@ -15,9 +15,9 @@ using namespace js;
 
 /*
  * RegExpStatics allocates memory -- in order to keep the statics stored
- * per-global and not leak, we create a js::Class to wrap the C++ instance and
+ * per-global and not leak, we create a JSClass to wrap the C++ instance and
  * provide an appropriate finalizer. We lazily create and store an instance of
- * that js::Class in a global reserved slot.
+ * that JSClass in a global reserved slot.
  */
 
 static void resc_finalize(JSFreeOp* fop, JSObject* obj) {
@@ -46,7 +46,7 @@ static const JSClassOps RegExpStaticsObjectClassOps = {
     nullptr,                /* construct */
     resc_trace};
 
-const Class RegExpStaticsObject::class_ = {
+const JSClass RegExpStaticsObject::class_ = {
     "RegExpStatics", JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE,
     &RegExpStaticsObjectClassOps};
 

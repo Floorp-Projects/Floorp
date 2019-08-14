@@ -20,7 +20,7 @@ class NumberObject : public NativeObject {
  public:
   static const unsigned RESERVED_SLOTS = 1;
 
-  static const Class class_;
+  static const JSClass class_;
 
   /*
    * Creates a new Number object boxing the given number.

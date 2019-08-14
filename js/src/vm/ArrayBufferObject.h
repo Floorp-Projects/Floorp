@@ -305,8 +305,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     WasmArrayRawBuffer* wasmBuffer() const;
   };
 
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 

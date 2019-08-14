@@ -214,7 +214,7 @@ GeneratorObject* GeneratorObject::create(JSContext* cx, HandleFunction fun) {
   return NewObjectWithGivenProto<GeneratorObject>(cx, proto);
 }
 
-const Class GeneratorObject::class_ = {
+const JSClass GeneratorObject::class_ = {
     "Generator", JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS)};
 
 static const JSFunctionSpec generator_methods[] = {
