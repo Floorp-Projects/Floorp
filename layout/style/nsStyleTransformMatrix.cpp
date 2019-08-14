@@ -13,6 +13,7 @@
 #include "nsPresContext.h"
 #include "nsSVGUtils.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
@@ -47,7 +48,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
   mIsCached = true;
 
   if (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    if (!nsLayoutUtils::SVGTransformBoxEnabled()) {
+    if (!StaticPrefs::svg_transform_box_enabled()) {
       mX = -mFrame->GetPosition().x;
       mY = -mFrame->GetPosition().y;
       Size contextSize = nsSVGUtils::GetContextSize(mFrame);
