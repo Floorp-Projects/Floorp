@@ -56,9 +56,9 @@ class SettingsUseCasesTest {
         verify(engineSessionA).enableTrackingProtection(TrackingProtectionPolicy.none())
         verify(engineSessionB).enableTrackingProtection(TrackingProtectionPolicy.none())
 
-        useCases.updateTrackingProtection(TrackingProtectionPolicy.all())
-        verify(settings).trackingProtectionPolicy = TrackingProtectionPolicy.all()
-        verify(engineSessionA).enableTrackingProtection(TrackingProtectionPolicy.all())
-        verify(engineSessionB).enableTrackingProtection(TrackingProtectionPolicy.all())
+        useCases.updateTrackingProtection(TrackingProtectionPolicy.strict())
+        verify(settings).trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+        verify(engineSessionA).enableTrackingProtection(TrackingProtectionPolicy.strict())
+        verify(engineSessionB).enableTrackingProtection(TrackingProtectionPolicy.strict())
     }
 }

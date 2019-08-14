@@ -18,6 +18,13 @@ permalink: /changelog/
 * **feature-media**
   * Do not display title/url/icon of website in media notification if website is opened in private mode.
 
+* **concept-engine** and **browser-session**
+  * ⚠️ **This is a breaking change**: `TrackingProtectionPolicy` removes the `categories` property to expose two new ones `trackingCategories: Array<AntiTrackingCategory>` and `safeBrowsingCategories: Array<SafeBrowsingCategory>` to separate the tracking protection categories from the safe browsing ones.
+  * ⚠️ **This is a breaking change**: `TrackingProtectionPolicy.all()` has been replaced by `TrackingProtectionPolicy.strict()` to have similar naming conventions with GeckoView api.
+  * ⚠️ **This is a breaking change**: `Tracker#categories` has been replaced by `Tracker#trackingCategories` and `Tracker#cookiePolicies` to better report blocked content see [#4098](https://github.com/mozilla-mobile/android-components/issues/4098).
+  * Added: `Session#trackersLoaded` A list of `Tracker`s that could be blocked but has been loaded in this session.
+  * Added: `Session#Observer#onTrackerLoaded` Notifies that a tracker that could be blocked has been loaded.
+
 * **browser-toolbar**
   * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
 

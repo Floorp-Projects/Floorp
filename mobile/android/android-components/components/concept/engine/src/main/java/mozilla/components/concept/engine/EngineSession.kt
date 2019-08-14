@@ -6,8 +6,10 @@ package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
 import androidx.annotation.CallSuper
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.RECOMMENDED
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory.RECOMMENDED
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
@@ -39,6 +41,7 @@ abstract class EngineSession(
         fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null) = Unit
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(tracker: Tracker) = Unit
+        fun onTrackerLoaded(tracker: Tracker) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
@@ -91,7 +94,8 @@ abstract class EngineSession(
      * [TrackingProtectionPolicyForSessionTypes]).
      */
     open class TrackingProtectionPolicy internal constructor(
-        val categories: Int,
+        val trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
+        val safeBrowsingCategories: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
         val useForPrivateSessions: Boolean = true,
         val useForRegularSessions: Boolean = true,
         val cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
@@ -133,95 +137,140 @@ abstract class EngineSession(
             ACCEPT_NON_TRACKERS(4)
         }
 
-        companion object {
-            internal const val NONE: Int = 0
+        @Suppress("MagicNumber")
+        enum class TrackingCategory(val id: Int) {
+
+            NONE(0),
+
             /**
              * Blocks advertisement trackers.
              */
-            const val AD: Int = 1 shl 1
+            AD(1 shl 1),
+
             /**
              * Blocks analytics trackers.
              */
-            const val ANALYTICS: Int = 1 shl 2
+            ANALYTICS(1 shl 2),
+
             /**
              * Blocks social trackers.
              */
-            const val SOCIAL: Int = 1 shl 3
+            SOCIAL(1 shl 3),
+
             /**
              * Blocks content trackers.
              * May cause issues with some web sites.
              */
-            const val CONTENT: Int = 1 shl 4
-            // This policy is just to align categories with GeckoView (which has AT_TEST = 1 << 5)
-            const val TEST: Int = 1 shl 5
+            CONTENT(1 shl 4),
+
+            // This policy is just to align categories with GeckoView
+            TEST(1 shl 5),
+
             /**
              * Blocks cryptocurrency miners.
              */
-            const val CRYPTOMINING = 1 shl 6
+            CRYPTOMINING(1 shl 6),
+
             /**
              * Blocks fingerprinting trackers.
              */
-            const val FINGERPRINTING = 1 shl 7
+            FINGERPRINTING(1 shl 7),
+
+            RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id),
+
+            /**
+             * Combining the [RECOMMENDED] categories plus [CRYPTOMINING],
+             * [FINGERPRINTING] and [CONTENT].
+             */
+            STRICT(RECOMMENDED.id + CRYPTOMINING.id + FINGERPRINTING.id + CONTENT.id)
+        }
+
+        @Suppress("MagicNumber")
+        enum class SafeBrowsingCategory(val id: Int) {
+            NONE(0),
+
             /**
              * Blocks malware sites.
              */
-            const val SAFE_BROWSING_MALWARE = 1 shl 10
+            MALWARE(1 shl 10),
+
             /**
              * Blocks unwanted sites.
              */
-            const val SAFE_BROWSING_UNWANTED = 1 shl 11
+            UNWANTED(1 shl 11),
+
             /**
              * Blocks harmful sites.
              */
-            const val SAFE_BROWSING_HARMFUL = 1 shl 12
+            HARMFUL(1 shl 12),
+
             /**
              * Blocks phishing sites.
              */
-            const val SAFE_BROWSING_PHISHING = 1 shl 13
+            PHISHING(1 shl 13),
+
             /**
              * Blocks all unsafe sites.
              */
-            const val SAFE_BROWSING_ALL =
-                SAFE_BROWSING_MALWARE + SAFE_BROWSING_UNWANTED + SAFE_BROWSING_HARMFUL + SAFE_BROWSING_PHISHING
+            RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id)
+        }
 
-            const val RECOMMENDED = AD + ANALYTICS + SOCIAL + TEST + SAFE_BROWSING_ALL
+        companion object {
 
-            const val ALL = RECOMMENDED + CRYPTOMINING + FINGERPRINTING + CONTENT
+            internal val RECOMMENDED = TrackingProtectionPolicy()
 
-            fun none() = TrackingProtectionPolicy(NONE, cookiePolicy = ACCEPT_ALL)
+            fun none() = TrackingProtectionPolicy(
+                trackingCategories = arrayOf(TrackingCategory.NONE),
+                safeBrowsingCategories = arrayOf(SafeBrowsingCategory.NONE),
+                cookiePolicy = ACCEPT_ALL
+            )
 
             /**
              * Strict policy.
-             * Combining the [recommended] categories plus [CRYPTOMINING], [FINGERPRINTING] and [CONTENT].
+             * Combining the [TrackingCategory.STRICT] plus [SafeBrowsingCategory.RECOMMENDED]
              * With a cookiePolicy of [ACCEPT_NON_TRACKERS].
              * This is the strictest setting and may cause issues on some web sites.
              */
-            fun all() = TrackingProtectionPolicyForSessionTypes(ALL)
+            fun strict() = TrackingProtectionPolicyForSessionTypes(
+                trackingCategory = arrayOf(TrackingCategory.STRICT),
+                safeBrowsingCategory = arrayOf(SafeBrowsingCategory.RECOMMENDED),
+                cookiePolicy = ACCEPT_NON_TRACKERS
+            )
 
             /**
              * Recommended policy.
-             * Combining the [AD], [ANALYTICS], [SOCIAL], [TEST] categories plus [SAFE_BROWSING_ALL].
+             * Combining the [TrackingCategory.RECOMMENDED] plus [SafeBrowsingCategory.RECOMMENDED].
              * With a [CookiePolicy] of [ACCEPT_NON_TRACKERS].
              * This is the recommended setting.
              */
-            fun recommended() = TrackingProtectionPolicyForSessionTypes(RECOMMENDED)
+            fun recommended() = TrackingProtectionPolicyForSessionTypes(
+                trackingCategory = arrayOf(TrackingCategory.RECOMMENDED),
+                safeBrowsingCategory = arrayOf(SafeBrowsingCategory.RECOMMENDED),
+                cookiePolicy = ACCEPT_NON_TRACKERS
+            )
 
-            fun select(vararg categories: Int, cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS) =
-                TrackingProtectionPolicyForSessionTypes(categories.sum(), cookiePolicy)
+            fun select(
+                trackingCategories: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
+                safeBrowsingCategories: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
+                cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
+            ) = TrackingProtectionPolicyForSessionTypes(
+                trackingCategories,
+                safeBrowsingCategories,
+                cookiePolicy
+            )
         }
-
-        fun contains(category: Int) = (categories and category) != 0
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is TrackingProtectionPolicy) return false
-            if (categories != other.categories) return false
+            if (hashCode() != other.hashCode()) return false
             if (useForPrivateSessions != other.useForPrivateSessions) return false
             if (useForRegularSessions != other.useForRegularSessions) return false
             return true
         }
 
-        override fun hashCode() = categories
+        override fun hashCode() =
+            trackingCategories.sumBy { it.id } + safeBrowsingCategories.sumBy { it.id } + cookiePolicy.id
     }
 
     /**
@@ -229,14 +278,20 @@ abstract class EngineSession(
      * should be applied to. By default, a policy will be applied to all sessions.
      */
     class TrackingProtectionPolicyForSessionTypes internal constructor(
-        categories: Int,
+        trackingCategory: Array<TrackingCategory> = arrayOf(TrackingCategory.RECOMMENDED),
+        safeBrowsingCategory: Array<SafeBrowsingCategory> = arrayOf(SafeBrowsingCategory.RECOMMENDED),
         cookiePolicy: CookiePolicy = ACCEPT_NON_TRACKERS
-    ) : TrackingProtectionPolicy(categories, cookiePolicy = cookiePolicy) {
+    ) : TrackingProtectionPolicy(
+        trackingCategories = trackingCategory,
+        safeBrowsingCategories = safeBrowsingCategory,
+        cookiePolicy = cookiePolicy
+    ) {
         /**
          * Marks this policy to be used for private sessions only.
          */
         fun forPrivateSessionsOnly() = TrackingProtectionPolicy(
-            categories,
+            trackingCategories = trackingCategories,
+            safeBrowsingCategories = safeBrowsingCategories,
             useForPrivateSessions = true,
             useForRegularSessions = false,
             cookiePolicy = cookiePolicy
@@ -246,7 +301,8 @@ abstract class EngineSession(
          * Marks this policy to be used for regular (non-private) sessions only.
          */
         fun forRegularSessionsOnly() = TrackingProtectionPolicy(
-            categories,
+            trackingCategories = trackingCategories,
+            safeBrowsingCategories = safeBrowsingCategories,
             useForPrivateSessions = false,
             useForRegularSessions = true,
             cookiePolicy = cookiePolicy
@@ -353,7 +409,7 @@ abstract class EngineSession(
      *
      * @param policy the tracking protection policy to use, defaults to blocking all trackers.
      */
-    abstract fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.all())
+    abstract fun enableTrackingProtection(policy: TrackingProtectionPolicy = TrackingProtectionPolicy.strict())
 
     /**
      * Disables tracking protection for this engine session.

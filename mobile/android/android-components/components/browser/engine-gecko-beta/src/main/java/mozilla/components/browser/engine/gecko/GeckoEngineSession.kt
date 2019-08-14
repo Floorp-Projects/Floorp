@@ -574,29 +574,33 @@ class GeckoEngineSession(
     }
 
     private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
-        val blockedContentCategories = ArrayList<Tracker.Category>()
+        val blockedContentCategories = mutableListOf<TrackingProtectionPolicy.TrackingCategory>()
 
         if (categories.contains(ContentBlocking.AT_AD)) {
-            blockedContentCategories.add(Tracker.Category.Ad)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.AD)
         }
 
         if (categories.contains(ContentBlocking.AT_ANALYTIC)) {
-            blockedContentCategories.add(Tracker.Category.Analytic)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.ANALYTICS)
         }
 
         if (categories.contains(ContentBlocking.AT_SOCIAL)) {
-            blockedContentCategories.add(Tracker.Category.Social)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.SOCIAL)
         }
 
         if (categories.contains(ContentBlocking.AT_FINGERPRINTING)) {
-            blockedContentCategories.add(Tracker.Category.Fingerprinting)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING)
         }
 
         if (categories.contains(ContentBlocking.AT_CRYPTOMINING)) {
-            blockedContentCategories.add(Tracker.Category.Cryptomining)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING)
         }
         if (categories.contains(ContentBlocking.AT_CONTENT)) {
-            blockedContentCategories.add(Tracker.Category.Content)
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.CONTENT)
+        }
+
+        if (categories.contains(ContentBlocking.AT_TEST)) {
+            blockedContentCategories.add(TrackingProtectionPolicy.TrackingCategory.TEST)
         }
         return Tracker(uri, blockedContentCategories)
     }

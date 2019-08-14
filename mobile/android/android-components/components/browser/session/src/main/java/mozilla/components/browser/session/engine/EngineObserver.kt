@@ -76,6 +76,7 @@ internal class EngineObserver(
         if (loading) {
             session.findResults = emptyList()
             session.trackersBlocked = emptyList()
+            session.trackersLoaded = emptyList()
         }
     }
 
@@ -91,6 +92,10 @@ internal class EngineObserver(
 
     override fun onTrackerBlocked(tracker: Tracker) {
         session.trackersBlocked += tracker
+    }
+
+    override fun onTrackerLoaded(tracker: Tracker) {
+        session.trackersLoaded += tracker
     }
 
     override fun onTrackerBlockingEnabledChange(enabled: Boolean) {

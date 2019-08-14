@@ -23,6 +23,9 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.SafeBrowsingCategory
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 
 class EngineSessionTest {
     private val unknownHitResult = HitResult.UNKNOWN("file://foobar")
@@ -543,40 +546,69 @@ class EngineSessionTest {
 
     @Test
     fun `tracking protection policies have correct categories`() {
-        assertEquals(TrackingProtectionPolicy.RECOMMENDED, TrackingProtectionPolicy.recommended().categories)
-        assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.all().categories)
-        assertEquals(TrackingProtectionPolicy.NONE, TrackingProtectionPolicy.none().categories)
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).categories))
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.ANALYTICS).categories))
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.CONTENT).categories))
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.TEST).categories))
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.SOCIAL).categories))
 
-        assertTrue(TrackingProtectionPolicy.all().contains(
-            TrackingProtectionPolicy.select(TrackingProtectionPolicy.SAFE_BROWSING_ALL).categories))
+        assertEquals(TrackingProtectionPolicy.RECOMMENDED, TrackingProtectionPolicy.recommended())
 
-        val policy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
-        assertTrue(policy.contains(TrackingProtectionPolicy.AD))
-        assertTrue(policy.contains(TrackingProtectionPolicy.ANALYTICS))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SOCIAL))
-        assertFalse(policy.contains(TrackingProtectionPolicy.CONTENT))
-        assertFalse(policy.contains(TrackingProtectionPolicy.TEST))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_ALL))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_MALWARE))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_PHISHING))
-        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED))
+        val strictPolicy = TrackingProtectionPolicy.strict()
+
+        assertEquals(
+            strictPolicy.trackingCategories.sumBy { it.id },
+            TrackingCategory.STRICT.id
+        )
+
+        assertEquals(
+            strictPolicy.safeBrowsingCategories.sumBy { it.id },
+            SafeBrowsingCategory.RECOMMENDED.id
+        )
+
+        assertEquals(strictPolicy.cookiePolicy.id, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+
+        val nonePolicy = TrackingProtectionPolicy.none()
+
+        assertEquals(
+            nonePolicy.trackingCategories.sumBy { it.id },
+            TrackingCategory.NONE.id
+        )
+
+        assertEquals(
+            nonePolicy.safeBrowsingCategories.sumBy { it.id },
+            SafeBrowsingCategory.NONE.id
+        )
+
+        assertEquals(nonePolicy.cookiePolicy.id, CookiePolicy.ACCEPT_ALL.id)
+
+        val newPolicy = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(
+                TrackingCategory.AD,
+                TrackingCategory.SOCIAL,
+                TrackingCategory.ANALYTICS,
+                TrackingCategory.CONTENT,
+                TrackingCategory.CRYPTOMINING,
+                TrackingCategory.FINGERPRINTING,
+                TrackingCategory.TEST
+            )
+        )
+
+        assertEquals(
+            newPolicy.trackingCategories.sumBy { it.id },
+            arrayOf(
+                TrackingCategory.AD,
+                TrackingCategory.SOCIAL,
+                TrackingCategory.ANALYTICS,
+                TrackingCategory.CONTENT,
+                TrackingCategory.CRYPTOMINING,
+                TrackingCategory.FINGERPRINTING,
+                TrackingCategory.TEST
+            ).sumBy { it.id })
     }
 
     @Test
     fun `tracking protection policies can be specified for session type`() {
-        val all = TrackingProtectionPolicy.all()
-        val selected = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD)
+        val all = TrackingProtectionPolicy.strict()
+        val selected = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(TrackingCategory.AD)
+
+        )
 
         // Tracking protection policies should be applied to all sessions by default
         assertTrue(all.useForPrivateSessions)
@@ -584,11 +616,14 @@ class EngineSessionTest {
         assertTrue(selected.useForPrivateSessions)
         assertTrue(selected.useForRegularSessions)
 
-        val allForPrivate = TrackingProtectionPolicy.all().forPrivateSessionsOnly()
+        val allForPrivate = TrackingProtectionPolicy.strict().forPrivateSessionsOnly()
         assertTrue(allForPrivate.useForPrivateSessions)
         assertFalse(allForPrivate.useForRegularSessions)
 
-        val selectedForRegular = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD).forRegularSessionsOnly()
+        val selectedForRegular =
+            TrackingProtectionPolicy.select(trackingCategories = arrayOf(TrackingCategory.AD))
+                .forRegularSessionsOnly()
+
         assertTrue(selectedForRegular.useForRegularSessions)
         assertFalse(selectedForRegular.useForPrivateSessions)
     }

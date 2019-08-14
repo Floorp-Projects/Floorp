@@ -156,13 +156,14 @@ class GeckoEngine(
                 defaultSettings?.automaticLanguageAdjustment = value
             }
 
-        override var trackingProtectionPolicy: TrackingProtectionPolicy?
-            get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
+        override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
-                value?.let {
-                    runtime.settings.contentBlocking.categories = it.categories
-                    runtime.settings.contentBlocking.cookieBehavior = it.cookiePolicy.id
+                value?.let { policy ->
+                    runtime.settings.contentBlocking.setAntiTracking(policy.trackingCategories.sumBy { it.id })
+                    runtime.settings.contentBlocking.setSafeBrowsing(policy.safeBrowsingCategories.sumBy { it.id })
+                    runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id
                     defaultSettings?.trackingProtectionPolicy = value
+                    field = value
                 }
             }
 
