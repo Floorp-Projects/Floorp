@@ -10202,6 +10202,20 @@ exports.CSS_PROPERTIES = {
       "uppercase"
     ]
   },
+  "text-underline-offset": {
+    "isInherited": true,
+    "subproperties": [
+      "text-underline-offset"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
   "top": {
     "isInherited": false,
     "subproperties": [
