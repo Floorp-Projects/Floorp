@@ -1274,6 +1274,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsInActiveDocShell(false),
       mBuildAsyncZoomContainer(false),
       mBuildBackdropRootContainer(false),
+      mContainsBackdropFilter(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
