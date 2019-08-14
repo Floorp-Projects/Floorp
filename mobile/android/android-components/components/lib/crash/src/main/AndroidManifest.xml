@@ -6,6 +6,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application>
         <activity android:name=".prompt.CrashReporterActivity"
@@ -16,6 +17,9 @@
 
         <service android:name=".handler.CrashHandlerService"
             android:process=":mozilla.components.lib.crash.CrashHandler"
+            android:exported="false" />
+
+        <service android:name=".service.SendCrashReportService"
             android:exported="false" />
     </application>
 
