@@ -260,6 +260,24 @@ void RemoteWorkerController::Thaw() {
   MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eThaw);
 }
 
+RefPtr<ServiceWorkerOpPromise> RemoteWorkerController::ExecServiceWorkerOp(
+    ServiceWorkerOpArgs&& aArgs) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mIsServiceWorker);
+
+  RefPtr<ServiceWorkerOpPromise::Private> promise =
+      new ServiceWorkerOpPromise::Private(__func__);
+
+  UniquePtr<PendingServiceWorkerOp> op =
+      MakeUnique<PendingServiceWorkerOp>(std::move(aArgs), promise);
+
+  if (!op->MaybeStart(this)) {
+    mPendingOps.AppendElement(std::move(op));
+  }
+
+  return promise;
+}
+
 RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
     Type aType, uint64_t aWindowID)
     : mType(aType), mWindowID(aWindowID) {
@@ -402,6 +420,19 @@ bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
 
     mArgs = std::move(copyArgs);
   }
+
+  aOwner->mActor->SendExecServiceWorkerOp(mArgs)->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [promise = std::move(mPromise)](
+          PRemoteWorkerParent::ExecServiceWorkerOpPromise::
+              ResolveOrRejectValue&& aResult) {
+        if (NS_WARN_IF(aResult.IsReject())) {
+          promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+          return;
+        }
+
+        promise->Resolve(std::move(aResult.ResolveValue()), __func__);
+      });
 
   return true;
 }
