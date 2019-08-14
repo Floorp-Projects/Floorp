@@ -2,10 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-### This file is not in a locales directory to prevent it from
-### being translated as the feature is still in heavy development
-### and strings are likely to change often.
-
 # Variables:
 #   $count (Number) - Number of tracking events blocked.
 graph-week-summary =
@@ -44,19 +40,19 @@ graph-today = Today
 graph-legend-description = A graph containing the total number of each type of tracker blocked this week.
 
 social-tab-title = Social Media Trackers
-social-tab-contant = Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online. <a data-l10n-name="learn-more-link">Learn more</a>
+social-tab-contant = Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles. <a data-l10n-name="learn-more-link">Learn more</a>
 
 cookie-tab-title = Cross-Site Tracking Cookies
-cookie-tab-content = Cross-site tracking cookies follow you from site to site to collect data about your browsing habits. Advertisers and analytics companies gather this data to create a profile of your interests across many sites. Blocking them reduces the number of personalized ads that follow you around. <a data-l10n-name="learn-more-link">Learn more</a>
+cookie-tab-content = These cookies follow you from site to site to gather data about what you do online. They are set by third parties such as advertisers and analytics companies. Blocking cross-site tracking cookies reduces the number of ads that follow you around. <a data-l10n-name="learn-more-link">Learn more</a>
 
 tracker-tab-title = Tracking Content
-tracker-tab-content = Websites may load outside ads, videos, and other content that contain hidden trackers. Blocking tracking content can make websites load faster, but some buttons, forms, and login fields might not work. <a data-l10n-name="learn-more-link">Learn more</a>
+tracker-tab-content = Websites may load external ads, videos, and other content that contain tracking code. Blocking tracking content can help sites load faster, but some buttons, forms, and login fields might not work. <a data-l10n-name="learn-more-link">Learn more</a>
 
 fingerprinter-tab-title = Fingerprinters
-fingerprinter-tab-content = Fingerprinting is a form of online tracking that’s different from your real fingerprints. Companies use it to create a unique profile of you using data about your browser, device, and other settings. We block ad trackers from fingerprinting your device. <a data-l10n-name="learn-more-link">Learn more</a>
+fingerprinter-tab-content = Fingerprinters collect settings from your browser and computer to create a profile of you. Using this digital fingerprint, they can track you across different websites. <a data-l10n-name="learn-more-link">Learn more</a>
 
 cryptominer-tab-title = Cryptominers
-cryptominer-tab-content = Some websites host hidden malware that secretly uses your system’s computing power to mine cryptocurrency, or digital money. It drains your battery, slows down your computer, and increases your energy bill. We block known cryptominers from using your computing resources to make money. <a data-l10n-name="learn-more-link">Learn more</a>
+cryptominer-tab-content = Cryptominers use your system’s computing power to mine digital money. Cryptomining scripts drain your battery, slow down your computer, and can increase your energy bill. <a data-l10n-name="learn-more-link">Learn more</a>
 
 lockwise-title = Never forget a password again
 lockwise-title-logged-in = { -lockwise-brand-name }
@@ -70,8 +66,8 @@ lockwise-no-logins-content = Get the <a data-l10n-name="lockwise-inline-link">{ 
 # your localization, because it would result in the number showing twice.
 lockwise-passwords-stored =
   { $count ->
-     [one] Password stored securely. <a data-l10n-name="lockwise-how-it-works">How it works</a>
-    *[other] Passwords stored securely. <a data-l10n-name="lockwise-how-it-works">How it works</a>
+     [one] Password stored securely <a data-l10n-name="lockwise-how-it-works">How it works</a>
+    *[other] Passwords stored securely <a data-l10n-name="lockwise-how-it-works">How it works</a>
   }
 
 turn-on-sync = Turn on { -sync-brand-short-name }…
@@ -81,8 +77,8 @@ turn-on-sync = Turn on { -sync-brand-short-name }…
 #   $count (Number) - Number of devices connected with sync.
 lockwise-sync-status =
   { $count ->
-     [one] Syncing to { $count } other device.
-    *[other] Syncing to { $count } other devices.
+     [one] Syncing to { $count } other device
+    *[other] Syncing to { $count } other devices
   }
 lockwise-sync-not-syncing = Not syncing to other devices.
 
@@ -90,7 +86,7 @@ monitor-title = Look out for data breaches
 monitor-link = How it works
 monitor-header-content = Check { -monitor-brand-name } to see if you’ve been part of a data breach and get alerts about new breaches.
 monitor-header-content-logged-in = { -monitor-brand-name } warns you if your info has appeared in a known data breach
-monitor-sign-up = Sign up for Breach Alerts
+monitor-sign-up = Sign Up for Breach Alerts
 auto-scan = Automatically scanned today
 
 # This string is displayed after a large numeral that indicates the total number
