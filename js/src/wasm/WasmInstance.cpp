@@ -1888,7 +1888,7 @@ void Instance::ensureProfilingLabels(bool profilingEnabled) const {
   return code_->ensureProfilingLabels(profilingEnabled);
 }
 
-void Instance::onMovingGrowMemory(uint8_t* prevMemoryBase) {
+void Instance::onMovingGrowMemory() {
   MOZ_ASSERT(!isAsmJS());
   MOZ_ASSERT(!memory_->isShared());
 
