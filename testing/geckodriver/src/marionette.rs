@@ -3,17 +3,14 @@ use crate::command::{
     GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
 use marionette_rs::common::{
-    Cookie as MarionetteCookie, Date as MarionetteDate, Frame as MarionetteFrame,
-    Timeouts as MarionetteTimeouts, WebElement as MarionetteWebElement,
+    Cookie as MarionetteCookie, Date as MarionetteDate, Timeouts as MarionetteTimeouts,
 };
 use marionette_rs::marionette::AppStatus;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, LegacyWebElement,
-    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, ScreenshotOptions,
-    Script as MarionetteScript, Selector as MarionetteSelector,
-    SwitchToFrame as MarionetteSwitchToFrame, SwitchToWindow as MarionetteSwitchToWindow,
-    Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
+    Locator as MarionetteLocator, NewWindow as MarionetteNewWindow, Script as MarionetteScript,
+    Selector as MarionetteSelector, WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -801,9 +798,7 @@ impl MarionetteSession {
 fn try_convert_to_marionette_message(
     msg: &WebDriverMessage<GeckoExtensionRoute>,
 ) -> WebDriverResult<Option<Command>> {
-    use self::GeckoExtensionCommand::*;
     use self::WebDriverCommand::*;
-
     Ok(match msg.command {
         AcceptAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::AcceptAlert)),
         AddCookie(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::AddCookie(
@@ -828,16 +823,6 @@ fn try_convert_to_marionette_message(
         ElementClick(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ElementClick(e.to_marionette()?),
         )),
-        ElementSendKeys(ref e, ref x) => {
-            let keys = x.to_marionette()?;
-            Some(Command::WebDriver(
-                MarionetteWebDriverCommand::ElementSendKeys {
-                    id: e.clone().to_string(),
-                    text: keys.text.clone(),
-                    value: keys.value.clone(),
-                },
-            ))
-        }
         ExecuteAsyncScript(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ExecuteAsyncScript(x.to_marionette()?),
         )),
@@ -873,9 +858,6 @@ fn try_convert_to_marionette_message(
         FullscreenWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FullscreenWindow,
         )),
-        Get(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::Get(
-            x.to_marionette()?,
-        ))),
         GetActiveElement => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetActiveElement,
         )),
@@ -883,15 +865,6 @@ fn try_convert_to_marionette_message(
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
-        GetCSSValue(ref e, ref x) => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::GetCSSValue {
-                id: e.clone().to_string(),
-                property: x.clone(),
-            },
-        )),
-        GetCurrentUrl => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::GetCurrentUrl,
-        )),
         GetElementAttribute(ref e, ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementAttribute {
                 id: e.clone().to_string(),
@@ -913,10 +886,6 @@ fn try_convert_to_marionette_message(
         GetElementText(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetElementText(x.to_marionette()?),
         )),
-        GetPageSource => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::GetPageSource,
-        )),
-        GetTitle => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTitle)),
         GetWindowHandle => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetWindowHandle,
         )),
@@ -947,10 +916,6 @@ fn try_convert_to_marionette_message(
         NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
             x.to_marionette()?,
         ))),
-        Refresh => Some(Command::WebDriver(MarionetteWebDriverCommand::Refresh)),
-        ReleaseActions => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::ReleaseActions,
-        )),
         SendAlertText(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SendAlertText(x.to_marionette()?),
         )),
@@ -960,45 +925,6 @@ fn try_convert_to_marionette_message(
         SetWindowRect(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::SetWindowRect(x.to_marionette()?),
         )),
-        SwitchToFrame(ref x) => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::SwitchToFrame(x.to_marionette()?),
-        )),
-        SwitchToParentFrame => Some(Command::WebDriver(
-            MarionetteWebDriverCommand::SwitchToParentFrame,
-        )),
-        TakeElementScreenshot(ref e) => {
-            let screenshot = ScreenshotOptions {
-                id: Some(e.clone().to_string()),
-                highlights: vec![],
-                full: false,
-            };
-            Some(Command::WebDriver(
-                MarionetteWebDriverCommand::TakeElementScreenshot(screenshot),
-            ))
-        }
-        TakeScreenshot => {
-            let screenshot = ScreenshotOptions {
-                id: None,
-                highlights: vec![],
-                full: false,
-            };
-            Some(Command::WebDriver(
-                MarionetteWebDriverCommand::TakeScreenshot(screenshot),
-            ))
-        }
-        Extension(ref extension) => match extension {
-            TakeFullScreenshot => {
-                let screenshot = ScreenshotOptions {
-                    id: None,
-                    highlights: vec![],
-                    full: true,
-                };
-                Some(Command::WebDriver(
-                    MarionetteWebDriverCommand::TakeFullScreenshot(screenshot),
-                ))
-            }
-            _ => None,
-        },
         _ => None,
     })
 }
@@ -1051,6 +977,31 @@ impl MarionetteCommand {
         } else {
             let (opt_name, opt_parameters) = match msg.command {
                 Status => panic!("Got status command that should already have been handled"),
+                ElementSendKeys(ref e, ref x) => {
+                    let mut data = Map::new();
+                    data.insert("id".to_string(), Value::String(e.to_string()));
+                    data.insert("text".to_string(), Value::String(x.text.clone()));
+                    data.insert(
+                        "value".to_string(),
+                        serde_json::to_value(
+                            x.text
+                                .chars()
+                                .map(|x| x.to_string())
+                                .collect::<Vec<String>>(),
+                        )?,
+                    );
+                    (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
+                }
+                Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
+                GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
+                GetCSSValue(ref e, ref x) => {
+                    let mut data = Map::new();
+                    data.insert("id".to_string(), Value::String(e.to_string()));
+                    data.insert("propertyName".to_string(), Value::String(x.clone()));
+                    (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
+                }
+                GetPageSource => (Some("WebDriver:GetPageSource"), None),
+                GetTitle => (Some("WebDriver:GetTitle"), None),
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
@@ -1064,6 +1015,27 @@ impl MarionetteCommand {
                 }
                 PerformActions(ref x) => {
                     (Some("WebDriver:PerformActions"), Some(x.to_marionette()))
+                }
+                Refresh => (Some("WebDriver:Refresh"), None),
+                ReleaseActions => (Some("WebDriver:ReleaseActions"), None),
+                SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
+                SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
+                SwitchToWindow(ref x) => {
+                    (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette()))
+                }
+                TakeElementScreenshot(ref e) => {
+                    let mut data = Map::new();
+                    data.insert("id".to_string(), Value::String(e.to_string()));
+                    data.insert("highlights".to_string(), Value::Array(vec![]));
+                    data.insert("full".to_string(), Value::Bool(false));
+                    (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
+                }
+                TakeScreenshot => {
+                    let mut data = Map::new();
+                    data.insert("id".to_string(), Value::Null);
+                    data.insert("highlights".to_string(), Value::Array(vec![]));
+                    data.insert("full".to_string(), Value::Bool(false));
+                    (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
                 }
                 Extension(ref extension) => match extension {
                     GetContext => (Some("Marionette:GetContext"), None),
@@ -1082,7 +1054,13 @@ impl MarionetteCommand {
                         data.insert("element".to_string(), serde_json::to_value(e.to_string())?);
                         (Some("WebDriver:FindElements"), Some(Ok(data)))
                     }
-                    _ => (None, None),
+                    TakeFullScreenshot => {
+                        let mut data = Map::new();
+                        data.insert("id".to_string(), Value::Null);
+                        data.insert("highlights".to_string(), Value::Array(vec![]));
+                        data.insert("full".to_string(), Value::Bool(true));
+                        (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
+                    }
                 },
                 _ => (None, None),
             };
@@ -1491,12 +1469,16 @@ impl ToMarionette<MarionetteDate> for Date {
     }
 }
 
-impl ToMarionette<MarionetteFrame> for FrameId {
-    fn to_marionette(&self) -> WebDriverResult<MarionetteFrame> {
-        match self {
-            FrameId::Short(x) => Ok(MarionetteFrame::Index(x.clone())),
-            FrameId::Element(ref x) => Ok(MarionetteFrame::Element(x.to_marionette()?)),
-        }
+impl ToMarionette<Map<String, Value>> for FrameId {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        match *self {
+            FrameId::Short(x) => data.insert("id".to_string(), serde_json::to_value(x)?),
+            FrameId::Element(ref x) => {
+                data.insert("element".to_string(), Value::Object(x.to_marionette()?))
+            }
+        };
+        Ok(data)
     }
 }
 
@@ -1511,11 +1493,14 @@ impl ToMarionette<Map<String, Value>> for GetNamedCookieParameters {
     }
 }
 
-impl ToMarionette<MarionetteUrl> for GetParameters {
-    fn to_marionette(&self) -> WebDriverResult<MarionetteUrl> {
-        Ok(MarionetteUrl {
-            url: self.url.clone(),
-        })
+impl ToMarionette<Map<String, Value>> for GetParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        Ok(try_opt!(
+            serde_json::to_value(self)?.as_object(),
+            ErrorStatus::UnknownError,
+            "Expected an object"
+        )
+        .clone())
     }
 }
 
@@ -1571,23 +1556,35 @@ impl ToMarionette<MarionetteKeys> for SendKeysParameters {
     }
 }
 
-impl ToMarionette<MarionetteSwitchToFrame> for SwitchToFrameParameters {
-    fn to_marionette(&self) -> WebDriverResult<MarionetteSwitchToFrame> {
-        Ok(MarionetteSwitchToFrame {
-            id: match &self.id {
-                None => None,
-                Some(x) => Some(x.to_marionette()?),
-            },
-        })
+impl ToMarionette<Map<String, Value>> for SwitchToFrameParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        match self.id {
+            None => None,
+            Some(FrameId::Short(_)) => {
+                data.insert("id".to_string(), serde_json::to_value(&self.id)?)
+            }
+            Some(FrameId::Element(ref web_element)) => data.insert(
+                "element".to_string(),
+                serde_json::to_value(web_element.to_string())?,
+            ),
+        };
+        Ok(data)
     }
 }
 
-impl ToMarionette<MarionetteSwitchToWindow> for SwitchToWindowParameters {
-    fn to_marionette(&self) -> WebDriverResult<MarionetteSwitchToWindow> {
-        Ok(MarionetteSwitchToWindow {
-            name: self.handle.clone(),
-            handle: self.handle.clone(),
-        })
+impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert(
+            "name".to_string(),
+            serde_json::to_value(self.handle.clone())?,
+        );
+        data.insert(
+            "handle".to_string(),
+            serde_json::to_value(self.handle.clone())?,
+        );
+        Ok(data)
     }
 }
 
@@ -1609,11 +1606,11 @@ impl ToMarionette<LegacyWebElement> for WebElement {
     }
 }
 
-impl ToMarionette<MarionetteWebElement> for WebElement {
-    fn to_marionette(&self) -> WebDriverResult<MarionetteWebElement> {
-        Ok(MarionetteWebElement {
-            element: self.to_string(),
-        })
+impl ToMarionette<Map<String, Value>> for WebElement {
+    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
+        let mut data = Map::new();
+        data.insert("id".to_string(), serde_json::to_value(self.to_string())?);
+        Ok(data)
     }
 }
 
