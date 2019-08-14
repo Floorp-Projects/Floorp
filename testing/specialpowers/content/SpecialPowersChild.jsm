@@ -7,11 +7,7 @@
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = [
-  "SpecialPowers",
-  "SpecialPowersChild",
-  "attachSpecialPowersToWindow",
-];
+var EXPORTED_SYMBOLS = ["SpecialPowersChild"];
 
 const { bindDOMWindowUtils, SpecialPowersAPI } = ChromeUtils.import(
   "resource://specialpowers/SpecialPowersAPI.jsm"
