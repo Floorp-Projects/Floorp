@@ -7105,8 +7105,7 @@ void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
 }
 
 bool nsBlockFrame::MarkerIsEmpty() const {
-  NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->mDisplay ==
-                       mozilla::StyleDisplay::ListItem &&
+  NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->IsListItem() &&
                    HasOutsideMarker(),
                "should only care when we have an outside ::marker");
   nsIFrame* marker = GetMarker();

@@ -2719,7 +2719,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     // reconstruct the frame.  (The opposite situation implies 'display'
     // changes so doesn't need to be handled explicitly here.)
     if (wasRestyled &&
-        styleFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem &&
+        styleFrame->StyleDisplay()->IsListItem() &&
         styleFrame->IsBlockFrameOrSubclass() &&
         !nsLayoutUtils::GetMarkerPseudo(aElement)) {
       RefPtr<ComputedStyle> pseudoStyle =
