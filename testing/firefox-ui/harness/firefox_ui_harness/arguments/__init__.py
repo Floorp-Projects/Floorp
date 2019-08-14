@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 from firefox_ui_harness.arguments.base import FirefoxUIArguments
-from firefox_ui_harness.arguments.update import UpdateArguments
