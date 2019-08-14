@@ -4649,6 +4649,20 @@
   value: -1
   mirror: always
 
+# The time in number of frames that we estimate for a refresh driver
+# to be quiescent.
+- name: layout.idle_period.required_quiescent_frames
+  type: uint32_t
+  value: 2
+  mirror: always
+
+# The amount of time (milliseconds) needed between an idle period's
+# end and the start of the next tick to avoid jank.
+- name: layout.idle_period.time_limit
+  type: uint32_t
+  value: 1
+  mirror: always
+
 # Enable/disable interruptible reflow, which allows reflows to stop
 # before completion (and display the partial results) when user events
 # are pending.
