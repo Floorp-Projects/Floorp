@@ -440,7 +440,7 @@ static size_t sandbox_moved(JSObject* obj, JSObject* old) {
 #define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT \
   (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
-static const js::ClassOps SandboxClassOps = {
+static const JSClassOps SandboxClassOps = {
     nullptr,
     nullptr,
     nullptr,
