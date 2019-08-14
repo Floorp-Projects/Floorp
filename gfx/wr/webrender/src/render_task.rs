@@ -559,6 +559,7 @@ pub struct BlurTask {
     pub blur_std_deviation: f32,
     pub target_kind: RenderTargetKind,
     pub uv_rect_handle: GpuCacheHandle,
+    pub blur_region: DeviceIntSize,
     uv_rect_kind: UvRectKind,
 }
 
@@ -975,6 +976,7 @@ impl RenderTask {
                                 RenderTargetKind::Alpha,
                                 ClearMode::Zero,
                                 None,
+                                cache_size,
                             )
                         }
                     ));
@@ -1086,6 +1088,7 @@ impl RenderTask {
         target_kind: RenderTargetKind,
         clear_mode: ClearMode,
         mut blur_cache: Option<&mut BlurTaskCache>,
+        blur_region: DeviceIntSize,
     ) -> RenderTaskId {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
@@ -1137,6 +1140,8 @@ impl RenderTask {
             None => None,
         };
 
+        let blur_region = blur_region / (scale_factor as i32);
+
         let blur_task_id = cached_task.unwrap_or_else(|| {
             let blur_task_v = RenderTask::with_dynamic_location(
                 adjusted_blur_target_size,
@@ -1145,6 +1150,7 @@ impl RenderTask {
                     blur_std_deviation: adjusted_blur_std_deviation.height,
                     target_kind,
                     uv_rect_handle: GpuCacheHandle::new(),
+                    blur_region,
                     uv_rect_kind,
                 }),
                 clear_mode,
@@ -1159,6 +1165,7 @@ impl RenderTask {
                     blur_std_deviation: adjusted_blur_std_deviation.width,
                     target_kind,
                     uv_rect_handle: GpuCacheHandle::new(),
+                    blur_region,
                     uv_rect_kind,
                 }),
                 clear_mode,
@@ -1363,6 +1370,7 @@ impl RenderTask {
                         RenderTargetKind::Color,
                         ClearMode::Transparent,
                         None,
+                        content_size,
                     )
                 }
                 FilterPrimitiveKind::Opacity(ref opacity) => {
@@ -1432,6 +1440,7 @@ impl RenderTask {
                         RenderTargetKind::Color,
                         ClearMode::Transparent,
                         None,
+                        content_size,
                     );
 
                     let task = RenderTask::new_svg_filter_primitive(
@@ -1585,8 +1594,8 @@ impl RenderTask {
             RenderTaskKind::HorizontalBlur(ref task) => {
                 [
                     task.blur_std_deviation,
-                    0.0,
-                    0.0,
+                    task.blur_region.width as f32,
+                    task.blur_region.height as f32,
                 ]
             }
             RenderTaskKind::Readback(..) |
