@@ -3,10 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PFetchEventOpProxy;
 
 include DOMTypes;
-include ServiceWorkerOpArgs;
 include RemoteWorkerTypes;
 
 namespace mozilla {
@@ -60,8 +58,6 @@ protocol PRemoteWorker
 {
   manager PBackground;
 
-  manages PFetchEventOpProxy;
-
 parent:
   async Created(bool aStatus);
 
@@ -69,17 +65,10 @@ parent:
 
   async Close();
 
-  async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
-
 child:
-  async PFetchEventOpProxy(ServiceWorkerFetchEventOpArgs aArgs);
-
   async __delete__();
 
   async ExecOp(RemoteWorkerOp op);
-
-  async ExecServiceWorkerOp(ServiceWorkerOpArgs aArgs)
-      returns (ServiceWorkerOpResult aResult);
 };
 
 } // namespace dom

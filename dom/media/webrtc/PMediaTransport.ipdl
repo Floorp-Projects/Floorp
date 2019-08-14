@@ -23,7 +23,6 @@ using TabId from "mozilla/dom/ipc/IdType.h";
 
 // ParamTraits stuff for our own classes
 using MediaPacket from "mtransport/mediapacket.h";
-include "mozilla/net/NrIceStunAddrMessageUtils.h";
 using net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 #endif // MOZ_WEBRTC
 
