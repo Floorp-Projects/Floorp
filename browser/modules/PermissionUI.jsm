@@ -78,11 +78,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "URICountListener",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "PermissionUITelemetry",
   "resource:///modules/PermissionUITelemetry.jsm"
 );
@@ -1154,17 +1149,6 @@ PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
 
 function StorageAccessPermissionPrompt(request) {
   this.request = request;
-
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_autoGrants",
-    "dom.storage_access.auto_grants"
-  );
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_maxConcurrentAutoGrants",
-    "dom.storage_access.max_concurrent_auto_grants"
-  );
 }
 
 StorageAccessPermissionPrompt.prototype = {
@@ -1248,10 +1232,6 @@ StorageAccessPermissionPrompt.prototype = {
   get promptActions() {
     let self = this;
 
-    let storageAccessHistogram = Services.telemetry.getHistogramById(
-      "STORAGE_ACCESS_API_UI"
-    );
-
     return [
       {
         label: gBrowserBundle.GetStringFromName(
@@ -1262,7 +1242,6 @@ StorageAccessPermissionPrompt.prototype = {
         ),
         action: Ci.nsIPermissionManager.DENY_ACTION,
         callback(state) {
-          storageAccessHistogram.add("Deny");
           self.cancel();
         },
       },
@@ -1273,7 +1252,6 @@ StorageAccessPermissionPrompt.prototype = {
         ),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         callback(state) {
-          storageAccessHistogram.add("Allow");
           self.allow({ "storage-access": "allow" });
         },
       },
@@ -1286,7 +1264,6 @@ StorageAccessPermissionPrompt.prototype = {
         ),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         callback(state) {
-          storageAccessHistogram.add("AllowOnAnySite");
           self.allow({ "storage-access": "allow-on-any-site" });
         },
       },
@@ -1295,60 +1272,6 @@ StorageAccessPermissionPrompt.prototype = {
 
   get topLevelPrincipal() {
     return this.request.topLevelPrincipal;
-  },
-
-  get maxConcurrentAutomaticGrants() {
-    // one percent of the number of top-levels origins visited in the current
-    // session (but not to exceed 24 hours), or the value of the
-    // dom.storage_access.max_concurrent_auto_grants preference, whichever is
-    // higher.
-    return Math.max(
-      Math.max(
-        Math.floor(URICountListener.uniqueDomainsVisitedInPast24Hours / 100),
-        this._maxConcurrentAutoGrants
-      ),
-      0
-    );
-  },
-
-  getOriginsThirdPartyHasAccessTo(thirdPartyOrigin) {
-    let prefix = `3rdPartyStorage^${thirdPartyOrigin}`;
-    let perms = Services.perms.getAllWithTypePrefix(prefix);
-    let origins = new Set();
-    while (perms.length) {
-      let perm = perms.shift();
-      // Let's make sure that we're not looking at a permission for
-      // https://exampletracker.company when we mean to look for the
-      // permisison for https://exampletracker.com!
-      if (perm.type != prefix && !perm.type.startsWith(`${prefix}^`)) {
-        continue;
-      }
-      origins.add(perm.principal.origin);
-    }
-    return origins.size;
-  },
-
-  onBeforeShow() {
-    let storageAccessHistogram = Services.telemetry.getHistogramById(
-      "STORAGE_ACCESS_API_UI"
-    );
-
-    storageAccessHistogram.add("Request");
-
-    let thirdPartyOrigin = this.request.principal.origin;
-    if (
-      this._autoGrants &&
-      this.getOriginsThirdPartyHasAccessTo(thirdPartyOrigin) <
-        this.maxConcurrentAutomaticGrants
-    ) {
-      // Automatically accept the prompt
-      this.allow({ "storage-access": "allow-auto-grant" });
-
-      storageAccessHistogram.add("AllowAutomatically");
-
-      return false;
-    }
-    return true;
   },
 };
 
