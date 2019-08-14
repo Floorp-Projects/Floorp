@@ -23,8 +23,8 @@ on Treeherder.
 [xpcshell]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests
 
 
-Functional tests
-----------------
+Browser chrome tests
+--------------------
 
 We also have a set of functional [browser chrome] tests located
 under _remote/test/browser_:
@@ -47,3 +47,24 @@ display.
 
 [browser chrome]: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests
 [headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
+
+
+Puppeteer tests
+---------------
+
+In addition to our own Firefox-specific tests, we run the upstream
+[Puppeteer test suite] against our implementation to track progress
+towards achieving full [Puppeteer support] in Firefox.
+
+These tests are vendored under _remote/test/puppeteer/_ and are
+run locally like this:
+
+	% ./mach test remote/test/puppeteer/test
+
+On try they appear under the `remote(pup)` symbol, but because they’re
+a Tier-3 class test job they’re not automatically scheduled.
+To schedule the tests, look for `source-test-remote-puppeteer` in
+`./mach try fuzzy`.
+
+[Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
+[Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
