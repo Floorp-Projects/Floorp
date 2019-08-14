@@ -358,7 +358,7 @@ const ObjectOps ModuleEnvironmentObject::objectOps_ = {
     nullptr, /* getElements */
     nullptr};
 
-const ClassOps ModuleEnvironmentObject::classOps_ = {
+const JSClassOps ModuleEnvironmentObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

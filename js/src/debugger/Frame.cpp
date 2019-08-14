@@ -172,7 +172,7 @@ inline js::Debugger* js::DebuggerFrame::owner() const {
   return Debugger::fromJSObject(dbgobj);
 }
 
-const ClassOps DebuggerFrame::classOps_ = {
+const JSClassOps DebuggerFrame::classOps_ = {
     nullptr,                        /* addProperty */
     nullptr,                        /* delProperty */
     nullptr,                        /* enumerate   */

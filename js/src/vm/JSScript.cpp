@@ -1669,7 +1669,7 @@ void ScriptSourceObject::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static const ClassOps ScriptSourceObjectClassOps = {
+static const JSClassOps ScriptSourceObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

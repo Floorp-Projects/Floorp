@@ -399,7 +399,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static const uint32_t MODULE_SLOT = 1;
 
   static const ObjectOps objectOps_;
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
  public:
   static const Class class_;
