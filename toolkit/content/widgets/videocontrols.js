@@ -92,6 +92,16 @@ this.VideoControlsWidget = class {
     delete this.impl;
   }
 
+  onPrefChange(prefName, prefValue) {
+    this.prefs[prefName] = prefValue;
+
+    if (!this.impl) {
+      return;
+    }
+
+    this.impl.onPrefChange(prefName, prefValue);
+  }
+
   static isPictureInPictureVideo(someVideo) {
     return someVideo.isCloningElementVisually;
   }
@@ -2643,6 +2653,11 @@ this.VideoControlsImplWidget = class {
     this.Utils.updateOrientationState(false);
   }
 
+  onPrefChange(prefName, prefValue) {
+    this.prefs[prefName] = prefValue;
+    this.Utils.updatePictureInPictureToggleDisplay();
+  }
+
   _setupEventListeners() {
     this.shadowRoot.firstChild.addEventListener("mouseover", event => {
       if (!this.Utils.isTouchControls) {
@@ -2788,6 +2803,10 @@ this.NoControlsMobileImplWidget = class {
     this.Utils.terminate();
   }
 
+  onPrefChange(prefName, prefValue) {
+    this.prefs[prefName] = prefValue;
+  }
+
   generateContent() {
     /*
      * Pass the markup through XML parser purely for the reason of loading the localization DTD.
@@ -2838,6 +2857,10 @@ this.NoControlsPictureInPictureImplWidget = class {
   }
 
   destructor() {}
+
+  onPrefChange(prefName, prefValue) {
+    this.prefs[prefName] = prefValue;
+  }
 
   generateContent() {
     /*
@@ -2975,6 +2998,11 @@ this.NoControlsDesktopImplWidget = class {
 
   destructor() {
     this.Utils.terminate();
+  }
+
+  onPrefChange(prefName, prefValue) {
+    this.prefs[prefName] = prefValue;
+    this.Utils.updatePictureInPictureToggleDisplay();
   }
 
   generateContent() {

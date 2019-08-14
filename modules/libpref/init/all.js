@@ -5531,9 +5531,6 @@ pref("security.data_uri.unique_opaque_origin", true);
 // URL-Bar will not be blocked when flipping this pref.
 pref("security.data_uri.block_toplevel_data_uri_navigations", true);
 
-// If true, all FTP subresource loads will be blocked.
-pref("security.block_ftp_subresources", true);
-
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
 
@@ -5764,3 +5761,51 @@ pref("services.sync.engine.passwords.validation.maxRecords", 1000);
 // a sync.
 pref("services.sync.maxResyncs", 5);
 #endif // MOZ_SERVICES_SYNC
+
+// Marionette is the remote protocol that lets OOP programs communicate with,
+// instrument, and control Gecko.
+
+// Starts and stops the Marionette server.
+pref("marionette.enabled", false);
+
+// Delay server startup until a modal dialogue has been clicked to allow time
+// for user to set breakpoints in the Browser Toolbox.
+pref("marionette.debugging.clicktostart", false);
+
+// Verbosity of Marionette logger repository.
+//
+// Available levels are, in descending order of severity, "trace", "debug",
+// "config", "info", "warn", "error", and "fatal". The value is treated
+// case-insensitively.
+pref("marionette.log.level", "Info");
+
+// Certain log messages that are known to be long are truncated. This
+// preference causes them to not be truncated.
+pref("marionette.log.truncate", true);
+
+// Port to start Marionette server on.
+pref("marionette.port", 2828);
+
+// Sets recommended automation preferences when Marionette is started.
+pref("marionette.prefs.recommended", true);
+
+// Whether content scripts can be safely reused.
+//
+// Deprecated and scheduled for removal with
+// https://bugzil.la/marionette-window-tracking
+pref("marionette.contentListener", false);
+
+// Indicates whether the remote agent is enabled. If it is false, the remote
+// agent will not be loaded.
+pref("remote.enabled", false);
+
+// Limits remote agent to listen on loopback devices, e.g. 127.0.0.1,
+// localhost, and ::1.
+pref("remote.force-local", true);
+
+// Defines the verbosity of the internal logger.
+//
+// Available levels are, in descending order of severity, "Trace", "Debug",
+// "Config", "Info", "Warn", "Error", and "Fatal". The value is treated
+// case-sensitively.
+pref("remote.log.level", "Info");

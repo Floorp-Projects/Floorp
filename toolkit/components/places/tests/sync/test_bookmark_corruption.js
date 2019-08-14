@@ -249,12 +249,7 @@ add_task(async function test_multiple_parents() {
 
   await storeChangesInMirror(buf, changesToUpload);
 
-  ok(
-    !(await buf.hasChanges()),
-    "Should not report local or remote changes after updating mirror"
-  );
-
-  let newChangesToUpload = await buf.forceApply({
+  let newChangesToUpload = await buf.apply({
     localTimeSeconds: now / 1000,
     remoteTimeSeconds: now / 1000,
   });
@@ -528,7 +523,7 @@ add_task(async function test_corrupt_local_roots() {
     );
     await Assert.rejects(
       buf.apply(),
-      /Local tree has misparented root/,
+      /The Places roots are invalid/,
       "Should abort merge if local tree has misparented syncable root"
     );
 
@@ -547,7 +542,7 @@ add_task(async function test_corrupt_local_roots() {
     });
     await Assert.rejects(
       buf.apply(),
-      /Local tree has misparented root/,
+      /The Places roots are invalid/,
       "Should abort merge if local tree has misparented Places root"
     );
   } finally {

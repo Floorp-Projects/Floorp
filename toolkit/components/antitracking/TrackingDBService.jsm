@@ -168,9 +168,15 @@ TrackingDBService.prototype = {
   identifyType(events) {
     let result = null;
     let isTracker = false;
+    let isSocialTracker = false;
     for (let [state, blocked] of events) {
       if (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
         isTracker = true;
+      }
+      if (
+        state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT
+      ) {
+        isSocialTracker = true;
       }
       if (blocked) {
         if (
@@ -181,8 +187,7 @@ TrackingDBService.prototype = {
           // If STP is enabled and either a social tracker is blocked,
           // or a cookie was blocked with a social tracking event
           social_enabled &&
-          ((state &
-            Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT &&
+          ((isSocialTracker &&
             state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) ||
             state &
               Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT)

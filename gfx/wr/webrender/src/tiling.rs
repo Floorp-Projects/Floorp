@@ -1320,7 +1320,9 @@ impl CompositeOps {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.filters.is_empty() && self.filter_datas.is_empty() && self.mix_blend_mode.is_none()
+        self.filters.is_empty() &&
+            self.filter_primitives.is_empty() &&
+            self.mix_blend_mode.is_none()
     }
 }
 

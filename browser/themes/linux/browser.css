@@ -315,7 +315,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border-top: 1px solid ThreeDShadow;
 }
 
-#urlbarView-results {
+#urlbar-results {
   font-size: 1.05em;
 }
 

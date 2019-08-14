@@ -4,11 +4,6 @@
 
 %include ../shared/searchbar.inc.css
 
-.search-panel-header,
-.addengine-item {
-  font-size: 10px;
-}
-
 .searchbar-popup {
   margin-top: 4px;
   margin-inline-start: 3px;

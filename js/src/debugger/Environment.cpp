@@ -51,17 +51,19 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-const ClassOps DebuggerEnvironment::classOps_ = {nullptr, /* addProperty */
-                                                 nullptr, /* delProperty */
-                                                 nullptr, /* enumerate   */
-                                                 nullptr, /* newEnumerate */
-                                                 nullptr, /* resolve     */
-                                                 nullptr, /* mayResolve  */
-                                                 nullptr, /* finalize    */
-                                                 nullptr, /* call        */
-                                                 nullptr, /* hasInstance */
-                                                 nullptr, /* construct   */
-                                                 trace};
+const ClassOps DebuggerEnvironment::classOps_ = {
+    nullptr,                              /* addProperty */
+    nullptr,                              /* delProperty */
+    nullptr,                              /* enumerate   */
+    nullptr,                              /* newEnumerate */
+    nullptr,                              /* resolve     */
+    nullptr,                              /* mayResolve  */
+    nullptr,                              /* finalize    */
+    nullptr,                              /* call        */
+    nullptr,                              /* hasInstance */
+    nullptr,                              /* construct   */
+    CallTraceMethod<DebuggerEnvironment>, /* trace */
+};
 
 const Class DebuggerEnvironment::class_ = {
     "Environment",
@@ -69,13 +71,14 @@ const Class DebuggerEnvironment::class_ = {
         JSCLASS_HAS_RESERVED_SLOTS(DebuggerEnvironment::RESERVED_SLOTS),
     &classOps_};
 
-void DebuggerEnvironment::trace(JSTracer* trc, JSObject* obj) {
+void DebuggerEnvironment::trace(JSTracer* trc) {
   // There is a barrier on private pointers, so the Unbarriered marking
   // is okay.
-  if (Env* referent = (JSObject*)obj->as<NativeObject>().getPrivate()) {
-    TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &referent,
-                                               "Debugger.Environment referent");
-    obj->as<NativeObject>().setPrivateUnbarriered(referent);
+  if (Env* referent = (JSObject*)getPrivate()) {
+    TraceManuallyBarrieredCrossCompartmentEdge(
+        trc, static_cast<JSObject*>(this), &referent,
+        "Debugger.Environment referent");
+    setPrivateUnbarriered(referent);
   }
 }
 

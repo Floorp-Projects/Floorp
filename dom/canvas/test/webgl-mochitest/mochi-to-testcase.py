@@ -1,35 +1,25 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 import sys
-import os.path
+import pathlib
 import re
 
 assert len(sys.argv) == 2
-mochiPath = sys.argv[1]
+MOCHI_PATH = pathlib.Path(sys.argv[1])
+assert MOCHI_PATH.suffix == '.html'
 
-extDotPos = mochiPath.find('.html')
-assert extDotPos != -1, 'mochitest target must be an html doc.'
+TEST_PATH = MOCHI_PATH.with_suffix('.solo.html')
 
-testPath = mochiPath[:extDotPos] + '.solo.html'
-
-def ReadLocalFile(include):
-    incPath = os.path.dirname(mochiPath)
-    filePath = os.path.join(incPath, include)
-
-    data = None
-    try:
-        f = open(filePath, 'r')
-        data = f.read()
-    except:
-        pass
+def read_local_file(include):
+    inc_path = MOCHI_PATH.parent
+    file_path = inc_path / include
 
     try:
-        f.close()
-    except:
-        pass
+        return file_path.read_bytes()
+    except IOError:
+        return b''
 
-    return data
 
-kSimpleTestReplacement = '''
+SIMPLETEST_REPLACEMENT = b'''
 
 <script>
 // SimpleTest.js replacement
@@ -72,42 +62,42 @@ SpecialPowers = {
 
 '''
 
-fin = open(mochiPath, 'rb')
-fout = open(testPath, 'wb')
-includePattern = re.compile('<script\\s*src=[\'"](.*)\\.js[\'"]>\\s*</script>')
-cssPattern = re.compile('<link\\s*rel=[\'"]stylesheet[\'"]\\s*href=[\'"]([^=>]*)[\'"]>')
-for line in fin:
-    skipLine = False
-    for css in cssPattern.findall(line):
-        skipLine = True
-        print('Ignoring stylesheet: ' + css)
+INCLUDE_PATTERN = re.compile(b'<script\\s*src=[\'"](.*)\\.js[\'"]>\\s*</script>')
+CSS_PATTERN = re.compile(b'<link\\s*rel=[\'"]stylesheet[\'"]\\s*href=[\'"]([^=>]*)[\'"]>')
 
-    for inc in includePattern.findall(line):
-        skipLine = True
-        if inc == '/MochiKit/MochiKit':
+with open(TEST_PATH, 'wb') as fout:
+    with open(MOCHI_PATH, 'rb') as fin:
+        for line in fin:
+            skip_line = False
+            for css in CSS_PATTERN.findall(line):
+                skip_line = True
+                print('Ignoring stylesheet: ' + css.decode())
+
+            for inc in INCLUDE_PATTERN.findall(line):
+                skip_line = True
+                if inc == b'/MochiKit/MochiKit':
+                    continue
+
+                if inc == b'/tests/SimpleTest/SimpleTest':
+                    print('Injecting SimpleTest replacement')
+                    fout.write(SIMPLETEST_REPLACEMENT);
+                    continue
+
+                inc_js = inc.decode() + '.js'
+                inc_data = read_local_file(inc_js)
+                if not inc_data:
+                    print('Warning: Unknown JS file ignored: ' + inc_js)
+                    continue
+
+                print('Injecting include: ' + inc_js)
+                fout.write(b'\n<script>\n// Imported from: ' + inc_js.encode() + b'\n');
+                fout.write(inc_data);
+                fout.write(b'\n</script>\n');
+                continue
+
+            if skip_line:
+                continue
+
+            fout.write(line)
             continue
 
-        if inc == '/tests/SimpleTest/SimpleTest':
-            print('Injecting SimpleTest replacement')
-            fout.write(kSimpleTestReplacement);
-            continue
-
-        incData = ReadLocalFile(inc + '.js')
-        if not incData:
-            print('Warning: Unknown JS file ignored: ' + inc + '.js')
-            continue
-
-        print('Injecting include: ' + inc + '.js')
-        fout.write('\n<script>\n// Imported from: ' + inc + '.js\n');
-        fout.write(incData);
-        fout.write('\n</script>\n');
-        continue
-
-    if skipLine:
-        continue
-
-    fout.write(line)
-    continue
-
-fin.close()
-fout.close()

@@ -7,29 +7,43 @@ exclude: true
 ---
 
 {% capture javadoc_uri %}{{ site.url }}{{ site.baseurl}}/javadoc/mozilla-central/org/mozilla/geckoview{% endcapture %}
+{% capture bugzilla %}https://bugzilla.mozilla.org/show_bug.cgi?id={% endcapture %}
 
 # GeckoView API Changelog.
 
 ## v70
 - Added API for session context assignment
-  [`GeckoSessionSettings.Builder.contextId`][70.1] and deletion of data
-  related to a session context
-  [`StorageController.clearDataForSessionContext`][70.2].
-- Removed `setSession(session, runtime)` from [`GeckoView`][70.5]. With this change, `GeckoView` will no longer
-  manage opening/closing of the [`GeckoSession`][70.6] and instead leave that up to the app. It's also now allowed
-  to call [`setSession`][70.10] with a closed `GeckoSession`.
-- Added an overload of [`GeckoSession.loadUri()`][70.8] that accepts a referring [`GeckoSession`][70.6]. This should be used
-  when the URI we're loading originates from another page. A common example of this would be long pressing
-  a link and then opening that in a new `GeckoSession`.
-- Added capture parameter to [`onFilePrompt`][70.9] and corresponding [`CAPTURE_TYPE_*`][70.7] constants.
+  [`GeckoSessionSettings.Builder.contextId`][70.1] and deletion of data related
+  to a session context [`StorageController.clearDataForSessionContext`][70.2].
+  ([bug 1501108]({{bugzilla}}1501108))
+- Removed `setSession(session, runtime)` from [`GeckoView`][70.5]. With this
+  change, `GeckoView` will no longer manage opening/closing of the
+  [`GeckoSession`][70.6] and instead leave that up to the app. It's also now
+  allowed to call [`setSession`][70.10] with a closed `GeckoSession`.
+  ([bug 1510314]({{bugzilla}}1510314))
+- Added an overload of [`GeckoSession.loadUri()`][70.8] that accepts a
+  referring [`GeckoSession`][70.6]. This should be used when the URI we're
+  loading originates from another page. A common example of this would be long
+  pressing a link and then opening that in a new `GeckoSession`.
+  ([bug 1561079]({{bugzilla}}1561079))
+- Added capture parameter to [`onFilePrompt`][70.9] and corresponding
+  [`CAPTURE_TYPE_*`][70.7] constants.
+  ([bug 1553603]({{bugzilla}}1553603))
 - Removed the obsolete `success` parameter from
   [`CrashReporter#sendCrashReport(Context, File, File, String)`][70.3] and
   [`CrashReporter#sendCrashReport(Context, File, Map, String)`][70.4].
-- Add GeckoSession.LOAD_FLAGS_REPLACE_HISTORY
+  ([bug 1570789]({{bugzilla}}1570789))
+- Add `GeckoSession.LOAD_FLAGS_REPLACE_HISTORY`.
+  ([bug 1571088]({{bugzilla}}1571088))
 - Complete rewrite of [`PromptDelegate`][70.11].
+  ([bug 1499394]({{bugzilla}}1499394))
 - Added [`RuntimeTelemetry.Delegate`][70.12] that receives streaming telemetry
   data from GeckoView.
+  ([bug 1566367]({{bugzilla}}1566367))
 - Updated [`ContentBlocking`][70.13] to better report blocked and allowed ETP events.
+  ([bug 1567268]({{bugzilla}}1567268))
+- Added API for controlling Gecko logging [`GeckoRuntimeSettings.debugLogging`][70.14]
+  ([bug 1573304]({{bugzilla}}1573304))
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -44,6 +58,7 @@ exclude: true
 [70.11]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html
 [70.12]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html
 [70.13]: {{javadoc_uri}}/ContentBlocking.html
+[70.14]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#debugLogging-boolean-
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -296,4 +311,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1929f5739623cec70ce9bad19837a4f21604488e
+[api-version]: 99204a5c93667e6d440e55d5d330d01cf4e8783f

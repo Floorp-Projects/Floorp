@@ -259,31 +259,12 @@ fn shadow_parameters(shadow: &Shadow) -> String {
     )
 }
 
-fn write_stacking_context(
+fn write_filters(
     parent: &mut Table,
-    sc: &StackingContext,
-    properties: &SceneProperties,
+    name: &str,
     filter_iter: impl IntoIterator<Item = FilterOp>,
-    filter_data_iter: &[TempFilterData],
-    filter_primitive_iter: impl IntoIterator<Item = FilterPrimitive>,
+    properties: &SceneProperties,
 ) {
-    enum_node(parent, "transform-style", sc.transform_style);
-
-    let raster_space = match sc.raster_space {
-        RasterSpace::Local(scale) => {
-            format!("local({})", scale)
-        }
-        RasterSpace::Screen => {
-            "screen".to_owned()
-        }
-    };
-    str_node(parent, "raster-space", &raster_space);
-
-    // mix_blend_mode
-    if sc.mix_blend_mode != MixBlendMode::Normal {
-        enum_node(parent, "mix-blend-mode", sc.mix_blend_mode)
-    }
-    // filters
     let mut filters = vec![];
     for filter in filter_iter {
         match filter {
@@ -324,9 +305,14 @@ fn write_stacking_context(
         }
     }
 
-    yaml_node(parent, "filters", Yaml::Array(filters));
+    yaml_node(parent, name, Yaml::Array(filters));
+}
 
-    // filter datas
+fn write_filter_datas(
+    parent: &mut Table,
+    name: &str,
+    filter_data_iter: &[TempFilterData],
+) {
     let mut filter_datas = vec![];
     for filter_data in filter_data_iter {
         let func_types = filter_data.func_types.iter().map(|func_type| {
@@ -361,9 +347,14 @@ fn write_stacking_context(
         filter_datas.push(Yaml::Array(avec));
     }
 
-    yaml_node(parent, "filter-datas", Yaml::Array(filter_datas));
+    yaml_node(parent, name, Yaml::Array(filter_datas));
+}
 
-    // filter primitives
+fn write_filter_primitives(
+    parent: &mut Table,
+    name: &str,
+    filter_primitive_iter: impl IntoIterator<Item = FilterPrimitive>,
+) {
     let mut filter_primitives = vec![];
     for filter_primitive in filter_primitive_iter {
         let mut table = new_table();
@@ -413,7 +404,37 @@ fn write_stacking_context(
         filter_primitives.push(Yaml::Hash(table));
     }
 
-    yaml_node(parent, "filter-primitives", Yaml::Array(filter_primitives));
+    yaml_node(parent, name, Yaml::Array(filter_primitives));
+}
+
+fn write_stacking_context(
+    parent: &mut Table,
+    sc: &StackingContext,
+    properties: &SceneProperties,
+    filter_iter: impl IntoIterator<Item = FilterOp>,
+    filter_data_iter: &[TempFilterData],
+    filter_primitive_iter: impl IntoIterator<Item = FilterPrimitive>,
+) {
+    enum_node(parent, "transform-style", sc.transform_style);
+
+    let raster_space = match sc.raster_space {
+        RasterSpace::Local(scale) => {
+            format!("local({})", scale)
+        }
+        RasterSpace::Screen => {
+            "screen".to_owned()
+        }
+    };
+    str_node(parent, "raster-space", &raster_space);
+
+    // mix_blend_mode
+    if sc.mix_blend_mode != MixBlendMode::Normal {
+        enum_node(parent, "mix-blend-mode", sc.mix_blend_mode)
+    }
+
+    write_filters(parent, "filters", filter_iter, properties);
+    write_filter_datas(parent, "filter-datas", filter_data_iter);
+    write_filter_primitives(parent, "filter-primitives", filter_primitive_iter);
 }
 
 #[cfg(target_os = "macos")]
@@ -1339,6 +1360,14 @@ impl YamlFrameWriter {
                         Yaml::Real(item.previously_applied_offset.y.to_string()),
                     ];
                     yaml_node(&mut v, "previously-applied-offset", Yaml::Array(applied));
+                }
+                DisplayItem::BackdropFilter(item) => {
+                    str_node(&mut v, "type", "backdrop-filter");
+                    common_node(&mut v, clip_id_mapper, &item.common);
+
+                    write_filters(&mut v, "filters", base.filters(), &scene.properties);
+                    write_filter_datas(&mut v, "filter-datas", base.filter_datas());
+                    write_filter_primitives(&mut v, "filter-primitives", base.filter_primitives());
                 }
 
                 DisplayItem::PopReferenceFrame |

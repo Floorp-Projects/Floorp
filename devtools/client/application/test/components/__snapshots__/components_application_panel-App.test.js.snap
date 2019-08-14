@@ -5,7 +5,7 @@ exports[`App renders the expected snapshot 1`] = `
   <main
     className="application"
   >
-    <Connect(PageContainer) />
+    <Connect(PageSwitcher) />
   </main>
 </LocalizationProvider>
 `;

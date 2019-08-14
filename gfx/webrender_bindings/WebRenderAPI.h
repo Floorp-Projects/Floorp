@@ -344,7 +344,8 @@ struct MOZ_STACK_CLASS StackingContextParams : public WrStackingContextParams {
                                 nullptr,
                                 /* is_backface_visible = */ true,
                                 /* cache_tiles = */ false,
-                                wr::MixBlendMode::Normal} {}
+                                wr::MixBlendMode::Normal,
+                                /* is_backdrop_root = */ false} {}
 
   void SetPreserve3D(bool aPreserve) {
     transform_style =
@@ -448,6 +449,12 @@ class DisplayListBuilder final {
   void PushClearRect(const wr::LayoutRect& aBounds);
   void PushClearRectWithComplexRegion(const wr::LayoutRect& aBounds,
                                       const wr::ComplexClipRegion& aRegion);
+
+  void PushBackdropFilter(const wr::LayoutRect& aBounds,
+                          const wr::ComplexClipRegion& aRegion,
+                          const nsTArray<wr::FilterOp>& aFilters,
+                          const nsTArray<wr::WrFilterData>& aFilterDatas,
+                          bool aIsBackfaceVisible);
 
   void PushLinearGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip, bool aIsBackfaceVisible,

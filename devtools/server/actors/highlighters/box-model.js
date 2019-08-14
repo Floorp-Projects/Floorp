@@ -331,7 +331,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     const shown = this._update();
     this._trackMutations();
-    this.emit("ready");
     return shown;
   }
 

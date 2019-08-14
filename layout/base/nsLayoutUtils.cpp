@@ -3963,16 +3963,11 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
       DisplayListChecker toBeMergedChecker;
       DisplayListChecker afterMergeChecker;
 
-      // If we transition between wrapping the RCD-RSF contents into an async
-      // zoom container vs. not, we need to rebuild the display list. This only
-      // happens when the zooming or container scrolling prefs are toggled
-      // (manually by the user, or during test setup).
+      // If a pref is toggled that adds or removes display list items,
+      // we need to rebuild the display list. The pref may be toggled
+      // manually by the user, or during test setup.
       bool shouldAttemptPartialUpdate = useRetainedBuilder;
-      bool didBuildAsyncZoomContainer =
-          builder->ShouldBuildAsyncZoomContainer();
-      builder->UpdateShouldBuildAsyncZoomContainer();
-      if (builder->ShouldBuildAsyncZoomContainer() !=
-          didBuildAsyncZoomContainer) {
+      if (builder->ShouldRebuildDisplayListDueToPrefChange()) {
         shouldAttemptPartialUpdate = false;
       }
 

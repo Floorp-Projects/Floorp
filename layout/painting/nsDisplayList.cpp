@@ -1273,13 +1273,14 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mPartialBuildFailed(false),
       mIsInActiveDocShell(false),
       mBuildAsyncZoomContainer(false),
+      mBuildBackdropRootContainer(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
 
-  UpdateShouldBuildAsyncZoomContainer();
+  ShouldRebuildDisplayListDueToPrefChange();
 
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
@@ -1507,6 +1508,38 @@ void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   mBuildAsyncZoomContainer =
       nsLayoutUtils::AllowZoomingForDocument(document) &&
       !StaticPrefs::layout_scroll_root_frame_containers();
+}
+
+void nsDisplayListBuilder::UpdateShouldBuildBackdropRootContainer() {
+  mBuildBackdropRootContainer =
+      StaticPrefs::layout_css_backdrop_filter_enabled();
+}
+
+// Certain prefs may cause display list items to be added or removed when they
+// are toggled. In those cases, we need to fully rebuild the display list.
+bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
+  bool shouldRebuild = false;
+
+  // If we transition between wrapping the RCD-RSF contents into an async
+  // zoom container vs. not, we need to rebuild the display list. This only
+  // happens when the zooming or container scrolling prefs are toggled
+  // (manually by the user, or during test setup).
+  bool didBuildAsyncZoomContainer = mBuildAsyncZoomContainer;
+  UpdateShouldBuildAsyncZoomContainer();
+  if (didBuildAsyncZoomContainer != mBuildAsyncZoomContainer) {
+    shouldRebuild = true;
+  }
+
+  // If backdrop-filter is enabled, backdrop root containers are added to the
+  // display list. When the pref is toggled these containers may be added or
+  // removed, so the display list should be rebuilt.
+  bool didBuildBackdropRootContainer = mBuildBackdropRootContainer;
+  UpdateShouldBuildBackdropRootContainer();
+  if (didBuildBackdropRootContainer != mBuildBackdropRootContainer) {
+    shouldRebuild = true;
+  }
+
+  return shouldRebuild;
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
@@ -10188,6 +10221,185 @@ void nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo) {
 }
 #endif
 
+static float ClampStdDeviation(float aStdDeviation) {
+  // Cap software blur radius for performance reasons.
+  return std::min(std::max(0.0f, aStdDeviation), 100.0f);
+}
+
+static bool CreateWebRenderCSSFilters(Span<const StyleFilter> aFilters,
+                                      nsIFrame* aFrame,
+                                      WrFiltersHolder& aWrFilters) {
+  // All CSS filters are supported by WebRender. SVG filters are not fully
+  // supported, those use NS_STYLE_FILTER_URL and are handled separately.
+
+  // If there are too many filters to render, then just pretend that we
+  // succeeded, and don't render any of them.
+  if (aFilters.Length() >
+      StaticPrefs::gfx_webrender_max_filter_ops_per_chain()) {
+    return true;
+  }
+  aWrFilters.filters.SetCapacity(aFilters.Length());
+  auto& wrFilters = aWrFilters.filters;
+  for (const StyleFilter& filter : aFilters) {
+    switch (filter.tag) {
+      case StyleFilter::Tag::Brightness:
+        wrFilters.AppendElement(
+            wr::FilterOp::Brightness(filter.AsBrightness()));
+        break;
+      case StyleFilter::Tag::Contrast:
+        wrFilters.AppendElement(wr::FilterOp::Contrast(filter.AsContrast()));
+        break;
+      case StyleFilter::Tag::Grayscale:
+        wrFilters.AppendElement(wr::FilterOp::Grayscale(filter.AsGrayscale()));
+        break;
+      case StyleFilter::Tag::Invert:
+        wrFilters.AppendElement(wr::FilterOp::Invert(filter.AsInvert()));
+        break;
+      case StyleFilter::Tag::Opacity: {
+        float opacity = filter.AsOpacity();
+        wrFilters.AppendElement(wr::FilterOp::Opacity(
+            wr::PropertyBinding<float>::Value(opacity), opacity));
+        break;
+      }
+      case StyleFilter::Tag::Saturate:
+        wrFilters.AppendElement(wr::FilterOp::Saturate(filter.AsSaturate()));
+        break;
+      case StyleFilter::Tag::Sepia:
+        wrFilters.AppendElement(wr::FilterOp::Sepia(filter.AsSepia()));
+        break;
+      case StyleFilter::Tag::HueRotate: {
+        wrFilters.AppendElement(
+            wr::FilterOp::HueRotate(filter.AsHueRotate().ToDegrees()));
+        break;
+      }
+      case StyleFilter::Tag::Blur: {
+        // TODO(emilio): we should go directly from css pixels -> device pixels.
+        float appUnitsPerDevPixel =
+            aFrame->PresContext()->AppUnitsPerDevPixel();
+        wrFilters.AppendElement(mozilla::wr::FilterOp::Blur(
+            ClampStdDeviation(NSAppUnitsToFloatPixels(
+                filter.AsBlur().ToAppUnits(), appUnitsPerDevPixel))));
+        break;
+      }
+      case StyleFilter::Tag::DropShadow: {
+        float appUnitsPerDevPixel =
+            aFrame->PresContext()->AppUnitsPerDevPixel();
+        const StyleSimpleShadow& shadow = filter.AsDropShadow();
+        nscolor color = shadow.color.CalcColor(aFrame);
+
+        wr::Shadow wrShadow;
+        wrShadow.offset = {
+            NSAppUnitsToFloatPixels(shadow.horizontal.ToAppUnits(),
+                                    appUnitsPerDevPixel),
+            NSAppUnitsToFloatPixels(shadow.vertical.ToAppUnits(),
+                                    appUnitsPerDevPixel)};
+        wrShadow.blur_radius = NSAppUnitsToFloatPixels(shadow.blur.ToAppUnits(),
+                                                       appUnitsPerDevPixel);
+        wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
+                          NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
+        wrFilters.AppendElement(wr::FilterOp::DropShadow(wrShadow));
+        break;
+      }
+      default:
+        return false;
+    }
+  }
+
+  return true;
+}
+
+already_AddRefed<Layer> nsDisplayBackdropRootContainer::BuildLayer(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aContainerParameters) {
+  RefPtr<Layer> container = aManager->GetLayerBuilder()->BuildContainerLayerFor(
+      aBuilder, aManager, mFrame, this, &mList, aContainerParameters, nullptr);
+  if (!container) {
+    return nullptr;
+  }
+
+  return container.forget();
+}
+
+LayerState nsDisplayBackdropRootContainer::GetLayerState(
+    nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+    const ContainerLayerParameters& aParameters) {
+  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
+                                       GetAnimatedGeometryRoot());
+}
+
+bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  wr::StackingContextParams params;
+  params.is_backdrop_root = true;
+  params.clip =
+      wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
+  StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
+                           params);
+
+  nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
+                                             aDisplayListBuilder);
+  return true;
+}
+
+/* static */
+bool nsDisplayBackdropFilters::CanCreateWebRenderCommands(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
+  WrFiltersHolder wrFilters;
+  Maybe<nsRect> filterClip;
+  auto filterChain = aFrame->StyleEffects()->mBackdropFilters.AsSpan();
+  return CreateWebRenderCSSFilters(filterChain, aFrame, wrFilters) ||
+         nsSVGIntegrationUtils::BuildWebRenderFilters(aFrame, filterChain,
+                                                      wrFilters, filterClip);
+}
+
+bool nsDisplayBackdropFilters::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  WrFiltersHolder wrFilters;
+  Maybe<nsRect> filterClip;
+  auto filterChain = mFrame->StyleEffects()->mBackdropFilters.AsSpan();
+  if (!CreateWebRenderCSSFilters(filterChain, mFrame, wrFilters) &&
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                    wrFilters, filterClip)) {
+    return false;
+  }
+
+  nsCSSRendering::ImageLayerClipState clip;
+  nsCSSRendering::GetImageLayerClip(
+      mFrame->StyleBackground()->BottomLayer(), mFrame, *mFrame->StyleBorder(),
+      mBackdropRect, mBackdropRect, false,
+      mFrame->PresContext()->AppUnitsPerDevPixel(), &clip);
+
+  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+      mBackdropRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(bounds);
+
+  wr::ComplexClipRegion region =
+      wr::ToComplexClipRegion(clip.mBGClipArea, clip.mRadii,
+                              mFrame->PresContext()->AppUnitsPerDevPixel());
+
+  aBuilder.PushBackdropFilter(roundedRect, region, wrFilters.filters,
+                              wrFilters.filter_datas, !BackfaceIsHidden());
+
+  wr::StackingContextParams params;
+  params.clip =
+      wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
+  StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
+                           params);
+
+  nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
+                                             aDisplayListBuilder);
+  return true;
+}
+
+/* static */
 nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayEffectsBase(aBuilder, aFrame, aList),
@@ -10276,99 +10488,14 @@ void nsDisplayFilters::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   nsDisplayFiltersGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
-static float ClampStdDeviation(float aStdDeviation) {
-  // Cap software blur radius for performance reasons.
-  return std::min(std::max(0.0f, aStdDeviation), 100.0f);
-}
-
-bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& aWrFilters) {
-  // All CSS filters are supported by WebRender. SVG filters are not fully
-  // supported, those use NS_STYLE_FILTER_URL and are handled separately.
-  Span<const StyleFilter> filters = mFrame->StyleEffects()->mFilters.AsSpan();
-
-  // If there are too many filters to render, then just pretend that we
-  // succeeded, and don't render any of them.
-  if (filters.Length() >
-      StaticPrefs::gfx_webrender_max_filter_ops_per_chain()) {
-    return true;
-  }
-  aWrFilters.filters.SetCapacity(filters.Length());
-  auto& wrFilters = aWrFilters.filters;
-  for (const StyleFilter& filter : filters) {
-    switch (filter.tag) {
-      case StyleFilter::Tag::Brightness:
-        wrFilters.AppendElement(
-            wr::FilterOp::Brightness(filter.AsBrightness()));
-        break;
-      case StyleFilter::Tag::Contrast:
-        wrFilters.AppendElement(wr::FilterOp::Contrast(filter.AsContrast()));
-        break;
-      case StyleFilter::Tag::Grayscale:
-        wrFilters.AppendElement(wr::FilterOp::Grayscale(filter.AsGrayscale()));
-        break;
-      case StyleFilter::Tag::Invert:
-        wrFilters.AppendElement(wr::FilterOp::Invert(filter.AsInvert()));
-        break;
-      case StyleFilter::Tag::Opacity: {
-        float opacity = filter.AsOpacity();
-        wrFilters.AppendElement(wr::FilterOp::Opacity(
-            wr::PropertyBinding<float>::Value(opacity), opacity));
-        break;
-      }
-      case StyleFilter::Tag::Saturate:
-        wrFilters.AppendElement(wr::FilterOp::Saturate(filter.AsSaturate()));
-        break;
-      case StyleFilter::Tag::Sepia:
-        wrFilters.AppendElement(wr::FilterOp::Sepia(filter.AsSepia()));
-        break;
-      case StyleFilter::Tag::HueRotate: {
-        wrFilters.AppendElement(
-            wr::FilterOp::HueRotate(filter.AsHueRotate().ToDegrees()));
-        break;
-      }
-      case StyleFilter::Tag::Blur: {
-        // TODO(emilio): we should go directly from css pixels -> device pixels.
-        float appUnitsPerDevPixel =
-            mFrame->PresContext()->AppUnitsPerDevPixel();
-        wrFilters.AppendElement(mozilla::wr::FilterOp::Blur(
-            ClampStdDeviation(NSAppUnitsToFloatPixels(
-                filter.AsBlur().ToAppUnits(), appUnitsPerDevPixel))));
-        break;
-      }
-      case StyleFilter::Tag::DropShadow: {
-        float appUnitsPerDevPixel =
-            mFrame->PresContext()->AppUnitsPerDevPixel();
-        const StyleSimpleShadow& shadow = filter.AsDropShadow();
-        nscolor color = shadow.color.CalcColor(mFrame);
-
-        wr::Shadow wrShadow;
-        wrShadow.offset = {
-            NSAppUnitsToFloatPixels(shadow.horizontal.ToAppUnits(),
-                                    appUnitsPerDevPixel),
-            NSAppUnitsToFloatPixels(shadow.vertical.ToAppUnits(),
-                                    appUnitsPerDevPixel)};
-        wrShadow.blur_radius = NSAppUnitsToFloatPixels(shadow.blur.ToAppUnits(),
-                                                       appUnitsPerDevPixel);
-        wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
-                          NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
-        wrFilters.AppendElement(wr::FilterOp::DropShadow(wrShadow));
-        break;
-      }
-      default:
-        return false;
-    }
-  }
-
-  return true;
-}
-
 bool nsDisplayFilters::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder) {
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
-  if (!CreateWebRenderCSSFilters(wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
-                                                    filterClip)) {
+  auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
+  if (!CreateWebRenderCSSFilters(filterChain, mFrame, wrFilters) &&
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                    wrFilters, filterClip)) {
     return false;
   }
   return true;
@@ -10384,9 +10511,10 @@ bool nsDisplayFilters::CreateWebRenderCommands(
 
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
-  if (!CreateWebRenderCSSFilters(wrFilters) &&
-      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, wrFilters,
-                                                    filterClip)) {
+  auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
+  if (!CreateWebRenderCSSFilters(filterChain, mFrame, wrFilters) &&
+      !nsSVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                    wrFilters, filterClip)) {
     return false;
   }
 

@@ -198,9 +198,9 @@ function getExpressionNameAndValue(
         const property: Object = properties.find(
           prop => prop.name === meta.property
         );
-        displayValue = property.contents.value;
+        displayValue = property && property.contents.value;
         displayName += `.${meta.property}`;
-      } else {
+      } else if (displayValue && displayValue.preview) {
         const { ownProperties } = displayValue.preview;
         for (const prop in ownProperties) {
           if (prop === meta.property) {

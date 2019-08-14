@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script>
+'use strict';
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["apz.allow_zooming", true],
+    ["dom.meta-viewport.enabled", true],
+  ]
+}, () => {
+  // We need to open a new window to avoid running tests in an iframe since
+  // we want to test metrics on the root document.
+  window.open("file_viewport_metrics_on_landscape_content.html");
+});
+</script>

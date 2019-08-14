@@ -982,6 +982,8 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     // The GPU process doesn't need hardware acceleration and can run on
     // devices that we normally block from not being on our whitelist.
     case nsIGfxInfo::FEATURE_GPU_PROCESS:
+    // We can mostly assume that ANGLE will work
+    case nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE:
       return false;
     default:
       return true;

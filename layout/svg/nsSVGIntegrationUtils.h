@@ -209,9 +209,10 @@ class nsSVGIntegrationUtils final {
    * Try to build WebRender filters for a frame if the filters applied to it are
    * supported.
    */
-  static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
-                                    WrFiltersHolder& aWrFilters,
-                                    mozilla::Maybe<nsRect>& aPostFilterClip);
+  static bool BuildWebRenderFilters(
+      nsIFrame* aFilteredFrame,
+      mozilla::Span<const mozilla::StyleFilter> aFilters,
+      WrFiltersHolder& aWrFilters, mozilla::Maybe<nsRect>& aPostFilterClip);
 
   /**
    * @param aRenderingContext the target rendering context in which the paint

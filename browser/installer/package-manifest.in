@@ -198,7 +198,6 @@
 #ifdef ENABLE_REMOTE_AGENT
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
-@RESPATH@/defaults/pref/remote.js
 #endif
 
 ; Marionette remote control protocol
@@ -207,7 +206,6 @@
 @RESPATH@/chrome/marionette.manifest
 @RESPATH@/components/marionette.manifest
 @RESPATH@/components/marionette.js
-@RESPATH@/defaults/pref/marionette.js
 #endif
 
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)

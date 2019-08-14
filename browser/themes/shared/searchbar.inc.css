@@ -12,6 +12,8 @@
 
 .search-one-offs {
   -moz-box-orient: vertical;
+  border-top: 1px solid var(--panel-separator-color);
+  width: 100%;
 }
 
 /**
@@ -49,24 +51,14 @@
 
 .search-panel-header {
   font-weight: normal;
-  background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
   margin: 0;
-  padding: 3px 6px;
+  padding: 3px;
   color: var(--panel-disabled-color);
-}
-
-:root[lwt-popup-brighttext] .search-panel-header {
-  color: var(--autocomplete-popup-color);
 }
 
 .search-panel-header > label {
   margin-top: 2px !important;
   margin-bottom: 1px !important;
-}
-
-.search-panel-current-input > label {
-  margin: 2px 0 !important;
 }
 
 .search-panel-input-value {
@@ -75,10 +67,11 @@
 
 .search-panel-one-offs {
   margin: 0 !important;
-  border-top: 1px solid var(--panel-separator-color);
-  background-color: var(--arrowpanel-dimmed);
   /* Bug 1108841: prevent font-size from affecting the layout */
   line-height: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .searchbar-engine-one-off-item {
@@ -88,35 +81,10 @@
   height: 32px;
   margin: 0;
   padding: 0;
-  background: linear-gradient(transparent 15%, var(--panel-separator-color) 15%, var(--panel-separator-color) 85%, transparent 85%);
-  background-size: 1px auto;
-  background-repeat: no-repeat;
-  background-position: right center;
   color: var(--panel-disabled-color);
 }
 
-.searchbar-engine-one-off-item:-moz-locale-dir(rtl) {
-  background-position-x: left;
-}
-
-.searchbar-engine-one-off-item:not(.last-row) {
-  box-sizing: content-box;
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.search-setting-button-compact {
-  border-bottom: none !important;
-}
-
-.search-one-offs:not([compact=true]) .searchbar-engine-one-off-item.last-of-row,
-.search-one-offs[compact=true] .searchbar-engine-one-off-item.last-of-row:not(.dummy),
-.search-one-offs[compact=true] .searchbar-engine-one-off-item.dummy:not(.last-of-row),
-.search-one-offs[compact=true] .searchbar-engine-one-off-item.last-engine,
-.search-setting-button-compact {
-  background-image: none;
-}
-
-.searchbar-engine-one-off-item:not([selected]):not(.dummy):hover,
+.searchbar-engine-one-off-item:not([selected]):hover,
 .addengine-item:hover {
   background-color: var(--arrowpanel-dimmed-further);
   color: inherit;
@@ -124,7 +92,6 @@
 
 .searchbar-engine-one-off-item[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
-  background-image: none;
   color: var(--autocomplete-popup-highlight-color);
 }
 
@@ -141,10 +108,6 @@
   margin-inline-end: 0;
   width: 16px;
   height: 16px;
-}
-
-.search-add-engines {
-  background-color: var(--arrowpanel-dimmed);
 }
 
 .addengine-item {
@@ -238,6 +201,13 @@
   -moz-appearance: none;
   margin: 0;
   min-height: 32px;
+  border-top: 1px solid var(--panel-separator-color);
+  background-color: var(--arrowpanel-dimmed);
+  color: var(--panel-disabled-color);
+}
+
+.search-setting-button-compact {
+  max-height: 32px;
 }
 
 .search-setting-button:hover,
