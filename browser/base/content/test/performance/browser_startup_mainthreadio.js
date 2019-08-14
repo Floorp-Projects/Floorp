@@ -933,10 +933,7 @@ add_task(async function() {
       // a kernel security bug that will never be patched (see
       // https://crbug.com/project-zero/1671 for details).  This can
       // be removed when we no longer support those OS versions.
-      //
-      // The org.chromium prefix will be removed in bug 1426526.
-      if (MAC && (filename.startsWith(tmpPath + "/org.chromium.") ||
-                  filename.startsWith(tmpPath + "/org.mozilla.ipc."))) {
+      if (MAC && filename.startsWith(tmpPath + "/org.mozilla.ipc.")) {
         continue;
       }
 
