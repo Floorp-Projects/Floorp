@@ -1,3 +1,17 @@
+/* Scroll to bottom */
+
+#messages-panel .uncontrolled {
+  flex-direction: column;
+}
+
+#messages-panel .ws-frames-list-scroll-anchor {
+  /* anchor nodes are required to have non-zero area */
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+  border: none;
+ }
+
 /* Empty notice */
 
 #messages-panel .ws-frame-list-empty-notice {
