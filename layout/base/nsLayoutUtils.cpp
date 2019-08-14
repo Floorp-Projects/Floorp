@@ -8736,20 +8736,6 @@ void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
 }  // namespace mozilla
 
 /* static */
-bool nsLayoutUtils::IsOutlineStyleAutoEnabled() {
-  static bool sOutlineStyleAutoEnabled;
-  static bool sOutlineStyleAutoPrefCached = false;
-
-  if (!sOutlineStyleAutoPrefCached) {
-    sOutlineStyleAutoPrefCached = true;
-    Preferences::AddBoolVarCache(&sOutlineStyleAutoEnabled,
-                                 "layout.css.outline-style-auto.enabled",
-                                 false);
-  }
-  return sOutlineStyleAutoEnabled;
-}
-
-/* static */
 void nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
                                             ReflowOutput& aMetrics,
                                             const LogicalMargin& aFramePadding,

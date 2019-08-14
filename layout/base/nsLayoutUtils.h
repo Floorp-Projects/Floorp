@@ -2758,8 +2758,6 @@ class nsLayoutUtils {
    */
   static void ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame);
 
-  static bool IsOutlineStyleAutoEnabled();
-
   static void SetBSizeFromFontMetrics(
       const nsIFrame* aFrame, mozilla::ReflowOutput& aMetrics,
       const mozilla::LogicalMargin& aFramePadding, mozilla::WritingMode aLineWM,

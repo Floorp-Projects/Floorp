@@ -59,6 +59,7 @@
 #include "nsCSSRenderingBorders.h"
 #include "mozilla/css/ImageLoader.h"
 #include "ImageContainer.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
@@ -1038,7 +1039,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
 
   StyleBorderStyle outlineStyle;
   if (ourOutline->mOutlineStyle.IsAuto()) {
-    if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+    if (StaticPrefs::layout_css_outline_style_auto_enabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                               StyleAppearance::FocusOutline)) {
