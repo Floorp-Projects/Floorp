@@ -399,6 +399,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return true;
   }
 
+  get walkerFront() {
+    return this.parentFront;
+  }
+
   getNodeValue() {
     // backward-compatibility: if nodevalue is null and shortValue is defined, the actual
     // value of the node needs to be fetched on the server.

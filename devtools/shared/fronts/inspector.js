@@ -23,12 +23,6 @@ loader.lazyRequireGetter(
   "nodeConstants",
   "devtools/shared/dom-node-constants"
 );
-loader.lazyRequireGetter(
-  this,
-  "Selection",
-  "devtools/client/framework/selection",
-  true
-);
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 
 const TELEMETRY_EYEDROPPER_OPENED = "DEVTOOLS_EYEDROPPER_OPENED_COUNT";
@@ -496,13 +490,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   // async initialization
   async initialize() {
     await Promise.all([this._getWalker(), this._getHighlighter()]);
-
-    this.selection = new Selection(this.walker);
-    this.nodePicker = new NodePicker(
-      this.highlighter,
-      this.walker,
-      this.selection
-    );
+    this.nodePicker = new NodePicker(this.highlighter, this.walker);
   }
 
   async _getWalker() {
@@ -528,9 +516,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   }
 
   destroy() {
-    // Selection isn't a Front and so isn't managed by InspectorFront
-    // and has to be destroyed manually
-    this.selection.destroy();
     // Highlighter fronts are managed by InspectorFront and so will be
     // automatically destroyed. But we have to clear the `_highlighters`
     // Map as well as explicitly call `finalize` request on all of them.
