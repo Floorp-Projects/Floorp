@@ -143,7 +143,11 @@ var gTests = [
         "blocked-permissions-container"
       );
 
-      let { state, scope } = SitePermissions.get(null, "camera", browser);
+      let { state, scope } = SitePermissions.getForPrincipal(
+        null,
+        "camera",
+        browser
+      );
       Assert.equal(state, SitePermissions.BLOCK);
       Assert.equal(scope, SitePermissions.SCOPE_TEMPORARY);
       ok(
@@ -153,7 +157,11 @@ var gTests = [
         "the blocked camera icon is shown"
       );
 
-      ({ state, scope } = SitePermissions.get(null, "microphone", browser));
+      ({ state, scope } = SitePermissions.getForPrincipal(
+        null,
+        "microphone",
+        browser
+      ));
       Assert.equal(state, SitePermissions.BLOCK);
       Assert.equal(scope, SitePermissions.SCOPE_TEMPORARY);
       ok(
@@ -172,8 +180,16 @@ var gTests = [
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
 
-      SitePermissions.remove(browser.currentURI, "camera", browser);
-      SitePermissions.remove(browser.currentURI, "microphone", browser);
+      SitePermissions.removeFromPrincipal(
+        browser.contentPrincipal,
+        "camera",
+        browser
+      );
+      SitePermissions.removeFromPrincipal(
+        browser.contentPrincipal,
+        "microphone",
+        browser
+      );
     },
   },
 
@@ -220,9 +236,21 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 
@@ -266,9 +294,21 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 
@@ -429,8 +469,8 @@ var gTests = [
           await expectObserverCalled("getUserMedia:response:deny");
           await expectObserverCalled("recording-window-ended");
           let browser = gBrowser.selectedBrowser;
-          SitePermissions.remove(null, "camera", browser);
-          SitePermissions.remove(null, "microphone", browser);
+          SitePermissions.removeFromPrincipal(null, "camera", browser);
+          SitePermissions.removeFromPrincipal(null, "microphone", browser);
         } else {
           let expectedMessage = aExpectStream ? "ok" : permissionError;
           let promise = promiseMessage(expectedMessage);

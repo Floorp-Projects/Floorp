@@ -17,6 +17,10 @@ const baseURL = getRootDirectory(gTestPath).replace(
 );
 const URL = baseURL + "popup_blocker2.html";
 const URI = Services.io.newURI(URL);
+const PRINCIPAL = Services.scriptSecurityManager.createContentPrincipal(
+  URI,
+  {}
+);
 
 function openIdentityPopup() {
   let promise = BrowserTestUtils.waitForEvent(
@@ -138,7 +142,8 @@ add_task(async function check_permission_state_change() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   // Initially the permission state is BLOCK for popups (set by the prefs).
-  let state = SitePermissions.get(URI, "popup", gBrowser).state;
+  let state = SitePermissions.getForPrincipal(PRINCIPAL, "popup", gBrowser)
+    .state;
   Assert.equal(state, SitePermissions.BLOCK);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
@@ -159,7 +164,7 @@ add_task(async function check_permission_state_change() {
   menuitem.click();
   await closeIdentityPopup();
 
-  state = SitePermissions.get(URI, "popup", gBrowser).state;
+  state = SitePermissions.getForPrincipal(PRINCIPAL, "popup", gBrowser).state;
   Assert.equal(state, SitePermissions.ALLOW);
 
   // Store the popup that opens in this array.
@@ -199,7 +204,7 @@ add_task(async function check_permission_state_change() {
 
   // Clicking on the "Block" menuitem should remove the permission object(same behavior as UNKNOWN state).
   // We have already confirmed that popups are blocked when the permission state is BLOCK.
-  state = SitePermissions.get(URI, "popup", gBrowser).state;
+  state = SitePermissions.getForPrincipal(PRINCIPAL, "popup", gBrowser).state;
   Assert.equal(state, SitePermissions.BLOCK);
 
   gBrowser.removeTab(tab);
@@ -220,7 +225,7 @@ add_task(async function check_explicit_default_permission() {
   Assert.equal(menulist.label, "Block");
   await closeIdentityPopup();
 
-  SitePermissions.set(URI, "popup", SitePermissions.ALLOW);
+  PermissionTestUtils.add(URI, "popup", Services.perms.ALLOW_ACTION);
 
   await openIdentityPopup();
   menulist = document.getElementById("identity-popup-popup-menulist");
@@ -228,6 +233,6 @@ add_task(async function check_explicit_default_permission() {
   Assert.equal(menulist.label, "Allow");
   await closeIdentityPopup();
 
-  SitePermissions.remove(URI, "popup");
+  PermissionTestUtils.remove(URI, "popup");
   gBrowser.removeTab(tab);
 });
