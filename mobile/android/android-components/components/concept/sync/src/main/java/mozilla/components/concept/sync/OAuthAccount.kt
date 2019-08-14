@@ -62,7 +62,7 @@ interface AccountObserver {
     /**
      * Account was successfully authenticated.
      * @param account An authenticated instance of a [OAuthAccount].
-     * @param newAccount True if this is a new account that was authenticated.
+     * @param newAccount True if an account was just signed in.
      */
     fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) = Unit
 
