@@ -49,7 +49,6 @@ treeherder:
         'Rap-fennec': 'Raptor performance tests on Fennec'
         'Rap-fennec-1proc': 'Raptor performance tests on Fennec without e10s'
         'Rap-refbrow': 'Raptor performance tests on the reference browser'
-        'remote': 'Remote debugging protocol tests'
         'T': 'Talos performance tests'
         'T-1proc': 'Talos performance tests without e10s'
         'T-fis': 'Talos performance tests with fission enabled'
