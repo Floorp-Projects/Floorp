@@ -20,12 +20,11 @@
     <!-- Code paged in from disk should match the signature at page in-time -->
     <key>com.apple.security.cs.disable-executable-page-protection</key><false/>
 
-    <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
-    <key>com.apple.security.cs.disable-library-validation</key><true/>
+    <!-- Do not allow loading unsigned libraries -->
+    <key>com.apple.security.cs.disable-library-validation</key><false/>
 
     <!-- Allow dyld environment variables. Needed because Firefox uses
-         dyld variables (such as @executable_path) to load libaries from
-         within the .app bundle. -->
+         dyld variables to load libaries from within the .app bundle. -->
     <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
 
     <!-- Don't allow debugging of the executable. Debuggers will be prevented
