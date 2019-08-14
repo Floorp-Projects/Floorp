@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1571650
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1571650 - Test AnonymousContent.setStyle() API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1571650">Mozilla Bug 1571650</a>
+  <script type="application/javascript">
+  const chromeWindow = SpecialPowers.wrap(window);
+  const chromeDocument = SpecialPowers.wrap(document);
+
+  const { require } = chromeWindow.ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
+  const {
+    DocumentWalker,
+  } = require("devtools/server/actors/inspector/document-walker");
+  const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
+
+  info("Set z-index to anonymous content");
+  const div = document.createElement("div");
+  div.setAttribute("class", "set-style-test");
+  const anonymousContent = chromeDocument.insertAnonymousContent(div);
+  anonymousContent.setStyle("z-index", 3);
+
+  info("Test the element which became to anonymous");
+  const walker = new DocumentWalker(chromeDocument, chromeWindow);
+  walker.filter = node => {
+    node = SpecialPowers.wrap(node);
+    return node.classList && node.classList.contains("set-style-test")
+         ? nodeFilterConstants.FILTER_ACCEPT
+         : nodeFilterConstants.FILTER_SKIP;
+  };
+  const anonymousDiv = SpecialPowers.wrap(walker.nextNode());
+  ok(anonymousDiv, "Element which became to anonymous is found");
+  is(anonymousDiv.style.zIndex, "3", "z-index is correct");
+
+  chromeDocument.removeAnonymousContent(anonymousContent);
+  </script>
+</body>
+</html>
