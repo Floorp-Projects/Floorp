@@ -3483,20 +3483,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .submissionStatus .submitStatusTitle {
     font-size: 20px; }
 
-.onboardingMessageContainer {
-  display: grid;
-  grid-column-gap: 21px;
-  grid-template-columns: auto auto auto;
-  padding-left: 30px;
-  padding-right: 30px;
-  min-height: 500px; }
-  @media (max-width: 850px) {
-    .onboardingMessageContainer {
-      grid-template-columns: none;
-      grid-template-rows: auto auto auto;
-      padding-left: 110px;
-      padding-right: 110px; } }
-
 .onboardingMessage {
   height: 340px;
   text-align: center;
@@ -4084,6 +4070,9 @@ a.firstrun-link {
   overflow: hidden;
   text-align: center;
   transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
+  @media (min-width: 610px) {
+    .trailheadCards {
+      max-height: 1000px; } }
   .trailheadCards.collapsed {
     max-height: 0; }
   .trailheadCards h1 {
@@ -4184,7 +4173,8 @@ a.firstrun-link {
   position: absolute; }
 
 .inline-onboarding .outer-wrapper {
-  position: relative; }
+  position: relative;
+  display: block; }
   .inline-onboarding .outer-wrapper .prefs-button button {
     position: absolute; }
 
