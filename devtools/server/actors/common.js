@@ -145,6 +145,10 @@ SourceLocation.prototype = {
     return this._lastColumn;
   },
 
+  get sourceUrl() {
+    return this.sourceActor.url;
+  },
+
   equals: function(other) {
     return (
       this.sourceActor.url == other.sourceActor.url &&

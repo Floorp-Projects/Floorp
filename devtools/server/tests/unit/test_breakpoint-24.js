@@ -110,7 +110,7 @@ async function testBreakpoints({ threadFront, targetFront }) {
   );
 
   threadFront.setBreakpoint(
-    { sourceUrl: "http://example.com/testBreakpoints.js", line: 3 },
+    { sourceUrl: "http://example.com/testBreakpoints.js", line: 3, column: 6 },
     {}
   );
 
