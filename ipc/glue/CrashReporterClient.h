@@ -24,7 +24,7 @@ class CrashReporterClient {
   // |aTopLevelProtocol| must be a top-level protocol instance, as sub-actors
   // do not have AllocUnsafeShmem. It must also have a child-to-parent message:
   //
-  //   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+  //   async SetCrashReporterClient(Shmem shmem);
   //
   // The parent-side receive function of this message should save the shmem
   // somewhere, and when the top-level actor's ActorDestroy runs (or when the
