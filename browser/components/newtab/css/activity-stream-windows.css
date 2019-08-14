@@ -1996,7 +1996,8 @@ main {
       margin: 0 0 12px; }
   .ds-hero .ds-card.placeholder {
     margin-bottom: 20px;
-    padding-bottom: 20px; }
+    padding-bottom: 20px;
+    min-height: 180px; }
   .ds-hero .img-wrapper {
     margin: 0 0 12px; }
   .ds-hero .ds-hero-item {
@@ -2638,11 +2639,8 @@ main {
   .ds-card.placeholder {
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
-    border-radius: 4px; }
-    .ds-card.placeholder .ds-card-link {
-      cursor: default; }
-    .ds-card.placeholder .img-wrapper {
-      opacity: 0; }
+    border-radius: 4px;
+    min-height: 300px; }
   .ds-card .img-wrapper {
     width: 100%; }
   .ds-card .img {

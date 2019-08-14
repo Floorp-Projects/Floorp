@@ -7230,6 +7230,14 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
+
+    this.setPlaceholderRef = element => {
+      this.placholderElement = element;
+    };
+
+    this.state = {
+      isSeen: false
+    };
   }
 
   onLinkClick(event) {
@@ -7253,9 +7261,47 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     }
   }
 
+  onSeen(entries) {
+    if (this.state) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
+        if (this.placholderElement) {
+          this.observer.unobserve(this.placholderElement);
+        } // Stop observing since element has been seen
+
+
+        this.setState({
+          isSeen: true
+        });
+      }
+    }
+  }
+
+  componentDidMount() {
+    if (this.placholderElement) {
+      this.observer = new IntersectionObserver(this.onSeen.bind(this));
+      this.observer.observe(this.placholderElement);
+    }
+  }
+
+  componentWillUnmount() {
+    // Remove observer on unmount
+    if (this.observer && this.placholderElement) {
+      this.observer.unobserve(this.placholderElement);
+    }
+  }
+
   render() {
+    if (this.props.placeholder || !this.state.isSeen) {
+      return external_React_default.a.createElement("div", {
+        className: "ds-card placeholder",
+        ref: this.setPlaceholderRef
+      });
+    }
+
     return external_React_default.a.createElement("div", {
-      className: `ds-card${this.props.placeholder ? " placeholder" : ""}`
+      className: "ds-card"
     }, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
       className: "ds-card-link",
       dispatch: this.props.dispatch,
@@ -7290,7 +7336,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
-    })), !this.props.placeholder && external_React_default.a.createElement(DSLinkMenu_DSLinkMenu, {
+    })), external_React_default.a.createElement(DSLinkMenu_DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
