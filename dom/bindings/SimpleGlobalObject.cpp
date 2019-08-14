@@ -111,10 +111,10 @@ JSObject* SimpleGlobalObject::Create(GlobalType globalType,
       nsCOMPtr<nsIPrincipal> principal =
           NullPrincipal::CreateWithoutOriginAttributes();
       options.creationOptions().setTrace(xpc::TraceXPCGlobal);
-      global = xpc::CreateGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
+      global = xpc::CreateGlobalObject(cx, &SimpleGlobalClass,
                                        nsJSPrincipals::get(principal), options);
     } else {
-      global = JS_NewGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass), nullptr,
+      global = JS_NewGlobalObject(cx, &SimpleGlobalClass, nullptr,
                                   JS::DontFireOnNewGlobalHook, options);
     }
 

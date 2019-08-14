@@ -223,7 +223,7 @@ Maybe<nsID> JSValue2ID(JSContext* aCx, HandleValue aVal) {
 static JSObject* NewIDObjectHelper(JSContext* aCx, const js::Class* aClass) {
   RootedObject proto(aCx, GetIDPrototype(aCx, aClass));
   if (proto) {
-    return JS_NewObjectWithGivenProto(aCx, Jsvalify(aClass), proto);
+    return JS_NewObjectWithGivenProto(aCx, aClass, proto);
   }
   return nullptr;
 }
