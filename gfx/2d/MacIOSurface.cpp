@@ -18,21 +18,15 @@ using namespace mozilla;
 // IOSurface signatures
 #define IOSURFACE_FRAMEWORK_PATH \
   "/System/Library/Frameworks/IOSurface.framework/IOSurface"
-#define COREVIDEO_FRAMEWORK_PATH                                         \
-  "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
-  "CoreVideo.framework/CoreVideo"
 
 #define GET_CONST(const_name) \
   ((CFStringRef*)dlsym(sIOSurfaceFramework, const_name))
 #define GET_IOSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sIOSurfaceFramework, sym_name)
-#define GET_CVSYM(dest, sym_name) \
-  (typeof(dest)) dlsym(sCoreVideoFramework, sym_name)
 
 MacIOSurfaceLib::LibraryUnloader MacIOSurfaceLib::sLibraryUnloader;
 bool MacIOSurfaceLib::isLoaded = false;
 void* MacIOSurfaceLib::sIOSurfaceFramework;
-void* MacIOSurfaceLib::sCoreVideoFramework;
 IOSurfaceCreateFunc MacIOSurfaceLib::sCreate;
 IOSurfaceGetIDFunc MacIOSurfaceLib::sGetID;
 IOSurfaceLookupFunc MacIOSurfaceLib::sLookup;
@@ -47,7 +41,6 @@ IOSurfaceVoidFunc MacIOSurfaceLib::sIncrementUseCount;
 IOSurfaceVoidFunc MacIOSurfaceLib::sDecrementUseCount;
 IOSurfaceLockFunc MacIOSurfaceLib::sLock;
 IOSurfaceUnlockFunc MacIOSurfaceLib::sUnlock;
-CVPixelBufferGetIOSurfaceFunc MacIOSurfaceLib::sCVPixelBufferGetIOSurface;
 IOSurfacePixelFormatFunc MacIOSurfaceLib::sPixelFormat;
 
 CFStringRef MacIOSurfaceLib::kPropWidth;
@@ -130,11 +123,6 @@ void MacIOSurfaceLib::IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr) {
   sDecrementUseCount(aIOSurfacePtr);
 }
 
-IOSurfacePtr MacIOSurfaceLib::CVPixelBufferGetIOSurface(
-    CVPixelBufferRef aPixelBuffer) {
-  return sCVPixelBufferGetIOSurface(aPixelBuffer);
-}
-
 CFStringRef MacIOSurfaceLib::GetIOConst(const char* symbole) {
   CFStringRef* address = (CFStringRef*)dlsym(sIOSurfaceFramework, symbole);
   if (!address) return nullptr;
@@ -150,14 +138,7 @@ void MacIOSurfaceLib::LoadLibrary() {
   sIOSurfaceFramework =
       dlopen(IOSURFACE_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
 
-  sCoreVideoFramework =
-      dlopen(COREVIDEO_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
-
-  if (!sIOSurfaceFramework || !sCoreVideoFramework) {
-    if (sIOSurfaceFramework) dlclose(sIOSurfaceFramework);
-    if (sCoreVideoFramework) dlclose(sCoreVideoFramework);
-    sIOSurfaceFramework = nullptr;
-    sCoreVideoFramework = nullptr;
+  if (!sIOSurfaceFramework) {
     return;
   }
 
@@ -186,15 +167,11 @@ void MacIOSurfaceLib::LoadLibrary() {
   sPlaneCount = GET_IOSYM(sPlaneCount, "IOSurfaceGetPlaneCount");
   sPixelFormat = GET_IOSYM(sPixelFormat, "IOSurfaceGetPixelFormat");
 
-  sCVPixelBufferGetIOSurface =
-      GET_CVSYM(sCVPixelBufferGetIOSurface, "CVPixelBufferGetIOSurface");
-
   if (!sCreate || !sGetID || !sLookup || !sGetBaseAddress ||
       !sGetBaseAddressOfPlane || !sPlaneCount || !kPropWidth || !kPropHeight ||
       !kPropBytesPerElem || !kPropIsGlobal || !sLock || !sUnlock ||
       !sIncrementUseCount || !sDecrementUseCount || !sWidth || !sHeight ||
-      !kPropBytesPerRow || !sBytesPerRow || !sGetPropertyMaximum ||
-      !sCVPixelBufferGetIOSurface) {
+      !kPropBytesPerRow || !sBytesPerRow || !sGetPropertyMaximum) {
     CloseLibrary();
   }
 }
@@ -203,11 +180,7 @@ void MacIOSurfaceLib::CloseLibrary() {
   if (sIOSurfaceFramework) {
     dlclose(sIOSurfaceFramework);
   }
-  if (sCoreVideoFramework) {
-    dlclose(sCoreVideoFramework);
-  }
   sIOSurfaceFramework = nullptr;
-  sCoreVideoFramework = nullptr;
 }
 
 MacIOSurface::MacIOSurface(IOSurfacePtr aIOSurfacePtr,
