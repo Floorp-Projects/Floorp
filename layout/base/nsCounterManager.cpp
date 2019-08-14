@@ -203,7 +203,7 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
   // We inherit `display` for some anonymous boxes, but we don't want them to
   // increment the list-item counter.
   const bool requiresListItemIncrement =
-      aFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem &&
+      aFrame->StyleDisplay()->IsListItem() &&
       !aFrame->Style()->IsAnonBox();
 
   const nsStyleContent* styleContent = aFrame->StyleContent();
