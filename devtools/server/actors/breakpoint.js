@@ -191,8 +191,7 @@ BreakpointActor.prototype = {
 
     if (
       this.threadActor.sources.isBlackBoxed(sourceActor.url, line, column) ||
-      this.threadActor.skipBreakpoints ||
-      frame.onStep
+      this.threadActor.skipBreakpoints
     ) {
       return undefined;
     }
