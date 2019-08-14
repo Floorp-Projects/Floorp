@@ -13,6 +13,7 @@
 #  include <dlfcn.h>
 
 #  include "mozilla/gfx/Types.h"
+#  include "CFTypeRefPtr.h"
 
 namespace mozilla {
 namespace gl {
@@ -60,7 +61,7 @@ class MacIOSurface final
       mozilla::gfx::YUVColorSpace aColorSpace =
           mozilla::gfx::YUVColorSpace::UNKNOWN);
 
-  explicit MacIOSurface(IOSurfaceRef aIOSurfaceRef,
+  explicit MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
                         double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true,
                         mozilla::gfx::YUVColorSpace aColorSpace =
@@ -112,10 +113,10 @@ class MacIOSurface final
 
   static size_t GetMaxWidth();
   static size_t GetMaxHeight();
-  IOSurfaceRef GetIOSurfaceRef() { return mIOSurfaceRef; }
+  CFTypeRefPtr<IOSurfaceRef> GetIOSurfaceRef() { return mIOSurfaceRef; }
 
  private:
-  const IOSurfaceRef mIOSurfaceRef;
+  CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
   double mContentsScaleFactor;
   bool mHasAlpha;
   mozilla::gfx::YUVColorSpace mColorSpace =
