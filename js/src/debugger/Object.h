@@ -174,7 +174,7 @@ class DebuggerObject : public NativeObject {
 
   static const unsigned RESERVED_SLOTS = 1;
 
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties_[];
   static const JSPropertySpec promiseProperties_[];

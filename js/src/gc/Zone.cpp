@@ -41,12 +41,10 @@ ZoneAllocator::ZoneAllocator(JSRuntime* rt)
 
 ZoneAllocator::~ZoneAllocator() {
 #ifdef DEBUG
-  if (runtimeFromAnyThread()->gc.shutdownCollectedEverything()) {
-    gcMallocTracker.checkEmptyOnDestroy();
-    MOZ_ASSERT(zoneSize.gcBytes() == 0);
-    MOZ_ASSERT(gcMallocBytes.gcBytes() == 0);
-    MOZ_ASSERT(gcJitBytes.gcBytes() == 0);
-  }
+  gcMallocTracker.checkEmptyOnDestroy();
+  MOZ_ASSERT(zoneSize.gcBytes() == 0);
+  MOZ_ASSERT(gcMallocBytes.gcBytes() == 0);
+  MOZ_ASSERT(gcJitBytes.gcBytes() == 0);
 #endif
 }
 
@@ -133,6 +131,8 @@ JS::Zone::Zone(JSRuntime* rt)
 
 Zone::~Zone() {
   MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
+  MOZ_ASSERT(gcWeakMapList().isEmpty());
+  MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
   JSRuntime* rt = runtimeFromAnyThread();
   if (this == rt->gc.systemZone) {
@@ -141,15 +141,6 @@ Zone::~Zone() {
 
   js_delete(debuggers.ref());
   js_delete(jitZone_.ref());
-
-#ifdef DEBUG
-  // Avoid assertions failures warning that not everything has been destroyed
-  // if the embedding leaked GC things.
-  if (!rt->gc.shutdownCollectedEverything()) {
-    gcWeakMapList().clear();
-    regExps().clear();
-  }
-#endif
 }
 
 bool Zone::init(bool isSystemArg) {
@@ -533,7 +524,7 @@ bool Zone::addTypeDescrObject(JSContext* cx, HandleObject obj) {
 
 void Zone::deleteEmptyCompartment(JS::Compartment* comp) {
   MOZ_ASSERT(comp->zone() == this);
-  MOZ_ASSERT(arenas.checkEmptyArenaLists());
+  arenas.checkEmptyArenaLists();
 
   MOZ_ASSERT(compartments().length() == 1);
   MOZ_ASSERT(compartments()[0] == comp);

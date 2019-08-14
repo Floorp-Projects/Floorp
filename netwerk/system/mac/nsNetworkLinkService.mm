@@ -20,13 +20,14 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsNetCID.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Telemetry.h"
 #include "nsNetworkLinkService.h"
-#include "MainThreadUtils.h"
 #include "../../base/IPv6Utils.h"
 
 #import <Cocoa/Cocoa.h>
@@ -323,6 +324,20 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
 }
 
 void nsNetworkLinkService::calculateNetworkId(void) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  if (!target) {
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(
+      target->Dispatch(NewRunnableMethod("nsNetworkLinkService::calculateNetworkIdInternal", this,
+                                         &nsNetworkLinkService::calculateNetworkIdInternal),
+                       NS_DISPATCH_NORMAL));
+}
+
+void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   MOZ_ASSERT(!NS_IsMainThread(), "Should not be called on the main thread");
   SHA1Sum sha1;
   bool found4 = ipv4NetworkId(&sha1);

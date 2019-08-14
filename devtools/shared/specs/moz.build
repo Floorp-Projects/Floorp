@@ -28,6 +28,7 @@ DevToolsModules(
     'index.js',
     'inspector.js',
     'layout.js',
+    'manifest.js',
     'memory.js',
     'network-event.js',
     'network-monitor.js',

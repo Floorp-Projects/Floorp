@@ -76,18 +76,18 @@ class JS_FRIEND_API Wrapper;
  * very different kinds of object in SpiderMonkey.
  *
  * 1.  Native objects cover most objects and contain both internal slots and
- *     properties. ClassOps and ObjectOps may be used to override certain
+ *     properties. JSClassOps and ObjectOps may be used to override certain
  *     default behaviors.
  *
  * 2.  Proxy objects are composed of internal slots and a ProxyHandler. The
  *     handler contains C++ methods that can implement these standard (and
- *     non-standard) internal methods. ClassOps and ObjectOps for the base
+ *     non-standard) internal methods. JSClassOps and ObjectOps for the base
  *     ProxyObject invoke the handler methods as appropriate.
  *
- * 3.  Objects with custom layouts like TypedObjects. These rely on ClassOps
+ * 3.  Objects with custom layouts like TypedObjects. These rely on JSClassOps
  *     and ObjectOps to implement internal methods.
  *
- * Native objects with custom ClassOps / ObjectOps are used when the object
+ * Native objects with custom JSClassOps / ObjectOps are used when the object
  * behaves very similar to a normal object such as the ArrayObject and it's
  * length property. Most usages wrapping a C++ or other type should prefer
  * using a Proxy. Using the proxy approach makes it much easier to create an
@@ -694,7 +694,7 @@ inline void assertEnteredPolicy(JSContext* cx, JSObject* obj, jsid id,
                                 BaseProxyHandler::Action act) {}
 #endif
 
-extern JS_FRIEND_DATA const js::ClassOps ProxyClassOps;
+extern JS_FRIEND_DATA const JSClassOps ProxyClassOps;
 extern JS_FRIEND_DATA const js::ClassExtension ProxyClassExtension;
 extern JS_FRIEND_DATA const js::ObjectOps ProxyObjectOps;
 

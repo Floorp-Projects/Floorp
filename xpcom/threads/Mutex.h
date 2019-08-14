@@ -201,7 +201,7 @@ class MOZ_RAII BaseAutoLock {
   BaseAutoLock();
   BaseAutoLock(BaseAutoLock&);
   BaseAutoLock& operator=(BaseAutoLock&);
-  static void* operator new(size_t) CPP_THROW_NEW;
+  static void* operator new(size_t) noexcept(true);
 
   friend class BaseAutoUnlock<T>;
 
@@ -242,7 +242,7 @@ class MOZ_RAII BaseAutoUnlock {
   BaseAutoUnlock();
   BaseAutoUnlock(BaseAutoUnlock&);
   BaseAutoUnlock& operator=(BaseAutoUnlock&);
-  static void* operator new(size_t) CPP_THROW_NEW;
+  static void* operator new(size_t) noexcept(true);
 
   T mLock;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

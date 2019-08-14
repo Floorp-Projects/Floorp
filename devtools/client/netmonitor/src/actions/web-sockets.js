@@ -18,11 +18,12 @@ const {
 /**
  * Add frame into state.
  */
-function addFrame(httpChannelId, data) {
+function addFrame(httpChannelId, data, batch) {
   return {
     type: WS_ADD_FRAME,
     httpChannelId,
     data,
+    meta: { batch },
   };
 }
 

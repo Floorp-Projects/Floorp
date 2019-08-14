@@ -3971,7 +3971,7 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
   return DefineDataProperty(cx, proto, id, value, JSPROP_READONLY);
 }
 
-static const ClassOps ArrayObjectClassOps = {
+static const JSClassOps ArrayObjectClassOps = {
     array_addProperty, nullptr, /* delProperty */
     nullptr,                    /* enumerate */
     nullptr,                    /* resolve */

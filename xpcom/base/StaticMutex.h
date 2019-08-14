@@ -72,7 +72,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS BaseStaticMutex {
 
   // Disallow these operators.
   BaseStaticMutex& operator=(BaseStaticMutex* aRhs);
-  static void* operator new(size_t) CPP_THROW_NEW;
+  static void* operator new(size_t) noexcept(true);
   static void operator delete(void*);
 };
 

@@ -52,7 +52,7 @@ typedef nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> RedirectHistoryArray;
  */
 class LoadInfo final : public nsILoadInfo {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
 
   // aLoadingPrincipal MUST NOT BE NULL.

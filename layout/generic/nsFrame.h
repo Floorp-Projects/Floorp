@@ -136,7 +136,7 @@ class nsFrame : public nsBox {
 
  private:
   // Left undefined; nsFrame objects are never allocated from the heap.
-  void* operator new(size_t sz) CPP_THROW_NEW;
+  void* operator new(size_t sz) noexcept(true);
 
  protected:
   // Overridden to prevent the global delete from being called, since
