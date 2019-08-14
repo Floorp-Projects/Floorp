@@ -209,6 +209,7 @@ class MenuScreenShotTest : ScreenshotTest() {
         device.findObject(UiSelector()
                 .instance(1)
                 .className(ImageView::class.java)).click()
+        device.wait(Until.findObjects(By.res("close_tab_button")), TestAssetHelper.waitingTimeShort)
         closeTabButton()
         Screengrab.screenshot("remove-tab")
     }
