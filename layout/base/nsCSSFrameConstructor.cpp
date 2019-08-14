@@ -331,10 +331,6 @@ static inline nsContainerFrame* GetFieldSetBlockFrame(
         {(FrameCreationFunc)_func}, nullptr, _anon_box       \
   }
 
-#define UNREACHABLE_FCDATA() \
-  { 0, {(FrameCreationFunc) nullptr}, nullptr, PseudoStyleType::NotPseudo }
-//----------------------------------------------------------------------
-
 /**
  * True if aFrame is an actual inline frame in the sense of non-replaced
  * display:inline CSS boxes.  In other words, it can be affected by {ib}
@@ -4465,17 +4461,17 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
 
   auto DisplayData = [](StyleDisplay aDisplay) -> const FrameConstructionData* {
     switch (aDisplay) {
+#ifdef DEBUG
       case StyleDisplay::None:
       case StyleDisplay::Block:
       case StyleDisplay::InlineBlock:
       case StyleDisplay::ListItem:
       case StyleDisplay::TableCaption:
       case StyleDisplay::FlowRoot:
-      case StyleDisplay::Contents: {
-        static const FrameConstructionData data =
-          UNREACHABLE_FCDATA();
-        return &data;
-      }
+      case StyleDisplay::Contents:
+        MOZ_ASSERT_UNREACHABLE("should have been handled earlier");
+        return nullptr;
+#endif
       case StyleDisplay::Inline: {
         static const FrameConstructionData data =
           FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
