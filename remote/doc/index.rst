@@ -38,6 +38,7 @@ Developers
   Architecture.md
   Prefs.md
   CodeStyle.md
+  PuppeteerVendor.md
 
 
 Bugs
