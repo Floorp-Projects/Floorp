@@ -12,7 +12,6 @@ transforms:
     - taskgraph.transforms.build:transforms
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -47,15 +46,16 @@ jobs:
             mozconfig-variant: profile-generate
             tooltool-downloads: public
             need-xvfb: true
-        toolchains:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-rust
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-rust
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node
 
     linux64-shippable/opt:
         description: "Linux64 Instrumented"
@@ -70,15 +70,16 @@ jobs:
             mozconfig-variant: profile-generate
             tooltool-downloads: public
             need-xvfb: true
-        toolchains:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-rust
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-rust
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node
 
     android-api-16/pgo:
         description: "Android 4.0 api-16+ PGO instrumented"
@@ -106,17 +107,18 @@ jobs:
                 - builds/releng_base_android_64_builds.py
             custom-build-variant-cfg: api-16-profile-generate
             tooltool-downloads: internal
-        toolchains:
-            - android-gradle-dependencies
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang-android-cross
-            - linux64-rust-android
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang-android-cross
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node
 
     win32-shippable/opt:
         description: "Win32 Shippable PGO Instrumented"
@@ -137,13 +139,14 @@ jobs:
                 - builds/taskcluster_base_win32.py
             extra-config:
                 stage_platform: win32
-        toolchains:
-            - win64-clang-cl
-            - win64-rust
-            - win64-rust-size
-            - win64-cbindgen
-            - win64-nasm
-            - win64-node
+        fetches:
+            toolchain:
+                - win64-clang-cl
+                - win64-rust
+                - win64-rust-size
+                - win64-cbindgen
+                - win64-nasm
+                - win64-node
 
     win64-shippable/opt:
         description: "Win64 Shippable PGO Instrumented"
@@ -164,10 +167,11 @@ jobs:
                 - builds/taskcluster_base_win64.py
             extra-config:
                 stage_platform: win64
-        toolchains:
-            - win64-clang-cl
-            - win64-rust
-            - win64-rust-size
-            - win64-cbindgen
-            - win64-nasm
-            - win64-node
+        fetches:
+            toolchain:
+                - win64-clang-cl
+                - win64-rust
+                - win64-rust-size
+                - win64-cbindgen
+                - win64-nasm
+                - win64-node
