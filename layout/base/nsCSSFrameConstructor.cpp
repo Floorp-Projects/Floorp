@@ -4166,57 +4166,6 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
 
 #endif /* MOZ_XUL */
 
-/* static */
-const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
-                                          const Element& aElement) {
-  switch (aDisplay.mDisplay) {
-#ifdef MOZ_XUL
-    case StyleDisplay::MozGrid:
-    case StyleDisplay::MozInlineGrid: {
-      static const FrameConstructionData data =
-        SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
-      return &data;
-    }
-    case StyleDisplay::MozGridGroup: {
-      static const FrameConstructionData data =
-        SCROLLABLE_XUL_FCDATA(NS_NewGridRowGroupFrame);
-      return &data;
-    }
-    case StyleDisplay::MozGridLine: {
-      static const FrameConstructionData data =
-        SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
-      return &data;
-    }
-    case StyleDisplay::MozStack:
-    case StyleDisplay::MozInlineStack: {
-      static const FrameConstructionData data =
-        SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
-      return &data;
-    }
-    case StyleDisplay::MozDeck: {
-      static const FrameConstructionData data =
-        SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
-      return &data;
-    }
-    case StyleDisplay::MozGroupbox: {
-      static const FrameConstructionData data =
-        SCROLLABLE_XUL_FCDATA(NS_NewGroupBoxFrame);
-      return &data;
-    }
-    case StyleDisplay::MozPopup: {
-      static const FrameConstructionData data =
-        FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
-                        FCDATA_SKIP_ABSPOS_PUSH,
-                    NS_NewMenuPopupFrame);
-      return &data;
-    }
-#endif /* MOZ_XUL */
-    default:
-      return nullptr;
-  };
-}
-
 already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     nsFrameConstructorState& aState, nsIContent* aContent,
     ComputedStyle* aContentStyle, nsContainerFrame* aParentFrame,
@@ -4349,7 +4298,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   // block-level.
   NS_ASSERTION(
       !(aDisplay.IsFloatingStyle() || aDisplay.IsAbsolutelyPositionedStyle()) ||
-          aDisplay.IsBlockOutsideStyle(),
+          aDisplay.IsBlockOutsideStyle() || IsXULDisplayType(&aDisplay),
       "Style system did not apply CSS2.1 section 9.7 fixups");
 
   // If this is "body", try propagating its scroll style to the viewport
@@ -4561,6 +4510,47 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
                     NS_NewRubyTextContainerFrame);
       return &data;
     }
+#ifdef MOZ_XUL
+    case StyleDisplay::MozGrid:
+    case StyleDisplay::MozInlineGrid: {
+      static const FrameConstructionData data =
+        SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
+      return &data;
+    }
+    case StyleDisplay::MozGridGroup: {
+      static const FrameConstructionData data =
+        SCROLLABLE_XUL_FCDATA(NS_NewGridRowGroupFrame);
+      return &data;
+    }
+    case StyleDisplay::MozGridLine: {
+      static const FrameConstructionData data =
+        SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
+      return &data;
+    }
+    case StyleDisplay::MozStack:
+    case StyleDisplay::MozInlineStack: {
+      static const FrameConstructionData data =
+        SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
+      return &data;
+    }
+    case StyleDisplay::MozDeck: {
+      static const FrameConstructionData data =
+        SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
+      return &data;
+    }
+    case StyleDisplay::MozGroupbox: {
+      static const FrameConstructionData data =
+        SCROLLABLE_XUL_FCDATA(NS_NewGroupBoxFrame);
+      return &data;
+    }
+    case StyleDisplay::MozPopup: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
+                        FCDATA_SKIP_ABSPOS_PUSH,
+                    NS_NewMenuPopupFrame);
+      return &data;
+    }
+#endif /* MOZ_XUL */
     default:
       MOZ_ASSERT_UNREACHABLE("unknown 'display' value");
       return nullptr;
@@ -5314,10 +5304,6 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
   }
 
   const auto& display = *aStyle.StyleDisplay();
-  if (auto* data = FindXULDisplayData(display, aElement)) {
-    return data;
-  }
-
   return FindDisplayData(display, aElement);
 }
 
