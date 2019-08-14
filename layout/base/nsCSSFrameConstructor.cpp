@@ -4542,12 +4542,16 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
                            &nsCSSFrameConstructor::ConstructTableCell);
         return &data;
       }
+      case StyleDisplay::MozBox:
+      case StyleDisplay::MozInlineBox: {
+        MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex(),
+                   "-moz-{inline-}box as XUL should have already been handled");
+        MOZ_FALLTHROUGH;
+      }
       case StyleDisplay::Flex:
       case StyleDisplay::InlineFlex:
       case StyleDisplay::WebkitBox:
-      case StyleDisplay::WebkitInlineBox:
-      case StyleDisplay::MozBox:
-      case StyleDisplay::MozInlineBox: {
+      case StyleDisplay::WebkitInlineBox: {
         static const FrameConstructionData data =
           FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame);
         return &data;
@@ -4594,10 +4598,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
         return nullptr;
     }
   };
-  MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex() ||
-                 (aDisplay.mDisplay != StyleDisplay::MozBox &&
-                  aDisplay.mDisplay != StyleDisplay::MozInlineBox),
-             "-moz-{inline-}box as XUL should have already been handled");
 
   const FrameConstructionData* data = DisplayData(aDisplay.mDisplay);
   MOZ_ASSERT(data, "unknown 'display' value");
