@@ -456,7 +456,7 @@ JSObject* WrapperNew(JSContext* aCx, JS::HandleObject aObj,
                      bool aSingleton) {
   js::WrapperOptions options;
   if (aClass) {
-    options.setClass(js::Valueify(aClass));
+    options.setClass(aClass);
   }
   options.setSingleton(aSingleton);
   return js::Wrapper::New(aCx, aObj, (const js::Wrapper*)aHandler, options);
@@ -477,7 +477,7 @@ void SetProxyReservedSlot(JSObject* obj, uint32_t slot, const JS::Value* val) {
 
 JSObject* NewWindowProxy(JSContext* aCx, JS::HandleObject aObj,
                          const void* aHandler) {
-  return WrapperNew(aCx, aObj, aHandler, Jsvalify(&WindowProxyClass), true);
+  return WrapperNew(aCx, aObj, aHandler, &WindowProxyClass, true);
 }
 
 JS::Value GetProxyPrivate(JSObject* obj) { return js::GetProxyPrivate(obj); }
