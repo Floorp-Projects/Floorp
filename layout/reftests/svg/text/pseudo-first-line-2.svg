@@ -4,7 +4,10 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="700" height="200">
   <style>
-    text::first-line { text-decoration: underline }
+    text::first-line {
+       text-decoration: underline;
+       text-decoration-skip-ink: none;
+    }
   </style>
   <text x="100" y="100" style="font: 16px sans-serif; white-space: pre-line; line-height: 20px">hello there everyone
     and good night</text>
