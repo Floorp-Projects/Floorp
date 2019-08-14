@@ -5895,6 +5895,8 @@ exports.CSS_PROPERTIES = {
       "inherit",
       "initial",
       "inline",
+      "inline flow-root list-item",
+      "inline list-item",
       "inline-block",
       "inline-flex",
       "inline-grid",

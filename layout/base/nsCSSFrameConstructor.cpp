@@ -11191,6 +11191,11 @@ void nsCSSFrameConstructor::BuildInlineChildItems(
   nsIContent* const parentContent = aParentItem.mContent;
 
   if (!aItemIsWithinSVGText) {
+    if (parentComputedStyle->StyleDisplay()->IsListItem()) {
+      CreateGeneratedContentItem(aState, nullptr, *parentContent->AsElement(),
+                                 *parentComputedStyle, PseudoStyleType::marker,
+                                 aParentItem.mChildItems);
+    }
     // Probe for generated content before
     CreateGeneratedContentItem(aState, nullptr, *parentContent->AsElement(),
                                *parentComputedStyle, PseudoStyleType::before,
