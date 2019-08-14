@@ -46,6 +46,11 @@ class SpecialPowersChild extends SpecialPowersAPI {
   }
 
   handleEvent(aEvent) {
+    // We don't actually care much about the "DOMWindowCreated" event.
+    // We only listen to it to force creation of the actor.
+  }
+
+  actorCreated() {
     this.attachToWindow();
   }
 

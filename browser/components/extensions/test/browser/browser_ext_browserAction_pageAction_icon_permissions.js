@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+PromiseTestUtils.whitelistRejectionsGlobally(/packaging errors/);
+
 // Test that an error is thrown when providing invalid icon sizes
 add_task(async function testInvalidIconSizes() {
   let extension = ExtensionTestUtils.loadExtension({

@@ -141,7 +141,7 @@ async function setDownloadDir() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.folderList", 2],
-      ["browser.download.dir", tmpDir, Ci.nsIFile],
+      ["browser.download.dir", tmpDir.path],
     ],
   });
 }
