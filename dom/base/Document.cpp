@@ -15457,13 +15457,6 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                       Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
                   p->Resolve(AntiTrackingCommon::eAllow, __func__);
                 },
-                // Allow auto grant
-                [p] {
-                  Telemetry::AccumulateCategorical(
-                      Telemetry::LABELS_STORAGE_ACCESS_API_UI::
-                          AllowAutomatically);
-                  p->Resolve(AntiTrackingCommon::eAllowAutoGrant, __func__);
-                },
                 // Allow on any site
                 [p] {
                   Telemetry::AccumulateCategorical(
@@ -15531,7 +15524,14 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                   } else if (autoGrant) {
                     choice = AntiTrackingCommon::eAllowAutoGrant;
                   }
-                  p->Resolve(choice, __func__);
+                  if (!autoGrant) {
+                    p->Resolve(choice, __func__);
+                  } else {
+                    sapr->MaybeDelayAutomaticGrants()->Then(
+                        GetCurrentThreadSerialEventTarget(), __func__,
+                        [p, choice] { p->Resolve(choice, __func__); },
+                        [p] { p->Reject(false, __func__); });
+                  }
                   return;
                 }
                 p->Reject(false, __func__);
