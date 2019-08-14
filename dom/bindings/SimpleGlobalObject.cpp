@@ -76,14 +76,14 @@ static const JSClassOps SimpleGlobalClassOps = {
 static const js::ClassExtension SimpleGlobalClassExtension = {
     SimpleGlobal_moved};
 
-const js::Class SimpleGlobalClass = {
-    "",
-    JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE |
-        JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
-    &SimpleGlobalClassOps,
-    JS_NULL_CLASS_SPEC,
-    &SimpleGlobalClassExtension,
-    JS_NULL_OBJECT_OPS};
+const JSClass SimpleGlobalClass = {"",
+                                   JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE |
+                                       JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                                       JSCLASS_FOREGROUND_FINALIZE,
+                                   &SimpleGlobalClassOps,
+                                   JS_NULL_CLASS_SPEC,
+                                   &SimpleGlobalClassExtension,
+                                   JS_NULL_OBJECT_OPS};
 
 // static
 JSObject* SimpleGlobalObject::Create(GlobalType globalType,

@@ -81,7 +81,7 @@ bool AccessCheck::isChrome(JSObject* obj) {
 
 bool IsCrossOriginAccessibleObject(JSObject* obj) {
   obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-  const js::Class* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = js::GetObjectClass(obj);
 
   return (clasp->name[0] == 'L' && !strcmp(clasp->name, "Location")) ||
          (clasp->name[0] == 'W' && !strcmp(clasp->name, "Window"));

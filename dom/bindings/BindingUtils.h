@@ -122,7 +122,7 @@ inline T* UnwrapPossiblyNotInitializedDOMObject(JSObject* obj) {
   return static_cast<T*>(val.toPrivate());
 }
 
-inline const DOMJSClass* GetDOMClass(const js::Class* clasp) {
+inline const DOMJSClass* GetDOMClass(const JSClass* clasp) {
   return IsDOMClass(clasp) ? DOMJSClass::FromJSClass(clasp) : nullptr;
 }
 
@@ -722,9 +722,9 @@ struct NamedConstructor {
 // clang-format on
 void CreateInterfaceObjects(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> protoProto, const js::Class* protoClass,
+    JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, const char* toStringTag,
-    JS::Handle<JSObject*> interfaceProto, const js::Class* constructorClass,
+    JS::Handle<JSObject*> interfaceProto, const JSClass* constructorClass,
     unsigned ctorNargs, const NamedConstructor* namedConstructors,
     JS::Heap<JSObject*>* constructorCache,
     const NativeProperties* regularProperties,
@@ -1422,7 +1422,7 @@ inline void UpdateWrapper(T* p, void*, JSObject* obj, const JSObject* old) {
 bool TryPreserveWrapper(JS::Handle<JSObject*> obj);
 
 // Can only be called with a DOM JSClass.
-bool InstanceClassHasProtoAtDepth(const js::Class* clasp, uint32_t protoID,
+bool InstanceClassHasProtoAtDepth(const JSClass* clasp, uint32_t protoID,
                                   uint32_t depth);
 
 // Only set allowNativeWrapper to false if you really know you need it; if in
@@ -2273,7 +2273,7 @@ inline bool XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
       MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
       protop.set(JS::GetRealmFunctionPrototype(cx));
     } else {
-      const js::Class* clasp = js::GetObjectClass(obj);
+      const JSClass* clasp = js::GetObjectClass(obj);
       MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
       ProtoGetter protoGetter =
           DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mGetParentProto;
@@ -2337,7 +2337,7 @@ extern const JSClassOps sBoringInterfaceObjectClassClassOps;
 extern const js::ObjectOps sInterfaceObjectClassObjectOps;
 
 inline bool UseDOMXray(JSObject* obj) {
-  const js::Class* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = js::GetObjectClass(obj);
   return IsDOMClass(clasp) || JS_IsNativeFunction(obj, Constructor) ||
          IsDOMIfaceAndProtoClass(clasp);
 }
@@ -2348,7 +2348,7 @@ inline bool IsDOMConstructor(JSObject* obj) {
     return true;
   }
 
-  const js::Class* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = js::GetObjectClass(obj);
   // Check for a DOM interface object.
   return dom::IsDOMIfaceAndProtoClass(clasp) &&
          dom::DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mType ==
@@ -2588,7 +2588,7 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
     }
   }
 
-  void CreateProxyObject(JSContext* aCx, const js::Class* aClass,
+  void CreateProxyObject(JSContext* aCx, const JSClass* aClass,
                          const DOMProxyHandler* aHandler,
                          JS::Handle<JSObject*> aProto, bool aLazyProto,
                          T* aNative, JS::Handle<JS::Value> aExpandoValue,

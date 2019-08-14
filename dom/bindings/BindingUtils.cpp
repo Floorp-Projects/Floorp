@@ -677,7 +677,7 @@ bool DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
 // funToString ObjectOps member for interface objects.
 JSString* InterfaceObjectToString(JSContext* aCx, JS::Handle<JSObject*> aObject,
                                   bool /* isToSource */) {
-  const js::Class* clasp = js::GetObjectClass(aObject);
+  const JSClass* clasp = js::GetObjectClass(aObject);
   MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
 
   const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
@@ -726,7 +726,7 @@ static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
 
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> constructorProto, const js::Class* constructorClass,
+    JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
     unsigned ctorNargs, const NamedConstructor* namedConstructors,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
@@ -855,7 +855,7 @@ static JSObject* CreateInterfaceObject(
 
 static JSObject* CreateInterfacePrototypeObject(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> parentProto, const js::Class* protoClass,
+    JS::Handle<JSObject*> parentProto, const JSClass* protoClass,
     const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties,
     const char* const* unscopableNames, const char* toStringTag,
@@ -953,9 +953,9 @@ bool DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
 
 void CreateInterfaceObjects(
     JSContext* cx, JS::Handle<JSObject*> global,
-    JS::Handle<JSObject*> protoProto, const js::Class* protoClass,
+    JS::Handle<JSObject*> protoProto, const JSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, const char* toStringTag,
-    JS::Handle<JSObject*> constructorProto, const js::Class* constructorClass,
+    JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
     unsigned ctorNargs, const NamedConstructor* namedConstructors,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
@@ -1107,7 +1107,7 @@ bool TryPreserveWrapper(JS::Handle<JSObject*> obj) {
 }
 
 // Can only be called with a DOM JSClass.
-bool InstanceClassHasProtoAtDepth(const js::Class* clasp, uint32_t protoID,
+bool InstanceClassHasProtoAtDepth(const JSClass* clasp, uint32_t protoID,
                                   uint32_t depth) {
   const DOMJSClass* domClass = DOMJSClass::FromJSClass(clasp);
   return static_cast<uint32_t>(domClass->mInterfaceChain[depth]) == protoID;
@@ -1326,7 +1326,7 @@ inline const NativePropertyHooks* GetNativePropertyHooksFromConstructorFunction(
 
 inline const NativePropertyHooks* GetNativePropertyHooks(
     JSContext* cx, JS::Handle<JSObject*> obj, DOMObjectType& type) {
-  const js::Class* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = js::GetObjectClass(obj);
 
   const DOMJSClass* domClass = GetDOMClass(clasp);
   if (domClass) {
@@ -1742,7 +1742,7 @@ static void DEBUG_CheckXBLLookup(JSContext* cx, JS::PropertyDescriptor* desc) {
     }
 
     if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE)) {
-      const js::Class* objClass = js::GetObjectClass(obj);
+      const JSClass* objClass = js::GetObjectClass(obj);
       if (IsDOMIfaceAndProtoClass(objClass) &&
           DOMIfaceAndProtoJSClass::FromJSClass(objClass)
               ->wantsInterfaceHasInstance) {
@@ -1766,7 +1766,7 @@ static void DEBUG_CheckXBLLookup(JSContext* cx, JS::PropertyDescriptor* desc) {
 
     if (id.get() == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
                         cx, JS::SymbolCode::hasInstance))) {
-      const js::Class* objClass = js::GetObjectClass(obj);
+      const JSClass* objClass = js::GetObjectClass(obj);
       if (IsDOMIfaceAndProtoClass(objClass) &&
           DOMIfaceAndProtoJSClass::FromJSClass(objClass)
               ->wantsInterfaceHasInstance) {
@@ -2425,7 +2425,7 @@ bool InterfaceHasInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
     return CallOrdinaryHasInstance(cx, args);
   }
 
-  const js::Class* thisClass = js::GetObjectClass(thisObj);
+  const JSClass* thisClass = js::GetObjectClass(thisObj);
 
   if (!IsDOMIfaceAndProtoClass(thisClass)) {
     return CallOrdinaryHasInstance(cx, args);
@@ -2501,7 +2501,7 @@ bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
     return true;
   }
 
-  const js::Class* thisClass = js::GetObjectClass(thisObj);
+  const JSClass* thisClass = js::GetObjectClass(thisObj);
   if (!IsDOMIfaceAndProtoClass(thisClass)) {
     args.rval().setBoolean(false);
     return true;
@@ -3429,7 +3429,7 @@ bool ForEachHandler(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
 
 static inline prototypes::ID GetProtoIdForNewtarget(
     JS::Handle<JSObject*> aNewTarget) {
-  const js::Class* newTargetClass = js::GetObjectClass(aNewTarget);
+  const JSClass* newTargetClass = js::GetObjectClass(aNewTarget);
   if (IsDOMIfaceAndProtoClass(newTargetClass)) {
     const DOMIfaceAndProtoJSClass* newTargetIfaceClass =
         DOMIfaceAndProtoJSClass::FromJSClass(newTargetClass);

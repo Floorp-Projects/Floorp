@@ -458,7 +458,7 @@ static const js::ClassExtension SandboxClassExtension = {
     sandbox_moved /* objectMovedOp */
 };
 
-static const js::Class SandboxClass = {
+static const JSClass SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1) | JSCLASS_FOREGROUND_FINALIZE,
     &SandboxClassOps,
@@ -471,7 +471,7 @@ static const JSFunctionSpec SandboxFunctions[] = {
     JS_FN("importFunction", SandboxImport, 1, 0), JS_FS_END};
 
 bool xpc::IsSandbox(JSObject* obj) {
-  const js::Class* clasp = js::GetObjectClass(obj);
+  const JSClass* clasp = js::GetObjectClass(obj);
   return clasp == &SandboxClass;
 }
 
@@ -1069,7 +1069,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
 
   realmOptions.behaviors().setDiscardSource(options.discardSource);
 
-  const js::Class* clasp = &SandboxClass;
+  const JSClass* clasp = &SandboxClass;
 
   RootedObject sandbox(
       cx, xpc::CreateGlobalObject(cx, clasp, principal, realmOptions));
@@ -1151,7 +1151,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
           JS_ReportErrorASCII(cx, "Sandbox must subsume sandboxPrototype");
           return NS_ERROR_INVALID_ARG;
         }
-        const js::Class* unwrappedClass = js::GetObjectClass(unwrappedProto);
+        const JSClass* unwrappedClass = js::GetObjectClass(unwrappedProto);
         useSandboxProxy = IS_WN_CLASS(unwrappedClass) ||
                           mozilla::dom::IsDOMClass(unwrappedClass);
       }
