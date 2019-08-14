@@ -26,7 +26,7 @@ static const js::Class windowProxy_class = {
     "WindowProxy", 0, nullptr, nullptr, nullptr, &windowProxy_objectOps};
 
 BEGIN_TEST(testWindowNonConfigurable) {
-  JS::RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&windowProxy_class)));
+  JS::RootedObject obj(cx, JS_NewObject(cx, &windowProxy_class));
   CHECK(obj);
   CHECK(JS_DefineProperty(cx, global, "windowProxy", obj, 0));
   JS::RootedValue v(cx);

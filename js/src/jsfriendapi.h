@@ -604,12 +604,8 @@ struct Function {
 // to #include vm/JSObject.h.
 extern JS_FRIEND_DATA const js::Class* const ObjectClassPtr;
 
-inline const js::Class* GetObjectClass(const JSObject* obj) {
+inline const JSClass* GetObjectClass(const JSObject* obj) {
   return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
-}
-
-inline const JSClass* GetObjectJSClass(JSObject* obj) {
-  return js::Jsvalify(GetObjectClass(obj));
 }
 
 JS_FRIEND_API const Class* ProtoKeyToClass(JSProtoKey key);

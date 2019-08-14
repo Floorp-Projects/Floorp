@@ -155,7 +155,7 @@ JSObject* newKey() {
       JS_NULL_CLASS_OPS, JS_NULL_CLASS_SPEC,
       JS_NULL_CLASS_EXT, JS_NULL_OBJECT_OPS};
 
-  JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&keyClass)));
+  JS::RootedObject key(cx, JS_NewObject(cx, &keyClass));
   if (!key) {
     return nullptr;
   }
@@ -219,9 +219,9 @@ JSObject* newDelegate() {
 
   /* Create the global object. */
   JS::RealmOptions options;
-  JS::RootedObject global(
-      cx, JS_NewGlobalObject(cx, Jsvalify(&delegateClass), nullptr,
-                             JS::FireOnNewGlobalHook, options));
+  JS::RootedObject global(cx,
+                          JS_NewGlobalObject(cx, &delegateClass, nullptr,
+                                             JS::FireOnNewGlobalHook, options));
   if (!global) {
     return nullptr;
   }
