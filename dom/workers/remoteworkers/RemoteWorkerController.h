@@ -80,6 +80,8 @@ namespace dom {
 
 class ErrorValue;
 class MessagePortIdentifier;
+class RemoteWorkerControllerParent;
+class RemoteWorkerData;
 class RemoteWorkerManager;
 class RemoteWorkerParent;
 
@@ -97,6 +99,7 @@ class RemoteWorkerObserver {
 };
 
 class RemoteWorkerController final {
+  friend class RemoteWorkerControllerParent;
   friend class RemoteWorkerManager;
   friend class RemoteWorkerParent;
 
@@ -124,7 +127,9 @@ class RemoteWorkerController final {
   void Thaw();
 
  private:
-  explicit RemoteWorkerController(RemoteWorkerObserver* aObserver);
+  RemoteWorkerController(const RemoteWorkerData& aData,
+                         RemoteWorkerObserver* aObserver);
+
   ~RemoteWorkerController();
 
   void SetWorkerActor(RemoteWorkerParent* aActor);
@@ -149,6 +154,8 @@ class RemoteWorkerController final {
     eReady,
     eTerminated,
   } mState;
+
+  const bool mIsServiceWorker;
 
   struct Op {
     enum Type {
