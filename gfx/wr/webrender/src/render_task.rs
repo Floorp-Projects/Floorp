@@ -1467,26 +1467,6 @@ impl RenderTask {
                         render_tasks.add(task)
                     }
                 }
-                FilterPrimitiveKind::Offset(ref info) => {
-                    let input_task_id = get_task_input(
-                        &info.input,
-                        filter_primitives,
-                        render_tasks,
-                        cur_index,
-                        &outputs,
-                        original_task_id,
-                        primitive.color_space
-                    );
-
-                    let offset = info.offset * LayoutToWorldScale::new(1.0) * device_pixel_scale;
-                    let offset_task = RenderTask::new_svg_filter_primitive(
-                        vec![input_task_id],
-                        content_size,
-                        uv_rect_kind,
-                        SvgFilterInfo::Offset(offset),
-                    );
-                    render_tasks.add(offset_task)
-                }
             };
             outputs.push(render_task_id);
         }

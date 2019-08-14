@@ -31,7 +31,6 @@ pub enum FilterPrimitiveKey {
     ColorMatrix(ColorSpace, [Au; 20], FilterPrimitiveInput),
     DropShadow(ColorSpace, (VectorKey, Au, ColorU), FilterPrimitiveInput),
     ComponentTransfer(ColorSpace, FilterPrimitiveInput, Vec<SFilterData>),
-    Offset(ColorSpace, FilterPrimitiveInput, VectorKey),
 }
 
 /// Represents a hashable description of how a picture primitive
@@ -176,8 +175,6 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                         }
                         FilterPrimitiveKind::ComponentTransfer(component_transfer) =>
                             FilterPrimitiveKey::ComponentTransfer(primitive.color_space, component_transfer.input, filter_data.clone()),
-                        FilterPrimitiveKind::Offset(info) =>
-                            FilterPrimitiveKey::Offset(primitive.color_space, info.input, info.offset.into()),
                     }
                 }).collect())
             }

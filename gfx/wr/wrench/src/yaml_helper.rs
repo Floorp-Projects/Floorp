@@ -769,12 +769,6 @@ impl YamlHelper for Yaml {
                         input: self["in"].as_filter_input().unwrap(),
                     })
                 }
-                "offset" => {
-                    FilterPrimitiveKind::Offset(OffsetPrimitive {
-                        input: self["in"].as_filter_input().unwrap(),
-                        offset: self["offset"].as_vector().unwrap(),
-                    })
-                }
                 _ => return None,
             };
 

@@ -1964,10 +1964,6 @@ impl PictureCompositeMode {
                             primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
                         FilterPrimitiveKind::ComponentTransfer(ref primitive) =>
                             primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
-                        FilterPrimitiveKind::Offset(ref primitive) => {
-                            let input_rect = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect);
-                            input_rect.translate(primitive.offset * Scale::new(1.0))
-                        },
 
                         FilterPrimitiveKind::Flood(..) => picture_rect,
                     };
