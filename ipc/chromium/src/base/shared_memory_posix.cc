@@ -56,6 +56,8 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
   return handle.fd >= 0;
 }
 
+bool SharedMemory::IsValid() const { return mapped_file_ >= 0; }
+
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
 
@@ -219,8 +221,11 @@ void SharedMemory::Close(bool unmap_view) {
   }
 }
 
-SharedMemoryHandle SharedMemory::handle() const {
-  return FileDescriptor(mapped_file_, false);
+mozilla::UniqueFileHandle SharedMemory::TakeHandle() {
+  mozilla::UniqueFileHandle fh(mapped_file_);
+  mapped_file_ = -1;
+  Unmap();
+  return fh;
 }
 
 }  // namespace base
