@@ -13,40 +13,39 @@ add_task(async function setup() {
 
 add_task(async function test_open_feedback() {
   const menuArray = [
-    {
-      urlFinal: "https://example.com/feedback",
-      urlBase: "https://example.com/feedback",
-      pref: "signon.management.page.feedbackURL",
-      selector: ".menuitem-feedback",
-    },
-    {
-      urlFinal: "https://example.com/faqs",
-      urlBase: "https://example.com/faqs",
-      pref: "signon.management.page.faqURL",
-      selector: ".menuitem-faq",
-    },
-    {
-      urlFinal: "https://example.com/android?utm_creative=Elipsis_Menu",
-      urlBase: "https://example.com/android?utm_creative=",
-      pref: "signon.management.page.mobileAndroidURL",
-      selector: ".menuitem-mobile-android",
-    },
-    {
-      urlFinal: "https://example.com/apple?utm_creative=Elipsis_Menu",
-      urlBase: "https://example.com/apple?utm_creative=",
-      pref: "signon.management.page.mobileAppleURL",
-      selector: ".menuitem-mobile-ios",
-    },
+    [
+      "https://example.com/feedback",
+      "signon.management.page.feedbackURL",
+      ".menuitem-feedback",
+    ],
+    [
+      "https://example.com/faqs",
+      "signon.management.page.faqURL",
+      ".menuitem-faq",
+    ],
+    [
+      "https://example.com/android",
+      "signon.management.page.mobileAndroidURL",
+      ".menuitem-mobile-android",
+    ],
+    [
+      "https://example.com/apple",
+      "signon.management.page.mobileAppleURL",
+      ".menuitem-mobile-ios",
+    ],
   ];
 
-  for (const { urlFinal, urlBase, pref, selector } of menuArray) {
-    info("Test on " + urlFinal);
+  for (let i = 0; i < menuArray.length; i++) {
+    info("Test on " + menuArray[i][1]);
+
+    const TEST_URL = menuArray[i][0];
+    const pref = menuArray[i][1];
 
     await SpecialPowers.pushPrefEnv({
-      set: [[pref, urlBase]],
+      set: [[pref, TEST_URL]],
     });
 
-    let promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, urlFinal);
+    let promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, TEST_URL);
 
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
@@ -66,7 +65,7 @@ add_task(async function test_open_feedback() {
     // on file as bug 1557489. As a workaround, this manually calculates the position to click.
     let { x, y } = await ContentTask.spawn(
       browser,
-      selector,
+      menuArray[i][2],
       async menuItemSelector => {
         let menuButton = Cu.waiveXrays(
           content.document.querySelector("menu-button")
@@ -79,7 +78,7 @@ add_task(async function test_open_feedback() {
 
     info("waiting for new tab to get opened");
     let newTab = await promiseNewTab;
-    ok(true, "New tab opened to" + urlFinal);
+    ok(true, "New tab opened to https://example.com/test");
 
     BrowserTestUtils.removeTab(newTab);
   }
