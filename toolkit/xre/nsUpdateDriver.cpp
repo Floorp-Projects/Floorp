@@ -185,7 +185,10 @@ static bool GetStatusFile(nsIFile* dir, nsCOMPtr<nsIFile>& result) {
 }
 
 /**
- * Get the contents of the update.status file.
+ * Get the contents of the update.status file when the update.status file can
+ * be opened with read and write access. The reason it is opened for both read
+ * and write is to prevent trying to update when the user doesn't have write
+ * access to the update directory.
  *
  * @param statusFile the status file object.
  * @param buf        the buffer holding the file contents
@@ -199,7 +202,7 @@ static bool GetStatusFileContents(nsIFile* statusFile, char (&buf)[Size]) {
       "Buffer needs to be large enough to hold the known status codes");
 
   PRFileDesc* fd = nullptr;
-  nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
+  nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDWR, 0660, &fd);
   if (NS_FAILED(rv)) return false;
 
   const int32_t n = PR_Read(fd, buf, Size);
