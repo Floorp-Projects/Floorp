@@ -95,7 +95,7 @@ class nsFloatManager {
                           mozilla::WritingMode aWM);
   ~nsFloatManager();
 
-  void* operator new(size_t aSize) CPP_THROW_NEW;
+  void* operator new(size_t aSize) noexcept(true);
   void operator delete(void* aPtr, size_t aSize);
 
   static void Shutdown();

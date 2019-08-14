@@ -118,6 +118,8 @@ class nsBlockFrame : public nsContainerFrame {
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList& aFrameList) override;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  nsContainerFrame* GetContentInsertionFrame() override;
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;
   void GetChildLists(nsTArray<ChildList>* aLists) const override;
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
@@ -235,13 +237,6 @@ class nsBlockFrame : public nsContainerFrame {
   // do we have either a 'list-style-type' or 'list-style-image' that is
   // not 'none', and no 'content'?
   bool MarkerIsEmpty() const;
-
-#ifdef ACCESSIBILITY
-  /**
-   * Return the ::marker text equivalent, without flushing.
-   */
-  void GetSpokenMarkerText(nsAString& aText) const;
-#endif
 
   /**
    * Return true if this frame has a ::marker frame.
@@ -491,6 +486,10 @@ class nsBlockFrame : public nsContainerFrame {
    */
   void AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
                  const nsLineList::iterator* aPrevSiblingLine);
+
+  // Return the :-moz-block-ruby-content child frame, if any.
+  // (It's non-null only if this block frame is for 'display:block ruby'.)
+  nsContainerFrame* GetRubyContentPseudoFrame();
 
   /**
    * Perform Bidi resolution on this frame

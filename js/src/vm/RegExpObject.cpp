@@ -166,7 +166,7 @@ void RegExpObject::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &sharedRef(), "RegExpObject shared");
 }
 
-static const ClassOps RegExpObjectClassOps = {
+static const JSClassOps RegExpObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

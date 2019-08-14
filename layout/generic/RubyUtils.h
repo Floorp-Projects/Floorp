@@ -75,7 +75,8 @@ class RubyUtils {
   }
 
   static inline bool IsRubyPseudo(PseudoStyleType aPseudo) {
-    return aPseudo == PseudoStyleType::ruby ||
+    return aPseudo == PseudoStyleType::blockRubyContent ||
+           aPseudo == PseudoStyleType::ruby ||
            aPseudo == PseudoStyleType::rubyBase ||
            aPseudo == PseudoStyleType::rubyText ||
            aPseudo == PseudoStyleType::rubyBaseContainer ||

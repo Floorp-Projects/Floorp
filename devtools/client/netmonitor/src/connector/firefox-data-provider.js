@@ -484,7 +484,7 @@ class FirefoxDataProvider {
    */
   async addFrame(httpChannelId, data) {
     if (this.actionsEnabled && this.actions.addFrame) {
-      await this.actions.addFrame(httpChannelId, data);
+      await this.actions.addFrame(httpChannelId, data, true);
     }
     // TODO: Emit an event for test here
   }

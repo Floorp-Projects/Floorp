@@ -1122,9 +1122,9 @@ inline bool IsObjectValueInCompartment(const Value& v, JS::Compartment* comp) {
  * A generic trace hook that calls the object's 'trace' method.
  *
  * If you are introducing a new JSObject subclass, MyObject, that needs a custom
- * js::ClassOps::trace function, it's often helpful to write `trace` as a
+ * JSClassOps::trace function, it's often helpful to write `trace` as a
  * non-static member function, since `this` will the correct type. In this case,
- * you can use `CallTraceMethod<MyObject>` as your js::ClassOps::trace value.
+ * you can use `CallTraceMethod<MyObject>` as your JSClassOps::trace value.
  */
 template <typename ObjectSubclass>
 void CallTraceMethod(JSTracer* trc, JSObject* obj) {

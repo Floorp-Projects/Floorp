@@ -141,7 +141,7 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
         &ErrorObject::classSpecs[JSProto_##name - JSProto_Error]      \
   }
 
-static const ClassOps ErrorObjectClassOps = {
+static const JSClassOps ErrorObjectClassOps = {
     nullptr,               /* addProperty */
     nullptr,               /* delProperty */
     nullptr,               /* enumerate */

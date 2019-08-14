@@ -412,17 +412,33 @@ void nsContentSecurityManager::AssertEvalNotRestricted(
     return;
   }
 
-  // This preferences is a file used for autoconfiguration of Firefox
+  // This preference is a file used for autoconfiguration of Firefox
   // by administrators. It has also been (ab)used by the userChromeJS
   // project to run legacy-style 'extensions', some of which use eval,
   // all of which run in the System Principal context.
-  nsAutoString configPref;
-  Preferences::GetString("general.config.filename", configPref);
-  if (!configPref.IsEmpty()) {
+  nsAutoString jsConfigPref;
+  Preferences::GetString("general.config.filename", jsConfigPref);
+  if (!jsConfigPref.IsEmpty()) {
     MOZ_LOG(
         sCSMLog, LogLevel::Debug,
         ("Allowing eval() %s because of "
          "general.config.filename",
+         (systemPrincipal ? "with System Principal" : "in parent process")));
+    return;
+  }
+
+  // This preference is better known as userchrome.css which allows
+  // customization of the Firefox UI. Believe it or not, you can also
+  // use XBL bindings to get it to run Javascript in the same manner
+  // as userChromeJS above, so even though 99.9% of people using
+  // userchrome.css aren't doing that, we're still going to need to
+  // disable the eval() assertion for them.
+  if (Preferences::GetBool(
+          "toolkit.legacyUserProfileCustomizations.stylesheets")) {
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing eval() %s because of "
+         "toolkit.legacyUserProfileCustomizations.stylesheets",
          (systemPrincipal ? "with System Principal" : "in parent process")));
     return;
   }

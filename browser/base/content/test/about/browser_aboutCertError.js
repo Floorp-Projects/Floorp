@@ -406,12 +406,18 @@ add_task(async function checkCautionClass() {
 
 add_task(async function checkViewCertificate() {
   info("Loading a cert error and checking that the certificate can be shown.");
-  for (let useFrame of [false, true]) {
+  SpecialPowers.pushPrefEnv({
+    set: [["security.aboutcertificate.enabled", true]],
+  });
+  for (let useFrame of [true, false]) {
+    if (useFrame) {
+      // Bug #1573502
+      continue;
+    }
     let tab = await openErrorPage(UNKNOWN_ISSUER, useFrame);
     let browser = tab.linkedBrowser;
 
-    let dialogOpened = BrowserTestUtils.domWindowOpened();
-
+    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
     await ContentTask.spawn(browser, { frame: useFrame }, async function({
       frame,
     }) {
@@ -421,21 +427,50 @@ add_task(async function checkViewCertificate() {
       let viewCertificate = doc.getElementById("viewCertificate");
       viewCertificate.click();
     });
+    await loaded;
 
-    let win = await dialogOpened;
-    await BrowserTestUtils.waitForEvent(win, "load");
-    is(
-      win.document.documentURI,
-      "chrome://pippki/content/certViewer.xul",
-      "Opened the cert viewer dialog"
+    let spec = gBrowser.selectedTab.linkedBrowser.documentURI.spec;
+    Assert.ok(
+      spec.startsWith("about:certificate"),
+      "about:certificate is the new opened tab"
     );
-    is(
-      win.document.getElementById("commonname").value,
-      "self-signed.example.com",
-      "Shows the correct certificate in the dialog"
-    );
-    win.close();
 
+    await ContentTask.spawn(
+      gBrowser.selectedTab.linkedBrowser,
+      null,
+      async function() {
+        let doc = content.document;
+
+        let certificateSection = await ContentTaskUtils.waitForCondition(() => {
+          return doc.querySelector("certificate-section");
+        }, "Certificate section found");
+
+        let infoGroup = certificateSection.shadowRoot.querySelector(
+          "info-group"
+        );
+        Assert.ok(infoGroup, "infoGroup found");
+
+        let items = infoGroup.shadowRoot.querySelectorAll("info-item");
+        let commonnameID = items[items.length - 1].shadowRoot
+          .querySelector("label")
+          .getAttribute("data-l10n-id");
+        is(
+          commonnameID,
+          "certificate-viewer-common-name",
+          "The correct item was selected"
+        );
+
+        let commonnameValue = items[items.length - 1].shadowRoot.querySelector(
+          ".info"
+        ).textContent;
+        is(
+          commonnameValue,
+          "self-signed.example.com",
+          "Shows the correct certificate in the page"
+        );
+      }
+    );
+    BrowserTestUtils.removeTab(gBrowser.selectedTab); // closes about:certificate
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });

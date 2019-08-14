@@ -1504,14 +1504,14 @@ nsBoxSize::nsBoxSize() {
 }
 
 void* nsBoxSize::operator new(size_t sz,
-                              nsBoxLayoutState& aState) CPP_THROW_NEW {
+                              nsBoxLayoutState& aState) noexcept(true) {
   return mozilla::AutoStackArena::Allocate(sz);
 }
 
 void nsBoxSize::operator delete(void* aPtr, size_t sz) {}
 
 void* nsComputedBoxSize::operator new(size_t sz,
-                                      nsBoxLayoutState& aState) CPP_THROW_NEW {
+                                      nsBoxLayoutState& aState) noexcept(true) {
   return mozilla::AutoStackArena::Allocate(sz);
 }
 

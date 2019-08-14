@@ -28,7 +28,7 @@ math {
   -moz-float-edge: margin-box;
   -moz-math-display: inline;
 }
-math[mode="display"], math[display="block"] {
+math[display="block"] {
   display: block;
   text-align: -moz-center;
   -moz-math-display: block;

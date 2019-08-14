@@ -14,7 +14,6 @@ py3:
         - layout/tools/reftest
         - security/manager/ssl
         - testing/awsy
-        - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
         - testing/gtest
         - testing/mozharness
         - testing/tps

@@ -59,7 +59,7 @@ static size_t SimpleGlobal_moved(JSObject* obj, JSObject* old) {
   return 0;
 }
 
-static const js::ClassOps SimpleGlobalClassOps = {
+static const JSClassOps SimpleGlobalClassOps = {
     nullptr,
     nullptr,
     nullptr,

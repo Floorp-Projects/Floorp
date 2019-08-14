@@ -2343,7 +2343,7 @@ inline JSObject* GetCachedSlotStorageObject(JSContext* cx,
 
 extern NativePropertyHooks sEmptyNativePropertyHooks;
 
-extern const js::ClassOps sBoringInterfaceObjectClassClassOps;
+extern const JSClassOps sBoringInterfaceObjectClassClassOps;
 
 extern const js::ObjectOps sInterfaceObjectClassObjectOps;
 
