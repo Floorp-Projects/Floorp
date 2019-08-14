@@ -34,6 +34,8 @@
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">46dp</dimen>
 
+    <dimen name="design_quick_action_sheet_peek_height_min">64dp</dimen>
+
     <dimen name="onboarding_header_icon_height_width">32dp</dimen>
 
     <!-- Bottom Sheet Fragment card -->

@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Intent
 import androidx.core.widget.NestedScrollView
 import androidx.navigation.NavController
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -37,6 +36,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
@@ -54,7 +54,7 @@ class DefaultBrowserToolbarControllerTest {
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
-    private val bottomSheetBehavior: BottomSheetBehavior<NestedScrollView> = mockk(relaxed = true)
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
 
@@ -236,7 +236,7 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED }
+        verify { bottomSheetBehavior.state = QuickActionSheetBehavior.STATE_COLLAPSED }
         verify { findInPageLauncher() }
         verify { metrics.track(Event.FindInPageOpened) }
     }

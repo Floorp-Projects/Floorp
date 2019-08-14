@@ -11,7 +11,6 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.edit
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.*
@@ -31,6 +30,7 @@ interface QuickActionSheetViewInteractor {
     fun onQuickActionSheetAppearancePressed()
     fun onQuickActionSheetOpenLinkPressed()
 }
+
 /**
  * View for the quick action sheet that slides out from the toolbar.
  */
@@ -47,13 +47,14 @@ class QuickActionSheetView(
     private val quickActionSheetBehavior = QuickActionSheetBehavior.from(nestedScrollQuickAction)
 
     init {
-        quickActionSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(v: View, state: Int) {
-                updateImportantForAccessibility(state)
+        quickActionSheetBehavior.setQuickActionSheetCallback(object :
+            QuickActionSheetBehavior.QuickActionSheetCallback {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                updateImportantForAccessibility(newState)
 
-                if (state == BottomSheetBehavior.STATE_EXPANDED) {
+                if (newState == QuickActionSheetBehavior.STATE_EXPANDED) {
                     interactor.onQuickActionSheetOpened()
-                } else if (state == BottomSheetBehavior.STATE_COLLAPSED) {
+                } else if (newState == QuickActionSheetBehavior.STATE_COLLAPSED) {
                     interactor.onQuickActionSheetClosed()
                 }
             }
@@ -86,7 +87,7 @@ class QuickActionSheetView(
             R.id.quick_action_open_app_link -> interactor.onQuickActionSheetOpenLinkPressed()
             else -> return
         }
-        quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        quickActionSheetBehavior.state = QuickActionSheetBehavior.STATE_COLLAPSED
     }
 
     /**
@@ -102,7 +103,7 @@ class QuickActionSheetView(
      */
     private fun updateImportantForAccessibility(state: Int) {
         view.quick_action_buttons_layout.importantForAccessibility = when (state) {
-            BottomSheetBehavior.STATE_COLLAPSED, BottomSheetBehavior.STATE_HIDDEN ->
+            QuickActionSheetBehavior.STATE_COLLAPSED, QuickActionSheetBehavior.STATE_HIDDEN ->
                 View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             else ->
                 View.IMPORTANT_FOR_ACCESSIBILITY_AUTO

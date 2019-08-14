@@ -48,4 +48,56 @@
     <declare-styleable name="OnboardingRadioButton">
         <attr name="onboardingKey" format="reference" />
     </declare-styleable>
+
+    <declare-styleable name="QuickActionSheetBehavior_Layout">
+        <!-- The height of the bottom sheet when it is collapsed. -->
+        <attr format="dimension" name="mozac_behavior_peekHeight">
+            <!-- Peek at the 16:9 ratio keyline of its parent -->
+            <enum name="auto" value="-1"/>
+        </attr>
+        <!-- Whether this bottom sheet can be hidden by dragging it further downwards -->
+        <attr format="boolean" name="mozac_behavior_hideable"/>
+        <!-- Skip the collapsed state once expanded; no effect unless it is hideable -->
+        <attr format="boolean" name="mozac_behavior_skipCollapsed"/>
+        <!-- Whether height of expanded sheet wraps content or not -->
+        <attr format="boolean" name="mozac_behavior_fitToContents"/>
+        <!-- The ratio to be used to set the height of half-expanded state in proportion to parent, when
+             fitToContents is false. Defaults to true half, 0.5, if not explicitly set. Ratio must be a
+             float value between 0 and 1 and produce a half-expanded state height larger than the
+             peek height for the half-expanded state to be operational -->
+        <attr format="reference|float" name="mozac_behavior_halfExpandedRatio"/>
+        <!-- The top offset of the BottomSheet in the expanded-state when fitsToContent is false.
+             The default value is 0, which results in the sheet matching the parent's top. -->
+        <attr format="reference|integer" name="mozac_behavior_expandedOffset"/>
+        <!-- Shape appearance style reference for BottomSheet. Attribute declaration is in the shape
+             package. -->
+        <attr name="shapeAppearance"/>
+        <!-- Shape appearance overlay style reference for BottomSheet. To be used to augment attributes
+             declared in the shapeAppearance. Attribute declaration is in the shape package. -->
+        <attr name="shapeAppearanceOverlay"/>
+        <!-- Background color used by the BottomSheetBehavior background drawable when shape theming is
+             enabled. Accepts a ColorStateList or ColorInt. If shape theming is not enabled,
+             android:background should instead be utilized to set the background resource. -->
+        <attr name="backgroundTint"/>
+        <!-- Behavior properties will be saved and restored by evaluating each flag.
+              usage: app:behavior_saveFlags=”hideable|skipCollapsed” -->
+        <attr name="mozac_behavior_saveFlags">
+            <!-- This flag will preserve the peekHeight on configuration change. -->
+            <flag name="peekHeight" value="0x1"/>
+            <!-- This flag will preserve the fitToContents boolean value on configuration change. -->
+            <flag name="fitToContents" value="0x2"/>
+            <!-- This flag will preserve the hideable boolean value on configuration change. -->
+            <flag name="hideable" value="0x4"/>
+            <!-- This flag will preserve the skipCollapsed boolean value on configuration change. -->
+            <flag name="skipCollapsed" value="0x8"/>
+            <!-- This flag will preserve the all the aforementioned values on configuration change. -->
+            <flag name="all" value="-1"/>
+            <!-- This flag will not preserve the aforementioned values on configuration change. The only
+                 value preserved will be the positional state, e.g. collapsed, hidden, expanded, etc.
+                 This is the default behavior. -->
+            <flag name="none" value="0"/>
+        </attr>
+        <attr name="android:elevation"/>
+
+    </declare-styleable>
 </resources>

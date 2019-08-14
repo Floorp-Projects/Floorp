@@ -26,6 +26,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.lib.Do
+import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 
 /**
  * An interface that handles the view manipulation of the BrowserToolbar, triggered by the Interactor
@@ -47,7 +48,7 @@ class DefaultBrowserToolbarController(
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
     private val currentSessionAsTab: Tab,
-    private val bottomSheetBehavior: BottomSheetBehavior<NestedScrollView>
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>
 ) : BrowserToolbarController {
 
     override fun handleToolbarClick() {

@@ -26,8 +26,8 @@
         android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:behavior_hideable="true"
-        app:behavior_peekHeight="12dp"
+        app:mozac_behavior_hideable="true"
+        app:mozac_behavior_peekHeight="12dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior" />
 
     <ViewStub

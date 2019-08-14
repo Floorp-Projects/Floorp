@@ -11,17 +11,15 @@ import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.LinearLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import mozilla.components.browser.toolbar.BrowserToolbar
-import org.mozilla.fenix.R
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
 const val POSITION_SNAP_BUFFER = 1f
@@ -35,7 +33,7 @@ class QuickActionSheet @JvmOverloads constructor(
 
     private val scope = MainScope()
 
-    private lateinit var quickActionSheetBehavior: QuickActionSheetBehavior
+    private lateinit var quickActionSheetBehavior: QuickActionSheetBehavior<NestedScrollView>
 
     init {
         inflate(context, R.layout.layout_quick_action_sheet, this)
@@ -43,8 +41,8 @@ class QuickActionSheet @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        quickActionSheetBehavior = BottomSheetBehavior.from(quick_action_sheet.parent as View)
-                as QuickActionSheetBehavior
+        quickActionSheetBehavior =
+            QuickActionSheetBehavior.from(quick_action_sheet.parent as NestedScrollView)
         quickActionSheetBehavior.isHideable = false
         setupHandle()
     }
@@ -76,21 +74,21 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     class HandleAccessibilityDelegate(
-        private val quickActionSheetBehavior: QuickActionSheetBehavior
+        private val quickActionSheetBehavior: QuickActionSheetBehavior<NestedScrollView>
     ) : View.AccessibilityDelegate() {
         private var finalState = BottomSheetBehavior.STATE_COLLAPSED
-        get() = when (quickActionSheetBehavior.state) {
-            BottomSheetBehavior.STATE_EXPANDED,
-            BottomSheetBehavior.STATE_HIDDEN,
-            BottomSheetBehavior.STATE_COLLAPSED -> {
-                quickActionSheetBehavior.state
+            get() = when (quickActionSheetBehavior.state) {
+                BottomSheetBehavior.STATE_EXPANDED,
+                BottomSheetBehavior.STATE_HIDDEN,
+                BottomSheetBehavior.STATE_COLLAPSED -> {
+                    quickActionSheetBehavior.state
+                }
+                else -> field
             }
-            else -> field
-        }
-        set(value) {
-            field = value
-            quickActionSheetBehavior.state = value
-        }
+            set(value) {
+                field = value
+                quickActionSheetBehavior.state = value
+            }
 
         override fun performAccessibilityAction(host: View?, action: Int, args: Bundle?): Boolean {
             finalState = when (action) {
@@ -113,57 +111,18 @@ class QuickActionSheet @JvmOverloads constructor(
 
         override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.addAction(when (finalState) {
-                BottomSheetBehavior.STATE_COLLAPSED,
-                BottomSheetBehavior.STATE_HIDDEN -> AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND
-                else -> AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE
-            })
+            info?.addAction(
+                when (finalState) {
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_HIDDEN -> AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND
+                    else -> AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE
+                }
+            )
         }
     }
 
     companion object {
         const val BOUNCE_ANIMATION_DELAY_LENGTH = 1000L
         const val BOUNCE_ANIMATION_PAUSE_LENGTH = 2000L
-    }
-}
-
-class QuickActionSheetBehavior(
-    context: Context,
-    attrs: AttributeSet
-) : BottomSheetBehavior<NestedScrollView>(context, attrs) {
-
-    override fun layoutDependsOn(parent: CoordinatorLayout, child: NestedScrollView, dependency: View): Boolean {
-        if (dependency is BrowserToolbar) {
-            return true
-        }
-
-        return super.layoutDependsOn(parent, child, dependency)
-    }
-
-    override fun onDependentViewChanged(
-        parent: CoordinatorLayout,
-        child: NestedScrollView,
-        dependency: View
-    ): Boolean {
-        return if (dependency is BrowserToolbar) {
-            repositionQuickActionSheet(child, dependency)
-            true
-        } else {
-            false
-        }
-    }
-
-    private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
-        if (toolbar.translationY >= toolbar.height.toFloat() - POSITION_SNAP_BUFFER) {
-            state = STATE_HIDDEN
-        } else if (state == STATE_HIDDEN || state == STATE_SETTLING) {
-            state = STATE_COLLAPSED
-        }
-        quickActionSheetContainer.translationY = toolbar.translationY + toolbar.height * -1.0f
-    }
-
-    companion object {
-        fun from(view: NestedScrollView) =
-            BottomSheetBehavior.from(view) as QuickActionSheetBehavior
     }
 }

@@ -19,7 +19,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
@@ -72,6 +71,7 @@ import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toTab
+import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
@@ -173,7 +173,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 },
                 currentSessionAsTab = session.toTab(context!!),
-                bottomSheetBehavior = BottomSheetBehavior.from(nestedScrollQuickAction)
+                bottomSheetBehavior = QuickActionSheetBehavior.from(nestedScrollQuickAction)
             )
 
             browserInteractor =
