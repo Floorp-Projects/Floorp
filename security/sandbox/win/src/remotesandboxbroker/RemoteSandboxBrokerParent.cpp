@@ -63,7 +63,13 @@ void RemoteSandboxBrokerParent::ActorDestroy(ActorDestroyReason aWhy) {
                           nsDependentCString(XRE_ChildProcessTypeToString(
                               GeckoProcessType_RemoteSandboxBroker)),
                           1);
-    GenerateCrashReport(OtherPid());
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    } else {
+      CrashReporter::FinalizeOrphanedMinidump(
+          OtherPid(), GeckoProcessType_RemoteSandboxBroker);
+    }
   }
   Shutdown();
 }
@@ -77,6 +83,14 @@ void RemoteSandboxBrokerParent::Shutdown() {
     mProcess->Destroy();
     mProcess = nullptr;
   }
+}
+
+mozilla::ipc::IPCResult RemoteSandboxBrokerParent::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
+      GeckoProcessType_RemoteSandboxBroker, aShmem, aThreadId);
+
+  return IPC_OK();
 }
 
 }  // namespace mozilla

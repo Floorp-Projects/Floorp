@@ -6,6 +6,7 @@
 #include "SocketProcessParent.h"
 
 #include "SocketProcessHost.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
@@ -43,9 +44,23 @@ SocketProcessParent* SocketProcessParent::GetSingleton() {
   return sSocketProcessParent;
 }
 
+mozilla::ipc::IPCResult SocketProcessParent::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<CrashReporterHost>(GeckoProcessType_Content,
+                                                 aShmem, aThreadId);
+
+  return IPC_OK();
+}
+
 void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
-    GenerateCrashReport(OtherPid());
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    } else {
+      CrashReporter::FinalizeOrphanedMinidump(OtherPid(),
+                                              GeckoProcessType_Content);
+    }
   }
 
   if (mHost) {

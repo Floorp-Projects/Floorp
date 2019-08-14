@@ -17,6 +17,7 @@
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
+#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/Unused.h"
@@ -114,6 +115,14 @@ mozilla::ipc::IPCResult GPUChild::RecvGraphicsError(const nsCString& aError) {
     message << "GP+" << aError.get();
     lf->UpdateStringsVector(message.str());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUChild::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GPU,
+                                                      aShmem, aThreadId);
+
   return IPC_OK();
 }
 
@@ -228,7 +237,12 @@ mozilla::ipc::IPCResult GPUChild::RecvFinishMemoryReport(
 
 void GPUChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
-    GenerateCrashReport(OtherPid());
+    if (mCrashReporter) {
+      mCrashReporter->GenerateCrashReport(OtherPid());
+      mCrashReporter = nullptr;
+    } else {
+      CrashReporter::FinalizeOrphanedMinidump(OtherPid(), GeckoProcessType_GPU);
+    }
 
     Telemetry::Accumulate(
         Telemetry::SUBPROCESS_ABNORMAL_ABORT,
