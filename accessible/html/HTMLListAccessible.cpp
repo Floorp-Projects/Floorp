@@ -11,8 +11,8 @@
 #include "Role.h"
 #include "States.h"
 
-#include "nsBlockFrame.h"
-#include "nsBulletFrame.h"
+#include "nsContainerFrame.h"
+#include "nsLayoutUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -38,8 +38,8 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr) {
   mType = eHTMLLiType;
 
-  nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
-  if (blockFrame && blockFrame->HasMarker()) {
+  nsIContent* marker = nsLayoutUtils::GetMarkerPseudo(aContent);
+  if (marker && marker->GetPrimaryFrame()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
     AppendChild(mBullet);
@@ -119,17 +119,16 @@ HTMLListBulletAccessible::HTMLListBulletAccessible(nsIContent* aContent,
 // HTMLListBulletAccessible: Accessible
 
 nsIFrame* HTMLListBulletAccessible::GetFrame() const {
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  return blockFrame ? blockFrame->GetMarker() : nullptr;
+  nsIContent* marker = nsLayoutUtils::GetMarkerPseudo(mContent);
+  return marker ? marker->GetPrimaryFrame() : nullptr;
 }
 
 ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   // Native anonymous content, ARIA can't be used. Get list bullet text.
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (blockFrame) {
-    blockFrame->GetSpokenMarkerText(aName);
+  if (nsContainerFrame* frame = do_QueryFrame(mContent->GetPrimaryFrame())) {
+    frame->GetSpokenMarkerText(aName);
   }
 
   return eNameOK;
@@ -145,9 +144,7 @@ void HTMLListBulletAccessible::AppendTextTo(nsAString& aText,
                                             uint32_t aStartOffset,
                                             uint32_t aLength) {
   nsAutoString bulletText;
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (blockFrame) blockFrame->GetSpokenMarkerText(bulletText);
-
+  Name(bulletText);
   aText.Append(Substring(bulletText, aStartOffset, aLength));
 }
 
@@ -155,6 +152,9 @@ void HTMLListBulletAccessible::AppendTextTo(nsAString& aText,
 // HTMLListBulletAccessible: public
 
 bool HTMLListBulletAccessible::IsInside() const {
-  nsBlockFrame* blockFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  return blockFrame ? blockFrame->HasInsideMarker() : false;
+  if (nsIFrame* frame = mContent->GetPrimaryFrame()) {
+    return frame->StyleList()->mListStylePosition ==
+        NS_STYLE_LIST_STYLE_POSITION_INSIDE;
+  }
+  return false;
 }
