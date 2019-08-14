@@ -43,13 +43,13 @@ class GCTrace {
  private:
   FILE* gcTraceFile = nullptr;
 
-  HashSet<const Class*, DefaultHasher<const Class*>, SystemAllocPolicy>
+  HashSet<const JSClass*, DefaultHasher<const JSClass*>, SystemAllocPolicy>
       tracedClasses;
   HashSet<const ObjectGroup*, DefaultHasher<const ObjectGroup*>,
           SystemAllocPolicy>
       tracedGroups;
 
-  void maybeTraceClass(const Class* clasp);
+  void maybeTraceClass(const JSClass* clasp);
   void maybeTraceGroup(ObjectGroup* group);
 
 #else

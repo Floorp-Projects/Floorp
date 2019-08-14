@@ -372,7 +372,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, void* thing,
 
       realmStats.classInfo.add(info);
 
-      const Class* clasp = obj->getClass();
+      const JSClass* clasp = obj->getClass();
       const char* className = clasp->name;
       AddClassInfo(granularity, realmStats, className, info);
 

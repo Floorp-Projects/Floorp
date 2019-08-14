@@ -393,7 +393,7 @@ class JSObject : public js::gc::Cell {
    */
   inline bool isNewGroupUnknown() const;
   static bool setNewGroupUnknown(JSContext* cx, js::ObjectGroupRealm& realm,
-                                 const js::Class* clasp, JS::HandleObject obj);
+                                 const JSClass* clasp, JS::HandleObject obj);
 
   /* Set a new prototype for an object with a singleton type. */
   static bool splicePrototype(JSContext* cx, js::HandleObject obj,
@@ -822,7 +822,7 @@ namespace js {
 bool NewObjectWithTaggedProtoIsCachable(JSContext* cx,
                                         Handle<TaggedProto> proto,
                                         NewObjectKind newKind,
-                                        const Class* clasp);
+                                        const JSClass* clasp);
 
 // ES6 9.1.15 GetPrototypeFromConstructor.
 extern bool GetPrototypeFromConstructor(JSContext* cx,
@@ -879,7 +879,7 @@ extern JSObject* CreateThisForFunction(JSContext* cx, js::HandleFunction callee,
                                        NewObjectKind newKind);
 
 // Generic call for constructing |this|.
-extern JSObject* CreateThis(JSContext* cx, const js::Class* clasp,
+extern JSObject* CreateThis(JSContext* cx, const JSClass* clasp,
                             js::HandleObject callee);
 
 extern JSObject* CloneObject(JSContext* cx, HandleObject obj,

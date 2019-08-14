@@ -13,7 +13,7 @@ namespace js {
 
 class RegExpStaticsObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
     // XXX: should really call RegExpStatics::sizeOfIncludingThis() here

@@ -962,7 +962,7 @@ template GCPtr<JS::Value>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
 template GCPtr<jsid>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
-template GCPtr<Class*>& CacheIRStubInfo::getStubField<ICStub>(
+template GCPtr<JSClass*>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
 template GCPtr<ArrayObject*>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
@@ -1638,7 +1638,7 @@ bool CacheIRCompiler::emitGuardClass() {
     return false;
   }
 
-  const Class* clasp = nullptr;
+  const JSClass* clasp = nullptr;
   switch (reader.guardClassKind()) {
     case GuardClassKind::Array:
       clasp = &ArrayObject::class_;
@@ -1709,7 +1709,7 @@ bool CacheIRCompiler::emitGuardSpecificNativeFunction() {
   }
 
   // Ensure obj is a function.
-  const Class* clasp = &JSFunction::class_;
+  const JSClass* clasp = &JSFunction::class_;
   masm.branchTestObjClass(Assembler::NotEqual, obj, clasp, scratch, obj,
                           failure->label());
 

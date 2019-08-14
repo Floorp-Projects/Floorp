@@ -375,7 +375,7 @@ class JS_FRIEND_API BaseProxyHandler {
   virtual bool isScripted() const { return false; }
 };
 
-extern JS_FRIEND_DATA const js::Class ProxyClass;
+extern JS_FRIEND_DATA const JSClass ProxyClass;
 
 inline bool IsProxy(const JSObject* obj) {
   return GetObjectClass(obj)->isProxy();
@@ -574,8 +574,8 @@ class MOZ_STACK_CLASS ProxyOptions {
     return *this;
   }
 
-  const Class* clasp() const { return clasp_; }
-  ProxyOptions& setClass(const Class* claspArg) {
+  const JSClass* clasp() const { return clasp_; }
+  ProxyOptions& setClass(const JSClass* claspArg) {
     clasp_ = claspArg;
     return *this;
   }
@@ -583,7 +583,7 @@ class MOZ_STACK_CLASS ProxyOptions {
  private:
   bool singleton_;
   bool lazyProto_;
-  const Class* clasp_;
+  const JSClass* clasp_;
 };
 
 JS_FRIEND_API JSObject* NewProxyObject(
@@ -728,7 +728,7 @@ constexpr unsigned CheckProxyFlags() {
 #define PROXY_CLASS_DEF(name, flags)                                       \
   {                                                                        \
     name,                                                                  \
-        js::Class::NON_NATIVE | JSCLASS_IS_PROXY |                         \
+        JSClass::NON_NATIVE | JSCLASS_IS_PROXY |                           \
             JSCLASS_DELAY_METADATA_BUILDER | js::CheckProxyFlags<flags>(), \
         &js::ProxyClassOps, JS_NULL_CLASS_SPEC, &js::ProxyClassExtension,  \
         &js::ProxyObjectOps                                                \

@@ -445,7 +445,7 @@ static const JSClassOps StringObjectClassOps = {
     str_enumerate, nullptr, /* newEnumerate */
     str_resolve,   str_mayResolve};
 
-const Class StringObject::class_ = {
+const JSClass StringObject::class_ = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_String),

@@ -55,7 +55,7 @@ const JSClassOps DateTimeFormatObject::classOps_ = {
     nullptr, /* mayResolve */
     DateTimeFormatObject::finalize};
 
-const Class DateTimeFormatObject::class_ = {
+const JSClass DateTimeFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DateTimeFormatObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,

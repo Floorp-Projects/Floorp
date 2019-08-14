@@ -60,7 +60,7 @@ static const JSClassOps InstrumentationHolderClassOps = {
     RealmInstrumentation::holderTrace,
 };
 
-static const Class InstrumentationHolderClass = {
+static const JSClass InstrumentationHolderClass = {
     "Instrumentation Holder",
     JSCLASS_HAS_RESERVED_SLOTS(ReservedSlotCount) | JSCLASS_FOREGROUND_FINALIZE,
     &InstrumentationHolderClassOps, JS_NULL_CLASS_SPEC, JS_NULL_CLASS_EXT};

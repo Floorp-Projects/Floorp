@@ -139,13 +139,13 @@ const ClassSpec WeakSetObject::classSpec_ = {
     WeakSetObject::properties,
 };
 
-const Class WeakSetObject::class_ = {
+const JSClass WeakSetObject::class_ = {
     "WeakSet",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet) |
         JSCLASS_BACKGROUND_FINALIZE,
     &WeakCollectionObject::classOps_, &WeakSetObject::classSpec_};
 
-const Class WeakSetObject::protoClass_ = {
+const JSClass WeakSetObject::protoClass_ = {
     js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WeakSet), JS_NULL_CLASS_OPS,
     &WeakSetObject::classSpec_};
 

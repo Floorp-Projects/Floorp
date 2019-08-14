@@ -195,7 +195,7 @@ class GeneratorObject : public AbstractGeneratorObject {
  public:
   enum { RESERVED_SLOTS = AbstractGeneratorObject::RESERVED_SLOTS };
 
-  static const Class class_;
+  static const JSClass class_;
 
   static GeneratorObject* create(JSContext* cx, HandleFunction fun);
 };

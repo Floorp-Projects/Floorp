@@ -85,7 +85,7 @@ const JSClassOps DebuggerObject::classOps_ = {
     CallTraceMethod<DebuggerObject>, /* trace */
 };
 
-const Class DebuggerObject::class_ = {
+const JSClass DebuggerObject::class_ = {
     "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
     &classOps_};
 

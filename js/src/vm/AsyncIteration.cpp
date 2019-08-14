@@ -54,7 +54,7 @@ MOZ_MUST_USE bool js::AsyncGeneratorYieldReturnAwaitedRejected(
   return AsyncGeneratorResume(cx, asyncGenObj, CompletionKind::Throw, reason);
 }
 
-const Class AsyncFromSyncIteratorObject::class_ = {
+const JSClass AsyncFromSyncIteratorObject::class_ = {
     "AsyncFromSyncIteratorObject",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFromSyncIteratorObject::Slots)};
 
@@ -149,7 +149,7 @@ static bool AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
                                args.get(0), args.rval());
 }
 
-const Class AsyncGeneratorObject::class_ = {
+const JSClass AsyncGeneratorObject::class_ = {
     "AsyncGenerator", JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorObject::Slots)};
 
 // ES 2017 draft 9.1.13.
@@ -271,7 +271,7 @@ AsyncGeneratorRequest* AsyncGeneratorObject::peekRequest(
   return &asyncGenObj->queue()->getAs<AsyncGeneratorRequest>(0);
 }
 
-const Class AsyncGeneratorRequest::class_ = {
+const JSClass AsyncGeneratorRequest::class_ = {
     "AsyncGeneratorRequest",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncGeneratorRequest::Slots)};
 

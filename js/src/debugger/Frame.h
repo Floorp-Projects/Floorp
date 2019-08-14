@@ -100,7 +100,7 @@ enum class DebuggerFrameImplementation { Interpreter, Baseline, Ion, Wasm };
 
 class DebuggerArguments : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static DebuggerArguments* create(JSContext* cx, HandleObject proto,
                                    HandleDebuggerFrame frame);
@@ -117,7 +117,7 @@ class DebuggerFrame : public NativeObject {
   friend class ScriptedOnPopHandler;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   enum {
     OWNER_SLOT = 0,

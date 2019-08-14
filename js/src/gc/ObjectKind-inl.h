@@ -18,7 +18,7 @@ namespace js {
 namespace gc {
 
 static inline bool CanBeFinalizedInBackground(AllocKind kind,
-                                              const Class* clasp) {
+                                              const JSClass* clasp) {
   MOZ_ASSERT(IsObjectAllocKind(kind));
   /* If the class has no finalizer or a finalizer that is safe to call on
    * a different thread, we change the alloc kind. For example,
@@ -51,7 +51,7 @@ static inline AllocKind GetGCObjectKind(size_t numSlots) {
   return slotsToThingKind[numSlots];
 }
 
-static inline AllocKind GetGCObjectKind(const Class* clasp) {
+static inline AllocKind GetGCObjectKind(const JSClass* clasp) {
   if (clasp == FunctionClassPtr) {
     return AllocKind::FUNCTION;
   }
@@ -132,7 +132,7 @@ static inline size_t GetGCKindSlots(AllocKind thingKind) {
   }
 }
 
-static inline size_t GetGCKindSlots(AllocKind thingKind, const Class* clasp) {
+static inline size_t GetGCKindSlots(AllocKind thingKind, const JSClass* clasp) {
   size_t nslots = GetGCKindSlots(thingKind);
 
   /* An object's private data uses the space taken by its last fixed slot. */

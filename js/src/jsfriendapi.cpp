@@ -1303,7 +1303,7 @@ JS_FRIEND_API JSAtom* js::GetPropertyNameFromPC(JSScript* script,
 }
 
 JS_FRIEND_API void js::SetWindowProxyClass(JSContext* cx,
-                                           const js::Class* clasp) {
+                                           const JSClass* clasp) {
   MOZ_ASSERT(!cx->runtime()->maybeWindowProxyClass());
   cx->runtime()->setWindowProxyClass(clasp);
 }

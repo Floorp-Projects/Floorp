@@ -87,7 +87,7 @@ class NewProxyCache {
   mozilla::UniquePtr<Entry[], JS::FreePolicy> entries_;
 
  public:
-  MOZ_ALWAYS_INLINE bool lookup(const Class* clasp, TaggedProto proto,
+  MOZ_ALWAYS_INLINE bool lookup(const JSClass* clasp, TaggedProto proto,
                                 ObjectGroup** group, Shape** shape) const {
     if (!entries_) {
       return false;
