@@ -68,17 +68,16 @@ TEST_MANIFESTS = dict(
     XPCSHELL_TESTS=('xpcshell', 'xpcshell', '.', True),
 )
 
-# reftests, wpt, and puppeteer all have their own manifest formats
-# and are processed separately
+# Reftests have their own manifest format and are processed separately.
 REFTEST_FLAVORS = ('crashtest', 'reftest')
-PUPPETEER_FLAVORS = ('puppeteer',)
+
+# Web platform tests have their own manifest format and are processed separately.
 WEB_PLATFORM_TESTS_FLAVORS = ('web-platform-tests',)
 
 
 def all_test_flavors():
     return ([v[0] for v in TEST_MANIFESTS.values()] +
             list(REFTEST_FLAVORS) +
-            list(PUPPETEER_FLAVORS) +
             list(WEB_PLATFORM_TESTS_FLAVORS))
 
 

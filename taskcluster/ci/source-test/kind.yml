@@ -27,10 +27,9 @@ jobs-from:
     - mozlint-android.yml
     - node.yml
     - python.yml
-    - remote.yml
     - webidl.yml
-    - wpt-manifest.yml
     - wpt-metadata.yml
+    - wpt-manifest.yml
 
 job-defaults:
     attributes:

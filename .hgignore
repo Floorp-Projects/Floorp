@@ -99,10 +99,6 @@ _OPT\.OBJ/
 # Ignore node_modules directories in devtools
 ^devtools/.*/node_modules/
 
-# Ignore node_module directories and npm artifacts
-^remote/test/puppeteer/package-lock.json
-^remote/test/puppeteer/node_modules/
-
 # git checkout of libstagefright
 ^media/libstagefright/android$
 
