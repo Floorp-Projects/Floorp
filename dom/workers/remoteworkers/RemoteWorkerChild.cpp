@@ -454,6 +454,9 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   }
 
   if (mIsServiceWorker) {
+    RefPtr<RemoteWorkerChild> self = this;
+    workerPrivate->SetRemoteWorkerControllerWeakRef(
+        ThreadSafeWeakPtr<RemoteWorkerChild>(self));
   } else {
     workerPrivate->SetRemoteWorkerController(this);
   }
@@ -934,6 +937,42 @@ IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
   MaybeStartOp(ServiceWorkerOp::Create(aArgs, std::move(aResolve)));
 
   return IPC_OK();
+}
+
+RefPtr<GenericPromise>
+RemoteWorkerChild::MaybeSendSetServiceWorkerSkipWaitingFlag() {
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+
+  RefPtr<RemoteWorkerChild> self = this;
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(__func__, [self = std::move(
+                                                                  self),
+                                                              promise] {
+    MOZ_ACCESS_THREAD_BOUND(self->mLauncherData, launcherData);
+
+    if (!launcherData->mIPCActive) {
+      promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+      return;
+    }
+
+    self->SendSetServiceWorkerSkipWaitingFlag()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [promise](
+            const SetServiceWorkerSkipWaitingFlagPromise::ResolveOrRejectValue&
+                aResult) {
+          if (NS_WARN_IF(aResult.IsReject())) {
+            promise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+            return;
+          }
+
+          promise->Resolve(aResult.ResolveValue(), __func__);
+        });
+  });
+
+  GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+
+  return promise;
 }
 
 /**

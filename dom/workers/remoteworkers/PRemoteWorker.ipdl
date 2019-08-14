@@ -69,6 +69,8 @@ parent:
 
   async Close();
 
+  async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
+
 child:
   async PFetchEventOpProxy(ServiceWorkerFetchEventOpArgs aArgs);
 
