@@ -3,7 +3,13 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.htm
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
+fuzzy-if(cocoaWidget,0-135,0-56) == dir-6.html dir-6-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-7.html dir-7-ref.html # Bug 1392106
+fails == dir-8.html dir-8-ref.html
+fails == dir-9.html dir-9-ref.html # Bug 787215
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-10.html dir-10-ref.html # Bug 1392106
+== dir-11.html dir-11-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
