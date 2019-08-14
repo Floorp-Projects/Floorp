@@ -459,7 +459,7 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
     // thing.  Also note that we only check this for JSCLASS_DOM_GLOBAL
     // classes because xpc::TraceXPCGlobal won't call
     // TraceProtoAndIfaceCache unless that flag is set.
-    if (!((const js::Class*)clasp)->isWrappedNative()) {
+    if (!((const JSClass*)clasp)->isWrappedNative()) {
       VerifyTraceProtoAndIfaceCacheCalledTracer trc(cx);
       TraceChildren(&trc, GCCellPtr(global.get()));
       MOZ_ASSERT(trc.ok,
