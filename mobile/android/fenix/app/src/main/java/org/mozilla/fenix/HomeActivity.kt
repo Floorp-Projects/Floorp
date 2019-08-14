@@ -189,6 +189,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             return
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
+            components.analytics.metrics.track(Event.SearchWidgetNewTabPressed)
             navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null))
             return
         }

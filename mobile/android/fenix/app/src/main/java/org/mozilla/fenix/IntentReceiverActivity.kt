@@ -10,9 +10,11 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.utils.Settings
 
 class IntentReceiverActivity : Activity() {
@@ -94,7 +96,7 @@ class IntentReceiverActivity : Activity() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         }
-
+        this.metrics.track(Event.SearchWidgetVoiceSearchPressed)
         startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
     }
 

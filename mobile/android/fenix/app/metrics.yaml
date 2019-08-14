@@ -1115,6 +1115,31 @@ collections:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
 
+search_widget:
+  new_tab_button:
+    type: event
+    description: >
+      A user pressed anywhere from the Firefox logo until the start of the microphone icon, opening a
+      new tab search screen.
+    bugs:
+      - 4457
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4714
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  voice_button:
+    type: event
+    description: >
+      A user pressed the microphone icon, opening a new voice search screen.
+    bugs:
+      - 4457
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4714
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 experiments.metrics:
   active_experiment:
     type: string

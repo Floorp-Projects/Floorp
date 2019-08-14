@@ -1067,3 +1067,27 @@ Data that is sent in the activation ping
     </tr>
 </table>
 </pre>
+
+## search_widget
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <td>new_tab_button</td>
+        <td>event</td>
+        <td>A user pressed anywhere from the Firefox logo until the start of the microphone icon, opening a
+                  new tab search screen.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4714">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>voice_button</td>
+        <td>event</td>
+        <td>A user pressed the microphone icon, opening a new voice search screen.</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4714">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>

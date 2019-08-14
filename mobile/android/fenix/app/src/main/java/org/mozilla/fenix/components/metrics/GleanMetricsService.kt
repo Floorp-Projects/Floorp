@@ -16,6 +16,7 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CustomTab
@@ -28,12 +29,12 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
-import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ReaderMode
+import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
+import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -292,6 +293,12 @@ private val Event.wrapper
         is Event.CollectionTabsAdded -> EventWrapper(
             { Collections.tabsAdded.record(it) },
             { Collections.tabsAddedKeys.valueOf(it) }
+        )
+        is Event.SearchWidgetNewTabPressed -> EventWrapper<NoExtraKeys>(
+            { SearchWidget.newTabButton.record(it) }
+        )
+        is Event.SearchWidgetVoiceSearchPressed -> EventWrapper<NoExtraKeys>(
+            { SearchWidget.voiceButton.record(it) }
         )
 
         // Don't track other events with Glean
