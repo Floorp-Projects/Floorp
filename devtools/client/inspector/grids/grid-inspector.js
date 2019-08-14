@@ -428,12 +428,6 @@ class GridInspector {
       grids.push(gridData);
     }
 
-    // We need to make sure that nested subgrids are displayed above their parent grid
-    // containers, so update the z-index of each grid before rendering them.
-    for (const root of grids.filter(g => !g.parentNodeActorID)) {
-      this._updateZOrder(grids, root);
-    }
-
     this.store.dispatch(updateGrids(grids));
     this.inspector.emit("grid-panel-updated");
   }
@@ -737,26 +731,6 @@ class GridInspector {
       if (grid.highlighted) {
         this.highlighters.showGridHighlighter(grid.nodeFront);
       }
-    }
-  }
-
-  /**
-   * Set z-index of each grids so that nested subgrids are always above their parent grid
-   * container.
-   *
-   * @param {Array} grids
-   *        A list of grid data.
-   * @param {Object} parent
-   *        A grid data of parent.
-   * @param {Number} zIndex
-   *        z-index for the parent.
-   */
-  _updateZOrder(grids, parent, zIndex = 0) {
-    parent.zIndex = zIndex;
-
-    for (const childIndex of parent.subgrids) {
-      // Recurse into children grids.
-      this._updateZOrder(grids, grids[childIndex], zIndex + 1);
     }
   }
 }

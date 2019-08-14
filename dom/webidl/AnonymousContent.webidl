@@ -91,10 +91,4 @@ interface AnonymousContent {
    * attribute value of the target.
    */
   DOMString? getTargetIdForEvent(Event event);
-
-  /**
-   * Set given style to this AnonymousContent.
-   */
-  [Throws]
-  void setStyle(DOMString property, DOMString value);
 };
