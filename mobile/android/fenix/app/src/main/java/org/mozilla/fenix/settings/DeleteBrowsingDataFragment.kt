@@ -27,6 +27,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 
 @SuppressWarnings("TooManyFunctions")
@@ -111,6 +112,7 @@ class DeleteBrowsingDataFragment : Fragment() {
 
             launch(Dispatchers.Main) {
                 finishDeletion()
+                requireComponents.analytics.metrics.track(Event.ClearedPrivateData)
             }
         }
     }

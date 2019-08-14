@@ -23,6 +23,12 @@ private val Event.name: String?
         is Event.OpenedApp -> "E_Opened_App"
         is Event.OpenedAppFirstRun -> "E_Opened_App_FirstRun"
         is Event.InteractWithSearchURLArea -> "E_Interact_With_Search_URL_Area"
+        is Event.CollectionSaved -> "E_Collection_Created"
+        is Event.CollectionTabRestored -> "E_Collection_Tab_Opened"
+        is Event.SyncAuthSignIn -> "E_Sign_In_FxA"
+        is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
+        is Event.FXANewSignup -> "E_New_Sign_Up_FxA"
+        is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
 
         // Do not track other events in Leanplum
         else -> ""

@@ -466,4 +466,19 @@
     <dialog
         android:id="@+id/signOutFragment"
         android:name="org.mozilla.fenix.settings.SignOutFragment" />
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment" />
+    <action
+        android:id="@+id/action_global_searchEngineFragment"
+        app:destination="@id/searchEngineFragment" />
+    <action
+        android:id="@+id/action_global_accessibilityFragment"
+        app:destination="@id/accessibilityFragment" />
+    <action
+        android:id="@+id/action_global_deleteBrowsingDataFragment"
+        app:destination="@id/deleteBrowsingDataFragment" />
+    <action
+        android:id="@+id/action_global_homeFragment"
+        app:destination="@id/homeFragment" />
 </navigation>

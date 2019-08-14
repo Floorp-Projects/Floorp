@@ -36,6 +36,8 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.Settings
@@ -139,6 +141,8 @@ class BackgroundServices(
 
             push.unsubscribeForType(PushType.Services)
 
+            context.components.analytics.metrics.track(Event.SyncAuthSignOut)
+
             Settings.instance?.setFxaSignedIn(false)
         }
 
@@ -146,8 +150,12 @@ class BackgroundServices(
             pushService.start(context)
 
             if (newAccount) {
+                context.components.analytics.metrics.track(Event.FXANewSignup)
                 push.subscribeForType(PushType.Services)
             }
+
+            context.components.analytics.metrics.track(Event.SyncAuthSignIn)
+
             Settings.instance?.setFxaSignedIn(true)
         }
     }

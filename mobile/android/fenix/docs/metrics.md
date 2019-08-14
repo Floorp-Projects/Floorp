@@ -634,7 +634,7 @@ tracking_protection</td>
     <tr>
         <td>sign_in</td>
         <td>event</td>
-        <td>A user pressed the sign in button on the sync authentication page</td>
+        <td>A user pressed the sign in button on the sync authentication page and was successfully signed in to FxA</td>
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
         <td></td>
         <td>2020-03-01</td>
@@ -690,14 +690,6 @@ tracking_protection</td>
         <td>sync_now</td>
         <td>event</td>
         <td>A user pressed the sync now button on the sync account page</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
-        <td></td>
-        <td>2020-03-01</td>
-    </tr>
-    <tr>
-        <td>sign_out</td>
-        <td>event</td>
-        <td>A user pressed the sign out button on the sync account page</td>
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532">link</a></td>
         <td></td>
         <td>2020-03-01</td>

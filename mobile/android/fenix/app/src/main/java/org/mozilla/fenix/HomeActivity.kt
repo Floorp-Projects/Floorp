@@ -6,6 +6,8 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -192,6 +194,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             components.analytics.metrics.track(Event.SearchWidgetNewTabPressed)
             navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null))
             return
+        } else if (intent?.scheme == "fenix") {
+            intent.data?.let { handleDeepLink(it) }
         }
 
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
@@ -204,6 +208,49 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         }
 
         openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
+    }
+
+    @SuppressWarnings("ComplexMethod")
+    private fun handleDeepLink(uri: Uri) {
+        val link = uri.host
+
+        // Handle links that require more than just simple navigation
+        when (link) {
+            "enable_private_browsing" -> {
+                navHost.navController.navigate(NavGraphDirections.actionGlobalHomeFragment())
+                browsingModeManager.mode = BrowsingMode.Private
+            }
+            "make_default_browser" -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) { return }
+                val settingsIntent = Intent(
+                    android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
+                )
+                startActivity(settingsIntent)
+            }
+            "open" -> {
+                uri.getQueryParameter("url")?.let {
+                    load(
+                        searchTermOrURL = it,
+                        newTab = true,
+                        engine = null,
+                        forceSearch = false
+                    )
+                    navHost.navController.navigate(NavGraphDirections.actionGlobalBrowser(null))
+                }
+            }
+        }
+
+        val directions = when (link) {
+            "home" -> NavGraphDirections.actionGlobalHomeFragment()
+            "settings" -> NavGraphDirections.actionGlobalSettingsFragment()
+            "turn_on_sync" -> NavGraphDirections.actionGlobalTurnOnSync()
+            "settings_search_engine" -> NavGraphDirections.actionGlobalSearchEngineFragment()
+            "settings_accessibility" -> NavGraphDirections.actionGlobalAccessibilityFragment()
+            "settings_delete_browsing_data" -> NavGraphDirections.actionGlobalDeleteBrowsingDataFragment()
+            else -> return
+        }
+
+        navHost.navController.navigate(directions)
     }
 
     @Suppress("LongParameterList")

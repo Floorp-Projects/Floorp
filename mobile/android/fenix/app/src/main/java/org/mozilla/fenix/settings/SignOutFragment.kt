@@ -19,7 +19,6 @@ import kotlinx.android.synthetic.main.fragment_sign_out.view.*
 import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 
 class SignOutFragment : BottomSheetDialogFragment() {
@@ -57,7 +56,6 @@ class SignOutFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.signOutDisconnect.setOnClickListener {
-            requireComponents.analytics.metrics.track(Event.SyncAccountSignOut)
             lifecycleScope.launch {
                 accountManager.logoutAsync().await()
             }.invokeOnCompletion {

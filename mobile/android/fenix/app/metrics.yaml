@@ -774,13 +774,24 @@ sync_auth:
   sign_in:
     type: event
     description: >
-      A user pressed the sign in button on the sync authentication page
+      A user pressed the sign in button on the sync authentication page and was successfully signed in to FxA
     bugs:
     - 1190
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  sign_out:
+    type: event
+    description: >
+      A user pressed the sign out button on the sync account page and was successfully signed out of FxA
+    bugs:
+      - 1190
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+      - fenix-core@mozilla.com
     expires: "2020-03-01"
   scan_pairing:
     type: event
@@ -832,17 +843,6 @@ sync_account:
     type: event
     description: >
       A user pressed the sync now button on the sync account page
-    bugs:
-    - 1190
-    data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
-    notification_emails:
-    - fenix-core@mozilla.com
-    expires: "2020-03-01"
-  sign_out:
-    type: event
-    description: >
-      A user pressed the sign out button on the sync account page
     bugs:
     - 1190
     data_reviews:

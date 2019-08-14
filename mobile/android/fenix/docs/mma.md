@@ -191,6 +191,86 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>The user removed a bookmark</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/3632#issuecomment-505135753">#3632</a></td>
   </tr> 
+  <tr>
+    <td>`E_Collection_Created`</td>
+    <td>The user created a new collection</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr> 
+  <tr>
+    <td>`E_Collection_Tab_Opened`</td>
+    <td>The user opened a tab from a previously created collection</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr> 
+  <tr>
+    <td>`E_Sign_In_FxA`</td>
+    <td>The user successfully signed in to FxA</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr> 
+  <tr>
+    <td>`E_Sign_Out_FxA`</td>
+    <td>The user successfully signed out of FxA</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr> 
+  <tr>
+    <td>`E_New_Sign_Up_FxA`</td>
+    <td>The user successfully signed up for a new FxA account</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr>  
+  <tr>
+    <td>`E_Cleared_Private_Data`</td>
+    <td>The user cleared one or many types of private data</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
+  </tr> 
+</table>
+
+Deep links
+-------
+Deep links are hooks utilized by marketing to direct users to certain portions of the application through a link. They can also be invoked by other applications or even users
+directly to access specific screens quickly.
+
+Here is the list of current deep links available, which can be found here in the code base: https://github.com/mozilla-mobile/fenix/blob/master/app/src/main/AndroidManifest.xml
+
+<table>
+  <tr>
+    <th>Deep link</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>`fenix://home`</td>
+    <td>Opens to the Fenix home screen</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings`</td>
+    <td>Opens to the top level settings screen</td>
+  </tr>
+  <tr>
+    <td>`fenix://turn_on_sync`</td>
+    <td>Opens to the turn on sync screen. **Only valid if the user is not signed in to FxA**</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_search_engine`</td>
+    <td>Opens to the search engine settings screen</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_accessibility`</td>
+    <td>Opens to the accessibility settings screen</td>
+  </tr>
+  <tr>
+    <td>`fenix://settings_delete_browsing_data`</td>
+    <td>Opens to the delete browsing data settings screen</td>
+  </tr>
+  <tr>
+    <td>`fenix://enable_private_browsing`</td>
+    <td>Opens to the Fenix home screen and enables private browsing</td>
+  </tr>
+  <tr>
+    <td>`fenix://open?url={DESIRED_URL}`</td>
+    <td>Creates a new tab, opens to the browser screen and loads the {DESIRED_URL}</td>
+  </tr>
+  <tr>
+    <td>`fenix://make_default_browser`</td>
+    <td>Opens to the Android default apps settings screen. **Only works on Android API >=24**</td>
+  </tr>
 </table>
 
 Messages

@@ -64,7 +64,6 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
-            requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
         }
     }
 

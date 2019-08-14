@@ -34,6 +34,30 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="fenix"
+                    android:host="home"/>
+                <data android:scheme="fenix"
+                      android:host="settings"/>
+                <data android:scheme="fenix"
+                    android:host="turn_on_sync"/>
+                <data android:scheme="fenix"
+                    android:host="settings_search_engine"/>
+                <data android:scheme="fenix"
+                    android:host="settings_accessibility"/>
+                <data android:scheme="fenix"
+                    android:host="settings_delete_browsing_data"/>
+                <data android:scheme="fenix"
+                    android:host="enable_private_browsing"/>
+                <data android:scheme="fenix"
+                    android:host="open"/>
+                <data android:scheme="fenix"
+                    android:host="make_default_browser"/>
+            </intent-filter>
         </activity>
 
         <activity
