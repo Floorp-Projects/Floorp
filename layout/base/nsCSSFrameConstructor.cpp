@@ -4349,8 +4349,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   // block-level.
   NS_ASSERTION(
       !(aDisplay.IsFloatingStyle() || aDisplay.IsAbsolutelyPositionedStyle()) ||
-          aDisplay.IsBlockOutsideStyle() ||
-          aDisplay.mDisplay == StyleDisplay::Contents,
+          aDisplay.IsBlockOutsideStyle(),
       "Style system did not apply CSS2.1 section 9.7 fixups");
 
   // If this is "body", try propagating its scroll style to the viewport
@@ -4371,12 +4370,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   }
 
   switch (aDisplay.mDisplay) {
-#ifdef DEBUG
-    case StyleDisplay::None:
-    case StyleDisplay::Contents:
-      MOZ_ASSERT_UNREACHABLE("should have been handled earlier");
-      return nullptr;
-#endif
     case StyleDisplay::Block:
     case StyleDisplay::InlineBlock:
     case StyleDisplay::ListItem:
