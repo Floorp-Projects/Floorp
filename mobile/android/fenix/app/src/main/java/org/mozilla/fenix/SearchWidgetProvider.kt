@@ -58,25 +58,24 @@ class SearchWidgetProvider : AppWidgetProvider() {
     }
 
     private fun getLayoutSize(dp: Int) = when {
-        dp >= DP_EXTRA_LARGE -> SearchWidgetProviderSize.EXTRA_LARGE
         dp >= DP_LARGE -> SearchWidgetProviderSize.LARGE
         dp >= DP_MEDIUM -> SearchWidgetProviderSize.MEDIUM
         dp >= DP_SMALL -> SearchWidgetProviderSize.SMALL
-        else -> SearchWidgetProviderSize.EXTRA_SMALL
+        dp >= DP_EXTRA_SMALL -> SearchWidgetProviderSize.EXTRA_SMALL_V2
+        else -> SearchWidgetProviderSize.EXTRA_SMALL_V1
     }
 
     private fun getLayout(size: SearchWidgetProviderSize) = when (size) {
-        SearchWidgetProviderSize.EXTRA_LARGE -> R.layout.search_widget_extra_large
         SearchWidgetProviderSize.LARGE -> R.layout.search_widget_large
         SearchWidgetProviderSize.MEDIUM -> R.layout.search_widget_medium
         SearchWidgetProviderSize.SMALL -> R.layout.search_widget_small
-        SearchWidgetProviderSize.EXTRA_SMALL -> R.layout.search_widget_extra_small
+        SearchWidgetProviderSize.EXTRA_SMALL_V2 -> R.layout.search_widget_extra_small_v2
+        SearchWidgetProviderSize.EXTRA_SMALL_V1 -> R.layout.search_widget_extra_small_v1
     }
 
     private fun getText(layout: SearchWidgetProviderSize, context: Context) = when (layout) {
         SearchWidgetProviderSize.MEDIUM -> context.getString(R.string.search_widget_text_short)
-        SearchWidgetProviderSize.LARGE,
-        SearchWidgetProviderSize.EXTRA_LARGE -> context.getString(R.string.search_widget_text_long)
+        SearchWidgetProviderSize.LARGE -> context.getString(R.string.search_widget_text_long)
         else -> null
     }
 
@@ -107,7 +106,8 @@ class SearchWidgetProvider : AppWidgetProvider() {
     ): RemoteViews {
         return RemoteViews(context.packageName, layout).apply {
             when (layout) {
-                R.layout.search_widget_extra_small -> {
+                R.layout.search_widget_extra_small_v1,
+                R.layout.search_widget_extra_small_v2 -> {
                     setOnClickPendingIntent(R.id.button_search_widget_new_tab, textSearchIntent)
                 }
                 R.layout.search_widget_small -> {
@@ -115,11 +115,10 @@ class SearchWidgetProvider : AppWidgetProvider() {
                     setOnClickPendingIntent(R.id.button_search_widget_voice, voiceSearchIntent)
                 }
                 R.layout.search_widget_medium,
-                R.layout.search_widget_large,
-                R.layout.search_widget_extra_large -> {
+                R.layout.search_widget_large -> {
                     setOnClickPendingIntent(R.id.button_search_widget_new_tab, textSearchIntent)
                     setOnClickPendingIntent(R.id.button_search_widget_voice, voiceSearchIntent)
-                    setTextViewText(R.id.text_search_widget, text)
+                    setTextViewText(R.id.button_search_widget_new_tab, text)
                 }
             }
         }
@@ -127,19 +126,19 @@ class SearchWidgetProvider : AppWidgetProvider() {
 
     // Cell sizes obtained from the actual dimensions listed in search widget specs
     companion object {
+        private const val DP_EXTRA_SMALL = 64
         private const val DP_SMALL = 100
         private const val DP_MEDIUM = 192
         private const val DP_LARGE = 256
-        private const val DP_EXTRA_LARGE = 360
         private const val REQUEST_CODE_NEW_TAB = 0
         private const val REQUEST_CODE_VOICE = 1
     }
 }
 
 enum class SearchWidgetProviderSize {
-    EXTRA_SMALL,
+    EXTRA_SMALL_V1,
+    EXTRA_SMALL_V2,
     SMALL,
     MEDIUM,
     LARGE,
-    EXTRA_LARGE
 }

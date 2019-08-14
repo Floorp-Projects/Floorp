@@ -3,35 +3,32 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:background="@drawable/rounded_white_corners"
+        android:layout_gravity="center">
 
-    <RelativeLayout android:layout_width="100dp"
-                    android:layout_height="50dp"
-                    android:background="@drawable/rounded_white_corners"
-                    android:layout_gravity="center">
+    <FrameLayout android:id="@+id/button_search_widget_new_tab"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="9dp">
 
-        <LinearLayout android:id="@+id/button_search_widget_new_tab"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:layout_marginTop="9dp">
-            <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/ic_logo_widget"
-                    android:layout_marginLeft="9dp"
-                    android:layout_marginRight="12dp"/>
-        </LinearLayout>
-
-        <ImageButton
-                android:id="@+id/button_search_widget_voice"
+        <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:background="@drawable/ic_microphone_widget"
-                android:layout_alignParentRight="true"
-                android:layout_alignTop="@id/button_search_widget_new_tab"
-                android:layout_marginRight="9dp"/>
-    </RelativeLayout>
+                android:background="@drawable/ic_logo_widget"
+                android:layout_marginStart="9dp"/>
+    </FrameLayout>
 
-</FrameLayout>
+    <ImageButton
+            android:id="@+id/button_search_widget_voice"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/ic_microphone_widget"
+            android:layout_alignParentEnd="true"
+            android:layout_alignTop="@id/button_search_widget_new_tab"
+            android:layout_marginEnd="9dp"/>
+</RelativeLayout>
+
