@@ -20,6 +20,7 @@
 #include "base/logging.h"
 #include "base/string_util.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "prenv.h"
 
 namespace base {
@@ -104,19 +105,18 @@ bool SharedMemory::Create(size_t size) {
   DCHECK(size > 0);
   DCHECK(mapped_file_ == -1);
 
-  int fd;
+  mozilla::UniqueFileHandle fd;
   bool needs_truncate = true;
 
 #ifdef ANDROID
   // Android has its own shared memory facility:
-  fd = open("/" ASHMEM_NAME_DEF, O_RDWR, 0600);
-  if (fd < 0) {
+  fd.reset(open("/" ASHMEM_NAME_DEF, O_RDWR, 0600));
+  if (!fd) {
     CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
     return false;
   }
-  if (ioctl(fd, ASHMEM_SET_SIZE, size) != 0) {
+  if (ioctl(fd.get(), ASHMEM_SET_SIZE, size) != 0) {
     CHROMIUM_LOG(WARNING) << "failed to set shm size: " << strerror(errno);
-    close(fd);
     return false;
   }
   needs_truncate = false;
@@ -130,8 +130,9 @@ bool SharedMemory::Create(size_t size) {
     CHECK(AppendPosixShmPrefix(&name, getpid()));
     StringAppendF(&name, "%zu", sNameCounter++);
     // O_EXCL means the names being predictable shouldn't be a problem.
-    fd = HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600));
-    if (fd >= 0) {
+    fd.reset(
+        HANDLE_EINTR(shm_open(name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600)));
+    if (fd) {
       if (shm_unlink(name.c_str()) != 0) {
         // This shouldn't happen, but if it does: assume the file is
         // in fact leaked, and bail out now while it's still 0-length.
@@ -139,23 +140,22 @@ bool SharedMemory::Create(size_t size) {
         return false;
       }
     }
-  } while (fd < 0 && errno == EEXIST);
+  } while (!fd && errno == EEXIST);
 #endif
 
-  if (fd < 0) {
+  if (!fd) {
     CHROMIUM_LOG(WARNING) << "failed to open shm: " << strerror(errno);
     return false;
   }
 
   if (needs_truncate) {
-    if (HANDLE_EINTR(ftruncate(fd, static_cast<off_t>(size))) != 0) {
+    if (HANDLE_EINTR(ftruncate(fd.get(), static_cast<off_t>(size))) != 0) {
       CHROMIUM_LOG(WARNING) << "failed to set shm size: " << strerror(errno);
-      close(fd);
       return false;
     }
   }
 
-  mapped_file_ = fd;
+  mapped_file_ = fd.release();
   max_size_ = size;
   return true;
 }
