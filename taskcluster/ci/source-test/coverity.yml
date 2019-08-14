@@ -22,12 +22,13 @@ job-defaults:
     run:
         using: run-task
         tooltool-downloads: public
-    toolchains:
-        - linux64-clang-7
-        - linux64-rust
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-clang-7
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
     when:
         # Extension list from https://hg.mozilla.org/mozilla-central/file/tip/python/mozbuild/mozbuild/mach_commands.py#l1664
         files-changed:
