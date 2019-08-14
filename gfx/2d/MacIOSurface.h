@@ -8,6 +8,7 @@
 #define MacIOSurface_h__
 #ifdef XP_DARWIN
 #  include <CoreVideo/CoreVideo.h>
+#  include <IOSurface/IOSurface.h>
 #  include <QuartzCore/QuartzCore.h>
 #  include <dlfcn.h>
 
@@ -28,8 +29,6 @@ typedef uint32_t IOSurfaceID;
 typedef kern_return_t IOReturn;
 typedef int CGLError;
 #  endif
-
-typedef CFTypeRef IOSurfacePtr;
 
 #  ifdef XP_MACOSX
 #    import <OpenGL/OpenGL.h>
@@ -61,7 +60,7 @@ class MacIOSurface final
       mozilla::gfx::YUVColorSpace aColorSpace =
           mozilla::gfx::YUVColorSpace::UNKNOWN);
 
-  explicit MacIOSurface(IOSurfacePtr aIOSurfacePtr,
+  explicit MacIOSurface(IOSurfaceRef aIOSurfaceRef,
                         double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true,
                         mozilla::gfx::YUVColorSpace aColorSpace =
@@ -90,7 +89,7 @@ class MacIOSurface final
   mozilla::gfx::SurfaceFormat GetFormat() const;
   mozilla::gfx::SurfaceFormat GetReadFormat() const;
   // This would be better suited on MacIOSurfaceImage type, however due to the
-  // current data structure, this is not possible as only the IOSurfacePtr is
+  // current data structure, this is not possible as only the IOSurfaceRef is
   // being used across.
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mColorSpace = aColorSpace;
@@ -113,11 +112,10 @@ class MacIOSurface final
 
   static size_t GetMaxWidth();
   static size_t GetMaxHeight();
-  const void* GetIOSurfacePtr() { return mIOSurfacePtr; }
+  IOSurfaceRef GetIOSurfaceRef() { return mIOSurfaceRef; }
 
  private:
-  friend class nsCARenderer;
-  const IOSurfacePtr mIOSurfacePtr;
+  const IOSurfaceRef mIOSurfaceRef;
   double mContentsScaleFactor;
   bool mHasAlpha;
   mozilla::gfx::YUVColorSpace mColorSpace =
