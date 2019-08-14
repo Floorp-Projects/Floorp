@@ -16,7 +16,7 @@ child:
 
   // cdm::ContentDecryptionModule9+10
   async Init(bool aAllowDistinctiveIdentifier,
-             bool aAllowPersistentState) returns (bool unused);
+             bool aAllowPersistentState) returns (bool aSuccess);
 
   async GetStatusForPolicy(uint32_t aPromiseId,
                            nsCString aMinHdcpVersion);
