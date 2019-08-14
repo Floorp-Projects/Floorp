@@ -25,6 +25,7 @@ DevToolsModules(
     'highlighters.js',
     'inspector.js',
     'layout.js',
+    'manifest.js',
     'memory.js',
     'node.js',
     'perf.js',

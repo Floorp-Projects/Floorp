@@ -7,6 +7,8 @@
 #include "OpusParser.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 TEST(OpusParser, Mapping2)
 {
   uint8_t validChannels[] = {1,   3,   4,   6,   9,   11,  16,  18,  25,  27,

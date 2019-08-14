@@ -224,7 +224,6 @@ class Test_get_config(object):
         cls.argv_tsvgr_opacity = '--activeTests tsvgr_opacity -e /some/random/path'.split()
         cls.argv_tscrollx = '--activeTests tscrollx -e /some/random/path'.split()
         cls.argv_a11yr = '--activeTests a11yr -e /some/random/path'.split()
-        cls.argv_speedometer = '--activeTests speedometer -e /some/random/path'.split()
         cls.argv_perf_reftest = '--activeTests perf_reftest -e /some/random/path'.split()
         cls.argv_perf_reftest_singletons = \
             '--activeTests perf_reftest_singletons -e /some/random/path'.split()
@@ -841,20 +840,6 @@ class Test_get_config(object):
         assert test_config['preferences'] == {'dom.send_after_paint_to_content': False}
         assert test_config['unit'] == 'ms'
         assert test_config['alert_threshold'] == 5.0
-
-    def test_speedometer_has_expected_attributes(self):
-        config = get_config(self.argv_speedometer)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'speedometer'
-        assert test_config['tpmanifest'] != '${talos}/tests/speedometer/speedometer.manifest'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 5
-        assert test_config['tpmozafterpaint'] is False
-        assert test_config['tpchrome'] is False
-        assert test_config['format_pagename'] is False
-        assert test_config['lower_is_better'] is False
-        assert test_config['unit'] == 'score'
 
     def test_perf_reftest_has_expected_attributes(self):
         config = get_config(self.argv_perf_reftest)

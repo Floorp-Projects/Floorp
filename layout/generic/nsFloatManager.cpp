@@ -49,7 +49,7 @@ nsFloatManager::nsFloatManager(PresShell* aPresShell, WritingMode aWM)
 nsFloatManager::~nsFloatManager() { MOZ_COUNT_DTOR(nsFloatManager); }
 
 // static
-void* nsFloatManager::operator new(size_t aSize) CPP_THROW_NEW {
+void* nsFloatManager::operator new(size_t aSize) noexcept(true) {
   if (sCachedFloatManagerCount > 0) {
     // We have cached unused instances of this class, return a cached
     // instance in stead of always creating a new one.

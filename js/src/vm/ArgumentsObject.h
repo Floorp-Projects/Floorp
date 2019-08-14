@@ -413,7 +413,7 @@ class ArgumentsObject : public NativeObject {
 };
 
 class MappedArgumentsObject : public ArgumentsObject {
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
   static const ClassExtension classExt_;
   static const ObjectOps objectOps_;
 
@@ -445,7 +445,7 @@ class MappedArgumentsObject : public ArgumentsObject {
 };
 
 class UnmappedArgumentsObject : public ArgumentsObject {
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
   static const ClassExtension classExt_;
 
  public:

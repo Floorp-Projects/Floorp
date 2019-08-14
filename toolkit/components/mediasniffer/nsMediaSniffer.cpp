@@ -140,6 +140,10 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        nsACString& aSniffedType) {
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    if (loadInfo->GetSkipContentSniffing()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
     nsLoadFlags loadFlags = 0;
     channel->GetLoadFlags(&loadFlags);
     if (!(loadFlags & nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE)) {

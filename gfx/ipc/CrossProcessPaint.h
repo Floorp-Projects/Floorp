@@ -34,6 +34,13 @@ namespace gfx {
 
 class CrossProcessPaint;
 
+enum class CrossProcessPaintFlags {
+  None = 0,
+  DrawView = 1 << 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CrossProcessPaintFlags)
+
 /**
  * A fragment of a paint of a cross process document tree.
  */
@@ -59,7 +66,8 @@ class PaintFragment final {
    */
   static PaintFragment Record(nsIDocShell* aDocShell,
                               const Maybe<IntRect>& aRect, float aScale,
-                              nscolor aBackgroundColor);
+                              nscolor aBackgroundColor,
+                              CrossProcessPaintFlags aFlags);
 
   /// Returns whether this paint fragment contains a valid recording.
   bool IsEmpty() const;
@@ -108,7 +116,7 @@ class CrossProcessPaint final {
    */
   static bool Start(dom::WindowGlobalParent* aRoot, const dom::DOMRect* aRect,
                     float aScale, nscolor aBackgroundColor,
-                    dom::Promise* aPromise);
+                    CrossProcessPaintFlags aFlags, dom::Promise* aPromise);
 
   void ReceiveFragment(dom::WindowGlobalParent* aWGP,
                        PaintFragment&& aFragment);
@@ -116,16 +124,16 @@ class CrossProcessPaint final {
 
  private:
   typedef nsRefPtrHashtable<nsUint64HashKey, SourceSurface> ResolvedSurfaceMap;
-  typedef nsDataHashtable<nsRefPtrHashKey<dom::WindowGlobalParent>,
-                          PaintFragment>
-      ReceivedFragmentMap;
+  typedef nsDataHashtable<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
 
   CrossProcessPaint(dom::Promise* aPromise, float aScale,
                     dom::WindowGlobalParent* aRoot);
   ~CrossProcessPaint();
 
-  void QueuePaint(dom::WindowGlobalParent* aWGP, const Maybe<IntRect>& aRect,
-                  nscolor aBackgroundColor = NS_RGBA(0, 0, 0, 0));
+  void QueuePaint(
+      dom::WindowGlobalParent* aWGP, const Maybe<IntRect>& aRect,
+      nscolor aBackgroundColor = NS_RGBA(0, 0, 0, 0),
+      CrossProcessPaintFlags aFlags = CrossProcessPaintFlags::DrawView);
 
   /// Clear the state of this paint so that it cannot be resolved or receive
   /// any paint fragments.
@@ -137,8 +145,7 @@ class CrossProcessPaint final {
   /// Resolves the paint fragments if we have none pending and resolves the
   /// promise.
   void MaybeResolve();
-  bool ResolveInternal(dom::WindowGlobalParent* aWGP,
-                       ResolvedSurfaceMap* aResolved);
+  nsresult ResolveInternal(dom::TabId aTabId, ResolvedSurfaceMap* aResolved);
 
   RefPtr<dom::Promise> mPromise;
   RefPtr<dom::WindowGlobalParent> mRoot;

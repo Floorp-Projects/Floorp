@@ -84,7 +84,7 @@ class MOZ_STACK_CLASS SpanningCellSorter {
    * memory, which much be pushed and popped at points matching a
    * push/pop on the C++ stack.
    */
-  void* operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
+  void* operator new(size_t sz) noexcept(true) { return nullptr; }
 };
 
 #endif

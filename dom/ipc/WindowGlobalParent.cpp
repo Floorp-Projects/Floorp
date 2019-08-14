@@ -363,6 +363,7 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
   }
 
   if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color,
+                                     gfx::CrossProcessPaintFlags::None,
                                      promise)) {
     aRv = NS_ERROR_FAILURE;
     return nullptr;
@@ -373,8 +374,9 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
 void WindowGlobalParent::DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,
                                               const Maybe<IntRect>& aRect,
                                               float aScale,
-                                              nscolor aBackgroundColor) {
-  auto promise = SendDrawSnapshot(aRect, aScale, aBackgroundColor);
+                                              nscolor aBackgroundColor,
+                                              uint32_t aFlags) {
+  auto promise = SendDrawSnapshot(aRect, aScale, aBackgroundColor, aFlags);
 
   RefPtr<gfx::CrossProcessPaint> paint(aPaint);
   RefPtr<WindowGlobalParent> wgp(this);

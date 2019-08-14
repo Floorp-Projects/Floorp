@@ -834,7 +834,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   void traceForMovingGC(JSTracer* trc);
   void traceCrossCompartmentEdges(JSTracer* tracer);
 
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
  public:
   static const Class class_;

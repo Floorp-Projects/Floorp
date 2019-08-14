@@ -8,7 +8,6 @@
 # having to create the same entry for each locale.
 
 [localization] @AB_CD@.jar:
-  preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/certviewer.ftl                           (../../toolkit/components/certviewer/content/certviewer.ftl)
   browser                                          (%browser/**/*.ftl)
 

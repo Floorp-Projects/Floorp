@@ -255,17 +255,17 @@ bool WeakMapObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-const ClassOps WeakCollectionObject::classOps_ = {nullptr, /* addProperty */
-                                                  nullptr, /* delProperty */
-                                                  nullptr, /* enumerate */
-                                                  nullptr, /* newEnumerate */
-                                                  nullptr, /* resolve */
-                                                  nullptr, /* mayResolve */
-                                                  WeakCollection_finalize,
-                                                  nullptr, /* call */
-                                                  nullptr, /* hasInstance */
-                                                  nullptr, /* construct */
-                                                  WeakCollection_trace};
+const JSClassOps WeakCollectionObject::classOps_ = {nullptr, /* addProperty */
+                                                    nullptr, /* delProperty */
+                                                    nullptr, /* enumerate */
+                                                    nullptr, /* newEnumerate */
+                                                    nullptr, /* resolve */
+                                                    nullptr, /* mayResolve */
+                                                    WeakCollection_finalize,
+                                                    nullptr, /* call */
+                                                    nullptr, /* hasInstance */
+                                                    nullptr, /* construct */
+                                                    WeakCollection_trace};
 
 const ClassSpec WeakMapObject::classSpec_ = {
     GenericCreateConstructor<WeakMapObject::construct, 0,

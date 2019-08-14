@@ -1024,9 +1024,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       gcCallbackDepth(0),
       alwaysPreserveCode(false),
       lowMemoryState(false),
-#ifdef DEBUG
-      arenasEmptyAtShutdown(true),
-#endif
       lock(mutexid::GCLock),
       allocTask(rt, emptyChunks_.ref()),
       sweepTask(rt),
@@ -4023,7 +4020,6 @@ void GCRuntime::deleteEmptyZone(Zone* zone) {
 
 void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
   MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
-  MOZ_ASSERT_IF(destroyingRuntime, arenasEmptyAtShutdown);
 
   if (numActiveZoneIters) {
     return;
@@ -4042,25 +4038,12 @@ void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
       MOZ_ASSERT(!zone->isQueuedForBackgroundSweep());
       const bool zoneIsDead =
           zone->arenas.arenaListsAreEmpty() && !zone->hasMarkedRealms();
-      if (zoneIsDead || destroyingRuntime) {
-        {
-          // We have just finished sweeping, so we should have freed any
-          // empty arenas back to their Chunk for future allocation.
-          zone->arenas.checkEmptyFreeLists();
-        }
-
-        // We are about to delete the Zone; this will leave the Zone*
-        // in the arena header dangling if there are any arenas
-        // remaining at this point.
-#ifdef DEBUG
-        if (!zone->arenas.checkEmptyArenaLists()) {
-          arenasEmptyAtShutdown = false;
-        }
-#endif
-
+      MOZ_ASSERT_IF(destroyingRuntime, zoneIsDead);
+      if (zoneIsDead) {
+        zone->arenas.checkEmptyFreeLists();
         zone->sweepCompartments(fop, false, destroyingRuntime);
         MOZ_ASSERT(zone->compartments().empty());
-        MOZ_ASSERT_IF(arenasEmptyAtShutdown, zone->typeDescrObjects().empty());
+        MOZ_ASSERT(zone->typeDescrObjects().empty());
         zone->destroy(fop);
         continue;
       }
@@ -4071,54 +4054,8 @@ void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
   zones().shrinkTo(write - zones().begin());
 }
 
-#ifdef DEBUG
-static const char* AllocKindToAscii(AllocKind kind) {
-  switch (kind) {
-#  define MAKE_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, \
-                    compact)                                                 \
-    case AllocKind::allocKind:                                               \
-      return #allocKind;
-    FOR_EACH_ALLOCKIND(MAKE_CASE)
-#  undef MAKE_CASE
-
-    default:
-      MOZ_CRASH("Unknown AllocKind in AllocKindToAscii");
-  }
-}
-#endif  // DEBUG
-
-bool ArenaLists::checkEmptyArenaList(AllocKind kind) {
-  bool isEmpty = true;
-#ifdef DEBUG
-  size_t numLive = 0;
-  if (!arenaLists(kind).isEmpty()) {
-    isEmpty = false;
-    size_t maxCells = 5;
-    char* env = getenv("JS_GC_MAX_LIVE_CELLS");
-    if (env && *env) {
-      maxCells = atol(env);
-    }
-    for (Arena* current = arenaLists(kind).head(); current;
-         current = current->next) {
-      for (ArenaCellIterUnderGC i(current); !i.done(); i.next()) {
-        TenuredCell* t = i.getCell();
-        MOZ_ASSERT(t->isMarkedAny(),
-                   "unmarked cells should have been finalized");
-        if (++numLive <= maxCells) {
-          fprintf(stderr,
-                  "ERROR: GC found live Cell %p of kind %s at shutdown\n", t,
-                  AllocKindToAscii(kind));
-        }
-      }
-    }
-    if (numLive > 0) {
-      fprintf(stderr, "ERROR: GC found %zu live Cells at shutdown\n", numLive);
-    } else {
-      fprintf(stderr, "ERROR: GC found empty Arenas at shutdown\n");
-    }
-  }
-#endif  // DEBUG
-  return isEmpty;
+void ArenaLists::checkEmptyArenaList(AllocKind kind) {
+  MOZ_ASSERT(arenaLists(kind).isEmpty());
 }
 
 class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask {

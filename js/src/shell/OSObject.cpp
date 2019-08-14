@@ -456,7 +456,7 @@ class FileObject : public NativeObject {
   }
 };
 
-static const js::ClassOps FileObjectClassOps = {
+static const JSClassOps FileObjectClassOps = {
     nullptr,              /* addProperty */
     nullptr,              /* delProperty */
     nullptr,              /* enumerate */

@@ -349,7 +349,7 @@ struct NativeIterator {
 };
 
 class PropertyIteratorObject : public NativeObject {
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
  public:
   static const Class class_;

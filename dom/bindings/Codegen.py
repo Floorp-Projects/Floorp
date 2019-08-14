@@ -509,7 +509,7 @@ class CGDOMJSClass(CGThing):
 
         return fill(
             """
-            static const js::ClassOps sClassOps = {
+            static const JSClassOps sClassOps = {
               ${addProperty}, /* addProperty */
               nullptr,               /* delProperty */
               nullptr,               /* enumerate */
@@ -781,7 +781,7 @@ class CGInterfaceObjectJSClass(CGThing):
         else:
             ret = fill(
                 """
-                static const js::ClassOps sInterfaceObjectClassOps = {
+                static const JSClassOps sInterfaceObjectClassOps = {
                     nullptr,               /* addProperty */
                     nullptr,               /* delProperty */
                     nullptr,               /* enumerate */

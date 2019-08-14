@@ -382,7 +382,10 @@ let LEGACY_ACTORS = {
 };
 
 (function earlyBlankFirstPaint() {
-  if (!Services.prefs.getBoolPref("browser.startup.blankWindow", false)) {
+  if (
+    AppConstants.platform == "macosx" ||
+    !Services.prefs.getBoolPref("browser.startup.blankWindow", false)
+  ) {
     return;
   }
 

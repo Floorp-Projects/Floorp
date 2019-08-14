@@ -984,7 +984,7 @@ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
  * stack frame with their corresponding property values in the frame's
  * arguments object.
  */
-const ClassOps MappedArgumentsObject::classOps_ = {
+const JSClassOps MappedArgumentsObject::classOps_ = {
     nullptr, /* addProperty */
     ArgumentsObject::obj_delProperty,
     MappedArgumentsObject::obj_enumerate,
@@ -1020,7 +1020,7 @@ const Class MappedArgumentsObject::class_ = {
  * Unmapped arguments is significantly less magical than mapped arguments, so
  * it is represented by a different class while sharing some functionality.
  */
-const ClassOps UnmappedArgumentsObject::classOps_ = {
+const JSClassOps UnmappedArgumentsObject::classOps_ = {
     nullptr, /* addProperty */
     ArgumentsObject::obj_delProperty,
     UnmappedArgumentsObject::obj_enumerate,

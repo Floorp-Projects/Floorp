@@ -43,7 +43,7 @@ child:
                               uint64_t aSwitchId)
       returns (nsresult rv, nullable PBrowserBridge bridge);
 
-  async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor) returns (PaintFragment retval);
+  async DrawSnapshot(IntRect? aRect, float aScale, nscolor aBackgroundColor, uint32_t aFlags) returns (PaintFragment retval);
 
   /**
    * Returns the serialized security info associated with this window.

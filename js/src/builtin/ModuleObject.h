@@ -319,7 +319,7 @@ class ModuleObject : public NativeObject {
                                                 HandleObject exports);
 
  private:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);

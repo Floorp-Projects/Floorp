@@ -111,6 +111,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/layout",
   },
   {
+    types: ["manifest"],
+    spec: "devtools/shared/specs/manifest",
+    front: "devtools/shared/fronts/manifest",
+  },
+  {
     types: ["memory"],
     spec: "devtools/shared/specs/memory",
     front: "devtools/shared/fronts/memory",

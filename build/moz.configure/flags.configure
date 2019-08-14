@@ -7,6 +7,9 @@
 # We support C++14, but we don't want to enable the sized deallocation
 # facilities in C++14 yet.
 check_and_add_gcc_flag('-fno-sized-deallocation', compiler=cxx_compiler)
+# Likewise for C++17 and aligned allocation.  It's not immediately obvious
+# from the clang and GCC documentation, but they both support this.
+check_and_add_gcc_flag('-fno-aligned-new', compiler=cxx_compiler)
 
 # Please keep these last in this file.
 add_old_configure_assignment('_COMPILATION_CFLAGS', compilation_flags.cflags)
