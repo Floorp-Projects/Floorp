@@ -2927,9 +2927,6 @@ pref("layout.css.scroll-snap.prediction-max-velocity", 2000);
 // gestures.
 pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
 
-// Is layout of CSS outline-style:auto enabled?
-pref("layout.css.outline-style-auto.enabled", false);
-
 // Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 pref("layout.css.scroll-behavior.enabled", true);
 

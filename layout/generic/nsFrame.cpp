@@ -9320,7 +9320,7 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
   const nscoord offset = outline->mOutlineOffset.ToAppUnits();
   nsRect outerRect(innerRect);
   bool useOutlineAuto = false;
-  if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+  if (StaticPrefs::layout_css_outline_style_auto_enabled()) {
     useOutlineAuto = outline->mOutlineStyle.IsAuto();
     if (MOZ_UNLIKELY(useOutlineAuto)) {
       nsPresContext* presContext = aFrame->PresContext();
