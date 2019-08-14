@@ -290,7 +290,9 @@ const PluginDataCleaner = {
     let promises = [];
     let tags = ph.getPluginTags();
     for (let tag of tags) {
-      promises.push(aCb(ph, tag));
+      if (tag.loaded) {
+        promises.push(aCb(ph, tag));
+      }
     }
 
     // As evidenced in bug 1253204, clearing plugin data can sometimes be
