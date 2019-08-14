@@ -1049,6 +1049,8 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mCompositor->GetWidget()->DrawWindowOverlay(
       &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
+  mCompositor->NormalDrawingDone();
+
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
 
   if (mCompositionRecorder) {
@@ -1067,8 +1069,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       }
     }
   }
-
-  mCompositor->NormalDrawingDone();
 
 #if defined(MOZ_WIDGET_ANDROID)
   // Depending on the content shift the toolbar may be rendered on top of
