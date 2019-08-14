@@ -30,23 +30,6 @@ typedef int CGLError;
 #  endif
 
 typedef CFTypeRef IOSurfacePtr;
-typedef IOSurfacePtr (*IOSurfaceCreateFunc)(CFDictionaryRef properties);
-typedef IOSurfacePtr (*IOSurfaceLookupFunc)(uint32_t io_surface_id);
-typedef IOSurfaceID (*IOSurfaceGetIDFunc)(IOSurfacePtr io_surface);
-typedef void (*IOSurfaceVoidFunc)(IOSurfacePtr io_surface);
-typedef IOReturn (*IOSurfaceLockFunc)(IOSurfacePtr io_surface, uint32_t options,
-                                      uint32_t* seed);
-typedef IOReturn (*IOSurfaceUnlockFunc)(IOSurfacePtr io_surface,
-                                        uint32_t options, uint32_t* seed);
-typedef void* (*IOSurfaceGetBaseAddressFunc)(IOSurfacePtr io_surface);
-typedef void* (*IOSurfaceGetBaseAddressOfPlaneFunc)(IOSurfacePtr io_surface,
-                                                    size_t planeIndex);
-typedef size_t (*IOSurfaceSizeTFunc)(IOSurfacePtr io_surface);
-typedef size_t (*IOSurfaceSizePlaneTFunc)(IOSurfacePtr io_surface,
-                                          size_t plane);
-typedef size_t (*IOSurfaceGetPropertyMaximumFunc)(CFStringRef property);
-
-typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 
 #  ifdef XP_MACOSX
 #    import <OpenGL/OpenGL.h>
@@ -139,57 +122,6 @@ class MacIOSurface final
   bool mHasAlpha;
   mozilla::gfx::YUVColorSpace mColorSpace =
       mozilla::gfx::YUVColorSpace::UNKNOWN;
-};
-
-class MacIOSurfaceLib {
- public:
-  MacIOSurfaceLib() = delete;
-  static void* sIOSurfaceFramework;
-  static bool isLoaded;
-  static IOSurfaceCreateFunc sCreate;
-  static IOSurfaceGetIDFunc sGetID;
-  static IOSurfaceLookupFunc sLookup;
-  static IOSurfaceGetBaseAddressFunc sGetBaseAddress;
-  static IOSurfaceGetBaseAddressOfPlaneFunc sGetBaseAddressOfPlane;
-  static IOSurfaceSizeTFunc sPlaneCount;
-  static IOSurfaceLockFunc sLock;
-  static IOSurfaceUnlockFunc sUnlock;
-  static IOSurfaceVoidFunc sIncrementUseCount;
-  static IOSurfaceVoidFunc sDecrementUseCount;
-  static IOSurfaceSizePlaneTFunc sWidth;
-  static IOSurfaceSizePlaneTFunc sHeight;
-  static IOSurfaceSizePlaneTFunc sBytesPerRow;
-  static IOSurfaceGetPropertyMaximumFunc sGetPropertyMaximum;
-  static IOSurfacePixelFormatFunc sPixelFormat;
-
-  static bool isInit();
-  static IOSurfacePtr IOSurfaceCreate(CFDictionaryRef properties);
-  static IOSurfacePtr IOSurfaceLookup(IOSurfaceID aIOSurfaceID);
-  static IOSurfaceID IOSurfaceGetID(IOSurfacePtr aIOSurfacePtr);
-  static void* IOSurfaceGetBaseAddress(IOSurfacePtr aIOSurfacePtr);
-  static void* IOSurfaceGetBaseAddressOfPlane(IOSurfacePtr aIOSurfacePtr,
-                                              size_t aPlaneIndex);
-  static size_t IOSurfaceGetPlaneCount(IOSurfacePtr aIOSurfacePtr);
-  static size_t IOSurfaceGetWidth(IOSurfacePtr aIOSurfacePtr, size_t plane);
-  static size_t IOSurfaceGetHeight(IOSurfacePtr aIOSurfacePtr, size_t plane);
-  static size_t IOSurfaceGetBytesPerRow(IOSurfacePtr aIOSurfacePtr,
-                                        size_t plane);
-  static size_t IOSurfaceGetPropertyMaximum(CFStringRef property);
-  static IOReturn IOSurfaceLock(IOSurfacePtr aIOSurfacePtr, uint32_t options,
-                                uint32_t* seed);
-  static IOReturn IOSurfaceUnlock(IOSurfacePtr aIOSurfacePtr, uint32_t options,
-                                  uint32_t* seed);
-  static void IOSurfaceIncrementUseCount(IOSurfacePtr aIOSurfacePtr);
-  static void IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr);
-  static OSType IOSurfaceGetPixelFormat(IOSurfacePtr aIOSurfacePtr);
-  static void LoadLibrary();
-  static void CloseLibrary();
-
-  // Static deconstructor
-  static class LibraryUnloader {
-   public:
-    ~LibraryUnloader() { CloseLibrary(); }
-  } sLibraryUnloader;
 };
 
 #endif
