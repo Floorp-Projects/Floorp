@@ -103,9 +103,58 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
 
 CompilerConstraintList* NewCompilerConstraintList(jit::TempAllocator& alloc);
 
-bool AddClearDefiniteGetterSetterForPrototypeChain(JSContext* cx,
-                                                   ObjectGroup* group,
-                                                   HandleId id);
+// Stack class to record information about constraints that need to be added
+// after finishing the Definite Properties Analysis. When the analysis succeeds
+// the |finishConstraints| method must be called to add the constraints to the
+// TypeSets.
+//
+// There are two constraint types managed here:
+//
+//   1. Proto constraints for HeapTypeSets, to guard against things like getters
+//      and setters on the proto chain.
+//
+//   2. Inlining constraints for StackTypeSets, to invalidate when additional
+//      functions could be called at call sites where we inlined a function.
+//
+// This class uses bare GC-thing pointers because GC is suppressed when the
+// analysis runs.
+class MOZ_RAII DPAConstraintInfo {
+  struct ProtoConstraint {
+    JSObject* proto;
+    jsid id;
+    ProtoConstraint(JSObject* proto, jsid id) : proto(proto), id(id) {}
+  };
+  struct InliningConstraint {
+    JSScript* caller;
+    JSScript* callee;
+    InliningConstraint(JSScript* caller, JSScript* callee)
+        : caller(caller), callee(callee) {}
+  };
+
+  JS::AutoCheckCannotGC nogc_;
+  Vector<ProtoConstraint, 8> protoConstraints_;
+  Vector<InliningConstraint, 4> inliningConstraints_;
+
+ public:
+  explicit DPAConstraintInfo(JSContext* cx)
+      : nogc_(cx), protoConstraints_(cx), inliningConstraints_(cx) {}
+
+  DPAConstraintInfo(const DPAConstraintInfo&) = delete;
+  void operator=(const DPAConstraintInfo&) = delete;
+
+  MOZ_MUST_USE bool addProtoConstraint(JSObject* proto, jsid id) {
+    return protoConstraints_.emplaceBack(proto, id);
+  }
+  MOZ_MUST_USE bool addInliningConstraint(JSScript* caller, JSScript* callee) {
+    return inliningConstraints_.emplaceBack(caller, callee);
+  }
+
+  MOZ_MUST_USE bool finishConstraints(JSContext* cx, ObjectGroup* group);
+};
+
+bool AddClearDefiniteGetterSetterForPrototypeChain(
+    JSContext* cx, DPAConstraintInfo& constraintInfo, ObjectGroup* group,
+    HandleId id, bool* added);
 
 bool AddClearDefiniteFunctionUsesInScript(JSContext* cx, ObjectGroup* group,
                                           JSScript* script,
