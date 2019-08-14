@@ -11,7 +11,6 @@ UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
     'src/base/command_line.cc',
     'src/base/file_path.cc',
-    'src/base/file_util.cc',
     'src/base/histogram.cc',
     'src/base/logging.cc',
     'src/base/message_loop.cc',
@@ -35,7 +34,6 @@ UNIFIED_SOURCES += [
 if os_win:
     SOURCES += [
         'src/base/condition_variable_win.cc',
-        'src/base/file_util_win.cc',
         'src/base/lock_impl_win.cc',
         'src/base/message_pump_win.cc',
         'src/base/object_watcher.cc',
@@ -57,7 +55,6 @@ elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
 if os_posix:
     UNIFIED_SOURCES += [
         'src/base/condition_variable_posix.cc',
-        'src/base/file_util_posix.cc',
         'src/base/lock_impl_posix.cc',
         'src/base/message_pump_libevent.cc',
         'src/base/platform_thread_posix.cc',
@@ -74,7 +71,6 @@ if os_posix:
 if os_macosx:
     UNIFIED_SOURCES += [
         'src/base/chrome_application_mac.mm',
-        'src/base/file_util_mac.mm',
         'src/base/mac_util.mm',
         'src/base/message_pump_mac.mm',
         'src/base/process_util_mac.mm',
