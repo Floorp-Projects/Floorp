@@ -5888,6 +5888,7 @@ exports.CSS_PROPERTIES = {
       "-webkit-box",
       "-webkit-inline-box",
       "block",
+      "block ruby",
       "contents",
       "flex",
       "flow-root",
