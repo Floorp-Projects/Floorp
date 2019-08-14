@@ -22,9 +22,8 @@ the [general test guidelines](../writing-tests/general-guidelines).
 The review must happen in public, but there is no requirement for it
 to happen in any specific location. In particular if a vendor is
 submitting tests that have already been publicly reviewed in their own
-review system, that review may be carried forward. For other tests, we
-strongly recommend using either Reviewable or GitHub's built-in review
-tools.
+review system, that review may be carried forward. For other submissions, we
+recommend using GitHub's built-in review tools.
 
 Regardless of what review tool is used, the review must be clearly
 linked in the pull request.
