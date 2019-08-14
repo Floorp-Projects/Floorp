@@ -4649,6 +4649,14 @@
   value: -1
   mirror: always
 
+# Enable/disable interruptible reflow, which allows reflows to stop
+# before completion (and display the partial results) when user events
+# are pending.
+- name: layout.interruptible-reflow.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: layout.min-active-layer-size
   type: int32_t
   value: 64

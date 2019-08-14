@@ -76,6 +76,7 @@
 #include "nsFontFaceUtils.h"
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_zoom.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -2228,7 +2229,7 @@ void nsPresContext::ReflowStarted(bool aInterruptible) {
   // We don't support interrupting in paginated contexts, since page
   // sequences only handle initial reflow
   mInterruptsEnabled = aInterruptible && !IsPaginated() &&
-                       nsLayoutUtils::InterruptibleReflowEnabled();
+                       StaticPrefs::layout_interruptible_reflow_enabled();
 
   // Don't set mHasPendingInterrupt based on HavePendingInputEvent() here.  If
   // we ever change that, then we need to update the code in
