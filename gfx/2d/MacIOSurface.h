@@ -45,8 +45,6 @@ typedef size_t (*IOSurfaceSizeTFunc)(IOSurfacePtr io_surface);
 typedef size_t (*IOSurfaceSizePlaneTFunc)(IOSurfacePtr io_surface,
                                           size_t plane);
 typedef size_t (*IOSurfaceGetPropertyMaximumFunc)(CFStringRef property);
-typedef IOSurfacePtr (*CVPixelBufferGetIOSurfaceFunc)(
-    CVPixelBufferRef pixelBuffer);
 
 typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 
@@ -147,7 +145,6 @@ class MacIOSurfaceLib {
  public:
   MacIOSurfaceLib() = delete;
   static void* sIOSurfaceFramework;
-  static void* sCoreVideoFramework;
   static bool isLoaded;
   static IOSurfaceCreateFunc sCreate;
   static IOSurfaceGetIDFunc sGetID;
@@ -163,7 +160,6 @@ class MacIOSurfaceLib {
   static IOSurfaceSizePlaneTFunc sHeight;
   static IOSurfaceSizePlaneTFunc sBytesPerRow;
   static IOSurfaceGetPropertyMaximumFunc sGetPropertyMaximum;
-  static CVPixelBufferGetIOSurfaceFunc sCVPixelBufferGetIOSurface;
   static IOSurfacePixelFormatFunc sPixelFormat;
   static CFStringRef kPropWidth;
   static CFStringRef kPropHeight;
@@ -191,7 +187,6 @@ class MacIOSurfaceLib {
                                   uint32_t* seed);
   static void IOSurfaceIncrementUseCount(IOSurfacePtr aIOSurfacePtr);
   static void IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr);
-  static IOSurfacePtr CVPixelBufferGetIOSurface(CVPixelBufferRef apixelBuffer);
   static OSType IOSurfaceGetPixelFormat(IOSurfacePtr aIOSurfacePtr);
   static void LoadLibrary();
   static void CloseLibrary();
