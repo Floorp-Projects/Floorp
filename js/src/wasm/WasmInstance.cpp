@@ -2003,7 +2003,6 @@ void Instance::destroyBreakpointSite(JSFreeOp* fop, uint32_t offset) {
 
 void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                              Metadata::SeenSet* seenMetadata,
-                             ShareableBytes::SeenSet* seenBytes,
                              Code::SeenSet* seenCode,
                              Table::SeenSet* seenTables, size_t* code,
                              size_t* data) const {
@@ -2014,8 +2013,8 @@ void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
   }
 
   if (maybeDebug_) {
-    maybeDebug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode,
-                               code, data);
+    maybeDebug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenCode, code,
+                               data);
   }
 
   code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code,
