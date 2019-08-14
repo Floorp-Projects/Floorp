@@ -4459,149 +4459,144 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     }
   }
 
-  auto DisplayData = [](StyleDisplay aDisplay) -> const FrameConstructionData* {
-    switch (aDisplay) {
+  switch (aDisplay.mDisplay) {
 #ifdef DEBUG
-      case StyleDisplay::None:
-      case StyleDisplay::Block:
-      case StyleDisplay::InlineBlock:
-      case StyleDisplay::ListItem:
-      case StyleDisplay::TableCaption:
-      case StyleDisplay::FlowRoot:
-      case StyleDisplay::Contents:
-        MOZ_ASSERT_UNREACHABLE("should have been handled earlier");
-        return nullptr;
+    case StyleDisplay::None:
+    case StyleDisplay::Block:
+    case StyleDisplay::InlineBlock:
+    case StyleDisplay::ListItem:
+    case StyleDisplay::TableCaption:
+    case StyleDisplay::FlowRoot:
+    case StyleDisplay::Contents:
+      MOZ_ASSERT_UNREACHABLE("should have been handled earlier");
+      return nullptr;
 #endif
-      case StyleDisplay::Inline: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
-                           &nsCSSFrameConstructor::ConstructInline);
-        return &data;
-      }
-      case StyleDisplay::Table:
-      case StyleDisplay::InlineTable: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable);
-        return &data;
-      }
-      // NOTE: In the unlikely event that we add another table-part here that
-      // has a desired-parent-type (& hence triggers table fixup), we'll need to
-      // also update the flexbox chunk in ComputedStyle::ApplyStyleFixups().
-      case StyleDisplay::TableRowGroup: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(
-              FCDATA_IS_TABLE_PART |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
-        return &data;
-      }
-      case StyleDisplay::TableColumn: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(
-              FCDATA_IS_TABLE_PART |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeColGroup),
-              &nsCSSFrameConstructor::ConstructTableCol);
-        return &data;
-      }
-      case StyleDisplay::TableColumnGroup: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_DISALLOW_OUT_OF_FLOW |
-                          FCDATA_SKIP_ABSPOS_PUSH |
-                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-                      NS_NewTableColGroupFrame);
-        return &data;
-      }
-      case StyleDisplay::TableHeaderGroup: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(
-              FCDATA_IS_TABLE_PART |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
-        return &data;
-      }
-      case StyleDisplay::TableFooterGroup: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(
-              FCDATA_IS_TABLE_PART |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
-              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
-        return &data;
-      }
-      case StyleDisplay::TableRow: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(
-              FCDATA_IS_TABLE_PART |
-                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
-              &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
-        return &data;
-      }
-      case StyleDisplay::TableCell: {
-        static const FrameConstructionData data =
-          FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
-                               FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
-                           &nsCSSFrameConstructor::ConstructTableCell);
-        return &data;
-      }
-      case StyleDisplay::MozBox:
-      case StyleDisplay::MozInlineBox: {
-        MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex(),
-                   "-moz-{inline-}box as XUL should have already been handled");
-        MOZ_FALLTHROUGH;
-      }
-      case StyleDisplay::Flex:
-      case StyleDisplay::InlineFlex:
-      case StyleDisplay::WebkitBox:
-      case StyleDisplay::WebkitInlineBox: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame);
-        return &data;
-      }
-      case StyleDisplay::Grid:
-      case StyleDisplay::InlineGrid: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame);
-        return &data;
-      }
-      case StyleDisplay::Ruby: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewRubyFrame);
-        return &data;
-      }
-      case StyleDisplay::RubyBase: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer),
-                      NS_NewRubyBaseFrame);
-        return &data;
-      }
-      case StyleDisplay::RubyBaseContainer: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
-                      NS_NewRubyBaseContainerFrame);
-        return &data;
-      }
-      case StyleDisplay::RubyText: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
-                          FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer),
-                      NS_NewRubyTextFrame);
-        return &data;
-      }
-      case StyleDisplay::RubyTextContainer: {
-        static const FrameConstructionData data =
-          FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
-                      NS_NewRubyTextContainerFrame);
-        return &data;
-      }
-      default:
-        return nullptr;
+    case StyleDisplay::Inline: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
+                         &nsCSSFrameConstructor::ConstructInline);
+      return &data;
     }
-  };
-
-  const FrameConstructionData* data = DisplayData(aDisplay.mDisplay);
-  MOZ_ASSERT(data, "unknown 'display' value");
-  return data;
+    case StyleDisplay::Table:
+    case StyleDisplay::InlineTable: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable);
+      return &data;
+    }
+    // NOTE: In the unlikely event that we add another table-part here that
+    // has a desired-parent-type (& hence triggers table fixup), we'll need to
+    // also update the flexbox chunk in ComputedStyle::ApplyStyleFixups().
+    case StyleDisplay::TableRowGroup: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(
+            FCDATA_IS_TABLE_PART |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+            &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
+      return &data;
+    }
+    case StyleDisplay::TableColumn: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(
+            FCDATA_IS_TABLE_PART |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeColGroup),
+            &nsCSSFrameConstructor::ConstructTableCol);
+      return &data;
+    }
+    case StyleDisplay::TableColumnGroup: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_DISALLOW_OUT_OF_FLOW |
+                        FCDATA_SKIP_ABSPOS_PUSH |
+                        FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+                    NS_NewTableColGroupFrame);
+      return &data;
+    }
+    case StyleDisplay::TableHeaderGroup: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(
+            FCDATA_IS_TABLE_PART |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+            &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
+      return &data;
+    }
+    case StyleDisplay::TableFooterGroup: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(
+            FCDATA_IS_TABLE_PART |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
+            &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
+      return &data;
+    }
+    case StyleDisplay::TableRow: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(
+            FCDATA_IS_TABLE_PART |
+                FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
+            &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
+      return &data;
+    }
+    case StyleDisplay::TableCell: {
+      static const FrameConstructionData data =
+        FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
+                             FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
+                         &nsCSSFrameConstructor::ConstructTableCell);
+      return &data;
+    }
+    case StyleDisplay::MozBox:
+    case StyleDisplay::MozInlineBox: {
+      MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex(),
+                 "-moz-{inline-}box as XUL should have already been handled");
+      MOZ_FALLTHROUGH;
+    }
+    case StyleDisplay::Flex:
+    case StyleDisplay::InlineFlex:
+    case StyleDisplay::WebkitBox:
+    case StyleDisplay::WebkitInlineBox: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame);
+      return &data;
+    }
+    case StyleDisplay::Grid:
+    case StyleDisplay::InlineGrid: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame);
+      return &data;
+    }
+    case StyleDisplay::Ruby: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewRubyFrame);
+      return &data;
+    }
+    case StyleDisplay::RubyBase: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                        FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer),
+                    NS_NewRubyBaseFrame);
+      return &data;
+    }
+    case StyleDisplay::RubyBaseContainer: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                        FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
+                    NS_NewRubyBaseContainerFrame);
+      return &data;
+    }
+    case StyleDisplay::RubyText: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                        FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer),
+                    NS_NewRubyTextFrame);
+      return &data;
+    }
+    case StyleDisplay::RubyTextContainer: {
+      static const FrameConstructionData data =
+        FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
+                    NS_NewRubyTextContainerFrame);
+      return &data;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown 'display' value");
+      return nullptr;
+  }
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
