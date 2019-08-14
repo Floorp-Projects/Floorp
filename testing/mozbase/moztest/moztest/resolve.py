@@ -4,8 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import pickle
+import fnmatch
 import os
+import pickle
 import sys
 from collections import defaultdict
 
@@ -147,6 +148,11 @@ TEST_SUITES = {
     'mochitest-webgl2-core': WebglSuite('webgl2-core'),
     'mochitest-webgl2-ext': WebglSuite('webgl2-ext'),
     'mochitest-webgl2-deqp': WebglSuite('webgl2-deqp'),
+    'puppeteer': {
+        'aliases': ('remote/test/puppeteer',),
+        'mach_command': 'puppeteer-test',
+        'kwargs': {},
+    },
     'python': {
         'mach_command': 'python-test',
         'kwargs': {'tests': None},
@@ -234,6 +240,7 @@ _test_flavors = {
     'firefox-ui-update': 'firefox-ui-update',
     'marionette': 'marionette',
     'mochitest': 'mochitest-plain',
+    'puppeteer': 'puppeteer',
     'python': 'python',
     'reftest': 'reftest',
     'steeplechase': '',
@@ -425,6 +432,8 @@ class TestMetadata(object):
 
         candidate_paths = set()
 
+        if flavor in (None, 'puppeteer') and any(self.is_puppeteer_path(p) for p in paths):
+            self.add_puppeteer_manifest_data()
         if flavor in (None, 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
             self.add_wpt_manifest_data()
 
@@ -454,6 +463,28 @@ class TestMetadata(object):
 
             for test in fltr(tests):
                 yield test
+
+    def is_puppeteer_path(self, path):
+        return mozpath.match(path, "remote/test/puppeteer/test/**")
+
+    def add_puppeteer_manifest_data(self):
+        test_path = os.path.join(self._srcdir, "remote", "test", "puppeteer", "test")
+        for root, dirs, paths in os.walk(test_path):
+            for filename in fnmatch.filter(paths, "*.spec.js"):
+                path = os.path.join(root, filename)
+                self._tests_by_path[path].append({
+                    "path": os.path.abspath(path),
+                    "flavor": "puppeteer",
+                    "here": os.path.dirname(path),
+                    "manifest": None,
+                    "name": path,
+                    "file_relpath": path,
+                    "head": "",
+                    "support-files": "",
+                    "subsuite": "puppeteer",
+                    "dir_relpath": os.path.dirname(path),
+                    "srcdir_relpath": path,
+                    })
 
     def is_wpt_path(self, path):
         if path is None:
