@@ -4318,12 +4318,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     }
   }
 
-  switch (aDisplay.mDisplay) {
-    case StyleDisplay::Block:
-    case StyleDisplay::InlineBlock:
-    case StyleDisplay::ListItem:
-    case StyleDisplay::TableCaption:
-    case StyleDisplay::FlowRoot: {
+  switch (aDisplay.DisplayInside()) {
+    case StyleDisplayInside::Block:
+    case StyleDisplayInside::FlowRoot: {
       // If the frame is a block-level frame and is scrollable, then wrap it in a
       // scroll frame.  Except we don't want to do that for paginated contexts for
       // frames that are block-outside and aren't frames for native anonymous
@@ -4371,14 +4368,13 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
                &nsCSSFrameConstructor::ConstructNonScrollableBlock)}};
       return &sNonScrollableBlockData[suppressScrollFrame][caption];
     }
-    case StyleDisplay::Inline: {
+    case StyleDisplayInside::Inline: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
                          &nsCSSFrameConstructor::ConstructInline);
       return &data;
     }
-    case StyleDisplay::Table:
-    case StyleDisplay::InlineTable: {
+    case StyleDisplayInside::Table: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable);
       return &data;
@@ -4386,7 +4382,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     // NOTE: In the unlikely event that we add another table-part here that
     // has a desired-parent-type (& hence triggers table fixup), we'll need to
     // also update the flexbox chunk in ComputedStyle::ApplyStyleFixups().
-    case StyleDisplay::TableRowGroup: {
+    case StyleDisplayInside::TableRowGroup: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(
             FCDATA_IS_TABLE_PART |
@@ -4394,7 +4390,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
       return &data;
     }
-    case StyleDisplay::TableColumn: {
+    case StyleDisplayInside::TableColumn: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(
             FCDATA_IS_TABLE_PART |
@@ -4402,7 +4398,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             &nsCSSFrameConstructor::ConstructTableCol);
       return &data;
     }
-    case StyleDisplay::TableColumnGroup: {
+    case StyleDisplayInside::TableColumnGroup: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_DISALLOW_OUT_OF_FLOW |
                         FCDATA_SKIP_ABSPOS_PUSH |
@@ -4410,7 +4406,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
                     NS_NewTableColGroupFrame);
       return &data;
     }
-    case StyleDisplay::TableHeaderGroup: {
+    case StyleDisplayInside::TableHeaderGroup: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(
             FCDATA_IS_TABLE_PART |
@@ -4418,7 +4414,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
       return &data;
     }
-    case StyleDisplay::TableFooterGroup: {
+    case StyleDisplayInside::TableFooterGroup: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(
             FCDATA_IS_TABLE_PART |
@@ -4426,7 +4422,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
       return &data;
     }
-    case StyleDisplay::TableRow: {
+    case StyleDisplayInside::TableRow: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(
             FCDATA_IS_TABLE_PART |
@@ -4434,15 +4430,15 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
             &nsCSSFrameConstructor::ConstructTableRowOrRowGroup);
       return &data;
     }
-    case StyleDisplay::TableCell: {
+    case StyleDisplayInside::TableCell: {
       static const FrameConstructionData data =
         FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART |
                              FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
                          &nsCSSFrameConstructor::ConstructTableCell);
       return &data;
     }
-    case StyleDisplay::MozBox:
-    case StyleDisplay::MozInlineBox: {
+    case StyleDisplayInside::MozBox:
+    case StyleDisplayInside::MozInlineBox: {
       if (!aElement.IsInNativeAnonymousSubtree() &&
           aElement.OwnerDoc()->IsContentDocument()) {
         aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
@@ -4460,90 +4456,87 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       }
       MOZ_FALLTHROUGH;
     }
-    case StyleDisplay::Flex:
-    case StyleDisplay::InlineFlex:
-    case StyleDisplay::WebkitBox:
-    case StyleDisplay::WebkitInlineBox: {
+    case StyleDisplayInside::Flex:
+    case StyleDisplayInside::WebkitBox: {
       static const FrameConstructionData nonScrollableData =
         FCDATA_DECL(0, NS_NewFlexContainerFrame);
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame);
       return MOZ_UNLIKELY(propagatedScrollToViewport) ? &nonScrollableData : &data;
     }
-    case StyleDisplay::Grid:
-    case StyleDisplay::InlineGrid: {
+    case StyleDisplayInside::Grid: {
       static const FrameConstructionData nonScrollableData =
         FCDATA_DECL(0, NS_NewGridContainerFrame);
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame);
       return MOZ_UNLIKELY(propagatedScrollToViewport) ? &nonScrollableData : &data;
     }
-    case StyleDisplay::Ruby: {
+    case StyleDisplayInside::Ruby: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT, NS_NewRubyFrame);
       return &data;
     }
-    case StyleDisplay::RubyBase: {
+    case StyleDisplayInside::RubyBase: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer),
                     NS_NewRubyBaseFrame);
       return &data;
     }
-    case StyleDisplay::RubyBaseContainer: {
+    case StyleDisplayInside::RubyBaseContainer: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
                     NS_NewRubyBaseContainerFrame);
       return &data;
     }
-    case StyleDisplay::RubyText: {
+    case StyleDisplayInside::RubyText: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
                         FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer),
                     NS_NewRubyTextFrame);
       return &data;
     }
-    case StyleDisplay::RubyTextContainer: {
+    case StyleDisplayInside::RubyTextContainer: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
                     NS_NewRubyTextContainerFrame);
       return &data;
     }
 #ifdef MOZ_XUL
-    case StyleDisplay::MozGrid:
-    case StyleDisplay::MozInlineGrid: {
+    case StyleDisplayInside::MozGrid:
+    case StyleDisplayInside::MozInlineGrid: {
       static const FrameConstructionData data =
         SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
       return &data;
     }
-    case StyleDisplay::MozGridGroup: {
+    case StyleDisplayInside::MozGridGroup: {
       static const FrameConstructionData data =
         SCROLLABLE_XUL_FCDATA(NS_NewGridRowGroupFrame);
       return &data;
     }
-    case StyleDisplay::MozGridLine: {
+    case StyleDisplayInside::MozGridLine: {
       static const FrameConstructionData data =
         SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
       return &data;
     }
-    case StyleDisplay::MozStack:
-    case StyleDisplay::MozInlineStack: {
+    case StyleDisplayInside::MozStack:
+    case StyleDisplayInside::MozInlineStack: {
       static const FrameConstructionData data =
         SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
       return &data;
     }
-    case StyleDisplay::MozDeck: {
+    case StyleDisplayInside::MozDeck: {
       static const FrameConstructionData data =
         SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
       return &data;
     }
-    case StyleDisplay::MozGroupbox: {
+    case StyleDisplayInside::MozGroupbox: {
       static const FrameConstructionData data =
         SCROLLABLE_XUL_FCDATA(NS_NewGroupBoxFrame);
       return &data;
     }
-    case StyleDisplay::MozPopup: {
+    case StyleDisplayInside::MozPopup: {
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_IS_POPUP |
                         FCDATA_SKIP_ABSPOS_PUSH,
