@@ -60,6 +60,21 @@
           ["a footer within an article"],
           ["a footer within an article"]],
       }, {
+        accOrElmOrID: "main_header",
+        expectedUtterance: [["a header within main content"],
+                            ["a header within main content"]],
+        expectedBraille: [
+          ["a header within main content"],
+          ["a header within main content"]],
+      }, {
+        accOrElmOrID: "main_footer",
+        expectedUtterance: [
+          ["a footer within main content"],
+          ["a footer within main content"]],
+        expectedBraille: [
+          ["a footer within main content"],
+          ["a footer within main content"]],
+      }, {
         accOrElmOrID: "section_header",
         expectedUtterance: [["a header within a section"],
                             ["a header within a section"]],
@@ -159,6 +174,10 @@
       <header id="article_header">a header within an article</header>
       <footer id="article_footer">a footer within an article</footer>
     </article>
+    <main id="main_with_header_and_footer">
+      <header id="main_header">a header within main content</header>
+      <footer id="main_footer">a footer within main content</footer>
+    </main>
     <section id="section_with_header_and_footer">
       <header id="section_header">a header within a section</header>
       <footer id="section_footer">a footer within a section</footer>
