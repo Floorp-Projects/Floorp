@@ -2123,8 +2123,6 @@ using RuntimeScriptDataTable =
 
 extern void SweepScriptData(JSRuntime* rt);
 
-extern void FreeScriptData(JSRuntime* rt);
-
 } /* namespace js */
 
 namespace JS {
