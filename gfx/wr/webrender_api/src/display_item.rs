@@ -837,13 +837,6 @@ pub struct IdentityPrimitive {
     pub input: FilterPrimitiveInput,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub struct OffsetPrimitive {
-    pub input: FilterPrimitiveInput,
-    pub offset: LayoutVector2D,
-}
-
 /// See: https://github.com/eqrion/cbindgen/issues/9
 /// cbindgen:derive-eq=false
 #[repr(C)]
@@ -859,7 +852,6 @@ pub enum FilterPrimitiveKind {
     ColorMatrix(ColorMatrixPrimitive),
     DropShadow(DropShadowPrimitive),
     ComponentTransfer(ComponentTransferPrimitive),
-    Offset(OffsetPrimitive),
 }
 
 impl Default for FilterPrimitiveKind {
@@ -880,7 +872,6 @@ impl FilterPrimitiveKind {
             FilterPrimitiveKind::Identity(..) |
             FilterPrimitiveKind::Blend(..) |
             FilterPrimitiveKind::ColorMatrix(..) |
-            FilterPrimitiveKind::Offset(..) |
             // Component transfer's filter data is sanitized separately.
             FilterPrimitiveKind::ComponentTransfer(..) => {}
         }
