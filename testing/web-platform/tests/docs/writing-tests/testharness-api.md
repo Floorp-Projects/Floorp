@@ -802,6 +802,24 @@ asserts that one `assert_func(actual, expected_array_N, extra_arg1, ..., extra_a
   allows multiple behaviours. Test authors should not use this method simply to hide
   UA bugs.
 
+## Formatting ##
+
+When many JavaScript Object values are coerced to a String, the resulting value
+will be `"[object Object]"`. This obscures helpful information, making the
+coerced value unsuitable for use in assertion messages, test names, and
+debugging statements.
+
+testharness.js provides a global function named `format_value` which produces
+more distinctive string representations of many kinds of objects, including
+arrays and the more important DOM Node types. It also translates String values
+containing control characters to include human-readable representations.
+
+```js
+format_value(document); // "Document node with 2 children"
+format_value("foo\uffffbar"); // "\"foo\\uffffbar\""
+format_value([-0, Infinity]); // "[-0, Infinity]"
+```
+
 ## Metadata ##
 
 It is possible to add optional metadata to tests; this can be done in
