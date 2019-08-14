@@ -325,10 +325,6 @@ class GCRuntime {
   void setLowMemoryState(bool newState) { lowMemoryState = newState; }
   bool systemHasLowMemory() const { return lowMemoryState; }
 
-#ifdef DEBUG
-  bool shutdownCollectedEverything() const { return arenasEmptyAtShutdown; }
-#endif
-
  public:
   // Internal public interface
   State state() const { return incrementalState; }
@@ -1011,10 +1007,6 @@ class GCRuntime {
   MainThreadData<bool> alwaysPreserveCode;
 
   MainThreadData<bool> lowMemoryState;
-
-#ifdef DEBUG
-  MainThreadData<bool> arenasEmptyAtShutdown;
-#endif
 
   /* Synchronize GC heap access among GC helper threads and the main thread. */
   friend class js::AutoLockGC;
