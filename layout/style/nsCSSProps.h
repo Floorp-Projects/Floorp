@@ -43,26 +43,28 @@ const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* aLength);
 }
 
 struct nsCSSKTableEntry {
-  // nsCSSKTableEntry objects can be initialized either with an int16_t value
-  // or a value of an enumeration type that can fit within an int16_t.
+  // nsCSSKTableEntry objects can be initialized either with an uint16_t value
+  // or a value of an enumeration type that can fit within an uint16_t.
+  static constexpr uint16_t SENTINEL_VALUE = uint16_t(-1);
 
-  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, int16_t aValue)
+  constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, uint16_t aValue)
       : mKeyword(aKeyword), mValue(aValue) {}
 
   template <typename T,
             typename = typename std::enable_if<std::is_enum<T>::value>::type>
   constexpr nsCSSKTableEntry(nsCSSKeyword aKeyword, T aValue)
-      : mKeyword(aKeyword), mValue(static_cast<int16_t>(aValue)) {
-    static_assert(mozilla::EnumTypeFitsWithin<T, int16_t>::value,
+      : mKeyword(aKeyword), mValue(static_cast<uint16_t>(aValue)) {
+    static_assert(mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
                   "aValue must be an enum that fits within mValue");
+    MOZ_ASSERT(static_cast<uint16_t>(aValue) != SENTINEL_VALUE);
   }
 
   bool IsSentinel() const {
-    return mKeyword == eCSSKeyword_UNKNOWN && mValue == -1;
+    return mKeyword == eCSSKeyword_UNKNOWN && mValue == SENTINEL_VALUE;
   }
 
   nsCSSKeyword mKeyword;
-  int16_t mValue;
+  uint16_t mValue;
 };
 
 class nsCSSProps {
@@ -139,9 +141,9 @@ class nsCSSProps {
             typename = typename std::enable_if<std::is_enum<T>::value>::type>
   static nsCSSKeyword ValueToKeywordEnum(T aValue, const KTableEntry aTable[]) {
     static_assert(
-        mozilla::EnumTypeFitsWithin<T, int16_t>::value,
+        mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
         "aValue must be an enum that fits within KTableEntry::mValue");
-    return ValueToKeywordEnum(static_cast<int16_t>(aValue), aTable);
+    return ValueToKeywordEnum(static_cast<uint16_t>(aValue), aTable);
   }
   // Ditto but as a string, return "" when not found.
   static const nsCString& ValueToKeyword(int32_t aValue,
@@ -150,9 +152,9 @@ class nsCSSProps {
             typename = typename std::enable_if<std::is_enum<T>::value>::type>
   static const nsCString& ValueToKeyword(T aValue, const KTableEntry aTable[]) {
     static_assert(
-        mozilla::EnumTypeFitsWithin<T, int16_t>::value,
+        mozilla::EnumTypeFitsWithin<T, uint16_t>::value,
         "aValue must be an enum that fits within KTableEntry::mValue");
-    return ValueToKeyword(static_cast<int16_t>(aValue), aTable);
+    return ValueToKeyword(static_cast<uint16_t>(aValue), aTable);
   }
 
  private:

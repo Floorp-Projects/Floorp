@@ -217,7 +217,7 @@ const KTableEntry nsCSSProps::kCursorKTable[] = {
     {eCSSKeyword__moz_grabbing, StyleCursorKind::Grabbing},
     {eCSSKeyword__moz_zoom_in, StyleCursorKind::ZoomIn},
     {eCSSKeyword__moz_zoom_out, StyleCursorKind::ZoomOut},
-    {eCSSKeyword_UNKNOWN, -1}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
 KTableEntry nsCSSProps::kDisplayKTable[] = {
     {eCSSKeyword_none, StyleDisplay::None},
@@ -265,12 +265,12 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
     {eCSSKeyword__webkit_inline_flex, StyleDisplay::InlineFlex},
     {eCSSKeyword_contents, StyleDisplay::Contents},
     {eCSSKeyword_flow_root, StyleDisplay::FlowRoot},
-    {eCSSKeyword_UNKNOWN, -1}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
 const KTableEntry nsCSSProps::kFontSmoothingKTable[] = {
     {eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO},
     {eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE},
-    {eCSSKeyword_UNKNOWN, -1}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
@@ -282,7 +282,7 @@ const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT},
     {eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START},
     {eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END},
-    {eCSSKeyword_UNKNOWN, -1}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
 const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
     {eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE},
@@ -291,7 +291,7 @@ const KTableEntry nsCSSProps::kTextDecorationStyleKTable[] = {
     {eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED},
     {eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED},
     {eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY},
-    {eCSSKeyword_UNKNOWN, -1}};
+    {eCSSKeyword_UNKNOWN, nsCSSKTableEntry::SENTINEL_VALUE}};
 
 int32_t nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
                                        const KTableEntry aTable[]) {
