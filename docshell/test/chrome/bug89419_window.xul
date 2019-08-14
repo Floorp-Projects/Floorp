@@ -9,7 +9,6 @@
         title="bug 89419 test">
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
-  <script src="chrome://mochikit/content/tests/SimpleTest/ChromePowers.js"/>
   <script type="application/javascript" src="docshell_helpers.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
