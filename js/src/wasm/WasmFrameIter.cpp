@@ -757,8 +757,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation)
   initFromExitFP(activation.wasmExitFP());
 }
 
-ProfilingFrameIterator::ProfilingFrameIterator(const JitActivation& activation,
-                                               const Frame* fp)
+ProfilingFrameIterator::ProfilingFrameIterator(const Frame* fp)
     : code_(nullptr),
       codeRange_(nullptr),
       callerFP_(nullptr),

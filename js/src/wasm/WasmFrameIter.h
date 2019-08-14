@@ -187,7 +187,7 @@ class ProfilingFrameIterator {
 
   // Start unwinding at a group of wasm frames after unwinding an inner group
   // of JSJit frames.
-  ProfilingFrameIterator(const jit::JitActivation& activation, const Frame* fp);
+  explicit ProfilingFrameIterator(const Frame* fp);
 
   // Start unwinding at the innermost activation given the register state when
   // the thread was suspended.
