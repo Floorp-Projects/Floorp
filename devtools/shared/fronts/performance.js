@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const { Cu } = require("chrome");
@@ -21,8 +22,8 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "getSystemInfo", "devtools/shared/system", true);
 
 class PerformanceFront extends FrontClassWithSpec(performanceSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._queuedRecordings = [];
     this._onRecordingStartedEvent = this._onRecordingStartedEvent.bind(this);
     this.flushQueuedRecordings = this.flushQueuedRecordings.bind(this);
