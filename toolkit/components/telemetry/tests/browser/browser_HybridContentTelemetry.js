@@ -13,9 +13,6 @@ const { TelemetryUtils } = ChromeUtils.import(
 const { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 const HC_PERMISSION = "hc_telemetry";
 
@@ -98,11 +95,7 @@ add_task(async function test_untrusted_http_origin() {
   // Try to use the API on a non-secure host.
   const testHost = "http://example.org";
   let testHttpUri = Services.io.newURI(testHost);
-  PermissionTestUtils.add(
-    testHttpUri,
-    HC_PERMISSION,
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(testHttpUri, HC_PERMISSION, Services.perms.ALLOW_ACTION);
   let url = getRootDirectory(gTestPath) + "hybrid_content.html";
   url = url.replace("chrome://mochitests/content", testHost);
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -134,7 +127,7 @@ add_task(async function test_untrusted_http_origin() {
 
   // Finally clean up the listener.
   BrowserTestUtils.removeTab(newTab);
-  PermissionTestUtils.remove(testHttpUri, HC_PERMISSION);
+  Services.perms.remove(testHttpUri, HC_PERMISSION);
   Services.mm.removeMessageListener(messageName, makeTestFail);
   Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
 });
@@ -202,11 +195,7 @@ add_task(async function test_trusted_disabled_hybrid_telemetry() {
   // Try to use the API on a secure host.
   const testHost = "https://example.org";
   let testHttpsUri = Services.io.newURI(testHost);
-  PermissionTestUtils.add(
-    testHttpsUri,
-    HC_PERMISSION,
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(testHttpsUri, HC_PERMISSION, Services.perms.ALLOW_ACTION);
   let url = getRootDirectory(gTestPath) + "hybrid_content.html";
   url = url.replace("chrome://mochitests/content", testHost);
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -239,7 +228,7 @@ add_task(async function test_trusted_disabled_hybrid_telemetry() {
   // Finally clean up the listener.
   await SpecialPowers.popPrefEnv();
   BrowserTestUtils.removeTab(newTab);
-  PermissionTestUtils.remove(testHttpsUri, HC_PERMISSION);
+  Services.perms.remove(testHttpsUri, HC_PERMISSION);
   Services.mm.removeMessageListener(messageName, makeTestFail);
   Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
 });
@@ -250,11 +239,7 @@ add_task(async function test_hybrid_content_with_iframe() {
   // Open a trusted page that can use in the HCT in a new tab.
   const testOuterPageHost = "https://example.com";
   let testHttpsUri = Services.io.newURI(testOuterPageHost);
-  PermissionTestUtils.add(
-    testHttpsUri,
-    HC_PERMISSION,
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(testHttpsUri, HC_PERMISSION, Services.perms.ALLOW_ACTION);
   let url = getRootDirectory(gTestPath) + "hybrid_content.html";
   let outerUrl = url.replace("chrome://mochitests/content", testOuterPageHost);
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, outerUrl);
@@ -312,7 +297,7 @@ add_task(async function test_hybrid_content_with_iframe() {
   // Cleanup permissions and remove the tab.
   BrowserTestUtils.removeTab(newTab);
   Services.mm.removeMessageListener(messageName, makeTestFail);
-  PermissionTestUtils.remove(testHttpsUri, HC_PERMISSION);
+  Services.perms.remove(testHttpsUri, HC_PERMISSION);
   Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
 });
 
@@ -340,11 +325,7 @@ add_task(async function test_hybrid_content_recording() {
 
   // Give the test host enough privileges to use the API and open the test page.
   let testHttpsUri = Services.io.newURI(testHost);
-  PermissionTestUtils.add(
-    testHttpsUri,
-    HC_PERMISSION,
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(testHttpsUri, HC_PERMISSION, Services.perms.ALLOW_ACTION);
   let url = getRootDirectory(gTestPath) + "hybrid_content.html";
   url = url.replace("chrome://mochitests/content", testHost);
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -417,7 +398,7 @@ add_task(async function test_hybrid_content_recording() {
 
   // Cleanup permissions and remove the tab.
   BrowserTestUtils.removeTab(newTab);
-  PermissionTestUtils.remove(testHttpsUri, HC_PERMISSION);
+  Services.perms.remove(testHttpsUri, HC_PERMISSION);
 });
 
 add_task(async function test_can_upload() {
@@ -429,11 +410,7 @@ add_task(async function test_can_upload() {
 
   // Give the test host enough privileges to use the API and open the test page.
   let testHttpsUri = Services.io.newURI(testHost);
-  PermissionTestUtils.add(
-    testHttpsUri,
-    HC_PERMISSION,
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(testHttpsUri, HC_PERMISSION, Services.perms.ALLOW_ACTION);
   let url = getRootDirectory(gTestPath) + "hybrid_content.html";
   url = url.replace("chrome://mochitests/content", testHost);
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -468,17 +445,14 @@ add_task(async function test_can_upload() {
 
   // Cleanup permissions and remove the tab.
   BrowserTestUtils.removeTab(newTab);
-  PermissionTestUtils.remove(testHttpsUri, HC_PERMISSION);
+  Services.perms.remove(testHttpsUri, HC_PERMISSION);
 });
 
 add_task(async function test_hct_for_discopane() {
   const discoHost = "https://discovery.addons.mozilla.org";
 
   let discoHttpsUri = Services.io.newURI(discoHost);
-  let permission = PermissionTestUtils.testPermission(
-    discoHttpsUri,
-    HC_PERMISSION
-  );
+  let permission = Services.perms.testPermission(discoHttpsUri, HC_PERMISSION);
 
   ok(
     permission == Services.perms.ALLOW_ACTION,
@@ -522,7 +496,7 @@ add_task(async function test_init_rejects() {
   // Give the test host HCT privileges and test that init doesn't throw.
   const testHostPrivileges = "https://example.com";
   let testUrlPrivileges = Services.io.newURI(testHostPrivileges);
-  PermissionTestUtils.add(
+  Services.perms.add(
     testUrlPrivileges,
     HC_PERMISSION,
     Services.perms.ALLOW_ACTION
@@ -560,5 +534,5 @@ add_task(async function test_init_rejects() {
   // Cleanup permissions and remove the tab.
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(otherTab);
-  PermissionTestUtils.remove(testUrlPrivileges, HC_PERMISSION);
+  Services.perms.remove(testUrlPrivileges, HC_PERMISSION);
 });

@@ -143,11 +143,7 @@ var gTests = [
         "blocked-permissions-container"
       );
 
-      let { state, scope } = SitePermissions.getForPrincipal(
-        null,
-        "camera",
-        browser
-      );
+      let { state, scope } = SitePermissions.get(null, "camera", browser);
       Assert.equal(state, SitePermissions.BLOCK);
       Assert.equal(scope, SitePermissions.SCOPE_TEMPORARY);
       ok(
@@ -157,11 +153,7 @@ var gTests = [
         "the blocked camera icon is shown"
       );
 
-      ({ state, scope } = SitePermissions.getForPrincipal(
-        null,
-        "microphone",
-        browser
-      ));
+      ({ state, scope } = SitePermissions.get(null, "microphone", browser));
       Assert.equal(state, SitePermissions.BLOCK);
       Assert.equal(scope, SitePermissions.SCOPE_TEMPORARY);
       ok(
@@ -180,16 +172,8 @@ var gTests = [
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
 
-      SitePermissions.removeFromPrincipal(
-        browser.contentPrincipal,
-        "camera",
-        browser
-      );
-      SitePermissions.removeFromPrincipal(
-        browser.contentPrincipal,
-        "microphone",
-        browser
-      );
+      SitePermissions.remove(browser.currentURI, "camera", browser);
+      SitePermissions.remove(browser.currentURI, "microphone", browser);
     },
   },
 
@@ -236,21 +220,9 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
     },
   },
 
@@ -294,21 +266,9 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
     },
   },
 
@@ -368,27 +328,23 @@ var gTests = [
         );
 
         function checkDevicePermissions(aDevice, aExpected) {
+          let Perms = Services.perms;
           let uri = gBrowser.selectedBrowser.documentURI;
-          let devicePerms = PermissionTestUtils.testExactPermission(
-            uri,
-            aDevice
-          );
+          let devicePerms = Perms.testExactPermission(uri, aDevice);
           if (aExpected === undefined) {
             is(
               devicePerms,
-              Services.perms.UNKNOWN_ACTION,
+              Perms.UNKNOWN_ACTION,
               "no " + aDevice + " persistent permissions"
             );
           } else {
             is(
               devicePerms,
-              aExpected
-                ? Services.perms.ALLOW_ACTION
-                : Services.perms.DENY_ACTION,
+              aExpected ? Perms.ALLOW_ACTION : Perms.DENY_ACTION,
               aDevice + " persistently " + (aExpected ? "allowed" : "denied")
             );
           }
-          PermissionTestUtils.remove(uri, aDevice);
+          Perms.remove(uri, aDevice);
         }
         checkDevicePermissions("microphone", aExpectedAudioPerm);
         checkDevicePermissions("camera", aExpectedVideoPerm);
@@ -399,7 +355,7 @@ var gTests = [
       }
 
       // 3 cases where the user accepts the device prompt.
-      info("audio+video, user grants, expect both Services.perms set to allow");
+      info("audio+video, user grants, expect both perms set to allow");
       await checkPerm(true, true, true, true);
       info(
         "audio only, user grants, check audio perm set to allow, video perm not set"
@@ -419,7 +375,7 @@ var gTests = [
         "video only, user denies, expect video perm set to deny, audio perm not set"
       );
       await checkPerm(false, true, undefined, false, true);
-      info("audio+video, user denies, expect both Services.perms set to deny");
+      info("audio+video, user denies, expect both perms set to deny");
       await checkPerm(true, true, false, false, true);
     },
   },
@@ -434,24 +390,21 @@ var gTests = [
         aRequestVideo,
         aExpectStream
       ) {
+        let Perms = Services.perms;
         let uri = gBrowser.selectedBrowser.documentURI;
 
         if (aAllowAudio !== undefined) {
-          PermissionTestUtils.add(
+          Perms.add(
             uri,
             "microphone",
-            aAllowAudio
-              ? Services.perms.ALLOW_ACTION
-              : Services.perms.DENY_ACTION
+            aAllowAudio ? Perms.ALLOW_ACTION : Perms.DENY_ACTION
           );
         }
         if (aAllowVideo !== undefined) {
-          PermissionTestUtils.add(
+          Perms.add(
             uri,
             "camera",
-            aAllowVideo
-              ? Services.perms.ALLOW_ACTION
-              : Services.perms.DENY_ACTION
+            aAllowVideo ? Perms.ALLOW_ACTION : Perms.DENY_ACTION
           );
         }
 
@@ -469,8 +422,8 @@ var gTests = [
           await expectObserverCalled("getUserMedia:response:deny");
           await expectObserverCalled("recording-window-ended");
           let browser = gBrowser.selectedBrowser;
-          SitePermissions.removeFromPrincipal(null, "camera", browser);
-          SitePermissions.removeFromPrincipal(null, "microphone", browser);
+          SitePermissions.remove(null, "camera", browser);
+          SitePermissions.remove(null, "microphone", browser);
         } else {
           let expectedMessage = aExpectStream ? "ok" : permissionError;
           let promise = promiseMessage(expectedMessage);
@@ -505,8 +458,8 @@ var gTests = [
           }
         }
 
-        PermissionTestUtils.remove(uri, "camera");
-        PermissionTestUtils.remove(uri, "microphone");
+        Perms.remove(uri, "camera");
+        Perms.remove(uri, "microphone");
       }
 
       // Set both permissions identically
@@ -569,11 +522,12 @@ var gTests = [
     desc: "Stop Sharing removes persistent permissions",
     run: async function checkStopSharingRemovesPersistentPermissions() {
       async function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
+        let Perms = Services.perms;
         let uri = gBrowser.selectedBrowser.documentURI;
 
         // Initially set both permissions to 'allow'.
-        PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
-        PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+        Perms.add(uri, "microphone", Perms.ALLOW_ACTION);
+        Perms.add(uri, "camera", Perms.ALLOW_ACTION);
 
         let indicator = promiseIndicatorWindow();
         // Start sharing what's been requested.
@@ -590,44 +544,25 @@ var gTests = [
         await stopSharing(aRequestVideo ? "camera" : "microphone");
 
         // Check that permissions have been removed as expected.
-        let audioPerm = PermissionTestUtils.testExactPermission(
-          uri,
-          "microphone"
-        );
+        let audioPerm = Perms.testExactPermission(uri, "microphone");
         if (aRequestAudio) {
-          is(
-            audioPerm,
-            Services.perms.UNKNOWN_ACTION,
-            "microphone permissions removed"
-          );
+          is(audioPerm, Perms.UNKNOWN_ACTION, "microphone permissions removed");
         } else {
-          is(
-            audioPerm,
-            Services.perms.ALLOW_ACTION,
-            "microphone permissions untouched"
-          );
+          is(audioPerm, Perms.ALLOW_ACTION, "microphone permissions untouched");
         }
 
-        let videoPerm = PermissionTestUtils.testExactPermission(uri, "camera");
+        let videoPerm = Perms.testExactPermission(uri, "camera");
         if (aRequestVideo) {
-          is(
-            videoPerm,
-            Services.perms.UNKNOWN_ACTION,
-            "camera permissions removed"
-          );
+          is(videoPerm, Perms.UNKNOWN_ACTION, "camera permissions removed");
         } else {
-          is(
-            videoPerm,
-            Services.perms.ALLOW_ACTION,
-            "camera permissions untouched"
-          );
+          is(videoPerm, Perms.ALLOW_ACTION, "camera permissions untouched");
         }
 
         // Cleanup.
         await closeStream(true);
 
-        PermissionTestUtils.remove(uri, "camera");
-        PermissionTestUtils.remove(uri, "microphone");
+        Perms.remove(uri, "camera");
+        Perms.remove(uri, "microphone");
       }
 
       info("request audio+video, stop sharing resets both");
@@ -710,9 +645,10 @@ var gTests = [
       await BrowserTestUtils.browserLoaded(browser);
 
       // Initially set both permissions to 'allow'.
+      let Perms = Services.perms;
       let uri = browser.documentURI;
-      PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
-      PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+      Perms.add(uri, "microphone", Perms.ALLOW_ACTION);
+      Perms.add(uri, "camera", Perms.ALLOW_ACTION);
 
       // Request devices and expect a prompt despite the saved 'Allow' permission,
       // because the connection isn't secure.
@@ -737,8 +673,8 @@ var gTests = [
 
       // Cleanup.
       await closeStream(true);
-      PermissionTestUtils.remove(uri, "camera");
-      PermissionTestUtils.remove(uri, "microphone");
+      Perms.remove(uri, "camera");
+      Perms.remove(uri, "microphone");
     },
   },
 ];

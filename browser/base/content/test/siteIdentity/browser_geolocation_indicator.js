@@ -5,9 +5,6 @@
 
 ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
 ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 const CP = Cc["@mozilla.org/content-pref/service;1"].getService(
   Ci.nsIContentPrefService2
@@ -15,10 +12,6 @@ const CP = Cc["@mozilla.org/content-pref/service;1"].getService(
 
 const EXAMPLE_PAGE_URL = "https://example.com";
 const EXAMPLE_PAGE_URI = Services.io.newURI(EXAMPLE_PAGE_URL);
-const EXAMPLE_PAGE_PRINCIPAL = Services.scriptSecurityManager.createContentPrincipal(
-  EXAMPLE_PAGE_URI,
-  {}
-);
 const GEO_CONTENT_PREF_KEY = "permissions.geoLocation.lastAccess";
 const POLL_INTERVAL_FALSE_STATE = 50;
 
@@ -235,11 +228,11 @@ add_task(function test_indicator_and_timestamp_after_explicit_allow_remember() {
 
 // Indicator and identity popup entry shown after auto PermissionUI geolocation allow
 add_task(async function test_indicator_and_timestamp_after_implicit_allow() {
-  PermissionTestUtils.add(
+  SitePermissions.set(
     EXAMPLE_PAGE_URI,
     "geo",
-    Services.perms.ALLOW_ACTION,
-    Services.perms.EXPIRE_NEVER
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_PERSISTENT
   );
   let tab = await openExamplePage();
   let result = await requestGeoLocation(tab.linkedBrowser);
@@ -266,11 +259,11 @@ add_task(function test_indicator_sharing_state_inactive() {
 
 // Identity popup shows permission if geo permission is set to persistent allow
 add_task(async function test_identity_popup_permission_scope_permanent() {
-  PermissionTestUtils.add(
+  SitePermissions.set(
     EXAMPLE_PAGE_URI,
     "geo",
-    Services.perms.ALLOW_ACTION,
-    Services.perms.EXPIRE_NEVER
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_PERSISTENT
   );
   let tab = await openExamplePage();
 
@@ -303,11 +296,11 @@ add_task(
 
 // Clicking permission clear button clears permission and resets geo sharing state
 add_task(async function test_identity_popup_permission_clear() {
-  PermissionTestUtils.add(
+  SitePermissions.set(
     EXAMPLE_PAGE_URI,
     "geo",
-    Services.perms.ALLOW_ACTION,
-    Services.perms.EXPIRE_NEVER
+    SitePermissions.ALLOW,
+    SitePermissions.SCOPE_PERSISTENT
   );
   let tab = await openExamplePage();
   gBrowser.updateBrowserSharing(tab.linkedBrowser, { geo: true });

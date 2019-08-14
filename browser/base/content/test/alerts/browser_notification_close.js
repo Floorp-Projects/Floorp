@@ -4,10 +4,6 @@ const { PlacesTestUtils } = ChromeUtils.import(
   "resource://testing-common/PlacesTestUtils.jsm"
 );
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 let notificationURL =
   "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 let oldShowFavicons;
@@ -101,7 +97,7 @@ add_task(async function test_notificationClose() {
 });
 
 add_task(async function cleanup() {
-  PermissionTestUtils.remove(notificationURL, "desktop-notification");
+  Services.perms.remove(makeURI(notificationURL), "desktop-notification");
   if (typeof oldShowFavicons == "boolean") {
     Services.prefs.setBoolPref("alerts.showFavicons", oldShowFavicons);
   }

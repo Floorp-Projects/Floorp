@@ -5,26 +5,23 @@
 
 // Test that temporary permissions are removed on user initiated reload only.
 add_task(async function testTempPermissionOnReload() {
-  let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let uri = NetUtil.newURI("https://example.com");
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(uri.spec, async function(browser) {
     let reloadButton = document.getElementById("reload-button");
 
-    SitePermissions.setForPrincipal(
-      principal,
+    SitePermissions.set(
+      uri,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
       browser
     );
 
-    let reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
+    let reloaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
@@ -39,26 +36,26 @@ add_task(async function testTempPermissionOnReload() {
       return !reloadButton.disabled;
     });
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
 
-    reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
+    reloaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
 
     // Reload as a user (should remove the temp permission).
     EventUtils.synthesizeMouseAtCenter(reloadButton, {});
 
     await reloaded;
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.UNKNOWN,
       scope: SitePermissions.SCOPE_PERSISTENT,
     });
 
     // Set the permission again.
-    SitePermissions.setForPrincipal(
-      principal,
+    SitePermissions.set(
+      uri,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
@@ -82,33 +79,30 @@ add_task(async function testTempPermissionOnReload() {
 
     let reloadMenuItem = document.getElementById("context_reloadTab");
 
-    reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
+    reloaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
 
     // Reload as a user through the context menu (should remove the temp permission).
     EventUtils.synthesizeMouseAtCenter(reloadMenuItem, {});
 
     await reloaded;
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.UNKNOWN,
       scope: SitePermissions.SCOPE_PERSISTENT,
     });
 
-    SitePermissions.removeFromPrincipal(principal, id, browser);
+    SitePermissions.remove(uri, id, browser);
   });
 });
 
 // Test that temporary permissions are not removed when reloading all tabs.
 add_task(async function testTempPermissionOnReloadAllTabs() {
-  let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let uri = NetUtil.newURI("https://example.com");
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
-    SitePermissions.setForPrincipal(
-      principal,
+  await BrowserTestUtils.withNewTab(uri.spec, async function(browser) {
+    SitePermissions.set(
+      uri,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
@@ -143,33 +137,30 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
     EventUtils.synthesizeMouseAtCenter(reloadMenuItem, {});
     await reloaded;
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
 
-    SitePermissions.removeFromPrincipal(principal, id, browser);
+    SitePermissions.remove(uri, id, browser);
   });
 });
 
 // Test that temporary permissions are persisted through navigation in a tab.
 add_task(async function testTempPermissionOnNavigation() {
-  let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let uri = NetUtil.newURI("https://example.com/");
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
-    SitePermissions.setForPrincipal(
-      principal,
+  await BrowserTestUtils.withNewTab(uri.spec, async function(browser) {
+    SitePermissions.set(
+      uri,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
       browser
     );
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
@@ -190,15 +181,12 @@ add_task(async function testTempPermissionOnNavigation() {
     await loaded;
 
     // The temporary permissions for the current URI should be reset.
-    Assert.deepEqual(
-      SitePermissions.getForPrincipal(browser.contentPrincipal, id, browser),
-      {
-        state: SitePermissions.UNKNOWN,
-        scope: SitePermissions.SCOPE_PERSISTENT,
-      }
-    );
+    Assert.deepEqual(SitePermissions.get(browser.currentURI, id, browser), {
+      state: SitePermissions.UNKNOWN,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    });
 
-    loaded = BrowserTestUtils.browserLoaded(browser, false, origin);
+    loaded = BrowserTestUtils.browserLoaded(browser, false, uri.spec);
 
     // Navigate to the original domain.
     await ContentTask.spawn(
@@ -210,14 +198,11 @@ add_task(async function testTempPermissionOnNavigation() {
     await loaded;
 
     // The temporary permissions for the original URI should still exist.
-    Assert.deepEqual(
-      SitePermissions.getForPrincipal(browser.contentPrincipal, id, browser),
-      {
-        state: SitePermissions.BLOCK,
-        scope: SitePermissions.SCOPE_TEMPORARY,
-      }
-    );
+    Assert.deepEqual(SitePermissions.get(browser.currentURI, id, browser), {
+      state: SitePermissions.BLOCK,
+      scope: SitePermissions.SCOPE_TEMPORARY,
+    });
 
-    SitePermissions.removeFromPrincipal(browser.contentPrincipal, id, browser);
+    SitePermissions.remove(uri, id, browser);
   });
 });

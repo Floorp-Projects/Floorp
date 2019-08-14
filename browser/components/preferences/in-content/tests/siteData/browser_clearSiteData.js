@@ -6,16 +6,10 @@
 var { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 async function testClearData(clearSiteData, clearCache) {
-  PermissionTestUtils.add(
-    TEST_QUOTA_USAGE_ORIGIN,
-    "persistent-storage",
-    Services.perms.ALLOW_ACTION
-  );
+  let quotaURI = Services.io.newURI(TEST_QUOTA_USAGE_ORIGIN);
+  SitePermissions.set(quotaURI, "persistent-storage", SitePermissions.ALLOW);
 
   // Open a test site which saves into appcache.
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_OFFLINE_URL);
@@ -184,13 +178,13 @@ async function testClearData(clearSiteData, clearCache) {
     );
   }
 
-  let permission = PermissionTestUtils.getPermissionObject(
-    TEST_QUOTA_USAGE_ORIGIN,
-    "persistent-storage"
-  );
+  let desiredPermissionState = clearSiteData
+    ? SitePermissions.UNKNOWN
+    : SitePermissions.ALLOW;
+  let permission = SitePermissions.get(quotaURI, "persistent-storage");
   is(
-    clearSiteData ? permission : permission.capability,
-    clearSiteData ? null : Services.perms.ALLOW_ACTION,
+    permission.state,
+    desiredPermissionState,
     "Should have the correct permission state."
   );
 

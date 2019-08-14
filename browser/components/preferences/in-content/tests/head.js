@@ -2,9 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 const kDefaultWait = 2000;
 
