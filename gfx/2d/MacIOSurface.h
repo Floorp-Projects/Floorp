@@ -161,14 +161,8 @@ class MacIOSurfaceLib {
   static IOSurfaceSizePlaneTFunc sBytesPerRow;
   static IOSurfaceGetPropertyMaximumFunc sGetPropertyMaximum;
   static IOSurfacePixelFormatFunc sPixelFormat;
-  static CFStringRef kPropWidth;
-  static CFStringRef kPropHeight;
-  static CFStringRef kPropBytesPerElem;
-  static CFStringRef kPropBytesPerRow;
-  static CFStringRef kPropIsGlobal;
 
   static bool isInit();
-  static CFStringRef GetIOConst(const char* symbole);
   static IOSurfacePtr IOSurfaceCreate(CFDictionaryRef properties);
   static IOSurfacePtr IOSurfaceLookup(IOSurfaceID aIOSurfaceID);
   static IOSurfaceID IOSurfaceGetID(IOSurfacePtr aIOSurfacePtr);
