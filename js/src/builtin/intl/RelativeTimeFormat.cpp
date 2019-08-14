@@ -106,10 +106,6 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  relativeTimeFormat->setFixedSlot(RelativeTimeFormatObject::INTERNALS_SLOT,
-                                   NullValue());
-  relativeTimeFormat->setRelativeDateTimeFormatter(nullptr);
-
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
 
