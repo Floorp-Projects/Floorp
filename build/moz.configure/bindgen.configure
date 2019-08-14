@@ -239,7 +239,7 @@ set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
 def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
                          clang_flags):
     args = [
-        '-x', 'c++', '-fno-sized-deallocation',
+        '-x', 'c++', '-fno-sized-deallocation', '-fno-aligned-new',
         '-DTRACING=1', '-DIMPL_LIBXUL', '-DMOZILLA_INTERNAL_API',
         '-DRUST_BINDGEN'
     ]
