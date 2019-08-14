@@ -111,10 +111,6 @@ static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
     return false;
   }
 
-  dateTimeFormat->setFixedSlot(DateTimeFormatObject::INTERNALS_SLOT,
-                               NullValue());
-  dateTimeFormat->setDateFormat(nullptr);
-
   RootedValue thisValue(
       cx, construct ? ObjectValue(*dateTimeFormat) : args.thisv());
   HandleValue locales = args.get(0);
