@@ -4,6 +4,7 @@
 # Altered features:
 # * returns 404 rather than dropping the whole HTTP/2 connection on the floor
 # * remove the replay packages that don't have any content in their response package
+from __future__ import absolute_import, print_function
 
 import os
 import json

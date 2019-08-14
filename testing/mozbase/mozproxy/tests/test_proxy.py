@@ -31,13 +31,15 @@ class Process:
 @mock.patch("mozproxy.backends.mitm.tooltool_download", new=mock.DEFAULT)
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy", lambda x: True)
 def test_mitm(*args):
-    bin_name = "mitmproxy-rel-bin-{platform}.manifest"
-    pageset_name = "mitmproxy-recordings-raptor-paypal.manifest"
+    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    pageset_name = "mitm4-linux-firefox-amazon.manifest"
 
     config = {
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
+        "playback_upstream_cert": 'false',
+        "playback_version": '4.0.4',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
@@ -49,7 +51,7 @@ def test_mitm(*args):
     with tempdir() as obj_path:
         config["obj_path"] = obj_path
         playback = get_playback(config)
-
+        playback.config['playback_files'] = config['playback_recordings']
     assert playback is not None
     try:
         playback.start()
@@ -70,13 +72,15 @@ def test_playback_setup_failed(*args):
 
         return _s
 
-    bin_name = "mitmproxy-rel-bin-{platform}.manifest"
-    pageset_name = "mitmproxy-recordings-raptor-paypal.manifest"
+    bin_name = "mitmproxy-rel-bin-4.0.4-{platform}.manifest"
+    pageset_name = "mitm4-linux-firefox-amazon.manifest"
 
     config = {
         "playback_tool": "mitmproxy",
         "playback_binary_manifest": bin_name,
         "playback_pageset_manifest": pageset_name,
+        "playback_upstream_cert": 'false',
+        "playback_version": '4.0.4',
         "platform": mozinfo.os,
         "playback_recordings": os.path.join(here, "paypal.mp"),
         "run_local": True,
@@ -93,6 +97,7 @@ def test_playback_setup_failed(*args):
             with mock.patch(prefix + "stop_mitmproxy_playback") as p:
                 try:
                     pb = get_playback(config)
+                    pb.config['playback_files'] = config['playback_recordings']
                     pb.start()
                 except SetupFailed:
                     assert p.call_count == 1

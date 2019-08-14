@@ -402,53 +402,12 @@ class Raptor(Perftest):
         if self.config['app'] in chrome_apps:
             self.profile.addons.remove(self.raptor_webext)
 
-    def get_proxy_command_for_mitm(self, test, version):
-        # Generate Mitmproxy playback args
-        script = os.path.join(here, "playback", "alternate-server-replay-{}.py".format(version))
-
-        recording_paths = self.get_recording_paths(test)
-
-        # this part is platform-specific
-        if mozinfo.os == "win":
-            script = script.replace("\\", "\\\\\\")
-            recording_paths = [recording_path.replace("\\", "\\\\\\")
-                               for recording_path in recording_paths]
-
-        if version == "2.0.2":
-            args = [
-                "--replay-kill-extra",
-                "-v",
-                "--script",
-                '""{} {}""'.format(script, " ".join(recording_paths)),
-            ]
-
-            if not self.config["playback_upstream_cert"]:
-                LOG.info("No upstream certificate sniffing")
-                args.insert(0, "--no-upstream-cert")
-            self.playback.config["playback_tool_args"] = args
-        elif version == "4.0.4":
-            args = [
-                "-v",
-                "--set",
-                "websocket=false",
-                "--set",
-                "server_replay_files={}".format(" ".join(recording_paths)),
-                "--scripts",
-                script,
-            ]
-            if not self.config["playback_upstream_cert"]:
-                LOG.info("No upstream certificate sniffing")
-                args = ["--set", "upstream_cert=false"] + args
-            self.playback.config["playback_tool_args"] = args
-        else:
-            raise Exception("Mitmproxy version is unknown!")
-
     def start_playback(self, test):
         # creating the playback tool
         self.get_playback_config(test)
         self.playback = get_playback(self.config, self.device)
 
-        self.get_proxy_command_for_mitm(test, self.config['playback_version'])
+        self.playback.config['playback_files'] = self.get_recording_paths(test)
 
         # let's start it!
         self.playback.start()
