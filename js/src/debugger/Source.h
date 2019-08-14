@@ -65,7 +65,7 @@ class DebuggerSource : public NativeObject {
   static bool getSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
 
  private:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];

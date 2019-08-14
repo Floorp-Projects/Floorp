@@ -49,7 +49,7 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-const ClassOps DebuggerSource::classOps_ = {
+const JSClassOps DebuggerSource::classOps_ = {
     nullptr,                         /* addProperty */
     nullptr,                         /* delProperty */
     nullptr,                         /* enumerate   */

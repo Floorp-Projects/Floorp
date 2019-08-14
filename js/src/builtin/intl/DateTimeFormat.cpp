@@ -46,7 +46,7 @@ using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
 using js::intl::StringsAreEqual;
 
-const ClassOps DateTimeFormatObject::classOps_ = {
+const JSClassOps DateTimeFormatObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

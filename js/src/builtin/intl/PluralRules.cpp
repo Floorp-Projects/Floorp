@@ -34,13 +34,13 @@ using js::intl::CallICU;
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 
-const ClassOps PluralRulesObject::classOps_ = {nullptr, /* addProperty */
-                                               nullptr, /* delProperty */
-                                               nullptr, /* enumerate */
-                                               nullptr, /* newEnumerate */
-                                               nullptr, /* resolve */
-                                               nullptr, /* mayResolve */
-                                               PluralRulesObject::finalize};
+const JSClassOps PluralRulesObject::classOps_ = {nullptr, /* addProperty */
+                                                 nullptr, /* delProperty */
+                                                 nullptr, /* enumerate */
+                                                 nullptr, /* newEnumerate */
+                                                 nullptr, /* resolve */
+                                                 nullptr, /* mayResolve */
+                                                 PluralRulesObject::finalize};
 
 const Class PluralRulesObject::class_ = {
     js_Object_str,

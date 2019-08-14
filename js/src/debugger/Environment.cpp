@@ -51,7 +51,7 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-const ClassOps DebuggerEnvironment::classOps_ = {
+const JSClassOps DebuggerEnvironment::classOps_ = {
     nullptr,                              /* addProperty */
     nullptr,                              /* delProperty */
     nullptr,                              /* enumerate   */

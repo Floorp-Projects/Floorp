@@ -192,7 +192,7 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone) {
 }
 
 JSObject* newDelegate() {
-  static const js::ClassOps delegateClassOps = {
+  static const JSClassOps delegateClassOps = {
       nullptr, /* addProperty */
       nullptr, /* delProperty */
       nullptr, /* enumerate */

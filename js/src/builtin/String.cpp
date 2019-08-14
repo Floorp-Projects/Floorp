@@ -439,7 +439,7 @@ static bool str_resolve(JSContext* cx, HandleObject obj, HandleId id,
   return true;
 }
 
-static const ClassOps StringObjectClassOps = {
+static const JSClassOps StringObjectClassOps = {
     nullptr,                /* addProperty */
     nullptr,                /* delProperty */
     str_enumerate, nullptr, /* newEnumerate */

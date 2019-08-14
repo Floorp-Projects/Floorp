@@ -849,8 +849,6 @@ static const uint32_t JSCLASS_CACHED_PROTO_MASK =
 
 namespace js {
 
-using ClassOps = JSClassOps;
-
 struct MOZ_STATIC_CLASS Class {
   JS_CLASS_MEMBERS;
   const ClassSpec* spec;

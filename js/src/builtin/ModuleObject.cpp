@@ -702,7 +702,7 @@ void FunctionDeclaration::trace(JSTracer* trc) {
 ///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
-/* static */ const ClassOps ModuleObject::classOps_ = {
+/* static */ const JSClassOps ModuleObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate   */

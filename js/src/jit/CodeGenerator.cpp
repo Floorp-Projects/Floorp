@@ -12747,8 +12747,8 @@ void CodeGenerator::emitIsCallableOrConstructor(Register object,
 
   masm.bind(&hasCOps);
   masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
-  size_t opsOffset = mode == Callable ? offsetof(js::ClassOps, call)
-                                      : offsetof(js::ClassOps, construct);
+  size_t opsOffset = mode == Callable ? offsetof(JSClassOps, call)
+                                      : offsetof(JSClassOps, construct);
   masm.cmpPtrSet(Assembler::NonZero, Address(output, opsOffset),
                  ImmPtr(nullptr), output);
 

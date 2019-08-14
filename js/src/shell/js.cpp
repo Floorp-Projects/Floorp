@@ -6977,7 +6977,7 @@ typedef RefPtr<StreamCacheEntry> StreamCacheEntryPtr;
 
 class StreamCacheEntryObject : public NativeObject {
   static const unsigned CACHE_ENTRY_SLOT = 0;
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
   static const JSPropertySpec properties_;
 
   static void finalize(JSFreeOp*, JSObject* obj) {
@@ -7074,7 +7074,7 @@ class StreamCacheEntryObject : public NativeObject {
   }
 };
 
-const ClassOps StreamCacheEntryObject::classOps_ = {
+const JSClassOps StreamCacheEntryObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

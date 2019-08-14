@@ -143,7 +143,7 @@ class MapObject : public NativeObject {
 
  private:
   static const ClassSpec classSpec_;
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
@@ -257,7 +257,7 @@ class SetObject : public NativeObject {
 
  private:
   static const ClassSpec classSpec_;
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];

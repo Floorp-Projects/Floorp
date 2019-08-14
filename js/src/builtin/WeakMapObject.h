@@ -31,7 +31,7 @@ class WeakCollectionObject : public NativeObject {
       MutableHandleObject ret);
 
  protected:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 };
 
 class WeakMapObject : public WeakCollectionObject {

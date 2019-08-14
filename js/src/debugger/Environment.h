@@ -72,7 +72,7 @@ class DebuggerEnvironment : public NativeObject {
                                        HandleId id, HandleValue value);
 
  private:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];
