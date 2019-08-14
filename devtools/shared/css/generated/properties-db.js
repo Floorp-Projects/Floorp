@@ -9970,6 +9970,21 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "text-decoration-skip-ink": {
+    "isInherited": true,
+    "subproperties": [
+      "text-decoration-skip-ink"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "text-decoration-style": {
     "isInherited": false,
     "subproperties": [
