@@ -162,9 +162,9 @@ static nsCString GetDeviceModelId() {
     deviceString.Trim(" ", true, true);
     deviceString.ReplaceSubstring(NS_LITERAL_CSTRING("%DEVICEID%"),
                                   deviceModelId);
-    return deviceString;
+    return std::move(deviceString);
   }
-  return deviceModelId;
+  return std::move(deviceModelId);
 }
 #endif
 
