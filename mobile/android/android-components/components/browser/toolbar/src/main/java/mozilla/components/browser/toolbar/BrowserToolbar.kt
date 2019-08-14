@@ -104,6 +104,16 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
+     * Set/Get whether a separator view should be visible between the tracking protection icon and
+     * the security indicator icon.
+     */
+    var displaySeparatorView: Boolean
+        get() = displayToolbar.displaySeparatorView
+        set(value) {
+            displayToolbar.displaySeparatorView = value
+        }
+
+    /**
      * Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL.
      */
     var displaySiteSecurityIcon: Boolean

@@ -1056,6 +1056,17 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `displaySeparatorView will forward to display displaySeparatorView`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.displayToolbar = spy(toolbar.displayToolbar)
+
+        toolbar.displaySeparatorView = false
+
+        verify(toolbar.displayToolbar).displaySeparatorView = false
+        assertFalse(toolbar.displaySeparatorView)
+    }
+
+    @Test
     fun `private flag sets IME_FLAG_NO_PERSONALIZED_LEARNING on url edit view`() {
         val toolbar = BrowserToolbar(testContext)
         val editToolbar = toolbar.editToolbar

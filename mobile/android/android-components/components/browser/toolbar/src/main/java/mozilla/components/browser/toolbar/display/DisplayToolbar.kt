@@ -87,7 +87,7 @@ internal class DisplayToolbar(
             field = value
             setTrackingProtectionState(siteTrackingProtection)
         }
-
+    internal var displaySeparatorView = false
     private val browserActions: MutableList<ActionWrapper> = mutableListOf()
     private val pageActions: MutableList<ActionWrapper> = mutableListOf()
     private val navigationActions: MutableList<ActionWrapper> = mutableListOf()
@@ -156,8 +156,7 @@ internal class DisplayToolbar(
         setOnClickListener(null)
     }
 
-    internal val trackingProtectionAndSecurityIndicatorSeparatorView =
-        AppCompatImageView(context).apply {
+    internal val separatorView = AppCompatImageView(context).apply {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             isVisible = false
 
@@ -223,7 +222,7 @@ internal class DisplayToolbar(
 
     init {
         addView(trackingProtectionIconView)
-        addView(trackingProtectionAndSecurityIndicatorSeparatorView)
+        addView(separatorView)
         addView(siteSecurityIconView)
         addView(titleView)
         addView(urlView)
@@ -343,8 +342,8 @@ internal class DisplayToolbar(
             OFF_GLOBALLY -> false
         }
 
-        trackingProtectionAndSecurityIndicatorSeparatorView.apply {
-            isVisible = isSeparatorVisible
+        separatorView.apply {
+            isVisible = if (displaySeparatorView) isSeparatorVisible else false
             setColorFilter(separatorColor)
         }
 
@@ -581,7 +580,7 @@ internal class DisplayToolbar(
     @VisibleForTesting
     internal fun layoutTrackingProtectionViewIfNeeded(navigationActionsWidth: Int): Pair<Int, Int> {
         val trackingProtectionWidth = trackingProtectionIconView.measuredWidth
-        val separatorWidth = trackingProtectionAndSecurityIndicatorSeparatorView.measuredWidth
+        val separatorWidth = getSeparatorMeasuredWidth()
         val securityWidth = siteSecurityIconView.measuredWidth
 
         return if (shouldTrackingProtectionViewBeVisible()) {
@@ -592,14 +591,16 @@ internal class DisplayToolbar(
                 measuredHeight
             )
 
-            trackingProtectionAndSecurityIndicatorSeparatorView.layout(
-                trackingProtectionWidth,
-                0,
-                separatorWidth + trackingProtectionWidth,
-                measuredHeight
-            )
+            if (displaySeparatorView) {
+                separatorView.layout(
+                    navigationActionsWidth + trackingProtectionWidth,
+                    0,
+                    separatorWidth + navigationActionsWidth + trackingProtectionWidth,
+                    measuredHeight
+                )
+            }
 
-            separatorWidth + trackingProtectionWidth to
+            navigationActionsWidth + separatorWidth + trackingProtectionWidth to
                 navigationActionsWidth + separatorWidth + securityWidth + trackingProtectionWidth
         } else {
             navigationActionsWidth to navigationActionsWidth + securityWidth
@@ -608,19 +609,25 @@ internal class DisplayToolbar(
 
     private fun getTrackingProtectionMeasuredWidth(): Int {
         return if (trackingProtectionIconView.isVisible) {
-            trackingProtectionIconView.measuredWidth + trackingProtectionAndSecurityIndicatorSeparatorView.measuredWidth
+            trackingProtectionIconView.measuredWidth + getSeparatorMeasuredWidth()
         } else 0
+    }
+
+    private fun getSeparatorMeasuredWidth(): Int {
+        return if (displaySeparatorView) separatorView.measuredWidth else 0
     }
 
     private fun measureTrackingProtectionViewsIfNeeded(squareSpec: Int) {
         if (shouldTrackingProtectionViewBeVisible()) {
             trackingProtectionIconView.measure(squareSpec, squareSpec)
-            val height =
-                resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_height)
-            val width =
-                resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_width)
 
-            trackingProtectionAndSecurityIndicatorSeparatorView.measure(width, height)
+            if (displaySeparatorView) {
+                val height =
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_height)
+                val width =
+                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icons_separator_width)
+                separatorView.measure(width, height)
+            }
         }
     }
 
