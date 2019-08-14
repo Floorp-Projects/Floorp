@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const { memorySpec } = require("devtools/shared/specs/memory");
@@ -22,8 +23,8 @@ loader.lazyRequireGetter(
 );
 
 class MemoryFront extends FrontClassWithSpec(memorySpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._client = client;
     this.heapSnapshotFileActorID = null;
 

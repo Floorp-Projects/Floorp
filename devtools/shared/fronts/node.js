@@ -1,17 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
+const promise = require("promise");
 const {
   FrontClassWithSpec,
   types,
   registerFront,
 } = require("devtools/shared/protocol.js");
-
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
-
-const promise = require("promise");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
 
 loader.lazyRequireGetter(
@@ -114,8 +113,8 @@ class AttributeModificationList {
  * to traverse children.
  */
 class NodeFront extends FrontClassWithSpec(nodeSpec) {
-  constructor(conn, form) {
-    super(conn, form);
+  constructor(conn, targetFront, parentFront) {
+    super(conn, targetFront, parentFront);
     // The parent node
     this._parent = null;
     // The first child of this node.

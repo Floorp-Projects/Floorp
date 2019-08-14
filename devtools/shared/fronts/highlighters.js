@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -14,8 +15,8 @@ const {
 } = require("devtools/shared/specs/highlighters");
 
 class HighlighterFront extends FrontClassWithSpec(highlighterSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this.isNodeFrontHighlighted = false;
     this.isPicking = false;
@@ -102,8 +103,8 @@ exports.HighlighterFront = HighlighterFront;
 registerFront(HighlighterFront);
 
 class CustomHighlighterFront extends FrontClassWithSpec(customHighlighterSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this._isShown = false;
   }

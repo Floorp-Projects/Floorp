@@ -34,8 +34,8 @@ loader.lazyRequireGetter(
  *        The actor ID for this thread.
  */
 class ThreadFront extends FrontClassWithSpec(threadSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this.client = client;
     this._pauseGrips = {};
     this._threadGrips = {};
