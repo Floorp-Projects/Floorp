@@ -2457,6 +2457,7 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_viewportScroll", ":-moz-viewport-scroll"),
     InheritingAnonBoxAtom("AnonBox_anonymousFlexItem", ":-moz-anonymous-flex-item"),
     InheritingAnonBoxAtom("AnonBox_anonymousGridItem", ":-moz-anonymous-grid-item"),
+    InheritingAnonBoxAtom("AnonBox_blockRubyContent", ":-moz-block-ruby-content"),
     InheritingAnonBoxAtom("AnonBox_ruby", ":-moz-ruby"),
     InheritingAnonBoxAtom("AnonBox_rubyBase", ":-moz-ruby-base"),
     InheritingAnonBoxAtom("AnonBox_rubyBaseContainer", ":-moz-ruby-base-container"),

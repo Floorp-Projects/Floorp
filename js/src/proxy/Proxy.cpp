@@ -742,7 +742,7 @@ size_t js::proxy_ObjectMoved(JSObject* obj, JSObject* old) {
   return proxy.handler()->objectMoved(obj, old);
 }
 
-const ClassOps js::ProxyClassOps = {
+const JSClassOps js::ProxyClassOps = {
     nullptr,            /* addProperty */
     nullptr,            /* delProperty */
     nullptr,            /* enumerate   */

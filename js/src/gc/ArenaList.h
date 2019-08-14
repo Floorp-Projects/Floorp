@@ -329,10 +329,10 @@ class ArenaLists {
   void adoptArenas(ArenaLists* fromArenaLists, bool targetZoneIsCollecting);
 
   inline void checkEmptyFreeLists();
-  inline bool checkEmptyArenaLists();
+  inline void checkEmptyArenaLists();
   inline void checkEmptyFreeList(AllocKind kind);
 
-  bool checkEmptyArenaList(AllocKind kind);
+  void checkEmptyArenaList(AllocKind kind);
 
   bool relocateArenas(Arena*& relocatedListOut, JS::GCReason reason,
                       js::SliceBudget& sliceBudget, gcstats::Statistics& stats);

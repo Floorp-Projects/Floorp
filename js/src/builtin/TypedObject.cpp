@@ -205,14 +205,14 @@ const Class js::TypedProto::class_ = {
  * distinguish which scalar type object this actually is.
  */
 
-static const ClassOps ScalarTypeDescrClassOps = {nullptr, /* addProperty */
-                                                 nullptr, /* delProperty */
-                                                 nullptr, /* enumerate */
-                                                 nullptr, /* newEnumerate */
-                                                 nullptr, /* resolve */
-                                                 nullptr, /* mayResolve */
-                                                 TypeDescr::finalize,
-                                                 ScalarTypeDescr::call};
+static const JSClassOps ScalarTypeDescrClassOps = {nullptr, /* addProperty */
+                                                   nullptr, /* delProperty */
+                                                   nullptr, /* enumerate */
+                                                   nullptr, /* newEnumerate */
+                                                   nullptr, /* resolve */
+                                                   nullptr, /* mayResolve */
+                                                   TypeDescr::finalize,
+                                                   ScalarTypeDescr::call};
 
 const Class js::ScalarTypeDescr::class_ = {
     "Scalar",
@@ -358,14 +358,15 @@ TypeDescr* GlobalObject::getOrCreateReferenceTypeDescr(
  * reference type object this actually is.
  */
 
-static const ClassOps ReferenceTypeDescrClassOps = {nullptr, /* addProperty */
-                                                    nullptr, /* delProperty */
-                                                    nullptr, /* enumerate */
-                                                    nullptr, /* newEnumerate */
-                                                    nullptr, /* resolve */
-                                                    nullptr, /* mayResolve */
-                                                    TypeDescr::finalize,
-                                                    ReferenceTypeDescr::call};
+static const JSClassOps ReferenceTypeDescrClassOps = {
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    TypeDescr::finalize,
+    ReferenceTypeDescr::call};
 
 const Class js::ReferenceTypeDescr::class_ = {
     "Reference",
@@ -498,16 +499,16 @@ static TypedProto* CreatePrototypeObjectForComplexTypeInstance(
                                              SingletonObject);
 }
 
-static const ClassOps ArrayTypeDescrClassOps = {nullptr, /* addProperty */
-                                                nullptr, /* delProperty */
-                                                nullptr, /* enumerate */
-                                                nullptr, /* newEnumerate */
-                                                nullptr, /* resolve */
-                                                nullptr, /* mayResolve */
-                                                TypeDescr::finalize,
-                                                nullptr, /* call */
-                                                nullptr, /* hasInstance */
-                                                TypedObject::construct};
+static const JSClassOps ArrayTypeDescrClassOps = {nullptr, /* addProperty */
+                                                  nullptr, /* delProperty */
+                                                  nullptr, /* enumerate */
+                                                  nullptr, /* newEnumerate */
+                                                  nullptr, /* resolve */
+                                                  nullptr, /* mayResolve */
+                                                  TypeDescr::finalize,
+                                                  nullptr, /* call */
+                                                  nullptr, /* hasInstance */
+                                                  TypedObject::construct};
 
 const Class ArrayTypeDescr::class_ = {
     "ArrayType",
@@ -747,16 +748,16 @@ bool js::IsTypedObjectArray(JSObject& obj) {
  * StructType class
  */
 
-static const ClassOps StructTypeDescrClassOps = {nullptr, /* addProperty */
-                                                 nullptr, /* delProperty */
-                                                 nullptr, /* enumerate */
-                                                 nullptr, /* newEnumerate */
-                                                 nullptr, /* resolve */
-                                                 nullptr, /* mayResolve */
-                                                 TypeDescr::finalize,
-                                                 StructTypeDescr::call,
-                                                 nullptr, /* hasInstance */
-                                                 TypedObject::construct};
+static const JSClassOps StructTypeDescrClassOps = {nullptr, /* addProperty */
+                                                   nullptr, /* delProperty */
+                                                   nullptr, /* enumerate */
+                                                   nullptr, /* newEnumerate */
+                                                   nullptr, /* resolve */
+                                                   nullptr, /* mayResolve */
+                                                   TypeDescr::finalize,
+                                                   StructTypeDescr::call,
+                                                   nullptr, /* hasInstance */
+                                                   TypedObject::construct};
 
 const Class StructTypeDescr::class_ = {
     "StructType",
@@ -2279,7 +2280,7 @@ const ObjectOps TypedObject::objectOps_ = {
 };
 
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Moved)                          \
-  static const ClassOps Name##ClassOps = {                                 \
+  static const JSClassOps Name##ClassOps = {                               \
       nullptr, /* addProperty */                                           \
       nullptr, /* delProperty */                                           \
       nullptr, /* enumerate   */                                           \

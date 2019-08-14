@@ -1441,12 +1441,14 @@ nsresult ProcessXCTO(nsHttpChannel* aChannel, nsIURI* aURI,
                            Report::Error);
     return NS_ERROR_CORRUPTED_CONTENT;
   }
+
   auto policyType = aLoadInfo->GetExternalContentPolicyType();
-  if (policyType == nsIContentPolicy::TYPE_DOCUMENT ||
-      policyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+  if ((policyType == nsIContentPolicy::TYPE_DOCUMENT ||
+       policyType == nsIContentPolicy::TYPE_SUBDOCUMENT) &&
+      gHttpHandler->IsDocumentNosniffEnabled()) {
     // If the header XCTO nosniff is set for any browsing context, then
     // we set the skipContentSniffing flag on the Loadinfo. Within
-    // NS_SniffContent we then bail early and do not do any sniffing.
+    // GetMIMETypeFromContent we then bail early and do not do any sniffing.
     aLoadInfo->SetSkipContentSniffing(true);
     return NS_OK;
   }

@@ -1438,7 +1438,7 @@ void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
             ImmPtr(nullptr), isObject);
 
   loadPtr(Address(scratch, offsetof(js::Class, cOps)), scratch);
-  branchPtr(Assembler::Equal, Address(scratch, offsetof(js::ClassOps, call)),
+  branchPtr(Assembler::Equal, Address(scratch, offsetof(JSClassOps, call)),
             ImmPtr(nullptr), isObject);
 
   jump(isCallable);

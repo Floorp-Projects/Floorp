@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 FIREFOX_UI_FUNCTIONAL_MANIFESTS += ["tests/functional/manifest.ini"]
-FIREFOX_UI_UPDATE_MANIFESTS += ["tests/update/manifest.ini"]
 # TODO: Move to testing/marionette/puppeteer/firefox
 PUPPETEER_FIREFOX_MANIFESTS += ["tests/puppeteer/manifest.ini"]
 
