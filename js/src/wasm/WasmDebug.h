@@ -72,8 +72,8 @@ class DebugState {
 
   const Bytes& bytecode() const { return module_->debugBytecode(); }
 
-  bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);
-  bool getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets);
+  bool getLineOffsets(size_t lineno, Vector<uint32_t>* offsets);
+  bool getAllColumnOffsets(Vector<ExprLoc>* offsets);
   bool getOffsetLocation(uint32_t offset, size_t* lineno, size_t* column);
 
   // The Code can track enter/leave frame events. Any such event triggers
@@ -89,7 +89,7 @@ class DebugState {
 
   bool hasBreakpointTrapAtOffset(uint32_t offset);
   void toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled);
-  WasmBreakpointSite* getBreakpointSite(JSContext* cx, uint32_t offset) const;
+  WasmBreakpointSite* getBreakpointSite(uint32_t offset) const;
   WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
                                                 Instance* instance,
                                                 uint32_t offset);

@@ -882,7 +882,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
     Vector<wasm::ExprLoc> offsets(cx_);
     if (instance.debugEnabled() &&
-        !instance.debug().getAllColumnOffsets(cx_, &offsets)) {
+        !instance.debug().getAllColumnOffsets(&offsets)) {
       return false;
     }
 
@@ -1631,7 +1631,7 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
 
     Vector<wasm::ExprLoc> offsets(cx_);
     if (instance.debugEnabled() &&
-        !instance.debug().getAllColumnOffsets(cx_, &offsets)) {
+        !instance.debug().getAllColumnOffsets(&offsets)) {
       return false;
     }
 
@@ -1722,7 +1722,7 @@ class DebuggerScript::GetLineOffsetsMatcher {
 
     Vector<uint32_t> offsets(cx_);
     if (instance.debugEnabled() &&
-        !instance.debug().getLineOffsets(cx_, lineno_, &offsets)) {
+        !instance.debug().getLineOffsets(lineno_, &offsets)) {
       return false;
     }
 
