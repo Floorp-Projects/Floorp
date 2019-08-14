@@ -10,7 +10,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -46,5 +45,6 @@ jobs:
             keep-artifacts: false
         dependencies:
             linux64-opt: build-linux64/opt
-        toolchains:
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-node

@@ -31,17 +31,18 @@ win32-mingwclang/opt:
             - builds/releng_base_windows_32_mingw_builds.py
             - builds/releng_sub_windows_configs/32_mingwclang.py
         mozconfig-variant: mingwclang
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - linux64-sccache
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
-        - linux64-clang-mingw-x86
-        - linux64-mingw32-nsis
-        - linux64-mingw-fxc2-x86
+    fetches:
+        toolchain:
+            - mingw32-rust
+            - linux64-upx
+            - linux64-wine
+            - linux64-sccache
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - linux64-clang-mingw-x86
+            - linux64-mingw32-nsis
+            - linux64-mingw-fxc2-x86
 
 win32-mingwclang/debug:
     description: "Win32 MinGW-Clang Debug"
@@ -61,17 +62,18 @@ win32-mingwclang/debug:
             - builds/releng_base_windows_32_mingw_builds.py
             - builds/releng_sub_windows_configs/32_mingwclang.py
         mozconfig-variant: mingwclang-debug
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - linux64-sccache
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
-        - linux64-clang-mingw-x86
-        - linux64-mingw32-nsis
-        - linux64-mingw-fxc2-x86
+    fetches:
+        toolchain:
+            - mingw32-rust
+            - linux64-upx
+            - linux64-wine
+            - linux64-sccache
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - linux64-clang-mingw-x86
+            - linux64-mingw32-nsis
+            - linux64-mingw-fxc2-x86
 
 win64-mingwclang/opt:
     description: "Win64 MinGW-Clang Opt"
@@ -91,17 +93,18 @@ win64-mingwclang/opt:
             - builds/releng_base_windows_64_mingw_builds.py
             - builds/releng_sub_windows_configs/64_mingwclang.py
         mozconfig-variant: mingwclang
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - linux64-sccache
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
-        - linux64-clang-mingw-x64
-        - linux64-mingw32-nsis
-        - linux64-mingw-fxc2-x86
+    fetches:
+        toolchain:
+            - mingw32-rust
+            - linux64-upx
+            - linux64-wine
+            - linux64-sccache
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - linux64-clang-mingw-x64
+            - linux64-mingw32-nsis
+            - linux64-mingw-fxc2-x86
 
 win64-mingwclang/debug:
     description: "Win64 MinGW-Clang Debug"
@@ -121,14 +124,15 @@ win64-mingwclang/debug:
             - builds/releng_base_windows_64_mingw_builds.py
             - builds/releng_sub_windows_configs/64_mingwclang.py
         mozconfig-variant: mingwclang-debug
-    toolchains:
-        - mingw32-rust
-        - linux64-upx
-        - linux64-wine
-        - linux64-sccache
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
-        - linux64-clang-mingw-x64
-        - linux64-mingw32-nsis
-        - linux64-mingw-fxc2-x86
+    fetches:
+        toolchain:
+            - mingw32-rust
+            - linux64-upx
+            - linux64-wine
+            - linux64-sccache
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - linux64-clang-mingw-x64
+            - linux64-mingw32-nsis
+            - linux64-mingw-fxc2-x86
