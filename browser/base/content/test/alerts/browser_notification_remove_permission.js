@@ -1,5 +1,9 @@
 "use strict";
 
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 var tab;
 var notificationURL =
   "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
@@ -35,8 +39,8 @@ function onAlertShowing() {
     return;
   }
   ok(
-    Services.perms.testExactPermission(
-      makeURI(notificationURL),
+    PermissionTestUtils.testExactPermission(
+      notificationURL,
       "desktop-notification"
     ),
     "Permission should exist prior to removal"

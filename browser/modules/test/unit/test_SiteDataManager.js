@@ -13,6 +13,9 @@ const { SiteDataManager } = ChromeUtils.import(
 const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"
 );
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "setTimeout",
@@ -119,7 +122,7 @@ add_task(async function testRemove() {
   await SiteDataManager.updateSites();
 
   let uri = Services.io.newURI(EXAMPLE_ORIGIN);
-  Services.perms.add(uri, "camera", Services.perms.ALLOW_ACTION);
+  PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
 
   SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo1", "bar1");
   SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo2", "bar2");
@@ -151,25 +154,25 @@ add_task(async function testRemove() {
   let cookies = Services.cookies.countCookiesFromHost("example.com");
   Assert.equal(cookies, 0, "Has cleared cookies for example.com");
 
-  let perm = Services.perms.testPermission(uri, "persistent-storage");
+  let perm = PermissionTestUtils.testPermission(uri, "persistent-storage");
   Assert.equal(
     perm,
     Services.perms.UNKNOWN_ACTION,
     "Cleared the persistent-storage permission."
   );
-  perm = Services.perms.testPermission(uri, "camera");
+  perm = PermissionTestUtils.testPermission(uri, "camera");
   Assert.equal(
     perm,
     Services.perms.ALLOW_ACTION,
     "Did not clear other permissions."
   );
 
-  Services.perms.remove(uri, "camera");
+  PermissionTestUtils.remove(uri, "camera");
 });
 
 add_task(async function testRemoveSiteData() {
   let uri = Services.io.newURI(EXAMPLE_ORIGIN);
-  Services.perms.add(uri, "camera", Services.perms.ALLOW_ACTION);
+  PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
 
   SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo1", "bar1");
   SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN, "foo2", "bar2");
@@ -199,18 +202,18 @@ add_task(async function testRemoveSiteData() {
   let cookies = Services.cookies.countCookiesFromHost("example.org");
   Assert.equal(cookies, 0, "Has cleared cookies for example.org");
 
-  let perm = Services.perms.testPermission(uri, "persistent-storage");
+  let perm = PermissionTestUtils.testPermission(uri, "persistent-storage");
   Assert.equal(
     perm,
     Services.perms.UNKNOWN_ACTION,
     "Cleared the persistent-storage permission."
   );
-  perm = Services.perms.testPermission(uri, "camera");
+  perm = PermissionTestUtils.testPermission(uri, "camera");
   Assert.equal(
     perm,
     Services.perms.ALLOW_ACTION,
     "Did not clear other permissions."
   );
 
-  Services.perms.remove(uri, "camera");
+  PermissionTestUtils.remove(uri, "camera");
 });
