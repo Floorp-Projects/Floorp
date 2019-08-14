@@ -20,11 +20,8 @@ function test() {
     Ci.nsICookie.SAMESITE_NONE
   );
 
-  PermissionTestUtils.add(
-    "http://example.com/",
-    "install",
-    Services.perms.ALLOW_ACTION
-  );
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(
     JSON.stringify({
@@ -54,7 +51,7 @@ function finish_test(count) {
     {}
   );
 
-  PermissionTestUtils.remove("http://example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

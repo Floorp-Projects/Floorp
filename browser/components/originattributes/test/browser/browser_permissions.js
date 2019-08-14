@@ -4,16 +4,12 @@
  * This test is testing the cookie "permission" for a specific URI.
  */
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 const TEST_PAGE = "http://example.net";
 const uri = Services.io.newURI(TEST_PAGE);
 
 function disableCookies() {
   Services.cookies.removeAll();
-  PermissionTestUtils.add(uri, "cookie", Services.perms.DENY_ACTION);
+  Services.perms.add(uri, "cookie", Services.perms.DENY_ACTION);
 }
 
 function ensureCookieNotSet(aBrowser) {
@@ -37,7 +33,7 @@ IsolationTestTools.runTests(
 
 function enableCookies() {
   Services.cookies.removeAll();
-  PermissionTestUtils.add(uri, "cookie", Services.perms.ALLOW_ACTION);
+  Services.perms.add(uri, "cookie", Services.perms.ALLOW_ACTION);
 }
 
 function ensureCookieSet(aBrowser) {

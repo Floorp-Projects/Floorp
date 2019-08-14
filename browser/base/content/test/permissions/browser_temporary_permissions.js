@@ -17,21 +17,19 @@ const SUBFRAME_PAGE =
 
 // Test that setting temp permissions triggers a change in the identity block.
 add_task(async function testTempPermissionChangeEvents() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    ORIGIN
-  );
+  let uri = NetUtil.newURI(ORIGIN);
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(ORIGIN, function(browser) {
-    SitePermissions.setForPrincipal(
-      principal,
+  await BrowserTestUtils.withNewTab(uri.spec, function(browser) {
+    SitePermissions.set(
+      uri,
       id,
       SitePermissions.BLOCK,
       SitePermissions.SCOPE_TEMPORARY,
       browser
     );
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
@@ -46,7 +44,7 @@ add_task(async function testTempPermissionChangeEvents() {
       "geo anchor should be visible"
     );
 
-    SitePermissions.removeFromPrincipal(principal, id, browser);
+    SitePermissions.remove(uri, id, browser);
 
     Assert.equal(
       geoIcon.getBoundingClientRect().width,
@@ -59,10 +57,6 @@ add_task(async function testTempPermissionChangeEvents() {
 // Test that temp blocked permissions requested by subframes (with a different URI) affect the whole page.
 add_task(async function testTempPermissionSubframes() {
   let uri = NetUtil.newURI(ORIGIN);
-  let principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    {}
-  );
   let id = "geo";
 
   await BrowserTestUtils.withNewTab(SUBFRAME_PAGE, async function(browser) {
@@ -96,7 +90,7 @@ add_task(async function testTempPermissionSubframes() {
 
     await popuphidden;
 
-    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.BLOCK,
       scope: SitePermissions.SCOPE_TEMPORARY,
     });

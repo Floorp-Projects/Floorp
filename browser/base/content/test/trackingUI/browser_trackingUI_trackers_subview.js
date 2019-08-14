@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 const TRACKING_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 
@@ -117,14 +113,10 @@ add_task(async function testTrackersSubView() {
   await assertSitesListed(true);
   info("Testing trackers subview with TP enabled and a CB exception.");
   let uri = Services.io.newURI("https://tracking.example.org");
-  PermissionTestUtils.add(
-    uri,
-    "trackingprotection",
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(uri, "trackingprotection", Services.perms.ALLOW_ACTION);
   await assertSitesListed(false);
   info("Testing trackers subview with TP enabled and a CB exception removed.");
-  PermissionTestUtils.remove(uri, "trackingprotection");
+  Services.perms.remove(uri, "trackingprotection");
   await assertSitesListed(true);
 
   Services.prefs.clearUserPref(TP_PREF);

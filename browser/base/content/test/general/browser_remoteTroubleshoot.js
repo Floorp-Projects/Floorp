@@ -5,9 +5,6 @@
 var { WebChannel } = ChromeUtils.import(
   "resource://gre/modules/WebChannel.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 const TEST_URL_TAIL =
   "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html";
@@ -57,13 +54,13 @@ add_task(async function() {
   );
 
   // Add a permission manager entry for our URI.
-  PermissionTestUtils.add(
+  Services.perms.add(
     TEST_URI_GOOD,
     "remote-troubleshooting",
     Services.perms.ALLOW_ACTION
   );
   registerCleanupFunction(() => {
-    PermissionTestUtils.remove(TEST_URI_GOOD, "remote-troubleshooting");
+    Services.perms.remove(TEST_URI_GOOD, "remote-troubleshooting");
   });
 
   // Try again - now we are expecting a response with the actual data.

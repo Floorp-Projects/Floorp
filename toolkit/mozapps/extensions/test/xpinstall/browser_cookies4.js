@@ -21,11 +21,8 @@ function test() {
     Ci.nsICookie.SAMESITE_NONE
   );
 
-  PermissionTestUtils.add(
-    "http://example.com/",
-    "install",
-    Services.perms.ALLOW_ACTION
-  );
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
 
@@ -58,7 +55,7 @@ function finish_test(count) {
   );
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
-  PermissionTestUtils.remove("http://example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

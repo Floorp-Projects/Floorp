@@ -13,9 +13,6 @@ const TEST_PERM = "test-permission";
 const { PermissionsUtils } = ChromeUtils.import(
   "resource://gre/modules/PermissionsUtils.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 function run_test() {
   test_importfromPrefs();
@@ -82,7 +79,7 @@ function test_importfromPrefs() {
   for (let url of unknown) {
     let uri = Services.io.newURI(url);
     Assert.equal(
-      PermissionTestUtils.testPermission(uri, TEST_PERM),
+      Services.perms.testPermission(uri, TEST_PERM),
       Services.perms.UNKNOWN_ACTION
     );
   }
@@ -102,21 +99,21 @@ function test_importfromPrefs() {
   for (let url of whitelisted) {
     let uri = Services.io.newURI(url);
     Assert.equal(
-      PermissionTestUtils.testPermission(uri, TEST_PERM),
+      Services.perms.testPermission(uri, TEST_PERM),
       Services.perms.ALLOW_ACTION
     );
   }
   for (let url of blacklisted) {
     let uri = Services.io.newURI(url);
     Assert.equal(
-      PermissionTestUtils.testPermission(uri, TEST_PERM),
+      Services.perms.testPermission(uri, TEST_PERM),
       Services.perms.DENY_ACTION
     );
   }
   for (let url of untouched) {
     let uri = Services.io.newURI(url);
     Assert.equal(
-      PermissionTestUtils.testPermission(uri, TEST_PERM),
+      Services.perms.testPermission(uri, TEST_PERM),
       Services.perms.UNKNOWN_ACTION
     );
   }

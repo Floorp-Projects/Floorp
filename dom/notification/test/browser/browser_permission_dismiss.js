@@ -1,9 +1,5 @@
 "use strict";
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 const ORIGIN_URI = Services.io.newURI("https://example.com");
 const PERMISSION_NAME = "desktop-notification";
 const PROMPT_ALLOW_BUTTON = -1;
@@ -49,7 +45,7 @@ function clickDoorhangerButton(aButtonIndex) {
  *                   closes.
  */
 function tabWithRequest(task, permission) {
-  PermissionTestUtils.remove(ORIGIN_URI, PERMISSION_NAME);
+  Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
 
   return BrowserTestUtils.withNewTab(
     {
@@ -98,7 +94,7 @@ add_task(async function setup() {
   );
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
-    PermissionTestUtils.remove(ORIGIN_URI, PERMISSION_NAME);
+    Services.perms.remove(ORIGIN_URI, PERMISSION_NAME);
   });
 });
 
@@ -113,7 +109,7 @@ add_task(async function test_requestPermission_granted() {
   );
 
   is(
-    PermissionTestUtils.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
     Services.perms.ALLOW_ACTION,
     "Check permission in perm. manager"
   );
@@ -130,7 +126,7 @@ add_task(async function test_requestPermission_denied_temporarily() {
   );
 
   is(
-    PermissionTestUtils.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
     Services.perms.UNKNOWN_ACTION,
     "Check permission in perm. manager"
   );
@@ -147,7 +143,7 @@ add_task(async function test_requestPermission_denied_permanently() {
   );
 
   is(
-    PermissionTestUtils.testPermission(ORIGIN_URI, PERMISSION_NAME),
+    Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
     Services.perms.DENY_ACTION,
     "Check permission in perm. manager"
   );

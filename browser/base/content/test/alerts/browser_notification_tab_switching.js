@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 var tab;
 var notification;
 var notificationURL =
@@ -108,5 +104,5 @@ add_task(async function test_notificationPreventDefaultAndSwitchTabs() {
 });
 
 add_task(async function cleanup() {
-  PermissionTestUtils.remove(notificationURL, "desktop-notification");
+  Services.perms.remove(makeURI(notificationURL), "desktop-notification");
 });

@@ -6,9 +6,6 @@
 
 var tmp = {};
 ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 var { Translation } = tmp;
 
 const kLanguagesPref = "browser.translation.neverForLanguages";
@@ -243,7 +240,7 @@ var gTests = [
       );
 
       // Cleanup.
-      PermissionTestUtils.remove("http://example.com", "translate");
+      Services.perms.remove(makeURI("http://example.com"), "translate");
       notif.close();
     },
   },
@@ -310,16 +307,9 @@ var gTests = [
     run: async function checkDomainExceptions() {
       // Put 2 exceptions before opening the window to check the list is
       // displayed on load.
-      PermissionTestUtils.add(
-        "http://example.org",
-        "translate",
-        Services.perms.DENY_ACTION
-      );
-      PermissionTestUtils.add(
-        "http://example.com",
-        "translate",
-        Services.perms.DENY_ACTION
-      );
+      let perms = Services.perms;
+      perms.add(makeURI("http://example.org"), "translate", perms.DENY_ACTION);
+      perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
 
       // Open the translation exceptions dialog.
       let win = openDialog(
@@ -349,18 +339,14 @@ var gTests = [
       is(getDomainExceptions().length, 1, "One exception in the permissions");
 
       // Clear the permissions, and check the last item is removed from the display.
-      PermissionTestUtils.remove("http://example.org", "translate");
-      PermissionTestUtils.remove("http://example.com", "translate");
+      perms.remove(makeURI("http://example.org"), "translate");
+      perms.remove(makeURI("http://example.com"), "translate");
       is(tree.view.rowCount, 0, "The site exceptions list is empty");
       ok(remove.disabled, "The 'Remove Site' button is disabled");
       ok(removeAll.disabled, "The 'Remove All Site' button is disabled");
 
       // Add an item and check it appears.
-      PermissionTestUtils.add(
-        "http://example.com",
-        "translate",
-        Services.perms.DENY_ACTION
-      );
+      perms.add(makeURI("http://example.com"), "translate", perms.DENY_ACTION);
       is(tree.view.rowCount, 1, "The site exceptions list has 1 item");
       ok(remove.disabled, "The 'Remove Site' button is disabled");
       ok(!removeAll.disabled, "The 'Remove All Sites' button is enabled");

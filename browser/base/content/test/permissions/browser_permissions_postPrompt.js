@@ -41,12 +41,12 @@ function testPostPrompt(task) {
     EventUtils.synthesizeMouseAtCenter(notification.button, {});
 
     is(
-      PermissionTestUtils.testPermission(uri, "desktop-notification"),
+      Services.perms.testPermission(uri, "desktop-notification"),
       Ci.nsIPermissionManager.ALLOW_ACTION,
       "User can override the default deny by using the prompt"
     );
 
-    PermissionTestUtils.remove(uri, "desktop-notification");
+    Services.perms.remove(uri, "desktop-notification");
   });
 }
 

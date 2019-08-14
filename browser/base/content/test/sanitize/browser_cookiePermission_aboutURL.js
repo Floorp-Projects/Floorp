@@ -2,9 +2,6 @@ const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 function checkDataForAboutURL() {
   return new Promise(resolve => {
@@ -80,7 +77,7 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
 
   // Custom permission without considering OriginAttributes
   let uri = Services.io.newURI("about:newtab");
-  PermissionTestUtils.add(uri, "cookie", Ci.nsICookiePermission.ACCESS_SESSION);
+  Services.perms.add(uri, "cookie", Ci.nsICookiePermission.ACCESS_SESSION);
 
   // Let's create a tab with some data.
   await SiteDataTestUtils.addToIndexedDB("about:newtab", "foo", "bar", {});
@@ -105,5 +102,5 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
     };
   });
 
-  PermissionTestUtils.remove(uri, "cookie");
+  Services.perms.remove(uri, "cookie");
 });

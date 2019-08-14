@@ -24,9 +24,6 @@ var { PlacesUtils } = ChromeUtils.import(
 var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
-var { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,

@@ -1,9 +1,6 @@
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 const TEST_ORIGIN = "https://example.com";
 const TEST_ORIGIN_CERT_ERROR = "https://expired.example.com";
@@ -25,27 +22,25 @@ async function testPermissions(defaultPermission) {
 
     ok(defaultCheckbox.checked, "The default checkbox should be checked.");
 
-    PermissionTestUtils.add(
-      gBrowser.currentURI,
-      "geo",
-      Services.perms.DENY_ACTION
-    );
+    SitePermissions.set(gBrowser.currentURI, "geo", SitePermissions.BLOCK);
 
     ok(!defaultCheckbox.checked, "The default checkbox should not be checked.");
 
     defaultCheckbox.checked = true;
     defaultCheckbox.dispatchEvent(new Event("command"));
 
-    ok(
-      !PermissionTestUtils.getPermissionObject(gBrowser.currentURI, "geo"),
+    is(
+      SitePermissions.get(gBrowser.currentURI, "geo").state,
+      defaultPermission,
       "Checking the default checkbox should reset the permission."
     );
 
     defaultCheckbox.checked = false;
     defaultCheckbox.dispatchEvent(new Event("command"));
 
-    ok(
-      !PermissionTestUtils.getPermissionObject(gBrowser.currentURI, "geo"),
+    is(
+      SitePermissions.get(gBrowser.currentURI, "geo").state,
+      defaultPermission,
       "Unchecking the default checkbox should pick the default permission."
     );
     is(
@@ -58,23 +53,23 @@ async function testPermissions(defaultPermission) {
     blockRadioButton.dispatchEvent(new Event("command"));
 
     is(
-      PermissionTestUtils.getPermissionObject(gBrowser.currentURI, "geo")
-        .capability,
-      Services.perms.DENY_ACTION,
+      SitePermissions.get(gBrowser.currentURI, "geo").state,
+      SitePermissions.BLOCK,
       "Selecting a value in the radio group should set the corresponding permission"
     );
 
     radioGroup.selectedItem = defaultRadioButton;
     defaultRadioButton.dispatchEvent(new Event("command"));
 
-    ok(
-      !PermissionTestUtils.getPermissionObject(gBrowser.currentURI, "geo"),
+    is(
+      SitePermissions.get(gBrowser.currentURI, "geo").state,
+      defaultPermission,
       "Selecting the default value should reset the permission."
     );
     ok(defaultCheckbox.checked, "The default checkbox should be checked.");
 
     pageInfo.close();
-    PermissionTestUtils.remove(gBrowser.currentURI, "geo");
+    SitePermissions.remove(gBrowser.currentURI, "geo");
   });
 }
 
@@ -183,7 +178,7 @@ add_task(async function test_NetworkError() {
 
 // Test some standard operations in the permission tab.
 add_task(async function test_geo_permission() {
-  await testPermissions(Services.perms.UNKNOWN_ACTION);
+  await testPermissions(SitePermissions.UNKNOWN);
 });
 
 // Test some standard operations in the permission tab, falling back to a custom
@@ -192,7 +187,7 @@ add_task(async function test_default_geo_permission() {
   await SpecialPowers.pushPrefEnv({
     set: [["permissions.default.geo", SitePermissions.ALLOW]],
   });
-  await testPermissions(Services.perms.ALLOW_ACTION);
+  await testPermissions(SitePermissions.ALLOW);
 });
 
 // Test special behavior for cookie permissions.
@@ -214,7 +209,7 @@ add_task(async function test_cookie_permission() {
     defaultCheckbox.dispatchEvent(new Event("command"));
 
     is(
-      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
+      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.ALLOW,
       "Unchecking the default checkbox should pick the default permission."
     );
@@ -228,7 +223,7 @@ add_task(async function test_cookie_permission() {
     blockRadioButton.dispatchEvent(new Event("command"));
 
     is(
-      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
+      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.BLOCK,
       "Selecting a value in the radio group should set the corresponding permission"
     );
@@ -237,7 +232,7 @@ add_task(async function test_cookie_permission() {
     allowRadioButton.dispatchEvent(new Event("command"));
 
     is(
-      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
+      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.ALLOW,
       "Selecting a value in the radio group should set the corresponding permission"
     );
@@ -247,7 +242,7 @@ add_task(async function test_cookie_permission() {
     defaultCheckbox.dispatchEvent(new Event("command"));
 
     is(
-      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
+      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.UNKNOWN,
       "Checking the default checkbox should reset the permission."
     );
@@ -258,6 +253,6 @@ add_task(async function test_cookie_permission() {
     );
 
     pageInfo.close();
-    PermissionTestUtils.remove(gBrowser.currentURI, "cookie");
+    SitePermissions.remove(gBrowser.currentURI, "cookie");
   });
 });
