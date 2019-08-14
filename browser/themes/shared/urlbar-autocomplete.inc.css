@@ -29,11 +29,18 @@
 #urlbar-results {
   position: fixed;
   z-index: 1;
-  left: 0;
-  right: 0;
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   text-shadow: none;
+}
+
+#urlbar-results.megabar {
+  margin-inline-start: 5px;
+}
+
+#urlbar-results:not(.megabar) {
+  left: 0;
+  right: 0;
   border-block: 1px solid var(--chrome-content-separator-color);
 }
 
@@ -251,10 +258,13 @@
 /* Search one-offs. */
 #urlbar-results > .search-one-offs {
   -moz-box-orient: horizontal;
-  padding-inline-start: var(--item-padding-start, 5px);
-  padding-inline-end: var(--item-padding-end, 5px);
   padding-top: 16px;
   padding-bottom: 16px;
+}
+
+#urlbar-results:not(.megabar) > .search-one-offs {
+  padding-inline-start: var(--item-padding-start, 5px);
+  padding-inline-end: var(--item-padding-end, 5px);
 }
 
 #urlbar-results .search-panel-one-offs {
