@@ -2841,8 +2841,7 @@ static bool GetScriptAndPCArgs(JSContext* cx, CallArgs& args,
   if (!args.get(0).isUndefined()) {
     HandleValue v = args[0];
     unsigned intarg = 0;
-    if (v.isObject() &&
-        JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_)) {
+    if (v.isObject() && JS_GetClass(&v.toObject()) == &JSFunction::class_) {
       script = TestingFunctionArgumentToScript(cx, v);
       if (!script) {
         return false;
@@ -8326,8 +8325,8 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
 
   if (!source) {
     if (!createProxy) {
-      source = NewBuiltinClassInstance(
-          cx, Valueify(&TransplantableDOMObjectClass), TenuredObject);
+      source = NewBuiltinClassInstance(cx, &TransplantableDOMObjectClass,
+                                       TenuredObject);
       if (!source) {
         return false;
       }
@@ -9786,7 +9785,7 @@ static void InitDOMObject(HandleObject obj) {
 
 static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global) {
   MOZ_ASSERT(JS_IsGlobalObject(global));
-  if (GetObjectJSClass(global) != &global_class) {
+  if (GetObjectClass(global) != &global_class) {
     JS_ReportErrorASCII(cx, "Can't get FakeDOMObject prototype in sandbox");
     return nullptr;
   }
@@ -9824,7 +9823,7 @@ static bool dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
 static bool InstanceClassHasProtoAtDepth(const Class* clasp, uint32_t protoID,
                                          uint32_t depth) {
   // Only the (fake) DOM object supports any JIT optimizations.
-  return clasp == Valueify(GetDomClass());
+  return clasp == GetDomClass();
 }
 
 static bool ShellBuildId(JS::BuildIdCharVector* buildId) {

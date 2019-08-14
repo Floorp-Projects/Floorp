@@ -103,9 +103,8 @@ class JSObject : public js::gc::Cell {
  public:
   bool isNative() const { return getClass()->isNative(); }
 
-  const js::Class* getClass() const { return group_->clasp(); }
-  const JSClass* getJSClass() const { return Jsvalify(getClass()); }
-  bool hasClass(const js::Class* c) const { return getClass() == c; }
+  const JSClass* getClass() const { return group_->clasp(); }
+  bool hasClass(const JSClass* c) const { return getClass() == c; }
 
   js::LookupPropertyOp getOpsLookupProperty() const {
     return getClass()->getOpsLookupProperty();

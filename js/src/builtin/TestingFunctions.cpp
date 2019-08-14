@@ -2940,7 +2940,7 @@ class CloneBufferObject : public NativeObject {
   static const Class class_;
 
   static CloneBufferObject* Create(JSContext* cx) {
-    RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&class_)));
+    RootedObject obj(cx, JS_NewObject(cx, &class_));
     if (!obj) {
       return nullptr;
     }
