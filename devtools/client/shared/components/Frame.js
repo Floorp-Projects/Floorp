@@ -204,11 +204,11 @@ class Frame extends Component {
       }
     }
 
-    // If the message comes from a logPoint or conditional breakpoint,
+    // If the message comes from a logPoint,
     // prefix the source location accordingly
-    if (frame.origin) {
+    if (frame.options) {
       let locationPrefix;
-      if (frame.origin === "logPoint") {
+      if (frame.options.logPoint) {
         locationPrefix = "Logpoint @ ";
       }
 

@@ -333,10 +333,10 @@ window.onload = async function () {
     // a prefix should render before source
     await checkFrameComponent({
       frame: {
-        origin: "logPoint",
         source: "http://myfile.com/mahscripts.js",
         line: 55,
         column: 10,
+        options: { logPoint: true },
       }
     }, {
       locationPrefix: "Logpoint @ ",

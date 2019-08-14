@@ -52,7 +52,7 @@ exports.viewSourceInStyleEditor = async function(
  * @param {number} sourceLine
  * @param {number} sourceColumn
  * @param {string} sourceID
- * @param {string} [reason=unknown]
+ * @param {(string|object)} [reason=unknown]
  *
  * @return {Promise<boolean>}
  */
