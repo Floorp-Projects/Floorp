@@ -33,4 +33,5 @@
     <string name="device_sharing_camera_and_mic">Camera and microphone are on</string>
     <string name="new_tab">New tab</string>
     <string name="close_tab">Close tab</string>
+    <string name="desktop_mode">Desktop site</string>
 </resources>
