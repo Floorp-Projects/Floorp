@@ -16,10 +16,10 @@ optional arguments:
 Pre-requisites
 --------------
 * Working build toolchain.
-* Subversion
+* git
 * CMake
 * Ninja
-* Python 2.7
+* Python 2.7 and 3
 
 Please use the latest available CMake for your platform to avoid surprises.
 
@@ -28,15 +28,7 @@ Config file format
 
 build-clang.py accepts a JSON config format with the following fields:
 
-* llvm_revision: The LLVM SVN revision to build.
 * stages: Use 1, 2, or 3 to select different compiler stages.  The default is 3.
-* llvm_repo: SVN path to the LLVM repo.
-* clang_repo: SVN path to the Clang repo.
-* extra_repo: SVN path to the clang-tools-extra repo.
-* lld_repo: SVN path to the lld repo.
-* compiler_repo: SVN path to the compiler-rt repo.
-* libcxx_repo: SVN path to the libcxx repo.
-* libcxxabi_repo: SVN path to the libcxxabi repo.
 * python_path: Path to the Python 2.7 installation on the machine building clang.
 * gcc_dir: Path to the gcc toolchain installation, only required on Linux.
 * cc: Path to the bootsraping C Compiler.
@@ -52,6 +44,8 @@ build-clang.py accepts a JSON config format with the following fields:
 * build_clang_tidy: Whether to build clang-tidy with the Mozilla checks imported.  The default is false.
 * osx_cross_compile: Whether to invoke CMake for OS X cross compile builds.
 * assertions: Whether to enable LLVM assertions.  The default is false.
+
+The revisions are defined in taskcluster/ci/fetch/toolchains.yml. They are usually commit sha1s corresponding to upstream tags.
 
 Environment Variables
 ---------------------
