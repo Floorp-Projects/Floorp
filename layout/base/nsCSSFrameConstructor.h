@@ -1503,14 +1503,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 #  endif /* XP_MACOSX */
 #endif   /* MOZ_XUL */
 
-  // Function to find FrameConstructionData for an element using one of the XUL
-  // display types.  Will return null if the style doesn't have a XUL display
-  // type.  This function performs no other checks, so should only be called if
-  // we know for sure that the element is not something that should get a frame
-  // constructed by tag.
-  static const FrameConstructionData* FindXULDisplayData(const nsStyleDisplay&,
-                                                         const Element&);
-
   /**
    * Constructs an outer frame, an anonymous child that wraps its real
    * children, and its descendant frames.  This is used by both
