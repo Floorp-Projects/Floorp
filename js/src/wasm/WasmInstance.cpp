@@ -945,8 +945,7 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   RootedAnyRef ref(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
-  JSContext* cx = TlsContext.get();
-  uint32_t oldSize = table.grow(delta, cx);
+  uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
     switch (table.kind()) {
@@ -954,7 +953,7 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         table.fillAnyRef(oldSize, delta, ref);
         break;
       case TableKind::FuncRef:
-        table.fillFuncRef(oldSize, delta, ref, cx);
+        table.fillFuncRef(oldSize, delta, ref, TlsContext.get());
         break;
       case TableKind::AsmJS:
         MOZ_CRASH("not asm.js");
