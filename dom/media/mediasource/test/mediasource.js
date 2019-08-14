@@ -183,12 +183,12 @@ function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
 }
 
 // Register timeout function to dump debugging logs.
-SimpleTest.registerTimeoutFunction(function() {
+SimpleTest.registerTimeoutFunction(async function() {
   for (const v of document.getElementsByTagName("video")) {
-    v.mozDumpDebugInfo();
+    console.log(await SpecialPowers.wrap(v).mozRequestDebugInfo());
   }
   for (const a of document.getElementsByTagName("audio")) {
-    a.mozDumpDebugInfo();
+    console.log(await SpecialPowers.wrap(a).mozRequestDebugInfo());
   }
 });
 

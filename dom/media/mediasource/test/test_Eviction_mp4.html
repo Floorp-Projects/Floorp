@@ -52,7 +52,7 @@ runWithMSE(async (ms, el) => {
     ok(true, "appendBuffer succeeded");
   } catch (ex) {
     ok(false, "Shouldn't throw another time when data can be evicted");
-    el.mozDumpDebugInfo();
+    dump(JSON.stringify(await SpecialPowers.wrap(el).mozRequestDebugInfo()));
   }
   SimpleTest.finish();
 });
