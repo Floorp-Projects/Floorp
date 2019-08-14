@@ -297,6 +297,11 @@ only takes `actual` and `description` as arguments.
 The description parameter is used to present more useful error messages when
 a test fails.
 
+When assertions are violated, they throw a runtime exception. This interrupts
+test execution, so subsequent statements are not evaluated. A given test can
+only fail due to one such violation, so if you would like to assert multiple
+behaviors independently, you should use multiple tests.
+
 NOTE: All asserts must be located in a `test()` or a step of an
 `async_test()`, unless the test is a single page test. Asserts outside
 these places won't be detected correctly by the harness and may cause
