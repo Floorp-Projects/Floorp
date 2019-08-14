@@ -10012,6 +10012,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "from-font",
       "inherit",
       "initial",
       "revert",
