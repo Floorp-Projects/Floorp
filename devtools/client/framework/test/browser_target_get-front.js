@@ -19,6 +19,11 @@ add_task(async function() {
     null,
     "got null from the targetFront attribute for the root"
   );
+  is(
+    client.mainRoot.parentFront,
+    null,
+    "got null from the parentFront attribute for the root"
+  );
 
   info("Test getting a front twice");
   const getAccessibilityFront = await target.getFront("accessibility");
@@ -37,6 +42,16 @@ add_task(async function() {
     getAccessibilityFront2.targetFront,
     target,
     "got the correct targetFront attribute from the front"
+  );
+  is(
+    getAccessibilityFront.parentFront,
+    target,
+    "got the correct parentFront attribute from the front"
+  );
+  is(
+    getAccessibilityFront2.parentFront,
+    target,
+    "got the correct parentFront attribute from the front"
   );
 
   info("Test getting a front on different targets");
