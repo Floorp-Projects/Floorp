@@ -191,23 +191,6 @@ that modify sensitive resources (such as `.py`). The latter require
 someone with merge access to comment with "LGTM" or "w3c-test:mirror" to
 indicate the pull request has been checked.
 
-Finding Things
-==============
-
-Each top-level directory matches the shortname used by a standard, with
-some exceptions. (Typically the shortname is from the standard's
-corresponding GitHub repository.)
-
-For some of the specifications, the tree under the top-level directory
-represents the sections of the respective documents, using the section
-IDs for directory names, with a maximum of three levels deep.
-
-So if you're looking for tests in HTML for "The History interface",
-they will be under `html/browsers/history/the-history-interface/`.
-
-Various resources that tests depend on are in `common`, `images`, and
-`fonts`.
-
 Branches
 ========
 
