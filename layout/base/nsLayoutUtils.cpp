@@ -184,8 +184,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */
-uint32_t nsLayoutUtils::sSystemFontScale;
-/* static */
 uint32_t nsLayoutUtils::sZoomMaxPercent;
 /* static */
 uint32_t nsLayoutUtils::sZoomMinPercent;
@@ -7973,8 +7971,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddUintVarCache(&sSystemFontScale, "font.size.systemFontScale",
-                               100);
   Preferences::AddUintVarCache(&sZoomMaxPercent, "zoom.maxPercent", 300);
   Preferences::AddUintVarCache(&sZoomMinPercent, "zoom.minPercent", 30);
   Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
