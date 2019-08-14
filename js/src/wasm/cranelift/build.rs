@@ -47,6 +47,7 @@ fn main() {
             "c++",
             "-std=gnu++14",
             "-fno-sized-deallocation",
+            "-fno-aligned-new",
             "-DRUST_BINDGEN",
         ])
         .clang_arg("-I../..");
