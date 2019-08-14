@@ -24,6 +24,7 @@ extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
 extern crate encoding_c;
+extern crate encoding_c_mem;
 extern crate encoding_glue;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_client;

@@ -1009,6 +1009,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "encoding_c_mem"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "encoding_rs 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "encoding_glue"
 version = "0.1.0"
 dependencies = [
@@ -1260,6 +1268,7 @@ dependencies = [
  "cubeb-pulse 0.2.0",
  "cubeb-sys 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_c 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_c_mem 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "geckoservo 0.0.1",
@@ -3995,6 +4004,7 @@ dependencies = [
 "checksum dwrote 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0bd1369e02db5e9b842a9b67bce8a2fcc043beafb2ae8a799dd482d46ea1ff0d"
 "checksum either 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "18785c1ba806c258137c937e44ada9ee7e69a37e3c72077542cd2f069d78562a"
 "checksum encoding_c 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "769ecb8b33323998e482b218c0d13cd64c267609023b4b7ec3ee740714c318ee"
+"checksum encoding_c_mem 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2f9516d857aa9e070e02890ed3906f678ffca7fac8d82bd53c3567d96337f256"
 "checksum encoding_rs 0.8.17 (registry+https://github.com/rust-lang/crates.io-index)" = "4155785c79f2f6701f185eb2e6b4caf0555ec03477cb4c70db67b465311620ed"
 "checksum enum-display-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "53f76eb63c4bfc6fce5000f106254701b741fc9a65ee08445fde0ff39e583f1c"
 "checksum env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0561146661ae44c579e993456bc76d11ce1e0c7d745e57b2fa7146b6e49fa2ad"
