@@ -526,6 +526,7 @@
       };
       testElm("footer_in_article", obj);
       testElm("footer_in_aside", obj);
+      testElm("footer_in_main", obj);
       testElm("footer_in_nav", obj);
       testElm("footer_in_section", obj);
       testElm("footer_in_blockquote", obj);
@@ -628,6 +629,7 @@
       };
       testElm("header_in_article", obj);
       testElm("header_in_aside", obj);
+      testElm("header_in_main", obj);
       testElm("header_in_nav", obj);
       testElm("header_in_section", obj);
       testElm("header_in_blockquote", obj);
@@ -1554,6 +1556,9 @@
   <aside>
     <footer id="footer_in_aside">Some copyright info</footer>
   </aside>
+  <main>
+    <footer id="footer_in_main">Some copyright info</footer>
+  </main>
   <nav>
     <footer id="footer_in_nav">Some copyright info</footer>
   </nav>
@@ -1600,6 +1605,9 @@
   <aside>
     <header id="header_in_aside">Not logo</header>
   </aside>
+  <main>
+    <header id="header_in_main">Not logo</header>
+  </main>
   <nav>
     <header id="header_in_nav">Not logo</header>
   </nav>
