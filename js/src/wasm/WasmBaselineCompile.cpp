@@ -4822,7 +4822,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.jump(&returnLabel_);
   }
 
-  void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
+  void checkDivideByZeroI32(RegI32 rhs) {
     Label nonZero;
     masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
     trap(Trap::IntegerDivideByZero);
@@ -7021,10 +7021,11 @@ void BaseCompiler::emitQuotientI32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
+
+    Label done;
     if (!isConst || c == -1) {
       checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(false));
     }
@@ -7051,12 +7052,10 @@ void BaseCompiler::emitQuotientU32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
     masm.quotient32(rs, r, IsUnsigned(true));
-    masm.bind(&done);
 
     maybeFreeI32(reserved);
     freeI32(rs);
@@ -7088,10 +7087,11 @@ void BaseCompiler::emitRemainderI32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
+
+    Label done;
     if (!isConst || c == -1) {
       checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(true));
     }
@@ -7116,12 +7116,10 @@ void BaseCompiler::emitRemainderU32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
     masm.remainder32(rs, r, IsUnsigned(true));
-    masm.bind(&done);
 
     maybeFreeI32(reserved);
     freeI32(rs);
