@@ -138,11 +138,7 @@ add_task(async function testAdd() {
   await runTest(
     async (params, observeAllPromise, apply) => {
       let uri = Services.io.newURI("http://test.com");
-      PermissionTestUtils.add(
-        uri,
-        "popup",
-        Ci.nsIPermissionManager.DENY_ACTION
-      );
+      Services.perms.add(uri, "popup", Ci.nsIPermissionManager.DENY_ACTION);
 
       info("Adding unrelated permission should not change display.");
       assertListContents(params, []);
@@ -150,7 +146,7 @@ add_task(async function testAdd() {
       apply();
       await observeAllPromise;
 
-      PermissionTestUtils.remove(uri, "popup");
+      Services.perms.remove(uri, "popup");
     },
     params => {
       return [
@@ -416,11 +412,7 @@ add_task(async function testSort() {
 
       for (let URL of ["http://a", "http://z", "http://b"]) {
         let URI = Services.io.newURI(URL);
-        PermissionTestUtils.add(
-          URI,
-          "cookie",
-          Ci.nsIPermissionManager.ALLOW_ACTION
-        );
+        Services.perms.add(URI, "cookie", Ci.nsIPermissionManager.ALLOW_ACTION);
       }
 
       assertListContents(params, [
@@ -447,7 +439,7 @@ add_task(async function testSort() {
 
       for (let URL of ["http://a", "http://z", "http://b"]) {
         let uri = Services.io.newURI(URL);
-        PermissionTestUtils.remove(uri, "cookie");
+        Services.perms.remove(uri, "cookie");
       }
     },
     params => {

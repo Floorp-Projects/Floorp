@@ -15,11 +15,7 @@
 "use strict";
 add_task(async _ => {
   let uri = Services.io.newURI("https://example.net");
-  PermissionTestUtils.add(
-    uri,
-    "trackingprotection-pb",
-    Services.perms.ALLOW_ACTION
-  );
+  Services.perms.add(uri, "trackingprotection-pb", Services.perms.ALLOW_ACTION);
 
   registerCleanupFunction(_ => {
     Services.perms.removeAll();

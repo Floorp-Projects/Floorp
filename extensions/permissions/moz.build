@@ -6,10 +6,6 @@
 
 TEST_DIRS += ['test']
 
-TESTING_JS_MODULES += [
-    'test/PermissionTestUtils.jsm',
-]
-
 UNIFIED_SOURCES += [
     'nsContentBlocker.cpp',
     'nsPermission.cpp',

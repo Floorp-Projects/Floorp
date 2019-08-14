@@ -4,13 +4,13 @@
 /* import-globals-from antitracking_head.js */
 
 add_task(async _ => {
-  PermissionTestUtils.add(
-    "https://tracking.example.org",
+  Services.perms.add(
+    Services.io.newURI("https://tracking.example.org"),
     "cookie",
     Services.perms.DENY_ACTION
   );
-  PermissionTestUtils.add(
-    "https://tracking.example.com",
+  Services.perms.add(
+    Services.io.newURI("https://tracking.example.com"),
     "cookie",
     Services.perms.DENY_ACTION
   );

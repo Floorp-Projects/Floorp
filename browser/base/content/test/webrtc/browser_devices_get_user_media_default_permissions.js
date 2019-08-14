@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 const permissionError =
   "error: NotAllowedError: The request is not allowed " +
   "by the user agent or the platform in the current context.";
@@ -75,11 +71,7 @@ var gTests = [
       let browser = gBrowser.selectedBrowser;
       Services.prefs.setIntPref(CAMERA_PREF, SitePermissions.BLOCK);
       // Overwrite the permission for that URI, requesting video should work again.
-      PermissionTestUtils.add(
-        browser.currentURI,
-        "camera",
-        Services.perms.ALLOW_ACTION
-      );
+      SitePermissions.set(browser.currentURI, "camera", SitePermissions.ALLOW);
 
       // Requesting video should work.
       let indicator = promiseIndicatorWindow();
@@ -94,7 +86,7 @@ var gTests = [
       await checkSharingUI({ video: true });
       await closeStream();
 
-      PermissionTestUtils.remove(browser.currentURI, "camera");
+      SitePermissions.remove(browser.currentURI, "camera");
       Services.prefs.clearUserPref(CAMERA_PREF);
     },
   },
@@ -160,10 +152,10 @@ var gTests = [
       let browser = gBrowser.selectedBrowser;
       Services.prefs.setIntPref(MICROPHONE_PREF, SitePermissions.BLOCK);
       // Overwrite the permission for that URI, requesting video should work again.
-      PermissionTestUtils.add(
+      SitePermissions.set(
         browser.currentURI,
         "microphone",
-        Services.perms.ALLOW_ACTION
+        SitePermissions.ALLOW
       );
 
       // Requesting audio should work.
@@ -179,7 +171,7 @@ var gTests = [
       await checkSharingUI({ audio: true });
       await closeStream();
 
-      PermissionTestUtils.remove(browser.currentURI, "microphone");
+      SitePermissions.remove(browser.currentURI, "microphone");
       Services.prefs.clearUserPref(MICROPHONE_PREF);
     },
   },

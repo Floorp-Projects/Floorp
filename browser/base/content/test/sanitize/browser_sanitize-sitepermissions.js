@@ -19,15 +19,12 @@ add_task(async function test() {
   let numAtStart = countPermissions();
 
   // Add a permission entry
-  PermissionTestUtils.add(
-    "http://example.com",
-    "testing",
-    Services.perms.ALLOW_ACTION
-  );
+  var pm = Services.perms;
+  pm.add(Services.io.newURI("http://example.com"), "testing", pm.ALLOW_ACTION);
 
   // Sanity check
   ok(
-    Services.perms.enumerator.hasMoreElements(),
+    pm.enumerator.hasMoreElements(),
     "Permission manager should have elements, since we just added one"
   );
 

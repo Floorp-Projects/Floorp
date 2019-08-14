@@ -53,7 +53,7 @@ function install_blocked(installInfo) {
 
 function finish_test(count) {
   is(count, 0, "No add-ons should have been installed");
-  PermissionTestUtils.remove("http://example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

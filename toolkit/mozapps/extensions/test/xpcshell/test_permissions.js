@@ -5,10 +5,6 @@
 // Checks that permissions set in preferences are correctly imported but can
 // be removed by the user.
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
-
 const XPI_MIMETYPE = "application/x-xpinstall";
 
 function newPrincipal(uri) {
@@ -34,8 +30,8 @@ add_task(async function setup() {
     "https://test5.com"
   );
 
-  PermissionTestUtils.add(
-    "https://www.test9.com",
+  Services.perms.add(
+    NetUtil.newURI("https://www.test9.com"),
     "install",
     Ci.nsIPermissionManager.ALLOW_ACTION
   );

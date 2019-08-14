@@ -66,21 +66,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // After closing all streams, gUM(audio+camera) causes a prompt.
       await closeStream();
@@ -97,21 +85,9 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
       await checkNotSharing();
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
     },
   },
 
@@ -151,21 +127,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // gUM(audio+camera) causes a prompt;
       promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -179,21 +143,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // gUM(screen) causes a prompt;
       promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -213,21 +165,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // gUM(camera) returns a stream without prompting.
       promise = promiseMessage("ok");
@@ -287,21 +227,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // gUM(audio+camera) causes a prompt;
       promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -315,21 +243,9 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.removeFromPrincipal(
-        null,
-        "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
-        gBrowser.selectedBrowser
-      );
+      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
+      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
 
       // gUM(audio) returns a stream without prompting.
       promise = promiseMessage("ok");

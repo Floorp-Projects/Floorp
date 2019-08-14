@@ -15,11 +15,8 @@ function test() {
   delete Services.ww;
   is(Services.ww, undefined, "Services.ww should now be undefined");
 
-  PermissionTestUtils.add(
-    "http://example.com/",
-    "install",
-    Services.perms.ALLOW_ACTION
-  );
+  var pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(
     JSON.stringify({
@@ -54,7 +51,7 @@ function finish_test(count) {
 
   Services.ww = gWindowWatcher;
 
-  PermissionTestUtils.remove("http://example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   Harness.finish();
 }

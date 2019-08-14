@@ -31,7 +31,7 @@ add_task(async function() {
 
   let uri = Services.io.newURI(TEST_DOMAIN);
   is(
-    PermissionTestUtils.testPermission(uri, "storageAccessAPI"),
+    Services.perms.testPermission(uri, "storageAccessAPI"),
     Services.perms.UNKNOWN_ACTION,
     "Before user-interaction we don't have a permission"
   );

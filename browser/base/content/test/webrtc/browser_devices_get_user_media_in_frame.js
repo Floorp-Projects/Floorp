@@ -65,15 +65,16 @@ var gTests = [
       await indicator;
       await checkSharingUI({ video: true, audio: true });
 
+      let Perms = Services.perms;
       let uri = Services.io.newURI("https://example.com/");
       is(
-        PermissionTestUtils.testExactPermission(uri, "microphone"),
-        Services.perms.ALLOW_ACTION,
+        Perms.testExactPermission(uri, "microphone"),
+        Perms.ALLOW_ACTION,
         "microphone persistently allowed"
       );
       is(
-        PermissionTestUtils.testExactPermission(uri, "camera"),
-        Services.perms.ALLOW_ACTION,
+        Perms.testExactPermission(uri, "camera"),
+        Perms.ALLOW_ACTION,
         "camera persistently allowed"
       );
 
@@ -81,13 +82,13 @@ var gTests = [
 
       // The persistent permissions for the frame should have been removed.
       is(
-        PermissionTestUtils.testExactPermission(uri, "microphone"),
-        Services.perms.UNKNOWN_ACTION,
+        Perms.testExactPermission(uri, "microphone"),
+        Perms.UNKNOWN_ACTION,
         "microphone not persistently allowed"
       );
       is(
-        PermissionTestUtils.testExactPermission(uri, "camera"),
-        Services.perms.UNKNOWN_ACTION,
+        Perms.testExactPermission(uri, "camera"),
+        Perms.UNKNOWN_ACTION,
         "camera not persistently allowed"
       );
 

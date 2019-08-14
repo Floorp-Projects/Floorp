@@ -4,9 +4,7 @@
 
 "use strict";
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
+ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
 const VIDEO_PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
@@ -37,7 +35,7 @@ async function testAutoplayExistingPermission(args) {
       let promptShowing = () =>
         PopupNotifications.getNotification("autoplay-media", browser);
 
-      PermissionTestUtils.add(
+      SitePermissions.set(
         browser.currentURI,
         "autoplay-media",
         args.permission
@@ -48,7 +46,7 @@ async function testAutoplayExistingPermission(args) {
       await checkVideoDidPlay(browser, args);
 
       // Reset permission.
-      PermissionTestUtils.remove(browser.currentURI, "autoplay-media");
+      SitePermissions.remove(browser.currentURI, "autoplay-media");
 
       info("- Finished '" + args.name + "' -");
     }
@@ -67,25 +65,25 @@ add_task(async () => {
   await setTestingPreferences("blocked" /* default setting */);
   await testAutoplayExistingPermission({
     name: "Prexisting allow permission autoplay attribute",
-    permission: Services.perms.ALLOW_ACTION,
+    permission: SitePermissions.ALLOW,
     shouldPlay: true,
     mode: "autoplay attribute",
   });
   await testAutoplayExistingPermission({
     name: "Prexisting allow permission call play",
-    permission: Services.perms.ALLOW_ACTION,
+    permission: SitePermissions.ALLOW,
     shouldPlay: true,
     mode: "call play",
   });
   await testAutoplayExistingPermission({
     name: "Prexisting block permission autoplay attribute",
-    permission: Services.perms.DENY_ACTION,
+    permission: SitePermissions.BLOCK,
     shouldPlay: false,
     mode: "autoplay attribute",
   });
   await testAutoplayExistingPermission({
     name: "Prexisting block permission call play",
-    permission: Services.perms.DENY_ACTION,
+    permission: SitePermissions.BLOCK,
     shouldPlay: false,
     mode: "call play",
   });
@@ -99,7 +97,7 @@ add_task(async () => {
   await testAutoplayExistingPermissionAgainstDefaultSetting({
     name:
       "Site has prexisting allow permission but default setting is 'blocked'",
-    permission: Services.perms.ALLOW_ACTION,
+    permission: SitePermissions.ALLOW,
     defaultSetting: "blocked",
     shouldPlay: true,
     mode: "autoplay attribute",
@@ -107,7 +105,7 @@ add_task(async () => {
   await testAutoplayExistingPermissionAgainstDefaultSetting({
     name:
       "Site has prexisting block permission but default setting is 'allowed'",
-    permission: Services.perms.DENY_ACTION,
+    permission: SitePermissions.BLOCK,
     defaultSetting: "allowed",
     shouldPlay: false,
     mode: "autoplay attribute",
