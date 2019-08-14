@@ -13,14 +13,7 @@ $excerpt-line-height: 20;
     background: transparent;
     box-shadow: inset $inner-box-shadow;
     border-radius: 4px;
-
-    .ds-card-link {
-      cursor: default;
-    }
-
-    .img-wrapper {
-      opacity: 0;
-    }
+    min-height: 300px;
   }
 
 

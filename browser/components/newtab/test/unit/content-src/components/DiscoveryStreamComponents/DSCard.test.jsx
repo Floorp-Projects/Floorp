@@ -6,7 +6,7 @@ import { actionCreators as ac } from "common/Actions.jsm";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import React from "react";
 import { SafeAnchor } from "content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 
 describe("<DSCard>", () => {
   let wrapper;
@@ -14,6 +14,7 @@ describe("<DSCard>", () => {
 
   beforeEach(() => {
     wrapper = shallow(<DSCard />);
+    wrapper.setState({ isSeen: true });
     sandbox = sinon.createSandbox();
   });
 
@@ -77,6 +78,7 @@ describe("<DSCard>", () => {
     beforeEach(() => {
       dispatch = sandbox.stub();
       wrapper = shallow(<DSCard dispatch={dispatch} />);
+      wrapper.setState({ isSeen: true });
     });
 
     it("should call dispatch with the correct events", () => {
@@ -134,6 +136,57 @@ describe("<DSCard>", () => {
       );
     });
   });
+
+  describe("DSCard with Intersection Observer", () => {
+    beforeEach(() => {
+      wrapper = shallow(<DSCard />);
+    });
+
+    it("should render card when seen", () => {
+      let card = wrapper.find("div.ds-card.placeholder");
+      assert.lengthOf(card, 1);
+
+      wrapper.instance().observer = {
+        unobserve: sandbox.stub(),
+      };
+      wrapper.instance().placholderElement = "element";
+
+      wrapper.instance().onSeen([
+        {
+          isIntersecting: true,
+        },
+      ]);
+
+      assert.isTrue(wrapper.instance().state.isSeen);
+      card = wrapper.find("div.ds-card.placeholder");
+      assert.lengthOf(card, 0);
+      assert.lengthOf(wrapper.find(SafeAnchor), 1);
+      assert.calledOnce(wrapper.instance().observer.unobserve);
+      assert.calledWith(wrapper.instance().observer.unobserve, "element");
+    });
+
+    it("should setup proper placholder ref for isSeen", () => {
+      wrapper.instance().setPlaceholderRef("element");
+      assert.equal(wrapper.instance().placholderElement, "element");
+    });
+
+    it("should setup observer on componentDidMount", () => {
+      wrapper = mount(<DSCard />);
+      assert.isTrue(!!wrapper.instance().observer);
+    });
+
+    it("should remove observer on componentWillUnmount", () => {
+      wrapper = mount(<DSCard />);
+      wrapper.instance().observer = {
+        unobserve: sandbox.stub(),
+      };
+      wrapper.instance().placholderElement = "element";
+
+      wrapper.instance().componentWillUnmount();
+      assert.calledOnce(wrapper.instance().observer.unobserve);
+      assert.calledWith(wrapper.instance().observer.unobserve, "element");
+    });
+  });
 });
 
 describe("<PlaceholderDSCard> component", () => {
@@ -148,21 +201,21 @@ describe("<PlaceholderDSCard> component", () => {
 
   it("should contain placeholder div", () => {
     const wrapper = shallow(<DSCard placeholder={true} />);
+    wrapper.setState({ isSeen: true });
     const card = wrapper.find("div.ds-card.placeholder");
     assert.lengthOf(card, 1);
   });
 
   it("should not be clickable", () => {
     const wrapper = shallow(<DSCard placeholder={true} />);
+    wrapper.setState({ isSeen: true });
     const anchor = wrapper.find("SafeAnchor.ds-card-link");
-    assert.lengthOf(anchor, 1);
-
-    const linkClick = anchor.prop("onLinkClick");
-    assert.isUndefined(linkClick);
+    assert.lengthOf(anchor, 0);
   });
 
   it("should not have context menu", () => {
     const wrapper = shallow(<DSCard placeholder={true} />);
+    wrapper.setState({ isSeen: true });
     const linkMenu = wrapper.find(DSLinkMenu);
     assert.lengthOf(linkMenu, 0);
   });
