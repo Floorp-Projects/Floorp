@@ -2338,7 +2338,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
     isJS = false;
     pc = nullptr;
     bytecodeOffset = iter.wasmBytecodeOffset();
-    site = iter.wasmInstance()->debug().getBreakpointSite(cx, bytecodeOffset);
+    site = iter.wasmInstance()->debug().getBreakpointSite(bytecodeOffset);
   }
 
   // Build list of breakpoint handlers.
@@ -2407,8 +2407,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         if (isJS) {
           site = DebugScript::getBreakpointSite(iter.script(), pc);
         } else {
-          site = iter.wasmInstance()->debug().getBreakpointSite(cx,
-                                                                bytecodeOffset);
+          site = iter.wasmInstance()->debug().getBreakpointSite(bytecodeOffset);
         }
       }
     }

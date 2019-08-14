@@ -56,8 +56,7 @@ static const CallSite* SlowCallSiteSearchByOffset(const MetadataTier& metadata,
   return nullptr;
 }
 
-bool DebugState::getLineOffsets(JSContext* cx, size_t lineno,
-                                Vector<uint32_t>* offsets) {
+bool DebugState::getLineOffsets(size_t lineno, Vector<uint32_t>* offsets) {
   const CallSite* callsite =
       SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
   if (callsite && !offsets->append(lineno)) {
@@ -66,7 +65,7 @@ bool DebugState::getLineOffsets(JSContext* cx, size_t lineno,
   return true;
 }
 
-bool DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets) {
+bool DebugState::getAllColumnOffsets(Vector<ExprLoc>* offsets) {
   for (const CallSite& callSite : metadata(Tier::Debug).callSites) {
     if (callSite.kind() != CallSite::Breakpoint) {
       continue;
@@ -188,8 +187,7 @@ void DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset,
   toggleDebugTrap(debugTrapOffset, enabled);
 }
 
-WasmBreakpointSite* DebugState::getBreakpointSite(JSContext* cx,
-                                                  uint32_t offset) const {
+WasmBreakpointSite* DebugState::getBreakpointSite(uint32_t offset) const {
   WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
   if (!p) {
     return nullptr;
