@@ -455,11 +455,9 @@ bool DebugState::getSourceMappingURL(JSContext* cx,
 
 void DebugState::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                                Metadata::SeenSet* seenMetadata,
-                               ShareableBytes::SeenSet* seenBytes,
                                Code::SeenSet* seenCode, size_t* code,
                                size_t* data) const {
   code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code,
                                 data);
-  module_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code,
-                         data);
+  module_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenCode, code, data);
 }

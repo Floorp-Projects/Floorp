@@ -415,7 +415,6 @@ RefPtr<JS::WasmModule> wasm::DeserializeModule(const uint8_t* bytecode,
 /* virtual */
 void Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                            Metadata::SeenSet* seenMetadata,
-                           ShareableBytes::SeenSet* seenBytes,
                            Code::SeenSet* seenCode, size_t* code,
                            size_t* data) const {
   code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code,

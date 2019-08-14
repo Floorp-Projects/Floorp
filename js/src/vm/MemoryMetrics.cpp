@@ -183,7 +183,6 @@ struct StatsClosure {
   ObjectPrivateVisitor* opv;
   SourceSet seenSources;
   wasm::Metadata::SeenSet wasmSeenMetadata;
-  wasm::ShareableBytes::SeenSet wasmSeenBytes;
   wasm::Code::SeenSet wasmSeenCode;
   wasm::Table::SeenSet wasmSeenTables;
   bool anonymize;
@@ -355,7 +354,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, void* thing,
           CollectScriptSourceStats<granularity>(closure, ss);
         }
         module.addSizeOfMisc(rtStats->mallocSizeOf_, &closure->wasmSeenMetadata,
-                             &closure->wasmSeenBytes, &closure->wasmSeenCode,
+                             &closure->wasmSeenCode,
                              &info.objectsNonHeapCodeWasm,
                              &info.objectsMallocHeapMisc);
       } else if (obj->is<WasmInstanceObject>()) {
@@ -365,9 +364,8 @@ static void StatsCellCallback(JSRuntime* rt, void* data, void* thing,
         }
         instance.addSizeOfMisc(
             rtStats->mallocSizeOf_, &closure->wasmSeenMetadata,
-            &closure->wasmSeenBytes, &closure->wasmSeenCode,
-            &closure->wasmSeenTables, &info.objectsNonHeapCodeWasm,
-            &info.objectsMallocHeapMisc);
+            &closure->wasmSeenCode, &closure->wasmSeenTables,
+            &info.objectsNonHeapCodeWasm, &info.objectsMallocHeapMisc);
       }
 
       realmStats.classInfo.add(info);
