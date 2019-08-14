@@ -1,6 +1,9 @@
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 
 const TEST_ORIGIN = "https://example.com";
 const TEST_ORIGIN_CERT_ERROR = "https://expired.example.com";
@@ -209,7 +212,7 @@ add_task(async function test_cookie_permission() {
     defaultCheckbox.dispatchEvent(new Event("command"));
 
     is(
-      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
+      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.ALLOW,
       "Unchecking the default checkbox should pick the default permission."
     );
@@ -223,7 +226,7 @@ add_task(async function test_cookie_permission() {
     blockRadioButton.dispatchEvent(new Event("command"));
 
     is(
-      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
+      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.BLOCK,
       "Selecting a value in the radio group should set the corresponding permission"
     );
@@ -232,7 +235,7 @@ add_task(async function test_cookie_permission() {
     allowRadioButton.dispatchEvent(new Event("command"));
 
     is(
-      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
+      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.ALLOW,
       "Selecting a value in the radio group should set the corresponding permission"
     );
@@ -242,7 +245,7 @@ add_task(async function test_cookie_permission() {
     defaultCheckbox.dispatchEvent(new Event("command"));
 
     is(
-      Services.perms.testPermission(gBrowser.currentURI, "cookie"),
+      PermissionTestUtils.testPermission(gBrowser.currentURI, "cookie"),
       SitePermissions.UNKNOWN,
       "Checking the default checkbox should reset the permission."
     );
