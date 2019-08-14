@@ -38,26 +38,6 @@ enum MozContentPolicyType {
 };
 
 /**
- * String versions of CLASSIFIED_* tracking flags from nsHttpChannel.idl
- */
-enum MozUrlClassificationFlags {
-  "fingerprinting",
-  "fingerprinting_content",
-  "cryptomining",
-  "cryptomining_content",
-  "tracking",
-  "tracking_ad",
-  "tracking_analytics",
-  "tracking_social",
-  "tracking_content",
-  "socialtracking",
-  "socialtracking_facebook",
-  "socialtracking_twitter",
-  "any_basic_tracking",
-  "any_strict_tracking"
-};
-
-/**
  * A thin wrapper around nsIChannel and nsIHttpChannel that allows JS
  * callers to access them without XPConnect overhead.
  */
@@ -402,20 +382,6 @@ interface ChannelWrapper : EventTarget {
   void setResponseHeader(ByteString header,
                          ByteString value,
                          optional boolean merge = false);
-
-  /**
-   * Provides the tracking classification data when it is available.
-   */
-  [Cached, Frozen, GetterThrows, Pure]
-  readonly attribute MozUrlClassification? urlClassification;
-};
-
-/**
- * Wrapper for first and third party tracking classification data.
- */
-dictionary MozUrlClassification {
-  required sequence<MozUrlClassificationFlags> firstParty;
-  required sequence<MozUrlClassificationFlags> thirdParty;
 };
 
 /**

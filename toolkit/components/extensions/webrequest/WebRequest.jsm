@@ -217,7 +217,6 @@ const OPTIONAL_PROPERTIES = [
   "proxyInfo",
   "ip",
   "frameAncestors",
-  "urlClassification",
 ];
 
 function serializeRequestData(eventName) {
@@ -242,18 +241,6 @@ function serializeRequestData(eventName) {
       data[opt] = this[opt];
     }
   }
-
-  if (this.urlClassification) {
-    data.urlClassification = {
-      firstParty: this.urlClassification.firstParty.filter(
-        c => !c.startsWith("socialtracking")
-      ),
-      thirdParty: this.urlClassification.thirdParty.filter(
-        c => !c.startsWith("socialtracking")
-      ),
-    };
-  }
-
   return data;
 }
 
@@ -757,7 +744,7 @@ HttpObserverManager = {
     }
   },
 
-  getRequestData(channel, extraData, policy) {
+  getRequestData(channel, extraData) {
     let originAttributes =
       channel.loadInfo && channel.loadInfo.originAttributes;
     let data = {
@@ -783,12 +770,6 @@ HttpObserverManager = {
 
       serialize: serializeRequestData,
     };
-
-    // We're limiting access to
-    // urlClassification while the feature is further fleshed out.
-    if (policy && policy.extension.isPrivileged) {
-      data.urlClassification = channel.urlClassification;
-    }
 
     return Object.assign(data, extraData);
   },
@@ -845,7 +826,7 @@ HttpObserverManager = {
         }
 
         if (!commonData) {
-          commonData = this.getRequestData(channel, extraData, opts.extension);
+          commonData = this.getRequestData(channel, extraData);
           if (this.STATUS_TYPES.has(kind)) {
             commonData.statusCode = channel.statusCode;
             commonData.statusLine = channel.statusLine;
