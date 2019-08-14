@@ -62,16 +62,12 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
 
 Realm::~Realm() {
   MOZ_ASSERT(!hasBeenEnteredIgnoringJit());
+  MOZ_ASSERT(!isDebuggee());
 
   // Write the code coverage information in a file.
   if (coverage::IsLCovEnabled()) {
     runtime_->lcovOutput().writeLCovResult(lcovOutput);
   }
-
-  // We can have a debuggee realm here only if we are destroying the runtime and
-  // leaked GC things.
-  MOZ_ASSERT_IF(runtime_->gc.shutdownCollectedEverything(), !isDebuggee());
-  unsetIsDebuggee();
 
   MOZ_ASSERT(runtime_->numRealms > 0);
   runtime_->numRealms--;

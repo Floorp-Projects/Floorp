@@ -3667,46 +3667,6 @@ void js::SweepScriptData(JSRuntime* rt) {
   }
 }
 
-void js::FreeScriptData(JSRuntime* rt) {
-  AutoLockScriptData lock(rt);
-
-  RuntimeScriptDataTable& table = rt->scriptDataTable(lock);
-
-  // The table should be empty unless the embedding leaked GC things.
-  MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), table.empty());
-
-#ifdef DEBUG
-  size_t numLive = 0;
-  size_t maxCells = 5;
-  char* env = getenv("JS_GC_MAX_LIVE_CELLS");
-  if (env && *env) {
-    maxCells = atol(env);
-  }
-#endif
-
-  for (RuntimeScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
-#ifdef DEBUG
-    if (++numLive <= maxCells) {
-      RuntimeScriptData* scriptData = e.front();
-      fprintf(stderr,
-              "ERROR: GC found live RuntimeScriptData %p with ref count %d at "
-              "shutdown\n",
-              scriptData, scriptData->refCount());
-    }
-#endif
-    js_free(e.front());
-  }
-
-#ifdef DEBUG
-  if (numLive > 0) {
-    fprintf(stderr, "ERROR: GC found %zu live RuntimeScriptData at shutdown\n",
-            numLive);
-  }
-#endif
-
-  table.clear();
-}
-
 /* static */
 size_t PrivateScriptData::AllocationSize(uint32_t ngcthings) {
   size_t size = sizeof(PrivateScriptData);
