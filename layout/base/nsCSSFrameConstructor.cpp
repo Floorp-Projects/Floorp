@@ -4171,26 +4171,6 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay& aDisplay,
                                           const Element& aElement) {
   switch (aDisplay.mDisplay) {
-    case StyleDisplay::MozBox:
-    case StyleDisplay::MozInlineBox: {
-      if (!aElement.IsInNativeAnonymousSubtree() &&
-          aElement.OwnerDoc()->IsContentDocument()) {
-        aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
-      }
-
-      // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
-      // return null (except for scrollcorners which have to be XUL becuase their
-      // parent reflows them with BoxReflow() which means they have to get
-      // actual-XUL frames).
-      if (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
-          !aElement.IsXULElement(nsGkAtoms::scrollcorner)) {
-        return nullptr;
-      }
-
-      static const FrameConstructionData data =
-        SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(NS_NewBoxFrame);
-      return &data;
-    }
 #ifdef MOZ_XUL
     case StyleDisplay::MozGrid:
     case StyleDisplay::MozInlineGrid: {
@@ -4543,8 +4523,21 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     }
     case StyleDisplay::MozBox:
     case StyleDisplay::MozInlineBox: {
-      MOZ_ASSERT(StaticPrefs::layout_css_emulate_moz_box_with_flex(),
-                 "-moz-{inline-}box as XUL should have already been handled");
+      if (!aElement.IsInNativeAnonymousSubtree() &&
+          aElement.OwnerDoc()->IsContentDocument()) {
+        aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
+      }
+
+      // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
+      // fall through (except for scrollcorners which have to be XUL becuase their
+      // parent reflows them with BoxReflow() which means they have to get
+      // actual-XUL frames).
+      if (!StaticPrefs::layout_css_emulate_moz_box_with_flex() ||
+          aElement.IsXULElement(nsGkAtoms::scrollcorner)) {
+        static const FrameConstructionData data =
+          SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(NS_NewBoxFrame);
+        return &data;
+      }
       MOZ_FALLTHROUGH;
     }
     case StyleDisplay::Flex:
