@@ -2,7 +2,7 @@
 
 # CustomDistributionMetricType
 
-`data class CustomDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md)`, `[`HistogramBase`](../-histogram-base/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CustomDistributionMetricType.kt#L30)
+`data class CustomDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md)`, `[`HistogramMetricBase`](../-histogram-metric-base/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CustomDistributionMetricType.kt#L30)
 
 This implements the developer facing API for recording custom distribution metrics.
 
@@ -53,7 +53,7 @@ allowing developers to record values that were previously registered in the metr
 | Name | Summary |
 |---|---|
 | [accumulateSamples](accumulate-samples.md) | `fun accumulateSamples(samples: `[`LongArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long-array/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Accumulates the provided samples in the metric. |
-| [testGetValue](test-get-value.md) | `fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`CustomDistributionData`](../../mozilla.components.service.glean.storages/-custom-distribution-data/index.md)<br>Returns the stored value for testing purposes only. This function will attempt to await the last task (if any) writing to the the metric's storage engine before returning a value. |
+| [testGetValue](test-get-value.md) | `fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`PrecomputedHistogram`](../../mozilla.components.service.glean.histogram/-precomputed-histogram/index.md)<br>Returns the stored value for testing purposes only. This function will attempt to await the last task (if any) writing to the the metric's storage engine before returning a value. |
 | [testHasValue](test-has-value.md) | `fun testHasValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tests whether a value is stored for the metric for testing purposes only. This function will attempt to await the last task (if any) writing to the the metric's storage engine before returning a value. |
 
 ### Inherited Functions

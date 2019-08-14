@@ -12,6 +12,9 @@ Describes a type of the physical device in the constellation.
 |---|---|
 | [DESKTOP](-d-e-s-k-t-o-p.md) |  |
 | [MOBILE](-m-o-b-i-l-e.md) |  |
+| [TABLET](-t-a-b-l-e-t.md) |  |
+| [TV](-t-v.md) |  |
+| [VR](-v-r.md) |  |
 | [UNKNOWN](-u-n-k-n-o-w-n.md) |  |
 
 ### Extension Functions

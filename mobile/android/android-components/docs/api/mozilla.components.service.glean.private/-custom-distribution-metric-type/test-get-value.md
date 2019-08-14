@@ -2,7 +2,7 @@
 
 # testGetValue
 
-`fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`CustomDistributionData`](../../mozilla.components.service.glean.storages/-custom-distribution-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CustomDistributionMetricType.kt#L100)
+`fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`PrecomputedHistogram`](../../mozilla.components.service.glean.histogram/-precomputed-histogram/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CustomDistributionMetricType.kt#L100)
 
 Returns the stored value for testing purposes only. This function will attempt to await the
 last task (if any) writing to the the metric's storage engine before returning a value.
