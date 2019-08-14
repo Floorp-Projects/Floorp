@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -14,8 +15,8 @@ const { webSocketSpec } = require("devtools/shared/specs/websocket");
  * created on the server, hiding implementation details.
  */
 class WebSocketFront extends FrontClassWithSpec(webSocketSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this._onWebSocketOpened = this._onWebSocketOpened.bind(this);
     this._onWebSocketClosed = this._onWebSocketClosed.bind(this);

@@ -63,8 +63,8 @@ class PerformanceRecordingFront extends FrontClassWithSpec(
     }
   }
 
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._markers = [];
     this._frames = [];
     this._memory = [];

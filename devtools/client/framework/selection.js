@@ -6,16 +6,25 @@
 
 "use strict";
 
-const nodeConstants = require("devtools/shared/dom-node-constants");
-var EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
+
+loader.lazyRequireGetter(
+  this,
+  "nodeConstants",
+  "devtools/shared/dom-node-constants"
+);
 
 /**
+ * Selection is a singleton belonging to the Toolbox that manages the current selected
+ * NodeFront. In addition, it provides some helpers about the context of the selected
+ * node.
+ *
  * API
  *
- *   new Selection(walker=null)
+ *   new Selection()
  *   destroy()
- *   node (readonly)
- *   setNode(node, origin="unknown")
+ *   nodeFront (readonly)
+ *   setNodeFront(node, origin="unknown")
  *
  * Helpers:
  *
@@ -48,14 +57,11 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *   "reparented" when the node (or one of its parents) is moved under
  *   a different node
  */
-
-/**
- * A Selection object. Hold a reference to a node.
- * Includes some helpers, fire some helpful events.
- */
-function Selection(walker) {
+function Selection() {
   EventEmitter.decorate(this);
 
+  // The WalkerFront is dynamic and is always set to the selected NodeFront's WalkerFront.
+  this._walker = null;
   // A single node front can be represented twice on the client when the node is a slotted
   // element. It will be displayed once as a direct child of the host element, and once as
   // a child of a slot in the "shadow DOM". The latter is called the slotted version.
@@ -63,14 +69,9 @@ function Selection(walker) {
 
   this._onMutations = this._onMutations.bind(this);
   this.setNodeFront = this.setNodeFront.bind(this);
-  this.setWalker(walker);
 }
 
-exports.Selection = Selection;
-
 Selection.prototype = {
-  _walker: null,
-
   _onMutations: function(mutations) {
     let attributeChange = false;
     let pseudoChange = false;
@@ -107,10 +108,10 @@ Selection.prototype = {
   },
 
   destroy: function() {
-    this.setWalker(null);
+    this.setWalker();
   },
 
-  setWalker: function(walker) {
+  setWalker: function(walker = null) {
     if (this._walker) {
       this._walker.off("mutations", this._onMutations);
     }
@@ -153,11 +154,13 @@ Selection.prototype = {
     this._isSlotted = isSlotted;
     this._nodeFront = nodeFront;
 
-    this.emit("new-node-front", nodeFront, this.reason);
-  },
+    if (nodeFront) {
+      this.setWalker(nodeFront.walkerFront);
+    } else {
+      this.setWalker();
+    }
 
-  get documentFront() {
-    return this._walker.document(this._nodeFront);
+    this.emit("new-node-front", nodeFront, this.reason);
   },
 
   get nodeFront() {
@@ -310,3 +313,5 @@ Selection.prototype = {
     return this.isNode() && this.nodeFront.isShadowRoot;
   },
 };
+
+module.exports = Selection;

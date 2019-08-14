@@ -18,15 +18,12 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is
  * created on the server, hiding implementation details.
  *
- * @param object debuggerClient
+ * @param object client
  *        The DebuggerClient instance we live for.
- * @param object response
- *        The response packet received from the "startListeners" request sent to
- *        the WebConsoleActor.
  */
 class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
     this._client = client;
     this.traits = {};
     this._longStrings = {};

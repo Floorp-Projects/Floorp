@@ -124,6 +124,10 @@ function pageLoad() {
   }
 }
 
+function continueAsync() {
+  setTimeout(function() { gTestContinuation.next(); })
+}
+
 function* testBody() {
   is(popup.scrollY, 0, "test 1");
   popup.scroll(0, 100);
@@ -133,16 +137,24 @@ function* testBody() {
   popup.scroll(0, 200); // set state-2's position to 200
 
   popup.history.back();
+  continueAsync();
+  yield;
   is(Math.round(popup.scrollY), 100, "test 3");
   popup.scroll(0, 150); // set original page's position to 150
 
   popup.history.forward();
+  continueAsync();
+  yield;
   is(Math.round(popup.scrollY), 200, "test 4");
 
   popup.history.back();
+  continueAsync();
+  yield;
   is(Math.round(popup.scrollY), 150, "test 5");
 
   popup.history.forward();
+  continueAsync();
+  yield;
   is(Math.round(popup.scrollY), 200, "test 6");
 
   // At this point, the history looks like:
@@ -187,8 +199,12 @@ function* testBody() {
   is(Math.round(popup.scrollY), 200, "test 8");
 
   popup.history.back();
+  continueAsync();
+  yield;
   is(Math.round(popup.scrollY), 150, "test 9");
   popup.history.forward();
+  continueAsync();
+  yield;
 
   is(Math.round(popup.scrollY), 200, "test 10");
 

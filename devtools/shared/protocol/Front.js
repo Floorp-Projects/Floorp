@@ -30,19 +30,28 @@ function defer() {
 /**
  * Base class for client-side actor fronts.
  *
- * @param optional conn
- *   Either a DebuggerServerConnection or a DebuggerClient.  Must have
+ * @param [DebuggerClient|null] conn
+ *   The conn must either be DebuggerClient or null. Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
+ * @param [Target|null] target
+ *   If we are instantiating a target-scoped front, this is a reference to the front's
+ *   Target instance, otherwise this is null.
+ * @param [Front|null] parentFront
+ *   The parent front. This is only available if the Front being initialized is a child
+ *   of a parent front.
  * @constructor
  */
 class Front extends Pool {
-  constructor(conn = null) {
+  constructor(conn = null, targetFront = null, parentFront = null) {
     super(conn);
     this.actorID = null;
     // The targetFront attribute represents the debuggable context. Only target-scoped
     // fronts and their children fronts will have the targetFront attribute set.
-    this.targetFront = null;
+    this.targetFront = targetFront;
+    // The parentFront attribute points to its parent front. Only children of
+    // target-scoped fronts will have the parentFront attribute set.
+    this.parentFront = parentFront;
     this._requests = [];
 
     // Front listener functions registered via `onFront` get notified
@@ -75,6 +84,7 @@ class Front extends Pool {
     this.clearEvents();
     this.actorID = null;
     this.targetFront = null;
+    this.parentFront = null;
     this._frontListeners = null;
     this._beforeListeners = null;
   }

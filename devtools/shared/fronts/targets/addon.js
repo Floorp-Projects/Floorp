@@ -16,8 +16,8 @@ loader.lazyRequireGetter(
 );
 
 class AddonTargetFront extends FrontClassWithSpec(addonTargetSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this.client = client;
 
