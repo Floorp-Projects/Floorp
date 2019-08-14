@@ -106,11 +106,12 @@ class DisplayToolbarTest {
         val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
 
         displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
         displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
 
         displayToolbar.measure(widthSpec, heightSpec)
 
-        val iconView = displayToolbar.trackingProtectionAndSecurityIndicatorSeparatorView
+        val iconView = displayToolbar.separatorView
 
         assertEquals(1, iconView.measuredWidth)
         assertEquals(24, iconView.measuredHeight)
@@ -121,12 +122,13 @@ class DisplayToolbarTest {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)
         val trackingView = displayToolbar.trackingProtectionIconView
-        val separatorView = displayToolbar.trackingProtectionAndSecurityIndicatorSeparatorView
+        val separatorView = displayToolbar.separatorView
 
         assertTrue(trackingView.visibility == View.GONE)
         assertTrue(separatorView.visibility == View.GONE)
 
         displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
         displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
 
         assertTrue(trackingView.isVisible)
@@ -168,8 +170,7 @@ class DisplayToolbarTest {
 
         totalViewsWidth = urlView.measuredWidth + securityIcon.measuredWidth
         val trackingProtectionWidth = displayToolbar.trackingProtectionIconView.measuredWidth
-        val separatorWidth =
-            displayToolbar.trackingProtectionAndSecurityIndicatorSeparatorView.measuredWidth
+        val separatorWidth = displayToolbar.separatorView.measuredWidth
 
         // Tracking protection views MUST be measured
         assertEquals(totalViewsWidth + trackingProtectionWidth + separatorWidth, view.measuredWidth)
@@ -207,11 +208,11 @@ class DisplayToolbarTest {
         val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
 
         displayToolbar.displayTrackingProtectionIcon = true
+        displayToolbar.displaySeparatorView = true
         displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
         displayToolbar.measure(widthSpec, heightSpec)
 
-        val separatorWidth =
-            displayToolbar.trackingProtectionAndSecurityIndicatorSeparatorView.measuredWidth
+        val separatorWidth = displayToolbar.separatorView.measuredWidth
 
         val trackingProtectionWidth = displayToolbar.trackingProtectionIconView.measuredWidth
         val securityIconWidth = displayToolbar.siteSecurityIconView.measuredWidth
@@ -219,7 +220,7 @@ class DisplayToolbarTest {
         val LEFT_WITHOUT_TP_VIEWS = navigationActionsWidth
         val RIGHT_WITHOUT_TP_VIEWS = navigationActionsWidth + securityIconWidth
 
-        val LEFT_WITH_TP_VIEWS = separatorWidth + trackingProtectionWidth
+        val LEFT_WITH_TP_VIEWS = navigationActionsWidth + separatorWidth + trackingProtectionWidth
 
         val RIGHT_WITH_TP_VIEWS =
             navigationActionsWidth + separatorWidth + securityIconWidth + trackingProtectionWidth
