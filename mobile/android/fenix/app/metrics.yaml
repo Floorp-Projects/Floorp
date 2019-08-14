@@ -907,6 +907,7 @@ history:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+
 reader_mode:
   available:
     type: event
@@ -1113,3 +1114,20 @@ collections:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+
+experiments.metrics:
+  active_experiment:
+    type: string
+    description: >
+      Records the branch name of the active experiment, if the client is enrolled in the
+      `fenix-test-2019-08-05` experiment. This is intended to validate that the service-experiments
+      library properly matches clients to experiments and can take action based on a multi-branched
+      experiment. This is done by recording the experiment branch name in this string metric which
+      allows the experiment to be transparent and unobtrusive to the user.
+    bugs:
+      - 1543986
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1543986#c4
+    notification_emails:
+      - mcooper@mozilla.com
+    expires: 2019-11-01
