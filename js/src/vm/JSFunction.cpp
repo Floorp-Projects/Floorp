@@ -1194,7 +1194,7 @@ static const JSFunctionSpec function_methods[] = {
               JSPROP_READONLY | JSPROP_PERMANENT),
     JS_FS_END};
 
-static const ClassOps JSFunctionClassOps = {
+static const JSClassOps JSFunctionClassOps = {
     nullptr,                                /* addProperty */
     nullptr,                                /* delProperty */
     fun_enumerate, nullptr,                 /* newEnumerate */

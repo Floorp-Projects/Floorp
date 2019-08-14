@@ -316,15 +316,16 @@ IPCResult WindowGlobalChild::RecvChangeFrameRemoteness(
 
 mozilla::ipc::IPCResult WindowGlobalChild::RecvDrawSnapshot(
     const Maybe<IntRect>& aRect, const float& aScale,
-    const nscolor& aBackgroundColor, DrawSnapshotResolver&& aResolve) {
+    const nscolor& aBackgroundColor, const uint32_t& aFlags,
+    DrawSnapshotResolver&& aResolve) {
   nsCOMPtr<nsIDocShell> docShell = BrowsingContext()->GetDocShell();
   if (!docShell) {
     aResolve(gfx::PaintFragment{});
     return IPC_OK();
   }
 
-  aResolve(
-      gfx::PaintFragment::Record(docShell, aRect, aScale, aBackgroundColor));
+  aResolve(gfx::PaintFragment::Record(docShell, aRect, aScale, aBackgroundColor,
+                                      (gfx::CrossProcessPaintFlags)aFlags));
   return IPC_OK();
 }
 

@@ -573,15 +573,13 @@ typedef bool (*GetElementsOp)(JSContext* cx, JS::HandleObject obj,
                               uint32_t begin, uint32_t end,
                               ElementAdder* adder);
 
-typedef void (*FinalizeOp)(JSFreeOp* fop, JSObject* obj);
-
 // The special treatment of |finalize| and |trace| is necessary because if we
 // assign either of those hooks to a local variable and then call it -- as is
 // done with the other hooks -- the GC hazard analysis gets confused.
-#define JS_CLASS_MEMBERS(ClassOpsType, FreeOpType)                             \
+#define JS_CLASS_MEMBERS                                                       \
   const char* name;                                                            \
   uint32_t flags;                                                              \
-  const ClassOpsType* cOps;                                                    \
+  const JSClassOps* cOps;                                                      \
                                                                                \
   JSAddPropertyOp getAddProperty() const {                                     \
     return cOps ? cOps->addProperty : nullptr;                                 \
@@ -610,7 +608,7 @@ typedef void (*FinalizeOp)(JSFreeOp* fop, JSObject* obj);
                                                                                \
   bool isTrace(JSTraceOp trace) const { return cOps && cOps->trace == trace; } \
                                                                                \
-  void doFinalize(FreeOpType* fop, JSObject* obj) const {                      \
+  void doFinalize(JSFreeOp* fop, JSObject* obj) const {                        \
     MOZ_ASSERT(cOps && cOps->finalize);                                        \
     cOps->finalize(fop, obj);                                                  \
   }                                                                            \
@@ -618,21 +616,6 @@ typedef void (*FinalizeOp)(JSFreeOp* fop, JSObject* obj);
     MOZ_ASSERT(cOps && cOps->trace);                                           \
     cOps->trace(trc, obj);                                                     \
   }
-
-struct MOZ_STATIC_CLASS ClassOps {
-  /* Function pointer members (may be null). */
-  JSAddPropertyOp addProperty;
-  JSDeletePropertyOp delProperty;
-  JSEnumerateOp enumerate;
-  JSNewEnumerateOp newEnumerate;
-  JSResolveOp resolve;
-  JSMayResolveOp mayResolve;
-  FinalizeOp finalize;
-  JSNative call;
-  JSHasInstanceOp hasInstance;
-  JSNative construct;
-  JSTraceOp trace;
-};
 
 /** Callback for the creation of constructor and prototype objects. */
 typedef JSObject* (*ClassObjectCreationOp)(JSContext* cx, JSProtoKey key);
@@ -745,7 +728,7 @@ struct MOZ_STATIC_CLASS JSClassOps {
 #define JS_NULL_CLASS_OPS nullptr
 
 struct JSClass {
-  JS_CLASS_MEMBERS(JSClassOps, JSFreeOp);
+  JS_CLASS_MEMBERS;
 
   void* reserved[3];
 };
@@ -867,7 +850,7 @@ static const uint32_t JSCLASS_CACHED_PROTO_MASK =
 namespace js {
 
 struct MOZ_STATIC_CLASS Class {
-  JS_CLASS_MEMBERS(js::ClassOps, JSFreeOp);
+  JS_CLASS_MEMBERS;
   const ClassSpec* spec;
   const ClassExtension* ext;
   const ObjectOps* oOps;
@@ -969,36 +952,6 @@ struct MOZ_STATIC_CLASS Class {
     return oOps ? oOps->funToString : nullptr;
   }
 };
-
-static_assert(offsetof(JSClassOps, addProperty) ==
-                  offsetof(ClassOps, addProperty),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, delProperty) ==
-                  offsetof(ClassOps, delProperty),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, enumerate) == offsetof(ClassOps, enumerate),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, newEnumerate) ==
-                  offsetof(ClassOps, newEnumerate),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, resolve) == offsetof(ClassOps, resolve),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, mayResolve) ==
-                  offsetof(ClassOps, mayResolve),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, finalize) == offsetof(ClassOps, finalize),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, call) == offsetof(ClassOps, call),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, construct) == offsetof(ClassOps, construct),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, hasInstance) ==
-                  offsetof(ClassOps, hasInstance),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, trace) == offsetof(ClassOps, trace),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(sizeof(JSClassOps) == sizeof(ClassOps),
-              "ClassOps and JSClassOps must be consistent");
 
 static_assert(offsetof(JSClass, name) == offsetof(Class, name),
               "Class and JSClass must be consistent");

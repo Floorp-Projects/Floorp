@@ -35,7 +35,7 @@ uint32_t XPC_MAP_CLASSNAME::GetScriptableFlags() { return (XPC_MAP_FLAGS); }
 
 // virtual
 const js::Class* XPC_MAP_CLASSNAME::GetClass() {
-  static const js::ClassOps classOps = XPC_MAKE_CLASS_OPS(GetScriptableFlags());
+  static const JSClassOps classOps = XPC_MAKE_CLASS_OPS(GetScriptableFlags());
   static const js::Class klass =
       XPC_MAKE_CLASS(XPC_MAP_QUOTED_CLASSNAME, GetScriptableFlags(), &classOps);
   return &klass;

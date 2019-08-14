@@ -2694,15 +2694,6 @@ nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,
 void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
                      const uint8_t* aData, uint32_t aLength,
                      nsACString& aSniffedType) {
-  // In case XCTO nosniff was present, we could just skip sniffing here
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (channel) {
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    if (loadInfo->GetSkipContentSniffing()) {
-      aSniffedType.Truncate();
-      return;
-    }
-  }
   typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
   extern ContentSnifferCache* gNetSniffers;
   extern ContentSnifferCache* gDataSniffers;
@@ -2734,6 +2725,35 @@ void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
   }
 
   aSniffedType.Truncate();
+
+  // If the Sniffers did not hit and NoSniff is set
+  // Check if we have any MIME Type at all or report an
+  // Error to the Console
+  nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest);
+  if (channel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+
+    if (loadInfo->GetSkipContentSniffing()) {
+      nsAutoCString type;
+      channel->GetContentType(type);
+
+      if (type.Equals(nsCString("application/x-unknown-content-type"))) {
+        nsCOMPtr<nsIURI> requestUri;
+        channel->GetURI(getter_AddRefs(requestUri));
+        nsAutoCString spec;
+        requestUri->GetSpec(spec);
+        if (spec.Length() > 50) {
+          spec.Truncate(50);
+          spec.AppendLiteral("...");
+        }
+        channel->LogMimeTypeMismatch(
+            nsCString("XTCOWithMIMEValueMissing"), false,
+            NS_ConvertUTF8toUTF16(spec),
+            // Type is not used in the Error Message but required
+            NS_ConvertUTF8toUTF16(type));
+      }
+    }
+  }
 }
 
 bool NS_IsSrcdocChannel(nsIChannel* aChannel) {

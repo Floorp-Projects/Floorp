@@ -129,6 +129,7 @@
   pointer-events: none;
   margin: 0;
   text-align: center;
+  direction: ltr;
 }
 
 .boxmodel-main > p > span,
@@ -388,6 +389,8 @@
 
 .boxmodel-element-size {
   flex: 1;
+  direction: ltr;
+  text-align: match-parent;
 }
 
 .boxmodel-position-group {

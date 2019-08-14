@@ -24,7 +24,6 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsBlockReflowContext.h"
 #include "BlockReflowInput.h"
-#include "nsBulletFrame.h"
 #include "nsFontMetrics.h"
 #include "nsGenericHTMLElement.h"
 #include "nsLineBox.h"
@@ -65,8 +64,6 @@
 #include <inttypes.h>
 
 static const int MIN_LINES_NEEDING_CURSOR = 20;
-
-static const char16_t kDiscCharacter = 0x2022;
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -5622,6 +5619,30 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
 #endif
 }
 
+nsContainerFrame* nsBlockFrame::GetRubyContentPseudoFrame() {
+  auto* firstChild = PrincipalChildList().FirstChild();
+  if (firstChild && firstChild->IsRubyFrame() &&
+      firstChild->Style()->GetPseudoType() == mozilla::PseudoStyleType::blockRubyContent) {
+    return static_cast<nsContainerFrame*>(firstChild);
+  }
+  return nullptr;
+}
+
+nsContainerFrame* nsBlockFrame::GetContentInsertionFrame() {
+  // 'display:block ruby' use the inner (Ruby) frame for insertions.
+  if (auto* rubyContentPseudoFrame = GetRubyContentPseudoFrame()) {
+    return rubyContentPseudoFrame;
+  }
+  return this;
+}
+
+void nsBlockFrame::AppendDirectlyOwnedAnonBoxes(
+    nsTArray<OwnedAnonBox>& aResult) {
+  if (auto* rubyContentPseudoFrame = GetRubyContentPseudoFrame()) {
+    aResult.AppendElement(OwnedAnonBox(rubyContentPseudoFrame));
+  }
+}
+
 void nsBlockFrame::RemoveFloatFromFloatCache(nsIFrame* aFloat) {
   // Find which line contains the float, so we can update
   // the float cache.
@@ -7105,8 +7126,7 @@ void nsBlockFrame::SetMarkerFrameForListItem(nsIFrame* aMarkerFrame) {
 }
 
 bool nsBlockFrame::MarkerIsEmpty() const {
-  NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->mDisplay ==
-                       mozilla::StyleDisplay::ListItem &&
+  NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->IsListItem() &&
                    HasOutsideMarker(),
                "should only care when we have an outside ::marker");
   nsIFrame* marker = GetMarker();
@@ -7114,30 +7134,6 @@ bool nsBlockFrame::MarkerIsEmpty() const {
   return list->mCounterStyle.IsNone() && !list->GetListStyleImage() &&
          marker->StyleContent()->ContentCount() == 0;
 }
-
-#ifdef ACCESSIBILITY
-void nsBlockFrame::GetSpokenMarkerText(nsAString& aText) const {
-  const nsStyleList* myList = StyleList();
-  if (myList->GetListStyleImage()) {
-    aText.Assign(kDiscCharacter);
-    aText.Append(' ');
-  } else {
-    if (nsIFrame* marker = GetMarker()) {
-      if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
-        bullet->GetSpokenText(aText);
-      } else {
-        ErrorResult err;
-        marker->GetContent()->GetTextContent(aText, err);
-        if (err.Failed()) {
-          aText.Truncate();
-        }
-      }
-    } else {
-      aText.Truncate();
-    }
-  }
-}
-#endif
 
 void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
                                        BlockReflowInput& aState,

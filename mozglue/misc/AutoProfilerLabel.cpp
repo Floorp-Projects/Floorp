@@ -30,6 +30,8 @@ class MOZ_RAII AutoProfilerLabelData {
   const uint32_t& GenerationCRef() const { return sGeneration; }
   uint32_t& GenerationRef() { return sGeneration; }
 
+  static bool RacyIsProfilerPresent() { return !!sGeneration; }
+
  private:
   // Thin shell around mozglue PlatformMutex, for local internal use.
   // Does not preserve behavior in JS record/replay.
@@ -69,26 +71,43 @@ void RegisterProfilerLabelEnterExit(ProfilerLabelEnter aEnter,
   ++data.GenerationRef();
 }
 
+bool IsProfilerPresent() {
+  return AutoProfilerLabelData::RacyIsProfilerPresent();
+}
+
+ProfilerLabel ProfilerLabelBegin(const char* aLabelName,
+                                 const char* aDynamicString, void* aSp) {
+  const AutoProfilerLabelData data;
+  void* entryContext = (data.EnterCRef())
+                           ? data.EnterCRef()(aLabelName, aDynamicString, aSp)
+                           : nullptr;
+  uint32_t generation = data.GenerationCRef();
+
+  return MakeTuple(entryContext, generation);
+}
+
+void ProfilerLabelEnd(const ProfilerLabel& aLabel) {
+  if (!IsValidProfilerLabel(aLabel)) {
+    return;
+  }
+
+  const AutoProfilerLabelData data;
+  if (data.ExitCRef() && (Get<1>(aLabel) == data.GenerationCRef())) {
+    data.ExitCRef()(Get<0>(aLabel));
+  }
+}
+
 AutoProfilerLabel::AutoProfilerLabel(
     const char* aLabel,
     const char* aDynamicString MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  const AutoProfilerLabelData data;
-  mEntryContext = (data.EnterCRef())
-                      ? data.EnterCRef()(aLabel, aDynamicString, this)
-                      : nullptr;
-  mGeneration = data.GenerationCRef();
+  Tie(mEntryContext, mGeneration) =
+      ProfilerLabelBegin(aLabel, aDynamicString, this);
 }
 
 AutoProfilerLabel::~AutoProfilerLabel() {
-  if (!mEntryContext) {
-    return;
-  }
-  const AutoProfilerLabelData data;
-  if (data.ExitCRef() && (mGeneration == data.GenerationCRef())) {
-    data.ExitCRef()(mEntryContext);
-  }
+  ProfilerLabelEnd(MakeTuple(mEntryContext, mGeneration));
 }
 
 }  // namespace mozilla

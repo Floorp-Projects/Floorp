@@ -53,7 +53,7 @@ class MOZ_STACK_CLASS SafeOptionListMutation {
   void MutationFailed() { mNeedsRebuild = true; }
 
  private:
-  static void* operator new(size_t) CPP_THROW_NEW { return 0; }
+  static void* operator new(size_t) noexcept(true) { return 0; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
   RefPtr<HTMLSelectElement> mSelect;

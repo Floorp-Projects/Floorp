@@ -3660,7 +3660,7 @@ static void ReadableByteStreamControllerFinalize(JSFreeOp* fop, JSObject* obj) {
   controller.externalSource()->finalize();
 }
 
-static const ClassOps ReadableByteStreamControllerClassOps = {
+static const JSClassOps ReadableByteStreamControllerClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

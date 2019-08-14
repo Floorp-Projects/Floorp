@@ -63,7 +63,7 @@ class NumberFormatObject : public NativeObject {
   }
 
  private:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };

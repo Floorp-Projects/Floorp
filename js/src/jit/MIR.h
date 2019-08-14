@@ -1019,7 +1019,7 @@ class MInstruction : public MDefinition, public InlineListNode<MInstruction> {
   // following code prevents calls to "new(alloc) MFoo" outside the MFoo
   // members.
   inline void* operator new(size_t nbytes,
-                            TempAllocator::Fallible view) throw() {
+                            TempAllocator::Fallible view) noexcept(true) {
     return TempObject::operator new(nbytes, view);
   }
   inline void* operator new(size_t nbytes, TempAllocator& alloc) {
