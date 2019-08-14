@@ -324,10 +324,6 @@ BasicCompositor::CreateRenderTargetForWindow(
     if (!aClearRect.IsEmpty()) {
       IntRect clearRect = aClearRect.ToUnknownRect();
       mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
-
-      if (mFullWindowRenderTarget) {
-        mFullWindowRenderTarget->mDrawTarget->ClearRect(Rect(clearRect));
-      }
     }
   }
 
