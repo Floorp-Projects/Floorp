@@ -187,8 +187,6 @@ const gCachedGridPattern = new Map();
  * @param {Boolean} options.showInfiniteLines
  *        Displays an infinite line to represent the grid lines if isShown is
  *        true.
- * @param {Number} options.zIndex
- *        The z-index to decide the displaying order.
  *
  * Structure:
  * <div class="highlighter-container">
@@ -224,7 +222,6 @@ const gCachedGridPattern = new Map();
  *   </div>
  * </div>
  */
-
 class CssGridHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
     super(highlighterEnv);
@@ -1795,9 +1792,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    */
   _update() {
     setIgnoreLayoutChanges(true);
-
-    // Set z-index.
-    this.markup.content.setStyle("z-index", this.options.zIndex);
 
     const root = this.getElement("root");
     const cells = this.getElement("cells");
