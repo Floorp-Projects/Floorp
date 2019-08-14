@@ -7,11 +7,7 @@
 #define nsBidiUtils_h__
 
 #include "nsString.h"
-
-extern "C" {
-
-bool encoding_mem_is_utf16_bidi(char16_t const* buffer, size_t len);
-}
+#include "encoding_rs_mem.h"
 
 /**
  *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
