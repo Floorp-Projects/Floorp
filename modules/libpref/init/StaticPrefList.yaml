@@ -2639,6 +2639,18 @@
   value: 0
   mirror: always
 
+# This setting corresponds to a global text zoom setting affecting
+# all content that is not already subject to font size inflation.
+# It is interpreted as a percentage value that is applied on top
+# of the document's current text zoom setting.
+#
+# The resulting total zoom factor (text zoom * system font scale)
+# will be limited by zoom.minPercent and maxPercent.
+- name: font.size.systemFontScale
+  type: uint32_t
+  value: 100
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "full-screen-api."
 #---------------------------------------------------------------------------
