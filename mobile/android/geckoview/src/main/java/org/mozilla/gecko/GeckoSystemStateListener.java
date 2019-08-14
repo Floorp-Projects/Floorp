@@ -132,7 +132,7 @@ public class GeckoSystemStateListener
         onDeviceChanged();
     }
 
-    @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "any", dispatchTo = "gecko")
     private static native void nativeOnDeviceChanged();
 
     private static void onDeviceChanged() {
