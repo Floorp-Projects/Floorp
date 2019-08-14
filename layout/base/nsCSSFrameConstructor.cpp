@@ -9372,12 +9372,14 @@ void nsCSSFrameConstructor::WrapItemsInPseudoParent(
     const FCItemIterator& aEndIter) {
   const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
   PseudoStyleType pseudoType = pseudoData.mPseudoType;
-  StyleDisplay parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
+  auto parentDisplayInside = aParentStyle->StyleDisplay()->DisplayInside();
 
+  // XXXmats should we use IsInlineInsideStyle() here instead? seems odd to
+  // exclude RubyBaseContainer/RubyTextContainer...
   if (pseudoType == PseudoStyleType::table &&
-      (parentDisplay == StyleDisplay::Inline ||
-       parentDisplay == StyleDisplay::RubyBase ||
-       parentDisplay == StyleDisplay::RubyText)) {
+      (parentDisplayInside == StyleDisplayInside::Inline ||
+       parentDisplayInside == StyleDisplayInside::RubyBase ||
+       parentDisplayInside == StyleDisplayInside::RubyText)) {
     pseudoType = PseudoStyleType::inlineTable;
   }
 
