@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurface.h"
+#include <IOSurface/IOSurface.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/CGLIOSurface.h>
 #include <QuartzCore/QuartzCore.h>
@@ -19,8 +20,6 @@ using namespace mozilla;
 #define IOSURFACE_FRAMEWORK_PATH \
   "/System/Library/Frameworks/IOSurface.framework/IOSurface"
 
-#define GET_CONST(const_name) \
-  ((CFStringRef*)dlsym(sIOSurfaceFramework, const_name))
 #define GET_IOSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sIOSurfaceFramework, sym_name)
 
@@ -42,12 +41,6 @@ IOSurfaceVoidFunc MacIOSurfaceLib::sDecrementUseCount;
 IOSurfaceLockFunc MacIOSurfaceLib::sLock;
 IOSurfaceUnlockFunc MacIOSurfaceLib::sUnlock;
 IOSurfacePixelFormatFunc MacIOSurfaceLib::sPixelFormat;
-
-CFStringRef MacIOSurfaceLib::kPropWidth;
-CFStringRef MacIOSurfaceLib::kPropHeight;
-CFStringRef MacIOSurfaceLib::kPropBytesPerElem;
-CFStringRef MacIOSurfaceLib::kPropBytesPerRow;
-CFStringRef MacIOSurfaceLib::kPropIsGlobal;
 
 bool MacIOSurfaceLib::isInit() {
   // Guard against trying to reload the library
@@ -123,13 +116,6 @@ void MacIOSurfaceLib::IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr) {
   sDecrementUseCount(aIOSurfacePtr);
 }
 
-CFStringRef MacIOSurfaceLib::GetIOConst(const char* symbole) {
-  CFStringRef* address = (CFStringRef*)dlsym(sIOSurfaceFramework, symbole);
-  if (!address) return nullptr;
-
-  return *address;
-}
-
 void MacIOSurfaceLib::LoadLibrary() {
   if (isLoaded) {
     return;
@@ -142,11 +128,6 @@ void MacIOSurfaceLib::LoadLibrary() {
     return;
   }
 
-  kPropWidth = GetIOConst("kIOSurfaceWidth");
-  kPropHeight = GetIOConst("kIOSurfaceHeight");
-  kPropBytesPerElem = GetIOConst("kIOSurfaceBytesPerElement");
-  kPropBytesPerRow = GetIOConst("kIOSurfaceBytesPerRow");
-  kPropIsGlobal = GetIOConst("kIOSurfaceIsGlobal");
   sCreate = GET_IOSYM(sCreate, "IOSurfaceCreate");
   sGetID = GET_IOSYM(sGetID, "IOSurfaceGetID");
   sWidth = GET_IOSYM(sWidth, "IOSurfaceGetWidthOfPlane");
@@ -168,10 +149,9 @@ void MacIOSurfaceLib::LoadLibrary() {
   sPixelFormat = GET_IOSYM(sPixelFormat, "IOSurfaceGetPixelFormat");
 
   if (!sCreate || !sGetID || !sLookup || !sGetBaseAddress ||
-      !sGetBaseAddressOfPlane || !sPlaneCount || !kPropWidth || !kPropHeight ||
-      !kPropBytesPerElem || !kPropIsGlobal || !sLock || !sUnlock ||
+      !sGetBaseAddressOfPlane || !sPlaneCount || !sLock || !sUnlock ||
       !sIncrementUseCount || !sDecrementUseCount || !sWidth || !sHeight ||
-      !kPropBytesPerRow || !sBytesPerRow || !sGetPropertyMaximum) {
+      !sBytesPerRow || !sGetPropertyMaximum) {
     CloseLibrary();
   }
 }
@@ -221,14 +201,13 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
       ::CFNumberCreate(nullptr, kCFNumberSInt32Type, &aHeight);
   CFNumberRef cfBytesPerElem =
       ::CFNumberCreate(nullptr, kCFNumberSInt32Type, &bytesPerElem);
-  ::CFDictionaryAddValue(props, MacIOSurfaceLib::kPropWidth, cfWidth);
+  ::CFDictionaryAddValue(props, kIOSurfaceWidth, cfWidth);
   ::CFRelease(cfWidth);
-  ::CFDictionaryAddValue(props, MacIOSurfaceLib::kPropHeight, cfHeight);
+  ::CFDictionaryAddValue(props, kIOSurfaceHeight, cfHeight);
   ::CFRelease(cfHeight);
-  ::CFDictionaryAddValue(props, MacIOSurfaceLib::kPropBytesPerElem,
-                         cfBytesPerElem);
+  ::CFDictionaryAddValue(props, kIOSurfaceBytesPerElement, cfBytesPerElem);
   ::CFRelease(cfBytesPerElem);
-  ::CFDictionaryAddValue(props, MacIOSurfaceLib::kPropIsGlobal, kCFBooleanTrue);
+  ::CFDictionaryAddValue(props, kIOSurfaceIsGlobal, kCFBooleanTrue);
 
   IOSurfacePtr surfaceRef = MacIOSurfaceLib::IOSurfaceCreate(props);
   ::CFRelease(props);
@@ -292,15 +271,13 @@ size_t MacIOSurface::GetPlaneCount() const {
 /*static*/
 size_t MacIOSurface::GetMaxWidth() {
   if (!MacIOSurfaceLib::isInit()) return -1;
-  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(
-      MacIOSurfaceLib::kPropWidth);
+  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(kIOSurfaceWidth);
 }
 
 /*static*/
 size_t MacIOSurface::GetMaxHeight() {
   if (!MacIOSurfaceLib::isInit()) return -1;
-  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(
-      MacIOSurfaceLib::kPropHeight);
+  return MacIOSurfaceLib::IOSurfaceGetPropertyMaximum(kIOSurfaceHeight);
 }
 
 size_t MacIOSurface::GetDevicePixelWidth(size_t plane) const {

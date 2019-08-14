@@ -7,6 +7,8 @@
 #include "AppleVTDecoder.h"
 
 #include <CoreVideo/CVPixelBufferIOSurface.h>
+#include <IOSurface/IOSurface.h>
+
 #include "AppleDecoderModule.h"
 #include "AppleUtils.h"
 #include "MacIOSurfaceImage.h"
@@ -558,7 +560,7 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
   AutoCFRelease<CFNumberRef> PixelFormatTypeNumber = CFNumberCreate(
       kCFAllocatorDefault, kCFNumberSInt32Type, &PixelFormatTypeValue);
   // Construct IOSurface Properties
-  const void* IOSurfaceKeys[] = {MacIOSurfaceLib::kPropIsGlobal};
+  const void* IOSurfaceKeys[] = {kIOSurfaceIsGlobal};
   const void* IOSurfaceValues[] = {kCFBooleanTrue};
   static_assert(ArrayLength(IOSurfaceKeys) == ArrayLength(IOSurfaceValues),
                 "Non matching keys/values array size");
