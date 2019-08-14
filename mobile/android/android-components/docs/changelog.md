@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-media**
   * Do not display title/url/icon of website in media notification if website is opened in private mode.
 
+* **browser-toolbar**
+  * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)
@@ -54,7 +57,7 @@ permalink: /changelog/
     onTabsReceiver = { from, tabs -> /* Do cool things here! */ }
   )
   ```
-  
+
 * **feature-media**
   * `MediaFeature` is no longer showing a notification for playing media with a very short duration.
   * Lowererd priority of media notification channel to avoid the media notification makign any sounds itself.

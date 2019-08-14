@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:ac="http://schemas.android.com/apk/res-auto">
     <item android:drawable="@drawable/mozac_ic_lock" ac:state_site_secure="true" />
-    <item android:drawable="@drawable/mozac_ic_globe" />
+    <item android:drawable="@drawable/mozac_ic_broken_lock" />
 </selector>
