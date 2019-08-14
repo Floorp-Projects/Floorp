@@ -624,7 +624,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   }
 
   int columnCount = 0;
-  int contentBEnd = 0;
+  nscoord contentBEnd = 0;
   bool reflowNext = false;
 
   while (child) {
