@@ -4112,7 +4112,7 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
       return true;
     }
   } else {
-    // throw() steps 5-7.
+    // noexcept(true) steps 5-7.
     MOZ_ASSERT(completionKind == CompletionKind::Throw);
 
     // Step 5: Let throw be GetMethod(syncIterator, "throw").

@@ -1084,7 +1084,7 @@ class XPCNativeInterface final {
       : mInfo(aInfo), mName(aName), mMemberCount(0) {}
   ~XPCNativeInterface();
 
-  void* operator new(size_t, void* p) CPP_THROW_NEW { return p; }
+  void* operator new(size_t, void* p) noexcept(true) { return p; }
 
   XPCNativeInterface(const XPCNativeInterface& r) = delete;
   XPCNativeInterface& operator=(const XPCNativeInterface& r) = delete;
@@ -1205,7 +1205,7 @@ class XPCNativeSet final {
 
   XPCNativeSet() : mMemberCount(0), mInterfaceCount(0) {}
   ~XPCNativeSet();
-  void* operator new(size_t, void* p) CPP_THROW_NEW { return p; }
+  void* operator new(size_t, void* p) noexcept(true) { return p; }
 
   static void DestroyInstance(XPCNativeSet* inst);
 
