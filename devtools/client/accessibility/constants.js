@@ -119,26 +119,24 @@ const A11Y_TEXT_LABEL_LINK_BASE =
 
 const A11Y_TEXT_LABEL_LINK_IDS = {
   [AREA_NO_NAME_FROM_ALT]:
-    "Use_alt_attribute_to_label_<area>_elements_that_have_the_href_attribute",
+    "Use_alt_attribute_to_label_area_elements_that_have_the_href_attribute",
   [DIALOG_NO_NAME]: "Dialogs_should_be_labeled",
-  [DOCUMENT_NO_TITLE]: "Documents_must_have_a_<title>",
+  [DOCUMENT_NO_TITLE]: "Documents_must_have_a_title",
   [EMBED_NO_NAME]: "Embedded_content_must_be_labeled",
   [FIGURE_NO_NAME]: "Figures_with_optional_captions_should_be_labeled",
-  [FORM_FIELDSET_NO_NAME]: "<fieldset>_elements_must_be_labeled",
-  [FORM_FIELDSET_NO_NAME_FROM_LEGEND]:
-    "Use_<legend>_element_to_label_<fieldset>_elements",
+  [FORM_FIELDSET_NO_NAME]: "Fieldset_elements_must_be_labeled",
+  [FORM_FIELDSET_NO_NAME_FROM_LEGEND]: "Use_a_legend_to_label_a_fieldset",
   [FORM_NO_NAME]: "Form_elements_must_be_labeled",
   [FORM_NO_VISIBLE_NAME]: "Form_elements_should_have_a_visible_text_label",
   [FORM_OPTGROUP_NO_NAME_FROM_LABEL]:
-    "Use_label_attribute_to_label_<optgroup>_elements",
-  [FRAME_NO_NAME]: "<frame>_elements_must_be_labeled",
+    "Use_label_attribute_on_optgroup_elements",
+  [FRAME_NO_NAME]: "Frame_elements_must_be_labeled",
   [HEADING_NO_NAME]: "Headings_must_be_labeled",
   [HEADING_NO_CONTENT]: "Headings_should_have_visible_text_content",
-  [IFRAME_NO_NAME_FROM_TITLE]:
-    "Use_title_attribute_to_describe_<iframe>_content",
+  [IFRAME_NO_NAME_FROM_TITLE]: "Use_title_attribute_to_describe_iframe_content",
   [IMAGE_NO_NAME]: "Content_with_images_must_be_labeled",
   [INTERACTIVE_NO_NAME]: "Interactive_elements_must_be_labeled",
-  [MATHML_GLYPH_NO_NAME]: "Use_alt_attribute_to_label_<mglyph>_elements",
+  [MATHML_GLYPH_NO_NAME]: "Use_alt_attribute_to_label_mglyph_elements",
   [TOOLBAR_NO_NAME]:
     "Toolbars_must_be_labeled_when_there_is_more_than_one_toolbar",
 };
