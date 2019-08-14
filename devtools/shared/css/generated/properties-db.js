@@ -9989,6 +9989,20 @@ exports.CSS_PROPERTIES = {
       "wavy"
     ]
   },
+  "text-decoration-thickness": {
+    "isInherited": false,
+    "subproperties": [
+      "text-decoration-thickness"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
   "text-emphasis": {
     "isInherited": true,
     "subproperties": [
