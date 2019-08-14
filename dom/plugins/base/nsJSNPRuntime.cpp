@@ -233,7 +233,7 @@ static bool CreateNPObjectMember(NPP npp, JSContext* cx,
                                  NPVariant* getPropertyResult,
                                  JS::MutableHandle<JS::Value> vp);
 
-const js::Class sNPObjWrapperProxyClass =
+const JSClass sNPObjWrapperProxyClass =
     PROXY_CLASS_DEF(NPRUNTIME_JSCLASS_NAME, JSCLASS_HAS_RESERVED_SLOTS(1));
 
 typedef struct NPObjectMemberPrivate {

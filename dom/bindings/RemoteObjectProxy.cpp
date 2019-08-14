@@ -171,7 +171,7 @@ const char* RemoteObjectProxyBase::className(
 }
 
 void RemoteObjectProxyBase::GetOrCreateProxyObject(
-    JSContext* aCx, void* aNative, const js::Class* aClasp,
+    JSContext* aCx, void* aNative, const JSClass* aClasp,
     JS::Handle<JSObject*> aTransplantTo, JS::MutableHandle<JSObject*> aProxy,
     bool& aNewObjectCreated) const {
   xpc::CompartmentPrivate* priv =
