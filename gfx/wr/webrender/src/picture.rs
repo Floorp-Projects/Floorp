@@ -2563,7 +2563,7 @@ impl PicturePrimitive {
                             blur_std_deviation * scale_factors.0,
                             blur_std_deviation * scale_factors.1
                         );
-                        let device_rect = if self.options.inflate_if_required {
+                        let mut device_rect = if self.options.inflate_if_required {
                             let inflation_factor = frame_state.surfaces[raster_config.surface_index.0].inflation_factor;
                             let inflation_factor = (inflation_factor * device_pixel_scale.0).ceil();
 
@@ -2582,25 +2582,25 @@ impl PicturePrimitive {
                                 .intersection(&unclipped)
                                 .unwrap();
 
-                            let mut device_rect = match device_rect.try_cast::<i32>() {
+                            match device_rect.try_cast::<i32>() {
                                 Some(rect) => rect,
                                 None => {
                                     return None
                                 }
-                            };
-
-                            // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
-                            // what would be even better is to rasterize the picture at the down-scaled size
-                            // directly.
-                            device_rect.size = RenderTask::adjusted_blur_source_size(
-                                device_rect.size,
-                                blur_std_deviation,
-                            );
-
-                            device_rect
+                            }
                         } else {
                             clipped
                         };
+
+                        let original_size = device_rect.size;
+
+                        // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
+                        // what would be even better is to rasterize the picture at the down-scaled size
+                        // directly.
+                        device_rect.size = RenderTask::adjusted_blur_source_size(
+                            device_rect.size,
+                            blur_std_deviation,
+                        );
 
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
@@ -2630,6 +2630,7 @@ impl PicturePrimitive {
                             RenderTargetKind::Color,
                             ClearMode::Transparent,
                             None,
+                            original_size,
                         );
 
                         Some((blur_render_task_id, picture_task_id))
@@ -2701,6 +2702,7 @@ impl PicturePrimitive {
                                 RenderTargetKind::Color,
                                 ClearMode::Transparent,
                                 Some(&mut blur_tasks),
+                                device_rect.size,
                             );
                         }
 
