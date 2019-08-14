@@ -523,11 +523,15 @@ NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
 static StaticRefPtr<nsDNSService> gDNSService;
 
 already_AddRefed<nsIDNSService> nsDNSService::GetXPCOMSingleton() {
+  if (XRE_IsParentProcess()) {
+    return GetSingleton();
+  }
+
   if (XRE_IsContentProcess() || XRE_IsSocketProcess()) {
     return ChildDNSService::GetSingleton();
   }
 
-  return GetSingleton();
+  return nullptr;
 }
 
 already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
