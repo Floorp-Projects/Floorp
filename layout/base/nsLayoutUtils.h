@@ -2442,8 +2442,6 @@ class nsLayoutUtils {
 
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
-  static bool SVGTransformBoxEnabled() { return sSVGTransformBoxEnabled; }
-
   static uint32_t IdlePeriodDeadlineLimit() { return sIdlePeriodDeadlineLimit; }
 
   static uint32_t QuiescentFramesBeforeIdlePeriod() {
@@ -2994,7 +2992,6 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static bool sSVGTransformBoxEnabled;
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
 
