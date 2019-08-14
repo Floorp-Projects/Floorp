@@ -2131,11 +2131,6 @@ void HttpChannelParent::CancelChildCrossProcessRedirect() {
   }
 }
 
-already_AddRefed<ParentChannelListener> HttpChannelParent::GetParentListener() {
-  RefPtr<ParentChannelListener> listener = mParentListener;
-  return listener.forget();
-}
-
 NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
