@@ -206,7 +206,7 @@ function clickLinks(doc) {
     );
     // Check that clicking the label doesn't trigger a telemetry event.
     label.click();
-    assertTelemetryMatches([]);
+    assertAboutAddonsTelemetryEvents([]);
     link.click();
     doc.getElementById("detail-homepage").click();
     doc.getElementById("detail-reviews").click();
@@ -249,25 +249,27 @@ add_task(async function testBasicViewTelemetry() {
   openDetailView(doc, "extension@mochi.test");
   await wait_for_view_load(gManagerWindow);
 
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
-      ["view", "aboutAddons", "discover"],
-      ["view", "aboutAddons", "list", { type: "theme" }],
+      ["addonsManager", "view", "aboutAddons", "discover"],
+      ["addonsManager", "view", "aboutAddons", "list", { type: "theme" }],
       [
+        "addonsManager",
         "view",
         "aboutAddons",
         "detail",
         { type: "theme", addonId: "theme@mochi.test" },
       ],
-      ["view", "aboutAddons", "list", { type: "extension" }],
+      ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
       [
+        "addonsManager",
         "view",
         "aboutAddons",
         "detail",
         { type: "extension", addonId: "extension@mochi.test" },
       ],
     ],
-    { filterMethods: ["view"] }
+    { methods: ["view"] }
   );
 
   await close_manager(gManagerWindow);
@@ -280,52 +282,56 @@ add_task(async function testExtensionEvents() {
   let doc = await init("extension");
 
   // Check/clear the current telemetry.
-  assertTelemetryMatches(
-    [["view", "aboutAddons", "list", { type: "extension" }]],
-    { filterMethods: ["view"] }
+  assertAboutAddonsTelemetryEvents(
+    [["addonsManager", "view", "aboutAddons", "list", { type: "extension" }]],
+    { methods: ["view"] }
   );
 
   let row = getAddonCard(doc, addonId);
 
   // Check disable/enable.
   await enableAndDisable(doc, row);
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "disable", addonId, type, view: "list" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "enable", addonId, type, view: "list" },
       ],
     ],
-    { filterMethods: ["action"] }
+    { methods: ["action"] }
   );
 
   // Check remove/undo.
   await removeAddonAndUndo(doc, row);
   let uninstallValue = "accepted";
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         uninstallValue,
         { action: "uninstall", addonId, type, view: "list" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "undo", addonId, type, view: "list" },
       ],
     ],
-    { filterMethods: ["action"] }
+    { methods: ["action"] }
   );
 
   // Open the preferences page.
@@ -334,56 +340,61 @@ add_task(async function testExtensionEvents() {
   row = getAddonCard(doc, addonId);
   await openPrefs(doc, row);
   BrowserTestUtils.removeTab(await waitForNewTab);
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "external",
         { action: "preferences", type, addonId, view: "list" },
       ],
     ],
-    { filterMethods: ["action"] }
+    { methods: ["action"] }
   );
 
   // Go to the detail view.
   openDetailView(doc, addonId);
   await wait_for_view_load(gManagerWindow);
-  assertTelemetryMatches(
-    [["view", "aboutAddons", "detail", { type, addonId }]],
-    { filterMethods: ["view"] }
+  assertAboutAddonsTelemetryEvents(
+    [["addonsManager", "view", "aboutAddons", "detail", { type, addonId }]],
+    { methods: ["view"] }
   );
 
   // Check updates.
   changeAutoUpdates(doc);
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "",
         { action: "setAddonUpdate", type, addonId, view: "detail" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "checkForUpdate", type, addonId, view: "detail" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "enabled",
         { action: "setAddonUpdate", type, addonId, view: "detail" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "default",
         { action: "setAddonUpdate", type, addonId, view: "detail" },
       ],
     ],
-    { filterMethods: ["action"] }
+    { methods: ["action"] }
   );
 
   // These links don't actually have a URL, so they don't open a tab. They're only
@@ -401,20 +412,21 @@ add_task(async function testExtensionEvents() {
   await openPrefs(doc, row);
   BrowserTestUtils.removeTab(await waitForNewTab);
 
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
-      ["link", "aboutAddons", "author", { view: "detail" }],
-      ["link", "aboutAddons", "homepage", { view: "detail" }],
-      ["link", "aboutAddons", "rating", { view: "detail" }],
-      ["link", "aboutAddons", "support", { view: "detail" }],
+      ["addonsManager", "link", "aboutAddons", "author", { view: "detail" }],
+      ["addonsManager", "link", "aboutAddons", "homepage", { view: "detail" }],
+      ["addonsManager", "link", "aboutAddons", "rating", { view: "detail" }],
+      ["addonsManager", "link", "aboutAddons", "support", { view: "detail" }],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "external",
         { action: "preferences", type, addonId, view: "detail" },
       ],
     ],
-    { filterMethods: ["action", "link"] }
+    { methods: ["action", "link"] }
   );
 
   // Update the preferences and check that inline changes.
@@ -427,23 +439,25 @@ add_task(async function testExtensionEvents() {
   await openPrefs(doc, row);
   await wait_for_view_load(gManagerWindow);
 
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
-      ["view", "aboutAddons", "list", { type }],
+      ["addonsManager", "view", "aboutAddons", "list", { type }],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "inline",
         { action: "preferences", type, addonId, view: "list" },
       ],
       [
+        "addonsManager",
         "view",
         "aboutAddons",
         "detail",
         { type: "extension", addonId: "extension@mochi.test" },
       ],
     ],
-    { filterMethods: ["action", "view"] }
+    { methods: ["action", "view"] }
   );
 
   await close_manager(gManagerWindow);
@@ -495,59 +509,71 @@ add_task(async function testGeneralActions() {
   searchBox.doCommand();
   BrowserTestUtils.removeTab(await waitForNewTab);
 
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
-      ["view", "aboutAddons", "list", { type: "extension" }],
+      ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "checkForUpdates", view: "list" },
       ],
-      ["view", "aboutAddons", "updates", { type: "recent" }],
+      ["addonsManager", "view", "aboutAddons", "updates", { type: "recent" }],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "default,enabled",
         { action: "setUpdatePolicy", view: "updates" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "enabled",
         { action: "setUpdatePolicy", view: "updates" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "resetUpdatePolicy", view: "updates" },
       ],
-      ["view", "aboutAddons", "shortcuts"],
+      ["addonsManager", "view", "aboutAddons", "shortcuts"],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         null,
         { action: "checkForUpdates", view: "shortcuts" },
       ],
-      ["link", "aboutAddons", "about:debugging", { view: "shortcuts" }],
       [
+        "addonsManager",
+        "link",
+        "aboutAddons",
+        "about:debugging",
+        { view: "shortcuts" },
+      ],
+      [
+        "addonsManager",
         "link",
         "aboutAddons",
         "search",
         { view: "shortcuts", type: "shortcuts" },
       ],
     ],
-    { filterMethods: TELEMETRY_METHODS }
+    { methods: TELEMETRY_METHODS }
   );
 
   await close_manager(gManagerWindow);
 
-  assertTelemetryMatches([]);
+  assertAboutAddonsTelemetryEvents([]);
 });
 
 add_task(async function testPreferencesLink() {
-  assertTelemetryMatches([]);
+  assertAboutAddonsTelemetryEvents([]);
 
   await init("theme");
 
@@ -572,13 +598,22 @@ add_task(async function testPreferencesLink() {
   // Close the about:preferences tab.
   BrowserTestUtils.removeTab(tab);
 
-  assertTelemetryMatches(
+  TelemetryTestUtils.assertEvents(
     [
-      ["view", "aboutAddons", "list", { type: "theme" }],
-      ["link", "aboutAddons", "about:preferences", { view: "list" }],
-      ["link", "aboutPreferences", "about:addons"],
+      ["addonsManager", "view", "aboutAddons", "list", { type: "theme" }],
+      [
+        "addonsManager",
+        "link",
+        "aboutAddons",
+        "about:preferences",
+        { view: "list" },
+      ],
+      ["addonsManager", "link", "aboutPreferences", "about:addons"],
     ],
-    { filterMethods: ["link", "view"] }
+    {
+      category: "addonsManager",
+      methods: /^(link|view)$/,
+    }
   );
 
   await close_manager(gManagerWindow);
