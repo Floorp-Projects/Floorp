@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+#include "domstubs.idl"
+
+[scriptable, uuid(2703b5ed-a41f-42be-8764-b795eb67ed25)]
+interface nsIBrowserUsage : nsISupports
+{
+  /**
+   * Returns the number of unique domains (eTLD+1) visited in the past
+   * 24 hours by the user.
+   */
+  uint32_t getUniqueDomainsVisitedInPast24Hours();
+};
