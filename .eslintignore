@@ -259,7 +259,6 @@ remote/server/Socket.jsm
 remote/server/Stream.jsm
 remote/test/browser/chrome-remote-interface.js
 remote/test/demo.js
-remote/test/puppeteer/
 
 # NSS / taskcluster only.
 security/nss/**
