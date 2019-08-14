@@ -161,6 +161,11 @@ class SpecialPowersAPI extends JSWindowActorChild {
     this._extensionListeners = null;
   }
 
+  // Hack around devtools sometimes trying to JSON stringify us.
+  toJSON() {
+    return {};
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "Assert":
