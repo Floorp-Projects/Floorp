@@ -40,7 +40,9 @@ function isWrappable(x) {
 
 function isWrapper(x) {
   try {
-    return isWrappable(x) && typeof x.SpecialPowers_wrappedObject !== "undefined";
+    return (
+      isWrappable(x) && typeof x.SpecialPowers_wrappedObject !== "undefined"
+    );
   } catch (e) {
     // If `x` is a remote object proxy, trying to access an unexpected property
     // on it will throw a security error, even though we're chrome privileged.
