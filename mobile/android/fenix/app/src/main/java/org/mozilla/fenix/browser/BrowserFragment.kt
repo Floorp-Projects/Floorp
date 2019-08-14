@@ -95,7 +95,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
         return super.initializeUI(view)?.also { session ->
 
-            quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
+            quickActionSheetView =
+                QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
 
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(

@@ -61,16 +61,17 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     lateinit var browsingModeManager: BrowsingModeManager
 
-    private val onDestinationChangedListener = NavController.OnDestinationChangedListener { _, dest, _ ->
-        val fragmentName = resources.getResourceEntryName(dest.id)
-        Sentry.getContext().recordBreadcrumb(
-            BreadcrumbBuilder()
-                .setCategory("DestinationChanged")
-                .setMessage("Changing to fragment $fragmentName, isCustomTab: $isCustomTab")
-                .setLevel(Breadcrumb.Level.INFO)
-                .build()
-        )
-    }
+    private val onDestinationChangedListener =
+        NavController.OnDestinationChangedListener { _, dest, _ ->
+            val fragmentName = resources.getResourceEntryName(dest.id)
+            Sentry.getContext().recordBreadcrumb(
+                BreadcrumbBuilder()
+                    .setCategory("DestinationChanged")
+                    .setMessage("Changing to fragment $fragmentName, isCustomTab: $isCustomTab")
+                    .setLevel(Breadcrumb.Level.INFO)
+                    .build()
+            )
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,7 +108,11 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         val appBarConfiguration = AppBarConfiguration.Builder().build()
         val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
         setSupportActionBar(navigationToolbar)
-        NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
+        NavigationUI.setupWithNavController(
+            navigationToolbar,
+            navHost.navController,
+            appBarConfiguration
+        )
         navigationToolbar.setNavigationOnClickListener {
             onBackPressed()
         }
@@ -148,7 +153,10 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         attrs: AttributeSet
     ): View? =
         when (name) {
-            EngineView::class.java.name -> components.core.engine.createView(context, attrs).asView()
+            EngineView::class.java.name -> components.core.engine.createView(
+                context,
+                attrs
+            ).asView()
             else -> super.onCreateView(parent, name, context, attrs)
         }
 
@@ -180,8 +188,11 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER_AND_LOAD) == true) {
             this.intent.putExtra(OPEN_TO_BROWSER_AND_LOAD, false)
-            openToBrowserAndLoad(intent.getStringExtra(
-                IntentReceiverActivity.SPEECH_PROCESSING), true, BrowserDirection.FromGlobal, forceSearch = true)
+            openToBrowserAndLoad(
+                intent.getStringExtra(
+                    IntentReceiverActivity.SPEECH_PROCESSING
+                ), true, BrowserDirection.FromGlobal, forceSearch = true
+            )
             return
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
@@ -220,7 +231,11 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             sessionObserver = subscribeToSessions()
 
         with(navHost.navController) {
-            if (currentDestination?.id == R.id.browserFragment || popBackStack(R.id.browserFragment, false)) return
+            if (currentDestination?.id == R.id.browserFragment || popBackStack(
+                    R.id.browserFragment,
+                    false
+                )
+            ) return
         }
 
         @IdRes var fragmentId: Int? = null

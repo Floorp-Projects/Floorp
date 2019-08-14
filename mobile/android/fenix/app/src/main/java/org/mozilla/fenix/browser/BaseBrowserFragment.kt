@@ -129,7 +129,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         bookmarked = false,
                         readerActive = getSessionById()?.readerMode ?: false,
                         bounceNeeded = false,
-                        isAppLink = getSessionById()?.let { appLink.invoke(it.url).hasExternalApp() } ?: false
+                        isAppLink = getSessionById()?.let {
+                            appLink.invoke(it.url).hasExternalApp()
+                        } ?: false
                     )
                 )
             )
@@ -160,7 +162,12 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 engineView = engineView,
                 currentSession = session,
                 viewModel = viewModel,
-                getSupportUrl = { SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP) },
+                getSupportUrl = {
+                    SupportUtils.getSumoURLForTopic(
+                        context!!,
+                        SupportUtils.SumoTopic.HELP
+                    )
+                },
                 openInFenixIntent = Intent(context, IntentReceiverActivity::class.java).also {
                     it.action = Intent.ACTION_VIEW
                     it.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -169,7 +176,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 bottomSheetBehavior = BottomSheetBehavior.from(nestedScrollQuickAction)
             )
 
-            browserInteractor = createBrowserToolbarViewInteractor(browserToolbarController, session)
+            browserInteractor =
+                createBrowserToolbarViewInteractor(browserToolbarController, session)
 
             browserToolbarView = BrowserToolbarView(
                 container = view.browserLayout,
@@ -224,7 +232,10 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     sessionManager = sessionManager,
                     fragmentManager = childFragmentManager,
                     sessionId = customTabSessionId,
-                    downloadManager = FetchDownloadManager(requireContext().applicationContext, DownloadService::class),
+                    downloadManager = FetchDownloadManager(
+                        requireContext().applicationContext,
+                        DownloadService::class
+                    ),
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                     }),
@@ -268,7 +279,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 view = view
             )
 
-            val accentHighContrastColor = ThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
+            val accentHighContrastColor =
+                ThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
 
             sitePermissionsFeature.set(
                 feature = SitePermissionsFeature(
@@ -299,7 +311,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         FenixSnackbar.make(view.rootView, Snackbar.LENGTH_SHORT)
                             .setText(getString(R.string.full_screen_notification))
                             .show()
-                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                        activity?.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                         activity?.enterToImmersiveMode()
                         toolbar.visibility = View.GONE
                         nestedScrollQuickAction.visibility = View.GONE
@@ -314,7 +327,12 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     }
                     view.swipeRefresh.apply {
                         val (topMargin, bottomMargin) = if (inFullScreen) 0 to 0 else getEngineMargins()
-                        (layoutParams as CoordinatorLayout.LayoutParams).setMargins(0, topMargin, 0, bottomMargin)
+                        (layoutParams as CoordinatorLayout.LayoutParams).setMargins(
+                            0,
+                            topMargin,
+                            0,
+                            bottomMargin
+                        )
                     }
                 },
                 owner = this,
@@ -323,7 +341,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
             @Suppress("ConstantConditionIf")
             if (FeatureFlags.pullToRefreshEnabled) {
-                val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+                val primaryTextColor =
+                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
                 view.swipeRefresh.setColorSchemeColors(primaryTextColor)
                 swipeRefreshFeature.set(
                     feature = SwipeRefreshFeature(
@@ -448,7 +467,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
      */
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
-            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
+            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(
+                session
+            )
         }
         return false
     }
@@ -496,14 +517,15 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             }
 
             view?.let {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-                    sessionId = session.id,
-                    url = session.url,
-                    isSecured = session.securityInfo.secure,
-                    isTrackingProtectionOn = session.trackerBlockingEnabled,
-                    sitePermissions = sitePermissions,
-                    gravity = getAppropriateLayoutGravity()
-                )
+                val directions =
+                    BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                        sessionId = session.id,
+                        url = session.url,
+                        isSecured = session.securityInfo.secure,
+                        isTrackingProtectionOn = session.trackerBlockingEnabled,
+                        sitePermissions = sitePermissions,
+                        gravity = getAppropriateLayoutGravity()
+                    )
                 nav(R.id.browserFragment, directions)
             }
         }
