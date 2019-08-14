@@ -61,7 +61,7 @@ SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
 
 // static
 bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
-#if defined(ANDROID) || defined(SHM_ANON)
+#if defined(ANDROID)
   return false;
 #else
   *str += '/';
@@ -87,7 +87,7 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid) {
   // enough for this.
   StringAppendF(str, "org.mozilla.ipc.%d.", static_cast<int>(pid));
   return true;
-#endif    // !ANDROID && !SHM_ANON
+#endif    // !ANDROID
 }
 
 bool SharedMemory::Create(size_t size) {
@@ -112,10 +112,6 @@ bool SharedMemory::Create(size_t size) {
     return false;
   }
   needs_truncate = false;
-#elif defined(SHM_ANON)
-  // FreeBSD (or any other Unix that might decide to implement this
-  // nice, simple API):
-  fd = shm_open(SHM_ANON, O_RDWR, 0600);
 #else
   // Generic Unix: shm_open + shm_unlink
   do {
