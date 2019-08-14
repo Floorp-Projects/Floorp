@@ -1337,6 +1337,9 @@ class ScriptSourceObject : public NativeObject {
   };
 };
 
+enum class GeneratorKind : bool { NotGenerator, Generator };
+enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
+
 // This class contains fields and accessors that are common to both lazy and
 // non-lazy interpreted scripts. This must be located at offset +0 of any
 // derived classes in order for the 'jitCodeRaw' mechanism to work with the
@@ -1384,7 +1387,7 @@ class BaseScript : public gc::TenuredCell {
   uint32_t column_ = 0;  // Count of Code Points
 
   // See ImmutableFlags / MutableFlags below for definitions. These are stored
-  // as uint32_t instead of bitfields to make it more predicatable to access
+  // as uint32_t instead of bitfields to make it more predictable to access
   // from JIT code.
   uint32_t immutableFlags_ = 0;
   uint32_t mutableFlags_ = 0;
@@ -1408,6 +1411,9 @@ class BaseScript : public gc::TenuredCell {
   // initialized. These flags should likely be preserved when serializing
   // (XDR) or copying (CopyScript) this script. This is only public for the
   // JITs.
+  //
+  // Specific accessors for flag values are defined with
+  // IMMUTABLE_FLAG_* macros below.
   enum class ImmutableFlags : uint32_t {
     // No need for result value of last expression statement.
     NoScriptRval = 1 << 0,
@@ -1470,7 +1476,7 @@ class BaseScript : public gc::TenuredCell {
     HasRest = 1 << 20,
 
     // See comments below.
-    ArgsHasVarBinding = 1 << 21,
+    ArgumentsHasVarBinding = 1 << 21,
 
     // Script came from eval().
     IsForEval = 1 << 22,
@@ -1492,6 +1498,9 @@ class BaseScript : public gc::TenuredCell {
 
   // Mutable flags typically store information about runtime or deoptimization
   // behavior of this script. This is only public for the JITs.
+  //
+  // Specific accessors for flag values are defined with
+  // MUTABLE_FLAG_* macros below.
   enum class MutableFlags : uint32_t {
     // Number of times the |warmUpCount| was forcibly discarded. The counter is
     // reset when a script is successfully jit-compiled.
@@ -1611,6 +1620,133 @@ class BaseScript : public gc::TenuredCell {
 
   void traceChildren(JSTracer* trc);
 
+  // Specific flag accessors
+
+#define FLAG_GETTER(enumName, enumEntry, lowerName) \
+ public:                                            \
+  bool lowerName() const { return hasFlag(enumName::enumEntry); }
+
+#define FLAG_GETTER_SETTER(enumName, enumEntry, setterLevel, lowerName, name) \
+setterLevel:                                                                  \
+  void set##name() { setFlag(enumName::enumEntry); }                          \
+  void set##name(bool b) { setFlag(enumName::enumEntry, b); }                 \
+  void clear##name() { clearFlag(enumName::enumEntry); }                      \
+                                                                              \
+ public:                                                                      \
+  bool lowerName() const { return hasFlag(enumName::enumEntry); }
+
+#define IMMUTABLE_FLAG_GETTER(lowerName, name) \
+  FLAG_GETTER(ImmutableFlags, name, lowerName)
+#define IMMUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
+  FLAG_GETTER_SETTER(ImmutableFlags, name, protected, lowerName, name)
+#define IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(lowerName, name) \
+  FLAG_GETTER_SETTER(ImmutableFlags, name, public, lowerName, name)
+#define IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(enumName, lowerName, name) \
+  FLAG_GETTER_SETTER(ImmutableFlags, enumName, public, lowerName, name)
+#define MUTABLE_FLAG_GETTER(lowerName, name) \
+  FLAG_GETTER(MutableFlags, name, lowerName)
+#define MUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
+  FLAG_GETTER_SETTER(MutableFlags, name, public, lowerName, name)
+
+  IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(strict, Strict)
+  IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
+  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(bindingsAccessedDynamically,
+                                      BindingsAccessedDynamically)
+  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
+  IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
+  IMMUTABLE_FLAG_GETTER_SETTER(functionHasThisBinding, FunctionHasThisBinding)
+  // Alternate shorter name used throughout the codebase
+  IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(FunctionHasThisBinding,
+                                             hasThisBinding, HasThisBinding)
+  // FunctionHasExtraBodyVarScope: custom logic below.
+  IMMUTABLE_FLAG_GETTER_SETTER(hasMappedArgsObj, HasMappedArgsObj)
+  IMMUTABLE_FLAG_GETTER_SETTER(hasInnerFunctions, HasInnerFunctions)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(needsHomeObject, NeedsHomeObject)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDerivedClassConstructor,
+                                      IsDerivedClassConstructor)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDefaultClassConstructor,
+                                      IsDefaultClassConstructor)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
+  IMMUTABLE_FLAG_GETTER_SETTER(isLikelyConstructorWrapper,
+                               IsLikelyConstructorWrapper)
+  // alternate name used throughout the codebase
+  IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(IsLikelyConstructorWrapper,
+                                             likelyConstructorWrapper,
+                                             LikelyConstructorWrapper)
+  IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
+  IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasRest, HasRest)
+  // See ContextFlags::funArgumentsHasLocalBinding comment.
+  // N.B.: no setter -- custom logic in JSScript.
+  IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
+  // IsForEval: custom logic below.
+  // IsModule: custom logic below.
+  IMMUTABLE_FLAG_GETTER_SETTER(needsFunctionEnvironmentObjects,
+                               NeedsFunctionEnvironmentObjects)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(shouldDeclareArguments,
+                                      ShouldDeclareArguments)
+  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasDirectEval, HasDirectEval)
+
+  MUTABLE_FLAG_GETTER_SETTER(warnedAboutUndefinedProp, WarnedAboutUndefinedProp)
+  MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
+  MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
+  MUTABLE_FLAG_GETTER_SETTER(trackRecordReplayProgress,
+                             TrackRecordReplayProgress)
+  // N.B.: no setter -- custom logic in JSScript.
+  MUTABLE_FLAG_GETTER(hasScriptCounts, HasScriptCounts)
+  // Access the flag for whether this script has a DebugScript in its realm's
+  // map. This should only be used by the DebugScript class.
+  MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
+  MUTABLE_FLAG_GETTER_SETTER(doNotRelazify, DoNotRelazify)
+  MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
+  MUTABLE_FLAG_GETTER_SETTER(failedShapeGuard, FailedShapeGuard)
+  MUTABLE_FLAG_GETTER_SETTER(hadFrequentBailouts, HadFrequentBailouts)
+  MUTABLE_FLAG_GETTER_SETTER(hadOverflowBailout, HadOverflowBailout)
+  MUTABLE_FLAG_GETTER_SETTER(uninlineable, Uninlineable)
+  MUTABLE_FLAG_GETTER_SETTER(invalidatedIdempotentCache,
+                             InvalidatedIdempotentCache)
+  MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
+  MUTABLE_FLAG_GETTER_SETTER(needsArgsAnalysis, NeedsArgsAnalysis)
+  // NeedsArgsObj: custom logic below.
+  MUTABLE_FLAG_GETTER_SETTER(hideScriptFromDebugger, HideScriptFromDebugger)
+  MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
+
+#undef IMMUTABLE_FLAG_GETTER
+#undef IMMUTABLE_FLAG_GETTER_SETTER
+#undef IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC
+#undef IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC
+#undef MUTABLE_FLAG_GETTER
+#undef MUTABLE_FLAG_GETTER_SETTER
+#undef FLAG_GETTER
+#undef FLAG_GETTER_SETTER
+
+  GeneratorKind generatorKind() const {
+    return isGenerator() ? GeneratorKind::Generator
+                         : GeneratorKind::NotGenerator;
+  }
+
+  void setGeneratorKind(GeneratorKind kind) {
+    // A script only gets its generator kind set as part of initialization,
+    // so it can only transition from NotGenerator.
+    MOZ_ASSERT(!isGenerator());
+    if (kind == GeneratorKind::Generator) {
+      setFlag(ImmutableFlags::IsGenerator);
+    }
+  }
+
+  FunctionAsyncKind asyncKind() const {
+    return isAsync() ? FunctionAsyncKind::AsyncFunction
+                     : FunctionAsyncKind::SyncFunction;
+  }
+
+  void setAsyncKind(FunctionAsyncKind kind) {
+    if (kind == FunctionAsyncKind::AsyncFunction) {
+      setFlag(ImmutableFlags::IsAsync);
+    }
+  }
+
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
@@ -1622,9 +1758,6 @@ class BaseScript : public gc::TenuredCell {
     return offsetof(BaseScript, mutableFlags_);
   }
 };
-
-enum class GeneratorKind : bool { NotGenerator, Generator };
-enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
 
 struct FieldInitializers {
 #ifdef DEBUG
@@ -2390,37 +2523,6 @@ class JSScript : public js::BaseScript {
 
   size_t funLength() const { return immutableScriptData()->funLength; }
 
-  bool noScriptRval() const { return hasFlag(ImmutableFlags::NoScriptRval); }
-
-  bool strict() const { return hasFlag(ImmutableFlags::Strict); }
-
-  bool hasNonSyntacticScope() const {
-    return hasFlag(ImmutableFlags::HasNonSyntacticScope);
-  }
-
-  bool selfHosted() const { return hasFlag(ImmutableFlags::SelfHosted); }
-  bool bindingsAccessedDynamically() const {
-    return hasFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-  bool funHasExtensibleScope() const {
-    return hasFlag(ImmutableFlags::FunHasExtensibleScope);
-  }
-  bool hasDirectEval() const { return hasFlag(ImmutableFlags::HasDirectEval); }
-
-  bool hasCallSiteObj() const {
-    return hasFlag(ImmutableFlags::HasCallSiteObj);
-  }
-
-  bool treatAsRunOnce() const {
-    return hasFlag(ImmutableFlags::TreatAsRunOnce);
-  }
-  bool hasRunOnce() const { return hasFlag(MutableFlags::HasRunOnce); }
-  bool hasBeenCloned() const { return hasFlag(MutableFlags::HasBeenCloned); }
-
-  void setTreatAsRunOnce() { setFlag(ImmutableFlags::TreatAsRunOnce); }
-  void setHasRunOnce() { setFlag(MutableFlags::HasRunOnce); }
-  void setHasBeenCloned() { setFlag(MutableFlags::HasBeenCloned); }
-
   void cacheForEval() {
     MOZ_ASSERT(isForEval());
     // IsEvalCacheCandidate will make sure that there's nothing in this
@@ -2429,65 +2531,8 @@ class JSScript : public js::BaseScript {
     clearFlag(MutableFlags::HasRunOnce);
   }
 
-  bool isLikelyConstructorWrapper() const {
-    return hasFlag(ImmutableFlags::IsLikelyConstructorWrapper);
-  }
-  void setLikelyConstructorWrapper() {
-    setFlag(ImmutableFlags::IsLikelyConstructorWrapper);
-  }
-
-  bool failedBoundsCheck() const {
-    return hasFlag(MutableFlags::FailedBoundsCheck);
-  }
-  bool failedShapeGuard() const {
-    return hasFlag(MutableFlags::FailedShapeGuard);
-  }
-  bool hadFrequentBailouts() const {
-    return hasFlag(MutableFlags::HadFrequentBailouts);
-  }
-  bool hadOverflowBailout() const {
-    return hasFlag(MutableFlags::HadOverflowBailout);
-  }
-  bool uninlineable() const { return hasFlag(MutableFlags::Uninlineable); }
-  bool invalidatedIdempotentCache() const {
-    return hasFlag(MutableFlags::InvalidatedIdempotentCache);
-  }
-  bool failedLexicalCheck() const {
-    return hasFlag(MutableFlags::FailedLexicalCheck);
-  }
-  bool isDefaultClassConstructor() const {
-    return hasFlag(ImmutableFlags::IsDefaultClassConstructor);
-  }
-
-  void setFailedBoundsCheck() { setFlag(MutableFlags::FailedBoundsCheck); }
-  void setFailedShapeGuard() { setFlag(MutableFlags::FailedShapeGuard); }
-  void setHadFrequentBailouts() { setFlag(MutableFlags::HadFrequentBailouts); }
-  void setHadOverflowBailout() { setFlag(MutableFlags::HadOverflowBailout); }
-  void setUninlineable() { setFlag(MutableFlags::Uninlineable); }
-  void setInvalidatedIdempotentCache() {
-    setFlag(MutableFlags::InvalidatedIdempotentCache);
-  }
-  void setFailedLexicalCheck() { setFlag(MutableFlags::FailedLexicalCheck); }
-  void setIsDefaultClassConstructor() {
-    setFlag(ImmutableFlags::IsDefaultClassConstructor);
-  }
-
-  bool hasScriptCounts() const {
-    return hasFlag(MutableFlags::HasScriptCounts);
-  }
   bool hasScriptName();
 
-  bool warnedAboutUndefinedProp() const {
-    return hasFlag(MutableFlags::WarnedAboutUndefinedProp);
-  }
-  void setWarnedAboutUndefinedProp() {
-    setFlag(MutableFlags::WarnedAboutUndefinedProp);
-  }
-
-  /* See ContextFlags::funArgumentsHasLocalBinding comment. */
-  bool argumentsHasVarBinding() const {
-    return hasFlag(ImmutableFlags::ArgsHasVarBinding);
-  }
   void setArgumentsHasVarBinding();
   bool argumentsAliasesFormals() const {
     return argumentsHasVarBinding() && hasMappedArgsObj();
@@ -2497,34 +2542,10 @@ class JSScript : public js::BaseScript {
     return isGenerator() ? js::GeneratorKind::Generator
                          : js::GeneratorKind::NotGenerator;
   }
-  bool isGenerator() const { return hasFlag(ImmutableFlags::IsGenerator); }
 
   js::FunctionAsyncKind asyncKind() const {
     return isAsync() ? js::FunctionAsyncKind::AsyncFunction
                      : js::FunctionAsyncKind::SyncFunction;
-  }
-  bool isAsync() const { return hasFlag(ImmutableFlags::IsAsync); }
-
-  bool hasRest() const { return hasFlag(ImmutableFlags::HasRest); }
-
-  bool hideScriptFromDebugger() const {
-    return hasFlag(MutableFlags::HideScriptFromDebugger);
-  }
-  void clearHideScriptFromDebugger() {
-    clearFlag(MutableFlags::HideScriptFromDebugger);
-  }
-
-  bool spewEnabled() const { return hasFlag(MutableFlags::SpewEnabled); }
-  void setSpewEnabled(bool enabled) {
-    setFlag(MutableFlags::SpewEnabled, enabled);
-  }
-
-  bool needsHomeObject() const {
-    return hasFlag(ImmutableFlags::NeedsHomeObject);
-  }
-
-  bool isDerivedClassConstructor() const {
-    return hasFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
 
   /*
@@ -2549,14 +2570,6 @@ class JSScript : public js::BaseScript {
   static void argumentsOptimizationFailed(JSContext* cx,
                                           js::HandleScript script);
 
-  bool hasMappedArgsObj() const {
-    return hasFlag(ImmutableFlags::HasMappedArgsObj);
-  }
-
-  bool functionHasThisBinding() const {
-    return hasFlag(ImmutableFlags::FunctionHasThisBinding);
-  }
-
   void setFieldInitializers(js::FieldInitializers fieldInitializers) {
     MOZ_ASSERT(data_);
     data_->setFieldInitializers(fieldInitializers);
@@ -2577,13 +2590,6 @@ class JSScript : public js::BaseScript {
    */
   bool argsObjAliasesFormals() const {
     return needsArgsObj() && hasMappedArgsObj();
-  }
-
-  bool hasDoNotRelazify() const { return hasFlag(MutableFlags::DoNotRelazify); }
-  void setDoNotRelazify(bool b) { setFlag(MutableFlags::DoNotRelazify, b); }
-
-  bool hasInnerFunctions() const {
-    return hasFlag(ImmutableFlags::HasInnerFunctions);
   }
 
   static constexpr size_t offsetOfScriptData() {
@@ -2648,7 +2654,7 @@ class JSScript : public js::BaseScript {
   bool isRelazifiableIgnoringJitCode() const {
     return (selfHosted() || lazyScript) && !hasInnerFunctions() &&
            !isGenerator() && !isAsync() && !isDefaultClassConstructor() &&
-           !hasDoNotRelazify() && !hasCallSiteObj();
+           !doNotRelazify() && !hasCallSiteObj();
   }
   bool isRelazifiable() const {
     MOZ_ASSERT_IF(hasBaselineScript() || hasIonScript(), jitScript_);
@@ -2767,10 +2773,6 @@ class JSScript : public js::BaseScript {
     // the decl env scope is present.
     size_t index = 0;
     return getScope(index);
-  }
-
-  bool needsFunctionEnvironmentObjects() const {
-    return hasFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
   }
 
   bool functionHasExtraBodyVarScope() const {
@@ -3039,11 +3041,6 @@ class JSScript : public js::BaseScript {
   // invariants of debuggee compartments, scripts, and frames.
   inline bool isDebuggee() const;
 
-  // Access the flag for whether this script has a DebugScript in its realm's
-  // map. This should only be used by the DebugScript class.
-  bool hasDebugScript() const { return hasFlag(MutableFlags::HasDebugScript); }
-  void setHasDebugScript(bool b) { setFlag(MutableFlags::HasDebugScript, b); }
-
   void finalize(JSFreeOp* fop);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
@@ -3080,10 +3077,6 @@ class JSScript : public js::BaseScript {
     void holdScript(JS::HandleFunction fun);
     void dropScript();
   };
-
-  bool trackRecordReplayProgress() const {
-    return hasFlag(MutableFlags::TrackRecordReplayProgress);
-  }
 };
 
 /* If this fails, add/remove padding within JSScript. */
@@ -3336,39 +3329,6 @@ class LazyScript : public BaseScript {
     return lazyData_ ? lazyData_->innerFunctions().size() : 0;
   }
 
-  GeneratorKind generatorKind() const {
-    return hasFlag(ImmutableFlags::IsGenerator) ? GeneratorKind::Generator
-                                                : GeneratorKind::NotGenerator;
-  }
-
-  bool isGenerator() const {
-    return generatorKind() == GeneratorKind::Generator;
-  }
-
-  void setGeneratorKind(GeneratorKind kind) {
-    // A script only gets its generator kind set as part of initialization,
-    // so it can only transition from NotGenerator.
-    MOZ_ASSERT(!isGenerator());
-    if (kind == GeneratorKind::Generator) {
-      setFlag(ImmutableFlags::IsGenerator);
-    }
-  }
-
-  bool isAsync() const { return hasFlag(ImmutableFlags::IsAsync); }
-  FunctionAsyncKind asyncKind() const {
-    return isAsync() ? FunctionAsyncKind::AsyncFunction
-                     : FunctionAsyncKind::SyncFunction;
-  }
-
-  void setAsyncKind(FunctionAsyncKind kind) {
-    if (kind == FunctionAsyncKind::AsyncFunction) {
-      setFlag(ImmutableFlags::IsAsync);
-    }
-  }
-
-  bool hasRest() const { return hasFlag(ImmutableFlags::HasRest); }
-  void setHasRest() { setFlag(ImmutableFlags::HasRest); }
-
   frontend::ParseGoal parseGoal() const {
     if (hasFlag(ImmutableFlags::IsModule)) {
       return frontend::ParseGoal::Module;
@@ -3377,58 +3337,6 @@ class LazyScript : public BaseScript {
   }
 
   bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
-
-  bool strict() const { return hasFlag(ImmutableFlags::Strict); }
-  void setStrict() { setFlag(ImmutableFlags::Strict); }
-
-  bool bindingsAccessedDynamically() const {
-    return hasFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-  void setBindingsAccessedDynamically() {
-    setFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-
-  bool hasDirectEval() const { return hasFlag(ImmutableFlags::HasDirectEval); }
-  void setHasDirectEval() { setFlag(ImmutableFlags::HasDirectEval); }
-
-  bool isLikelyConstructorWrapper() const {
-    return hasFlag(ImmutableFlags::IsLikelyConstructorWrapper);
-  }
-  void setLikelyConstructorWrapper() {
-    setFlag(ImmutableFlags::IsLikelyConstructorWrapper);
-  }
-
-  bool hasBeenCloned() const { return hasFlag(MutableFlags::HasBeenCloned); }
-  void setHasBeenCloned() { setFlag(MutableFlags::HasBeenCloned); }
-
-  bool treatAsRunOnce() const {
-    return hasFlag(ImmutableFlags::TreatAsRunOnce);
-  }
-  void setTreatAsRunOnce() { setFlag(ImmutableFlags::TreatAsRunOnce); }
-
-  bool isDerivedClassConstructor() const {
-    return hasFlag(ImmutableFlags::IsDerivedClassConstructor);
-  }
-  void setIsDerivedClassConstructor() {
-    setFlag(ImmutableFlags::IsDerivedClassConstructor);
-  }
-
-  bool needsHomeObject() const {
-    return hasFlag(ImmutableFlags::NeedsHomeObject);
-  }
-  void setNeedsHomeObject() { setFlag(ImmutableFlags::NeedsHomeObject); }
-
-  bool shouldDeclareArguments() const {
-    return hasFlag(ImmutableFlags::ShouldDeclareArguments);
-  }
-  void setShouldDeclareArguments() {
-    setFlag(ImmutableFlags::ShouldDeclareArguments);
-  }
-
-  bool hasThisBinding() const {
-    return hasFlag(ImmutableFlags::FunctionHasThisBinding);
-  }
-  void setHasThisBinding() { setFlag(ImmutableFlags::FunctionHasThisBinding); }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
     MOZ_ASSERT(lazyData_);
