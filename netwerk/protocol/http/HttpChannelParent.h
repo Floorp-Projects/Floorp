@@ -138,8 +138,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // child channel.
   void CancelChildCrossProcessRedirect();
 
-  already_AddRefed<ParentChannelListener> GetParentListener();
-
  protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
