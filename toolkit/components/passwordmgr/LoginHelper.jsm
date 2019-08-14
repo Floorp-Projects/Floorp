@@ -1113,6 +1113,14 @@ this.LoginHelper = {
     }
   },
 
+  async recordBreachAlertDismissal(loginGuid) {
+    await Services.logins.initializationPromise;
+    const storageJSON =
+      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+
+    return storageJSON.recordBreachAlertDismissal(loginGuid);
+  },
+
   async getBreachesForLogins(logins, breaches = null) {
     const breachesByLoginGUID = new Map();
     if (!breaches) {
@@ -1137,6 +1145,11 @@ this.LoginHelper = {
     );
     const baseBreachAlertURL = new URL(BREACH_ALERT_URL);
 
+    await Services.logins.initializationPromise;
+    const storageJSON =
+      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+    const dismissedBreachAlertsByLoginGUID = storageJSON.getBreachAlertDismissalsByLoginGUID();
+
     // Determine potentially breached logins by checking their origin and the last time
     // they were changed. It's important to note here that we are NOT considering the
     // username and password of that login.
@@ -1146,11 +1159,16 @@ this.LoginHelper = {
         if (!breach.Domain) {
           continue;
         }
+        const breachDate = new Date(breach.BreachDate).getTime();
+        const breachAddedDate = new Date(breach.AddedDate).getTime();
         if (
           Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
           breach.hasOwnProperty("DataClasses") &&
           breach.DataClasses.includes("Passwords") &&
-          login.timePasswordChanged < new Date(breach.BreachDate).getTime()
+          login.timePasswordChanged < breachDate &&
+          (!dismissedBreachAlertsByLoginGUID[login.guid] ||
+            dismissedBreachAlertsByLoginGUID[login.guid]
+              .timeBreachAlertDismissed < breachAddedDate)
         ) {
           let breachAlertURL = new URL(breach.Name, baseBreachAlertURL);
           breach.breachAlertURL = breachAlertURL.href;
