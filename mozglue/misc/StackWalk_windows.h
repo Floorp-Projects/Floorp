@@ -21,6 +21,11 @@ struct MOZ_RAII AutoSuppressStackWalking {
   MFBT_API ~AutoSuppressStackWalking();
 };
 
+#if defined(IMPL_MFBT)
+void SuppressStackWalking();
+void DesuppressStackWalking();
+#endif  // defined(IMPL_MFBT)
+
 MFBT_API void RegisterJitCodeRegion(uint8_t* aStart, size_t size);
 
 MFBT_API void UnregisterJitCodeRegion(uint8_t* aStart, size_t size);

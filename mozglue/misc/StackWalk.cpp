@@ -115,14 +115,16 @@ CRITICAL_SECTION gDbgHelpCS;
 // more difficult for WalkStackMain64 to read the suspended thread's counter.
 static Atomic<size_t> sStackWalkSuppressions;
 
+void SuppressStackWalking() { ++sStackWalkSuppressions; }
+
+void DesuppressStackWalking() { --sStackWalkSuppressions; }
+
 MFBT_API
-AutoSuppressStackWalking::AutoSuppressStackWalking() {
-  ++sStackWalkSuppressions;
-}
+AutoSuppressStackWalking::AutoSuppressStackWalking() { SuppressStackWalking(); }
 
 MFBT_API
 AutoSuppressStackWalking::~AutoSuppressStackWalking() {
-  --sStackWalkSuppressions;
+  DesuppressStackWalking();
 }
 
 static uint8_t* sJitCodeRegionStart;
