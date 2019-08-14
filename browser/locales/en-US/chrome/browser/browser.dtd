@@ -112,10 +112,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 
 <!-- LOCALIZATION NOTE (fxa.service) Used to define the different FxA services
      for the Firefox Account toolbar menu screen.  -->
-<!ENTITY fxa.service.send.description "Upload and share files with end-to-end encryption plus a link that automatically expires.">
-<!ENTITY fxa.service.send.launch "Launch &sendShortName;">
-<!ENTITY fxa.service.monitor.description "Check if your email has appeared in a data breach and get alerted if it appears in a new breach.">
-<!ENTITY fxa.service.monitor.launch "Launch &monitorShortName;">
 <!ENTITY fxa.service.sendTab.description "Send a tab instantly to any device you’re signed in on.">
 
 <!-- LOCALIZATION NOTE (fullscreenWarning.beforeDomain.label,
