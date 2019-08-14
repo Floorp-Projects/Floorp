@@ -73,7 +73,8 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
             "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
             "fxa_signed_in" to (Settings.instance?.fxaSignedIn ?: false),
-            "fxa_has_synced_items" to (Settings.instance?.fxaHasSyncedItems ?: false)
+            "fxa_has_synced_items" to (Settings.instance?.fxaHasSyncedItems ?: false),
+            "search_widget_installed" to (Settings.instance?.searchWidgetInstalled ?: false)
         ))
     }
 

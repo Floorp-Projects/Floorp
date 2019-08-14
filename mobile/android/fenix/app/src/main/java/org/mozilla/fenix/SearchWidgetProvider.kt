@@ -12,8 +12,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.RemoteViews
+import org.mozilla.fenix.utils.Settings
 
 class SearchWidgetProvider : AppWidgetProvider() {
+
+    override fun onEnabled(context: Context) {
+        Settings.instance?.addSearchWidgetInstalled(1)
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        Settings.instance?.addSearchWidgetInstalled(-appWidgetIds.size)
+    }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         val textSearchIntent = createTextSearchIntent(context)

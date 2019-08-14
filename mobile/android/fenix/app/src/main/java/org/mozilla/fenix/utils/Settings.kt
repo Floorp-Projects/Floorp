@@ -257,6 +257,19 @@ class Settings private constructor(
             appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items), true
         )
 
+    fun addSearchWidgetInstalled(count: Int) {
+        val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed)
+        val newValue = preferences.getInt(key, 0) + count
+        preferences.edit()
+            .putInt(key, newValue)
+            .apply()
+    }
+
+    val searchWidgetInstalled: Boolean
+        get() = 0 < preferences.getInt(
+            appContext.getPreferenceKey(R.string.pref_key_search_widget_installed), 0
+        )
+
     private val SitePermissionsRules.Action.id: Int
         get() {
             return when (this) {
