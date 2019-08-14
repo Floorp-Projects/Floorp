@@ -22,7 +22,7 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   RemoteWorkerParent();
 
-  void Initialize();
+  void Initialize(bool aAlreadyRegistered = false);
 
   void SetController(RemoteWorkerController* aController);
 
