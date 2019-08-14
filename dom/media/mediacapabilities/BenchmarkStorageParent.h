@@ -28,6 +28,12 @@ class BenchmarkStorageParent : public PBenchmarkStorageParent {
 
   IPCResult RecvCheckVersion(const nsCString& aDbName, int32_t aVersion);
 
+  /* Helper methods exposed here to be tested via gtest. */
+  static void MovingAverage(int32_t& aAverage, int32_t& aWindow,
+                            const int32_t aValue);
+  static int32_t ParseStoredValue(int32_t aValue, int32_t& aWindow);
+  static int32_t PrepareStoredValue(int32_t aScore, int32_t aWindow);
+
  private:
   RefPtr<KeyValueStorage> mStorage;
 };
