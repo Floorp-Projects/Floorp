@@ -67,11 +67,9 @@ export default class MenuButton extends HTMLElement {
         let classList = event.originalTarget.classList;
         if (classList.contains("menuitem-button")) {
           let eventName = event.originalTarget.dataset.eventName;
-          const linkTrackingSource = "Elipsis_Menu";
           document.dispatchEvent(
             new CustomEvent(eventName, {
               bubbles: true,
-              detail: linkTrackingSource,
             })
           );
         }
