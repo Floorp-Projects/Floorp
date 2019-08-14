@@ -12,6 +12,7 @@
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/PresShell.h"
@@ -45,7 +46,8 @@ static const float kMinPaintScale = 0.05f;
 /* static */
 PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
                                     const Maybe<IntRect>& aRect, float aScale,
-                                    nscolor aBackgroundColor) {
+                                    nscolor aBackgroundColor,
+                                    CrossProcessPaintFlags aFlags) {
   if (!aDocShell) {
     PF_LOG("Couldn't find DocShell.\n");
     return PaintFragment{};
@@ -114,6 +116,12 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
   RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
       recorder, referenceDt, IntRect(IntPoint(0, 0), surfaceSize));
 
+  RenderDocumentFlags renderDocFlags = RenderDocumentFlags::None;
+  if (!(aFlags & CrossProcessPaintFlags::DrawView)) {
+    renderDocFlags = (RenderDocumentFlags::IgnoreViewportScrolling |
+                      RenderDocumentFlags::DocumentRelative);
+  }
+
   // Perform the actual rendering
   {
     nsRect r(nsPresContext::CSSPixelsToAppUnits(rect.x),
@@ -124,8 +132,8 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
     RefPtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
     thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
     RefPtr<PresShell> presShell = presContext->PresShell();
-    Unused << presShell->RenderDocument(r, RenderDocumentFlags::None,
-                                        aBackgroundColor, thebes);
+    Unused << presShell->RenderDocument(r, renderDocFlags, aBackgroundColor,
+                                        thebes);
   }
 
   ByteBuf recording = ByteBuf((uint8_t*)recorder->mOutputStream.mData,
@@ -156,6 +164,7 @@ PaintFragment::PaintFragment(IntSize aSize, ByteBuf&& aRecording,
 bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
                               const dom::DOMRect* aRect, float aScale,
                               nscolor aBackgroundColor,
+                              CrossProcessPaintFlags aFlags,
                               dom::Promise* aPromise) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   aScale = std::max(aScale, kMinPaintScale);
@@ -193,9 +202,10 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
 
     resolver->mPendingFragments += 1;
     resolver->ReceiveFragment(
-        aRoot, PaintFragment::Record(docShell, rect, aScale, aBackgroundColor));
+        aRoot, PaintFragment::Record(docShell, rect, aScale, aBackgroundColor,
+                                     aFlags));
   } else {
-    resolver->QueuePaint(aRoot, rect, aBackgroundColor);
+    resolver->QueuePaint(aRoot, rect, aBackgroundColor, aFlags);
   }
   return true;
 }
@@ -283,13 +293,14 @@ void CrossProcessPaint::LostFragment(dom::WindowGlobalParent* aWGP) {
 
 void CrossProcessPaint::QueuePaint(dom::WindowGlobalParent* aWGP,
                                    const Maybe<IntRect>& aRect,
-                                   nscolor aBackgroundColor) {
+                                   nscolor aBackgroundColor,
+                                   CrossProcessPaintFlags aFlags) {
   MOZ_ASSERT(!mReceivedFragments.GetValue(GetTabId(aWGP)));
 
   CPP_LOG("Queueing paint for %p.\n", aWGP);
 
-  // TODO - Don't apply the background color to all paints (Bug 1562722)
-  aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor);
+  aWGP->DrawSnapshotInternal(this, aRect, mScale, aBackgroundColor,
+                             (uint32_t)aFlags);
   mPendingFragments += 1;
 }
 
