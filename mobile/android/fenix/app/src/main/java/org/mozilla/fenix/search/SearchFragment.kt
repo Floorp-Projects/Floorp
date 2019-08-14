@@ -84,7 +84,7 @@ class SearchFragment : Fragment(), BackHandler {
             SearchStore(
                 SearchState(
                     query = url,
-                    showShortcutEnginePicker = false,
+                    showShortcutEnginePicker = true,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
                     showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
