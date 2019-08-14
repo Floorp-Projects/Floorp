@@ -5,7 +5,7 @@
 package org.mozilla.fenix.components
 
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.testing.launchFragmentInContainer
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -16,6 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -45,31 +46,49 @@ class StoreProviderTest {
 
     @Test
     fun `get returns store`() {
-        val scenario = launchFragmentInContainer { Fragment() }
-        scenario.onFragment {
-            val store = StoreProvider.get(it) { basicStore }
-            assertEquals(basicStore, store)
+        val activity = Robolectric.buildActivity(FragmentActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
+
+        val fragment = Fragment()
+
+        activity.supportFragmentManager.beginTransaction().apply {
+            add(fragment, "test")
+            commitNow()
         }
+
+        val store = StoreProvider.get(fragment) { basicStore }
+        assertEquals(basicStore, store)
     }
 
     @Test
     fun `get only calls createStore if needed`() {
-        val scenario = launchFragmentInContainer { Fragment() }
+        val activity = Robolectric.buildActivity(FragmentActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
+
+        val fragment = Fragment()
+
+        activity.supportFragmentManager.beginTransaction().apply {
+            add(fragment, "test")
+            commitNow()
+        }
+
         var createCalled = false
         val createStore = {
             createCalled = true
             basicStore
         }
 
-        scenario.onFragment {
-            StoreProvider.get(it, createStore)
-        }
+        StoreProvider.get(fragment, createStore)
         assertTrue(createCalled)
 
         createCalled = false
-        scenario.onFragment {
-            StoreProvider.get(it, createStore)
-        }
+        StoreProvider.get(fragment, createStore)
         assertFalse(createCalled)
     }
 }
