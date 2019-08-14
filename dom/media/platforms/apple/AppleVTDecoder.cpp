@@ -394,7 +394,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
 #ifndef MOZ_WIDGET_UIKIT
-    IOSurfacePtr surface = (IOSurfacePtr)CVPixelBufferGetIOSurface(aImage);
+    IOSurfaceRef surface = CVPixelBufferGetIOSurface(aImage);
     MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
