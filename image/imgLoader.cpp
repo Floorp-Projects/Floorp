@@ -2570,6 +2570,13 @@ NS_IMETHODIMP
 imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
                                   const uint8_t* aContents, uint32_t aLength,
                                   nsACString& aContentType) {
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  if (channel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    if (loadInfo->GetSkipContentSniffing()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
   return GetMimeTypeFromContent((const char*)aContents, aLength, aContentType);
 }
 
