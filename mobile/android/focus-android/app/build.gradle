@@ -306,7 +306,9 @@ task buildBlocklists(type:Copy) {
     // Android can't handle dashes in the filename, so we need to rename:
     rename 'disconnect-blacklist.json', 'blocklist.json'
     rename 'disconnect-entitylist.json', 'entitylist.json'
-    // google_mapping.json already has an expected name
+    rename { String filename ->
+        return filename.replaceAll("-", "_").toLowerCase()
+    }
 }
 
 clean.doLast {

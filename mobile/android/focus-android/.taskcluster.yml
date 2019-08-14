@@ -28,6 +28,7 @@ tasks:
           - -cx
           - >-
             git fetch ${event.pull_request.head.repo.clone_url} ${event.pull_request.head.ref}
+            && git submodule update --init
             && git config advice.detachedHead false
             && git checkout ${event.pull_request.head.sha}
             && echo "--" > .adjust_token
@@ -91,6 +92,7 @@ tasks:
             - -cx
             - >-
               git fetch origin
+              && git submodule update --init
               && git config advice.detachedHead false
               && git checkout ${event.after}
               && python tools/taskcluster/schedule-master-build.py
@@ -163,6 +165,7 @@ tasks:
             - -cx
             - >-
               git fetch origin --tags
+              && git submodule update --init
               && git config advice.detachedHead false
               && git checkout ${event.release.tag_name}
               && python tools/taskcluster/release.py \
@@ -246,6 +249,7 @@ tasks:
             - >-
               git fetch origin
               && git reset --hard origin/master
+              && git submodule update --init
               && python tools/taskcluster/release.py \
                 --channel nightly \
                 --commit \

@@ -1,0 +1,3 @@
+[submodule "shavar-prod-lists"]
+	path = shavar-prod-lists
+	url = git@github.com:mozilla-services/shavar-prod-lists.git
