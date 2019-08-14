@@ -930,7 +930,7 @@ class StaticAnalysis(MachCommandBase):
         # Configure the tree or download clang-tidy package, depending on the option that we choose
         if intree_tool:
             _, config, _ = self._get_config_environment()
-            clang_tools_path = self.topsrcdir
+            clang_tools_path = os.environ['MOZ_FETCHES_DIR']
             self._clang_tidy_path = mozpath.join(
                 clang_tools_path, "clang-tidy", "bin",
                 "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
@@ -1813,7 +1813,7 @@ class StaticAnalysis(MachCommandBase):
         rc, config, _ = self._get_config_environment()
         if rc != 0:
             return rc
-        infer_path = self.topsrcdir if intree_tool else \
+        infer_path = os.environ['MOZ_FETCHES_DIR'] if intree_tool else \
             mozpath.join(self._mach_context.state_dir, 'infer')
         self._infer_path = mozpath.join(infer_path, 'infer', 'bin', 'infer' +
                                         config.substs.get('BIN_SUFFIX', ''))
