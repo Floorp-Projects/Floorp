@@ -757,14 +757,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     const FrameConstructionData mData;
   };
 
-#ifdef DEBUG
-#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-    { _display, _fcdata }
-#else
-#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-    { _fcdata }
-#endif
-
   /* Structure that has a FrameConstructionData and style pseudo-type
      for a table pseudo-frame */
   struct PseudoParentData {
