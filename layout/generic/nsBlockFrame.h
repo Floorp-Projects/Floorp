@@ -236,13 +236,6 @@ class nsBlockFrame : public nsContainerFrame {
   // not 'none', and no 'content'?
   bool MarkerIsEmpty() const;
 
-#ifdef ACCESSIBILITY
-  /**
-   * Return the ::marker text equivalent, without flushing.
-   */
-  void GetSpokenMarkerText(nsAString& aText) const;
-#endif
-
   /**
    * Return true if this frame has a ::marker frame.
    */
