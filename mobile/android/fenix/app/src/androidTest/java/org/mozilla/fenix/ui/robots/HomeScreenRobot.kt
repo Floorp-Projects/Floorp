@@ -42,6 +42,7 @@ class HomeScreenRobot {
 
     // First Run elements
     fun verifyWelcomeHeader() = assertWelcomeHeader()
+
     fun verifyGetTheMostHeader() = assertGetTheMostHeader()
     fun verifyAccountsSignInButton() = assertAccountsSignInButton()
     fun verifyGetToKnowHeader() = assertGetToKnowHeader()
@@ -106,20 +107,29 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 
 val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-private fun navigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
+private fun navigationToolbar() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
 
-private fun assertNavigationToolbar() = onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertNavigationToolbar() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertHomeScreen() = onView(ViewMatchers.withResourceName("homeLayout"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertHomeMenu() = onView(ViewMatchers.withResourceName("menuButton"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertHomePrivateBrowsingButton() = onView(ViewMatchers.withResourceName("privateBrowsingButton"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertHomePrivateBrowsingButton() =
+    onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertHomeWordmark() = onView(ViewMatchers.withResourceName("wordmark"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertHomeToolbar() = onView(ViewMatchers.withResourceName("toolbar"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertOpenTabsHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Open tabs")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -136,28 +146,45 @@ private fun assertNoTabsOpenedText() {
     onView(CoreMatchers.allOf(ViewMatchers.withText("Your open tabs will be shown here.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-private fun assertCollectionsHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Collections")))
+
+private fun assertCollectionsHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Collections")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertNoCollectionsHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("No collections")))
+
+private fun assertNoCollectionsHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("No collections")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertNoCollectionsText() =
-    onView(CoreMatchers.allOf(ViewMatchers.withText("Your collections will be shown here.")))
+    onView(
+        CoreMatchers.allOf(
+            ViewMatchers
+                .withText("Collect the things that matter to you. To start, save open tabs to a new collection.")
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertHomeComponent() = onView(ViewMatchers.withResourceName("home_component"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun threeDotButton() = onView(allOf(ViewMatchers.withId(R.id.menuButton)))
 
 // First Run elements
-private fun assertWelcomeHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Welcome to Firefox Preview!")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertWelcomeHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Welcome to Firefox Preview!")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertGetTheMostHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Get the most out of Firefox Preview.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertAccountsSignInButton() = onView(ViewMatchers.withResourceName("turn_on_sync_button"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertGetToKnowHeader() = onView(CoreMatchers.allOf(ViewMatchers.withText("Get to know Firefox Preview")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertAccountsSignInButton() =
+    onView(ViewMatchers.withResourceName("turn_on_sync_button"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertGetToKnowHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Get to know Firefox Preview")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertChooseThemeHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Choose your theme")))
@@ -167,33 +194,54 @@ private fun assertChooseThemeText() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Try dark theme: easier on your battery and your eyes.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertLightThemeToggle() = onView(ViewMatchers.withResourceName("theme_light_radio_button"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertLightThemeDescription() = onView(CoreMatchers.allOf(ViewMatchers.withText("Light theme")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertDarkThemeToggle() = onView(ViewMatchers.withResourceName("theme_dark_radio_button"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertDarkThemeDescription() = onView(CoreMatchers.allOf(ViewMatchers.withText("Dark theme")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertAutomaticThemeToggle() = onView(ViewMatchers.withResourceName("theme_automatic_radio_button"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertAutomaticThemeDescription() = onView(CoreMatchers.allOf(ViewMatchers.withText("Automatic")))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertLightThemeToggle() =
+    onView(ViewMatchers.withResourceName("theme_light_radio_button"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertLightThemeDescription() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Light theme")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertDarkThemeToggle() =
+    onView(ViewMatchers.withResourceName("theme_dark_radio_button"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertDarkThemeDescription() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Dark theme")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertAutomaticThemeToggle() =
+    onView(ViewMatchers.withResourceName("theme_automatic_radio_button"))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertAutomaticThemeDescription() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Automatic")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertProtectYourselfHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Protect yourself")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertTrackingProtectionToggle() = onView(
-    CoreMatchers.allOf(ViewMatchers.withResourceName("tracking_protection_toggle")))
+    CoreMatchers.allOf(ViewMatchers.withResourceName("tracking_protection_toggle"))
+)
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertProtectYourselfText() {
-    onView(CoreMatchers.allOf(ViewMatchers.withText(
-        "Firefox Preview blocks ad trackers that follow you around the web.")))
+    onView(
+        CoreMatchers.allOf(
+            ViewMatchers.withText(
+                "Firefox Preview blocks ad trackers that follow you around the web."
+            )
+        )
+    )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
+
 private fun assertBrowsePrivatelyHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Browse privately")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertBrowsePrivatelyText() =
     onView(CoreMatchers.allOf(ViewMatchers.withText(containsString("private browsing is just a tap away."))))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -201,10 +249,12 @@ private fun assertBrowsePrivatelyText() =
 private fun assertYourPrivacyHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Your privacy")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertYourPrivacyText() =
     onView(CoreMatchers.allOf(ViewMatchers.withText(
         "We’ve designed Firefox Preview to give you control over what you share online and what you share with us.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
 private fun assertPrivacyNoticeButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Read our privacy notice")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

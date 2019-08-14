@@ -24,7 +24,7 @@ val noTabMessage = AdapterItem.NoContentMessage(
 val noCollectionMessage = AdapterItem.NoContentMessage(
     R.drawable.ic_tab_collection,
     R.string.no_collections_header,
-    R.string.no_collections_description
+    R.string.collections_description
 )
 
 private fun normalModeAdapterItems(
