@@ -13,7 +13,6 @@
 #include "GMPTimerParent.h"
 #include "GMPStorageParent.h"
 #include "mozilla/gmp/PGMPParent.h"
-#include "mozilla/ipc/CrashReporterHelper.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsISupports.h"
@@ -23,6 +22,9 @@
 #include "mozilla/MozPromise.h"
 
 namespace mozilla {
+namespace ipc {
+class CrashReporterHost;
+}  // namespace ipc
 namespace gmp {
 
 class GMPCapability {
@@ -52,9 +54,7 @@ enum GMPState {
 
 class GMPContentParent;
 
-class GMPParent final
-    : public PGMPParent,
-      public ipc::CrashReporterHelper<GeckoProcessType_GMPlugin> {
+class GMPParent final : public PGMPParent {
   friend class PGMPParent;
 
  public:
@@ -157,6 +157,9 @@ class GMPParent final
   bool GetCrashID(nsString& aResult);
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  mozilla::ipc::IPCResult RecvInitCrashReporter(
+      Shmem&& shmem, const NativeThreadId& aThreadId);
+
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(
       PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent();
@@ -213,6 +216,8 @@ class GMPParent final
   // its reference to us, we stay alive long enough for the child process
   // to terminate gracefully.
   bool mHoldingSelfRef;
+
+  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 
   const RefPtr<AbstractThread> mMainThread;
 };
