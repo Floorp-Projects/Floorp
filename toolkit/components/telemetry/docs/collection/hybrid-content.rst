@@ -25,7 +25,10 @@ Telemetry can be sent from web content by:
 
 Granting the privileges
 -----------------------
-For security/privacy reasons `Mozilla.ContentTelemetry` will only work on a list of allowed secure origins. The list of allowed origins can be found in `browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_ . A host needs to be given the ``hc_telemetry`` permission in order to be whitelisted.
+For security/privacy reasons `Mozilla.ContentTelemetry` will only work on a list of allowed secure origins.
+The list of allowed origins can be found in
+`browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_ .
+A host needs to be given the ``hc_telemetry`` permission in order to be allowed to use the API.
 
 Example:
 
