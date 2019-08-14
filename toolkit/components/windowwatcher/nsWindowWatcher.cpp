@@ -1571,8 +1571,16 @@ nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
                                 /* aSkipTabGroup = */ false,
                                 getter_AddRefs(treeItem));
   } else {
+    if (aTargetName.LowerCaseEqualsLiteral("_blank") ||
+        aTargetName.LowerCaseEqualsLiteral("_top") ||
+        aTargetName.LowerCaseEqualsLiteral("_parent") ||
+        aTargetName.LowerCaseEqualsLiteral("_self")) {
+      return NS_OK;
+    }
+
     // Note: original requestor is null here, per idl comments
-    FindItemWithName(aTargetName, nullptr, nullptr, getter_AddRefs(treeItem));
+    Unused << TabGroup::GetChromeTabGroup()->FindItemWithName(
+        aTargetName, nullptr, nullptr, getter_AddRefs(treeItem));
   }
 
   if (treeItem) {
