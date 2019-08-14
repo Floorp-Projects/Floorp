@@ -4,7 +4,7 @@
 
 `fun accumulateSamples(samples: `[`LongArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long-array/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CustomDistributionMetricType.kt#L53)
 
-Overrides [HistogramBase.accumulateSamples](../-histogram-base/accumulate-samples.md)
+Overrides [HistogramMetricBase.accumulateSamples](../-histogram-metric-base/accumulate-samples.md)
 
 Accumulates the provided samples in the metric.
 

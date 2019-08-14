@@ -2,7 +2,7 @@
 
 # Device
 
-`data class Device` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L152)
+`data class Device` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L155)
 
 Describes a device in the [DeviceConstellation](../-device-constellation/index.md).
 
