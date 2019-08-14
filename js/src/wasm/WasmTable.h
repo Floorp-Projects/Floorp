@@ -101,7 +101,7 @@ class Table : public ShareableBase<Table> {
   void copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex);
 
   // grow() returns (uint32_t)-1 if it could not grow.
-  uint32_t grow(uint32_t delta, JSContext* cx);
+  uint32_t grow(uint32_t delta);
   bool movingGrowable() const;
   bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
 
