@@ -1258,9 +1258,8 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
 }
 
 // static
-bool AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
-                                                   nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aPermission);
+bool AntiTrackingCommon::CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
+                                                    nsACString& aKey) {
   MOZ_ASSERT(aPrincipal);
 
   nsAutoCString origin;
@@ -1268,6 +1267,16 @@ bool AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
+
+  CreatePermissionKey(origin, aKey);
+  return true;
+}
+
+// static
+bool AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
+                                                   nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPermission);
+  MOZ_ASSERT(aPrincipal);
 
   // The permission key may belong either to a tracking origin on the same
   // origin as the granted origin, or on another origin as the granted origin
@@ -1280,10 +1289,13 @@ bool AntiTrackingCommon::IsStorageAccessPermission(nsIPermission* aPermission,
   // shorter permission key and will then do a prefix match on the type of the
   // input permission to see if it is a storage access permission or not.
   nsAutoCString permissionKey;
-  CreatePermissionKey(origin, permissionKey);
+  bool result = CreateStoragePermissionKey(aPrincipal, permissionKey);
+  if (NS_WARN_IF(!result)) {
+    return false;
+  }
 
   nsAutoCString type;
-  rv = aPermission->GetType(type);
+  nsresult rv = aPermission->GetType(type);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

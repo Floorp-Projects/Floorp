@@ -2006,7 +2006,12 @@
   value: true
   mirror: always
 
-# Are shared memory User Agent style sheets enabled?
+# Whether automatic storage access granting heuristics should be turned on.
+- name: dom.storage_access.auto_grants
+  type: bool
+  value: true
+  mirror: always
+
 - name: dom.storage_access.auto_grants.delayed
   type: bool
   value: true
@@ -2016,6 +2021,14 @@
 - name: dom.storage_access.enabled
   type: bool
   value: false
+  mirror: always
+
+# The maximum number of origins that a given third-party tracker is allowed
+# to have concurrent access to before the user is presented with a storage
+# access prompt.  Only effective when the auto_grants pref is turned on.
+- name: dom.storage_access.max_concurrent_auto_grants
+  type: int32_t
+  value: 5
   mirror: always
 
 # Enable Storage API for all platforms except Android.

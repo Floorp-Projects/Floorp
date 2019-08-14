@@ -497,6 +497,7 @@ LOCAL_INCLUDES += [
     '/dom/xml',
     '/dom/xslt/xpath',
     '/dom/xul',
+    '/extensions/permissions',
     '/gfx/2d',
     '/image',
     '/js/xpconnect/loader',

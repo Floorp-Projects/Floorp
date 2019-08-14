@@ -7,6 +7,7 @@
 
 var EXPORTED_SYMBOLS = [
   "BrowserUsageTelemetry",
+  "getUniqueDomainsVisitedInPast24Hours",
   "URICountListener",
   "URLBAR_SELECTED_RESULT_TYPES",
   "URLBAR_SELECTED_RESULT_METHODS",
@@ -890,3 +891,8 @@ let BrowserUsageTelemetry = {
     }
   },
 };
+
+// Used by nsIBrowserUsage
+function getUniqueDomainsVisitedInPast24Hours() {
+  return URICountListener.uniqueDomainsVisitedInPast24Hours;
+}
