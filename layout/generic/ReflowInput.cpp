@@ -894,46 +894,35 @@ void ReflowInput::InitFrameType(LayoutFrameType aFrameType) {
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
     }
   } else {
-    switch (GetDisplay()) {
-      case StyleDisplay::Block:
-      case StyleDisplay::ListItem:
-      case StyleDisplay::Table:
-      case StyleDisplay::TableCaption:
-      case StyleDisplay::Flex:
-      case StyleDisplay::WebkitBox:
-      case StyleDisplay::Grid:
-      case StyleDisplay::FlowRoot:
-      case StyleDisplay::RubyTextContainer:
+    switch (disp->DisplayOutside()) {
+      case StyleDisplayOutside::Block:
+      case StyleDisplayOutside::TableCaption:
         frameType = NS_CSS_FRAME_TYPE_BLOCK;
         break;
 
-      case StyleDisplay::Inline:
-      case StyleDisplay::InlineBlock:
-      case StyleDisplay::InlineTable:
-      case StyleDisplay::MozInlineBox:
-      case StyleDisplay::MozInlineGrid:
-      case StyleDisplay::MozInlineStack:
-      case StyleDisplay::InlineFlex:
-      case StyleDisplay::WebkitInlineBox:
-      case StyleDisplay::InlineGrid:
-      case StyleDisplay::Ruby:
-      case StyleDisplay::RubyBase:
-      case StyleDisplay::RubyText:
-      case StyleDisplay::RubyBaseContainer:
+      case StyleDisplayOutside::Inline:
         frameType = NS_CSS_FRAME_TYPE_INLINE;
         break;
 
-      case StyleDisplay::TableCell:
-      case StyleDisplay::TableRowGroup:
-      case StyleDisplay::TableColumn:
-      case StyleDisplay::TableColumnGroup:
-      case StyleDisplay::TableHeaderGroup:
-      case StyleDisplay::TableFooterGroup:
-      case StyleDisplay::TableRow:
+      case StyleDisplayOutside::InternalTable:
         frameType = NS_CSS_FRAME_TYPE_INTERNAL_TABLE;
         break;
 
-      case StyleDisplay::None:
+      case StyleDisplayOutside::InternalRuby:
+        switch (disp->DisplayInside()) {
+          case StyleDisplayInside::RubyTextContainer:
+            frameType = NS_CSS_FRAME_TYPE_BLOCK;
+            break;
+          case StyleDisplayInside::RubyBase:
+          case StyleDisplayInside::RubyText:
+          case StyleDisplayInside::RubyBaseContainer:
+            frameType = NS_CSS_FRAME_TYPE_INLINE;
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE("unexpected inside for InternalRuby");
+        }
+        break;
+
       default:
         frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
         break;
