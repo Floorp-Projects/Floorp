@@ -44,6 +44,5 @@ setup(name='firefox-ui-harness',
       entry_points="""
         [console_scripts]
         firefox-ui-functional = firefox_ui_harness.cli_functional:cli
-        firefox-ui-update = firefox_ui_harness.cli_update:cli
       """,
       )

@@ -1921,10 +1921,6 @@ VARIABLES = {
                                         """List of manifest files defining firefox-ui-functional tests.
         """),
 
-    'FIREFOX_UI_UPDATE_MANIFESTS': (ManifestparserManifestList, list,
-                                    """List of manifest files defining firefox-ui-update tests.
-        """),
-
     'PUPPETEER_FIREFOX_MANIFESTS': (ManifestparserManifestList, list,
                                     """List of manifest files defining puppeteer unit tests for Firefox.
         """),

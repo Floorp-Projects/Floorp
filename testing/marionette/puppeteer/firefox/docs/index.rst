@@ -66,14 +66,12 @@ future. Each library is available from an instance of the FirefoxTestCase class.
    ui/browser/tabbar
    ui/browser/toolbars
    ui/browser/window
-   ui/update_wizard/dialog
    ui/windows
    api/appinfo
    api/keys
    api/l10n
    api/places
    api/security
-   api/software_update
    api/utils
 
 
