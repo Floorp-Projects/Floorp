@@ -2442,12 +2442,6 @@ class nsLayoutUtils {
 
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
-  static uint32_t IdlePeriodDeadlineLimit() { return sIdlePeriodDeadlineLimit; }
-
-  static uint32_t QuiescentFramesBeforeIdlePeriod() {
-    return sQuiescentFramesBeforeIdlePeriod;
-  }
-
   /**
    * Returns true if the nglayout.debug.invalidation pref is set to true.
    */
@@ -2992,9 +2986,6 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static uint32_t sIdlePeriodDeadlineLimit;
-  static uint32_t sQuiescentFramesBeforeIdlePeriod;
-
   /**
    * Helper function for LogTestDataForPaint().
    */
