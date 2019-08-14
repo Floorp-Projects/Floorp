@@ -184,10 +184,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */
-uint32_t nsLayoutUtils::sZoomMaxPercent;
-/* static */
-uint32_t nsLayoutUtils::sZoomMinPercent;
-/* static */
 bool nsLayoutUtils::sInvalidationDebuggingIsEnabled;
 /* static */
 bool nsLayoutUtils::sInterruptibleReflowEnabled;
@@ -7971,8 +7967,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddUintVarCache(&sZoomMaxPercent, "zoom.maxPercent", 300);
-  Preferences::AddUintVarCache(&sZoomMinPercent, "zoom.minPercent", 30);
   Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
                                "nglayout.debug.invalidation");
   Preferences::AddBoolVarCache(&sInterruptibleReflowEnabled,
