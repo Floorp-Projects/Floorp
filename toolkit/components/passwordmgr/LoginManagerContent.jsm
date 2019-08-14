@@ -1530,12 +1530,13 @@ this.LoginManagerContent = {
 
   _maybeStopTreatingAsGeneratedPasswordField(event) {
     let passwordField = event.target;
+    let { value } = passwordField;
 
-    // If the field isn't empty then keep treating it as a generated password field.
-    if (passwordField.value) {
-      return;
+    // If the field is now empty or the inserted text replaced the whole value
+    // then stop treating it as a generated password field.
+    if (!value || (event.data && event.data == value)) {
+      this._stopTreatingAsGeneratedPasswordField(passwordField);
     }
-    this._stopTreatingAsGeneratedPasswordField(passwordField);
   },
 
   _stopTreatingAsGeneratedPasswordField(passwordField) {
