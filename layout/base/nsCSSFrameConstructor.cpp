@@ -4364,29 +4364,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     if (nsPresContext* presContext = mPresShell->GetPresContext()) {
       propagatedScrollToViewport =
           presContext->UpdateViewportScrollStylesOverride() == &aElement;
-    }
-  }
-
-  NS_ASSERTION(!propagatedScrollToViewport ||
-                   !mPresShell->GetPresContext()->IsPaginated(),
-               "Shouldn't propagate scroll in paginated contexts");
-
-  // If this is for a <body> node and we've propagated the scroll-frame to the
-  // viewport, we need to make sure not to add another layer of scrollbars, so
-  // we use a different FCData struct without FCDATA_MAY_NEED_SCROLLFRAME.
-  if (propagatedScrollToViewport && aDisplay.IsScrollableOverflow()) {
-    if (aDisplay.mDisplay == StyleDisplay::Flex ||
-        aDisplay.mDisplay == StyleDisplay::WebkitBox ||
-        (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
-         aDisplay.mDisplay == StyleDisplay::MozBox)) {
-      static const FrameConstructionData sNonScrollableFlexData =
-          FCDATA_DECL(0, NS_NewFlexContainerFrame);
-      return &sNonScrollableFlexData;
-    }
-    if (aDisplay.mDisplay == StyleDisplay::Grid) {
-      static const FrameConstructionData sNonScrollableGridData =
-          FCDATA_DECL(0, NS_NewGridContainerFrame);
-      return &sNonScrollableGridData;
+      MOZ_ASSERT(!propagatedScrollToViewport ||
+                     !mPresShell->GetPresContext()->IsPaginated(),
+                 "Shouldn't propagate scroll in paginated contexts");
     }
   }
 
@@ -4542,15 +4522,19 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
     case StyleDisplay::InlineFlex:
     case StyleDisplay::WebkitBox:
     case StyleDisplay::WebkitInlineBox: {
+      static const FrameConstructionData nonScrollableData =
+        FCDATA_DECL(0, NS_NewFlexContainerFrame);
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame);
-      return &data;
+      return MOZ_UNLIKELY(propagatedScrollToViewport) ? &nonScrollableData : &data;
     }
     case StyleDisplay::Grid:
     case StyleDisplay::InlineGrid: {
+      static const FrameConstructionData nonScrollableData =
+        FCDATA_DECL(0, NS_NewGridContainerFrame);
       static const FrameConstructionData data =
         FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame);
-      return &data;
+      return MOZ_UNLIKELY(propagatedScrollToViewport) ? &nonScrollableData : &data;
     }
     case StyleDisplay::Ruby: {
       static const FrameConstructionData data =
