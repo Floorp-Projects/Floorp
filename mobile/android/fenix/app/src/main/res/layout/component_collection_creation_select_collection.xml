@@ -13,11 +13,12 @@
     <Button
         android:id="@+id/back_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:drawableStart="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
+        android:gravity="start|center_vertical"
         android:drawableTint="@color/neutral_text"
         android:text="@string/create_collection_select_collection"
         android:textAppearance="@style/HeaderTextStyle"
