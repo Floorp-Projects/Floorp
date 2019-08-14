@@ -42,6 +42,25 @@ RefPtr<RemoteWorkerParent> RemoteWorkerControllerParent::GetRemoteWorkerParent()
   return mRemoteWorkerController->mActor;
 }
 
+void RemoteWorkerControllerParent::MaybeSendSetServiceWorkerSkipWaitingFlag(
+    std::function<void(bool)>&& aCallback) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aCallback);
+
+  if (!mIPCActive) {
+    aCallback(false);
+    return;
+  }
+
+  SendSetServiceWorkerSkipWaitingFlag()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [callback = std::move(aCallback)](
+          const SetServiceWorkerSkipWaitingFlagPromise::ResolveOrRejectValue&
+              aResult) {
+        callback(aResult.IsResolve() ? aResult.ResolveValue() : false);
+      });
+}
+
 RemoteWorkerControllerParent::~RemoteWorkerControllerParent() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mIPCActive);
