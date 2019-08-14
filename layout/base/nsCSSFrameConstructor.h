@@ -1361,6 +1361,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   const nsStyleDisplay* aStyleDisplay,
                                   nsFrameList& aFrameList);
 
+  // Creates a block frame wrapping an anonymous ruby frame.
+  nsIFrame* ConstructBlockRubyFrame(nsFrameConstructorState& aState,
+                                    FrameConstructionItem& aItem,
+                                    nsContainerFrame* aParentFrame,
+                                    const nsStyleDisplay* aStyleDisplay,
+                                    nsFrameList& aFrameList);
+
   void ConstructTextFrame(const FrameConstructionData* aData,
                           nsFrameConstructorState& aState, nsIContent* aContent,
                           nsContainerFrame* aParentFrame,

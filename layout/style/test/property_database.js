@@ -5479,6 +5479,7 @@ var gCSSProperties = {
       "table-column",
       "table-cell",
       "table-caption",
+      "block ruby",
       "ruby",
       "ruby-base",
       "ruby-base-container",
