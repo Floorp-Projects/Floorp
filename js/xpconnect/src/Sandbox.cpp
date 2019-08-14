@@ -1071,8 +1071,8 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
 
   const js::Class* clasp = &SandboxClass;
 
-  RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, js::Jsvalify(clasp),
-                                                   principal, realmOptions));
+  RootedObject sandbox(
+      cx, xpc::CreateGlobalObject(cx, clasp, principal, realmOptions));
   if (!sandbox) {
     return NS_ERROR_FAILURE;
   }
@@ -1153,7 +1153,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
         }
         const js::Class* unwrappedClass = js::GetObjectClass(unwrappedProto);
         useSandboxProxy = IS_WN_CLASS(unwrappedClass) ||
-                          mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass));
+                          mozilla::dom::IsDOMClass(unwrappedClass);
       }
 
       if (useSandboxProxy) {

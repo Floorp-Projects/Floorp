@@ -1185,7 +1185,7 @@ void CycleCollectedJSRuntime::JSObjectsTenured() {
     MOZ_DIAGNOSTIC_ASSERT(wrapper || recordreplay::IsReplaying());
     if (!JS::ObjectIsTenured(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
-      const JSClass* jsClass = js::GetObjectJSClass(wrapper);
+      const JSClass* jsClass = js::GetObjectClass(wrapper);
       jsClass->doFinalize(nullptr, wrapper);
     }
   }

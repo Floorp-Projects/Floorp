@@ -452,7 +452,7 @@ struct DOMJSClass {
     return reinterpret_cast<const DOMJSClass*>(base);
   }
 
-  const JSClass* ToJSClass() const { return Jsvalify(&mBase); }
+  const JSClass* ToJSClass() const { return &mBase; }
 };
 
 // Special JSClass for DOM interface and interface prototype objects.
@@ -488,7 +488,7 @@ struct DOMIfaceAndProtoJSClass {
     return reinterpret_cast<const DOMIfaceAndProtoJSClass*>(base);
   }
 
-  const JSClass* ToJSClass() const { return Jsvalify(&mBase); }
+  const JSClass* ToJSClass() const { return &mBase; }
 };
 
 class ProtoAndIfaceCache;

@@ -42,7 +42,7 @@ const js::Class* XPC_MAP_CLASSNAME::GetClass() {
 }
 
 // virtual
-const JSClass* XPC_MAP_CLASSNAME::GetJSClass() { return Jsvalify(GetClass()); }
+const JSClass* XPC_MAP_CLASSNAME::GetJSClass() { return GetClass(); }
 
 /**************************************************************/
 

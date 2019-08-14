@@ -1087,7 +1087,7 @@ pre_call_clean_up:
 static const JSClass XPCOutParamClass = {"XPCOutParam", 0, JS_NULL_CLASS_OPS};
 
 bool xpc::IsOutObject(JSContext* cx, JSObject* obj) {
-  return js::GetObjectJSClass(obj) == &XPCOutParamClass;
+  return js::GetObjectClass(obj) == &XPCOutParamClass;
 }
 
 JSObject* xpc::NewOutObject(JSContext* cx) {
