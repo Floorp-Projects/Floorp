@@ -347,7 +347,7 @@ bool SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor,
   return FreezeObject(cx, proto);
 }
 
-static const ClassOps SavedFrameClassOps = {
+static const JSClassOps SavedFrameClassOps = {
     nullptr,               // addProperty
     nullptr,               // delProperty
     nullptr,               // enumerate

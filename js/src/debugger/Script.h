@@ -104,7 +104,7 @@ class DebuggerScript : public NativeObject {
   }
 
  private:
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];

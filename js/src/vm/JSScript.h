@@ -1265,7 +1265,7 @@ class ScriptSourceHolder {
 // canonical SSO will be stored in the wrapper map if necessary so GC will do
 // the right thing.
 class ScriptSourceObject : public NativeObject {
-  static const ClassOps classOps_;
+  static const JSClassOps classOps_;
 
   static ScriptSourceObject* createInternal(JSContext* cx, ScriptSource* source,
                                             HandleObject canonical);
