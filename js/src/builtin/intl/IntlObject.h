@@ -16,7 +16,7 @@ namespace js {
 
 class GlobalObject;
 
-extern const Class IntlClass;
+extern const JSClass IntlClass;
 
 /**
  * Initializes the Intl Object and its standard built-in properties.

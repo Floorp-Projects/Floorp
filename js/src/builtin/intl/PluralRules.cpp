@@ -42,7 +42,7 @@ const JSClassOps PluralRulesObject::classOps_ = {nullptr, /* addProperty */
                                                  nullptr, /* mayResolve */
                                                  PluralRulesObject::finalize};
 
-const Class PluralRulesObject::class_ = {
+const JSClass PluralRulesObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(PluralRulesObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,

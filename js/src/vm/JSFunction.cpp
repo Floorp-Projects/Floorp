@@ -1208,11 +1208,11 @@ static const ClassSpec JSFunctionClassSpec = {
     CreateFunctionConstructor, CreateFunctionPrototype, nullptr, nullptr,
     function_methods,          function_properties};
 
-const Class JSFunction::class_ = {js_Function_str,
-                                  JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
-                                  &JSFunctionClassOps, &JSFunctionClassSpec};
+const JSClass JSFunction::class_ = {js_Function_str,
+                                    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
+                                    &JSFunctionClassOps, &JSFunctionClassSpec};
 
-const Class* const js::FunctionClassPtr = &JSFunction::class_;
+const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
 
 bool JSFunction::isDerivedClassConstructor() {
   bool derived;
@@ -2524,7 +2524,7 @@ JSFunction* js::DefineFunction(
 }
 
 void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
-                                  const Class* clasp) {
+                                  const JSClass* clasp) {
   RootedValue thisv(cx, args.thisv());
 
 #ifdef DEBUG

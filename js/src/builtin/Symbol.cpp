@@ -17,7 +17,7 @@
 using JS::Symbol;
 using namespace js;
 
-const Class SymbolObject::class_ = {
+const JSClass SymbolObject::class_ = {
     "Symbol", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
                   JSCLASS_HAS_CACHED_PROTO(JSProto_Symbol)};
 

@@ -521,7 +521,7 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
  * where global |this| is a WindowProxy. All requests are forwarded to the
  * underlying global and no navigation is supported.
  */
-const js::Class ShellWindowProxyClass =
+const JSClass ShellWindowProxyClass =
     PROXY_CLASS_DEF("ShellWindowProxy", JSCLASS_HAS_RESERVED_SLOTS(1));
 
 JSObject* NewShellWindowProxy(JSContext* cx, JS::HandleObject global) {
@@ -7018,7 +7018,7 @@ class StreamCacheEntryObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -7082,7 +7082,7 @@ const JSClassOps StreamCacheEntryObject::classOps_ = {
     nullptr, /* mayResolve */
     StreamCacheEntryObject::finalize};
 
-const Class StreamCacheEntryObject::class_ = {
+const JSClass StreamCacheEntryObject::class_ = {
     "StreamCacheEntryObject",
     JSCLASS_HAS_RESERVED_SLOTS(StreamCacheEntryObject::RESERVED_SLOTS) |
         JSCLASS_BACKGROUND_FINALIZE,
@@ -8098,7 +8098,7 @@ static const JSClass TransplantableDOMObjectClass = {
     "TransplantableDOMObject",
     JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1)};
 
-static const Class TransplantableDOMProxyObjectClass =
+static const JSClass TransplantableDOMProxyObjectClass =
     PROXY_CLASS_DEF("TransplantableDOMProxyObject",
                     JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1));
 
@@ -9820,7 +9820,7 @@ static bool dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
-static bool InstanceClassHasProtoAtDepth(const Class* clasp, uint32_t protoID,
+static bool InstanceClassHasProtoAtDepth(const JSClass* clasp, uint32_t protoID,
                                          uint32_t depth) {
   // Only the (fake) DOM object supports any JIT optimizations.
   return clasp == GetDomClass();

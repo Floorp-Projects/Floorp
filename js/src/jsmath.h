@@ -23,7 +23,7 @@ typedef double (*UnaryFunType)(double);
  * JS math functions.
  */
 
-extern const Class MathClass;
+extern const JSClass MathClass;
 
 extern JSObject* InitMathClass(JSContext* cx, Handle<GlobalObject*> global);
 

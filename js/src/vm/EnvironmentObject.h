@@ -318,7 +318,7 @@ class CallObject : public EnvironmentObject {
 
  public:
   static const uint32_t RESERVED_SLOTS = 2;
-  static const Class class_;
+  static const JSClass class_;
 
   /* These functions are internal and are exposed only for JITs. */
 
@@ -377,7 +377,7 @@ class VarEnvironmentObject : public EnvironmentObject {
 
  public:
   static const uint32_t RESERVED_SLOTS = 2;
-  static const Class class_;
+  static const JSClass class_;
 
   static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
                                       AbstractFramePtr frame);
@@ -402,7 +402,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static const JSClassOps classOps_;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static const uint32_t RESERVED_SLOTS = 2;
 
@@ -455,7 +455,7 @@ class WasmInstanceEnvironmentObject : public EnvironmentObject {
   static const uint32_t SCOPE_SLOT = 1;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static const uint32_t RESERVED_SLOTS = 2;
 
@@ -476,7 +476,7 @@ class WasmFunctionCallObject : public EnvironmentObject {
   static const uint32_t SCOPE_SLOT = 1;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static const uint32_t RESERVED_SLOTS = 2;
 
@@ -499,7 +499,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 2;
-  static const Class class_;
+  static const JSClass class_;
 
  private:
   static LexicalEnvironmentObject* createTemplateObject(JSContext* cx,
@@ -611,7 +611,7 @@ class NamedLambdaObject : public LexicalEnvironmentObject {
 class NonSyntacticVariablesObject : public EnvironmentObject {
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
 
   static NonSyntacticVariablesObject* create(JSContext* cx);
 };
@@ -629,7 +629,7 @@ class WithEnvironmentObject : public EnvironmentObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 4;
-  static const Class class_;
+  static const JSClass class_;
 
   static WithEnvironmentObject* create(JSContext* cx, HandleObject object,
                                        HandleObject enclosing,
@@ -684,7 +684,7 @@ class RuntimeLexicalErrorObject : public EnvironmentObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 2;
-  static const Class class_;
+  static const JSClass class_;
 
   static RuntimeLexicalErrorObject* create(JSContext* cx,
                                            HandleObject enclosing,

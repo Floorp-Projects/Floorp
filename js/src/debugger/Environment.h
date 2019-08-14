@@ -35,7 +35,7 @@ class DebuggerEnvironment : public NativeObject {
 
   static const unsigned RESERVED_SLOTS = 1;
 
-  static const Class class_;
+  static const JSClass class_;
 
   static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
                                  HandleObject dbgCtor);

@@ -439,13 +439,11 @@ struct JSRuntime {
   js::MainThreadData<js::CTypesActivityCallback> ctypesActivityCallback;
 
  private:
-  js::WriteOnceData<const js::Class*> windowProxyClass_;
+  js::WriteOnceData<const JSClass*> windowProxyClass_;
 
  public:
-  const js::Class* maybeWindowProxyClass() const { return windowProxyClass_; }
-  void setWindowProxyClass(const js::Class* clasp) {
-    windowProxyClass_ = clasp;
-  }
+  const JSClass* maybeWindowProxyClass() const { return windowProxyClass_; }
+  void setWindowProxyClass(const JSClass* clasp) { windowProxyClass_ = clasp; }
 
  private:
   // List of non-ephemeron weak containers to sweep during

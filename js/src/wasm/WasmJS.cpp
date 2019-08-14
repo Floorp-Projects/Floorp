@@ -665,7 +665,7 @@ const JSClassOps WasmModuleObject::classOps_ = {nullptr, /* addProperty */
                                                 nullptr, /* mayResolve */
                                                 WasmModuleObject::finalize};
 
-const Class WasmModuleObject::class_ = {
+const JSClass WasmModuleObject::class_ = {
     "WebAssembly.Module",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS) |
@@ -1188,7 +1188,7 @@ const JSClassOps WasmInstanceObject::classOps_ = {nullptr, /* addProperty */
                                                   nullptr, /* construct */
                                                   WasmInstanceObject::trace};
 
-const Class WasmInstanceObject::class_ = {
+const JSClass WasmInstanceObject::class_ = {
     "WebAssembly.Instance",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS) |
@@ -1611,7 +1611,7 @@ const JSClassOps WasmMemoryObject::classOps_ = {nullptr, /* addProperty */
                                                 nullptr, /* mayResolve */
                                                 WasmMemoryObject::finalize};
 
-const Class WasmMemoryObject::class_ = {
+const JSClass WasmMemoryObject::class_ = {
     "WebAssembly.Memory",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS) |
@@ -1955,7 +1955,7 @@ const JSClassOps WasmTableObject::classOps_ = {nullptr, /* addProperty */
                                                nullptr, /* construct */
                                                WasmTableObject::trace};
 
-const Class WasmTableObject::class_ = {
+const JSClass WasmTableObject::class_ = {
     "WebAssembly.Table",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS) |
@@ -2330,7 +2330,7 @@ const JSClassOps WasmGlobalObject::classOps_ = {nullptr, /* addProperty */
                                                 nullptr, /* construct */
                                                 WasmGlobalObject::trace};
 
-const Class WasmGlobalObject::class_ = {
+const JSClass WasmGlobalObject::class_ = {
     "WebAssembly.Global",
     JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS) |
         JSCLASS_BACKGROUND_FINALIZE,
@@ -3432,7 +3432,7 @@ class ResolveResponseClosure : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 4;
-  static const Class class_;
+  static const JSClass class_;
 
   static ResolveResponseClosure* create(JSContext* cx, const CompileArgs& args,
                                         HandleObject promise, bool instantiate,
@@ -3477,7 +3477,7 @@ const JSClassOps ResolveResponseClosure::classOps_ = {
     nullptr, /* mayResolve */
     ResolveResponseClosure::finalize};
 
-const Class ResolveResponseClosure::class_ = {
+const JSClass ResolveResponseClosure::class_ = {
     "WebAssembly ResolveResponseClosure",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(ResolveResponseClosure::RESERVED_SLOTS) |
@@ -3657,7 +3657,7 @@ static const JSFunctionSpec WebAssembly_static_methods[] = {
           JSPROP_ENUMERATE),
     JS_FS_END};
 
-const Class js::WebAssemblyClass = {
+const JSClass js::WebAssemblyClass = {
     js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly)};
 
 template <class Class>

@@ -859,7 +859,7 @@ extern bool JS::InstanceofOperator(JSContext* cx, HandleObject obj,
 }
 
 bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
   RootedValue local(cx, v);
   if (JSHasInstanceOp hasInstance = clasp->getHasInstance()) {
     return hasInstance(cx, obj, &local, bp);

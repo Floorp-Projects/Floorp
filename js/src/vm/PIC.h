@@ -215,7 +215,7 @@ struct ForOfPIC {
   };
 
   // Class for object that holds ForOfPIC chain.
-  static const Class class_;
+  static const JSClass class_;
 
   static NativeObject* createForOfPICObject(JSContext* cx,
                                             Handle<GlobalObject*> global);

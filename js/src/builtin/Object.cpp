@@ -519,7 +519,7 @@ static bool GetBuiltinTagSlow(JSContext* cx, HandleObject obj,
 }
 
 static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
-                                                     const Class* clasp,
+                                                     const JSClass* clasp,
                                                      JSContext* cx) {
   MOZ_ASSERT(clasp == obj->getClass());
   MOZ_ASSERT(!clasp->isProxy());
@@ -598,7 +598,7 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedString builtinTag(cx);
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
   if (MOZ_UNLIKELY(clasp->isProxy())) {
     if (!GetBuiltinTagSlow(cx, obj, &builtinTag)) {
       return false;
@@ -668,7 +668,7 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 JSString* js::ObjectClassToString(JSContext* cx, HandleObject obj) {
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
 
   if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx)) {
     return tag;
@@ -2066,8 +2066,8 @@ static const ClassSpec PlainObjectClassSpec = {
     object_methods,          object_properties,
     FinishObjectClassInit};
 
-const Class PlainObject::class_ = {js_Object_str,
-                                   JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-                                   JS_NULL_CLASS_OPS, &PlainObjectClassSpec};
+const JSClass PlainObject::class_ = {js_Object_str,
+                                     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+                                     JS_NULL_CLASS_OPS, &PlainObjectClassSpec};
 
-const Class* const js::ObjectClassPtr = &PlainObject::class_;
+const JSClass* const js::ObjectClassPtr = &PlainObject::class_;

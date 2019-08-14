@@ -30,7 +30,7 @@
 
 using namespace js;
 
-const Class LocaleObject::class_ = {
+const JSClass LocaleObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT),
 };

@@ -2651,8 +2651,8 @@ GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
                                          nullptr,
                                          JS_GlobalObjectTraceHook};
 
-  static const Class shgClass = {"self-hosting-global", JSCLASS_GLOBAL_FLAGS,
-                                 &shgClassOps};
+  static const JSClass shgClass = {"self-hosting-global", JSCLASS_GLOBAL_FLAGS,
+                                   &shgClassOps};
 
   AutoRealmUnchecked ar(cx, realm);
   Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));

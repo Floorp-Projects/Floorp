@@ -71,7 +71,7 @@ const JSClassOps DebuggerScript::classOps_ = {
     CallTraceMethod<DebuggerScript>, /* trace */
 };
 
-const Class DebuggerScript::class_ = {
+const JSClass DebuggerScript::class_ = {
     "Script", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
     &classOps_};
 

@@ -236,7 +236,7 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
   return callobj;
 }
 
-const Class CallObject::class_ = {
+const JSClass CallObject::class_ = {
     "Call", JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS)};
 
 /*****************************************************************************/
@@ -342,7 +342,7 @@ VarEnvironmentObject* VarEnvironmentObject::createHollowForDebug(
   return env;
 }
 
-const Class VarEnvironmentObject::class_ = {
+const JSClass VarEnvironmentObject::class_ = {
     "Var", JSCLASS_HAS_RESERVED_SLOTS(VarEnvironmentObject::RESERVED_SLOTS)};
 
 /*****************************************************************************/
@@ -364,7 +364,7 @@ const JSClassOps ModuleEnvironmentObject::classOps_ = {
     nullptr, /* enumerate */
     ModuleEnvironmentObject::newEnumerate};
 
-const Class ModuleEnvironmentObject::class_ = {
+const JSClass ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS),
     &ModuleEnvironmentObject::classOps_,
@@ -581,7 +581,7 @@ bool ModuleEnvironmentObject::newEnumerate(JSContext* cx, HandleObject obj,
 
 /*****************************************************************************/
 
-const Class WasmInstanceEnvironmentObject::class_ = {
+const JSClass WasmInstanceEnvironmentObject::class_ = {
     "WasmInstance",
     JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceEnvironmentObject::RESERVED_SLOTS)};
 
@@ -618,7 +618,7 @@ WasmInstanceEnvironmentObject::createHollowForDebug(
 
 /*****************************************************************************/
 
-const Class WasmFunctionCallObject::class_ = {
+const JSClass WasmFunctionCallObject::class_ = {
     "WasmCall",
     JSCLASS_HAS_RESERVED_SLOTS(WasmFunctionCallObject::RESERVED_SLOTS)};
 
@@ -816,7 +816,7 @@ static const ObjectOps WithEnvironmentObjectOps = {
     nullptr,
 };
 
-const Class WithEnvironmentObject::class_ = {
+const JSClass WithEnvironmentObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(WithEnvironmentObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,
@@ -843,7 +843,7 @@ NonSyntacticVariablesObject* NonSyntacticVariablesObject::create(
   return obj;
 }
 
-const Class NonSyntacticVariablesObject::class_ = {
+const JSClass NonSyntacticVariablesObject::class_ = {
     "NonSyntacticVariablesObject",
     JSCLASS_HAS_RESERVED_SLOTS(NonSyntacticVariablesObject::RESERVED_SLOTS)};
 
@@ -1100,7 +1100,7 @@ void LexicalEnvironmentObject::setWindowProxyThisValue(JSObject* obj) {
   setReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, ObjectValue(*obj));
 }
 
-const Class LexicalEnvironmentObject::class_ = {
+const JSClass LexicalEnvironmentObject::class_ = {
     "LexicalEnvironment",
     JSCLASS_HAS_RESERVED_SLOTS(LexicalEnvironmentObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,
@@ -1241,7 +1241,7 @@ static const ObjectOps RuntimeLexicalErrorObjectObjectOps = {
     nullptr, /* this */
 };
 
-const Class RuntimeLexicalErrorObject::class_ = {
+const JSClass RuntimeLexicalErrorObject::class_ = {
     "RuntimeLexicalError",
     JSCLASS_HAS_RESERVED_SLOTS(RuntimeLexicalErrorObject::RESERVED_SLOTS),
     JS_NULL_CLASS_OPS,

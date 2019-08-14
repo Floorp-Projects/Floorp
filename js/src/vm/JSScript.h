@@ -1276,7 +1276,7 @@ class ScriptSourceObject : public NativeObject {
   ScriptSourceObject* unwrappedCanonical() const;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);

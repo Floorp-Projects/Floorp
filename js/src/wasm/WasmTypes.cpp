@@ -109,14 +109,14 @@ class WasmValueBox : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
 
   static WasmValueBox* create(JSContext* cx, HandleValue val);
   Value value() const { return getFixedSlot(VALUE_SLOT); }
 };
 
-const Class WasmValueBox::class_ = {"WasmValueBox",
-                                    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
+const JSClass WasmValueBox::class_ = {
+    "WasmValueBox", JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS)};
 
 WasmValueBox* WasmValueBox::create(JSContext* cx, HandleValue val) {
   WasmValueBox* obj = (WasmValueBox*)NewObjectWithGivenProto(

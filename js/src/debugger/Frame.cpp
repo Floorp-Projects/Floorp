@@ -186,7 +186,7 @@ const JSClassOps DebuggerFrame::classOps_ = {
     CallTraceMethod<DebuggerFrame>, /* trace */
 };
 
-const Class DebuggerFrame::class_ = {
+const JSClass DebuggerFrame::class_ = {
     "Frame",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
         // We require foreground finalization so we can destruct GeneratorInfo's
@@ -196,7 +196,7 @@ const Class DebuggerFrame::class_ = {
 
 enum { JSSLOT_DEBUGARGUMENTS_FRAME, JSSLOT_DEBUGARGUMENTS_COUNT };
 
-const Class DebuggerArguments::class_ = {
+const JSClass DebuggerArguments::class_ = {
     "Arguments", JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT)};
 
 bool DebuggerFrame::resume(const FrameIter& iter) {

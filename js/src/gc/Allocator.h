@@ -32,7 +32,7 @@ T* Allocate(JSContext* cx);
 template <AllowGC allowGC = CanGC>
 JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind,
                          size_t nDynamicSlots, gc::InitialHeap heap,
-                         const Class* clasp);
+                         const JSClass* clasp);
 
 // Internal function used for nursery-allocatable strings.
 template <typename StringAllocT, AllowGC allowGC = CanGC>

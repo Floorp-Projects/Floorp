@@ -36,7 +36,6 @@ class JSString;
 
 namespace js {
 class TempAllocPolicy;
-using Class = JSClass;
 };  // namespace js
 
 namespace JS {

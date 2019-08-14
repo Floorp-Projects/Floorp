@@ -86,8 +86,8 @@ class AutoSetNewObjectMetadata;
 class PromiseObject : public NativeObject {
  public:
   static const unsigned RESERVED_SLOTS = PromiseSlots;
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
   static PromiseObject* create(JSContext* cx, HandleObject executor,
                                HandleObject proto = nullptr,
                                bool needsWrapping = false);

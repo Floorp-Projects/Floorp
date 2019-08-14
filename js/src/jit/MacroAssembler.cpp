@@ -1429,15 +1429,15 @@ void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
   branchPtr(Assembler::Equal, scratch, ImmPtr(&JSFunction::class_), isCallable);
 
   // Objects that emulate undefined.
-  Address flags(scratch, Class::offsetOfFlags());
+  Address flags(scratch, JSClass::offsetOfFlags());
   branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_EMULATES_UNDEFINED),
                isUndefined);
 
   // Handle classes with a call hook.
-  branchPtr(Assembler::Equal, Address(scratch, offsetof(js::Class, cOps)),
+  branchPtr(Assembler::Equal, Address(scratch, offsetof(JSClass, cOps)),
             ImmPtr(nullptr), isObject);
 
-  loadPtr(Address(scratch, offsetof(js::Class, cOps)), scratch);
+  loadPtr(Address(scratch, offsetof(JSClass, cOps)), scratch);
   branchPtr(Assembler::Equal, Address(scratch, offsetof(JSClassOps, call)),
             ImmPtr(nullptr), isObject);
 
@@ -2956,8 +2956,8 @@ void MacroAssembler::branchIfPretenuredGroup(Register group, Label* label) {
 void MacroAssembler::branchIfNonNativeObj(Register obj, Register scratch,
                                           Label* label) {
   loadObjClassUnsafe(obj, scratch);
-  branchTest32(Assembler::NonZero, Address(scratch, Class::offsetOfFlags()),
-               Imm32(Class::NON_NATIVE), label);
+  branchTest32(Assembler::NonZero, Address(scratch, JSClass::offsetOfFlags()),
+               Imm32(JSClass::NON_NATIVE), label);
 }
 
 void MacroAssembler::branchIfInlineTypedObject(Register obj, Register scratch,
