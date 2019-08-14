@@ -19,9 +19,6 @@ using namespace mozilla;
   "/System/Library/Frameworks/IOSurface.framework/IOSurface"
 #define OPENGL_FRAMEWORK_PATH \
   "/System/Library/Frameworks/OpenGL.framework/OpenGL"
-#define COREGRAPHICS_FRAMEWORK_PATH                                      \
-  "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
-  "CoreGraphics.framework/CoreGraphics"
 #define COREVIDEO_FRAMEWORK_PATH                                         \
   "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
   "CoreVideo.framework/CoreVideo"
@@ -32,8 +29,6 @@ using namespace mozilla;
   (typeof(dest)) dlsym(sIOSurfaceFramework, sym_name)
 #define GET_CGLSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sOpenGLFramework, sym_name)
-#define GET_CGSYM(dest, sym_name) \
-  (typeof(dest)) dlsym(sCoreGraphicsFramework, sym_name)
 #define GET_CVSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sCoreVideoFramework, sym_name)
 
@@ -41,7 +36,6 @@ MacIOSurfaceLib::LibraryUnloader MacIOSurfaceLib::sLibraryUnloader;
 bool MacIOSurfaceLib::isLoaded = false;
 void* MacIOSurfaceLib::sIOSurfaceFramework;
 void* MacIOSurfaceLib::sOpenGLFramework;
-void* MacIOSurfaceLib::sCoreGraphicsFramework;
 void* MacIOSurfaceLib::sCoreVideoFramework;
 IOSurfaceCreateFunc MacIOSurfaceLib::sCreate;
 IOSurfaceGetIDFunc MacIOSurfaceLib::sGetID;
@@ -58,11 +52,7 @@ IOSurfaceVoidFunc MacIOSurfaceLib::sDecrementUseCount;
 IOSurfaceLockFunc MacIOSurfaceLib::sLock;
 IOSurfaceUnlockFunc MacIOSurfaceLib::sUnlock;
 CGLTexImageIOSurface2DFunc MacIOSurfaceLib::sTexImage;
-IOSurfaceContextCreateFunc MacIOSurfaceLib::sIOSurfaceContextCreate;
-IOSurfaceContextCreateImageFunc MacIOSurfaceLib::sIOSurfaceContextCreateImage;
-IOSurfaceContextGetSurfaceFunc MacIOSurfaceLib::sIOSurfaceContextGetSurface;
 CVPixelBufferGetIOSurfaceFunc MacIOSurfaceLib::sCVPixelBufferGetIOSurface;
-unsigned int (*MacIOSurfaceLib::sCGContextGetTypePtr)(CGContextRef) = nullptr;
 IOSurfacePixelFormatFunc MacIOSurfaceLib::sPixelFormat;
 
 CFStringRef MacIOSurfaceLib::kPropWidth;
@@ -158,27 +148,6 @@ IOSurfacePtr MacIOSurfaceLib::CVPixelBufferGetIOSurface(
   return sCVPixelBufferGetIOSurface(aPixelBuffer);
 }
 
-CGContextRef MacIOSurfaceLib::IOSurfaceContextCreate(
-    IOSurfacePtr aIOSurfacePtr, unsigned aWidth, unsigned aHeight,
-    unsigned aBitsPerComponent, unsigned aBytes, CGColorSpaceRef aColorSpace,
-    CGBitmapInfo bitmapInfo) {
-  if (!sIOSurfaceContextCreate) return nullptr;
-  return sIOSurfaceContextCreate(aIOSurfacePtr, aWidth, aHeight,
-                                 aBitsPerComponent, aBytes, aColorSpace,
-                                 bitmapInfo);
-}
-
-CGImageRef MacIOSurfaceLib::IOSurfaceContextCreateImage(CGContextRef aContext) {
-  if (!sIOSurfaceContextCreateImage) return nullptr;
-  return sIOSurfaceContextCreateImage(aContext);
-}
-
-IOSurfacePtr MacIOSurfaceLib::IOSurfaceContextGetSurface(
-    CGContextRef aContext) {
-  if (!sIOSurfaceContextGetSurface) return nullptr;
-  return sIOSurfaceContextGetSurface(aContext);
-}
-
 CFStringRef MacIOSurfaceLib::GetIOConst(const char* symbole) {
   CFStringRef* address = (CFStringRef*)dlsym(sIOSurfaceFramework, symbole);
   if (!address) return nullptr;
@@ -195,21 +164,15 @@ void MacIOSurfaceLib::LoadLibrary() {
       dlopen(IOSURFACE_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
   sOpenGLFramework = dlopen(OPENGL_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
 
-  sCoreGraphicsFramework =
-      dlopen(COREGRAPHICS_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
-
   sCoreVideoFramework =
       dlopen(COREVIDEO_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
 
-  if (!sIOSurfaceFramework || !sOpenGLFramework || !sCoreGraphicsFramework ||
-      !sCoreVideoFramework) {
+  if (!sIOSurfaceFramework || !sOpenGLFramework || !sCoreVideoFramework) {
     if (sIOSurfaceFramework) dlclose(sIOSurfaceFramework);
     if (sOpenGLFramework) dlclose(sOpenGLFramework);
-    if (sCoreGraphicsFramework) dlclose(sCoreGraphicsFramework);
     if (sCoreVideoFramework) dlclose(sCoreVideoFramework);
     sIOSurfaceFramework = nullptr;
     sOpenGLFramework = nullptr;
-    sCoreGraphicsFramework = nullptr;
     sCoreVideoFramework = nullptr;
     return;
   }
@@ -240,19 +203,9 @@ void MacIOSurfaceLib::LoadLibrary() {
   sPixelFormat = GET_IOSYM(sPixelFormat, "IOSurfaceGetPixelFormat");
 
   sTexImage = GET_CGLSYM(sTexImage, "CGLTexImageIOSurface2D");
-  sCGContextGetTypePtr =
-      (unsigned int (*)(CGContext*))dlsym(RTLD_DEFAULT, "CGContextGetType");
 
   sCVPixelBufferGetIOSurface =
       GET_CVSYM(sCVPixelBufferGetIOSurface, "CVPixelBufferGetIOSurface");
-
-  // Optional symbols
-  sIOSurfaceContextCreate =
-      GET_CGSYM(sIOSurfaceContextCreate, "CGIOSurfaceContextCreate");
-  sIOSurfaceContextCreateImage =
-      GET_CGSYM(sIOSurfaceContextCreateImage, "CGIOSurfaceContextCreateImage");
-  sIOSurfaceContextGetSurface =
-      GET_CGSYM(sIOSurfaceContextGetSurface, "CGIOSurfaceContextGetSurface");
 
   if (!sCreate || !sGetID || !sLookup || !sTexImage || !sGetBaseAddress ||
       !sGetBaseAddressOfPlane || !sPlaneCount || !kPropWidth || !kPropHeight ||
@@ -573,55 +526,4 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
                                 internalFormat, GetDevicePixelWidth(plane),
                                 GetDevicePixelHeight(plane), format, type,
                                 plane);
-}
-
-static CGColorSpaceRef CreateSystemColorSpace() {
-  CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
-  if (!cspace) {
-    cspace = ::CGColorSpaceCreateDeviceRGB();
-  }
-  return cspace;
-}
-
-CGContextRef MacIOSurface::CreateIOSurfaceContext() {
-  CGColorSpaceRef cspace = CreateSystemColorSpace();
-  CGContextRef ref = MacIOSurfaceLib::IOSurfaceContextCreate(
-      mIOSurfacePtr, GetDevicePixelWidth(), GetDevicePixelHeight(), 8, 32,
-      cspace, 0x2002);
-  ::CGColorSpaceRelease(cspace);
-  return ref;
-}
-
-CGImageRef MacIOSurface::CreateImageFromIOSurfaceContext(
-    CGContextRef aContext) {
-  if (!MacIOSurfaceLib::isInit()) return nullptr;
-
-  return MacIOSurfaceLib::IOSurfaceContextCreateImage(aContext);
-}
-
-already_AddRefed<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(
-    CGContextRef aContext, double aContentsScaleFactor, bool aHasAlpha) {
-  if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0) return nullptr;
-
-  IOSurfacePtr surfaceRef =
-      MacIOSurfaceLib::IOSurfaceContextGetSurface(aContext);
-  if (!surfaceRef) return nullptr;
-
-  RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
-  return ioSurface.forget();
-}
-
-CGContextType GetContextType(CGContextRef ref) {
-  if (!MacIOSurfaceLib::isInit() || !MacIOSurfaceLib::sCGContextGetTypePtr)
-    return CG_CONTEXT_TYPE_UNKNOWN;
-
-  unsigned int type = MacIOSurfaceLib::sCGContextGetTypePtr(ref);
-  if (type == CG_CONTEXT_TYPE_BITMAP) {
-    return CG_CONTEXT_TYPE_BITMAP;
-  } else if (type == CG_CONTEXT_TYPE_IOSURFACE) {
-    return CG_CONTEXT_TYPE_IOSURFACE;
-  } else {
-    return CG_CONTEXT_TYPE_UNKNOWN;
-  }
 }
