@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+PromiseTestUtils.whitelistRejectionsGlobally(/packaging errors/);
+
 const { GlobalManager } = ChromeUtils.import(
   "resource://gre/modules/Extension.jsm",
   null

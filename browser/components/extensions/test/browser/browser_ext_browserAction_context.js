@@ -546,6 +546,7 @@ add_task(async function testBadgeColorPersistence() {
 add_task(async function testPropertyRemoval() {
   await runTests({
     manifest: {
+      name: "Generated extension",
       browser_action: {
         default_icon: "default.png",
         default_popup: "default.html",
