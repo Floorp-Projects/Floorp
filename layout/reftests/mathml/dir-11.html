@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head><title>Test direction: dynamic change</title></head>
+  <body>
+    <p>
+      math:
+      <math>
+        <mi>a</mi>
+        <mi>b</mi>
+        <mi>c</mi>
+      </math>
+      <math dir="ltr">
+        <mi>a</mi>
+        <mi>b</mi>
+        <mi>c</mi>
+      </math>
+      <math dir="rtl">
+        <mi>a</mi>
+        <mi>b</mi>
+        <mi>c</mi>
+      </math>
+    </p>
+
+    <p>
+      mstyle:
+      <math>
+        <mstyle>
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mstyle>
+      </math>
+      <math>
+        <mstyle dir="ltr">
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mstyle>
+      </math>
+      <math>
+        <mstyle dir="rtl">
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mstyle>
+      </math>
+    </p>
+
+    <p>
+      mrow:
+      <math>
+        <mrow>
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mrow>
+      </math>
+      <math>
+        <mrow dir="ltr">
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mrow>
+      </math>
+      <math>
+        <mrow dir="rtl">
+          <mi>a</mi>
+          <mi>b</mi>
+          <mi>c</mi>
+        </mrow>
+      </math>
+    </p>
+
+    <script>
+      function doTest()
+      {
+      var x = document.getElementsByTagName("math");
+      x[0].setAttribute("dir", "rtl");
+      x[1].setAttribute("dir", "rtl");
+      x[2].removeAttribute("dir");
+
+      x = document.getElementsByTagName("mstyle");
+      x[0].setAttribute("dir", "rtl");
+      x[1].setAttribute("dir", "rtl");
+      x[2].removeAttribute("dir");
+ 
+      x = document.getElementsByTagName("mrow");
+      x[0].setAttribute("dir", "rtl");
+      x[1].setAttribute("dir", "rtl");
+      x[2].removeAttribute("dir");
+
+      document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate", doTest);
+    </script>
+
+  </body>
+</html>
