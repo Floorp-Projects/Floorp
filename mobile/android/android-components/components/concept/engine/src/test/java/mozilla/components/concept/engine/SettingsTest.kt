@@ -34,7 +34,7 @@ class SettingsTest {
             { settings.automaticLanguageAdjustment },
             { settings.automaticLanguageAdjustment = false },
             { settings.trackingProtectionPolicy },
-            { settings.trackingProtectionPolicy = TrackingProtectionPolicy.all() },
+            { settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict() },
             { settings.historyTrackingDelegate },
             { settings.historyTrackingDelegate = null },
             { settings.requestInterceptor },
@@ -128,7 +128,7 @@ class SettingsTest {
             webFontsEnabled = false,
             automaticFontSizeAdjustment = false,
             automaticLanguageAdjustment = false,
-            trackingProtectionPolicy = TrackingProtectionPolicy.all(),
+            trackingProtectionPolicy = TrackingProtectionPolicy.strict(),
             historyTrackingDelegate = historyTrackingDelegate,
             requestInterceptor = interceptor,
             userAgentString = "userAgent",
@@ -157,7 +157,7 @@ class SettingsTest {
         assertFalse(defaultSettings.webFontsEnabled)
         assertFalse(defaultSettings.automaticFontSizeAdjustment)
         assertFalse(defaultSettings.automaticLanguageAdjustment)
-        assertEquals(TrackingProtectionPolicy.all(), defaultSettings.trackingProtectionPolicy)
+        assertEquals(TrackingProtectionPolicy.strict(), defaultSettings.trackingProtectionPolicy)
         assertEquals(historyTrackingDelegate, defaultSettings.historyTrackingDelegate)
         assertEquals(interceptor, defaultSettings.requestInterceptor)
         assertEquals("userAgent", defaultSettings.userAgentString)

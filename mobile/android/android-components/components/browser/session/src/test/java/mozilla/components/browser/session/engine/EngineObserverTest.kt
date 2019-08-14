@@ -215,6 +215,21 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverClearsLoadedTrackersIfNewPageStartsLoading() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        val tracker1 = Tracker("tracker1")
+        val tracker2 = Tracker("tracker2")
+        observer.onTrackerLoaded(tracker1)
+        observer.onTrackerLoaded(tracker2)
+        assertEquals(listOf(tracker1, tracker2), session.trackersLoaded)
+
+        observer.onLoadingStateChange(true)
+        assertEquals(emptyList<String>(), session.trackersLoaded)
+    }
+
+    @Test
     fun engineObserverPassingHitResult() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)

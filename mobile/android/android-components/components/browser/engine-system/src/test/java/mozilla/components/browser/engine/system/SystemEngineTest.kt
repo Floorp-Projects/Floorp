@@ -54,14 +54,17 @@ class SystemEngineTest {
     fun settings() {
         val engine = SystemEngine(testContext, DefaultSettings(
                 remoteDebuggingEnabled = true,
-                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.strict()
         ))
 
         assertTrue(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = false
         assertFalse(engine.settings.remoteDebuggingEnabled)
 
-        assertEquals(engine.settings.trackingProtectionPolicy, EngineSession.TrackingProtectionPolicy.all())
+        assertEquals(
+            engine.settings.trackingProtectionPolicy,
+            EngineSession.TrackingProtectionPolicy.strict()
+        )
         engine.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.none()
         assertEquals(engine.settings.trackingProtectionPolicy, EngineSession.TrackingProtectionPolicy.none())
 

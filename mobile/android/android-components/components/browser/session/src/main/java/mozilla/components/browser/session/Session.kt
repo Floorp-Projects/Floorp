@@ -85,6 +85,7 @@ class Session(
         fun onDownload(session: Session, download: Download): Boolean = false
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
+        fun onTrackerLoaded(session: Session, tracker: Tracker, all: List<Tracker>) = Unit
         fun onLongPress(session: Session, hitResult: HitResult): Boolean = false
         fun onFindResult(session: Session, result: FindResult) = Unit
         fun onDesktopModeChanged(session: Session, enabled: Boolean) = Unit
@@ -309,6 +310,17 @@ class Session(
         notifyObservers(old, new) {
             if (new.isNotEmpty()) {
                 onTrackerBlocked(this@Session, new.last(), new)
+            }
+        }
+    }
+
+    /**
+     * List of [Tracker]s that could be blocked but have been loaded in this session.
+     */
+    var trackersLoaded: List<Tracker> by Delegates.observable(emptyList()) { _, old, new ->
+        notifyObservers(old, new) {
+            if (new.isNotEmpty()) {
+                onTrackerLoaded(this@Session, new.last(), new)
             }
         }
     }

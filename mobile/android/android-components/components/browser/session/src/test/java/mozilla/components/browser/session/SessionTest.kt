@@ -598,6 +598,40 @@ class SessionTest {
     }
 
     @Test
+    fun `observer is notified when a tracker is loaded`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        val tracker1 = Tracker("trackerUrl1")
+        val tracker2 = Tracker("trackerUrl2")
+
+        session.trackersLoaded += tracker1
+
+        verify(observer).onTrackerLoaded(
+            eq(session),
+            eq(tracker1),
+            eq(listOf(tracker1))
+        )
+
+        assertEquals(listOf(tracker1), session.trackersLoaded)
+
+        session.trackersLoaded += tracker2
+
+        verify(observer).onTrackerLoaded(
+            eq(session),
+            eq(tracker2),
+            eq(listOf(tracker1, tracker2))
+        )
+
+        assertEquals(listOf(tracker1, tracker2), session.trackersLoaded)
+
+        session.trackersLoaded = emptyList()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
     fun `observer is notified when tracker blocking is enabled`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -910,6 +944,33 @@ class SessionTest {
                     session.trackersBlocked = emptyList()
                     session.trackersBlocked += Tracker("test")
                     session.trackersBlocked = emptyList()
+                }
+                def.await()
+                def2.await()
+            }
+        }
+    }
+
+    @Test
+    fun `handle empty loaded trackers list race conditions`() {
+        val observer = mock(Session.Observer::class.java)
+        val observer2 = mock(Session.Observer::class.java)
+
+        val session = Session("about:blank")
+        session.register(observer)
+        session.register(observer2)
+
+        runBlocking {
+            (1..3).map {
+                val def = GlobalScope.async(IO) {
+                    session.trackersLoaded = emptyList()
+                    session.trackersLoaded += Tracker("test")
+                    session.trackersLoaded = emptyList()
+                }
+                val def2 = GlobalScope.async(IO) {
+                    session.trackersLoaded = emptyList()
+                    session.trackersLoaded += Tracker("test")
+                    session.trackersLoaded = emptyList()
                 }
                 def.await()
                 def2.await()

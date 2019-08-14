@@ -68,6 +68,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 
 @RunWith(AndroidJUnit4::class)
 class SystemEngineViewTest {
@@ -477,7 +478,7 @@ class SystemEngineViewTest {
         var response = webViewClient.shouldInterceptRequest(engineSession.webView, invalidRequest)
         assertNull(response)
 
-        engineSession.trackingProtectionPolicy = TrackingProtectionPolicy.all()
+        engineSession.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
         response = webViewClient.shouldInterceptRequest(engineSession.webView, invalidRequest)
         assertNotNull(response)
         assertNull(response!!.data)
@@ -899,13 +900,25 @@ class SystemEngineViewTest {
         SystemEngineView.URL_MATCHER = null
         val resources = testContext.resources
 
-        var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources,
-                TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
+        var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(
+            resources,
+            TrackingProtectionPolicy.select(
+                arrayOf(
+                    TrackingCategory.AD,
+                    TrackingCategory.ANALYTICS
+                )
+            )
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS), urlMatcher.enabledCategories)
 
-        urlMatcher = SystemEngineView.getOrCreateUrlMatcher(resources,
-                TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.SOCIAL)
+        urlMatcher = SystemEngineView.getOrCreateUrlMatcher(
+            resources,
+            TrackingProtectionPolicy.select(
+                arrayOf(
+                    TrackingCategory.AD,
+                    TrackingCategory.SOCIAL
+                )
+            )
         )
         assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.SOCIAL), urlMatcher.enabledCategories)
     }

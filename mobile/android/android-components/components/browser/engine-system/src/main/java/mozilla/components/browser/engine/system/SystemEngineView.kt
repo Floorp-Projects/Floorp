@@ -723,15 +723,15 @@ class SystemEngineView @JvmOverloads constructor(
         internal var URL_MATCHER: UrlMatcher? = null
 
         private val urlMatcherCategoryMap = mapOf(
-                UrlMatcher.ADVERTISING to TrackingProtectionPolicy.AD,
-                UrlMatcher.ANALYTICS to TrackingProtectionPolicy.ANALYTICS,
-                UrlMatcher.CONTENT to TrackingProtectionPolicy.CONTENT,
-                UrlMatcher.SOCIAL to TrackingProtectionPolicy.SOCIAL
+                UrlMatcher.ADVERTISING to TrackingProtectionPolicy.TrackingCategory.AD,
+                UrlMatcher.ANALYTICS to TrackingProtectionPolicy.TrackingCategory.ANALYTICS,
+                UrlMatcher.CONTENT to TrackingProtectionPolicy.TrackingCategory.CONTENT,
+                UrlMatcher.SOCIAL to TrackingProtectionPolicy.TrackingCategory.SOCIAL
         )
 
         @Synchronized
         internal fun getOrCreateUrlMatcher(resources: Resources, policy: TrackingProtectionPolicy): UrlMatcher {
-            val categories = urlMatcherCategoryMap.filterValues { policy.contains(it) }.keys
+            val categories = urlMatcherCategoryMap.filterValues { policy.trackingCategories.contains(it) }.keys
 
             URL_MATCHER?.setCategoriesEnabled(categories) ?: run {
                 URL_MATCHER = UrlMatcher.createMatcher(
