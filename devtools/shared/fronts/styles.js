@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -23,8 +24,8 @@ loader.lazyRequireGetter(
  * PageStyleFront, the front object for the PageStyleActor
  */
 class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
-  constructor(conn) {
-    super(conn);
+  constructor(conn, targetFront, parentFront) {
+    super(conn, targetFront, parentFront);
     this.inspector = this.parent();
   }
 
@@ -84,8 +85,8 @@ registerFront(PageStyleFront);
  * StyleRuleFront, the front for the StyleRule actor.
  */
 class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this.before("location-changed", this._locationChangedPre.bind(this));
   }

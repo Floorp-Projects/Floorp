@@ -53,6 +53,21 @@ void ChildSHistory::Go(int32_t aOffset, ErrorResult& aRv) {
   aRv = mHistory->GotoIndex(index.value());
 }
 
+void ChildSHistory::AsyncGo(int32_t aOffset) {
+  if (!CanGo(aOffset)) {
+    return;
+  }
+
+  RefPtr<PendingAsyncHistoryNavigation> asyncNav =
+      new PendingAsyncHistoryNavigation(this, aOffset);
+  mPendingNavigations.insertBack(asyncNav);
+  NS_DispatchToCurrentThread(asyncNav.forget());
+}
+
+void ChildSHistory::RemovePendingHistoryNavigations() {
+  mPendingNavigations.clear();
+}
+
 void ChildSHistory::EvictLocalContentViewers() {
   mHistory->EvictAllContentViewers();
 }

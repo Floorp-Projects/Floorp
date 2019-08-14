@@ -146,27 +146,11 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "AboutLoginsLoginSelected": {
-        let login = event.detail;
-        if (this.hasPendingChanges()) {
-          event.preventDefault();
-          this.showConfirmationDialog("discard-changes", () => {
-            // Clear any pending changes
-            this.setLogin(login);
-
-            window.dispatchEvent(
-              new CustomEvent("AboutLoginsLoginSelected", {
-                detail: login,
-                cancelable: true,
-              })
-            );
-          });
-        } else {
-          this.setLogin(login);
-        }
+        this.confirmPendingChangesOnEvent(event, event.detail);
         break;
       }
       case "AboutLoginsShowBlankLogin": {
-        this.setLogin({});
+        this.confirmPendingChangesOnEvent(event, {});
         break;
       }
       case "blur": {
@@ -319,6 +303,31 @@ export default class LoginItem extends HTMLElement {
           recordTelemetryEvent({ object: "new_login", method: "save" });
         }
       }
+    }
+  }
+
+  /**
+   * Helper to show the "Discard changes" confirmation dialog and delay the
+   * received event after confirmation.
+   * @param {object} event The event to be delayed.
+   * @param {object} login The login to be shown on confirmation.
+   */
+  confirmPendingChangesOnEvent(event, login) {
+    if (this.hasPendingChanges()) {
+      event.preventDefault();
+      this.showConfirmationDialog("discard-changes", () => {
+        // Clear any pending changes
+        this.setLogin(login);
+
+        window.dispatchEvent(
+          new CustomEvent(event.type, {
+            detail: login,
+            cancelable: false,
+          })
+        );
+      });
+    } else {
+      this.setLogin(login);
     }
   }
 

@@ -22,7 +22,7 @@ Step 4:
 '''
 
 # includes
-from typing import List # mypy!
+from typing import List  # mypy!
 
 import pathlib
 import sys
@@ -62,6 +62,7 @@ FOOTER = b'''
 
 # -
 
+
 def format_lib_constant(lib, name, value):
     # lib would be 'GL', 'EGL', 'GLX' or 'WGL'
     # name is the name of the const (example: MAX_TEXTURE_SIZE)
@@ -74,7 +75,6 @@ def format_lib_constant(lib, name, value):
 
     return define + ' ' * whitespace + ' ' + value
 
-# -
 
 class GLConst:
     def __init__(self, lib, name, value, type):
@@ -83,7 +83,6 @@ class GLConst:
         self.value = value
         self.type = type
 
-# -
 
 class GLDatabase:
     LIBS = ['GL', 'EGL', 'GLX', 'WGL']
@@ -133,6 +132,7 @@ class GLDatabase:
 
                 self.consts[lib + '_' + name] = GLConst(lib, name, value, type)
 
+
 # -
 
 db = GLDatabase()
@@ -143,7 +143,7 @@ db.load_xml(XML_DIR / 'egl.xml')
 
 # -
 
-lines: List[str] = []
+lines: List[str] = []  # noqa: E999 (bug 1573737)
 
 keys = sorted(db.consts.keys())
 
@@ -169,4 +169,4 @@ b_data: bytes = b'\n'.join(b_lines)
 dest = pathlib.Path('GLConsts.h')
 dest.write_bytes(b_data)
 
-print(f'Wrote {len(b_data)} bytes.') # Some indication that we're successful.
+print(f'Wrote {len(b_data)} bytes.')  # Some indication that we're successful.
