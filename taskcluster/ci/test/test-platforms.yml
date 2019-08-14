@@ -337,7 +337,6 @@ android-em-4.3-arm7-api-16/debug:
     build-platform: android-api-16/debug
     test-sets:
         - android-common-tests
-        - android-debug-tests
 
 # Disable ccov testing on Android due to issues with
 # Java 8 features. Bug 1498721.
@@ -362,7 +361,6 @@ android-em-7.0-x86_64/opt:
     build-platform: android-x86_64/opt
     test-sets:
         - android-x86_64-tests
-        - android-x86_64-opt-tests
 
 android-em-7.0-x86_64/debug:
     build-platform: android-x86_64/debug
