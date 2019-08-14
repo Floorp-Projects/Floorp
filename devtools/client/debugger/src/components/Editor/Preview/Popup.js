@@ -84,10 +84,14 @@ export class Popup extends Component<Props> {
     if (!editorRef) {
       return "auto";
     }
-    return (
-      editorRef.getBoundingClientRect().height +
-      editorRef.getBoundingClientRect().top
-    );
+
+    const { height, top } = editorRef.getBoundingClientRect();
+    const maxHeight = height + top;
+    if (maxHeight < 250) {
+      return maxHeight;
+    }
+
+    return 250;
   };
 
   renderFunctionPreview() {
