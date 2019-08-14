@@ -42,7 +42,14 @@ function test_display_value(val)
   if (val == "list-item") {
     is(floatConversion, val, "'float' shouldn't affect 'display:list-item'");
     is(rootConversion, "block",
-       "We traditionally convert 'display:list-item' on the root node to " +
+       "We traditionally convert '" + val + "' on the root node to " +
+       "'display:block' (though if that changes, it's not technically a bug, " +
+       "as long as we support it properly).");
+} else if (val == "inline list-item" ||
+           val == "inline flow-root list-item") {
+    is(floatConversion, "list-item", "'float' should blockify '" + val + "'");
+    is(rootConversion, "block",
+       "We traditionally convert '" + val + "' on the root node to " +
        "'display:block' (though if that changes, it's not technically a bug, " +
        "as long as we support it properly).");
   } else if (val == "contents") {

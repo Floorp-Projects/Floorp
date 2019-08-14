@@ -46,7 +46,7 @@ void RealmInstrumentation::holderTrace(JSTracer* trc, JSObject* obj) {
   instrumentation->trace(trc);
 }
 
-static const ClassOps InstrumentationHolderClassOps = {
+static const JSClassOps InstrumentationHolderClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* enumerate */

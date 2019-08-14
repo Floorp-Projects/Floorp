@@ -91,8 +91,7 @@ ExecutableAllocator::~ExecutableAllocator() {
   }
 
   // If this asserts we have a pool leak.
-  MOZ_ASSERT_IF(TlsContext.get()->runtime()->gc.shutdownCollectedEverything(),
-                m_pools.empty());
+  MOZ_ASSERT(m_pools.empty());
 }
 
 ExecutablePool* ExecutableAllocator::poolForSize(size_t n) {

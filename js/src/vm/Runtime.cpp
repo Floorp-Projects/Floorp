@@ -287,11 +287,12 @@ void JSRuntime::destroyRuntime() {
 
   MOZ_ASSERT(!hasHelperThreadZones());
 
-  /*
-   * Even though all objects in the compartment are dead, we may have keep
-   * some filenames around because of gcKeepAtoms.
-   */
-  FreeScriptData(this);
+#ifdef DEBUG
+  {
+    AutoLockScriptData lock(this);
+    MOZ_ASSERT(scriptDataTable(lock).empty());
+  }
+#endif
 
 #if !ENABLE_INTL_API
   FinishRuntimeNumberState(this);

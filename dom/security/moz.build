@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
     'CSPEvalChecker.h',
     'FramingChecker.h',
     'nsContentSecurityManager.h',
+    'nsContentSecurityUtils.h',
     'nsCSPContext.h',
     'nsCSPService.h',
     'nsCSPUtils.h',
@@ -28,6 +29,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS += [
     'nsContentSecurityManager.h',
+    'nsContentSecurityUtils.h',
     'nsMixedContentBlocker.h',
     'ReferrerInfo.h',
 ]
@@ -36,6 +38,7 @@ UNIFIED_SOURCES += [
     'CSPEvalChecker.cpp',
     'FramingChecker.cpp',
     'nsContentSecurityManager.cpp',
+    'nsContentSecurityUtils.cpp',
     'nsCSPContext.cpp',
     'nsCSPParser.cpp',
     'nsCSPService.cpp',

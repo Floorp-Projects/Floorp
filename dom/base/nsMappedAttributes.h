@@ -27,7 +27,7 @@ class nsMappedAttributes final {
                      nsMapRuleToAttributesFunc aMapRuleFunc);
 
   // Do not return null.
-  void* operator new(size_t size, uint32_t aAttrCount = 1) CPP_THROW_NEW;
+  void* operator new(size_t size, uint32_t aAttrCount = 1) noexcept(true);
   nsMappedAttributes* Clone(bool aWillAddAttr);
 
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(nsMappedAttributes, LastRelease())

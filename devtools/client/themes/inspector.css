@@ -147,6 +147,7 @@ window {
   flex: 1;
   display: flex;
   overflow: hidden;
+  direction: ltr;
 }
 
 #inspector-breadcrumbs .breadcrumbs-widget-item {

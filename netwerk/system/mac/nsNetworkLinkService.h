@@ -14,7 +14,7 @@
 
 class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINETWORKLINKSERVICE
   NS_DECL_NSIOBSERVER
 
@@ -45,6 +45,7 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
   static void IPConfigChanged(SCDynamicStoreRef store, CFArrayRef changedKeys,
                               void* info);
   void calculateNetworkId(void);
+  void calculateNetworkIdInternal(void);
 
   mozilla::Mutex mMutex;
   nsCString mNetworkId;

@@ -110,10 +110,6 @@ bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   MOZ_ASSERT(IsMathMLElement());
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (mNodeInfo->Equals(nsGkAtoms::math) && aAttribute == nsGkAtoms::mode) {
-      WarnDeprecated(nsGkAtoms::mode->GetUTF16String(),
-                     nsGkAtoms::display->GetUTF16String(), OwnerDoc());
-    }
     if (aAttribute == nsGkAtoms::color) {
       WarnDeprecated(nsGkAtoms::color->GetUTF16String(),
                      nsGkAtoms::mathcolor_->GetUTF16String(), OwnerDoc());

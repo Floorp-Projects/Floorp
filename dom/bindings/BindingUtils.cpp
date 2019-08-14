@@ -2046,7 +2046,7 @@ NativePropertyHooks sEmptyNativePropertyHooks = {nullptr,
                                                  constructors::id::_ID_Count,
                                                  nullptr};
 
-const js::ClassOps sBoringInterfaceObjectClassClassOps = {
+const JSClassOps sBoringInterfaceObjectClassClassOps = {
     nullptr,             /* addProperty */
     nullptr,             /* delProperty */
     nullptr,             /* enumerate */

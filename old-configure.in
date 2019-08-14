@@ -2571,7 +2571,6 @@ fi
 
 fi # ! SKIP_COMPILER_CHECKS
 
-AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
 if test "$COMPILE_ENVIRONMENT"; then
@@ -3276,7 +3275,6 @@ dnl ========================================================
 
 dnl The following defines are used by xpcom
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
-CPP_THROW_NEW
 HAVE_GETPAGESIZE
 HAVE_STATVFS64
 HAVE_STATVFS

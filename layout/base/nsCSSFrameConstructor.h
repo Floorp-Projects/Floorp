@@ -757,14 +757,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     const FrameConstructionData mData;
   };
 
-#ifdef DEBUG
-#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-    { _display, _fcdata }
-#else
-#  define FCDATA_FOR_DISPLAY(_display, _fcdata) \
-    { _fcdata }
-#endif
-
   /* Structure that has a FrameConstructionData and style pseudo-type
      for a table pseudo-frame */
   struct PseudoParentData {
@@ -1369,6 +1361,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   const nsStyleDisplay* aStyleDisplay,
                                   nsFrameList& aFrameList);
 
+  // Creates a block frame wrapping an anonymous ruby frame.
+  nsIFrame* ConstructBlockRubyFrame(nsFrameConstructorState& aState,
+                                    FrameConstructionItem& aItem,
+                                    nsContainerFrame* aParentFrame,
+                                    const nsStyleDisplay* aStyleDisplay,
+                                    nsFrameList& aFrameList);
+
   void ConstructTextFrame(const FrameConstructionData* aData,
                           nsFrameConstructorState& aState, nsIContent* aContent,
                           nsContainerFrame* aParentFrame,
@@ -1510,14 +1509,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                          ComputedStyle&);
 #  endif /* XP_MACOSX */
 #endif   /* MOZ_XUL */
-
-  // Function to find FrameConstructionData for an element using one of the XUL
-  // display types.  Will return null if the style doesn't have a XUL display
-  // type.  This function performs no other checks, so should only be called if
-  // we know for sure that the element is not something that should get a frame
-  // constructed by tag.
-  static const FrameConstructionData* FindXULDisplayData(const nsStyleDisplay&,
-                                                         const Element&);
 
   /**
    * Constructs an outer frame, an anonymous child that wraps its real

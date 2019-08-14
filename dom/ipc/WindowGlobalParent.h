@@ -158,7 +158,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   void DrawSnapshotInternal(gfx::CrossProcessPaint* aPaint,
                             const Maybe<IntRect>& aRect, float aScale,
-                            nscolor aBackgroundColor);
+                            nscolor aBackgroundColor, uint32_t aFlags);
 
  private:
   ~WindowGlobalParent();

@@ -1730,6 +1730,32 @@ uint16_t nsContainerFrame::CSSAlignmentForAbsPosChild(
   return NS_STYLE_ALIGN_START;
 }
 
+#ifdef ACCESSIBILITY
+void nsContainerFrame::GetSpokenMarkerText(nsAString& aText) const {
+  const nsStyleList* myList = StyleList();
+  if (myList->GetListStyleImage()) {
+    char16_t kDiscCharacter = 0x2022;
+    aText.Assign(kDiscCharacter);
+    aText.Append(' ');
+  } else {
+    nsIContent* markerPseudo = nsLayoutUtils::GetMarkerPseudo(GetContent());
+    if (nsIFrame* marker = markerPseudo->GetPrimaryFrame()) {
+      if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
+        bullet->GetSpokenText(aText);
+      } else {
+        ErrorResult err;
+        markerPseudo->GetTextContent(aText, err);
+        if (err.Failed()) {
+          aText.Truncate();
+        }
+      }
+    } else {
+      aText.Truncate();
+    }
+  }
+}
+#endif
+
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(
     nsContainerFrame* aFrame, bool aWalkOOFFrames,
     bool aSkipOverflowContainerChildren)

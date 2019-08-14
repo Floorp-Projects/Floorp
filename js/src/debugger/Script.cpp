@@ -57,7 +57,7 @@ using namespace js;
 using mozilla::Maybe;
 using mozilla::Some;
 
-const ClassOps DebuggerScript::classOps_ = {
+const JSClassOps DebuggerScript::classOps_ = {
     nullptr,                         /* addProperty */
     nullptr,                         /* delProperty */
     nullptr,                         /* enumerate   */
