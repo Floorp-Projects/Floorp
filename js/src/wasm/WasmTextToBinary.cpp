@@ -3869,7 +3869,7 @@ static AstTableSet* ParseTableSet(WasmParseContext& c, bool inParens) {
   return new (c.lifo) AstTableSet(targetTable, index, value);
 }
 
-static AstTableSize* ParseTableSize(WasmParseContext& c, bool inParens) {
+static AstTableSize* ParseTableSize(WasmParseContext& c) {
   // (table.size table)
   // (table.size)
 
@@ -4090,7 +4090,7 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
     case WasmToken::TableSet:
       return ParseTableSet(c, inParens);
     case WasmToken::TableSize:
-      return ParseTableSize(c, inParens);
+      return ParseTableSize(c);
 #endif
 #ifdef ENABLE_WASM_GC
     case WasmToken::StructNew:
@@ -5795,19 +5795,16 @@ static bool ResolveRefFunc(Resolver& r, AstRefFunc& s) {
   return r.resolveFunction(s.func());
 }
 
-static bool ResolveRefNull(Resolver& r, AstRefNull& s) { return true; }
-
 static bool ResolveExpr(Resolver& r, AstExpr& expr) {
   switch (expr.kind()) {
     case AstExprKind::Nop:
     case AstExprKind::Pop:
     case AstExprKind::Unreachable:
     case AstExprKind::MemorySize:
+    case AstExprKind::RefNull:
       return true;
     case AstExprKind::RefFunc:
       return ResolveRefFunc(r, expr.as<AstRefFunc>());
-    case AstExprKind::RefNull:
-      return ResolveRefNull(r, expr.as<AstRefNull>());
     case AstExprKind::Drop:
       return ResolveDropOperator(r, expr.as<AstDrop>());
     case AstExprKind::BinaryOperator:
@@ -6415,7 +6412,7 @@ static bool EncodeBranchTable(Encoder& e, AstBranchTable& bt) {
   return true;
 }
 
-static bool EncodeMemorySize(Encoder& e, AstMemorySize& cm) {
+static bool EncodeMemorySize(Encoder& e) {
   if (!e.writeOp(Op::MemorySize)) {
     return false;
   }
@@ -6475,7 +6472,7 @@ static bool EncodeWake(Encoder& e, AstWake& s) {
          e.writeOp(ThreadOp::Wake) && EncodeLoadStoreFlags(e, s.address());
 }
 
-static bool EncodeFence(Encoder& e, AstFence& s) {
+static bool EncodeFence(Encoder& e) {
   return e.writeOp(ThreadOp::Fence) && e.writeFixedU8(0);
 }
 
@@ -6605,10 +6602,6 @@ static bool EncodeRefFunc(Encoder& e, AstRefFunc& s) {
   return e.writeOp(Op::RefFunc) && e.writeVarU32(s.func().index());
 }
 
-static bool EncodeRefNull(Encoder& e, AstRefNull& s) {
-  return e.writeOp(Op::RefNull);
-}
-
 static bool EncodeExpr(Encoder& e, AstExpr& expr) {
   switch (expr.kind()) {
     case AstExprKind::Pop:
@@ -6620,7 +6613,7 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
     case AstExprKind::RefFunc:
       return EncodeRefFunc(e, expr.as<AstRefFunc>());
     case AstExprKind::RefNull:
-      return EncodeRefNull(e, expr.as<AstRefNull>());
+      return e.writeOp(Op::RefNull);
     case AstExprKind::BinaryOperator:
       return EncodeBinaryOperator(e, expr.as<AstBinaryOperator>());
     case AstExprKind::Block:
@@ -6669,7 +6662,7 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
     case AstExprKind::UnaryOperator:
       return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
     case AstExprKind::MemorySize:
-      return EncodeMemorySize(e, expr.as<AstMemorySize>());
+      return EncodeMemorySize(e);
     case AstExprKind::MemoryGrow:
       return EncodeMemoryGrow(e, expr.as<AstMemoryGrow>());
     case AstExprKind::AtomicCmpXchg:
@@ -6685,7 +6678,7 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
     case AstExprKind::Wake:
       return EncodeWake(e, expr.as<AstWake>());
     case AstExprKind::Fence:
-      return EncodeFence(e, expr.as<AstFence>());
+      return EncodeFence(e);
     case AstExprKind::MemOrTableCopy:
       return EncodeMemOrTableCopy(e, expr.as<AstMemOrTableCopy>());
     case AstExprKind::DataOrElemDrop:
