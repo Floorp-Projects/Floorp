@@ -48,7 +48,7 @@ GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarksStorage)
 val accountManager = FxaAccountManager(
     context = this,
     serverConfig = ServerConfig.release(CLIENT_ID, REDIRECT_URL),
-    deviceConfig =DeviceConfig(
+    deviceConfig = DeviceConfig(
         name = "Sample app",
         type = DeviceType.MOBILE,
         capabilities = setOf(DeviceCapability.SEND_TAB)
@@ -63,6 +63,10 @@ accountManager.register(accountObserver, owner = this, autoPause = true)
 accountManager.registerForSyncEvents(syncObserver, owner = this, autoPause = true)
 
 // Observe incoming device events (e.g. SEND_TAB events from other devices).
+// Note that since device is configured with a SEND_TAB capability, device constellation will be
+// automatically updated during any account initialization flow (restore, login, sign-up, recovery).
+// It is up to the application to keep it up-to-date beyond that.
+// See `account.deviceConstellation().refreshDeviceStateAsync()`.
 accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
 
 // Now that all of the observers we care about are registered, kick off the account manager.

@@ -28,6 +28,9 @@ permalink: /changelog/
 * **browser-toolbar**
   * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
 
+* **service-firefox-accounts**
+  * `FxaAccountManager`, if configured with `DeviceCapability.SEND_TAB`, will now automatically refresh device constellation state and poll for device events during initialization and login.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)

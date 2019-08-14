@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.OAuthAccount
@@ -562,9 +563,7 @@ open class FxaAccountManager(
                             deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
 
-                        maybeUpdateSyncAuthInfoCache()
-
-                        notifyObservers { onAuthenticated(account, true) }
+                        postAuthenticated(true)
 
                         Event.FetchProfile
                     }
@@ -589,13 +588,14 @@ open class FxaAccountManager(
                         logger.info("Stopping periodic refresh of the device constellation")
                         account.deviceConstellation().stopPeriodicRefresh()
 
-                        maybeUpdateSyncAuthInfoCache()
-
-                        notifyObservers { onAuthenticated(account, false) }
+                        postAuthenticated(false)
 
                         Event.FetchProfile
                     }
                     Event.SignedInShareableAccount -> {
+                        // Note that we are not registering an account persistence callback here like
+                        // we do in other `AuthenticatedNoProfile` methods, because it would have been
+                        // already registered while handling `Event.SignInShareableAccount`.
                         logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(deviceEventsIntegration)
 
@@ -605,9 +605,7 @@ open class FxaAccountManager(
                                 deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
 
-                        maybeUpdateSyncAuthInfoCache()
-
-                        notifyObservers { onAuthenticated(account, true) }
+                        postAuthenticated(true)
 
                         Event.FetchProfile
                     }
@@ -627,9 +625,7 @@ open class FxaAccountManager(
                                 deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
                         ).await()
 
-                        maybeUpdateSyncAuthInfoCache()
-
-                        notifyObservers { onAuthenticated(account, false) }
+                        postAuthenticated(false)
 
                         Event.FetchProfile
                     }
@@ -751,6 +747,20 @@ open class FxaAccountManager(
         }
         oauthObservers.notifyObservers { onBeginOAuthFlow(url) }
         return null
+    }
+
+    private suspend fun postAuthenticated(newAccount: Boolean) {
+        // Before any sync workers have a chance to access it, make sure our SyncAuthInfo cache is hot.
+        maybeUpdateSyncAuthInfoCache()
+
+        // Notify our internal (sync) and external (app logic) observers.
+        notifyObservers { onAuthenticated(account, newAccount) }
+
+        // If device supports SEND_TAB...
+        if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB)) {
+            // ... update constellation state, and poll for any pending device events.
+            account.deviceConstellation().refreshDeviceStateAsync().await()
+        }
     }
 
     @VisibleForTesting

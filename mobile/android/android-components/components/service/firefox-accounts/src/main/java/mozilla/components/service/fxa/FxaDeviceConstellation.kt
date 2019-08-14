@@ -77,11 +77,9 @@ class FxaDeviceConstellation(
     override fun processRawEventAsync(payload: String): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "processing raw events") {
-                val events = account.handlePushMessage(payload).filter {
-                    it is AccountEvent.TabReceived
-                }.map {
-                    (it as AccountEvent.TabReceived).into()
-                }
+                val events = account.handlePushMessage(payload)
+                    .filterIsInstance<AccountEvent.TabReceived>()
+                    .map { it.into() }
                 deviceManager.processEvents(events)
             }
         }
@@ -91,11 +89,9 @@ class FxaDeviceConstellation(
         // Currently ignoring non-TabReceived events.
         return scope.async {
             handleFxaExceptions(logger, "polling for device events", { null }) {
-                account.pollDeviceCommands().filter {
-                    it is AccountEvent.TabReceived
-                }.map {
-                    (it as AccountEvent.TabReceived).into()
-                }
+                account.pollDeviceCommands()
+                    .filterIsInstance<AccountEvent.TabReceived>()
+                    .map { it.into() }
             }
         }
     }

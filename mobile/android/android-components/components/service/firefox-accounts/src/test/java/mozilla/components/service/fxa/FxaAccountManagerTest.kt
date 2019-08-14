@@ -242,7 +242,7 @@ class FxaAccountManagerTest {
     fun `updating sync config, without it at first`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
 
         val syncAccessTokenExpiresAt = System.currentTimeMillis() + 10 * 60 * 1000L
         val account = StatePersistenceTestableAccount(profile, constellation, tokenServerEndpointUrl = "https://some.server.com/test") {
@@ -340,7 +340,7 @@ class FxaAccountManagerTest {
     fun `updating sync config, with one to begin with`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
 
         val syncAccessTokenExpiresAt = System.currentTimeMillis() + 10 * 60 * 1000L
         val account = StatePersistenceTestableAccount(profile, constellation, tokenServerEndpointUrl = "https://some.server.com/test") {
@@ -450,7 +450,7 @@ class FxaAccountManagerTest {
         // - all good, migrated successfully
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
 
@@ -511,7 +511,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
@@ -541,6 +541,9 @@ class FxaAccountManagerTest {
         // Assert that we cancel any existing periodic jobs.
         verify(constellation).stopPeriodicRefresh()
 
+        // Assert that we refresh device state.
+        verify(constellation).refreshDeviceStateAsync()
+
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
         verify(accountStorage).write("test")
@@ -550,7 +553,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence, ensureCapabilities hit an intermittent error`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
@@ -587,7 +590,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence, hit an auth error`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation, ableToRecoverFromAuthError = false)
 
         val accountObserver: AccountObserver = mock()
@@ -657,7 +660,7 @@ class FxaAccountManagerTest {
     fun `newly authenticated account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
@@ -892,6 +895,9 @@ class FxaAccountManagerTest {
 
         assertEquals(mockAccount, manager.authenticatedAccount())
         assertEquals(profile, manager.accountProfile())
+
+        // Assert that we don't refresh device state for non-SEND_TAB enabled devices.
+        verify(constellation, never()).refreshDeviceStateAsync()
 
         // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
@@ -1576,5 +1582,11 @@ class FxaAccountManagerTest {
         }
 
         return manager
+    }
+
+    private fun mockDeviceConstellation(): DeviceConstellation {
+        val c: DeviceConstellation = mock()
+        `when`(c.refreshDeviceStateAsync()).thenReturn(CompletableDeferred(true))
+        return c
     }
 }
