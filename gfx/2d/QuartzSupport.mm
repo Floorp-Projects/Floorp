@@ -11,6 +11,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import <AppKit/NSOpenGL.h>
+#import <OpenGL/CGLIOSurface.h>
 #include <dlfcn.h>
 #include "GLDefs.h"
 
@@ -200,10 +201,10 @@ nsresult nsCARenderer::SetupRenderer(void* aCALayer, int aWidth, int aHeight,
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, mIOTexture);
     ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    MacIOSurfaceLib::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
-                                            aWidth * intScaleFactor, aHeight * intScaleFactor,
-                                            GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                                            mIOSurface->mIOSurfacePtr, 0);
+    ::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
+                             aWidth * intScaleFactor, aHeight * intScaleFactor, GL_BGRA,
+                             GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)mIOSurface->mIOSurfacePtr,
+                             0);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
   } else {
     ::glGenTextures(1, &mFBOTexture);
@@ -332,10 +333,10 @@ void nsCARenderer::AttachIOSurface(MacIOSurface* aSurface) {
     CGLContextObj oldContext = ::CGLGetCurrentContext();
     ::CGLSetCurrentContext(mOpenGLContext);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, mIOTexture);
-    MacIOSurfaceLib::CGLTexImageIOSurface2D(
-        mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, mIOSurface->GetDevicePixelWidth(),
-        mIOSurface->GetDevicePixelHeight(), GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-        mIOSurface->mIOSurfacePtr, 0);
+    ::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
+                             mIOSurface->GetDevicePixelWidth(), mIOSurface->GetDevicePixelHeight(),
+                             GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                             (IOSurfaceRef)mIOSurface->mIOSurfacePtr, 0);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 
     // Rebind the FBO to make it live
