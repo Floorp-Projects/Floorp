@@ -6,6 +6,9 @@
 const { WebChannel } = ChromeUtils.import(
   "resource://gre/modules/WebChannel.jsm"
 );
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 
 const ERROR_ID_ORIGIN_REQUIRED =
   "WebChannel id and originOrPermission are required.";
@@ -93,13 +96,13 @@ add_task(function test_web_channel_listen() {
 add_task(function test_web_channel_listen_permission() {
   return new Promise((resolve, reject) => {
     // add a new permission
-    Services.perms.add(
+    PermissionTestUtils.add(
       VALID_WEB_CHANNEL_ORIGIN,
       TEST_PERMISSION_NAME,
       Services.perms.ALLOW_ACTION
     );
     registerCleanupFunction(() =>
-      Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME)
+      PermissionTestUtils.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME)
     );
     let channel = new WebChannel(VALID_WEB_CHANNEL_ID, TEST_PERMISSION_NAME, {
       broker: MockWebChannelBroker,
