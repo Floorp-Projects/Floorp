@@ -99,35 +99,65 @@ document.addEventListener("DOMContentLoaded", e => {
       cryptominer: 0,
     };
 
+    // For accessibility clients, we turn the graph into a fake table with annotated text.
+    // We use WAI-ARIA roles, properties, and states to mark up the table, rows and cells.
+    // Each day becomes one row in the table.
+    // Each row contains the day, total, and then one cell for each bar that we display.
+    // At most, a row can contain seven cells.
+    // But we need to caclulate the actual number of the most cells in a row to give accurate information.
+    let maxColumnCount = 0;
     let date = new Date();
+    // The graph is already a role "table" from the HTML file.
     let graph = document.getElementById("graph");
     for (let i = 0; i <= 6; i++) {
       let dateString = date.toISOString().split("T")[0];
+      let ariaOwnsString = ""; // Get the row's colummns in order
+      let currentColumnCount = 0;
 
       let bar = document.createElement("div");
       bar.className = "graph-bar";
+      bar.setAttribute("role", "row");
       let innerBar = document.createElement("div");
       innerBar.className = "graph-wrapper-bar";
       if (data[dateString]) {
         let content = data[dateString];
         let count = document.createElement("div");
         count.className = "bar-count";
+        count.id = "count" + i;
+        count.setAttribute("role", "cell");
         count.textContent = content.total;
         bar.appendChild(count);
+        ariaOwnsString = count.id;
+        currentColumnCount += 1;
         let barHeight = (content.total / largest) * 100;
         weekCount += content.total;
         bar.style.height = `${barHeight}%`;
         for (let type of dataTypes) {
           if (content[type]) {
             let dataHeight = (content[type] / content.total) * 100;
+            // Since we are dealing with non-visual content, screen readers need a parent container to get the text
+            let cellSpan = document.createElement("span");
+            cellSpan.id = type + i;
+            cellSpan.setAttribute("role", "cell");
             let div = document.createElement("div");
             div.className = `${type}-bar inner-bar`;
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
+            div.setAttribute(
+              "data-l10n-args",
+              JSON.stringify({ count: content[type], percentage: dataHeight })
+            );
             div.setAttribute("data-l10n-id", `bar-tooltip-${type}`);
             weekTypeCounts[type] += content[type];
-            innerBar.appendChild(div);
+            cellSpan.appendChild(div);
+            innerBar.appendChild(cellSpan);
+            ariaOwnsString = ariaOwnsString + " " + cellSpan.id;
+            currentColumnCount += 1;
           }
+        }
+        if (currentColumnCount > maxColumnCount) {
+          // The current row has more than any previous rows
+          maxColumnCount = currentColumnCount;
         }
       } else {
         // There were no content blocking events on this day.
@@ -144,14 +174,21 @@ document.addEventListener("DOMContentLoaded", e => {
 
       let label = document.createElement("span");
       label.className = "column-label";
+      // While the graphs fill up from the right, the days fill up from the left, so match the IDs
+      label.id = "day" + (6 - i);
+      label.setAttribute("role", "rowheader");
       if (i == 6) {
         label.setAttribute("data-l10n-id", "graph-today");
       } else {
         label.textContent = data.weekdays[(i + 1 + new Date().getDay()) % 7];
       }
       graph.append(label);
+      // Make the day the first column in a row, making it the row header.
+      bar.setAttribute("aria-owns", "day" + i + " " + ariaOwnsString);
       date.setDate(date.getDate() - 1);
     }
+    maxColumnCount += 1; // Add the day column in the fake table
+    graph.setAttribute("aria-colCount", maxColumnCount);
     // Set the total number of each type of tracker on the tabs as well as their
     // "Learn More" links
     for (let type of dataTypes) {

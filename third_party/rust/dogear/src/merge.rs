@@ -1857,6 +1857,20 @@ pub struct CompletionOps<'t> {
     pub upload: Vec<Upload<'t>>,
 }
 
+impl<'t> CompletionOps<'t> {
+    /// Returns `true` if there are no completion ops to apply.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.change_guids.is_empty()
+            && self.apply_remote_items.is_empty()
+            && self.apply_new_local_structure.is_empty()
+            && self.flag_for_upload.is_empty()
+            && self.skip_upload.is_empty()
+            && self.flag_as_merged.is_empty()
+            && self.upload.is_empty()
+    }
+}
+
 /// A completion op to change the local GUID to the merged GUID. This is used
 /// to dedupe new local items to remote ones, as well as to fix up invalid
 /// GUIDs.

@@ -308,6 +308,10 @@ impl DataStores {
                 let prim_data = &self.yuv_image[data_handle];
                 &prim_data.common
             }
+            PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
+                let prim_data = &self.backdrop[data_handle];
+                &prim_data.common
+            }
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain => {
                 unreachable!();

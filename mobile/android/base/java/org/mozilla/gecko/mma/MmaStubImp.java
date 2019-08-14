@@ -49,6 +49,11 @@ public class MmaStubImp implements MmaInterface {
     }
 
     @Override
+    public void setToken(String token) {
+
+    }
+
+    @Override
     public boolean handleGcmMessage(Context context, String from, Bundle bundle) {
         return false;
     }

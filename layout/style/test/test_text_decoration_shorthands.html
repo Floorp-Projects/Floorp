@@ -45,6 +45,10 @@ var text_decoration_test_cases = [
         textDecorationThickness: "auto",
     },
     {
+        specified: "from-font",
+        textDecorationThickness: "from-font",
+    },
+    {
         specified: "#00ff00 underline",
         textDecorationColor: "rgb(0, 255, 0)",
         textDecorationLine: "underline",
@@ -94,6 +98,12 @@ var text_decoration_test_cases = [
         specified: "overline -30px",
         textDecorationLine: "overline",
         textDecorationThickness: "-30px",
+    },
+    {
+        specified: "underline red from-font",
+        textDecorationLine: "underline",
+        textDecorationColor: "rgb(255, 0, 0)",
+        textDecorationThickness: "from-font",
     },
 ];
 

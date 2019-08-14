@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=0.5">
+<style>
+html {
+  scrollbar-width: none; /* avoid scrollbar width is included in some metrics */
+}
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: none;
+}
+#twice-width {
+  width: 200%;
+  height: 100%;
+  position: absolute;
+}
+</style>
+<div id="twice-width"></div>
+<script>
+
+const is = opener.is.bind(opener);
+const todo_is = opener.todo_is.bind(opener);
+const add_task = opener.add_task.bind(opener);
+const original_finish = opener.SimpleTest.finish;
+const SimpleTest = opener.SimpleTest;
+
+SimpleTest.finish = function finish() {
+  self.close();
+  original_finish();
+}
+
+add_task(async () => {
+  // Explicitly set to 0.5x so that this test doesn't need to reply on our
+  // auto initial-scale calculation.
+  SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(0.5);
+  is(window.visualViewport.scale, 0.5, "The content should be scaled by 0.5x");
+
+  // Now the visual viewport size is same as the layout viewport.
+  const layoutViewportHeight = window.visualViewport.height;
+
+  is(window.innerHeight, layoutViewportHeight,
+     "window.innerHeight should reflect the layout viewport");
+  is(document.documentElement.scrollHeight, layoutViewportHeight,
+     "The root element's scrollHeight should be the layout viewport height");
+  is(document.documentElement.getBoundingClientRect().height,
+     layoutViewportHeight / 2,
+     "The content height should be half of the layout viewport height");
+
+  // Set scale to 1.0x so that the visual viport size becomes 0.5x of the layout
+  // viewport.
+  SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(1);
+  is(window.visualViewport.scale, 1, "The content should be scaled by 1.0x");
+  is(window.visualViewport.height, layoutViewportHeight / 2,
+     "Now the visual viewport height should be changed to half of the layout " +
+     "viewport height");
+  todo_is(window.innerHeight, layoutViewportHeight,
+          "window.innerHeight shouldn't be changed (Bug 1514429)");
+  is(document.documentElement.scrollHeight, layoutViewportHeight,
+     "The root element's scrollHeight shouldn't be changed");
+});
+</script>
+</html>

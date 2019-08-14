@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+  This test case is initially scaled to 1.x by initial-scale=1 in the meta
+  viewport tag below, then scaled down to 0.25x by reftest-resolution="0.25"
+  -->
+<html reftest-resolution="0.25">
+<meta name="viewport" content="width=device-width,minimum-scale=0.25,initial-scale=1">
+<style>
+html {
+  background-color: green;
+}
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none; /* avoid drawing scrollbars */
+}
+#quadruple-width {
+  background-color: red;
+  width: 400%;
+  height: 100%;
+  position: absolute;
+}
+</style>
+<div id="quadruple-width"></div>
+</html>

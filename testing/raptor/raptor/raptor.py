@@ -892,7 +892,6 @@ class RaptorAndroid(Raptor):
             LOG.info("copying %s to device: %s" % (yml_on_host, yml_on_device))
             self.device.rm(yml_on_device, force=True, recursive=True)
             self.device.push(yml_on_host, yml_on_device)
-            self.device.chmod(yml_on_device, recursive=True, root=True)
 
         except Exception:
             LOG.critical("failed to push %s to device!" % yml_on_device)

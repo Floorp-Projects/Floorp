@@ -6,6 +6,8 @@ var EXPORTED_SYMBOLS = ["Async"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer");
+
 /*
  * Helpers for various async operations.
  */
@@ -174,6 +176,10 @@ var Async = {
   asyncObserver(log, obj) {
     return new AsyncObserver(log, obj);
   },
+
+  watchdog() {
+    return new Watchdog();
+  },
 };
 
 /**
@@ -229,5 +235,71 @@ class AsyncObserver extends AsyncQueueCaller {
 
   promiseObserversComplete() {
     return this.promiseCallsComplete();
+  }
+}
+
+/**
+ * Woof! Signals an operation to abort, either at shutdown or after a timeout.
+ * The buffered engine uses this to abort long-running merges, so that they
+ * don't prevent Firefox from quitting, or block future syncs.
+ */
+class Watchdog {
+  constructor() {
+    this.controller = new AbortController();
+    this.timer = new Timer();
+
+    /**
+     * The reason for signaling an abort. `null` if not signaled,
+     * `"timeout"` if the watchdog timer fired, or `"shutdown"` if the app is
+     * is quitting.
+     *
+     * @type {String?}
+     */
+    this.abortReason = null;
+  }
+
+  /**
+   * Returns the abort signal for this watchdog. This can be passed to APIs
+   * that take a signal for cancellation, like `SyncedBookmarksMirror::apply`
+   * or `fetch`.
+   *
+   * @type {AbortSignal}
+   */
+  get signal() {
+    return this.controller.signal;
+  }
+
+  /**
+   * Starts the watchdog timer, and listens for the app quitting.
+   *
+   * @param {Number} delay
+   *                 The time to wait before signaling the operation to abort.
+   */
+  start(delay) {
+    if (!this.signal.aborted) {
+      Services.obs.addObserver(this, "quit-application");
+      this.timer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  }
+
+  /**
+   * Stops the watchdog timer and removes any listeners. This should be called
+   * after the operation finishes.
+   */
+  stop() {
+    if (!this.signal.aborted) {
+      Services.obs.removeObserver(this, "quit-application");
+      this.timer.cancel();
+    }
+  }
+
+  observe(subject, topic, data) {
+    if (topic == "timer-callback") {
+      this.abortReason = "timeout";
+    } else if (topic == "quit-application") {
+      this.abortReason = "shutdown";
+    }
+    this.stop();
+    this.controller.abort();
   }
 }

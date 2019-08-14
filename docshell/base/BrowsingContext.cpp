@@ -197,7 +197,8 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mGroup(aGroup),
       mParent(aParent),
       mIsInProcess(false),
-      mIsDiscarded(false) {
+      mIsDiscarded(false),
+      mDanglingRemoteOuterProxies(false) {
   MOZ_RELEASE_ASSERT(!mParent || mParent->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
@@ -208,7 +209,52 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   // process to the parent & do other validation here.
   MOZ_RELEASE_ASSERT(aDocShell->GetBrowsingContext() == this);
   mDocShell = aDocShell;
+  mDanglingRemoteOuterProxies = !mIsInProcess;
   mIsInProcess = true;
+}
+
+// This class implements a callback that will return the remote window proxy for
+// mBrowsingContext in that compartment, if it has one. It also removes the
+// proxy from the map, because the object will be transplanted into another kind
+// of object.
+class MOZ_STACK_CLASS CompartmentRemoteProxyTransplantCallback
+    : public js::CompartmentTransplantCallback {
+ public:
+  explicit CompartmentRemoteProxyTransplantCallback(
+      BrowsingContext* aBrowsingContext)
+      : mBrowsingContext(aBrowsingContext) {}
+
+  virtual JSObject* getObjectToTransplant(
+      JS::Compartment* compartment) override {
+    auto* priv = xpc::CompartmentPrivate::Get(compartment);
+    if (!priv) {
+      return nullptr;
+    }
+
+    auto& map = priv->GetRemoteProxyMap();
+    auto result = map.lookup(mBrowsingContext);
+    if (!result) {
+      return nullptr;
+    }
+    JSObject* resultObject = result->value();
+    map.remove(result);
+
+    return resultObject;
+  }
+
+ private:
+  BrowsingContext* mBrowsingContext;
+};
+
+void BrowsingContext::CleanUpDanglingRemoteOuterWindowProxies(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aOuter) {
+  if (!mDanglingRemoteOuterProxies) {
+    return;
+  }
+  mDanglingRemoteOuterProxies = false;
+
+  CompartmentRemoteProxyTransplantCallback cb(this);
+  js::RemapRemoteWindowProxies(aCx, &cb, aOuter);
 }
 
 void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {

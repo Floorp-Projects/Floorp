@@ -69,7 +69,6 @@ add_task(async function() {
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
-    const onHighlighterReady = toolbox.once("highlighter-ready");
     const onPickerNodeHovered = inspector.inspectorFront.nodePicker.once(
       "picker-node-hovered"
     );
@@ -78,6 +77,6 @@ add_task(async function() {
       center: true,
       selector: selector,
     });
-    return promise.all([onHighlighterReady, onPickerNodeHovered]);
+    return onPickerNodeHovered;
   }
 });

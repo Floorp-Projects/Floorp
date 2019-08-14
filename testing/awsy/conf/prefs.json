@@ -10,5 +10,6 @@
     "network.proxy.type": 1,
     "plugin.disable": true,
     "startup.homepage_override_url": "",
-    "startup.homepage_welcome_url": ""
+    "startup.homepage_welcome_url": "",
+    "trailhead.firstrun.branches": "join"
 }

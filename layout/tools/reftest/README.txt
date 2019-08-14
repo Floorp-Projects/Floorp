@@ -604,7 +604,9 @@ is rendered with the specified resolution (as if the user pinch-zoomed in
 to that scale). Note that the difference between reftest-async-zoom and
 reftest-resolution is that reftest-async-zoom only applies the scale in
 the compositor, while reftest-resolution causes the page to be paint at that
-resolution.
+resolution. This attribute can be used together with initial-scale in meta
+viewport tag, in such cases initial-scale is applied first then
+reftest-resolution changes the scale.
 
 This attributes requires the pref apz.allow_zooming=true to have an effect.
 

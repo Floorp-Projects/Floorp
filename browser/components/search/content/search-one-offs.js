@@ -18,24 +18,13 @@ class SearchOneOffs {
     this.container.appendChild(
       MozXULElement.parseXULToFragment(
         `
-      <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-        <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"/>
-        <hbox class="search-panel-searchforwith search-panel-current-input">
-          <label value="&searchFor.label;"/>
-          <label class="searchbar-oneoffheader-searchtext search-panel-input-value" flex="1" crop="end"/>
-          <label flex="10000" value="&searchWith.label;"/>
-        </hbox>
-        <hbox class="search-panel-searchonengine search-panel-current-input">
-          <label value="&search.label;"/>
-          <label class="searchbar-oneoffheader-engine search-panel-input-value" flex="1" crop="end"/>
-          <label flex="10000" value="&searchAfter.label;"/>
-        </hbox>
-      </deck>
-      <description role="group" class="search-panel-one-offs">
-        <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
-      </description>
+      <div class="search-panel-one-offs-header search-panel-header search-panel-current-input">
+        <label class="searchbar-oneoffheader-search" value="&searchWithDesc.label;"/>
+      </div>
+      <div class="search-panel-one-offs"/>
       <vbox class="search-add-engines"/>
-      <button class="search-setting-button search-panel-header" label="&changeSearchSettings.button;"/>
+      <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
+      <button class="search-setting-button" label="&changeSearchSettings.button;"/>
       <menupopup class="search-one-offs-context-menu">
         <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"/>
         <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"/>
@@ -179,12 +168,17 @@ class SearchOneOffs {
   }
 
   /**
-   * Width in pixels of the one-off buttons.  49px is the min-width of
-   * each search engine button, adapt this const when changing the css.
-   * It's actually 48px + 1px of right border.
+   * Width in pixels of the one-off buttons.
    */
   get buttonWidth() {
-    return 49;
+    return this.compact ? 40 : 48;
+  }
+
+  /**
+   * Height in pixels of the one-off buttons.
+   */
+  get buttonHeight() {
+    return 32;
   }
 
   /**
@@ -274,7 +268,14 @@ class SearchOneOffs {
       (this._view && this._view.isOpen) ||
       (this.popup && this.popup.popupOpen)
     ) {
-      this._updateAfterQueryChanged();
+      let isOneOffSelected =
+        this.selectedButton &&
+        this.selectedButton.classList.contains("searchbar-engine-one-off-item");
+      // Typing de-selects the settings or opensearch buttons at the bottom
+      // of the search panel, as typing shows the user intends to search.
+      if (this.selectedButton && !isOneOffSelected) {
+        this.selectedButton = null;
+      }
     }
     return val;
   }
@@ -291,10 +292,6 @@ class SearchOneOffs {
    *        The selected one-off button. Null if no one-off is selected.
    */
   set selectedButton(val) {
-    if (val && val.classList.contains("dummy")) {
-      // Never select dummy buttons.
-      val = null;
-    }
     let previousButton = this._selectedButton;
     if (previousButton) {
       previousButton.removeAttribute("selected");
@@ -393,43 +390,6 @@ class SearchOneOffs {
   }
 
   /**
-   * Updates the parts of the UI that show the query string.
-   */
-  _updateAfterQueryChanged() {
-    let headerSearchText = this.querySelector(
-      ".searchbar-oneoffheader-searchtext"
-    );
-    headerSearchText.setAttribute("value", this.query);
-    let groupText;
-    let isOneOffSelected =
-      this.selectedButton &&
-      this.selectedButton.classList.contains("searchbar-engine-one-off-item");
-    // Typing de-selects the settings or opensearch buttons at the bottom
-    // of the search panel, as typing shows the user intends to search.
-    if (this.selectedButton && !isOneOffSelected) {
-      this.selectedButton = null;
-    }
-    if (this.query) {
-      groupText =
-        headerSearchText.previousElementSibling.value +
-        '"' +
-        headerSearchText.value +
-        '"' +
-        headerSearchText.nextElementSibling.value;
-      if (!isOneOffSelected) {
-        this.header.selectedIndex = 1;
-      }
-    } else {
-      let noSearchHeader = this.querySelector(".searchbar-oneoffheader-search");
-      groupText = noSearchHeader.value;
-      if (!isOneOffSelected) {
-        this.header.selectedIndex = 0;
-      }
-    }
-    this.buttons.setAttribute("aria-label", groupText);
-  }
-
-  /**
    * Infallible, non-re-entrant version of `__rebuild()`.
    */
   async _rebuild() {
@@ -454,9 +414,6 @@ class SearchOneOffs {
     this.selectedButton = null;
     this._contextEngine = null;
 
-    // Update the 'Search for <keywords> with:" header.
-    this._updateAfterQueryChanged();
-
     // Handle opensearch items. This needs to be done before building the
     // list of one off providers, as that code will return early if all the
     // alternative engines are hidden.
@@ -480,15 +437,14 @@ class SearchOneOffs {
     }
 
     // Finally, build the list of one-off buttons.
-    while (this.buttons.firstElementChild != this.settingsButtonCompact) {
+    while (this.buttons.firstElementChild) {
       this.buttons.firstElementChild.remove();
     }
 
-    // Remove the trailing empty text node introduced by the binding's
-    // content markup above.
-    if (this.settingsButtonCompact.nextElementSibling) {
-      this.settingsButtonCompact.nextElementSibling.remove();
-    }
+    let headerText = this.header.querySelector(
+      ".searchbar-oneoffheader-search"
+    );
+    this.buttons.setAttribute("aria-label", headerText.value);
 
     let engines = await this.getEngines();
     let defaultEngine = await Services.search.getDefault();
@@ -508,7 +464,10 @@ class SearchOneOffs {
       return;
     }
 
-    let panelWidth = parseInt((this.popup || this._view.panel).clientWidth);
+    // this.buttonWidth is for the compact settings button.
+    let buttonsWidth = this.compact
+      ? this._textboxWidth - this.buttonWidth - this.header.clientWidth
+      : this.popup.clientWidth;
 
     // There's one weird thing to guard against: when layout pixels
     // aren't an integral multiple of device pixels, the last button
@@ -519,33 +478,41 @@ class SearchOneOffs {
     // As a workaround, decrement the width if the scale is not an integer.
     let scale = window.windowUtils.screenPixelsPerCSSPixel;
     if (Math.floor(scale) != scale) {
-      --panelWidth;
+      --buttonsWidth;
     }
 
-    // The + 1 is because the last button doesn't have a right border.
-    let enginesPerRow = Math.floor((panelWidth + 1) / this.buttonWidth);
-    let buttonWidth = Math.floor(panelWidth / enginesPerRow);
-    // There will be an emtpy area of:
-    //   panelWidth - enginesPerRow * buttonWidth  px
+    // If the header string is very long, then the searchbar buttons will
+    // overflow their container unless max-width is set.
+    this.buttons.style.setProperty(
+      this.compact ? "width" : "max-width",
+      `${buttonsWidth}px`
+    );
+
+    // 24: 12px left padding + 12px right padding.
+    if (this.compact) {
+      buttonsWidth -= 24;
+    }
+
+    // In very narrow windows, we should always have at least one button
+    // per row.
+    buttonsWidth = Math.max(buttonsWidth, this.buttonWidth);
+
+    let enginesPerRow = Math.floor(buttonsWidth / this.buttonWidth);
+    // There will be an empty area of:
+    //   buttonsWidth - enginesPerRow * this.buttonWidth  px
     // at the end of each row.
 
-    // If the <description> tag with the list of search engines doesn't have
+    // If the <div> with the list of search engines doesn't have
     // a fixed height, the panel will be sized incorrectly, causing the bottom
     // of the suggestion <tree> to be hidden.
-    if (this.compact) {
-      ++oneOffCount;
-    }
     let rowCount = Math.ceil(oneOffCount / enginesPerRow);
-    let height = rowCount * 33; // 32px per row, 1px border.
-    this.buttons.setAttribute("height", height + "px");
-
+    let height = rowCount * this.buttonHeight;
+    this.buttons.style.setProperty("height", `${height}px`);
     // Ensure we can refer to the settings buttons by ID:
     let origin = this.telemetryOrigin;
     this.settingsButton.id = origin + "-anon-search-settings";
     this.settingsButtonCompact.id = origin + "-anon-search-settings-compact";
 
-    let dummyItems =
-      enginesPerRow - (oneOffCount % enginesPerRow || enginesPerRow);
     for (let i = 0; i < engines.length; ++i) {
       let engine = engines[i];
       let button = document.createXULElement("button");
@@ -557,53 +524,9 @@ class SearchOneOffs {
       button.setAttribute("image", uri);
       button.setAttribute("class", "searchbar-engine-one-off-item");
       button.setAttribute("tooltiptext", engine.name);
-      button.setAttribute("width", buttonWidth);
       button.engine = engine;
 
-      if ((i + 1) % enginesPerRow == 0) {
-        button.classList.add("last-of-row");
-      }
-
-      if (i + 1 == engines.length) {
-        button.classList.add("last-engine");
-      }
-
-      if (i >= oneOffCount + dummyItems - enginesPerRow) {
-        button.classList.add("last-row");
-      }
-
-      this.buttons.insertBefore(button, this.settingsButtonCompact);
-    }
-
-    let hasDummyItems = !!dummyItems;
-    while (dummyItems) {
-      let button = document.createXULElement("button");
-      button.setAttribute(
-        "class",
-        "searchbar-engine-one-off-item dummy last-row"
-      );
-      button.setAttribute("width", buttonWidth);
-
-      if (!--dummyItems) {
-        button.classList.add("last-of-row");
-      }
-
-      this.buttons.insertBefore(button, this.settingsButtonCompact);
-    }
-
-    if (this.compact) {
-      this.settingsButtonCompact.setAttribute("width", buttonWidth);
-      if (rowCount == 1 && hasDummyItems) {
-        // When there's only one row, make the compact settings button
-        // hug the right edge of the panel.  It may not due to the panel's
-        // width not being an integral multiple of the button width.  (See
-        // the "There will be an emtpy area" comment above.)  Increase the
-        // width of the last dummy item by the remainder.
-        let remainder = panelWidth - enginesPerRow * buttonWidth;
-        let width = remainder + buttonWidth;
-        let lastDummyItem = this.settingsButtonCompact.previousElementSibling;
-        lastDummyItem.setAttribute("width", width);
-      }
+      this.buttons.appendChild(button);
     }
   }
 
@@ -732,37 +655,16 @@ class SearchOneOffs {
   _updateStateForButton(mousedOverButton) {
     let button = mousedOverButton;
 
-    // Ignore dummy buttons.
-    if (button && button.classList.contains("dummy")) {
-      button = null;
-    }
-
     // If there's no moused-over button, then the one-offs should reflect
     // the selected button, if any.
     button = button || this.selectedButton;
 
-    if (!button) {
-      this.header.selectedIndex = this.query ? 1 : 0;
-      if (this.textbox) {
-        this.textbox.removeAttribute("aria-activedescendant");
-      }
-      return;
-    }
-
-    if (
-      button.classList.contains("searchbar-engine-one-off-item") &&
-      button.engine
-    ) {
-      let headerEngineText = this.querySelector(
-        ".searchbar-oneoffheader-engine"
-      );
-      this.header.selectedIndex = 2;
-      headerEngineText.value = button.engine.name;
-    } else {
-      this.header.selectedIndex = this.query ? 1 : 0;
-    }
     if (this.textbox) {
-      this.textbox.setAttribute("aria-activedescendant", button.id);
+      if (!button) {
+        this.textbox.removeAttribute("aria-activedescendant");
+      } else {
+        this.textbox.setAttribute("aria-activedescendant", button.id);
+      }
     }
   }
 
@@ -773,19 +675,7 @@ class SearchOneOffs {
       oneOff;
       oneOff = oneOff.nextElementSibling
     ) {
-      // oneOff may be a text node since the list xul:description contains
-      // whitespace and the compact settings button.  See the markup
-      // above.  _rebuild removes text nodes, but it may not have been
-      // called yet (because e.g. the popup hasn't been opened yet).
-      if (oneOff.nodeType == Node.ELEMENT_NODE) {
-        if (
-          oneOff.classList.contains("dummy") ||
-          oneOff.classList.contains("search-setting-button-compact")
-        ) {
-          break;
-        }
-        buttons.push(oneOff);
-      }
+      buttons.push(oneOff);
     }
 
     if (aIncludeNonEngineButtons) {
@@ -850,7 +740,7 @@ class SearchOneOffs {
    *        If true, the index is incremented, and if false, the index is
    *        decremented.
    * @param {boolean} aIncludeNonEngineButtons
-   *        If true, non-dummy buttons that do not have engines are included.
+   *        If true, buttons that do not have engines are included.
    *        These buttons include the OpenSearch and settings buttons.  For
    *        example, if the currently selected button is an engine button,
    *        the next button is the settings button, and you pass true for
@@ -1202,9 +1092,7 @@ class SearchOneOffs {
       return;
     }
 
-    let isOneOff =
-      target.classList.contains("searchbar-engine-one-off-item") &&
-      !target.classList.contains("dummy");
+    let isOneOff = target.classList.contains("searchbar-engine-one-off-item");
     if (
       isOneOff ||
       target.classList.contains("addengine-item") ||
@@ -1349,8 +1237,7 @@ class SearchOneOffs {
     // Prevent the context menu from appearing except on the one off buttons.
     if (
       !target.classList.contains("searchbar-engine-one-off-item") ||
-      target.classList.contains("search-setting-button-compact") ||
-      target.classList.contains("dummy")
+      target.classList.contains("search-setting-button-compact")
     ) {
       event.preventDefault();
       return;

@@ -193,6 +193,19 @@ add_task(async function test_graph_display() {
 
     is(allBars.length, 7, "7 bars have been found on the graph");
 
+    // For accessibility, test if the graph is a table
+    // and has a correct column count (number of data types + total + day)
+    is(
+      content.document.getElementById("graph").getAttribute("role"),
+      "table",
+      "Graph is an accessible table"
+    );
+    is(
+      content.document.getElementById("graph").getAttribute("aria-colcount"),
+      DATA_TYPES.length + 2,
+      "Table has the right number of columns"
+    );
+
     // today has each type
     // yesterday will have no tracking cookies
     // 2 days ago will have no fingerprinters
@@ -205,10 +218,26 @@ add_task(async function test_graph_display() {
       DATA_TYPES.length,
       "today has all of the data types shown"
     );
+    is(allBars[6].getAttribute("role"), "row", "Today has the correct role");
+    is(
+      allBars[6].getAttribute("aria-owns"),
+      "day0 count0 cryptominer0 fingerprinter0 tracker0 cookie0 social0",
+      "Row has the columns in the right order"
+    );
     is(
       allBars[6].querySelector(".tracker-bar").style.height,
       "10%",
       "trackers take 10%"
+    );
+    is(
+      allBars[6].querySelector(".tracker-bar").parentNode.getAttribute("role"),
+      "cell",
+      "Trackers have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".tracker-bar").getAttribute("aria-label"),
+      "1 tracking content (10%)",
+      "Trackers have the correct accessible text"
     );
     is(
       allBars[6].querySelector(".cryptominer-bar").style.height,
@@ -216,9 +245,33 @@ add_task(async function test_graph_display() {
       "cryptominers take 20%"
     );
     is(
+      allBars[6]
+        .querySelector(".cryptominer-bar")
+        .parentNode.getAttribute("role"),
+      "cell",
+      "Cryptominers have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".cryptominer-bar").getAttribute("aria-label"),
+      "2 cryptominers (20%)",
+      "Cryptominers have the correct accessible label"
+    );
+    is(
       allBars[6].querySelector(".fingerprinter-bar").style.height,
       "20%",
       "fingerprinters take 20%"
+    );
+    is(
+      allBars[6]
+        .querySelector(".fingerprinter-bar")
+        .parentNode.getAttribute("role"),
+      "cell",
+      "Fingerprinters have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".fingerprinter-bar").getAttribute("aria-label"),
+      "2 fingerprinters (20%)",
+      "Fingerprinters have the correct accessible label"
     );
     is(
       allBars[6].querySelector(".cookie-bar").style.height,
@@ -226,9 +279,29 @@ add_task(async function test_graph_display() {
       "cross site tracking cookies take 40%"
     );
     is(
+      allBars[6].querySelector(".cookie-bar").parentNode.getAttribute("role"),
+      "cell",
+      "cross site tracking cookies have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".cookie-bar").getAttribute("aria-label"),
+      "4 cross-site tracking cookies (40%)",
+      "cross site tracking cookies have the correct accessible label"
+    );
+    is(
       allBars[6].querySelector(".social-bar").style.height,
       "10%",
       "social trackers take 10%"
+    );
+    is(
+      allBars[6].querySelector(".social-bar").parentNode.getAttribute("role"),
+      "cell",
+      "social trackers have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".social-bar").getAttribute("aria-label"),
+      "1 social media tracker (10%)",
+      "social trackers have the correct accessible text"
     );
 
     is(
@@ -240,6 +313,11 @@ add_task(async function test_graph_display() {
       !allBars[5].querySelector(".cookie-bar"),
       "there is no cross site tracking cookie section 1 day ago."
     );
+    is(
+      allBars[5].getAttribute("aria-owns"),
+      "day1 count1 cryptominer1 fingerprinter1 tracker1 social1",
+      "Row has the columns in the right order"
+    );
 
     is(
       allBars[4].querySelectorAll(".inner-bar").length,
@@ -249,6 +327,11 @@ add_task(async function test_graph_display() {
     ok(
       !allBars[4].querySelector(".fingerprinter-bar"),
       "there is no fingerprinter section 1 day ago."
+    );
+    is(
+      allBars[4].getAttribute("aria-owns"),
+      "day2 count2 cryptominer2 tracker2 cookie2 social2",
+      "Row has the columns in the right order"
     );
 
     is(
@@ -260,6 +343,11 @@ add_task(async function test_graph_display() {
       !allBars[3].querySelector(".cryptominer-bar"),
       "there is no cryptominer section 1 day ago."
     );
+    is(
+      allBars[3].getAttribute("aria-owns"),
+      "day3 count3 fingerprinter3 tracker3 cookie3 social3",
+      "Row has the columns in the right order"
+    );
 
     is(
       allBars[2].querySelectorAll(".inner-bar").length,
@@ -269,6 +357,11 @@ add_task(async function test_graph_display() {
     ok(
       !allBars[2].querySelector(".tracker-bar"),
       "there is no tracker section 1 day ago."
+    );
+    is(
+      allBars[2].getAttribute("aria-owns"),
+      "day4 count4 cryptominer4 fingerprinter4 cookie4 social4",
+      "Row has the columns in the right order"
     );
 
     is(
@@ -280,6 +373,11 @@ add_task(async function test_graph_display() {
       !allBars[1].querySelector(".social-bar"),
       "there is no social section 1 day ago."
     );
+    is(
+      allBars[1].getAttribute("aria-owns"),
+      "day5 count5 cryptominer5 fingerprinter5 tracker5 cookie5",
+      "Row has the columns in the right order"
+    );
 
     is(
       allBars[0].querySelectorAll(".inner-bar").length,
@@ -287,6 +385,11 @@ add_task(async function test_graph_display() {
       "6 days ago has no content"
     );
     ok(allBars[0].classList.contains("empty"), "6 days ago is an empty bar");
+    is(
+      allBars[0].getAttribute("aria-owns"),
+      "day6 ",
+      "Row has the columns in the right order"
+    );
 
     // Check that each tab has the correct aria-describedby value. This helps screen readers
     // know what type of tracker the reported tab number is referencing.

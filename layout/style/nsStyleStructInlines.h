@@ -135,7 +135,8 @@ bool nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
     return true;
   }
 
-  return aStyle.StyleEffects()->HasFilters();
+  return aStyle.StyleEffects()->HasFilters() ||
+         aStyle.StyleEffects()->HasBackdropFilters();
 }
 
 bool nsStyleDisplay::

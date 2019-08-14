@@ -137,13 +137,45 @@ go-to-privacy-settings = Go to Privacy Settings
 # This is the title attribute describing the Lockwise card's link to about:logins
 go-to-saved-logins = Go to Saved Logins
 
+## The title attribute is used to display the type of protection.
+## The aria-label is spoken by screen readers to make the visual graph accessible to blind users.
+##
+## Variables:
+##   $count (Number) - Number of specific trackers
+##   $percentage (Number) - Percentage this type of tracker contributes to the whole graph
+
 bar-tooltip-social =
   .title = Social Media Trackers
+  .aria-label =
+    { $count ->
+       [one] { $count } social media tracker ({ $percentage }%)
+      *[other] { $count } social media trackers ({ $percentage }%)
+    }
 bar-tooltip-cookie =
   .title = Cross-Site Tracking Cookies
+  .aria-label =
+    { $count ->
+       [one] { $count } cross-site tracking cookie ({ $percentage }%)
+      *[other] { $count } cross-site tracking cookies ({ $percentage }%)
+    }
 bar-tooltip-tracker =
   .title = Tracking Content
+  .aria-label =
+    { $count ->
+       [one] { $count } tracking content ({ $percentage }%)
+      *[other] { $count } tracking content ({ $percentage }%)
+    }
 bar-tooltip-fingerprinter =
   .title = Fingerprinters
+  .aria-label =
+    { $count ->
+       [one] { $count } fingerprinter ({ $percentage }%)
+      *[other] { $count } fingerprinters ({ $percentage }%)
+    }
 bar-tooltip-cryptominer =
   .title = Cryptominers
+  .aria-label =
+    { $count ->
+       [one] { $count } cryptominer ({ $percentage }%)
+      *[other] { $count } cryptominers ({ $percentage }%)
+    }

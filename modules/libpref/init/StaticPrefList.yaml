@@ -4620,6 +4620,13 @@
   value: 2
   mirror: always
 
+# Whether we expand the layout viewport even if the expanded viewport doesn't
+# contain any contents in the area.
+- name: layout.viewport_contains_no_contents_area
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------

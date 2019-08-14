@@ -11,6 +11,8 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,lockaspectratio,resizable`;
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
+const TOGGLE_ENABLED_PREF =
+  "media.videocontrols.picture-in-picture.video-toggle.enabled";
 
 /**
  * If closing the Picture-in-Picture player window occurred for a reason that
@@ -62,6 +64,11 @@ var PictureInPicture = {
         if (player) {
           player.setIsPlayingState(false);
         }
+        break;
+      }
+      case "PictureInPicture:OpenToggleContextMenu": {
+        let win = browser.ownerGlobal;
+        this.openToggleContextMenu(win, aMessage.data);
         break;
       }
     }
@@ -296,5 +303,38 @@ var PictureInPicture = {
         { once: true }
       );
     });
+  },
+
+  openToggleContextMenu(window, data) {
+    let document = window.document;
+    let popup = document.getElementById("pictureInPictureToggleContextMenu");
+
+    // We synthesize a new MouseEvent to propagate the inputSource to the
+    // subsequently triggered popupshowing event.
+    let newEvent = document.createEvent("MouseEvent");
+    newEvent.initNSMouseEvent(
+      "contextmenu",
+      true,
+      true,
+      null,
+      0,
+      data.screenX,
+      data.screenY,
+      0,
+      0,
+      false,
+      false,
+      false,
+      false,
+      0,
+      null,
+      0,
+      data.mozInputSource
+    );
+    popup.openPopupAtScreen(newEvent.screenX, newEvent.screenY, true, newEvent);
+  },
+
+  hideToggle() {
+    Services.prefs.setBoolPref(TOGGLE_ENABLED_PREF, false);
   },
 };

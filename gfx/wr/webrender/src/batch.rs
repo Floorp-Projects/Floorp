@@ -1632,9 +1632,19 @@ impl BatchBuilder {
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
+                                let textures = match render_tasks[cache_task_id].saved_index {
+                                    Some(saved_index) => BatchTextures {
+                                        colors: [
+                                            TextureSource::RenderTaskCache(saved_index, Swizzle::default()),
+                                            TextureSource::PrevPassAlpha,
+                                            TextureSource::Invalid,
+                                        ]
+                                    },
+                                    None => BatchTextures::render_target_cache(),
+                                };
                                 let batch_params = BrushBatchParameters::shared(
                                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
-                                    BatchTextures::render_target_cache(),
+                                    textures,
                                     [
                                         ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                         RasterizationSpace::Screen as i32,
@@ -2367,6 +2377,67 @@ impl BatchBuilder {
                     );
                 }
             }
+            PrimitiveInstanceKind::Backdrop { data_handle } => {
+                let prim_data = &ctx.data_stores.backdrop[data_handle];
+                let backdrop_pic_index = prim_data.kind.pic_index;
+                let backdrop_surface_index = ctx.prim_store.pictures[backdrop_pic_index.0]
+                    .raster_config
+                    .as_ref()
+                    .expect("backdrop surface should be alloc by now")
+                    .surface_index;
+
+                let backdrop_task_id = ctx.surfaces[backdrop_surface_index.0]
+                    .render_tasks
+                    .as_ref()
+                    .expect("backdrop task not available")
+                    .root;
+
+                let backdrop_uv_rect_address = render_tasks[backdrop_task_id]
+                    .get_texture_address(gpu_cache)
+                    .as_int();
+
+                let textures = BatchTextures::render_target_cache();
+                let batch_key = BatchKey::new(
+                    BatchKind::Brush(BrushBatchKind::Image(ImageBufferKind::Texture2DArray)),
+                    BlendMode::PremultipliedAlpha,
+                    textures,
+                );
+
+                let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
+                let backdrop_picture = &ctx.prim_store.pictures[backdrop_pic_index.0];
+                let prim_header = PrimitiveHeader {
+                    local_rect: backdrop_picture.snapped_local_rect,
+                    local_clip_rect: prim_info.combined_local_clip_rect,
+                    transform_id,
+                    snap_offsets,
+                    specific_prim_address: prim_cache_address,
+                };
+
+                let prim_header_index = prim_headers.push(
+                    &prim_header,
+                    z_id,
+                    [
+                        ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                        RasterizationSpace::Screen as i32,
+                        get_shader_opacity(1.0),
+                        0
+                    ],
+                );
+
+                self.add_brush_instance_to_batches(
+                    batch_key,
+                    batch_features,
+                    bounding_rect,
+                    z_id,
+                    INVALID_SEGMENT_INDEX,
+                    EdgeAaSegmentMask::empty(),
+                    OPAQUE_TASK_ADDRESS,
+                    BrushFlags::empty(),
+                    prim_header_index,
+                    backdrop_uv_rect_address,
+                    prim_vis_mask,
+                );
+            }
         }
     }
 
@@ -2695,7 +2766,8 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::RadialGradient { .. } |
             PrimitiveInstanceKind::PushClipChain |
             PrimitiveInstanceKind::PopClipChain |
-            PrimitiveInstanceKind::Clear { .. } => {
+            PrimitiveInstanceKind::Clear { .. } |
+            PrimitiveInstanceKind::Backdrop { .. } => {
                 return true;
             }
         };

@@ -75,49 +75,6 @@ const SyncedBookmarksMerger = Components.Constructor(
   "mozISyncedBookmarksMerger"
 );
 
-/**
- * A common table expression for all local items in Places, to be included in a
- * `WITH RECURSIVE` clause. We start at the roots, excluding tags (bug 424160),
- * and work our way down.
- *
- * Note that syncable items (`isSyncable`) descend from the four syncable roots.
- * Any other roots and their descendants, like the left pane root, left pane
- * queries, and custom roots, are non-syncable.
- *
- * Newer Desktops should never reupload non-syncable items (bug 1274496), and
- * should have removed them in Places migrations (bug 1310295). However, these
- * items might be orphaned in "unfiled", in which case they're seen as syncable
- * locally. If the server has the missing parents and roots, we'll determine
- * that the items are non-syncable when merging, remove them from Places, and
- * upload tombstones to the server.
- */
-XPCOMUtils.defineLazyGetter(
-  this,
-  "LocalItemsSQLFragment",
-  () => `
-  localItems(id, guid, parentId, parentGuid, position, type, title,
-             parentTitle, placeId, dateAdded, lastModified, syncChangeCounter,
-             isSyncable, level) AS (
-    SELECT b.id, b.guid, p.id, p.guid, b.position, b.type, b.title, p.title,
-           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
-           b.guid IN (${PlacesUtils.bookmarks.userContentRoots
-             .map(v => `'${v}'`)
-             .join(",")}), 0
-    FROM moz_bookmarks b
-    JOIN moz_bookmarks p ON p.id = b.parent
-    WHERE b.guid <> '${PlacesUtils.bookmarks.tagsGuid}' AND
-          p.guid = '${PlacesUtils.bookmarks.rootGuid}'
-    UNION ALL
-    SELECT b.id, b.guid, s.id, s.guid, b.position, b.type, b.title, s.title,
-           b.fk, b.dateAdded, b.lastModified, b.syncChangeCounter,
-           s.isSyncable, s.level + 1
-    FROM moz_bookmarks b
-    JOIN localItems s ON s.id = b.parent
-    WHERE b.guid <> '${PlacesUtils.bookmarks.rootGuid}'
-  )
-`
-);
-
 // These can be removed once they're exposed in a central location (bug
 // 1375896).
 const DB_URL_LENGTH_MAX = 65536;
@@ -307,6 +264,7 @@ class SyncedBookmarksMirror {
     // Automatically close the database connection on shutdown. `progress`
     // tracks state for shutdown hang reporting.
     this.progress = new ProgressTracker(recordStepTelemetry);
+    this.finalizeController = new AbortController();
     this.finalizeAt = finalizeAt;
     this.finalizeBound = () => this.finalize({ alsoCleanup: false });
     this.finalizeAt.addBlocker(
@@ -587,58 +545,40 @@ class SyncedBookmarksMirror {
    *         the next set of URLs after the next merge, or all remaining URLs
    *         when Places automatically fixes invalid frecencies on idle;
    *         whichever comes first.
+   * @param  {AbortSignal} [options.signal]
+   *         An abort signal that can be used to interrupt a merge when its
+   *         associated `AbortController` is aborted. If omitted, the merge can
+   *         still be interrupted when the mirror is finalized.
    * @return {Object.<String, BookmarkChangeRecord>}
    *         A changeset containing locally changed and reconciled records to
    *         upload to the server, and to store in the mirror once upload
    *         succeeds.
    */
-  async apply(options = {}) {
-    let hasChanges =
-      ("weakUpload" in options && options.weakUpload.length > 0) ||
-      (await this.hasChanges());
-    if (!hasChanges) {
-      MirrorLog.debug("No changes detected in both mirror and Places");
-      let limit =
-        "maxFrecenciesToRecalculate" in options
-          ? options.maxFrecenciesToRecalculate
-          : DEFAULT_MAX_FRECENCIES_TO_RECALCULATE;
-      await updateFrecencies(this.db, limit);
-      return {};
-    }
-    let changeRecords = await this.forceApply(options);
-    return changeRecords;
-  }
-
-  // Forces a full merge, even if there are no local or remote changes, and
-  // no items to weakly upload. Exposed for tests.
-  async forceApply({
-    localTimeSeconds = Date.now() / 1000,
-    remoteTimeSeconds = 0,
-    weakUpload = [],
-    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE,
+  async apply({
+    localTimeSeconds,
+    remoteTimeSeconds,
+    weakUpload,
+    maxFrecenciesToRecalculate,
+    signal = null,
   } = {}) {
     // We intentionally don't use `executeBeforeShutdown` in this function,
     // since merging can take a while for large trees, and we don't want to
     // block shutdown. Since all new items are in the mirror, we'll just try
     // to merge again on the next sync.
 
-    let observersToNotify = new BookmarkObserverRecorder(this.db, {
-      maxFrecenciesToRecalculate,
-    });
-
-    if (!(await this.validLocalRoots())) {
-      throw new SyncedBookmarksMirror.MergeError(
-        "Local tree has misparented root"
-      );
-    }
+    let finalizeOrInterruptSignal = anyAborted(
+      this.finalizeController.signal,
+      signal
+    );
 
     let changeRecords;
     try {
       changeRecords = await this.tryApply(
+        finalizeOrInterruptSignal,
         localTimeSeconds,
         remoteTimeSeconds,
-        observersToNotify,
-        weakUpload
+        weakUpload,
+        maxFrecenciesToRecalculate
       );
     } finally {
       this.progress.reset();
@@ -648,99 +588,29 @@ class SyncedBookmarksMirror {
   }
 
   async tryApply(
+    signal,
     localTimeSeconds,
     remoteTimeSeconds,
-    observersToNotify,
-    weakUpload
+    weakUpload,
+    maxFrecenciesToRecalculate = DEFAULT_MAX_FRECENCIES_TO_RECALCULATE
   ) {
-    await withTiming("Merging bookmarks in Rust", () => {
-      return new Promise((resolve, reject) => {
-        let callback = {
-          QueryInterface: ChromeUtils.generateQI([
-            Ci.mozISyncedBookmarksMirrorProgressListener,
-            Ci.mozISyncedBookmarksMirrorCallback,
-          ]),
-          // `mozISyncedBookmarksMirrorProgressListener` methods.
-          onFetchLocalTree: (took, count, problems) => {
-            this.progress.stepWithItemCount(
-              ProgressTracker.STEPS.FETCH_LOCAL_TREE,
-              took,
-              count
-            );
-            // We don't record local tree problems in validation telemetry.
-          },
-          onFetchRemoteTree: (took, count, problemsBag) => {
-            this.progress.stepWithItemCount(
-              ProgressTracker.STEPS.FETCH_REMOTE_TREE,
-              took,
-              count
-            );
-            // Record validation telemetry for problems in the remote tree.
-            let problems = bagToNamedCounts(problemsBag, [
-              "orphans",
-              "misparentedRoots",
-              "multipleParents",
-              "nonFolderParents",
-              "parentChildDisagreements",
-              "missingChildren",
-            ]);
-            this.recordValidationTelemetry(took, count, problems);
-          },
-          onMerge: (took, countsBag) => {
-            let counts = bagToNamedCounts(countsBag, [
-              "items",
-              "deletes",
-              "dupes",
-              "remoteRevives",
-              "localDeletes",
-              "localRevives",
-              "remoteDeletes",
-            ]);
-            this.progress.stepWithTelemetry(
-              ProgressTracker.STEPS.MERGE,
-              took,
-              counts
-            );
-          },
-          onApply: took => {
-            this.progress.stepWithTelemetry(ProgressTracker.STEPS.APPLY, took);
-          },
-          // `mozISyncedBookmarksMirrorCallback` methods.
-          handleSuccess: resolve,
-          handleError(code, message) {
-            switch (code) {
-              case Cr.NS_ERROR_STORAGE_BUSY:
-                reject(
-                  new SyncedBookmarksMirror.MergeConflictError(
-                    "Local tree changed during merge"
-                  )
-                );
-                break;
+    let wasMerged = await withTiming("Merging bookmarks in Rust", () =>
+      this.merge(signal, localTimeSeconds, remoteTimeSeconds, weakUpload)
+    );
 
-              case Cr.NS_ERROR_ABORT:
-                reject(
-                  new SyncedBookmarksMirror.ShutdownError(
-                    "Merge interrupted at shutdown"
-                  )
-                );
-                break;
-
-              default:
-                reject(new SyncedBookmarksMirror.MergeError(message));
-            }
-          },
-        };
-        this.merger.merge(
-          localTimeSeconds,
-          remoteTimeSeconds,
-          weakUpload,
-          callback
-        );
-      });
-    });
+    if (!wasMerged) {
+      MirrorLog.debug("No changes detected in both mirror and Places");
+      await updateFrecencies(this.db, maxFrecenciesToRecalculate);
+      return {};
+    }
 
     // At this point, the database is consistent, so we can notify observers and
     // inflate records for outgoing items.
+
+    let observersToNotify = new BookmarkObserverRecorder(this.db, {
+      maxFrecenciesToRecalculate,
+      signal,
+    });
 
     await withTiming(
       "Notifying Places observers",
@@ -752,6 +622,11 @@ class SyncedBookmarksMirror {
           // and the time we notify observers.
           await observersToNotify.notifyAll();
         } catch (ex) {
+          // Places relies on observer notifications to update internal caches.
+          // If notifying observers failed, these caches may be inconsistent,
+          // so we invalidate them just in case.
+          PlacesUtils.invalidateCachedGuids();
+          await PlacesUtils.keywords.invalidateCachedKeywords();
           MirrorLog.warn("Error notifying Places observers", ex);
         } finally {
           await this.db.executeTransaction(async () => {
@@ -774,7 +649,7 @@ class SyncedBookmarksMirror {
       "Fetching records for local items to upload",
       async () => {
         try {
-          let changeRecords = await this.fetchLocalChangeRecords();
+          let changeRecords = await this.fetchLocalChangeRecords(signal);
           return changeRecords;
         } finally {
           await this.db.execute(`DELETE FROM itemsToUpload`);
@@ -787,6 +662,107 @@ class SyncedBookmarksMirror {
           Object.keys(records).length
         )
     );
+  }
+
+  merge(
+    signal,
+    localTimeSeconds = Date.now() / 1000,
+    remoteTimeSeconds = 0,
+    weakUpload = []
+  ) {
+    return new Promise((resolve, reject) => {
+      let op = null;
+      function onAbort() {
+        signal.removeEventListener("abort", onAbort);
+        op.cancel();
+      }
+      let callback = {
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.mozISyncedBookmarksMirrorProgressListener,
+          Ci.mozISyncedBookmarksMirrorCallback,
+        ]),
+        // `mozISyncedBookmarksMirrorProgressListener` methods.
+        onFetchLocalTree: (took, count, problems) => {
+          this.progress.stepWithItemCount(
+            ProgressTracker.STEPS.FETCH_LOCAL_TREE,
+            took,
+            count
+          );
+          // We don't record local tree problems in validation telemetry.
+        },
+        onFetchRemoteTree: (took, count, problemsBag) => {
+          this.progress.stepWithItemCount(
+            ProgressTracker.STEPS.FETCH_REMOTE_TREE,
+            took,
+            count
+          );
+          // Record validation telemetry for problems in the remote tree.
+          let problems = bagToNamedCounts(problemsBag, [
+            "orphans",
+            "misparentedRoots",
+            "multipleParents",
+            "nonFolderParents",
+            "parentChildDisagreements",
+            "missingChildren",
+          ]);
+          this.recordValidationTelemetry(took, count, problems);
+        },
+        onMerge: (took, countsBag) => {
+          let counts = bagToNamedCounts(countsBag, [
+            "items",
+            "deletes",
+            "dupes",
+            "remoteRevives",
+            "localDeletes",
+            "localRevives",
+            "remoteDeletes",
+          ]);
+          this.progress.stepWithTelemetry(
+            ProgressTracker.STEPS.MERGE,
+            took,
+            counts
+          );
+        },
+        onApply: took => {
+          this.progress.stepWithTelemetry(ProgressTracker.STEPS.APPLY, took);
+        },
+        // `mozISyncedBookmarksMirrorCallback` methods.
+        handleSuccess(result) {
+          signal.removeEventListener("abort", onAbort);
+          resolve(result);
+        },
+        handleError(code, message) {
+          signal.removeEventListener("abort", onAbort);
+          switch (code) {
+            case Cr.NS_ERROR_STORAGE_BUSY:
+              reject(
+                new SyncedBookmarksMirror.MergeConflictError(
+                  "Local tree changed during merge"
+                )
+              );
+              break;
+
+            case Cr.NS_ERROR_ABORT:
+              reject(new SyncedBookmarksMirror.InterruptedError(message));
+              break;
+
+            default:
+              reject(new SyncedBookmarksMirror.MergeError(message));
+          }
+        },
+      };
+      op = this.merger.merge(
+        localTimeSeconds,
+        remoteTimeSeconds,
+        weakUpload,
+        callback
+      );
+      if (signal.aborted) {
+        op.cancel();
+      } else {
+        signal.addEventListener("abort", onAbort);
+      }
+    });
   }
 
   /**
@@ -1084,83 +1060,45 @@ class SyncedBookmarksMirror {
     );
   }
 
-  /*
-   * Checks if Places or mirror have any unsynced/unmerged changes.
-   *
-   * @return {Boolean}
-   *         `true` if something has changed.
-   */
-  async hasChanges() {
-    // In the first subquery, we check incoming items with needsMerge = true
-    // except the tombstones who don't correspond to any local bookmark because
-    // we don't store them yet, hence never "merged" (see bug 1343103).
-    let rows = await this.db.execute(`
-      SELECT
-      EXISTS (
-       SELECT 1
-       FROM items v
-       LEFT JOIN moz_bookmarks b ON v.guid = b.guid
-       WHERE v.needsMerge AND
-       (NOT v.isDeleted OR b.guid NOT NULL)
-      ) OR EXISTS (
-       WITH RECURSIVE
-       ${LocalItemsSQLFragment}
-       SELECT 1
-       FROM localItems
-       WHERE syncChangeCounter > 0
-      ) OR EXISTS (
-       SELECT 1
-       FROM moz_bookmarks_deleted
-      )
-      AS hasChanges
-    `);
-    return !!rows[0].getResultByName("hasChanges");
-  }
-
-  /**
-   * Ensures that all local roots are parented correctly. Misparented roots
-   * (bug 1453994, bug 1472127) might produce an invalid tree, so we check
-   * before merging, and rely on Places to reparent any invalid roots after
-   * the next restart or maintenance run.
-   *
-   * @return {Boolean}
-   *         `true` if the Places root, and four syncable roots, are parented
-   *         correctly.
-   */
-  async validLocalRoots() {
-    let rows = await this.db.execute(`
-      SELECT EXISTS(SELECT 1 FROM moz_bookmarks
-                    WHERE guid = '${PlacesUtils.bookmarks.rootGuid}' AND
-                          parent = 0) AND
-             (SELECT COUNT(*) FROM moz_bookmarks b
-              JOIN moz_bookmarks p ON p.id = b.parent
-              WHERE b.guid IN (${PlacesUtils.bookmarks.userContentRoots.map(
-                v => `'${v}'`
-              )}) AND
-                    p.guid = '${PlacesUtils.bookmarks.rootGuid}') =
-             ${PlacesUtils.bookmarks.userContentRoots.length} AS areValid`);
-    return !!rows[0].getResultByName("areValid");
-  }
-
   /**
    * Inflates Sync records for all staged outgoing items.
    *
+   * @param  {AbortSignal} signal
+   *         Stops fetching records when the associated `AbortController`
+   *         is aborted.
    * @return {Object.<String, BookmarkChangeRecord>}
    *         A changeset containing Sync record cleartexts for outgoing items
    *         and tombstones, keyed by their Sync record IDs.
    */
-  async fetchLocalChangeRecords() {
+  async fetchLocalChangeRecords(signal) {
     let changeRecords = {};
     let childRecordIdsByLocalParentId = new Map();
     let tagsByLocalId = new Map();
 
-    let childGuidRows = await this.db.execute(`
-      SELECT parentId, guid FROM structureToUpload
-      ORDER BY parentId, position`);
+    let childGuidRows = [];
+    await this.db.execute(
+      `SELECT parentId, guid FROM structureToUpload
+       ORDER BY parentId, position`,
+      null,
+      (row, cancel) => {
+        if (signal.aborted) {
+          cancel();
+        } else {
+          // `Sqlite.jsm` callbacks swallow exceptions (bug 1387775), so we
+          // accumulate all rows in an array, and process them after.
+          childGuidRows.push(row);
+        }
+      }
+    );
 
     await Async.yieldingForEach(
       childGuidRows,
       row => {
+        if (signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while fetching structure to upload"
+          );
+        }
         let localParentId = row.getResultByName("parentId");
         let childRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(
           row.getResultByName("guid")
@@ -1175,12 +1113,27 @@ class SyncedBookmarksMirror {
       yieldState
     );
 
-    let tagRows = await this.db.execute(`
-      SELECT id, tag FROM tagsToUpload`);
+    let tagRows = [];
+    await this.db.execute(
+      `SELECT id, tag FROM tagsToUpload`,
+      null,
+      (row, cancel) => {
+        if (signal.aborted) {
+          cancel();
+        } else {
+          tagRows.push(row);
+        }
+      }
+    );
 
     await Async.yieldingForEach(
       tagRows,
       row => {
+        if (signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while fetching tags to upload"
+          );
+        }
         let localId = row.getResultByName("id");
         let tag = row.getResultByName("tag");
         let tags = tagsByLocalId.get(localId);
@@ -1193,16 +1146,31 @@ class SyncedBookmarksMirror {
       yieldState
     );
 
-    let itemRows = await this.db.execute(`
-      SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
-             tagFolderName, keyword, url, IFNULL(title, '') AS title,
-             position, parentGuid,
-             IFNULL(parentTitle, '') AS parentTitle, dateAdded
-      FROM itemsToUpload`);
+    let itemRows = [];
+    await this.db.execute(
+      `SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
+              tagFolderName, keyword, url, IFNULL(title, '') AS title,
+              position, parentGuid,
+              IFNULL(parentTitle, '') AS parentTitle, dateAdded
+       FROM itemsToUpload`,
+      null,
+      (row, cancel) => {
+        if (signal.interrupted) {
+          cancel();
+        } else {
+          itemRows.push(row);
+        }
+      }
+    );
 
     await Async.yieldingForEach(
       itemRows,
       row => {
+        if (signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while fetching items to upload"
+          );
+        }
         let syncChangeCounter = row.getResultByName("syncChangeCounter");
 
         let guid = row.getResultByName("guid");
@@ -1348,7 +1316,8 @@ class SyncedBookmarksMirror {
     if (!this.finalizePromise) {
       this.finalizePromise = (async () => {
         this.progress.step(ProgressTracker.STEPS.FINALIZE);
-        this.merger.finalize();
+        this.finalizeController.abort();
+        this.merger.reset();
         if (alsoCleanup) {
           // If the mirror is finalized explicitly, clean up temp entities and
           // detach from the mirror database. We can skip this for automatic
@@ -1374,18 +1343,15 @@ SyncedBookmarksMirror.META_KEY = {
 };
 
 /**
- * An error thrown when the merge was interrupted at shutdown.
+ * An error thrown when the merge was interrupted.
  */
-class ShutdownError extends Error {
+class InterruptedError extends Error {
   constructor(message) {
     super(message);
-    this.name = "ShutdownError";
-    // Set so that `Async.isShutdownException` detects this as a shutdown
-    // error.
-    this.appIsShuttingDown = true;
+    this.name = "InterruptedError";
   }
 }
-SyncedBookmarksMirror.ShutdownError = ShutdownError;
+SyncedBookmarksMirror.InterruptedError = InterruptedError;
 
 /**
  * An error thrown when the merge failed for an unexpected reason.
@@ -2026,9 +1992,10 @@ async function withTiming(name, func, recordTiming) {
  * the merge.
  */
 class BookmarkObserverRecorder {
-  constructor(db, { maxFrecenciesToRecalculate }) {
+  constructor(db, { maxFrecenciesToRecalculate, signal }) {
     this.db = db;
     this.maxFrecenciesToRecalculate = maxFrecenciesToRecalculate;
+    this.signal = signal;
     this.placesEvents = [];
     this.itemRemovedNotifications = [];
     this.guidChangedArgs = [];
@@ -2048,6 +2015,11 @@ class BookmarkObserverRecorder {
       await PlacesUtils.keywords.invalidateCachedKeywords();
     }
     await this.notifyBookmarkObservers();
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted before recalculating frecencies for new URLs"
+      );
+    }
     await updateFrecencies(this.db, this.maxFrecenciesToRecalculate);
   }
 
@@ -2061,15 +2033,18 @@ class BookmarkObserverRecorder {
     // that we update caches in the correct order (bug 1297941). We also order
     // by parent and position so that the notifications are well-ordered for
     // tests.
-    let removedItemRows = await this.db.execute(`
-      SELECT v.itemId AS id, v.parentId, v.parentGuid, v.position, v.type,
-             h.url, v.guid, v.isUntagging
-      FROM itemsRemoved v
-      LEFT JOIN moz_places h ON h.id = v.placeId
-      ORDER BY v.level DESC, v.parentId, v.position`);
-    await Async.yieldingForEach(
-      removedItemRows,
-      row => {
+    await this.db.execute(
+      `SELECT v.itemId AS id, v.parentId, v.parentGuid, v.position, v.type,
+              h.url, v.guid, v.isUntagging
+       FROM itemsRemoved v
+       LEFT JOIN moz_places h ON h.id = v.placeId
+       ORDER BY v.level DESC, v.parentId, v.position`,
+      null,
+      (row, cancel) => {
+        if (this.signal.aborted) {
+          cancel();
+          return;
+        }
         let info = {
           id: row.getResultByName("id"),
           parentId: row.getResultByName("parentId"),
@@ -2081,21 +2056,28 @@ class BookmarkObserverRecorder {
           isUntagging: row.getResultByName("isUntagging"),
         };
         this.noteItemRemoved(info);
-      },
-      yieldState
+      }
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted while recording observer notifications for removed items"
+      );
+    }
 
     MirrorLog.trace("Recording observer notifications for changed GUIDs");
-    let changedGuidRows = await this.db.execute(`
-      SELECT b.id, b.lastModified, b.type, b.guid AS newGuid,
-             c.oldGuid, p.id AS parentId, p.guid AS parentGuid
-      FROM guidsChanged c
-      JOIN moz_bookmarks b ON b.id = c.itemId
-      JOIN moz_bookmarks p ON p.id = b.parent
-      ORDER BY c.level, p.id, b.position`);
-    await Async.yieldingForEach(
-      changedGuidRows,
-      row => {
+    await this.db.execute(
+      `SELECT b.id, b.lastModified, b.type, b.guid AS newGuid,
+              c.oldGuid, p.id AS parentId, p.guid AS parentGuid
+       FROM guidsChanged c
+       JOIN moz_bookmarks b ON b.id = c.itemId
+       JOIN moz_bookmarks p ON p.id = b.parent
+       ORDER BY c.level, p.id, b.position`,
+      null,
+      (row, cancel) => {
+        if (this.signal.aborted) {
+          cancel();
+          return;
+        }
         let info = {
           id: row.getResultByName("id"),
           lastModified: row.getResultByName("lastModified"),
@@ -2106,23 +2088,30 @@ class BookmarkObserverRecorder {
           parentGuid: row.getResultByName("parentGuid"),
         };
         this.noteGuidChanged(info);
-      },
-      yieldState
+      }
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted while recording observer notifications for changed GUIDs"
+      );
+    }
 
     MirrorLog.trace("Recording observer notifications for new items");
-    let newItemRows = await this.db.execute(`
-      SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
+    await this.db.execute(
+      `SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
              IFNULL(b.title, '') AS title, b.dateAdded, b.guid,
              p.guid AS parentGuid, n.isTagging, n.keywordChanged
-      FROM itemsAdded n
-      JOIN moz_bookmarks b ON b.guid = n.guid
-      JOIN moz_bookmarks p ON p.id = b.parent
-      LEFT JOIN moz_places h ON h.id = b.fk
-      ORDER BY n.level, p.id, b.position`);
-    await Async.yieldingForEach(
-      newItemRows,
-      row => {
+       FROM itemsAdded n
+       JOIN moz_bookmarks b ON b.guid = n.guid
+       JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       ORDER BY n.level, p.id, b.position`,
+      null,
+      (row, cancel) => {
+        if (this.signal.aborted) {
+          cancel();
+          return;
+        }
         let info = {
           id: row.getResultByName("id"),
           parentId: row.getResultByName("parentId"),
@@ -2139,23 +2128,30 @@ class BookmarkObserverRecorder {
         if (row.getResultByName("keywordChanged")) {
           this.shouldInvalidateKeywords = true;
         }
-      },
-      yieldState
+      }
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted while recording observer notifications for new items"
+      );
+    }
 
     MirrorLog.trace("Recording observer notifications for moved items");
-    let movedItemRows = await this.db.execute(`
-      SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
-             p.guid AS newParentGuid, c.oldParentGuid,
-             b.position AS newPosition, c.oldPosition, h.url
-      FROM itemsMoved c
-      JOIN moz_bookmarks b ON b.id = c.itemId
-      JOIN moz_bookmarks p ON p.id = b.parent
-      LEFT JOIN moz_places h ON h.id = b.fk
-      ORDER BY c.level, newParentId, newPosition`);
-    await Async.yieldingForEach(
-      movedItemRows,
-      row => {
+    await this.db.execute(
+      `SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
+              p.guid AS newParentGuid, c.oldParentGuid,
+              b.position AS newPosition, c.oldPosition, h.url
+       FROM itemsMoved c
+       JOIN moz_bookmarks b ON b.id = c.itemId
+       JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       ORDER BY c.level, newParentId, newPosition`,
+      null,
+      (row, cancel) => {
+        if (this.signal.aborted) {
+          cancel();
+          return;
+        }
         let info = {
           id: row.getResultByName("id"),
           guid: row.getResultByName("guid"),
@@ -2169,27 +2165,34 @@ class BookmarkObserverRecorder {
           urlHref: row.getResultByName("url"),
         };
         this.noteItemMoved(info);
-      },
-      yieldState
+      }
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted while recording observer notifications for moved items"
+      );
+    }
 
     MirrorLog.trace("Recording observer notifications for changed items");
-    let changedItemRows = await this.db.execute(`
-      SELECT b.id, b.guid, b.lastModified, b.type,
-             IFNULL(b.title, '') AS newTitle,
-             IFNULL(c.oldTitle, '') AS oldTitle,
-             h.url AS newURL, i.url AS oldURL,
-             p.id AS parentId, p.guid AS parentGuid,
-             c.keywordChanged
-      FROM itemsChanged c
-      JOIN moz_bookmarks b ON b.id = c.itemId
-      JOIN moz_bookmarks p ON p.id = b.parent
-      LEFT JOIN moz_places h ON h.id = b.fk
-      LEFT JOIN moz_places i ON i.id = c.oldPlaceId
-      ORDER BY c.level, p.id, b.position`);
-    await Async.yieldingForEach(
-      changedItemRows,
-      row => {
+    await this.db.execute(
+      `SELECT b.id, b.guid, b.lastModified, b.type,
+              IFNULL(b.title, '') AS newTitle,
+              IFNULL(c.oldTitle, '') AS oldTitle,
+              h.url AS newURL, i.url AS oldURL,
+              p.id AS parentId, p.guid AS parentGuid,
+              c.keywordChanged
+       FROM itemsChanged c
+       JOIN moz_bookmarks b ON b.id = c.itemId
+       JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       LEFT JOIN moz_places i ON i.id = c.oldPlaceId
+       ORDER BY c.level, p.id, b.position`,
+      null,
+      (row, cancel) => {
+        if (this.signal.aborted) {
+          cancel();
+          return;
+        }
         let info = {
           id: row.getResultByName("id"),
           guid: row.getResultByName("guid"),
@@ -2206,9 +2209,13 @@ class BookmarkObserverRecorder {
         if (row.getResultByName("keywordChanged")) {
           this.shouldInvalidateKeywords = true;
         }
-      },
-      yieldState
+      }
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted while recording observer notifications for changed items"
+      );
+    }
   }
 
   noteItemAdded(info) {
@@ -2321,6 +2328,11 @@ class BookmarkObserverRecorder {
     await Async.yieldingForEach(
       this.itemRemovedNotifications,
       info => {
+        if (this.signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while notifying observers for removed items"
+          );
+        }
         this.notifyObserversWithInfo(observers, "onItemRemoved", info);
       },
       yieldState
@@ -2328,6 +2340,11 @@ class BookmarkObserverRecorder {
     await Async.yieldingForEach(
       this.guidChangedArgs,
       args => {
+        if (this.signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while notifying observers for changed GUIDs"
+          );
+        }
         this.notifyObserversWithInfo(observers, "onItemChanged", {
           isTagging: false,
           args,
@@ -2335,10 +2352,20 @@ class BookmarkObserverRecorder {
       },
       yieldState
     );
+    if (this.signal.aborted) {
+      throw new SyncedBookmarksMirror.InterruptedError(
+        "Interrupted before notifying observers for new items"
+      );
+    }
     PlacesObservers.notifyListeners(this.placesEvents);
     await Async.yieldingForEach(
       this.itemMovedArgs,
       args => {
+        if (this.signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted before notifying observers for moved items"
+          );
+        }
         this.notifyObserversWithInfo(observers, "onItemMoved", {
           isTagging: false,
           args,
@@ -2349,6 +2376,11 @@ class BookmarkObserverRecorder {
     await Async.yieldingForEach(
       this.itemChangedArgs,
       args => {
+        if (this.signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted before notifying observers for changed items"
+          );
+        }
         this.notifyObserversWithInfo(observers, "onItemChanged", {
           isTagging: false,
           args,
@@ -2411,13 +2443,42 @@ async function updateFrecencies(db, limit) {
     )`,
     { limit }
   );
-
-  // Trigger frecency updates for all affected origins.
-  await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
 }
 
 function bagToNamedCounts(bag, names) {
   return names.map(name => ({ name, count: bag.getProperty(name) }));
+}
+
+/**
+ * Returns an `AbortSignal` that aborts if either `finalizeSignal` or
+ * `interruptSignal` aborts. This is like `Promise.race`, but for
+ * cancellations.
+ *
+ * @param  {AbortSignal} finalizeSignal
+ * @param  {AbortSignal?} signal
+ * @return {AbortSignal}
+ */
+function anyAborted(finalizeSignal, interruptSignal = null) {
+  if (finalizeSignal.aborted || !interruptSignal) {
+    // If the mirror was already finalized, or we don't have an interrupt
+    // signal for this merge, just use the finalize signal.
+    return finalizeSignal;
+  }
+  if (interruptSignal.aborted) {
+    // If the merge was interrupted, return its already-aborted signal.
+    return interruptSignal;
+  }
+  // Otherwise, we return a new signal that aborts if either the mirror is
+  // finalized, or the merge is interrupted, whichever happens first.
+  let controller = new AbortController();
+  function onAbort() {
+    finalizeSignal.removeEventListener("abort", onAbort);
+    interruptSignal.removeEventListener("abort", onAbort);
+    controller.abort();
+  }
+  finalizeSignal.addEventListener("abort", onAbort);
+  interruptSignal.addEventListener("abort", onAbort);
+  return controller.signal;
 }
 
 // In conclusion, this is why bookmark syncing is hard.

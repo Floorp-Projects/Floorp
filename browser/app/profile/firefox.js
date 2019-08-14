@@ -329,6 +329,9 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
+// Whether the quantum bar displays the major design update.
+pref("browser.urlbar.megabar", false);
+
 pref("browser.urlbar.openViewOnFocus", false);
 
 pref("browser.altClickSave", false);

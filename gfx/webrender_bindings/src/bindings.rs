@@ -2085,6 +2085,9 @@ pub struct WrStackingContextParams {
     /// True if picture caching should be enabled for this stacking context.
     pub cache_tiles: bool,
     pub mix_blend_mode: MixBlendMode,
+    /// True if this stacking context is a backdrop root.
+    /// https://drafts.fxtf.org/filter-effects-2/#BackdropRoot
+    pub is_backdrop_root: bool,
 }
 
 #[no_mangle]
@@ -2206,7 +2209,8 @@ pub extern "C" fn wr_dp_push_stacking_context(
                                 &r_filter_datas,
                                 &[],
                                 glyph_raster_space,
-                                params.cache_tiles);
+                                params.cache_tiles,
+                                params.is_backdrop_root);
 
     result
 }
@@ -2425,6 +2429,60 @@ pub extern "C" fn wr_dp_push_rect_with_parent_clip(
     state.frame_builder.dl_builder.push_rect(
         &prim_info,
         color,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_backdrop_filter_with_parent_clip(
+    state: &mut WrState,
+    rect: LayoutRect,
+    clip: LayoutRect,
+    is_backface_visible: bool,
+    parent: &WrSpaceAndClip,
+    filters: *const FilterOp,
+    filter_count: usize,
+    filter_datas: *const WrFilterData,
+    filter_datas_count: usize,
+) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let c_filters = unsafe { make_slice(filters, filter_count) };
+    let filters : Vec<FilterOp> = c_filters.iter()
+        .map(|c_filter| { c_filter.clone() })
+        .collect();
+
+    let c_filter_datas = unsafe { make_slice(filter_datas, filter_datas_count) };
+    let filter_datas : Vec<FilterData> = c_filter_datas.iter().map(|c_filter_data| {
+        FilterData {
+            func_r_type: c_filter_data.funcR_type,
+            r_values: unsafe { make_slice(c_filter_data.R_values, c_filter_data.R_values_count).to_vec() },
+            func_g_type: c_filter_data.funcG_type,
+            g_values: unsafe { make_slice(c_filter_data.G_values, c_filter_data.G_values_count).to_vec() },
+            func_b_type: c_filter_data.funcB_type,
+            b_values: unsafe { make_slice(c_filter_data.B_values, c_filter_data.B_values_count).to_vec() },
+            func_a_type: c_filter_data.funcA_type,
+            a_values: unsafe { make_slice(c_filter_data.A_values, c_filter_data.A_values_count).to_vec() },
+        }
+    }).collect();
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let clip_rect = clip.intersection(&rect);
+    if clip_rect.is_none() { return; }
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip_rect.unwrap(),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
+    state.frame_builder.dl_builder.push_backdrop_filter(
+        &prim_info,
+        &filters,
+        &filter_datas,
+        &[],
     );
 }
 
