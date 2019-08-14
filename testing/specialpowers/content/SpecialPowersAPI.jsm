@@ -748,9 +748,6 @@ class SpecialPowersAPI extends JSWindowActorChild {
    * To get the expected data, you should modify
    * SpecialPowersObserver.prototype._registerObservers.observe. Or the message
    * you received from messageManager will only contain 'aData' from Service.obs.
-   *
-   * NOTICE: there is no implementation of _addMessageListener in
-   * ChromePowers.js
    */
   registerObservers(topic) {
     var msg = {
