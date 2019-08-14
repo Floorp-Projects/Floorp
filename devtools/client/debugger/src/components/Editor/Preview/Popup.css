@@ -52,6 +52,10 @@
   text-decoration: underline;
 }
 
+.popover .preview-popup .object-node {
+  padding-inline-start: 0px;
+}
+
 .preview-token:hover {
   cursor: default;
 }
