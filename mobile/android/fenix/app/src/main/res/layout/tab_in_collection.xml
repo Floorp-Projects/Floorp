@@ -21,6 +21,7 @@
 
         <ImageView
                 android:id="@+id/collection_tab_icon"
+                android:importantForAccessibility="no"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginTop="23dp"
@@ -62,16 +63,15 @@
 
         <ImageButton
                 android:id="@+id/collection_tab_close_button"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/close_tab"
                 android:src="@drawable/ic_close"
-                android:layout_marginTop="13dp"
-                android:layout_marginEnd="13dp"
                 android:alpha="0.8"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
         <View
                 android:id="@+id/divider_line"

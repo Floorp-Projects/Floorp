@@ -78,32 +78,30 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/collection_share_button"
                 app:layout_constraintStart_toStartOf="@id/collection_title"
-                app:layout_constraintTop_toBottomOf="@id/collection_share_button"
+                app:layout_constraintTop_toBottomOf="@id/collection_title"
                 tools:text="@tools:sample/lorem/random" />
 
         <ImageButton
                 android:id="@+id/collection_share_button"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="30dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/share_button_content_description"
                 android:src="@drawable/ic_hollow_share"
                 app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
+                app:layout_constraintBottom_toBottomOf="@id/collection_icon"
                 app:layout_constraintTop_toTopOf="@id/collection_icon" />
 
         <ImageButton
                 android:id="@+id/collection_overflow_button"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="4.5dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/collection_menu_button_content_description"
                 android:src="@drawable/ic_menu"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="@id/collection_icon"
+                app:layout_constraintBottom_toBottomOf="@id/collection_icon"/>
 
         <View
                 android:id="@+id/selected_border"
