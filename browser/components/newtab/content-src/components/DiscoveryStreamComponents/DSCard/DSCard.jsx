@@ -10,6 +10,13 @@ export class DSCard extends React.PureComponent {
     super(props);
 
     this.onLinkClick = this.onLinkClick.bind(this);
+    this.setPlaceholderRef = element => {
+      this.placholderElement = element;
+    };
+
+    this.state = {
+      isSeen: false,
+    };
   }
 
   onLinkClick(event) {
@@ -40,9 +47,45 @@ export class DSCard extends React.PureComponent {
     }
   }
 
+  onSeen(entries) {
+    if (this.state) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
+        if (this.placholderElement) {
+          this.observer.unobserve(this.placholderElement);
+        }
+
+        // Stop observing since element has been seen
+        this.setState({
+          isSeen: true,
+        });
+      }
+    }
+  }
+
+  componentDidMount() {
+    if (this.placholderElement) {
+      this.observer = new IntersectionObserver(this.onSeen.bind(this));
+      this.observer.observe(this.placholderElement);
+    }
+  }
+
+  componentWillUnmount() {
+    // Remove observer on unmount
+    if (this.observer && this.placholderElement) {
+      this.observer.unobserve(this.placholderElement);
+    }
+  }
+
   render() {
+    if (this.props.placeholder || !this.state.isSeen) {
+      return (
+        <div className="ds-card placeholder" ref={this.setPlaceholderRef} />
+      );
+    }
     return (
-      <div className={`ds-card${this.props.placeholder ? " placeholder" : ""}`}>
+      <div className="ds-card">
         <SafeAnchor
           className="ds-card-link"
           dispatch={this.props.dispatch}
@@ -83,20 +126,18 @@ export class DSCard extends React.PureComponent {
             source={this.props.type}
           />
         </SafeAnchor>
-        {!this.props.placeholder && (
-          <DSLinkMenu
-            id={this.props.id}
-            index={this.props.pos}
-            dispatch={this.props.dispatch}
-            url={this.props.url}
-            title={this.props.title}
-            source={this.props.source}
-            type={this.props.type}
-            pocket_id={this.props.pocket_id}
-            shim={this.props.shim}
-            bookmarkGuid={this.props.bookmarkGuid}
-          />
-        )}
+        <DSLinkMenu
+          id={this.props.id}
+          index={this.props.pos}
+          dispatch={this.props.dispatch}
+          url={this.props.url}
+          title={this.props.title}
+          source={this.props.source}
+          type={this.props.type}
+          pocket_id={this.props.pocket_id}
+          shim={this.props.shim}
+          bookmarkGuid={this.props.bookmarkGuid}
+        />
       </div>
     );
   }
