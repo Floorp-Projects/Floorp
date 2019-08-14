@@ -5466,6 +5466,8 @@ var gCSSProperties = {
       "flex",
       "inline-flex",
       "list-item",
+      "inline list-item",
+      "inline flow-root list-item",
       "inline-block",
       "table",
       "inline-table",
