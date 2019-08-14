@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -13,8 +14,8 @@ const {
 } = require("devtools/shared/specs/animation");
 
 class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
-  constructor(conn, form) {
-    super(conn, form);
+  constructor(conn, targetFront, parentFront) {
+    super(conn, targetFront, parentFront);
 
     this.state = {};
     this.before("changed", this.onChanged.bind(this));
@@ -200,8 +201,8 @@ exports.AnimationPlayerFront = AnimationPlayerFront;
 registerFront(AnimationPlayerFront);
 
 class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "animationsActor";

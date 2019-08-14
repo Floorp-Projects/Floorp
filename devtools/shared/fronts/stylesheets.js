@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {
@@ -31,8 +32,8 @@ loader.lazyRequireGetter(
  * Corresponding client-side front for a MediaRuleActor.
  */
 class MediaRuleFront extends FrontClassWithSpec(mediaRuleSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
     this.on("matches-change", this._onMatchesChange);
@@ -74,8 +75,8 @@ registerFront(MediaRuleFront);
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
-  constructor(conn, form) {
-    super(conn, form);
+  constructor(conn, targetFront, parentFront) {
+    super(conn, targetFront, parentFront);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     this.on("property-change", this._onPropertyChange);
@@ -151,8 +152,8 @@ registerFront(StyleSheetFront);
  * The corresponding Front object for the StyleSheetsActor.
  */
 class StyleSheetsFront extends FrontClassWithSpec(styleSheetsSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront, parentFront) {
+    super(client, targetFront, parentFront);
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "styleSheetsActor";

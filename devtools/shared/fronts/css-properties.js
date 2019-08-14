@@ -1,14 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "CSS_PROPERTIES_DB",
-  "devtools/shared/css/properties-db",
-  true
-);
+const {
+  FrontClassWithSpec,
+  registerFront,
+} = require("devtools/shared/protocol");
+const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 
 loader.lazyRequireGetter(
   this,
@@ -16,12 +16,18 @@ loader.lazyRequireGetter(
   "devtools/shared/css/color-db",
   true
 );
-
-const {
-  FrontClassWithSpec,
-  registerFront,
-} = require("devtools/shared/protocol");
-const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
+loader.lazyRequireGetter(
+  this,
+  "CSS_PROPERTIES_DB",
+  "devtools/shared/css/properties-db",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "CSS_TYPES",
+  "devtools/shared/css/constants",
+  true
+);
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -38,23 +44,6 @@ var IS_VARIABLE_TOKEN = new RegExp(
   "i"
 );
 
-loader.lazyRequireGetter(
-  this,
-  "CSS_TYPES",
-  "devtools/shared/css/constants",
-  true
-);
-
-/**
- * Check that this is a CSS variable.
- *
- * @param {String} input
- * @return {Boolean}
- */
-function isCssVariable(input) {
-  return !!input.match(IS_VARIABLE_TOKEN);
-}
-
 var cachedCssProperties = new WeakMap();
 
 /**
@@ -64,26 +53,12 @@ var cachedCssProperties = new WeakMap();
  * properties the current server supports.
  */
 class CssPropertiesFront extends FrontClassWithSpec(cssPropertiesSpec) {
-  constructor(client) {
-    super(client);
+  constructor(client, targetFront) {
+    super(client, targetFront);
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "cssPropertiesActor";
   }
-}
-
-/**
- * Query the feature supporting status in the featureSet.
- *
- * @param {Hashmap} featureSet the feature set hashmap
- * @param {String} feature the feature name string
- * @return {Boolean} has the feature or not
- */
-function hasFeature(featureSet, feature) {
-  if (feature in featureSet) {
-    return featureSet[feature];
-  }
-  return false;
 }
 
 /**
@@ -208,6 +183,30 @@ CssProperties.prototype = {
     return this.cssColor4ColorFunction;
   },
 };
+
+/**
+ * Check that this is a CSS variable.
+ *
+ * @param {String} input
+ * @return {Boolean}
+ */
+function isCssVariable(input) {
+  return !!input.match(IS_VARIABLE_TOKEN);
+}
+
+/**
+ * Query the feature supporting status in the featureSet.
+ *
+ * @param {Hashmap} featureSet the feature set hashmap
+ * @param {String} feature the feature name string
+ * @return {Boolean} has the feature or not
+ */
+function hasFeature(featureSet, feature) {
+  if (feature in featureSet) {
+    return featureSet[feature];
+  }
+  return false;
+}
 
 /**
  * Create a CssProperties object with a fully loaded CSS database. The

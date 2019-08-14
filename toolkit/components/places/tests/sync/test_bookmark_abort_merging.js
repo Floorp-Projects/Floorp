@@ -9,10 +9,9 @@ add_task(async function test_abort_merging() {
   let buf = await openMirror("abort_merging");
 
   let controller = new AbortController();
-  let promiseWasMerged = buf.merge(controller.signal);
   controller.abort();
   await Assert.rejects(
-    promiseWasMerged,
+    buf.merge(controller.signal),
     /Operation aborted/,
     "Should abort merge when signaled"
   );

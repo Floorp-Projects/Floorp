@@ -325,15 +325,14 @@ types.addActorType = function(name) {
           lazyLoadFront(name);
         }
 
+        const parentFront = ctx.marshallPool();
+        const targetFront = parentFront.targetFront;
+
         // Use intermediate Class variable to please eslint requiring
         // a capital letter for all constructors.
         const Class = type.frontClass;
-        front = new Class(ctx.conn);
+        front = new Class(ctx.conn, targetFront, parentFront);
         front.actorID = actorID;
-        const parentFront = ctx.marshallPool();
-        // If this is a child of a target-scoped front, propagate the target front to the
-        // child front that it manages.
-        front.targetFront = parentFront.targetFront;
         parentFront.manage(front);
       }
 
@@ -502,16 +501,14 @@ function getFront(client, typeName, form, target = null) {
   const type = types.getType(typeName);
   if (!type) {
     throw new Error(`No spec for front type '${typeName}'.`);
-  }
-  if (!type.frontClass) {
+  } else if (!type.frontClass) {
     lazyLoadFront(typeName);
   }
+
   // Use intermediate Class variable to please eslint requiring
   // a capital letter for all constructors.
   const Class = type.frontClass;
-  const instance = new Class(client);
-  // Set the targetFront for target-scoped fronts.
-  instance.targetFront = target;
+  const instance = new Class(client, target, target);
   const { formAttributeName } = instance;
   if (!formAttributeName) {
     throw new Error(`Can't find the form attribute name for ${typeName}`);

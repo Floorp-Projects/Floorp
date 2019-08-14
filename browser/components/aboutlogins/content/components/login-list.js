@@ -123,7 +123,11 @@ export default class LoginList extends HTMLElement {
     switch (event.type) {
       case "click": {
         if (event.originalTarget == this._createLoginButton) {
-          window.dispatchEvent(new CustomEvent("AboutLoginsShowBlankLogin"));
+          window.dispatchEvent(
+            new CustomEvent("AboutLoginsShowBlankLogin", {
+              cancelable: true,
+            })
+          );
           recordTelemetryEvent({ object: "new_login", method: "new" });
           return;
         }
@@ -192,8 +196,10 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "AboutLoginsShowBlankLogin": {
-        this._selectedGuid = null;
-        this._setListItemAsSelected(this._blankLoginListItem);
+        if (!event.defaultPrevented) {
+          this._selectedGuid = null;
+          this._setListItemAsSelected(this._blankLoginListItem);
+        }
         break;
       }
       case "keydown": {

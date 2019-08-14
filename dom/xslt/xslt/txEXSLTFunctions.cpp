@@ -158,7 +158,7 @@ enum class txEXSLTType {
   TEST,
 
   // http://exslt.org/sets
-  DIFFERENCE,
+  DIFFERENCE_,  // not DIFFERENCE to avoid a conflict with a winuser.h macro
   DISTINCT,
   HAS_SAME_NODE,
   INTERSECTION,
@@ -284,7 +284,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
 
       return NS_OK;
     }
-    case txEXSLTType::DIFFERENCE:
+    case txEXSLTType::DIFFERENCE_:
     case txEXSLTType::INTERSECTION: {
       RefPtr<txNodeSet> nodes1;
       rv = evaluateToNodeSet(mParams[0], aContext, getter_AddRefs(nodes1));
@@ -793,7 +793,7 @@ extern bool TX_InitEXSLTFunction() {
 
   EXSLT_FUNCS(
       "http://exslt.org/sets", txEXSLTFunctionCall,
-      (DIFFERENCE, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::difference),
+      (DIFFERENCE_, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::difference),
       (DISTINCT, 1, 1, Expr::NODESET_RESULT, nsGkAtoms::distinct),
       (HAS_SAME_NODE, 2, 2, Expr::BOOLEAN_RESULT, nsGkAtoms::hasSameNode),
       (INTERSECTION, 2, 2, Expr::NODESET_RESULT, nsGkAtoms::intersection),

@@ -229,7 +229,6 @@ Inspector.prototype = {
   async initInspectorFront() {
     this.inspectorFront = await this.target.getFront("inspector");
     this.highlighter = this.inspectorFront.highlighter;
-    this.selection = this.inspectorFront.selection;
     this.walker = this.inspectorFront.walker;
   },
 
@@ -295,6 +294,10 @@ Inspector.prototype = {
     }
 
     return this._search;
+  },
+
+  get selection() {
+    return this.toolbox.selection;
   },
 
   get cssProperties() {
