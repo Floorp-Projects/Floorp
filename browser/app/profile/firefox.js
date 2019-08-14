@@ -1319,7 +1319,7 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-pref("trailhead.firstrun.branches", "join-privacy");
+pref("trailhead.firstrun.branches", "join-supercharge");
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", false);

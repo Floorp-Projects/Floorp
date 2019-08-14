@@ -265,8 +265,13 @@
   background: var(--trailhead-cards-background-color);
   overflow: hidden;
   text-align: center;
+  // Note: should match TRANSITION_LENGTH in FirstRun.jsx
   transition: max-height 0.5s $photon-easing;
 
+  // This is needed for the transition to work, but will cut off content at the smallest breakpoint
+  @media (min-width: $break-point-medium) {
+    max-height: 1000px;
+  }
 
   &.collapsed {
     max-height: 0;
@@ -409,6 +414,7 @@
 
   .outer-wrapper {
     position: relative;
+    display: block;
 
     .prefs-button {
       button {

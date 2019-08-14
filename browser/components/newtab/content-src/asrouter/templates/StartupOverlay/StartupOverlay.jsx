@@ -1,20 +1,16 @@
-import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import { connect } from "react-redux";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 
-const FLUENT_FILES = [
-  "branding/brand.ftl",
-  "browser/branding/sync-brand.ftl",
-  "browser/newtab/onboarding.ftl",
-];
-
-export class _StartupOverlay extends React.PureComponent {
+export class StartupOverlay extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onInputChange = this.onInputChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.clickSkip = this.clickSkip.bind(this);
-    this.initScene = this.initScene.bind(this);
     this.removeOverlay = this.removeOverlay.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
 
@@ -22,71 +18,20 @@ export class _StartupOverlay extends React.PureComponent {
       "utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=trailhead-control";
 
     this.state = {
+      show: false,
       emailInput: "",
-      overlayRemoved: false,
-      deviceId: "",
-      flowId: "",
-      flowBeginTime: 0,
     };
-    this.didFetch = false;
   }
 
-  async componentWillUpdate() {
-    if (this.props.fxa_endpoint && !this.didFetch) {
-      try {
-        this.didFetch = true;
-        const fxaParams = "entrypoint=activity-stream-firstrun&form_type=email";
-        const response = await fetch(
-          `${this.props.fxa_endpoint}/metrics-flow?${fxaParams}&${
-            this.utmParams
-          }`,
-          { credentials: "omit" }
-        );
-        if (response.status === 200) {
-          const { deviceId, flowId, flowBeginTime } = await response.json();
-          this.setState({ deviceId, flowId, flowBeginTime });
-        } else {
-          this.props.dispatch(
-            ac.OnlyToMain({
-              type: at.TELEMETRY_UNDESIRED_EVENT,
-              data: {
-                event: "FXA_METRICS_FETCH_ERROR",
-                value: response.status,
-              },
-            })
-          );
-        }
-      } catch (error) {
-        this.props.dispatch(
-          ac.OnlyToMain({
-            type: at.TELEMETRY_UNDESIRED_EVENT,
-            data: { event: "FXA_METRICS_ERROR" },
-          })
-        );
-      }
-    }
-  }
-
-  async componentWillMount() {
-    FLUENT_FILES.forEach(file => {
-      const link = document.head.appendChild(document.createElement("link"));
-      link.href = file;
-      link.rel = "localization";
-    });
-
-    await this.componentWillUpdate(this.props);
+  componentWillMount() {
+    global.document.body.classList.add("fxa");
   }
 
   componentDidMount() {
-    this.initScene();
-  }
-
-  initScene() {
     // Timeout to allow the scene to render once before attaching the attribute
     // to trigger the animation.
     setTimeout(() => {
       this.setState({ show: true });
-      this.props.onReady();
     }, 10);
   }
 
@@ -94,11 +39,11 @@ export class _StartupOverlay extends React.PureComponent {
     window.removeEventListener("visibilitychange", this.removeOverlay);
     document.body.classList.remove("hide-main", "fxa");
     this.setState({ show: false });
-    this.props.onBlock();
+
     setTimeout(() => {
       // Allow scrolling and fully remove overlay after animation finishes.
+      this.props.onBlock();
       document.body.classList.remove("welcome");
-      this.setState({ overlayRemoved: true });
     }, 400);
   }
 
@@ -128,7 +73,9 @@ export class _StartupOverlay extends React.PureComponent {
    * Report to telemetry additional information about the form submission.
    */
   _getFormInfo() {
-    const value = { has_flow_params: this.state.flowId.length > 0 };
+    const value = {
+      has_flow_params: this.props.flowParams.flowId.length > 0,
+    };
     return { value };
   }
 
@@ -141,12 +88,6 @@ export class _StartupOverlay extends React.PureComponent {
   }
 
   render() {
-    // When skipping the onboarding tour we show AS but we are still on
-    // about:welcome, prop.isFirstrun is true and StartupOverlay is rendered
-    if (this.state.overlayRemoved) {
-      return null;
-    }
-
     return (
       <div className={`overlay-wrapper ${this.state.show ? "show" : ""}`}>
         <div className="background" />
@@ -209,13 +150,17 @@ export class _StartupOverlay extends React.PureComponent {
                 <input
                   name="device_id"
                   type="hidden"
-                  value={this.state.deviceId}
+                  value={this.props.flowParams.deviceId}
                 />
-                <input name="flow_id" type="hidden" value={this.state.flowId} />
+                <input
+                  name="flow_id"
+                  type="hidden"
+                  value={this.props.flowParams.flowId}
+                />
                 <input
                   name="flow_begin_time"
                   type="hidden"
-                  value={this.state.flowBeginTime}
+                  value={this.props.flowParams.flowBeginTime}
                 />
                 <span
                   className="error"
@@ -225,7 +170,7 @@ export class _StartupOverlay extends React.PureComponent {
                   className="email-input"
                   name="email"
                   type="email"
-                  required="true"
+                  required={true}
                   onInvalid={this.onInputInvalid}
                   onChange={this.onInputChange}
                   data-l10n-id="onboarding-sync-form-input"
@@ -270,5 +215,6 @@ export class _StartupOverlay extends React.PureComponent {
   }
 }
 
-const getState = state => ({ fxa_endpoint: state.Prefs.values.fxa_endpoint });
-export const StartupOverlay = connect(getState)(_StartupOverlay);
+StartupOverlay.defaultProps = {
+  flowParams: { deviceId: "", flowId: "", flowBeginTime: "" },
+};

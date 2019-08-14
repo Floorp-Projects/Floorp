@@ -33,9 +33,6 @@ const FAKE_PROVIDERS = [
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
 ];
-const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(
-  message => message.id
-);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const FAKE_RESPONSE_HEADERS = { get() {} };
@@ -791,6 +788,54 @@ describe("ASRouter", () => {
   });
 
   describe("#handleMessageRequest", () => {
+    it("should not return a blocked message", async () => {
+      // Block all messages except the first
+      await Router.setState(() => ({
+        messages: [
+          { id: "foo", provider: "snippets" },
+          { id: "bar", provider: "snippets" },
+        ],
+        messageBlockList: ["foo"],
+      }));
+      const result = await Router.handleMessageRequest({
+        provider: "snippets",
+      });
+      assert.equal(result.id, "bar");
+    });
+    it("should not return a message from a blocked campaign", async () => {
+      // Block all messages except the first
+      await Router.setState(() => ({
+        messages: [
+          { id: "foo", provider: "snippets", campaign: "foocampaign" },
+          { id: "bar", provider: "snippets" },
+        ],
+        messageBlockList: ["foocampaign"],
+      }));
+
+      const result = await Router.handleMessageRequest({
+        provider: "snippets",
+      });
+
+      assert.equal(result.id, "bar");
+    });
+    it("should not return a message from a blocked provider", async () => {
+      // There are only two providers; block the FAKE_LOCAL_PROVIDER, leaving
+      // only FAKE_REMOTE_PROVIDER unblocked, which provides only one message
+      await Router.setState(() => ({
+        providerBlockList: ["snippets"],
+      }));
+
+      await Router.setState(() => ({
+        messages: [{ id: "foo", provider: "snippets" }],
+        messageBlockList: ["foocampaign"],
+      }));
+
+      const result = await Router.handleMessageRequest({
+        provider: "snippets",
+      });
+
+      assert.isNull(result);
+    });
     it("should get unblocked messages that match the trigger", async () => {
       const message1 = {
         id: "1",
@@ -834,86 +879,12 @@ describe("ASRouter", () => {
 
       assert.deepEqual(result, message1);
     });
-    it("should get unblocked messages that match trigger and template", async () => {
-      const message1 = {
-        id: "1",
-        campaign: "foocampaign",
-        template: "badge",
-        trigger: { id: "foo" },
-      };
-      const message2 = {
-        id: "2",
-        campaign: "foocampaign",
-        template: "snippet",
-        trigger: { id: "foo" },
-      };
-      await Router.setState({ messages: [message2, message1] });
-      // Just return the first message provided as arg
-      sandbox.stub(Router, "_findMessage").callsFake(messages => messages[0]);
-
-      const result = Router.handleMessageRequest({
-        triggerId: "foo",
-        template: "badge",
-      });
-
-      assert.deepEqual(result, message1);
-    });
     it("should have messageImpressions in the message context", () => {
       assert.propertyVal(
         Router._getMessagesContext(),
         "messageImpressions",
         Router.state.messageImpressions
       );
-    });
-  });
-
-  describe("blocking", () => {
-    it("should not return a blocked message", async () => {
-      // Block all messages except the first
-      await Router.setState(() => ({
-        messageBlockList: ALL_MESSAGE_IDS.slice(1),
-      }));
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.sendNextMessage(targetStub);
-
-      assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.lastMessageId, ALL_MESSAGE_IDS[0]);
-    });
-    it("should not return a message from a blocked campaign", async () => {
-      // Block all messages except the first
-      await Router.setState(() => ({
-        messages: [{ id: "foo", campaign: "foocampaign" }, { id: "bar" }],
-        messageBlockList: ["foocampaign"],
-      }));
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.sendNextMessage(targetStub);
-
-      assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.lastMessageId, "bar");
-    });
-    it("should not return a message from a blocked provider", async () => {
-      // There are only two providers; block the FAKE_LOCAL_PROVIDER, leaving
-      // only FAKE_REMOTE_PROVIDER unblocked, which provides only one message
-      await Router.setState(() => ({
-        providerBlockList: [FAKE_LOCAL_PROVIDER.id],
-      }));
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.sendNextMessage(targetStub);
-
-      assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.lastMessageId, FAKE_REMOTE_MESSAGES[0].id);
-    });
-    it("should not return a message if all messages are blocked", async () => {
-      await Router.setState(() => ({ messageBlockList: ALL_MESSAGE_IDS }));
-      const targetStub = { sendAsyncMessage: sandbox.stub() };
-
-      await Router.sendNextMessage(targetStub);
-
-      assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.lastMessageId, null);
     });
     it("should forward trigger param info", async () => {
       const trigger = { triggerId: "foo", triggerParam: "bar" };
@@ -982,24 +953,23 @@ describe("ASRouter", () => {
   });
 
   describe("onMessage", () => {
-    describe("#onMessage: SNIPPETS_REQUEST", () => {
+    describe("#onMessage: NEWTAB_MESSAGE_REQUEST", () => {
       it("should set state.lastMessageId to a message id", async () => {
-        await Router.onMessage(fakeAsyncMessage({ type: "SNIPPETS_REQUEST" }));
+        await Router.setState({
+          messages: [{ id: "foo", provider: "snippets" }],
+        });
+        await Router.onMessage(
+          fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" })
+        );
 
-        assert.include(ALL_MESSAGE_IDS, Router.state.lastMessageId);
+        assert.equal(Router.state.lastMessageId, "foo");
       });
       it("should send a message back to the to the target", async () => {
         // force the only message to be a regular message so getRandomItemFromArray picks it
         await Router.setState({
-          messages: [
-            {
-              id: "foo",
-              template: "simple_template",
-              content: { title: "Foo", body: "Foo123" },
-            },
-          ],
+          messages: [{ id: "foo", provider: "snippets" }],
         });
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
         const [currentMessage] = Router.state.messages.filter(
           message => message.id === Router.state.lastMessageId
@@ -1017,13 +987,14 @@ describe("ASRouter", () => {
           messages: [
             {
               id: "foo1",
+              provider: "snippets",
               template: "simple_template",
               bundled: 1,
               content: { title: "Foo1", body: "Foo123-1" },
             },
           ],
         });
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
         const [currentMessage] = Router.state.messages.filter(
           message => message.id === Router.state.lastMessageId
@@ -1046,6 +1017,7 @@ describe("ASRouter", () => {
         sandbox.stub(Router, "_findProvider").returns(null);
         const firstMessage = {
           id: "foo2",
+          provider: "snippets",
           template: "simple_template",
           bundled: 2,
           order: 1,
@@ -1053,13 +1025,14 @@ describe("ASRouter", () => {
         };
         const secondMessage = {
           id: "foo1",
+          provider: "snippets",
           template: "simple_template",
           bundled: 2,
           order: 2,
           content: { title: "Foo1", body: "Foo123-1" },
         };
         await Router.setState({ messages: [secondMessage, firstMessage] });
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
         assert.calledWith(
           msg.target.sendAsyncMessage,
@@ -1122,13 +1095,14 @@ describe("ASRouter", () => {
           messages: [
             {
               id: "foo1",
+              provider: "snippets",
               template: "simple_template",
               bundled: 2,
               content: { title: "Foo1", body: "Foo123-1" },
             },
           ],
         });
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
         assert.calledWith(
           msg.target.sendAsyncMessage,
@@ -1138,7 +1112,7 @@ describe("ASRouter", () => {
       });
       it("should send a CLEAR_ALL message if no messages are available", async () => {
         await Router.setState({ messages: [] });
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         await Router.onMessage(msg);
 
         assert.calledWith(
@@ -1147,10 +1121,10 @@ describe("ASRouter", () => {
           { type: "CLEAR_ALL" }
         );
       });
-      it("should make a request to the provided endpoint on SNIPPETS_REQUEST", async () => {
+      it("should make a request to the provided endpoint on NEWTAB_MESSAGE_REQUEST", async () => {
         const url = "https://snippets-admin.mozilla.org/foo";
         const msg = fakeAsyncMessage({
-          type: "SNIPPETS_REQUEST",
+          type: "NEWTAB_MESSAGE_REQUEST",
           data: { endpoint: { url } },
         });
         await Router.onMessage(msg);
@@ -1172,7 +1146,7 @@ describe("ASRouter", () => {
       it("should dispatch SNIPPETS_PREVIEW_MODE when adding a preview endpoint", async () => {
         const url = "https://snippets-admin.mozilla.org/foo";
         const msg = fakeAsyncMessage({
-          type: "SNIPPETS_REQUEST",
+          type: "NEWTAB_MESSAGE_REQUEST",
           data: { endpoint: { url } },
         });
         await Router.onMessage(msg);
@@ -1188,7 +1162,7 @@ describe("ASRouter", () => {
       it("should not add a url that is not from a whitelisted host", async () => {
         const url = "https://mozilla.org";
         const msg = fakeAsyncMessage({
-          type: "SNIPPETS_REQUEST",
+          type: "NEWTAB_MESSAGE_REQUEST",
           data: { endpoint: { url } },
         });
         await Router.onMessage(msg);
@@ -1198,12 +1172,87 @@ describe("ASRouter", () => {
       it("should reject bad urls", async () => {
         const url = "foo";
         const msg = fakeAsyncMessage({
-          type: "SNIPPETS_REQUEST",
+          type: "NEWTAB_MESSAGE_REQUEST",
           data: { endpoint: { url } },
         });
         await Router.onMessage(msg);
 
         assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
+      });
+      it("should handle onboarding message provider", async () => {
+        const handleMessageRequestStub = sandbox.stub(
+          Router,
+          "handleMessageRequest"
+        );
+        handleMessageRequestStub
+          .withArgs({
+            provider: "onboarding",
+            template: "extended_triplets",
+          })
+          .resolves({ id: "foo" });
+        const spy = sandbox.spy(Router, "setupExtendedTriplets");
+        const msg = fakeAsyncMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        await Router.onMessage(msg);
+
+        assert.calledOnce(spy);
+      });
+      it("should fallback to snippets if one was assigned to the holdback experiment", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = holdback branch
+        const handleMessageRequestStub = sandbox.stub(
+          Router,
+          "handleMessageRequest"
+        );
+        handleMessageRequestStub
+          .withArgs({
+            provider: "onboarding",
+            template: "extended_triplets",
+          })
+          .resolves({ id: "foo" });
+        const msg = fakeAsyncMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        await Router.onMessage(msg);
+
+        assert.calledTwice(handleMessageRequestStub);
+        assert.calledWithExactly(handleMessageRequestStub, {
+          provider: "onboarding",
+          template: "extended_triplets",
+        });
+        assert.calledWithExactly(handleMessageRequestStub, {
+          provider: "snippets",
+        });
+      });
+      it("should fallback to snippets if onboarding message provider returned none", async () => {
+        const handleMessageRequestStub = sandbox.stub(
+          Router,
+          "handleMessageRequest"
+        );
+        handleMessageRequestStub
+          .withArgs({
+            provider: "onboarding",
+            template: "extended_triplets",
+          })
+          .resolves(null);
+        const spy = sandbox.spy(Router, "setupExtendedTriplets");
+        const msg = fakeAsyncMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        await Router.onMessage(msg);
+
+        assert.notCalled(spy);
+        assert.calledTwice(handleMessageRequestStub);
+        assert.calledWithExactly(handleMessageRequestStub, {
+          provider: "onboarding",
+          template: "extended_triplets",
+        });
+        assert.calledWithExactly(handleMessageRequestStub, {
+          provider: "snippets",
+        });
       });
     });
 
@@ -1280,23 +1329,6 @@ describe("ASRouter", () => {
           channel.sendAsyncMessage,
           PARENT_TO_CHILD_MESSAGE_NAME,
           { type: "CLEAR_PROVIDER", data: { id: "bar" } }
-        );
-      });
-    });
-
-    describe("#onMessage: DISMISS_BUNDLE", () => {
-      it("should add all the ids in the bundle to the messageBlockList and send a CLEAR_BUNDLE message", async () => {
-        await Router.setState({ lastMessageId: "foo" });
-        const msg = fakeAsyncMessage({
-          type: "DISMISS_BUNDLE",
-          data: { bundle: FAKE_BUNDLE },
-        });
-        await Router.onMessage(msg);
-
-        assert.calledWith(
-          channel.sendAsyncMessage,
-          PARENT_TO_CHILD_MESSAGE_NAME,
-          { type: "CLEAR_BUNDLE" }
         );
       });
     });
@@ -1435,25 +1467,26 @@ describe("ASRouter", () => {
       });
     });
 
-    describe("#onMessage: SNIPPETS_REQUEST", () => {
-      it("should call sendNextMessage on SNIPPETS_REQUEST", async () => {
-        sandbox.stub(Router, "sendNextMessage").resolves();
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+    describe("#onMessage: NEWTAB_MESSAGE_REQUEST", () => {
+      it("should call sendNewTabMessage on NEWTAB_MESSAGE_REQUEST", async () => {
+        sandbox.stub(Router, "sendNewTabMessage").resolves();
+        const data = { endpoint: "foo" };
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST", data });
 
         await Router.onMessage(msg);
 
-        assert.calledOnce(Router.sendNextMessage);
+        assert.calledOnce(Router.sendNewTabMessage);
         assert.calledWithExactly(
-          Router.sendNextMessage,
+          Router.sendNewTabMessage,
           sinon.match.instanceOf(FakeRemotePageManager),
-          {}
+          data
         );
       });
       it("should return the preview message if that's available and remove it from Router.state", async () => {
         const expectedObj = { provider: "preview" };
         Router.setState({ messages: [expectedObj] });
 
-        await Router.sendNextMessage(channel);
+        await Router.sendNewTabMessage(channel, { endpoint: "foo.com" });
 
         assert.calledWith(
           channel.sendAsyncMessage,
@@ -1527,11 +1560,11 @@ describe("ASRouter", () => {
         );
       });
       it("should get the bundle and send the message if the message has a bundle", async () => {
-        sandbox.stub(Router, "sendNextMessage").resolves();
-        const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+        sandbox.stub(Router, "sendNewTabMessage").resolves();
+        const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
         msg.bundled = 2; // force this message to want to be bundled
         await Router.onMessage(msg);
-        assert.calledOnce(Router.sendNextMessage);
+        assert.calledOnce(Router.sendNewTabMessage);
       });
     });
 
@@ -1547,6 +1580,7 @@ describe("ASRouter", () => {
         assert.calledOnce(Router._findMessage);
         assert.deepEqual(Router._findMessage.firstCall.args[1], {
           id: "firstRun",
+          param: undefined,
         });
       });
       it("consider the trigger when picking a message", async () => {
@@ -1842,7 +1876,6 @@ describe("ASRouter", () => {
       it("should add/remove observers for `webextension-install-notify`", async () => {
         sandbox.spy(global.Services.obs, "addObserver");
         sandbox.spy(global.Services.obs, "removeObserver");
-        sandbox.spy(Router, "blockMessageById");
 
         sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
         const msg = fakeExecuteUserAction({
@@ -1860,8 +1893,6 @@ describe("ASRouter", () => {
 
         assert.calledOnce(global.Services.obs.removeObserver);
         assert.calledOnce(channel.sendAsyncMessage);
-        assert.calledOnce(Router.blockMessageById);
-        assert.calledWithExactly(Router.blockMessageById, "RETURN_TO_AMO_1");
       });
     });
 
@@ -2550,9 +2581,9 @@ describe("ASRouter", () => {
         .stub(global.FilterExpressions, "eval")
         .returns(Promise.reject(new Error("fake error")));
       await Router.setState({
-        messages: [{ id: "foo", targeting: "foo2.[[(" }],
+        messages: [{ id: "foo", provider: "snippets", targeting: "foo2.[[(" }],
       });
-      const msg = fakeAsyncMessage({ type: "SNIPPETS_REQUEST" });
+      const msg = fakeAsyncMessage({ type: "NEWTAB_MESSAGE_REQUEST" });
       dispatchStub.reset();
 
       await Router.onMessage(msg);
@@ -2565,7 +2596,19 @@ describe("ASRouter", () => {
   });
 
   describe("trailhead", () => {
-    it("should call .setupTrailhead on init", async () => {
+    it("should call .setFirstRunStateFromPref and initialize trailhead branches on init", async () => {
+      sandbox.spy(Router, "setFirstRunStateFromPref");
+      getStringPrefStub
+        .withArgs(TRAILHEAD_CONFIG.OVERRIDE_PREF)
+        .returns("join-supercharge");
+
+      await Router.init(channel, createFakeStorage(), dispatchStub);
+
+      assert.calledOnce(Router.setFirstRunStateFromPref);
+      assert.equal(Router.state.trailheadInterrupt, "join");
+      assert.equal(Router.state.trailheadTriplet, "supercharge");
+    });
+    it.skip("should call .setupTrailhead on init", async () => {
       sandbox.spy(Router, "setupTrailhead");
       sandbox
         .stub(Router, "_generateTrailheadBranches")
@@ -2580,7 +2623,7 @@ describe("ASRouter", () => {
       assert.calledOnce(Router.setupTrailhead);
       assert.propertyVal(Router.state, "trailheadInitialized", true);
     });
-    it("should call .setupTrailhead on init but return early if the DID_SEE_ABOUT_WELCOME_PREF is false", async () => {
+    it.skip("should call .setupTrailhead on init but return early if the DID_SEE_ABOUT_WELCOME_PREF is false", async () => {
       sandbox.spy(Router, "setupTrailhead");
       sandbox.spy(Router, "_generateTrailheadBranches");
       sandbox
@@ -2594,7 +2637,7 @@ describe("ASRouter", () => {
       assert.notCalled(Router._generateTrailheadBranches);
       assert.propertyVal(Router.state, "trailheadInitialized", false);
     });
-    it("should call .setupTrailhead and set the DID_SEE_ABOUT_WELCOME_PREF on a firstRun TRIGGER message", async () => {
+    it("should call .setupTrailhead and set the DID_SEE_ABOUT_WELCOME_PREF on a firstRun message", async () => {
       sandbox.spy(Router, "setupTrailhead");
       const msg = fakeAsyncMessage({
         type: "TRIGGER",
@@ -2860,6 +2903,75 @@ describe("ASRouter", () => {
           interrupt: "join",
           triplet: "supercharge",
         });
+      });
+    });
+
+    describe(".setupExtendedTriplets", () => {
+      let setStringPrefStub;
+      let setExperimentActiveStub;
+
+      beforeEach(() => {
+        setStringPrefStub = sandbox.stub(
+          global.Services.prefs,
+          "setStringPref"
+        );
+        setExperimentActiveStub = sandbox.stub(
+          global.TelemetryEnvironment,
+          "setExperimentActive"
+        );
+      });
+
+      it("should generates a control branch configuration and update Router.state", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(0); // 0 = control branch
+
+        await Router.setupExtendedTriplets();
+
+        assert.propertyVal(Router.state, "extendedTripletsInitialized", true);
+        assert.propertyVal(Router.state, "showExtendedTriplets", true);
+        assert.calledWith(
+          setStringPrefStub,
+          TRAILHEAD_CONFIG.EXTENDED_TRIPLETS_EXPERIMENT_PREF,
+          "control"
+        );
+        assert.calledWith(
+          setExperimentActiveStub,
+          "activity-stream-extended-triplets",
+          "control"
+        );
+      });
+      it("should generates a test branch configuration and update Router.state", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = holdback branch
+
+        await Router.setupExtendedTriplets();
+
+        assert.propertyVal(Router.state, "extendedTripletsInitialized", true);
+        assert.propertyVal(Router.state, "showExtendedTriplets", false);
+        assert.calledWith(
+          setStringPrefStub,
+          TRAILHEAD_CONFIG.EXTENDED_TRIPLETS_EXPERIMENT_PREF,
+          "holdback"
+        );
+        assert.calledWith(
+          setExperimentActiveStub,
+          "activity-stream-extended-triplets",
+          "holdback"
+        );
+      });
+      it("should reuse the existing branch if it's already defined", async () => {
+        getStringPrefStub.returns("control");
+
+        await Router.setupExtendedTriplets();
+
+        assert.notCalled(setStringPrefStub);
+      });
+      it("should only run once", async () => {
+        sandbox.spy(Router, "setState");
+
+        await Router.setupExtendedTriplets();
+        await Router.setupExtendedTriplets();
+        await Router.setupExtendedTriplets();
+
+        assert.calledOnce(Router.setState);
       });
     });
   });
