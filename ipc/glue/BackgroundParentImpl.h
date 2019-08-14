@@ -171,6 +171,17 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   virtual bool DeallocPRemoteWorkerParent(PRemoteWorkerParent* aActor) override;
 
+  virtual mozilla::dom::PRemoteWorkerControllerParent*
+  AllocPRemoteWorkerControllerParent(
+      const mozilla::dom::RemoteWorkerData& aRemoteWorkerData) override;
+
+  virtual mozilla::ipc::IPCResult RecvPRemoteWorkerControllerConstructor(
+      mozilla::dom::PRemoteWorkerControllerParent* aActor,
+      const mozilla::dom::RemoteWorkerData& aRemoteWorkerData) override;
+
+  virtual bool DeallocPRemoteWorkerControllerParent(
+      mozilla::dom::PRemoteWorkerControllerParent* aActor) override;
+
   virtual mozilla::dom::PRemoteWorkerServiceParent*
   AllocPRemoteWorkerServiceParent() override;
 
