@@ -157,6 +157,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool CriticalRequestPrioritization() {
     return mCriticalRequestPrioritization;
   }
+
+  bool IsDocumentNosniffEnabled() { return mRespectDocumentNoSniff; }
   bool UseH2Deps() { return mUseH2Deps; }
   bool IsH2WebsocketsEnabled() { return mEnableH2Websockets; }
 
@@ -652,6 +654,9 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // Whether or not to block requests for non head js/css items (e.g. media)
   // while those elements load.
   bool mCriticalRequestPrioritization;
+
+  // Whether to respect X-Content-Type nosniff on Page loads
+  bool mRespectDocumentNoSniff;
 
   // TCP Keepalive configuration values.
 

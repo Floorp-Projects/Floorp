@@ -109,7 +109,7 @@
 #define H2MANDATORY_SUITE "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
 #define SAFE_HINT_HEADER_VALUE "safeHint.enabled"
 #define SECURITY_PREFIX "security."
-
+#define DOM_SECURITY_PREFIX "dom.security"
 #define TCP_FAST_OPEN_ENABLE "network.tcp.tcp_fastopen_enable"
 #define TCP_FAST_OPEN_FAILURE_LIMIT \
   "network.tcp.tcp_fastopen_consecutive_failure_limit"
@@ -269,6 +269,7 @@ nsHttpHandler::nsHttpHandler()
       mRequestTokenBucketHz(100),
       mRequestTokenBucketBurst(32),
       mCriticalRequestPrioritization(true),
+      mRespectDocumentNoSniff(true),
       mTCPKeepaliveShortLivedEnabled(false),
       mTCPKeepaliveShortLivedTimeS(60),
       mTCPKeepaliveShortLivedIdleTimeS(10),
@@ -431,6 +432,7 @@ static const char* gCallbackPrefs[] = {
     HTTP_PREF("tcp_keepalive.long_lived_connections"),
     SAFE_HINT_HEADER_VALUE,
     SECURITY_PREFIX,
+    DOM_SECURITY_PREFIX,
     TCP_FAST_OPEN_ENABLE,
     TCP_FAST_OPEN_FAILURE_LIMIT,
     TCP_FAST_OPEN_STALLS_LIMIT,
@@ -1557,6 +1559,14 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetBool(
         HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
     if (NS_SUCCEEDED(rv)) mCriticalRequestPrioritization = cVar;
+  }
+
+  // Whether to respect X-Content-Type nosniff on Page loads
+  if (PREF_CHANGED("dom.security.respect_document_nosniff")) {
+    rv = Preferences::GetBool("dom.security.respect_document_nosniff", &cVar);
+    if (NS_SUCCEEDED(rv)) {
+      mRespectDocumentNoSniff = cVar;
+    }
   }
 
   // on transition of network.http.diagnostics to true print
