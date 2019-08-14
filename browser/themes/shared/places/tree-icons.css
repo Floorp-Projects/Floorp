@@ -85,6 +85,11 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   color: HighlightText;
 }
 
+/* Remove tiny spacing in separators appearing after the twisty column */
+treechildren::-moz-tree-twisty(title, separator) {
+  padding: 0;
+}
+
 treechildren::-moz-tree-image(cutting) {
   opacity: 0.5;
 }
