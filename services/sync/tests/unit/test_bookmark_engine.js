@@ -101,8 +101,13 @@ add_task(async function test_buffer_timeout() {
   await Service.recordManager.clearCache();
   await PlacesSyncUtils.bookmarks.reset();
   let engine = new BufferedBookmarksEngine(Service);
-  // Abort merges immediately.
-  engine._applyTimeout = 0;
+  engine._newWatchdog = function() {
+    // Return an already-aborted watchdog, so that we can abort merges
+    // immediately.
+    let watchdog = Async.watchdog();
+    watchdog.controller.abort();
+    return watchdog;
+  };
   await engine.initialize();
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
