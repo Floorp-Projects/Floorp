@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
@@ -109,6 +110,7 @@ public class MmaDelegate {
         }
         mmaHelper.setDeviceId(deviceId);
         PrefsHelper.setPref(GeckoPreferences.PREFS_MMA_DEVICE_ID, deviceId);
+        mmaHelper.setToken(GeckoSharedPrefs.forApp(applicationContext).getString("gcm_token", ""));
         // above two config setup required to be invoked before mmaHelper.init.
         mmaHelper.init(activity, attributes);
 

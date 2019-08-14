@@ -63,6 +63,44 @@ impl<'s> Store<'s> {
         }
     }
 
+    /// Ensures that all local roots are parented correctly.
+    ///
+    /// The Places root can't be in another folder, or we'll recurse infinitely
+    /// when we try to fetch the local tree.
+    ///
+    /// The five built-in roots should be under the Places root, or we'll build
+    /// and sync an invalid tree (bug 1453994, bug 1472127).
+    pub fn validate(&self) -> Result<()> {
+        self.controller.err_if_aborted()?;
+        let mut statement = self.db.prepare(format!(
+            "SELECT NOT EXISTS(
+               SELECT 1 FROM moz_bookmarks
+               WHERE id = (SELECT parent FROM moz_bookmarks
+                           WHERE guid = '{0}')
+             ) AND NOT EXISTS(
+               SELECT 1 FROM moz_bookmarks b
+               JOIN moz_bookmarks p ON p.id = b.parent
+               WHERE b.guid IN ('{1}', '{2}', '{3}', '{4}', '{5}') AND
+                     p.guid <> '{0}'
+             )",
+            dogear::ROOT_GUID,
+            dogear::MENU_GUID,
+            dogear::MOBILE_GUID,
+            dogear::TAGS_GUID,
+            dogear::TOOLBAR_GUID,
+            dogear::UNFILED_GUID,
+        ))?;
+        let has_valid_roots = match statement.step()? {
+            Some(row) => row.get_by_index::<i64>(0)? == 1,
+            None => false,
+        };
+        if has_valid_roots {
+            Ok(())
+        } else {
+            Err(Error::InvalidLocalRoots)
+        }
+    }
+
     /// Prepares the mirror database for a merge.
     pub fn prepare(&self) -> Result<()> {
         // Sync associates keywords with bookmarks, and doesn't sync POST data;
@@ -73,6 +111,7 @@ impl<'s> Store<'s> {
         // bug 1328737). Just in case, we flag any remote bookmarks that have
         // different keywords for the same URL, or the same keyword for
         // different URLs, for reupload.
+        self.controller.err_if_aborted()?;
         self.db.exec(format!(
             "UPDATE items SET
                validity = {}
@@ -213,7 +252,10 @@ impl<'s> Store<'s> {
     }
 }
 
-impl<'s> dogear::Store<Error> for Store<'s> {
+impl<'s> dogear::Store for Store<'s> {
+    type Ok = ApplyStatus;
+    type Error = Error;
+
     /// Builds a fully rooted, consistent tree from the items and tombstones in
     /// Places.
     fn fetch_local_tree(&self) -> Result<Tree> {
@@ -355,12 +397,18 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         Ok(tree)
     }
 
-    fn apply<'t>(&mut self, root: MergedRoot<'t>) -> Result<()> {
+    fn apply<'t>(&mut self, root: MergedRoot<'t>) -> Result<ApplyStatus> {
         self.controller.err_if_aborted()?;
         let ops = root.completion_ops();
 
         self.controller.err_if_aborted()?;
         let deletions = root.deletions().collect::<Vec<_>>();
+
+        if ops.is_empty() && deletions.is_empty() && self.weak_uploads.is_empty() {
+            // If we don't have any items to apply, upload, or delete,
+            // no need to open a transaction at all.
+            return Ok(ApplyStatus::Skipped);
+        }
 
         // Apply the merged tree and stage outgoing items. This transaction
         // blocks writes from the main connection until it's committed, so we
@@ -381,7 +429,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         cleanup(&tx)?;
         tx.commit()?;
 
-        Ok(())
+        Ok(ApplyStatus::Merged)
     }
 }
 
@@ -1120,4 +1168,18 @@ fn rounded_now() -> u64 {
         .duration_since(SystemTime::UNIX_EPOCH)
         .map(|d| (d.as_secs() as u64) * 1_000_000 + u64::from(d.subsec_millis()) * 1000)
         .unwrap_or(0)
+}
+
+pub enum ApplyStatus {
+    Merged,
+    Skipped,
+}
+
+impl From<ApplyStatus> for bool {
+    fn from(status: ApplyStatus) -> bool {
+        match status {
+            ApplyStatus::Merged => true,
+            ApplyStatus::Skipped => false,
+        }
+    }
 }

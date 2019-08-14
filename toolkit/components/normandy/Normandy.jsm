@@ -42,9 +42,9 @@ var Normandy = {
   studyPrefsChanged: {},
   rolloutPrefsChanged: {},
 
-  init() {
+  async init() {
     // Initialization that needs to happen before the first paint on startup.
-    NormandyMigrations.applyAll();
+    await NormandyMigrations.applyAll();
     this.rolloutPrefsChanged = this.applyStartupPrefs(
       STARTUP_ROLLOUT_PREFS_BRANCH
     );

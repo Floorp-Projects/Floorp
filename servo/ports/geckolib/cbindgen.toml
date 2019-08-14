@@ -103,6 +103,7 @@ include = [
   "LengthOrAuto",
   "NonNegativeLengthOrAuto",
   "TextDecorationSkipInk",
+  "TextDecorationLength",
   "Rect",
   "IntersectionObserverRootMargin",
   "Size",

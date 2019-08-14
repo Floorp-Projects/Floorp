@@ -122,7 +122,7 @@ decorate_task(
 decorate_task(
   withStub(Normandy, "finishInit"),
   async function testStartupDelayed(finishInitStub) {
-    Normandy.init();
+    await Normandy.init();
     ok(
       !finishInitStub.called,
       "When initialized, do not call finishInit immediately."

@@ -80,6 +80,8 @@ class UrlbarInput {
     );
     this.panel = this.document.getElementById("urlbar-results");
 
+    this.megabar = UrlbarPrefs.get("megabar");
+
     this.controller =
       options.controller ||
       new UrlbarController({

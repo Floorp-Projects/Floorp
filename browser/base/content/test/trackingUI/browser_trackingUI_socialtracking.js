@@ -121,7 +121,11 @@ async function testSubview(hasException) {
   let categoryItem = document.getElementById(
     "protections-popup-category-socialblock"
   );
-  ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
+  ok(BrowserTestUtils.is_visible(categoryItem), "STP category item is visible");
+  ok(
+    categoryItem.classList.contains("blocked"),
+    "STP category item is blocked"
+  );
   let subview = document.getElementById("protections-popup-socialblockView");
   let viewShown = BrowserTestUtils.waitForEvent(subview, "ViewShown");
   categoryItem.click();

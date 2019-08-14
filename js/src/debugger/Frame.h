@@ -141,7 +141,7 @@ class DebuggerFrame : public NativeObject {
     RESERVED_SLOTS,
   };
 
-  static void trace(JSTracer* trc, JSObject* obj);
+  void trace(JSTracer* trc);
 
   static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
                                  HandleObject dbgCtor);

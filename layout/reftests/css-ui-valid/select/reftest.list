@@ -13,6 +13,6 @@ needs-focus == select-required-multiple-invalid.html select-required-multiple-re
 needs-focus == select-required-multiple-valid.html select-required-multiple-ref.html
 fuzzy(0-64,0-4) fuzzy-if(asyncPan&&layersGPUAccelerated,0-84,0-77) fuzzy-if(skiaContent,0-1,0-1000) needs-focus == select-required-multiple-valid-changed.html select-required-multiple-ref.html
 fuzzy-if(Android,0-9,0-1) needs-focus == select-disabled-fieldset-1.html select-fieldset-ref.html
-fuzzy-if(skiaContent&&!Android,0-2,0-10) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html
+fuzzy-if(skiaContent&&!Android,0-2,0-10) fuzzy-if(Android,0-9,0-1) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html
 fuzzy-if(skiaContent,0-2,0-10) needs-focus == select-fieldset-legend.html select-fieldset-legend-ref.html
 fuzzy-if(skiaContent,0-2,0-5) needs-focus == select-novalidate.html select-required-ref.html

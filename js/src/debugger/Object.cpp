@@ -71,29 +71,32 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 
-const ClassOps DebuggerObject::classOps_ = {nullptr, /* addProperty */
-                                            nullptr, /* delProperty */
-                                            nullptr, /* enumerate   */
-                                            nullptr, /* newEnumerate */
-                                            nullptr, /* resolve     */
-                                            nullptr, /* mayResolve  */
-                                            nullptr, /* finalize    */
-                                            nullptr, /* call        */
-                                            nullptr, /* hasInstance */
-                                            nullptr, /* construct   */
-                                            trace};
+const ClassOps DebuggerObject::classOps_ = {
+    nullptr,                         /* addProperty */
+    nullptr,                         /* delProperty */
+    nullptr,                         /* enumerate   */
+    nullptr,                         /* newEnumerate */
+    nullptr,                         /* resolve     */
+    nullptr,                         /* mayResolve  */
+    nullptr,                         /* finalize    */
+    nullptr,                         /* call        */
+    nullptr,                         /* hasInstance */
+    nullptr,                         /* construct   */
+    CallTraceMethod<DebuggerObject>, /* trace */
+};
 
 const Class DebuggerObject::class_ = {
     "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
     &classOps_};
 
-void DebuggerObject::trace(JSTracer* trc, JSObject* obj) {
+void DebuggerObject::trace(JSTracer* trc) {
   // There is a barrier on private pointers, so the Unbarriered marking
   // is okay.
-  if (JSObject* referent = (JSObject*)obj->as<NativeObject>().getPrivate()) {
-    TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &referent,
-                                               "Debugger.Object referent");
-    obj->as<NativeObject>().setPrivateUnbarriered(referent);
+  if (JSObject* referent = (JSObject*)getPrivate()) {
+    TraceManuallyBarrieredCrossCompartmentEdge(
+        trc, static_cast<JSObject*>(this), &referent,
+        "Debugger.Object referent");
+    setPrivateUnbarriered(referent);
   }
 }
 

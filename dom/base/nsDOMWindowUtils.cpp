@@ -4211,3 +4211,9 @@ nsDOMWindowUtils::GetLayersId(uint64_t* aOutLayersId) {
   *aOutLayersId = (uint64_t)child->GetLayersId();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetUsesOverlayScrollbars(bool* aResult) {
+  *aResult = Document::UseOverlayScrollbars(GetDocument());
+  return NS_OK;
+}

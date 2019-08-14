@@ -329,6 +329,9 @@ impl<'a> BuiltDisplayListIter<'a> {
         self.cur_stops = ItemRange::default();
         self.cur_complex_clip = ItemRange::default();
         self.cur_clip_chain_items = ItemRange::default();
+        self.cur_filters = ItemRange::default();
+        self.cur_filter_primitives = ItemRange::default();
+        self.cur_filter_data.clear();
 
         loop {
             self.next_raw()?;
@@ -629,6 +632,7 @@ impl Serialize for BuiltDisplayList {
                 Real::PushReferenceFrame(v) => Debug::PushReferenceFrame(v),
                 Real::PushStackingContext(v) => Debug::PushStackingContext(v),
                 Real::PushShadow(v) => Debug::PushShadow(v),
+                Real::BackdropFilter(v) => Debug::BackdropFilter(v),
 
                 Real::PopReferenceFrame => Debug::PopReferenceFrame,
                 Real::PopStackingContext => Debug::PopStackingContext,
@@ -730,6 +734,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::RadialGradient(v) => Real::RadialGradient(v),
                 Debug::PushStackingContext(v) => Real::PushStackingContext(v),
                 Debug::PushShadow(v) => Real::PushShadow(v),
+                Debug::BackdropFilter(v) => Real::BackdropFilter(v),
 
                 Debug::PopStackingContext => Real::PopStackingContext,
                 Debug::PopReferenceFrame => Real::PopReferenceFrame,
@@ -1235,28 +1240,9 @@ impl DisplayListBuilder {
         filter_primitives: &[di::FilterPrimitive],
         raster_space: di::RasterSpace,
         cache_tiles: bool,
+        is_backdrop_root: bool,
     ) {
-        if filters.len() > 0 {
-            self.push_item(&di::DisplayItem::SetFilterOps);
-            self.push_iter(filters);
-        }
-
-        for filter_data in filter_datas {
-            let func_types = [
-                filter_data.func_r_type, filter_data.func_g_type,
-                filter_data.func_b_type, filter_data.func_a_type];
-            self.push_item(&di::DisplayItem::SetFilterData);
-            self.push_iter(&func_types);
-            self.push_iter(&filter_data.r_values);
-            self.push_iter(&filter_data.g_values);
-            self.push_iter(&filter_data.b_values);
-            self.push_iter(&filter_data.a_values);
-        }
-
-        if !filter_primitives.is_empty() {
-            self.push_item(&di::DisplayItem::SetFilterPrimitives);
-            self.push_iter(filter_primitives);
-        }
+        self.push_filters(filters, filter_datas, filter_primitives);
 
         let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
             origin,
@@ -1268,6 +1254,7 @@ impl DisplayListBuilder {
                 clip_id,
                 raster_space,
                 cache_tiles,
+                is_backdrop_root,
             },
         });
 
@@ -1281,7 +1268,14 @@ impl DisplayListBuilder {
         spatial_id: di::SpatialId,
         is_backface_visible: bool,
     ) {
-        self.push_simple_stacking_context_with_filters(origin, spatial_id, is_backface_visible, &[], &[], &[]);
+        self.push_simple_stacking_context_with_filters(
+            origin,
+            spatial_id,
+            is_backface_visible,
+            &[],
+            &[],
+            &[],
+        );
     }
 
     /// Helper for examples/ code.
@@ -1306,6 +1300,7 @@ impl DisplayListBuilder {
             filter_primitives,
             di::RasterSpace::Screen,
             /* cache_tiles = */ false,
+            /* is_backdrop_root = */ false,
         );
     }
 
@@ -1319,6 +1314,50 @@ impl DisplayListBuilder {
         }
         self.push_item(&di::DisplayItem::SetGradientStops);
         self.push_iter(stops);
+    }
+
+    pub fn push_backdrop_filter(
+        &mut self,
+        common: &di::CommonItemProperties,
+        filters: &[di::FilterOp],
+        filter_datas: &[di::FilterData],
+        filter_primitives: &[di::FilterPrimitive],
+    ) {
+        self.push_filters(filters, filter_datas, filter_primitives);
+
+        let item = di::DisplayItem::BackdropFilter(di::BackdropFilterDisplayItem {
+            common: *common,
+        });
+        self.push_item(&item);
+    }
+
+    pub fn push_filters(
+        &mut self,
+        filters: &[di::FilterOp],
+        filter_datas: &[di::FilterData],
+        filter_primitives: &[di::FilterPrimitive],
+    ) {
+        if filters.len() > 0 {
+            self.push_item(&di::DisplayItem::SetFilterOps);
+            self.push_iter(filters);
+        }
+
+        for filter_data in filter_datas {
+            let func_types = [
+                filter_data.func_r_type, filter_data.func_g_type,
+                filter_data.func_b_type, filter_data.func_a_type];
+            self.push_item(&di::DisplayItem::SetFilterData);
+            self.push_iter(&func_types);
+            self.push_iter(&filter_data.r_values);
+            self.push_iter(&filter_data.g_values);
+            self.push_iter(&filter_data.b_values);
+            self.push_iter(&filter_data.a_values);
+        }
+
+        if !filter_primitives.is_empty() {
+            self.push_item(&di::DisplayItem::SetFilterPrimitives);
+            self.push_iter(filter_primitives);
+        }
     }
 
     fn generate_clip_index(&mut self) -> di::ClipId {

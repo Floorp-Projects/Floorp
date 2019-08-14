@@ -390,6 +390,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mTelemetryEnabled.set(true);
             return this;
         }
+
+        /**
+         * Enables GeckoView and Gecko Logging.
+         * Logging is on by default. Does not control all logging in Gecko.
+         * Logging done in Java code must be stripped out at build time.
+         *
+         * @param enable True if logging is enabled.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder debugLogging(final boolean enable) {
+            getSettings().mConsoleServiceToLogcat.set(enable);
+            getSettings().mGeckoViewLogLevel.set(enable ? "Debug" : "Fatal");
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -428,6 +442,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "gl.msaa-level", 0);
     /* package */ final Pref<Boolean> mTelemetryEnabled = new Pref<>(
             "toolkit.telemetry.geckoview.streaming", false);
+    /* package */ final Pref<String> mGeckoViewLogLevel = new Pref<>(
+            "geckoview.logging", "Debug");
+    /* package */ final Pref<Boolean> mConsoleServiceToLogcat = new Pref<>(
+            "consoleservice.logcat", true);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;

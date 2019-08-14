@@ -208,42 +208,42 @@ with only_when(host_is_osx):
     # Xcode state
     # ===========
     js_option('--disable-xcode-checks',
-	      help='Do not check that Xcode is installed and properly configured')
+              help='Do not check that Xcode is installed and properly configured')
 
 
     @depends(host, '--disable-xcode-checks')
     def xcode_path(host, xcode_checks):
-	if host.kernel != 'Darwin' or not xcode_checks:
-	    return
+        if host.kernel != 'Darwin' or not xcode_checks:
+            return
 
-	# xcode-select -p prints the path to the installed Xcode. It
-	# should exit 0 and return non-empty result if Xcode is installed.
+        # xcode-select -p prints the path to the installed Xcode. It
+        # should exit 0 and return non-empty result if Xcode is installed.
 
-	def bad_xcode_select():
-	    die('Could not find installed Xcode; install Xcode from the App '
-		'Store, run it once to perform initial configuration, and then '
-		'try again; in the rare case you wish to build without Xcode '
-		'installed, add the --disable-xcode-checks configure flag')
+        def bad_xcode_select():
+            die('Could not find installed Xcode; install Xcode from the App '
+                'Store, run it once to perform initial configuration, and then '
+                'try again; in the rare case you wish to build without Xcode '
+                'installed, add the --disable-xcode-checks configure flag')
 
-	xcode_path = check_cmd_output('xcode-select', '--print-path',
-				      onerror=bad_xcode_select).strip()
+        xcode_path = check_cmd_output('xcode-select', '--print-path',
+                                      onerror=bad_xcode_select).strip()
 
-	if not xcode_path:
-	    bad_xcode_select()
+        if not xcode_path:
+            bad_xcode_select()
 
-	# Now look for the Command Line Tools.
-	def no_cltools():
-	    die('Could not find installed Xcode Command Line Tools; '
-		'run `xcode-select --install` and follow the instructions '
-		'to install them then try again; if you wish to build without '
-		'Xcode Command Line Tools installed, '
-		'add the --disable-xcode-checks configure flag')
+        # Now look for the Command Line Tools.
+        def no_cltools():
+            die('Could not find installed Xcode Command Line Tools; '
+                'run `xcode-select --install` and follow the instructions '
+                'to install them then try again; if you wish to build without '
+                'Xcode Command Line Tools installed, '
+                'add the --disable-xcode-checks configure flag')
 
-	check_cmd_output('pkgutil', '--pkg-info',
-			 'com.apple.pkg.CLTools_Executables',
-			 onerror=no_cltools)
+        check_cmd_output('pkgutil', '--pkg-info',
+                         'com.apple.pkg.CLTools_Executables',
+                         onerror=no_cltools)
 
-	return xcode_path
+        return xcode_path
 
 
     set_config('XCODE_PATH', xcode_path)

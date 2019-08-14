@@ -8,21 +8,14 @@ var { AsyncShutdown } = ChromeUtils.import(
 add_task(async function test_abort_merging() {
   let buf = await openMirror("abort_merging");
 
-  let promise = new Promise((resolve, reject) => {
-    buf.merger.finalize();
-    let callback = {
-      handleSuccess() {
-        reject(new Error("Shouldn't have merged after aborting"));
-      },
-      handleError(code, message) {
-        equal(code, Cr.NS_ERROR_ABORT, "Should abort merge with result code");
-        resolve();
-      },
-    };
-    buf.merger.merge(0, 0, [], callback);
-  });
-
-  await promise;
+  let controller = new AbortController();
+  let promiseWasMerged = buf.merge(controller.signal);
+  controller.abort();
+  await Assert.rejects(
+    promiseWasMerged,
+    /Operation aborted/,
+    "Should abort merge when signaled"
+  );
 
   // Even though the merger is already finalized on the Rust side, the DB
   // connection is still open on the JS side. Finalizing `buf` closes it.
@@ -56,7 +49,7 @@ add_task(async function test_blocker_state() {
     },
   ]);
 
-  await buf.tryApply(0, 0, { notifyAll() {} }, []);
+  await buf.tryApply(buf.finalizeController.signal);
   await barrier.wait();
 
   let state = buf.progress.fetchState();
@@ -73,6 +66,10 @@ add_task(async function test_blocker_state() {
       "finalize",
     ],
     "Should report merge progress after waiting on blocker"
+  );
+  ok(
+    buf.finalizeController.signal.aborted,
+    "Should abort finalize signal on shutdown"
   );
 
   await buf.finalize();

@@ -153,11 +153,16 @@ a.hidden,
   cursor: default;
 }
 
+#protection-details,
+.inline-text-icon {
+  padding: 4px;
+  padding-inline-start: 24px;
+}
+
 #protection-details {
   -moz-context-properties: fill;
   fill: currentColor;
   background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
-  padding: 4px 4px 4px 24px;
   font-size: 0.75em;
   display: inline;
   cursor: default;
@@ -297,9 +302,13 @@ a.hidden,
   z-index: -1;
 }
 
-input {
+input[type="radio"] {
   position: absolute;
   left: -100px;
+}
+
+[dir="rtl"] input[type="radio"] {
+  right: -100px;
 }
 
 #legend input:focus + label {
@@ -345,6 +354,10 @@ input {
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 16px;
+}
+
+[dir="rtl"] #legend label {
+  background-position: right center;
 }
 
 #legend label:-moz-focusring {
@@ -485,6 +498,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   padding-inline-start: 24px;
 }
 
+[dir="rtl"] #protection-details,
 [dir="rtl"] .inline-text-icon {
   background-position-x: 100%;
 }

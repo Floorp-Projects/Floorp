@@ -50,19 +50,27 @@ add_task(async function test_create_login() {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
-      let createButton = loginList.shadowRoot.querySelector(
-        ".create-login-button"
-      );
+      let createButton = loginList._createLoginButton;
       is(
         content.getComputedStyle(loginList._blankLoginListItem).display,
         "none",
         "the blank login list item should be hidden initially"
       );
+      ok(
+        !createButton.disabled,
+        "Create button should not be disabled initially"
+      );
+
       createButton.click();
+
       isnot(
         content.getComputedStyle(loginList._blankLoginListItem).display,
         "none",
         "the blank login list item should be visible after clicking on the create button"
+      );
+      ok(
+        createButton.disabled,
+        "Create button should be disabled after being clicked"
       );
 
       let loginItem = Cu.waiveXrays(
@@ -118,6 +126,11 @@ add_task(async function test_create_login() {
           "none",
           "the blank login list item should be hidden after adding new login"
         );
+        ok(
+          !loginList._createLoginButton.disabled,
+          "Create button shouldn't be disabled after exiting create login view"
+        );
+
         let loginGuid = await ContentTaskUtils.waitForCondition(() => {
           return loginList._loginGuidsSortedOrder.find(
             guid => loginList._logins[guid].login.origin == aOriginTuple[1]

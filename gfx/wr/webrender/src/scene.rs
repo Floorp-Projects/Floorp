@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch};
-use api::{FilterOp, TempFilterData, FilterData, FilterPrimitive, ComponentTransferFuncType};
-use api::{PipelineId, PropertyBinding, PropertyBindingId, ItemRange, MixBlendMode, StackingContext};
+use api::{PipelineId, PropertyBinding, PropertyBindingId, MixBlendMode, StackingContext};
 use api::units::{LayoutSize, LayoutTransform};
-use crate::internal_types::{FastHashMap, Filter};
+use crate::internal_types::FastHashMap;
 use std::sync::Arc;
 
 /// Stores a map of the animated property bindings for the current display list. These
@@ -198,18 +197,6 @@ impl Scene {
 
 pub trait StackingContextHelpers {
     fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode>;
-    fn filter_ops_for_compositing(
-        &self,
-        input_filters: ItemRange<FilterOp>,
-    ) -> Vec<Filter>;
-    fn filter_datas_for_compositing(
-        &self,
-        input_filter_datas: &[TempFilterData],
-    ) -> Vec<FilterData>;
-    fn filter_primitives_for_compositing(
-        &self,
-        input_filter_primitives: ItemRange<FilterPrimitive>,
-    ) -> Vec<FilterPrimitive>;
 }
 
 impl StackingContextHelpers for StackingContext {
@@ -218,55 +205,5 @@ impl StackingContextHelpers for StackingContext {
             MixBlendMode::Normal => None,
             _ => Some(self.mix_blend_mode),
         }
-    }
-
-    fn filter_ops_for_compositing(
-        &self,
-        input_filters: ItemRange<FilterOp>,
-    ) -> Vec<Filter> {
-        // TODO(gw): Now that we resolve these later on,
-        //           we could probably make it a bit
-        //           more efficient than cloning these here.
-        let mut filters = vec![];
-        for filter in input_filters {
-            filters.push(filter.into());
-        }
-        filters
-    }
-
-    fn filter_datas_for_compositing(
-        &self,
-        input_filter_datas: &[TempFilterData],
-    ) -> Vec<FilterData> {
-        // TODO(gw): Now that we resolve these later on,
-        //           we could probably make it a bit
-        //           more efficient than cloning these here.
-        let mut filter_datas = vec![];
-        for temp_filter_data in input_filter_datas {
-            let func_types : Vec<ComponentTransferFuncType> = temp_filter_data.func_types.iter().collect();
-            debug_assert!(func_types.len() == 4);
-            filter_datas.push( FilterData {
-                func_r_type: func_types[0],
-                r_values: temp_filter_data.r_values.iter().collect(),
-                func_g_type: func_types[1],
-                g_values: temp_filter_data.g_values.iter().collect(),
-                func_b_type: func_types[2],
-                b_values: temp_filter_data.b_values.iter().collect(),
-                func_a_type: func_types[3],
-                a_values: temp_filter_data.a_values.iter().collect(),
-            });
-        }
-        filter_datas
-    }
-
-    fn filter_primitives_for_compositing(
-        &self,
-        input_filter_primitives: ItemRange<FilterPrimitive>,
-    ) -> Vec<FilterPrimitive> {
-        // Resolve these in the flattener?
-        // TODO(gw): Now that we resolve these later on,
-        //           we could probably make it a bit
-        //           more efficient than cloning these here.
-        input_filter_primitives.iter().map(|primitive| primitive.into()).collect()
     }
 }

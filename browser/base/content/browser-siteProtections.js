@@ -982,8 +982,10 @@ var SocialTracking = {
       this,
       "enabled",
       this.PREF_ENABLED,
-      false
+      false,
+      this.updateCategoryItem.bind(this)
     );
+    this.updateCategoryItem();
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "uiEnabled",
@@ -1017,6 +1019,10 @@ var SocialTracking = {
       "maxNotifications",
       this.PREF_MAX
     );
+  },
+
+  updateCategoryItem() {
+    this.categoryItem.classList.toggle("blocked", this.enabled);
   },
 
   isBlocking(state) {

@@ -9,7 +9,6 @@ with Files('**'):
 
 if CONFIG['ENABLE_TESTS']:
     MOCHITEST_MANIFESTS += [
-        'imptests/mochitest.ini',
         'tests/mochitest.ini',
 ]
     MOCHITEST_CHROME_MANIFESTS += [

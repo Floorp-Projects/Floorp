@@ -1113,7 +1113,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   nscoord mInitialLetterSink;    // 0 means normal
   float mInitialLetterSize;      // 0.0f means normal
   mozilla::StyleColor mTextDecorationColor;
-  mozilla::StyleLengthOrAuto mTextDecorationThickness;
+  mozilla::StyleTextDecorationLength mTextDecorationThickness;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
@@ -1157,7 +1157,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleLineHeight mLineHeight;
   mozilla::LengthPercentage mTextIndent;
 
-  mozilla::StyleLengthOrAuto mTextUnderlineOffset;
+  mozilla::StyleTextDecorationLength mTextUnderlineOffset;
   mozilla::StyleTextDecorationSkipInk mTextDecorationSkipInk;
 
   nscoord mWebkitTextStrokeWidth;  // coord
@@ -2376,6 +2376,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
 
   bool HasFilters() const { return !mFilters.IsEmpty(); }
 
+  bool HasBackdropFilters() const { return !mBackdropFilters.IsEmpty(); }
+
   bool HasBoxShadowWithInset(bool aInset) const {
     for (auto& shadow : mBoxShadow.AsSpan()) {
       if (shadow.inset == aInset) {
@@ -2383,6 +2385,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {
       }
     }
     return false;
+  }
+
+  bool HasMixBlendMode() const {
+    return mMixBlendMode != NS_STYLE_BLEND_NORMAL;
   }
 
   mozilla::StyleOwnedSlice<mozilla::StyleFilter> mFilters;

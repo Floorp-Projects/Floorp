@@ -32,9 +32,9 @@ function runTestInIframe() {
     return audioContext.audioWorklet.addModule("worklet_exception.js")
   })
   .then(() => {
-    ok(false, "We should not be called!");
+    ok(true, "The script threw but we are still here.");
   }, () => {
-    ok(true, "The script thrown but we are still here.");
+    ok(false, "We should not be called!");
   })
 
   .then(() => {

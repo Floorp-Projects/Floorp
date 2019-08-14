@@ -2070,6 +2070,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cx, NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
 
+      mBrowsingContext->CleanUpDanglingRemoteOuterWindowProxies(cx, &outer);
+      MOZ_ASSERT(js::IsWindowProxy(outer));
+
       js::SetProxyReservedSlot(outer, OUTER_WINDOW_SLOT,
                                js::PrivateValue(ToSupports(this)));
 

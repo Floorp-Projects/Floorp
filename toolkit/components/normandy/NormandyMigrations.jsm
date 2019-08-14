@@ -6,6 +6,12 @@
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonStudies",
+  "resource://normandy/lib/AddonStudies.jsm"
+);
+
 var EXPORTED_SYMBOLS = ["NormandyMigrations"];
 
 const BOOTSTRAP_LOGGER_NAME = "app.normandy.bootstrap";
@@ -22,30 +28,28 @@ log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 log.level = Services.prefs.getIntPref(PREF_LOGGING_LEVEL, Log.Level.Warn);
 
 const NormandyMigrations = {
-  applyAll() {
+  async applyAll() {
     let migrationsApplied = Services.prefs.getIntPref(
       PREF_MIGRATIONS_APPLIED,
       0
     );
 
     for (let i = migrationsApplied; i < this.migrations.length; i++) {
-      this.applyOne(i);
+      await this.applyOne(i);
       migrationsApplied++;
     }
 
     Services.prefs.setIntPref(PREF_MIGRATIONS_APPLIED, migrationsApplied);
   },
 
-  applyOne(id) {
-    this.migrations[id]();
+  async applyOne(id) {
+    await this.migrations[id]();
   },
 
   migrations: [
-    // Migration 0
     migrateShieldPrefs,
-
-    // Migration 1
     migrateStudiesEnabledWithoutHealthReporting,
+    AddonStudies.migrateAddonStudyFieldsToSlugAndUserFacingFields,
   ],
 };
 
