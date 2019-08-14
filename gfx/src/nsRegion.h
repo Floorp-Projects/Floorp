@@ -19,7 +19,6 @@
 #include "nsMargin.h"               // for nsIntMargin
 #include "nsRegionFwd.h"            // for nsIntRegion
 #include "nsString.h"               // for nsCString
-#include "xpcom-config.h"           // for CPP_THROW_NEW
 #include "mozilla/ArrayView.h"      // for ArrayView
 #include "mozilla/Move.h"           // for mozilla::Move
 #include "mozilla/gfx/MatrixFwd.h"  // for mozilla::gfx::Matrix4x4
