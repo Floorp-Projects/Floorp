@@ -24,21 +24,8 @@ var Services = require("Services");
 var ChromeUtils = require("ChromeUtils");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
+const Selection = require("devtools/client/framework/selection");
 var Telemetry = require("devtools/client/shared/telemetry");
-
-loader.lazyRequireGetter(
-  this,
-  "createToolboxStore",
-  "devtools/client/framework/store",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "registerWalkerListeners",
-  "devtools/client/framework/actions/index",
-  true
-);
-
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 var {
   DOMHelpers,
@@ -57,6 +44,18 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "createToolboxStore",
+  "devtools/client/framework/store",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "registerWalkerListeners",
+  "devtools/client/framework/actions/index",
+  true
+);
 loader.lazyRequireGetter(
   this,
   "AppConstants",
@@ -196,6 +195,7 @@ function Toolbox(
   this._target = target;
   this._win = contentWindow;
   this.frameId = frameId;
+  this.selection = new Selection();
   this.telemetry = new Telemetry();
 
   // The session ID is used to determine which telemetry events belong to which
@@ -255,6 +255,8 @@ function Toolbox(
   this._onPickerStarted = this._onPickerStarted.bind(this);
   this._onPickerStopped = this._onPickerStopped.bind(this);
   this._onPickerCanceled = this._onPickerCanceled.bind(this);
+  this._onPickerPicked = this._onPickerPicked.bind(this);
+  this._onPickerPreviewed = this._onPickerPreviewed.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
@@ -298,6 +300,8 @@ function Toolbox(
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._onToolSelected);
+
+  this.selection.on("new-node-front", this._onNewSelectedNodeFront);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
@@ -525,14 +529,6 @@ Toolbox.prototype = {
    */
   get walker() {
     return this._walker;
-  },
-
-  /**
-   * Get the toolbox's node selection. Note that it may not always have been
-   * initialized first. Use `initInspector()` if needed.
-   */
-  get selection() {
-    return this._selection;
   },
 
   /**
@@ -1812,6 +1808,24 @@ Toolbox.prototype = {
   },
 
   /**
+   * When the picker is canceled, make sure the toolbox
+   * gets the focus.
+   */
+  _onPickerCanceled: function() {
+    if (this.hostType !== Toolbox.HostType.WINDOW) {
+      this.win.focus();
+    }
+  },
+
+  _onPickerPicked: function(nodeFront) {
+    this.selection.setNodeFront(nodeFront, { reason: "picker-node-picked" });
+  },
+
+  _onPickerPreviewed: function(nodeFront) {
+    this.selection.setNodeFront(nodeFront, { reason: "picker-node-previewed" });
+  },
+
+  /**
    * RDM sometimes simulates touch events. For this to work correctly at all times, it
    * needs to know when the picker is active or not.
    * This method communicates with the RDM Manager if it exists.
@@ -1830,16 +1844,6 @@ Toolbox.prototype = {
 
     const ui = ResponsiveUIManager.getResponsiveUIForTab(tab);
     await ui.emulationFront.setElementPickerState(state);
-  },
-
-  /**
-   * When the picker is canceled, make sure the toolbox
-   * gets the focus.
-   */
-  _onPickerCanceled: function() {
-    if (this.hostType !== Toolbox.HostType.WINDOW) {
-      this.win.focus();
-    }
   },
 
   /**
@@ -3319,7 +3323,6 @@ Toolbox.prototype = {
         this._inspector = await this.target.getFront("inspector");
         this._walker = this.inspectorFront.walker;
         this._highlighter = this.inspectorFront.highlighter;
-        this._selection = this.inspectorFront.selection;
 
         this.inspectorFront.nodePicker.on(
           "picker-starting",
@@ -3337,7 +3340,14 @@ Toolbox.prototype = {
           "picker-node-canceled",
           this._onPickerCanceled
         );
-        this._selection.on("new-node-front", this._onNewSelectedNodeFront);
+        this.inspectorFront.nodePicker.on(
+          "picker-node-picked",
+          this._onPickerPicked
+        );
+        this.inspectorFront.nodePicker.on(
+          "picker-node-previewed",
+          this._onPickerPreviewed
+        );
         registerWalkerListeners(this);
       }.bind(this)();
     }
@@ -3456,7 +3466,6 @@ Toolbox.prototype = {
 
     this._inspector = null;
     this._highlighter = null;
-    this._selection = null;
     this._walker = null;
   },
 
@@ -3624,7 +3633,10 @@ Toolbox.prototype = {
           .catch(console.error)
           .then(async () => {
             // Destroying the walker and inspector fronts
-            await this.destroyInspector();
+            this.destroyInspector();
+
+            this.selection.destroy();
+            this.selection = null;
 
             if (this._netMonitorAPI) {
               this._netMonitorAPI.destroy();
