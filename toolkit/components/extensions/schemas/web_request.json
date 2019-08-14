@@ -347,28 +347,6 @@
           }
         },
         "description": "Contains data uploaded in a URL request."
-      },
-      {
-        "id": "UrlClassificationFlags",
-        "type": "string",
-        "enum": ["fingerprinting", "fingerprinting_content", "cryptomining", "cryptomining_content",
-                 "tracking", "tracking_ad", "tracking_analytics", "tracking_social", "tracking_content",
-                 "any_basic_tracking", "any_strict_tracking"],
-        "description": "Tracking flags that match our internal tracking classification"
-      },
-      {
-        "id": "UrlClassificationParty",
-        "type": "array",
-        "items": {"$ref": "UrlClassificationFlags"},
-        "description": "If the request has been classified this is an array of $(ref:UrlClassificationFlags)."
-      },
-      {
-        "id": "UrlClassification",
-        "type": "object",
-        "properties": {
-          "firstParty": {"$ref": "UrlClassificationParty", "description": "First party classification flags if the request has been classified."},
-          "thirdParty": {"$ref": "UrlClassificationParty", "description": "Third party classification flags if the request has been classified."}
-        }
       }
     ],
     "functions": [
@@ -478,8 +456,7 @@
               },
               "tabId": {"type": "integer", "description": "The ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab."},
               "type": {"$ref": "ResourceType", "description": "How the requested resource will be used."},
-              "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."}
             }
           }
         ],
@@ -526,8 +503,7 @@
               "tabId": {"type": "integer", "description": "The ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab."},
               "type": {"$ref": "ResourceType", "description": "How the requested resource will be used."},
               "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
-              "requestHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP request headers that are going to be sent out with this request."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "requestHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP request headers that are going to be sent out with this request."}
             }
           }
         ],
@@ -574,8 +550,7 @@
               "tabId": {"type": "integer", "description": "The ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab."},
               "type": {"$ref": "ResourceType", "description": "How the requested resource will be used."},
               "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
-              "requestHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP request headers that have been sent out with this request."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "requestHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP request headers that have been sent out with this request."}
             }
           }
         ],
@@ -619,8 +594,7 @@
               "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
               "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line)."},
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that have been received with this response."},
-              "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."}
              }
           }
         ],
@@ -673,8 +647,7 @@
               "isProxy": {"type": "boolean", "description": "True for Proxy-Authenticate, false for WWW-Authenticate."},
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that were received along with this response."},
               "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."},
-              "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."}
             }
           },
           {
@@ -733,8 +706,7 @@
               "fromCache": {"type": "boolean", "description": "Indicates if this response was fetched from disk cache."},
               "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."},
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that were received along with this response."},
-              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."}
             }
           }
         ],
@@ -781,8 +753,7 @@
               "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."},
               "redirectUrl": {"type": "string", "description": "The new URL."},
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that were received along with this redirect."},
-              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."}
             }
           }
         ],
@@ -828,8 +799,7 @@
               "fromCache": {"type": "boolean", "description": "Indicates if this response was fetched from disk cache."},
               "statusCode": {"type": "integer", "description": "Standard HTTP status code returned by the server."},
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that were received along with this response."},
-              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."},
-              "urlClassification": {"$ref": "UrlClassification","description": "Tracking classification if the request has been classified."}
+              "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."}
             }
           }
         ],
@@ -873,8 +843,7 @@
               "timeStamp": {"type": "number", "description": "The time when this signal is triggered, in milliseconds since the epoch."},
               "ip": {"type": "string", "optional": true, "description": "The server IP address that the request was actually sent to. Note that it may be a literal IPv6 address."},
               "fromCache": {"type": "boolean", "description": "Indicates if this response was fetched from disk cache."},
-              "error": {"type": "string", "description": "The error description. This string is <em>not</em> guaranteed to remain backwards compatible between releases. You must not parse and act based upon its content."},
-              "urlClassification": {"$ref": "UrlClassification", "optional": true, "description": "Tracking classification if the request has been classified."}
+              "error": {"type": "string", "description": "The error description. This string is <em>not</em> guaranteed to remain backwards compatible between releases. You must not parse and act based upon its content."}
             }
           }
         ],
