@@ -81,9 +81,9 @@ function startTests() {
 
 async function mozBrowserTests(browser) {
   info("Granting special powers for mozbrowser");
-  SpecialPowers.addPermission("browser", true, TEST_URI);
-  SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
-  SpecialPowers.setBoolPref("network.disable.ipc.security", true);
+  await SpecialPowers.addPermission("browser", true, TEST_URI);
+  Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
+  Services.prefs.setBoolPref("network.disable.ipc.security", true);
 
   await ContentTask.spawn(browser, null, function() {
     info("Checking mozbrowser iframe");
@@ -103,7 +103,7 @@ async function mozBrowserTests(browser) {
   });
 
   info("Revoking special powers for mozbrowser");
-  SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
-  SpecialPowers.clearUserPref("network.disable.ipc.security");
-  SpecialPowers.removePermission("browser", TEST_URI);
+  Services.prefs.clearUserPref("dom.mozBrowserFramesEnabled");
+  Services.prefs.clearUserPref("network.disable.ipc.security");
+  await SpecialPowers.removePermission("browser", TEST_URI);
 }
