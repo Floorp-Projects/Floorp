@@ -108,6 +108,9 @@ const startupPhases = {
     {
       name: "PGPU::Msg_GetDeviceStatus",
       condition: WIN && WEBRENDER, // bug 1553740 might want to drop the WEBRENDER clause here
+      // If Init() completes before we call EnsureGPUReady we won't send GetDeviceStatus
+      // so we can safely ignore if unused.
+      ignoreIfUnused: true,
       maxCount: 1,
     },
   ],
