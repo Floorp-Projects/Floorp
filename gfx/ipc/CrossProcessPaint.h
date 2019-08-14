@@ -116,9 +116,7 @@ class CrossProcessPaint final {
 
  private:
   typedef nsRefPtrHashtable<nsUint64HashKey, SourceSurface> ResolvedSurfaceMap;
-  typedef nsDataHashtable<nsRefPtrHashKey<dom::WindowGlobalParent>,
-                          PaintFragment>
-      ReceivedFragmentMap;
+  typedef nsDataHashtable<nsUint64HashKey, PaintFragment> ReceivedFragmentMap;
 
   CrossProcessPaint(dom::Promise* aPromise, float aScale,
                     dom::WindowGlobalParent* aRoot);
@@ -137,8 +135,7 @@ class CrossProcessPaint final {
   /// Resolves the paint fragments if we have none pending and resolves the
   /// promise.
   void MaybeResolve();
-  bool ResolveInternal(dom::WindowGlobalParent* aWGP,
-                       ResolvedSurfaceMap* aResolved);
+  nsresult ResolveInternal(dom::TabId aTabId, ResolvedSurfaceMap* aResolved);
 
   RefPtr<dom::Promise> mPromise;
   RefPtr<dom::WindowGlobalParent> mRoot;
