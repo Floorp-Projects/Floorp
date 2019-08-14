@@ -5687,12 +5687,12 @@
 
 - name: mousewheel.transaction.ignoremovedelay
   type: RelaxedAtomicInt32
-  value: (int32_t)100
+  value: 100
   mirror: always
 
 - name: mousewheel.transaction.timeout
   type: RelaxedAtomicInt32
-  value: (int32_t)1500
+  value: 1500
   mirror: always
 
 #---------------------------------------------------------------------------
