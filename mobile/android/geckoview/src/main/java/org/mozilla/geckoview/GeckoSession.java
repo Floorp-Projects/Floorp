@@ -533,7 +533,7 @@ public class GeckoSession implements Parcelable {
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
-                Log.i(LOGTAG, "handleMessage " + event + " uri=" + message.getString("uri"));
+                Log.d(LOGTAG, "handleMessage " + event + " uri=" + message.getString("uri"));
                 if ("GeckoView:LocationChange".equals(event)) {
                     if (message.getBoolean("isTopLevel")) {
                         delegate.onLocationChange(GeckoSession.this,
@@ -654,7 +654,7 @@ public class GeckoSession implements Parcelable {
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
-                Log.i(LOGTAG, "handleMessage " + event + " uri=" + message.getString("uri"));
+                Log.d(LOGTAG, "handleMessage " + event + " uri=" + message.getString("uri"));
                 if ("GeckoView:PageStart".equals(event)) {
                     delegate.onPageStart(GeckoSession.this,
                                          message.getString("uri"));
