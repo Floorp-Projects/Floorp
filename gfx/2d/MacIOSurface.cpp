@@ -6,6 +6,7 @@
 
 #include "MacIOSurface.h"
 #include <OpenGL/gl.h>
+#include <OpenGL/CGLIOSurface.h>
 #include <QuartzCore/QuartzCore.h>
 #include <dlfcn.h>
 #include "GLConsts.h"
@@ -17,8 +18,6 @@ using namespace mozilla;
 // IOSurface signatures
 #define IOSURFACE_FRAMEWORK_PATH \
   "/System/Library/Frameworks/IOSurface.framework/IOSurface"
-#define OPENGL_FRAMEWORK_PATH \
-  "/System/Library/Frameworks/OpenGL.framework/OpenGL"
 #define COREVIDEO_FRAMEWORK_PATH                                         \
   "/System/Library/Frameworks/ApplicationServices.framework/Frameworks/" \
   "CoreVideo.framework/CoreVideo"
@@ -27,15 +26,12 @@ using namespace mozilla;
   ((CFStringRef*)dlsym(sIOSurfaceFramework, const_name))
 #define GET_IOSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sIOSurfaceFramework, sym_name)
-#define GET_CGLSYM(dest, sym_name) \
-  (typeof(dest)) dlsym(sOpenGLFramework, sym_name)
 #define GET_CVSYM(dest, sym_name) \
   (typeof(dest)) dlsym(sCoreVideoFramework, sym_name)
 
 MacIOSurfaceLib::LibraryUnloader MacIOSurfaceLib::sLibraryUnloader;
 bool MacIOSurfaceLib::isLoaded = false;
 void* MacIOSurfaceLib::sIOSurfaceFramework;
-void* MacIOSurfaceLib::sOpenGLFramework;
 void* MacIOSurfaceLib::sCoreVideoFramework;
 IOSurfaceCreateFunc MacIOSurfaceLib::sCreate;
 IOSurfaceGetIDFunc MacIOSurfaceLib::sGetID;
@@ -51,7 +47,6 @@ IOSurfaceVoidFunc MacIOSurfaceLib::sIncrementUseCount;
 IOSurfaceVoidFunc MacIOSurfaceLib::sDecrementUseCount;
 IOSurfaceLockFunc MacIOSurfaceLib::sLock;
 IOSurfaceUnlockFunc MacIOSurfaceLib::sUnlock;
-CGLTexImageIOSurface2DFunc MacIOSurfaceLib::sTexImage;
 CVPixelBufferGetIOSurfaceFunc MacIOSurfaceLib::sCVPixelBufferGetIOSurface;
 IOSurfacePixelFormatFunc MacIOSurfaceLib::sPixelFormat;
 
@@ -135,14 +130,6 @@ void MacIOSurfaceLib::IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr) {
   sDecrementUseCount(aIOSurfacePtr);
 }
 
-CGLError MacIOSurfaceLib::CGLTexImageIOSurface2D(
-    CGLContextObj ctxt, GLenum target, GLenum internalFormat, GLsizei width,
-    GLsizei height, GLenum format, GLenum type, IOSurfacePtr ioSurface,
-    GLuint plane) {
-  return sTexImage(ctxt, target, internalFormat, width, height, format, type,
-                   ioSurface, plane);
-}
-
 IOSurfacePtr MacIOSurfaceLib::CVPixelBufferGetIOSurface(
     CVPixelBufferRef aPixelBuffer) {
   return sCVPixelBufferGetIOSurface(aPixelBuffer);
@@ -162,17 +149,14 @@ void MacIOSurfaceLib::LoadLibrary() {
   isLoaded = true;
   sIOSurfaceFramework =
       dlopen(IOSURFACE_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
-  sOpenGLFramework = dlopen(OPENGL_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
 
   sCoreVideoFramework =
       dlopen(COREVIDEO_FRAMEWORK_PATH, RTLD_LAZY | RTLD_LOCAL);
 
-  if (!sIOSurfaceFramework || !sOpenGLFramework || !sCoreVideoFramework) {
+  if (!sIOSurfaceFramework || !sCoreVideoFramework) {
     if (sIOSurfaceFramework) dlclose(sIOSurfaceFramework);
-    if (sOpenGLFramework) dlclose(sOpenGLFramework);
     if (sCoreVideoFramework) dlclose(sCoreVideoFramework);
     sIOSurfaceFramework = nullptr;
-    sOpenGLFramework = nullptr;
     sCoreVideoFramework = nullptr;
     return;
   }
@@ -202,12 +186,10 @@ void MacIOSurfaceLib::LoadLibrary() {
   sPlaneCount = GET_IOSYM(sPlaneCount, "IOSurfaceGetPlaneCount");
   sPixelFormat = GET_IOSYM(sPixelFormat, "IOSurfaceGetPixelFormat");
 
-  sTexImage = GET_CGLSYM(sTexImage, "CGLTexImageIOSurface2D");
-
   sCVPixelBufferGetIOSurface =
       GET_CVSYM(sCVPixelBufferGetIOSurface, "CVPixelBufferGetIOSurface");
 
-  if (!sCreate || !sGetID || !sLookup || !sTexImage || !sGetBaseAddress ||
+  if (!sCreate || !sGetID || !sLookup || !sGetBaseAddress ||
       !sGetBaseAddressOfPlane || !sPlaneCount || !kPropWidth || !kPropHeight ||
       !kPropBytesPerElem || !kPropIsGlobal || !sLock || !sUnlock ||
       !sIncrementUseCount || !sDecrementUseCount || !sWidth || !sHeight ||
@@ -221,14 +203,10 @@ void MacIOSurfaceLib::CloseLibrary() {
   if (sIOSurfaceFramework) {
     dlclose(sIOSurfaceFramework);
   }
-  if (sOpenGLFramework) {
-    dlclose(sOpenGLFramework);
-  }
   if (sCoreVideoFramework) {
     dlclose(sCoreVideoFramework);
   }
   sIOSurfaceFramework = nullptr;
-  sOpenGLFramework = nullptr;
   sCoreVideoFramework = nullptr;
 }
 
@@ -452,9 +430,9 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
                                               GLsizei width, GLsizei height,
                                               GLenum format, GLenum type,
                                               GLuint plane) const {
-  return MacIOSurfaceLib::CGLTexImageIOSurface2D(ctx, target, internalFormat,
-                                                 width, height, format, type,
-                                                 mIOSurfacePtr, plane);
+  return ::CGLTexImageIOSurface2D(ctx, target, internalFormat, width, height,
+                                  format, type, (IOSurfaceRef)mIOSurfacePtr,
+                                  plane);
 }
 
 CGLError MacIOSurface::CGLTexImageIOSurface2D(

@@ -45,11 +45,6 @@ typedef size_t (*IOSurfaceSizeTFunc)(IOSurfacePtr io_surface);
 typedef size_t (*IOSurfaceSizePlaneTFunc)(IOSurfacePtr io_surface,
                                           size_t plane);
 typedef size_t (*IOSurfaceGetPropertyMaximumFunc)(CFStringRef property);
-typedef CGLError (*CGLTexImageIOSurface2DFunc)(
-    CGLContextObj ctxt, GLenum target, GLenum internalFormat, GLsizei width,
-    GLsizei height, GLenum format, GLenum type, IOSurfacePtr ioSurface,
-    GLuint plane);
-
 typedef IOSurfacePtr (*CVPixelBufferGetIOSurfaceFunc)(
     CVPixelBufferRef pixelBuffer);
 
@@ -152,7 +147,6 @@ class MacIOSurfaceLib {
  public:
   MacIOSurfaceLib() = delete;
   static void* sIOSurfaceFramework;
-  static void* sOpenGLFramework;
   static void* sCoreVideoFramework;
   static bool isLoaded;
   static IOSurfaceCreateFunc sCreate;
@@ -169,7 +163,6 @@ class MacIOSurfaceLib {
   static IOSurfaceSizePlaneTFunc sHeight;
   static IOSurfaceSizePlaneTFunc sBytesPerRow;
   static IOSurfaceGetPropertyMaximumFunc sGetPropertyMaximum;
-  static CGLTexImageIOSurface2DFunc sTexImage;
   static CVPixelBufferGetIOSurfaceFunc sCVPixelBufferGetIOSurface;
   static IOSurfacePixelFormatFunc sPixelFormat;
   static CFStringRef kPropWidth;
@@ -198,11 +191,6 @@ class MacIOSurfaceLib {
                                   uint32_t* seed);
   static void IOSurfaceIncrementUseCount(IOSurfacePtr aIOSurfacePtr);
   static void IOSurfaceDecrementUseCount(IOSurfacePtr aIOSurfacePtr);
-  static CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt, GLenum target,
-                                         GLenum internalFormat, GLsizei width,
-                                         GLsizei height, GLenum format,
-                                         GLenum type, IOSurfacePtr ioSurface,
-                                         GLuint plane);
   static IOSurfacePtr CVPixelBufferGetIOSurface(CVPixelBufferRef apixelBuffer);
   static OSType IOSurfaceGetPixelFormat(IOSurfacePtr aIOSurfacePtr);
   static void LoadLibrary();
