@@ -4,7 +4,10 @@
  */
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 const VIDEO_PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
@@ -26,17 +29,17 @@ async function testAutoplayWebRTCPermission(args) {
       url: VIDEO_PAGE,
     },
     async browser => {
-      SitePermissions.set(
+      PermissionTestUtils.add(
         browser.currentURI,
         args.permission,
-        SitePermissions.ALLOW
+        Services.perms.ALLOW_ACTION
       );
 
       await loadAutoplayVideo(browser, args);
       await checkVideoDidPlay(browser, args);
 
       // Reset permission.
-      SitePermissions.remove(browser.currentURI, args.permission);
+      PermissionTestUtils.remove(browser.currentURI, args.permission);
 
       info(`- Finished ${args.name} -`);
     }
