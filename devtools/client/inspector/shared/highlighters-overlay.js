@@ -504,8 +504,7 @@ class HighlightersOverlay {
     const { grids, highlighterSettings } = this.store.getState();
     const grid = grids.find(g => g.nodeFront === nodeFront);
     const color = grid ? grid.color : DEFAULT_HIGHLIGHTER_COLOR;
-    const zIndex = grid ? grid.zIndex : 0;
-    return Object.assign({}, highlighterSettings, { color, zIndex });
+    return Object.assign({}, highlighterSettings, { color });
   }
 
   /**
