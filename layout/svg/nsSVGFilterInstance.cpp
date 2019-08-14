@@ -138,8 +138,6 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
   }
 
   if (!url) {
-    MOZ_ASSERT_UNREACHABLE(
-        "an StyleFilter of type URL should have a non-null URL");
     return nullptr;
   }
 
