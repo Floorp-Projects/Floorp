@@ -184,8 +184,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */
-bool nsLayoutUtils::sInterruptibleReflowEnabled;
-/* static */
 bool nsLayoutUtils::sSVGTransformBoxEnabled;
 /* static */
 uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
@@ -7965,8 +7963,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddBoolVarCache(&sInterruptibleReflowEnabled,
-                               "layout.interruptible-reflow.enabled");
   Preferences::AddBoolVarCache(&sSVGTransformBoxEnabled,
                                "svg.transform-box.enabled");
   Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,

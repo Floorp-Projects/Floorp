@@ -2398,10 +2398,6 @@ class nsLayoutUtils {
    */
   static bool GPUImageScalingEnabled();
 
-  static bool InterruptibleReflowEnabled() {
-    return sInterruptibleReflowEnabled;
-  }
-
   /**
    * Unions the overflow areas of the children of aFrame with aOverflowAreas.
    * aSkipChildLists specifies any child lists that should be skipped.
@@ -2998,7 +2994,6 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
