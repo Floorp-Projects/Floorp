@@ -2445,10 +2445,6 @@ class nsLayoutUtils {
 
   static bool FontSizeInflationEnabled(nsPresContext* aPresContext);
 
-  static float MaxZoom() { return sZoomMaxPercent / 100.0f; }
-
-  static float MinZoom() { return sZoomMinPercent / 100.0f; }
-
   static bool SVGTransformBoxEnabled() { return sSVGTransformBoxEnabled; }
 
   static uint32_t IdlePeriodDeadlineLimit() { return sIdlePeriodDeadlineLimit; }
@@ -3003,8 +2999,6 @@ class nsLayoutUtils {
       const nsIFrame* aFrame);
 
  private:
-  static uint32_t sZoomMaxPercent;
-  static uint32_t sZoomMinPercent;
   static bool sInvalidationDebuggingIsEnabled;
   static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;

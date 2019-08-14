@@ -6662,6 +6662,27 @@
 #endif
   mirror: always
 
+#---------------------------------------------------------------------------
+# Prefs starting with "zoom."
+#---------------------------------------------------------------------------
+
+- name: zoom.maxPercent
+  type: uint32_t
+#ifdef ANDROID
+  value: 400
+#else
+  value: 300
+#endif
+  mirror: always
+
+- name: zoom.minPercent
+  type: uint32_t
+#ifdef ANDROID
+  value: 20
+#else
+  value: 30
+#endif
+  mirror: always
 
 #---------------------------------------------------------------------------
 # End of prefs
