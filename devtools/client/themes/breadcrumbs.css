@@ -114,22 +114,6 @@
   content: unset;
 }
 
-.breadcrumbs-widget-item:dir(rtl)::before {
-  transform: scaleX(-1);
-}
-
-/* RTL support: move the images that were on the left to the right,
- * and move images that were on the right to the left.
- */
-.breadcrumbs-widget-item:dir(rtl) {
-  padding: 0 20px 0 8px;
-}
-
-.breadcrumbs-widget-item:dir(rtl),
-.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:dir(rtl) {
-  background-position: center right;
-}
-
 .breadcrumbs-widget-item:not(:first-child)::before {
   content: url(chrome://devtools/skin/images/breadcrumbs-divider.svg);
   background: none;
