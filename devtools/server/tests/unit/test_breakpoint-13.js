@@ -17,7 +17,10 @@ add_task(
     );
 
     const source = await getSourceById(threadFront, packet.frame.where.actor);
-    await threadFront.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
+    await threadFront.setBreakpoint(
+      { sourceUrl: source.url, line: 3, column: 6 },
+      {}
+    );
 
     info("Check that the stepping worked.");
     const packet1 = await stepIn(threadFront);
