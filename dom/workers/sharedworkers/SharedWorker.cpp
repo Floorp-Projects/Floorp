@@ -195,7 +195,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, principalInfo, storagePrincipalInfo,
       loadInfo.mDomain, isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo,
-      storageAllowed, true /* sharedWorker */);
+      storageAllowed, void_t() /* OptionalServiceWorkerData */);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier);
