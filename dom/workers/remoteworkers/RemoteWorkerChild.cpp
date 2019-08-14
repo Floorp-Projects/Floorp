@@ -34,6 +34,7 @@
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
+#include "mozilla/dom/ServiceWorkerOp.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
@@ -919,6 +920,18 @@ IPCResult RemoteWorkerChild::RecvExecOp(RemoteWorkerOp&& aOp) {
   MOZ_ASSERT(!mIsServiceWorker);
 
   MaybeStartOp(new SharedWorkerOp(std::move(aOp)));
+
+  return IPC_OK();
+}
+
+IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
+    ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve) {
+  MOZ_ASSERT(mIsServiceWorker);
+  MOZ_ASSERT(
+      aArgs.type() != ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs,
+      "FetchEvent operations should be sent via PFetchEventOp(Proxy) actors!");
+
+  MaybeStartOp(ServiceWorkerOp::Create(aArgs, std::move(aResolve)));
 
   return IPC_OK();
 }
