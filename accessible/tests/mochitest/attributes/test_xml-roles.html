@@ -21,9 +21,11 @@
       testAttrs("nav", {"xml-roles": "navigation"}, true);
       testAttrs("header", {"xml-roles": "banner"}, true);
       testAbsentAttrs("article_header", {"xml-roles": "banner"});
+      testAbsentAttrs("main_header", {"xml-roles": "banner"});
       testAbsentAttrs("section_header", {"xml-roles": "banner"});
       testAttrs("footer", {"xml-roles": "contentinfo"}, true);
       testAbsentAttrs("article_footer", {"xml-roles": "contentinfo"});
+      testAbsentAttrs("main_footer", {"xml-roles": "contentinfo"});
       testAbsentAttrs("section_footer", {"xml-roles": "contentinfo"});
       testAttrs("aside", {"xml-roles": "complementary"}, true);
       testAbsentAttrs("section", {"xml-roles": "region"}, true);
@@ -157,6 +159,10 @@
     <header id="article_header">a header within an article</header>
     <footer id="article_footer">a footer within an article</footer>
   </article>
+  <main id="main_with_header_and_footer">
+    <header id="main_header">a header within a main</header>
+    <footer id="main_footer">a footer within a main</footer>
+  </main>
   <section id="section_with_header_and_footer">
     <header id="section_header">a header within an section</header>
     <footer id="section_footer">a footer within an section</footer>

@@ -165,11 +165,11 @@ role HTMLHeaderOrFooterAccessible::NativeRole() const {
   // If other sectioning or sectioning root elements, they become sections.
   nsIContent* parent = mContent->GetParent();
   while (parent) {
-    if (parent->IsAnyOfHTMLElements(nsGkAtoms::article, nsGkAtoms::aside,
-                                    nsGkAtoms::nav, nsGkAtoms::section,
-                                    nsGkAtoms::blockquote, nsGkAtoms::details,
-                                    nsGkAtoms::dialog, nsGkAtoms::fieldset,
-                                    nsGkAtoms::figure, nsGkAtoms::td)) {
+    if (parent->IsAnyOfHTMLElements(
+            nsGkAtoms::article, nsGkAtoms::aside, nsGkAtoms::nav,
+            nsGkAtoms::section, nsGkAtoms::main, nsGkAtoms::blockquote,
+            nsGkAtoms::details, nsGkAtoms::dialog, nsGkAtoms::fieldset,
+            nsGkAtoms::figure, nsGkAtoms::td)) {
       break;
     }
     parent = parent->GetParent();
