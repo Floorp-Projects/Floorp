@@ -7,10 +7,10 @@ fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-1.html displaystyle-1-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-2.html displaystyle-2-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-3.html displaystyle-3-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-4.html displaystyle-4-ref.html # Bug 1392106
+== displaystyle-1.html displaystyle-1-ref.html
+== displaystyle-2.html displaystyle-2-ref.html
+== displaystyle-3.html displaystyle-3-ref.html
+== displaystyle-4.html displaystyle-4-ref.html
 random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(webrender&&winWidget,114-255,265-304) fuzzy-if(webrender&&OSX,87-87,242-242) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
@@ -108,7 +108,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-fails-if(gtkWidget||Android) random-if(winWidget) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429, bug 1328771
+== semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html
@@ -149,7 +149,7 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml # Bug 1392106
+== mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
@@ -157,7 +157,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-linethickness-1.xh
 != link-1.xhtml link-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 == positive-namedspace.html positive-namedspace-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mtable-align-whitespace.html mtable-align-whitespace-ref.html # Bug 1392106
+== mtable-align-whitespace.html mtable-align-whitespace-ref.html
 == mtable-width.html mtable-width-ref.html
 == mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
 == mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
@@ -178,7 +178,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mtable-align-whitespace.
 == mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
 == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html # Bug 1392106
+== maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace.html mo-lspace-rspace-ref.html # Bug 1392106
