@@ -3357,17 +3357,6 @@ pref("font.minimum-size.x-math", 0);
 pref("font.size.variable.x-math", 16);
 pref("font.size.monospace.x-math", 13);
 
-/**
- * This setting corresponds to a global text zoom setting affecting
- * all content that is not already subject to font size inflation.
- * It is interpreted as a percentage value that is applied on top
- * of the document's current text zoom setting.
- *
- * The resulting total zoom factor (text zoom * system font scale)
- * will be limited by zoom.minPercent and maxPercent.
- */
-pref("font.size.systemFontScale", 100);
-
 /*
  * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
  * to nearby elements that are sensitive to the event. See PositionedEventTargeting.cpp.
