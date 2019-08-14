@@ -31,6 +31,7 @@
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_zoom.h"
 
@@ -251,7 +252,6 @@ EventStateManager::EventStateManager()
     UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
-  WheelTransaction::InitializeStatics();
 }
 
 nsresult EventStateManager::UpdateUserActivityTimer() {
@@ -5841,7 +5841,8 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   // Reset if the previous wheel event is too old.
   if (!mLastTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastTime;
-    if (duration.ToMilliseconds() > WheelTransaction::GetTimeoutTime()) {
+    if (duration.ToMilliseconds() >
+        StaticPrefs::mousewheel_transaction_timeout()) {
       Reset();
     }
   }
