@@ -7,11 +7,6 @@
 #ifndef _XPCOM_CONFIG_H_
 #define _XPCOM_CONFIG_H_
 
-/* Define this to throw() if the compiler complains about 
- * constructors returning NULL
- */
-#undef CPP_THROW_NEW
-
 /* Define to a string describing the XPCOM ABI in use */
 #undef TARGET_XPCOM_ABI
 

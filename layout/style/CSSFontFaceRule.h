@@ -43,7 +43,7 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   RefPtr<RawServoFontFaceRule> mRawRule;
 
  private:
-  void* operator new(size_t size) CPP_THROW_NEW = delete;
+  void* operator new(size_t size) noexcept(true) = delete;
 };
 
 class CSSFontFaceRule final : public css::Rule {

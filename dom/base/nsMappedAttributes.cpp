@@ -79,7 +79,7 @@ nsMappedAttributes* nsMappedAttributes::Clone(bool aWillAddAttr) {
 }
 
 void* nsMappedAttributes::operator new(size_t aSize,
-                                       uint32_t aAttrCount) CPP_THROW_NEW {
+                                       uint32_t aAttrCount) noexcept(true) {
   size_t size = aSize + aAttrCount * sizeof(InternalAttr);
 
   // aSize will include the mAttrs buffer so subtract that.

@@ -151,7 +151,7 @@ class nsTimerEvent final : public CancelableRunnable {
   static void Shutdown();
   static void DeleteAllocatorIfNeeded();
 
-  static void* operator new(size_t aSize) CPP_THROW_NEW {
+  static void* operator new(size_t aSize) noexcept(true) {
     return sAllocator->Alloc(aSize);
   }
   void operator delete(void* aPtr) {

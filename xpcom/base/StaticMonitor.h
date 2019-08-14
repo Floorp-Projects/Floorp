@@ -78,7 +78,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticMonitor {
 
   // Disallow these operators.
   StaticMonitor& operator=(const StaticMonitor& aRhs);
-  static void* operator new(size_t) CPP_THROW_NEW;
+  static void* operator new(size_t) noexcept(true);
   static void operator delete(void*);
 };
 
@@ -101,7 +101,7 @@ class MOZ_STACK_CLASS StaticMonitorAutoLock {
   StaticMonitorAutoLock();
   StaticMonitorAutoLock(const StaticMonitorAutoLock&);
   StaticMonitorAutoLock& operator=(const StaticMonitorAutoLock&);
-  static void* operator new(size_t) CPP_THROW_NEW;
+  static void* operator new(size_t) noexcept(true);
 
   StaticMonitor* mMonitor;
 };

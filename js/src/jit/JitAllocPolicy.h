@@ -143,7 +143,7 @@ class AutoJitContextAlloc {
 
 struct TempObject {
   inline void* operator new(size_t nbytes,
-                            TempAllocator::Fallible view) throw() {
+                            TempAllocator::Fallible view) noexcept(true) {
     return view.alloc.allocate(nbytes);
   }
   inline void* operator new(size_t nbytes, TempAllocator& alloc) {

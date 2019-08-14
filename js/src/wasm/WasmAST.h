@@ -258,13 +258,13 @@ typedef AstVector<AstName> AstNameVector;
 typedef AstVector<AstRef> AstRefVector;
 
 struct AstBase {
-  void* operator new(size_t numBytes, LifoAlloc& astLifo) throw() {
+  void* operator new(size_t numBytes, LifoAlloc& astLifo) noexcept(true) {
     return astLifo.alloc(numBytes);
   }
 };
 
 struct AstNode {
-  void* operator new(size_t numBytes, LifoAlloc& astLifo) throw() {
+  void* operator new(size_t numBytes, LifoAlloc& astLifo) noexcept(true) {
     return astLifo.alloc(numBytes);
   }
 };

@@ -1433,7 +1433,6 @@ if test "$ac_cv_struct_tm_zone_tm_gmtoff" = "yes" ; then
 fi
 fi # ! SKIP_COMPILER_CHECKS
 
-AC_DEFINE(CPP_THROW_NEW, [throw()])
 AC_LANG_C
 
 MOZ_EXPAND_LIBS
