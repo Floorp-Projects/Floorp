@@ -7,114 +7,141 @@
 #ifndef mozilla_dom_RemoteWorkerChild_h
 #define mozilla_dom_RemoteWorkerChild_h
 
-#include "mozilla/dom/PRemoteWorkerChild.h"
-#include "mozilla/DataMutex.h"
-#include "mozilla/ThreadBound.h"
-#include "mozilla/UniquePtr.h"
+#include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
+#include "nsTArray.h"
 
+#include "mozilla/DataMutex.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/ThreadBound.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
+#include "mozilla/dom/PRemoteWorkerChild.h"
+#include "mozilla/dom/ServiceWorkerOpArgs.h"
+
+class nsISerialEventTarget;
 class nsIConsoleReportCollector;
 
 namespace mozilla {
 namespace dom {
 
+class ErrorValue;
 class RemoteWorkerData;
 class WeakWorkerRef;
 class WorkerErrorReport;
 class WorkerPrivate;
-class OptionalMessagePortIdentifier;
 
-class RemoteWorkerChild final : public PRemoteWorkerChild {
+class RemoteWorkerChild final
+    : public SupportsThreadSafeWeakPtr<RemoteWorkerChild>,
+      public PRemoteWorkerChild {
   friend class PRemoteWorkerChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerChild)
+  MOZ_DECLARE_THREADSAFEWEAKREFERENCE_TYPENAME(RemoteWorkerChild)
 
-  RemoteWorkerChild();
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(RemoteWorkerChild)
+
+  explicit RemoteWorkerChild(const RemoteWorkerData& aData);
+
+  ~RemoteWorkerChild();
+
+  nsISerialEventTarget* GetOwningEventTarget() const;
 
   void ExecWorker(const RemoteWorkerData& aData);
-
-  void InitializeOnWorker(WorkerPrivate* aWorkerPrivate);
-
-  void ShutdownOnWorker();
-
-  void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                         const MessagePortIdentifier& aPortIdentifier);
 
   void ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
                                     bool aIsErrorEvent);
 
-  void CloseWorkerOnMainThread();
-
   void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
+
+  void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                         const MessagePortIdentifier& aPortIdentifier);
+
+  RefPtr<GenericNonExclusivePromise> GetTerminationPromise();
+
+  void CloseWorkerOnMainThread();
 
  private:
   class InitializeWorkerRunnable;
 
-  ~RemoteWorkerChild();
+  class Op;
+  class SharedWorkerOp;
 
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  struct Pending {
+    nsTArray<RefPtr<Op>> mPendingOps;
+  };
 
-  mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp);
+  struct PendingTerminated {};
 
-  // This member is a function template because DataMutex<SharedData>::AutoLock
-  // is private, yet it must be passed by const reference into ExecuteOperation.
-  // There should only be one instantiation of this template.
-  template <typename T>
-  mozilla::ipc::IPCResult ExecuteOperation(const RemoteWorkerOp&,
-                                           const T& aLock);
+  struct Running {
+    ~Running();
 
-  void RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
+    RefPtr<WorkerPrivate> mWorkerPrivate;
+    RefPtr<WeakWorkerRef> mWorkerRef;
+  };
 
-  nsresult ExecWorkerOnMainThread(const RemoteWorkerData& aData);
+  struct Terminated {};
+
+  using State = Variant<Pending, Running, PendingTerminated, Terminated>;
+
+  DataMutex<State> mState;
+
+  class Op {
+   public:
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+    virtual ~Op() = default;
+
+    virtual bool MaybeStart(RemoteWorkerChild* aOwner, State& aState) = 0;
+
+    virtual void Cancel() = 0;
+  };
+
+  void ActorDestroy(ActorDestroyReason) override;
+
+  mozilla::ipc::IPCResult RecvExecOp(RemoteWorkerOp&& aOp);
+
+  nsresult ExecWorkerOnMainThread(RemoteWorkerData&& aData);
+
+  void InitializeOnWorker(already_AddRefed<WorkerPrivate> aWorkerPrivate);
+
+  void ShutdownOnWorker();
+
+  void CreationSucceededOnAnyThread();
+
+  void CreationFailedOnAnyThread();
+
+  void CreationSucceededOrFailedOnAnyThread(bool aDidCreationSucceed);
+
+  void CloseWorkerOnMainThread(State& aState);
 
   void ErrorPropagation(const ErrorValue& aValue);
 
   void ErrorPropagationDispatch(nsresult aError);
 
-  void CreationSucceededOnAnyThread();
+  void TransitionStateToPendingTerminated(State& aState);
 
-  void CreationSucceeded();
+  void TransitionStateToRunning(already_AddRefed<WorkerPrivate> aWorkerPrivate,
+                                already_AddRefed<WeakWorkerRef> aWorkerRef);
 
-  void CreationFailedOnAnyThread();
+  void TransitionStateToTerminated();
 
-  void CreationFailed();
+  void TransitionStateToTerminated(State& aState);
 
-  void WorkerTerminated();
+  void CancelAllPendingOps(State& aState);
+
+  void MaybeStartOp(RefPtr<Op>&& aOp);
+
+  MozPromiseHolder<GenericNonExclusivePromise> mTerminationPromise;
+
+  const bool mIsServiceWorker;
+  const nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
   // Touched on main-thread only.
   nsTArray<uint64_t> mWindowIDs;
 
-  RefPtr<WeakWorkerRef> mWorkerRef;
-  bool mIPCActive;
-
-  enum WorkerState {
-    // CreationSucceeded/CreationFailed not called yet.
-    ePending,
-
-    // The worker is not created yet, but we want to terminate as soon as
-    // possible.
-    ePendingTerminated,
-
-    // Worker up and running.
-    eRunning,
-
-    // Worker terminated.
-    eTerminated,
-  };
-
-  struct SharedData {
-    SharedData();
-
-    RefPtr<WorkerPrivate> mWorkerPrivate;
-    WorkerState mWorkerState;
-  };
-
-  DataMutex<SharedData> mSharedData;
-
-  // Touched only on the owning thread (Worker Launcher).
   struct LauncherBoundData {
-    nsTArray<RemoteWorkerOp> mPendingOps;
+    bool mIPCActive = true;
   };
 
   ThreadBound<LauncherBoundData> mLauncherData;
