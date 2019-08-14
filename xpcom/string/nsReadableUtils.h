@@ -16,49 +16,15 @@
 #include "mozilla/Assertions.h"
 #include "nsAString.h"
 #include "mozilla/Tuple.h"
+#include "encoding_rs_mem.h"
 
 #include "nsTArrayForwardDeclare.h"
 
-// Can't include mozilla/Encoding.h here. The implementations are in
-// the encoding_rs and encoding_glue crates.
+// Can't include mozilla/Encoding.h here. The implementation is in
+// the encoding_rs crate.
 extern "C" {
+// Declared as uint8_t instead of char to match declaration in another header.
 size_t encoding_utf8_valid_up_to(uint8_t const* buffer, size_t buffer_len);
-
-bool encoding_mem_is_ascii(uint8_t const* buffer, size_t buffer_len);
-
-bool encoding_mem_is_basic_latin(char16_t const* buffer, size_t buffer_len);
-
-bool encoding_mem_is_utf8_latin1(uint8_t const* buffer, size_t buffer_len);
-
-bool encoding_mem_is_str_latin1(uint8_t const* buffer, size_t buffer_len);
-
-bool encoding_mem_is_utf16_latin1(char16_t const* buffer, size_t buffer_len);
-
-size_t encoding_mem_utf16_valid_up_to(char16_t const* buffer,
-                                      size_t buffer_len);
-
-void encoding_mem_ensure_utf16_validity(char16_t* buffer, size_t buffer_len);
-
-void encoding_mem_convert_utf16_to_latin1_lossy(const char16_t* src,
-                                                size_t src_len, char* dst,
-                                                size_t dst_len);
-
-size_t encoding_mem_convert_utf8_to_latin1_lossy(const char* src,
-                                                 size_t src_len, char* dst,
-                                                 size_t dst_len);
-
-void encoding_mem_convert_latin1_to_utf16(const char* src, size_t src_len,
-                                          char16_t* dst, size_t dst_len);
-
-size_t encoding_mem_convert_utf16_to_utf8(const char16_t* src, size_t src_len,
-                                          char* dst, size_t dst_len);
-
-void encoding_mem_convert_utf16_to_utf8_partial(const char16_t* src,
-                                                size_t* src_len, char* dst,
-                                                size_t* dst_len);
-
-size_t encoding_mem_convert_utf8_to_utf16(const char* src, size_t src_len,
-                                          char16_t* dst, size_t dst_len);
 }
 
 // From the nsstring crate
@@ -514,18 +480,7 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
  * @param aString a 16-bit wide string to scan
  */
 inline bool IsASCII(mozilla::Span<const char16_t> aString) {
-  size_t length = aString.Length();
-  const char16_t* ptr = aString.Elements();
-  // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    char16_t accu = 0;
-    for (size_t i = 0; i < length; i++) {
-      accu |= ptr[i];
-    }
-    return accu < 0x80U;
-  }
-  return encoding_mem_is_basic_latin(ptr, length);
+  return encoding_mem_is_basic_latin(aString.Elements(), aString.Length());
 }
 
 /**
@@ -536,13 +491,14 @@ inline bool IsASCII(mozilla::Span<const char16_t> aString) {
  */
 inline bool IsASCII(mozilla::Span<const char> aString) {
   size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
-  // For short strings, calling into Rust is a pessimization, and the SIMD
+  const char* ptr = aString.Elements();
+  // For short strings, avoid the function call, since, the SIMD
   // code won't have a chance to kick in anyway.
   if (length < 16) {
+    const uint8_t* uptr = reinterpret_cast<const uint8_t*>(ptr);
     uint8_t accu = 0;
     for (size_t i = 0; i < length; i++) {
-      accu |= ptr[i];
+      accu |= uptr[i];
     }
     return accu < 0x80U;
   }
@@ -556,18 +512,7 @@ inline bool IsASCII(mozilla::Span<const char> aString) {
  * @param aString a potentially-invalid UTF-16 string to scan
  */
 inline bool IsUTF16Latin1(mozilla::Span<const char16_t> aString) {
-  size_t length = aString.Length();
-  const char16_t* ptr = aString.Elements();
-  // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    char16_t accu = 0;
-    for (size_t i = 0; i < length; i++) {
-      accu |= ptr[i];
-    }
-    return accu < 0x100U;
-  }
-  return encoding_mem_is_utf16_latin1(ptr, length);
+  return encoding_mem_is_utf16_latin1(aString.Elements(), aString.Length());
 }
 
 /**
@@ -580,25 +525,7 @@ inline bool IsUTF16Latin1(mozilla::Span<const char16_t> aString) {
  * @param aString potentially-invalid UTF-8 string to scan
  */
 inline bool IsUTF8Latin1(mozilla::Span<const char> aString) {
-  size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
-  // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    for (size_t i = 0; i < length; i++) {
-      if (ptr[i] >= 0x80U) {
-        ptr += i;
-        length -= i;
-        // This loop can't handle non-ASCII, but the Rust code can, so
-        // upon seeing non-ASCII, break the loop and let the Rust code
-        // handle the rest of the buffer (including the non-ASCII byte).
-        goto end;
-      }
-    }
-    return true;
-  }
-end:
-  return encoding_mem_is_utf8_latin1(ptr, length);
+  return encoding_mem_is_utf8_latin1(aString.Elements(), aString.Length());
 }
 
 /**
@@ -611,22 +538,7 @@ end:
  * @param aString known-valid UTF-8 string to scan
  */
 inline bool UnsafeIsValidUTF8Latin1(mozilla::Span<const char> aString) {
-  size_t length = aString.Length();
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
-  // For short strings, calling into Rust is a pessimization, and the SIMD
-  // code won't have a chance to kick in anyway.
-  if (length < 16) {
-    for (size_t i = 0; i < length; i++) {
-      if (ptr[i] >= 0x80U) {
-        ptr += i;
-        length -= i;
-        goto end;
-      }
-    }
-    return true;
-  }
-end:
-  return encoding_mem_is_str_latin1(ptr, length);
+  return encoding_mem_is_str_latin1(aString.Elements(), aString.Length());
 }
 
 /**
@@ -640,7 +552,7 @@ end:
 inline bool IsUTF8(mozilla::Span<const char> aString) {
   size_t length = aString.Length();
   const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.Elements());
-  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // For short strings, the function call is a pessimization, and the SIMD
   // code won't have a chance to kick in anyway.
   if (length < 16) {
     for (size_t i = 0; i < length; i++) {
