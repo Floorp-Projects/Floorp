@@ -399,6 +399,11 @@ fn write_filter_primitives(
                 yaml_node(&mut table, "type", Yaml::String("component-transfer".into()));
                 filter_input_node(&mut table, "in", component_transfer_primitive.input);
             }
+            FilterPrimitiveKind::Offset(info) => {
+                yaml_node(&mut table, "type", Yaml::String("offset".into()));
+                filter_input_node(&mut table, "in", info.input);
+                vector_node(&mut table, "offset", &info.offset);
+            }
         }
         enum_node(&mut table, "color-space", filter_primitive.color_space);
         filter_primitives.push(Yaml::Hash(table));
