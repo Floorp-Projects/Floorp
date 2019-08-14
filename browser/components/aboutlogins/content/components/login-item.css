@@ -228,6 +228,7 @@ input[type="url"][readOnly]:hover:active {
   padding-inline-start: 36px;
   padding-inline-end: 92px;
   margin-block-end: 40px;
+  position: relative;
 }
 
 .breach-alert:dir(rtl) {
@@ -238,6 +239,28 @@ a.breach-alert-link {
   color: inherit;
   text-decoration: underline;
   font-weight: 500;
+}
+
+.dismiss-breach-alert {
+  border: none;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  background-image: url("chrome://global/skin/icons/close.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  min-height: 16px;
+  min-width: 16px;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0;
+  fill: var(--grey-90);
+  inset-inline-end: 12px;
+  inset-block-start: 12px
+}
+
+.dismiss-breach-alert,
+.dismiss-breach-alert:hover {
+  background-color: transparent;
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
