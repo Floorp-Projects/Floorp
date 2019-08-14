@@ -6855,8 +6855,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitWake();
   MOZ_MUST_USE bool emitFence();
   MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
-  void emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
-                        WantResult wantResult);
+  void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   MOZ_MUST_USE bool bulkmemOpsEnabled();
   MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
   MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
@@ -10096,7 +10095,7 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
 #ifdef JS_64BIT
   MOZ_CRASH("Should not happen");
 #else
-  emitAtomicXchg64(&access, type, WantResult(false));
+  emitAtomicXchg64(&access, WantResult(false));
   return true;
 #endif
 }
@@ -10138,11 +10137,11 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
-  emitAtomicXchg64(&access, type, WantResult(true));
+  emitAtomicXchg64(&access, WantResult(true));
   return true;
 }
 
-void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
+void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
                                     WantResult wantResult) {
   PopAtomicXchg64Regs regs(this);
 
