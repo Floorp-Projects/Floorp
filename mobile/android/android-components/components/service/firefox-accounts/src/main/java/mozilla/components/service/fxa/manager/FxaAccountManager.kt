@@ -322,8 +322,12 @@ open class FxaAccountManager(
      * Request an immediate synchronization, as configured according to [syncConfig].
      *
      * @param startup Boolean flag indicating if sync is being requested in a startup situation.
+     * @param debounce Boolean flag indicating if this sync may be debounced (in case another sync executed recently).
      */
-    fun syncNowAsync(startup: Boolean = false): Deferred<Unit> = CoroutineScope(coroutineContext).async {
+    fun syncNowAsync(
+        startup: Boolean = false,
+        debounce: Boolean = false
+    ): Deferred<Unit> = CoroutineScope(coroutineContext).async {
         // Make sure auth cache is populated before we try to sync.
         maybeUpdateSyncAuthInfoCache()
 
@@ -334,7 +338,7 @@ open class FxaAccountManager(
                         "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
                 )
             }
-            syncManager?.now(startup)
+            syncManager?.now(startup, debounce)
         }
         Unit
     }

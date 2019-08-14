@@ -30,6 +30,7 @@ permalink: /changelog/
 
 * **service-firefox-accounts**
   * `FxaAccountManager`, if configured with `DeviceCapability.SEND_TAB`, will now automatically refresh device constellation state and poll for device events during initialization and login.
+  * `FxaAccountManager.syncNowAsync` can now receive a `debounce` parameter, allowing consumers to specify debounce behaviour of their sync requests.
 
 # 8.0.0
 

@@ -58,7 +58,7 @@ object GlobalSyncableStoreProvider {
  */
 interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
     fun isSyncActive(): Boolean
-    fun syncNow(startup: Boolean = false)
+    fun syncNow(startup: Boolean = false, debounce: Boolean = false)
     fun startPeriodicSync(unit: TimeUnit, period: Long)
     fun stopPeriodicSync()
     fun workersStateChanged(isRunning: Boolean)
@@ -121,13 +121,13 @@ abstract class SyncManager(
      *
      * @param startup Boolean flag indicating if sync is being requested in a startup situation.
      */
-    internal fun now(startup: Boolean = false) = synchronized(this) {
+    internal fun now(startup: Boolean = false, debounce: Boolean = false) = synchronized(this) {
         if (syncDispatcher == null) {
             logger.info("Sync is not enabled. Ignoring 'sync now' request.")
         }
         syncDispatcher?.let {
             logger.debug("Requesting immediate sync")
-            it.syncNow(startup)
+            it.syncNow(startup, debounce)
         }
     }
 

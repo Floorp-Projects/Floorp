@@ -185,8 +185,8 @@ class FxaAccountManagerTest {
             return inner.isSyncActive()
         }
 
-        override fun syncNow(startup: Boolean) {
-            inner.syncNow(startup)
+        override fun syncNow(startup: Boolean, debounce: Boolean) {
+            inner.syncNow(startup, debounce)
         }
 
         override fun startPeriodicSync(unit: TimeUnit, period: Long) {
@@ -306,14 +306,14 @@ class FxaAccountManagerTest {
         assertNotNull(latestSyncManager?.dispatcher?.inner)
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // With periodic sync.
         manager.setSyncConfigAsync(SyncConfig(setOf("history"), 60 * 1000L)).await()
 
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Make sure sync status listeners are working.
         // TODO fix these tests.
@@ -398,13 +398,15 @@ class FxaAccountManagerTest {
         assertNotNull(latestSyncManager!!.dispatcher.inner)
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Can trigger syncs.
         manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
         manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
+        manager.syncNowAsync(startup = true, debounce = true).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = true)
 
         // TODO fix these tests
 //        assertEquals(0, syncStatusObserver.onStartedCount)
@@ -425,13 +427,13 @@ class FxaAccountManagerTest {
 
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Can trigger syncs.
         manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
         manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
 
         // Pretend sync is running.
         `when`(latestSyncManager!!.dispatcher.inner.isSyncActive()).thenReturn(true)

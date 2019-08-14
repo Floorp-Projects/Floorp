@@ -32,8 +32,8 @@ import java.util.concurrent.TimeUnit
 
 private enum class SyncWorkerTag {
     Common,
-    Immediate,
-    Periodic
+    Immediate, // will not debounce a sync
+    Debounce // will debounce if another sync happened recently
 }
 
 private enum class SyncWorkerName {
@@ -135,7 +135,7 @@ class WorkManagerSyncDispatcher(
         return isSyncActive
     }
 
-    override fun syncNow(startup: Boolean) {
+    override fun syncNow(startup: Boolean, debounce: Boolean) {
         logger.debug("Immediate sync requested, startup = $startup")
         val delayMs = if (startup) {
             // Startup delay is there to avoid SQLITE_BUSY crashes, since we currently do a poor job
@@ -150,7 +150,7 @@ class WorkManagerSyncDispatcher(
             // Use the 'keep' policy to minimize overhead from multiple "sync now" operations coming in
             // at the same time.
             ExistingWorkPolicy.KEEP,
-            immediateSyncWorkRequest(delayMs)
+            regularSyncWorkRequest(delayMs, debounce)
         ).enqueue()
     }
 
@@ -194,11 +194,11 @@ class WorkManagerSyncDispatcher(
                 )
                 .setInputData(data)
                 .addTag(SyncWorkerTag.Common.name)
-                .addTag(SyncWorkerTag.Periodic.name)
+                .addTag(SyncWorkerTag.Debounce.name)
                 .build()
     }
 
-    private fun immediateSyncWorkRequest(delayMs: Long = 0L): OneTimeWorkRequest {
+    private fun regularSyncWorkRequest(delayMs: Long = 0L, debounce: Boolean = false): OneTimeWorkRequest {
         val data = getWorkerData()
         return OneTimeWorkRequestBuilder<WorkManagerSyncWorker>()
                 .setConstraints(
@@ -208,7 +208,7 @@ class WorkManagerSyncDispatcher(
                 )
                 .setInputData(data)
                 .addTag(SyncWorkerTag.Common.name)
-                .addTag(SyncWorkerTag.Immediate.name)
+                .addTag(if (debounce) SyncWorkerTag.Debounce.name else SyncWorkerTag.Immediate.name)
                 .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
                 .build()
     }
@@ -226,8 +226,8 @@ class WorkManagerSyncWorker(
 ) : CoroutineWorker(context, params) {
     private val logger = Logger("SyncWorker")
 
-    private fun isPeriodic(): Boolean {
-        return params.tags.contains(SyncWorkerTag.Periodic.name)
+    private fun isDebounced(): Boolean {
+        return params.tags.contains(SyncWorkerTag.Debounce.name)
     }
 
     private fun lastSyncedWithinStaggerBuffer(): Boolean {
@@ -239,11 +239,8 @@ class WorkManagerSyncWorker(
     override suspend fun doWork(): Result {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
-        // If this is a periodic sync task, and we've very recently synced successfully, skip it.
-        // There could have been a manual or heuristic-driven syc very recently, and it's unlikely
-        // that an additional sync so shortly afterward will be valuable.
-        // NB: this does not affect manually triggered syncing in any way.
-        if (isPeriodic() && lastSyncedWithinStaggerBuffer()) {
+        // If this is a "debouncing" sync task, and we've very recently synced successfully, skip it.
+        if (isDebounced() && lastSyncedWithinStaggerBuffer()) {
             return Result.success()
         }
 
