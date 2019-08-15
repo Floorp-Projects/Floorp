@@ -1,26 +1,55 @@
-<!DOCTYPE html>
-<html>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// Hacky glue code to run Jest-based tests as WPT tests.
+// TODO(https://github.com/WICG/import-maps/issues/170): Consider better ways
+// to write and run tests.
+
 setup({allow_uncaught_exception : true});
 
-// Hacky glue code to run Jest-based tests as WPT tests.
-// Only supports resolving.js.
+const exports = {};
+
 function require(name) {
-  return {
+  return Object.assign({
     'URL': URL,
     'parseFromString': parseFromString,
-    'resolve': resolve
-  };
+    'resolve': resolve,
+    'BUILT_IN_MODULE_SCHEME': 'std'
+  }, exports);
 }
 
 function expect(v) {
   return {
     toMatchURL: expected => assert_equals(v, expected),
-    toThrow: expected => assert_throws(expected(), v)
+    toThrow: expected => {
+      if (expected.test && expected.test('not yet implemented')) {
+        // We override /not yet implemented/ expectation.
+        assert_throws(TypeError(), v);
+      } else {
+        assert_throws(expected(), v);
+      }
+    },
+    toEqual: expected => {
+      if (v.localName === 'iframe') {
+        // `v` is the result of parseFromString(), and thus toEqual() is
+        // expected to compare parsed import maps.
+        // We sort keys when stringifying for normalization.
+        const actualParsedImportMap = JSON.parse(
+            internals.getParsedImportMap(v.contentDocument));
+        assert_equals(
+          JSON.stringify(actualParsedImportMap,
+                         Object.keys(actualParsedImportMap).sort()),
+          JSON.stringify(expected.imports,
+                         Object.keys(expected.imports).sort())
+        );
+      } else {
+        assert_object_equals(v, expected);
+      }
+    }
   };
 }
+
+expect.toMatchURL = expected => expected;
+
+const test_harness_test = test;
+test = it;
 
 let current_message = '';
 function describe(message, f) {
@@ -38,7 +67,7 @@ function it(message, f) {
     current_message += ' / ';
   }
   current_message += message;
-  test(t => t.step_func(f)(), current_message);
+  test_harness_test(t => t.step_func(f)(), current_message);
   current_message = old;
 }
 
@@ -71,11 +100,3 @@ function resolve(specifier, map, baseURL) {
                                           baseURL,
                                           map.contentDocument);
 }
-
-</script>
-
-<!--
-resolving.js is
-https://github.com/WICG/import-maps/blob/master/reference-implementation/__tests__/resolving.js
--->
-<script type="module" src="resources/resolving.js"></script>
