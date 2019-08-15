@@ -604,6 +604,7 @@ class ObjectGroupRealm {
   friend class ObjectGroup;
 
   struct AllocationSiteKey;
+  friend struct MovableCellHasher<AllocationSiteKey>;
 
  public:
   struct NewEntry;
