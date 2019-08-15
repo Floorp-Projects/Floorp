@@ -148,11 +148,16 @@ export function getColumnBreakpoints(
   positions: BreakpointPosition[],
   breakpoints: ?(Breakpoint[]),
   viewport: ?Range,
-  selectedSource: ?SourceWithContent
+  selectedSourceWithContent: ?SourceWithContent
 ) {
-  if (!positions || !selectedSource) {
+  if (!positions || !selectedSourceWithContent) {
     return [];
   }
+
+  const {
+    source: selectedSource,
+    content: selectedContent,
+  } = selectedSourceWithContent;
 
   // We only want to show a column breakpoint if several conditions are matched
   // - it is the first breakpoint to appear at an the original location
@@ -162,7 +167,7 @@ export function getColumnBreakpoints(
   const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
   positions = filterByLineCount(positions, selectedSource);
   positions = filterVisible(positions, selectedSource, viewport);
-  positions = filterInLine(positions, selectedSource, selectedSource.content);
+  positions = filterInLine(positions, selectedSource, selectedContent);
   positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
 
   return formatPositions(positions, selectedSource, breakpointMap);

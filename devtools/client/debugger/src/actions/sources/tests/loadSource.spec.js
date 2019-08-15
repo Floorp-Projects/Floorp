@@ -14,14 +14,14 @@ import {
 } from "../../../utils/test-head";
 import {
   createSource,
-  mockCommandClient,
-} from "../../tests/helpers/mockCommandClient";
+  sourceThreadFront,
+} from "../../tests/helpers/threadFront.js";
 import { getBreakpointsList } from "../../../selectors";
 import { isFulfilled, isRejected } from "../../../utils/async-value";
 
 describe("loadSourceText", () => {
   it("should load source text", async () => {
-    const store = createStore(mockCommandClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, getState, cx } = store;
 
     const foo1Source = await dispatch(
@@ -59,10 +59,10 @@ describe("loadSourceText", () => {
 
     const store = createStore(
       {
-        ...mockCommandClient,
+        ...sourceThreadFront,
         sourceContents: async () => fooGenContent,
-        getSourceActorBreakpointPositions: async () => ({ "1": [0] }),
-        getSourceActorBreakableLines: async () => [],
+        getBreakpointPositions: async () => ({ "1": [0] }),
+        getBreakableLines: async () => [],
       },
       {},
       {
@@ -156,8 +156,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getSourceActorBreakpointPositions: async () => ({}),
-      getSourceActorBreakableLines: async () => [],
+      getBreakpointPositions: async () => ({}),
+      getBreakableLines: async () => [],
     });
     const id = "foo";
 
@@ -194,8 +194,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getSourceActorBreakpointPositions: async () => ({}),
-      getSourceActorBreakableLines: async () => [],
+      getBreakpointPositions: async () => ({}),
+      getBreakableLines: async () => [],
     });
     const id = "foo";
 
@@ -223,7 +223,7 @@ describe("loadSourceText", () => {
   });
 
   it("should cache subsequent source text loads", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo1"))
@@ -238,7 +238,7 @@ describe("loadSourceText", () => {
   });
 
   it("should indicate a loading source", async () => {
-    const store = createStore(mockCommandClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, cx } = store;
 
     const source = await dispatch(
@@ -255,7 +255,7 @@ describe("loadSourceText", () => {
   });
 
   it("should indicate an errored source text", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("bad-id"))

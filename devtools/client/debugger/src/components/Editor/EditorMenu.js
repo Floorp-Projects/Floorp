@@ -30,7 +30,7 @@ type Props = {
   editor: SourceEditor,
   hasPrettySource: boolean,
   isPaused: boolean,
-  selectedSource: SourceWithContent,
+  selectedSourceWithContent: SourceWithContent,
 };
 
 class EditorMenu extends Component<Props> {
@@ -47,7 +47,7 @@ class EditorMenu extends Component<Props> {
     const {
       cx,
       editor,
-      selectedSource,
+      selectedSourceWithContent,
       editorActions,
       hasPrettySource,
       isPaused,
@@ -56,7 +56,7 @@ class EditorMenu extends Component<Props> {
 
     const location = getSourceLocationFromMouseEvent(
       editor,
-      selectedSource,
+      selectedSourceWithContent.source,
       // Use a coercion, as contextMenu is optional
       (event: any)
     );
@@ -66,7 +66,7 @@ class EditorMenu extends Component<Props> {
       editorMenuItems({
         cx,
         editorActions,
-        selectedSource,
+        selectedSourceWithContent,
         hasPrettySource,
         location,
         isPaused,
@@ -84,7 +84,10 @@ class EditorMenu extends Component<Props> {
 const mapStateToProps = (state, props) => ({
   cx: getThreadContext(state),
   isPaused: getIsPaused(state, getCurrentThread(state)),
-  hasPrettySource: !!getPrettySource(state, props.selectedSource.id),
+  hasPrettySource: !!getPrettySource(
+    state,
+    props.selectedSourceWithContent.source.id
+  ),
 });
 
 const mapDispatchToProps = dispatch => ({

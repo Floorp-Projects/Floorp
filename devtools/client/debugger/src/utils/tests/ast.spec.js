@@ -10,7 +10,7 @@ import { getSymbols } from "../../workers/parser/getSymbols";
 import { populateSource } from "../../workers/parser/tests/helpers";
 
 describe("find the best expression for the token", () => {
-  const source = populateSource("computed-props");
+  const { source } = populateSource("computed-props");
   const symbols = getSymbols(source.id);
 
   it("should find the identifier", () => {

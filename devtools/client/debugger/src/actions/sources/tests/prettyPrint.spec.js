@@ -11,12 +11,12 @@ import {
   makeSource,
 } from "../../../utils/test-head";
 import { createPrettySource } from "../prettyPrint";
-import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
+import { sourceThreadFront } from "../../tests/helpers/threadFront.js";
 import { isFulfilled } from "../../../utils/async-value";
 
 describe("sources - pretty print", () => {
   it("returns a pretty source for a minified file", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const url = "base.js";
     const source = await dispatch(actions.newGeneratedSource(makeSource(url)));
@@ -42,7 +42,7 @@ describe("sources - pretty print", () => {
   });
 
   it("should create a source when first toggling pretty print", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foobar.js"))
@@ -54,7 +54,7 @@ describe("sources - pretty print", () => {
   });
 
   it("should not make a second source when toggling pretty print", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foobar.js"))

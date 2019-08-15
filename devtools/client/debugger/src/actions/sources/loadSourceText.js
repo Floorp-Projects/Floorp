@@ -19,7 +19,7 @@ import { addBreakpoint } from "../breakpoints";
 
 import { prettyPrintSource } from "./prettyPrint";
 import { setBreakableLines } from "./breakableLines";
-import { isFulfilled, fulfilled } from "../../utils/async-value";
+import { isFulfilled } from "../../utils/async-value";
 
 import { isOriginal, isPretty } from "../../utils/source";
 import {
@@ -124,6 +124,8 @@ async function loadSourceTextPromise(
       await dispatch(addBreakpoint(cx, location, options, disabled));
     }
   }
+
+  return newSource;
 }
 
 export function loadSourceById(cx: Context, sourceId: string) {
@@ -137,22 +139,14 @@ export const loadSourceText: MemoizedAction<
   { cx: Context, source: Source },
   ?Source
 > = memoizeableAction("loadSourceText", {
-  getValue: ({ source }, { getState }) => {
-    source = source ? getSource(getState(), source.id) : null;
-    if (!source) {
-      return null;
-    }
-
-    const { content } = getSourceWithContent(getState(), source.id);
-    if (!content || content.state === "pending") {
-      return content;
-    }
-
-    // This currently swallows source-load-failure since we return fulfilled
-    // here when content.state === "rejected". In an ideal world we should
-    // propagate that error upward.
-    return fulfilled(source);
+  exitEarly: ({ source }) => !source,
+  hasValue: ({ source }, { getState }) => {
+    return !!(
+      getSource(getState(), source.id) &&
+      getSourceWithContent(getState(), source.id).content
+    );
   },
+  getValue: ({ source }, { getState }) => getSource(getState(), source.id),
   createKey: ({ source }, { getState }) => {
     const epoch = getSourcesEpoch(getState());
     return `${epoch}:${source.id}`;

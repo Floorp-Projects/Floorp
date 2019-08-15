@@ -4,7 +4,11 @@
 
 // @flow
 
-import type { SourceActor } from "../../../types";
+import type {
+  SourceActor,
+  SourceActorLocation,
+  BreakpointOptions,
+} from "../../../types";
 
 export function createSource(name: string, code?: string) {
   name = name.replace(/\..*$/, "");
@@ -32,7 +36,33 @@ const sources = [
   "jquery.js",
 ];
 
-export const mockCommandClient = {
+export const simpleMockThreadFront = {
+  getBreakpointByLocation: (jest.fn(): any),
+  setBreakpoint: (location: SourceActorLocation, _condition: string) =>
+    Promise.resolve({ id: "hi", actualLocation: location }),
+
+  removeBreakpoint: (_id: string) => Promise.resolve(),
+
+  setBreakpointOptions: (
+    _id: string,
+    _location: SourceActorLocation,
+    _options: BreakpointOptions,
+    _noSliding: boolean
+  ) => Promise.resolve({ sourceId: "a", line: 5 }),
+  sourceContents: ({
+    source,
+  }: SourceActor): Promise<{| source: any, contentType: ?string |}> =>
+    new Promise((resolve, reject) => {
+      if (sources.includes(source)) {
+        resolve(createSource(source));
+      }
+
+      reject(`unknown source: ${source}`);
+    }),
+};
+
+// sources and tabs
+export const sourceThreadFront = {
   sourceContents: function({
     source,
   }: SourceActor): Promise<{| source: any, contentType: ?string |}> {
@@ -45,10 +75,9 @@ export const mockCommandClient = {
     });
   },
   setBreakpoint: async () => {},
-  removeBreakpoint: (_id: string) => Promise.resolve(),
   threadFront: async () => {},
   getFrameScopes: async () => {},
   evaluateExpressions: async () => {},
-  getSourceActorBreakpointPositions: async () => ({}),
-  getSourceActorBreakableLines: async () => [],
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => [],
 };

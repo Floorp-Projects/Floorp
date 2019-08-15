@@ -27,12 +27,8 @@ import type {
   Why,
 } from "../types";
 import * as asyncValue from "./async-value";
-import type { SourceBase } from "../reducers/sources";
 
-function makeMockSource(
-  url: string = "url",
-  id: SourceId = "source"
-): SourceBase {
+function makeMockSource(url: string = "url", id: SourceId = "source"): Source {
   return {
     id,
     url,
@@ -56,7 +52,7 @@ function makeMockSourceWithContent(
   const source = makeMockSource(url, id);
 
   return {
-    ...source,
+    source,
     content: text
       ? asyncValue.fulfilled({
           type: "text",
@@ -72,11 +68,11 @@ function makeMockSourceAndContent(
   id?: SourceId,
   contentType?: string = "text/javascript",
   text: string = ""
-): { ...SourceBase, content: TextSourceContent } {
+): { source: Source, content: TextSourceContent } {
   const source = makeMockSource(url, id);
 
   return {
-    ...source,
+    source,
     content: {
       type: "text",
       value: text,
@@ -85,7 +81,7 @@ function makeMockSourceAndContent(
   };
 }
 
-function makeMockWasmSource(): SourceBase {
+function makeMockWasmSource(): Source {
   return {
     id: "wasm-source-id",
     url: "url",
@@ -106,7 +102,7 @@ function makeMockWasmSourceWithContent(text: {|
   const source = makeMockWasmSource();
 
   return {
-    ...source,
+    source,
     content: asyncValue.fulfilled({
       type: "wasm",
       value: text,
