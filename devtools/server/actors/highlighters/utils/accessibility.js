@@ -676,11 +676,11 @@ class TextLabel extends AuditReport {
       [FIGURE_NO_NAME]: "accessibility.text.label.issue.figure",
       [FORM_FIELDSET_NO_NAME]: "accessibility.text.label.issue.fieldset",
       [FORM_FIELDSET_NO_NAME_FROM_LEGEND]:
-        "accessibility.text.label.issue.fieldset.legend",
+        "accessibility.text.label.issue.fieldset.legend2",
       [FORM_NO_NAME]: "accessibility.text.label.issue.form",
       [FORM_NO_VISIBLE_NAME]: "accessibility.text.label.issue.form.visible",
       [FORM_OPTGROUP_NO_NAME_FROM_LABEL]:
-        "accessibility.text.label.issue.optgroup.label",
+        "accessibility.text.label.issue.optgroup.label2",
       [FRAME_NO_NAME]: "accessibility.text.label.issue.frame",
       [HEADING_NO_CONTENT]: "accessibility.text.label.issue.heading.content",
       [HEADING_NO_NAME]: "accessibility.text.label.issue.heading",

@@ -104,7 +104,7 @@ const ISSUE_TO_ANNOTATION_MAP = {
   },
   [FORM_FIELDSET_NO_NAME_FROM_LEGEND]: {
     href: A11Y_TEXT_LABEL_LINKS.FORM_FIELDSET_NO_NAME_FROM_LEGEND,
-    l10nId: "accessibility-text-label-issue-fieldset-legend",
+    l10nId: "accessibility-text-label-issue-fieldset-legend2",
     args: {
       get code() {
         return ReactDOM.code({}, "legend");
@@ -127,7 +127,7 @@ const ISSUE_TO_ANNOTATION_MAP = {
   },
   [FORM_OPTGROUP_NO_NAME_FROM_LABEL]: {
     href: A11Y_TEXT_LABEL_LINKS.FORM_OPTGROUP_NO_NAME_FROM_LABEL,
-    l10nId: "accessibility-text-label-issue-optgroup-label",
+    l10nId: "accessibility-text-label-issue-optgroup-label2",
     args: {
       get code() {
         return ReactDOM.code({}, "label");
