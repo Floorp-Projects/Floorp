@@ -79,6 +79,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mUsePrivateBrowsing;
     private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
+    private boolean mDesktopMode;
 
     private boolean mShowNotificationsRejected;
     private ArrayList<String> mAcceptedPersistentStorage = new ArrayList<String>();
@@ -226,6 +227,12 @@ public class GeckoViewActivity extends AppCompatActivity {
                 .usePrivateMode(mUsePrivateBrowsing)
                 .useTrackingProtection(mUseTrackingProtection)
                 .fullAccessibilityTree(mFullAccessibilityTree)
+                .viewportMode(mDesktopMode
+                        ? GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
+                        : GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
+                .userAgentMode(mDesktopMode
+                        ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+                        : GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
                 .build());
         connectSession(session);
 
@@ -253,6 +260,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         session.setSelectionActionDelegate(new BasicSelectionActionDelegate(this));
 
         updateTrackingProtection(session);
+        updateDesktopMode(session);
     }
 
     private void recreateSession() {
@@ -281,6 +289,15 @@ public class GeckoViewActivity extends AppCompatActivity {
         } else {
             recreateSession();
         }
+    }
+
+    private void updateDesktopMode(GeckoSession session) {
+        session.getSettings().setViewportMode(mDesktopMode
+                ? GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
+                : GeckoSessionSettings.VIEWPORT_MODE_MOBILE);
+        session.getSettings().setUserAgentMode(mDesktopMode
+                ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+                : GeckoSessionSettings.USER_AGENT_MODE_MOBILE);
     }
 
     private void updateTrackingProtection(GeckoSession session) {
@@ -315,6 +332,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         menu.findItem(R.id.action_e10s).setChecked(mUseMultiprocess);
         menu.findItem(R.id.action_tp).setChecked(mUseTrackingProtection);
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
+        menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
         menu.findItem(R.id.action_remote_debugging).setChecked(mEnableRemoteDebugging);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
         return true;
@@ -337,6 +355,11 @@ public class GeckoViewActivity extends AppCompatActivity {
             case R.id.action_tp:
                 mUseTrackingProtection = !mUseTrackingProtection;
                 updateTrackingProtection(session);
+                session.reload();
+                break;
+            case R.id.desktop_mode:
+                mDesktopMode = !mDesktopMode;
+                updateDesktopMode(session);
                 session.reload();
                 break;
             case R.id.action_pb:

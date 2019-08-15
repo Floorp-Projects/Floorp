@@ -98,7 +98,7 @@ static const char* ObjectClassname(JSObject* obj) {
   if (!obj) {
     return "(null object)";
   }
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
   if (!clasp) {
     return "(null)";
   }
@@ -127,7 +127,7 @@ inline bool probes::FinalizeObject(JSObject* obj) {
 
 #ifdef INCLUDE_MOZILLA_DTRACE
   if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED()) {
-    const Class* clasp = obj->getClass();
+    const JSClass* clasp = obj->getClass();
 
     /* the first arg is nullptr - reserved for future use (filename?) */
     JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char*)clasp->name, (uintptr_t)obj);

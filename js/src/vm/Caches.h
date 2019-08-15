@@ -91,7 +91,7 @@ class NewObjectCache {
 
   struct Entry {
     /* Class of the constructed object. */
-    const Class* clasp;
+    const JSClass* clasp;
 
     /*
      * Key with one of three possible values:
@@ -142,9 +142,9 @@ class NewObjectCache {
    * Get the entry index for the given lookup, return whether there was a hit
    * on an existing entry.
    */
-  inline bool lookupProto(const Class* clasp, JSObject* proto,
+  inline bool lookupProto(const JSClass* clasp, JSObject* proto,
                           gc::AllocKind kind, EntryIndex* pentry);
-  inline bool lookupGlobal(const Class* clasp, js::GlobalObject* global,
+  inline bool lookupGlobal(const JSClass* clasp, js::GlobalObject* global,
                            gc::AllocKind kind, EntryIndex* pentry);
 
   bool lookupGroup(js::ObjectGroup* group, gc::AllocKind kind,
@@ -161,10 +161,10 @@ class NewObjectCache {
                                         js::gc::InitialHeap heap);
 
   /* Fill an entry after a cache miss. */
-  void fillProto(EntryIndex entry, const Class* clasp, js::TaggedProto proto,
+  void fillProto(EntryIndex entry, const JSClass* clasp, js::TaggedProto proto,
                  gc::AllocKind kind, NativeObject* obj);
 
-  inline void fillGlobal(EntryIndex entry, const Class* clasp,
+  inline void fillGlobal(EntryIndex entry, const JSClass* clasp,
                          js::GlobalObject* global, gc::AllocKind kind,
                          NativeObject* obj);
 
@@ -179,12 +179,13 @@ class NewObjectCache {
                                  HandleObject proto);
 
  private:
-  EntryIndex makeIndex(const Class* clasp, gc::Cell* key, gc::AllocKind kind) {
+  EntryIndex makeIndex(const JSClass* clasp, gc::Cell* key,
+                       gc::AllocKind kind) {
     uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + size_t(kind);
     return hash % mozilla::ArrayLength(entries);
   }
 
-  bool lookup(const Class* clasp, gc::Cell* key, gc::AllocKind kind,
+  bool lookup(const JSClass* clasp, gc::Cell* key, gc::AllocKind kind,
               EntryIndex* pentry) {
     *pentry = makeIndex(clasp, key, kind);
     Entry* entry = &entries[*pentry];
@@ -194,7 +195,7 @@ class NewObjectCache {
     return entry->clasp == clasp && entry->key == key;
   }
 
-  void fill(EntryIndex entry_, const Class* clasp, gc::Cell* key,
+  void fill(EntryIndex entry_, const JSClass* clasp, gc::Cell* key,
             gc::AllocKind kind, NativeObject* obj) {
     MOZ_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     MOZ_ASSERT(entry_ == makeIndex(clasp, key, kind));

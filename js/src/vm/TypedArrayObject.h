@@ -70,16 +70,16 @@ class TypedArrayObject : public ArrayBufferViewObject {
     return a->bufferEither() == b->bufferEither();
   }
 
-  static const Class classes[Scalar::MaxTypedArrayViewType];
-  static const Class protoClasses[Scalar::MaxTypedArrayViewType];
-  static const Class sharedTypedArrayPrototypeClass;
+  static const JSClass classes[Scalar::MaxTypedArrayViewType];
+  static const JSClass protoClasses[Scalar::MaxTypedArrayViewType];
+  static const JSClass sharedTypedArrayPrototypeClass;
 
-  static const Class* classForType(Scalar::Type type) {
+  static const JSClass* classForType(Scalar::Type type) {
     MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
     return &classes[type];
   }
 
-  static const Class* protoClassForType(Scalar::Type type) {
+  static const JSClass* protoClassForType(Scalar::Type type) {
     MOZ_ASSERT(type < Scalar::MaxTypedArrayViewType);
     return &protoClasses[type];
   }
@@ -210,12 +210,12 @@ extern TypedArrayObject* NewTypedArrayWithTemplateAndBuffer(
     JSContext* cx, HandleObject templateObj, HandleObject arrayBuffer,
     HandleValue byteOffset, HandleValue length);
 
-inline bool IsTypedArrayClass(const Class* clasp) {
+inline bool IsTypedArrayClass(const JSClass* clasp) {
   return &TypedArrayObject::classes[0] <= clasp &&
          clasp < &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType];
 }
 
-inline Scalar::Type GetTypedArrayClassType(const Class* clasp) {
+inline Scalar::Type GetTypedArrayClassType(const JSClass* clasp) {
   MOZ_ASSERT(IsTypedArrayClass(clasp));
   return static_cast<Scalar::Type>(clasp - &TypedArrayObject::classes[0]);
 }

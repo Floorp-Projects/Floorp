@@ -30,13 +30,6 @@ XULComboboxAccessible::XULComboboxAccessible(nsIContent* aContent,
     mGenericTypes |= eAutoComplete;
   else
     mGenericTypes |= eCombobox;
-
-  // The XUL <textbox type="autocomplete"> uses XULComboboxAccessible. We need
-  // to walk the anonymous children for these so that the entry field is a
-  // child. Otherwise no XBL children.
-  if (!mContent->NodeInfo()->Equals(nsGkAtoms::textbox, kNameSpaceID_XUL)) {
-    mStateFlags |= eNoXBLKids;
-  }
 }
 
 role XULComboboxAccessible::NativeRole() const {

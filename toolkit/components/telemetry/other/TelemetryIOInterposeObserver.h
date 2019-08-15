@@ -98,7 +98,7 @@ class TelemetryIOInterposeObserver : public IOInterposeObserver {
 
   // Statistics for each filename
   Common::AutoHashtable<FileIOEntryType> mFileStats;
-  // Container for whitelisted directories
+  // Container for allowed directories
   nsTArray<SafeDir> mSafeDirs;
   Stage mCurStage;
 

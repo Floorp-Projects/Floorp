@@ -21,7 +21,7 @@ namespace js {
 
 class RelativeTimeFormatObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t URELATIVE_TIME_FORMAT_SLOT = 1;

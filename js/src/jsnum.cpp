@@ -627,7 +627,7 @@ static const JSFunctionSpec number_functions[] = {
     JS_SELF_HOSTED_FN(js_isFinite_str, "Global_isFinite", 1, JSPROP_RESOLVING),
     JS_FS_END};
 
-const Class NumberObject::class_ = {
+const JSClass NumberObject::class_ = {
     js_Number_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number)};
 

@@ -132,11 +132,11 @@ add_task(async function test_untrusted_http_origin() {
   Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
 });
 
-add_task(async function test_secure_non_whitelisted_origin() {
+add_task(async function test_secure_unallowed_origin() {
   Services.telemetry.clearEvents();
 
   // Install a custom handler that intercepts hybrid content telemetry messages
-  // and makes the test fail. We don't expect any message from non whitelisted pages.
+  // and makes the test fail. We don't expect any message from unallowed pages.
   const messageName = "HybridContentTelemetry:onTelemetryMessage";
   let makeTestFail = () => ok(false, `Received an unexpected ${messageName}.`);
   Services.mm.addMessageListener(messageName, makeTestFail);

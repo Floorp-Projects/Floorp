@@ -4,6 +4,8 @@
         app:showAsAction="never"/>
     <item android:title="@string/tracking_protection" android:id="@+id/action_tp" app:showAsAction="never"
           android:checkable="true"/>
+    <item android:title="@string/desktop_mode" android:id="@+id/desktop_mode" android:checkable="true"
+          app:showAsAction="never" />
     <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
     <item android:title="@string/remote_debugging" android:checkable="true" android:id="@+id/action_remote_debugging"/>
     <item android:title="@string/new_tab" android:id="@+id/action_new_tab"/>

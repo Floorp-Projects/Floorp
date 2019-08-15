@@ -9,10 +9,7 @@ job-defaults:
             .*-ux/.*: 2400
             default: 1800
     suite: raptor
-    workdir:
-        by-test-platform:
-            android-hw.*: /builds/worker
-            default: /home/cltbld
+    workdir: /home/cltbld
     run-on-projects: ['try', 'mozilla-central']
     tier: 2
     virtualization:
@@ -31,8 +28,6 @@ job-defaults:
                     - raptor/windows_vm_config.py
                 linux64-ccov/opt:
                     - raptor/linux64_config_taskcluster.py
-                android-hw.*:
-                    - raptor/android_hw_config.py
                 default:
                     - raptor/linux_config.py
     fetches:

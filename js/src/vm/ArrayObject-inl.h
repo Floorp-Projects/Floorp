@@ -36,7 +36,7 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
 /* static */ inline ArrayObject* ArrayObject::createArrayInternal(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap, HandleShape shape,
     HandleObjectGroup group, AutoSetNewObjectMetadata&) {
-  const js::Class* clasp = group->clasp();
+  const JSClass* clasp = group->clasp();
   MOZ_ASSERT(shape && group);
   MOZ_ASSERT(clasp == shape->getObjectClass());
   MOZ_ASSERT(clasp == &ArrayObject::class_);

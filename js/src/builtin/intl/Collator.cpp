@@ -47,7 +47,7 @@ const JSClassOps CollatorObject::classOps_ = {nullptr, /* addProperty */
                                               nullptr, /* mayResolve */
                                               CollatorObject::finalize};
 
-const Class CollatorObject::class_ = {
+const JSClass CollatorObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(CollatorObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,

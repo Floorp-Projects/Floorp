@@ -240,10 +240,10 @@ class GlobalObject : public NativeObject {
   static GlobalObject* create(...) = delete;
 
   friend struct ::JSRuntime;
-  static GlobalObject* createInternal(JSContext* cx, const Class* clasp);
+  static GlobalObject* createInternal(JSContext* cx, const JSClass* clasp);
 
  public:
-  static GlobalObject* new_(JSContext* cx, const Class* clasp,
+  static GlobalObject* new_(JSContext* cx, const JSClass* clasp,
                             JSPrincipals* principals,
                             JS::OnNewGlobalHookOption hookOption,
                             const JS::RealmOptions& options);
@@ -272,14 +272,14 @@ class GlobalObject : public NativeObject {
    */
   static NativeObject* createBlankPrototype(JSContext* cx,
                                             Handle<GlobalObject*> global,
-                                            const js::Class* clasp);
+                                            const JSClass* clasp);
 
   /*
    * Identical to createBlankPrototype, but uses proto as the [[Prototype]]
    * of the returned blank prototype.
    */
   static NativeObject* createBlankPrototypeInheriting(JSContext* cx,
-                                                      const js::Class* clasp,
+                                                      const JSClass* clasp,
                                                       HandleObject proto);
 
   template <typename T>
@@ -914,7 +914,7 @@ class GlobalObject : public NativeObject {
   // A class used in place of a prototype during off-thread parsing.
   struct OffThreadPlaceholderObject : public NativeObject {
     static const int32_t SlotIndexSlot = 0;
-    static const Class class_;
+    static const JSClass class_;
     static OffThreadPlaceholderObject* New(JSContext* cx, unsigned slot);
     inline int32_t getSlotIndex() const;
   };

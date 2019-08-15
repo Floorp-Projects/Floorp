@@ -8,7 +8,7 @@
 #  include "mozilla/UniquePtr.h"
 
 #  include "ICUUtils.h"
-#  include "mozilla/Preferences.h"
+#  include "mozilla/StaticPrefs_dom.h"
 #  include "mozilla/intl/LocaleService.h"
 #  include "nsIContent.h"
 #  include "mozilla/dom/Document.h"
@@ -29,28 +29,6 @@ class NumberFormatDeleter {
 };
 
 using UniqueUNumberFormat = UniquePtr<UNumberFormat, NumberFormatDeleter>;
-
-/**
- * This pref just controls whether we format the number with grouping separator
- * characters when the internal value is set or updated. It does not stop the
- * user from typing in a number and using grouping separators.
- */
-static bool gLocaleNumberGroupingEnabled;
-static const char LOCALE_NUMBER_GROUPING_PREF_STR[] =
-    "dom.forms.number.grouping";
-
-static bool LocaleNumberGroupingIsEnabled() {
-  static bool sInitialized = false;
-
-  if (!sInitialized) {
-    /* check and register ourselves with the pref */
-    Preferences::AddBoolVarCache(&gLocaleNumberGroupingEnabled,
-                                 LOCALE_NUMBER_GROUPING_PREF_STR, false);
-    sInitialized = true;
-  }
-
-  return gLocaleNumberGroupingEnabled;
-}
 
 void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   if (mCurrentFallbackIndex < 0) {
@@ -115,7 +93,7 @@ bool ICUUtils::LocalizeNumber(double aValue,
       continue;
     }
     unum_setAttribute(format.get(), UNUM_GROUPING_USED,
-                      LocaleNumberGroupingIsEnabled());
+                      StaticPrefs::dom_forms_number_grouping());
     // ICU default is a maximum of 3 significant fractional digits. We don't
     // want that limit, so we set it to the maximum that a double can represent
     // (14-16 decimal fractional digits).
@@ -151,7 +129,7 @@ double ICUUtils::ParseNumber(nsAString& aValue,
     UErrorCode status = U_ZERO_ERROR;
     UniqueUNumberFormat format(
         unum_open(UNUM_DECIMAL, nullptr, 0, langTag.get(), nullptr, &status));
-    if (!LocaleNumberGroupingIsEnabled()) {
+    if (!StaticPrefs::dom_forms_number_grouping()) {
       unum_setAttribute(format.get(), UNUM_GROUPING_USED, UBool(0));
     }
     int32_t parsePos = 0;

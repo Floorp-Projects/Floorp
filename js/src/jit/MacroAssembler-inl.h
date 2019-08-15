@@ -400,7 +400,7 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
 
   branchTestClassIsProxy(true, scratch, slowCheck);
 
-  Address flags(scratch, Class::offsetOfFlags());
+  Address flags(scratch, JSClass::offsetOfFlags());
   branchTest32(Assembler::NonZero, flags, Imm32(JSCLASS_EMULATES_UNDEFINED),
                label);
 }
@@ -422,8 +422,7 @@ void MacroAssembler::branchFunctionKind(Condition cond,
 }
 
 void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
-                                        const js::Class* clasp,
-                                        Register scratch,
+                                        const JSClass* clasp, Register scratch,
                                         Register spectreRegToZero,
                                         Label* label) {
   MOZ_ASSERT(obj != scratch);
@@ -439,7 +438,7 @@ void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
 }
 
 void MacroAssembler::branchTestObjClassNoSpectreMitigations(
-    Condition cond, Register obj, const js::Class* clasp, Register scratch,
+    Condition cond, Register obj, const JSClass* clasp, Register scratch,
     Label* label) {
   loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
   branchPtr(cond, Address(scratch, ObjectGroup::offsetOfClasp()), ImmPtr(clasp),
@@ -591,8 +590,8 @@ void MacroAssembler::branchTestObjGroupNoSpectreMitigations(Condition cond,
 void MacroAssembler::branchTestClassIsProxy(bool proxy, Register clasp,
                                             Label* label) {
   branchTest32(proxy ? Assembler::NonZero : Assembler::Zero,
-               Address(clasp, Class::offsetOfFlags()), Imm32(JSCLASS_IS_PROXY),
-               label);
+               Address(clasp, JSClass::offsetOfFlags()),
+               Imm32(JSCLASS_IS_PROXY), label);
 }
 
 void MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object,

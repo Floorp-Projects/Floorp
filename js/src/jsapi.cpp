@@ -920,7 +920,7 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   // property, so we won't resolve anything.
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
   if (key != JSProto_Null) {
-    const Class* clasp = ProtoKeyToClass(key);
+    const JSClass* clasp = ProtoKeyToClass(key);
     if (!clasp || clasp->specShouldDefineConstructor()) {
       if (!GlobalObject::ensureConstructor(cx, global, key)) {
         return false;
@@ -995,7 +995,7 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
       continue;
     }
 
-    if (const Class* clasp = ProtoKeyToClass(key)) {
+    if (const JSClass* clasp = ProtoKeyToClass(key)) {
       if (!clasp->specShouldDefineConstructor()) {
         continue;
       }
@@ -1570,8 +1570,8 @@ JS_PUBLIC_API JSObject* JS_InitClass(JSContext* cx, HandleObject obj,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(obj, parent_proto);
-  return InitClass(cx, obj, parent_proto, Valueify(clasp), constructor, nargs,
-                   ps, fs, static_ps, static_fs);
+  return InitClass(cx, obj, parent_proto, clasp, constructor, nargs, ps, fs,
+                   static_ps, static_fs);
 }
 
 JS_PUBLIC_API bool JS_LinkConstructorAndPrototype(JSContext* cx,
@@ -1581,7 +1581,7 @@ JS_PUBLIC_API bool JS_LinkConstructorAndPrototype(JSContext* cx,
 }
 
 JS_PUBLIC_API const JSClass* JS_GetClass(JSObject* obj) {
-  return obj->getJSClass();
+  return obj->getClass();
 }
 
 JS_PUBLIC_API bool JS_InstanceOf(JSContext* cx, HandleObject obj,
@@ -1594,9 +1594,9 @@ JS_PUBLIC_API bool JS_InstanceOf(JSContext* cx, HandleObject obj,
     cx->check(args->thisv(), args->calleev());
   }
 #endif
-  if (!obj || obj->getJSClass() != clasp) {
+  if (!obj || obj->getClass() != clasp) {
     if (args) {
-      ReportIncompatibleMethod(cx, *args, Valueify(clasp));
+      ReportIncompatibleMethod(cx, *args, clasp);
     }
     return false;
   }
@@ -1721,8 +1721,7 @@ JS_PUBLIC_API JSObject* JS_NewGlobalObject(JSContext* cx, const JSClass* clasp,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  return GlobalObject::new_(cx, Valueify(clasp), principals, hookOption,
-                            options);
+  return GlobalObject::new_(cx, clasp, principals, hookOption, options);
 }
 
 JS_PUBLIC_API void JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global) {
@@ -1774,12 +1773,11 @@ JS_PUBLIC_API void JS_FireOnNewGlobalObject(JSContext* cx,
   cx->runtime()->ensureRealmIsRecordingAllocations(globalObject);
 }
 
-JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* jsclasp) {
+JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* clasp) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  const Class* clasp = Valueify(jsclasp);
   if (!clasp) {
     clasp = &PlainObject::class_; /* default class is Object */
   }
@@ -1791,14 +1789,13 @@ JS_PUBLIC_API JSObject* JS_NewObject(JSContext* cx, const JSClass* jsclasp) {
 }
 
 JS_PUBLIC_API JSObject* JS_NewObjectWithGivenProto(JSContext* cx,
-                                                   const JSClass* jsclasp,
+                                                   const JSClass* clasp,
                                                    HandleObject proto) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(proto);
 
-  const Class* clasp = Valueify(jsclasp);
   if (!clasp) {
     clasp = &PlainObject::class_; /* default class is Object */
   }
@@ -1829,7 +1826,7 @@ JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,
 
   RootedObject newTarget(cx, &args.newTarget().toObject());
   cx->check(newTarget);
-  return CreateThis(cx, Valueify(clasp), newTarget);
+  return CreateThis(cx, clasp, newTarget);
 }
 
 JS_PUBLIC_API bool JS_IsNative(JSObject* obj) { return obj->isNative(); }
@@ -2922,14 +2919,12 @@ static bool DefineSelfHostedProperty(JSContext* cx, HandleObject obj,
 }
 
 JS_PUBLIC_API JSObject* JS_DefineObject(JSContext* cx, HandleObject obj,
-                                        const char* name,
-                                        const JSClass* jsclasp,
+                                        const char* name, const JSClass* clasp,
                                         unsigned attrs) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  const Class* clasp = Valueify(jsclasp);
   if (!clasp) {
     clasp = &PlainObject::class_; /* default class is Object */
   }
@@ -3075,7 +3070,7 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
     return;
   }
 
-  const Class* clasp = obj->getClass();
+  const JSClass* clasp = obj->getClass();
   unsigned numReserved = JSCLASS_RESERVED_SLOTS(clasp);
   unsigned numSlots = obj->as<NativeObject>().slotSpan();
   for (unsigned i = numReserved; i < numSlots; i++) {

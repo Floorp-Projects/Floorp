@@ -21,7 +21,7 @@ class ArrayObject : public NativeObject {
   static const uint32_t EagerAllocationMaxLength =
       2048 - ObjectElements::VALUES_PER_HEADER;
 
-  static const Class class_;
+  static const JSClass class_;
 
   bool lengthIsWritable() const {
     return !getElementsHeader()->hasNonwritableArrayLength();

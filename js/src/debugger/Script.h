@@ -27,7 +27,7 @@ struct Cell;
 
 class DebuggerScript : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   enum {
     OWNER_SLOT,

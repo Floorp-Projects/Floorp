@@ -568,7 +568,7 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
     return nullptr;
   }
 
-  const Class* clasp = &PropertyIteratorObject::class_;
+  const JSClass* clasp = &PropertyIteratorObject::class_;
   RootedShape shape(cx,
                     EmptyShape::getInitialShape(cx, clasp, TaggedProto(nullptr),
                                                 ITERATOR_FINALIZE_KIND));
@@ -848,7 +848,7 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
 
     // Typed arrays have indexed properties not captured by the Shape guard.
     // Enumerate hooks may add extra properties.
-    const Class* clasp = obj->getClass();
+    const JSClass* clasp = obj->getClass();
     if (MOZ_UNLIKELY(IsTypedArrayClass(clasp))) {
       return false;
     }
@@ -1097,11 +1097,11 @@ const JSClassOps PropertyIteratorObject::classOps_ = {
     nullptr,           /* construct   */
     trace};
 
-const Class PropertyIteratorObject::class_ = {
+const JSClass PropertyIteratorObject::class_ = {
     "Iterator", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &PropertyIteratorObject::classOps_};
 
-static const Class ArrayIteratorPrototypeClass = {"Array Iterator", 0};
+static const JSClass ArrayIteratorPrototypeClass = {"Array Iterator", 0};
 
 enum {
   ArrayIteratorSlotIteratedObject,
@@ -1110,7 +1110,7 @@ enum {
   ArrayIteratorSlotCount
 };
 
-const Class ArrayIteratorObject::class_ = {
+const JSClass ArrayIteratorObject::class_ = {
     "Array Iterator", JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount)};
 
 ArrayIteratorObject* js::NewArrayIteratorObject(JSContext* cx,
@@ -1127,7 +1127,7 @@ ArrayIteratorObject* js::NewArrayIteratorObject(JSContext* cx,
 static const JSFunctionSpec array_iterator_methods[] = {
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0), JS_FS_END};
 
-static const Class StringIteratorPrototypeClass = {"String Iterator", 0};
+static const JSClass StringIteratorPrototypeClass = {"String Iterator", 0};
 
 enum {
   StringIteratorSlotIteratedObject,
@@ -1135,7 +1135,7 @@ enum {
   StringIteratorSlotCount
 };
 
-const Class StringIteratorObject::class_ = {
+const JSClass StringIteratorObject::class_ = {
     "String Iterator", JSCLASS_HAS_RESERVED_SLOTS(StringIteratorSlotCount)};
 
 static const JSFunctionSpec string_iterator_methods[] = {
@@ -1152,7 +1152,7 @@ StringIteratorObject* js::NewStringIteratorObject(JSContext* cx,
   return NewObjectWithGivenProto<StringIteratorObject>(cx, proto, newKind);
 }
 
-static const Class RegExpStringIteratorPrototypeClass = {
+static const JSClass RegExpStringIteratorPrototypeClass = {
     "RegExp String Iterator", 0};
 
 enum {
@@ -1201,7 +1201,7 @@ static_assert(RegExpStringIteratorSlotLastIndex ==
               "RegExpStringIteratorSlotLastIndex must match self-hosting "
               "define for lastIndex slot.");
 
-const Class RegExpStringIteratorObject::class_ = {
+const JSClass RegExpStringIteratorObject::class_ = {
     "RegExp String Iterator",
     JSCLASS_HAS_RESERVED_SLOTS(RegExpStringIteratorSlotCount)};
 
@@ -1506,7 +1506,7 @@ bool GlobalObject::initArrayIteratorProto(JSContext* cx,
     return false;
   }
 
-  const Class* cls = &ArrayIteratorPrototypeClass;
+  const JSClass* cls = &ArrayIteratorPrototypeClass;
   RootedObject proto(
       cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
   if (!proto ||
@@ -1533,7 +1533,7 @@ bool GlobalObject::initStringIteratorProto(JSContext* cx,
     return false;
   }
 
-  const Class* cls = &StringIteratorPrototypeClass;
+  const JSClass* cls = &StringIteratorPrototypeClass;
   RootedObject proto(
       cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
   if (!proto ||
@@ -1560,7 +1560,7 @@ bool GlobalObject::initRegExpStringIteratorProto(JSContext* cx,
     return false;
   }
 
-  const Class* cls = &RegExpStringIteratorPrototypeClass;
+  const JSClass* cls = &RegExpStringIteratorPrototypeClass;
   RootedObject proto(
       cx, GlobalObject::createBlankPrototypeInheriting(cx, cls, iteratorProto));
   if (!proto ||

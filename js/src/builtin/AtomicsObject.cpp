@@ -72,8 +72,8 @@
 
 using namespace js;
 
-const Class AtomicsObject::class_ = {"Atomics",
-                                     JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics)};
+const JSClass AtomicsObject::class_ = {
+    "Atomics", JSCLASS_HAS_CACHED_PROTO(JSProto_Atomics)};
 
 static bool ReportBadArrayType(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

@@ -1613,8 +1613,10 @@ pref("browser.contentblocking.report.lockwise.enabled", true);
 
 // Enable Protections report's Monitor card by default.
 pref("browser.contentblocking.report.monitor.enabled", true);
+
 pref("browser.contentblocking.report.monitor.url", "https://monitor.firefox.com");
 pref("browser.contentblocking.report.lockwise.url", "https://lockwise.firefox.com/");
+pref("browser.contentblocking.report.manage_devices.url", "https://accounts.firefox.com/settings/clients");
 
 // Protection Report's SUMO urls
 pref("browser.contentblocking.report.monitor.how_it_works.url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/monitor-faq");

@@ -227,7 +227,7 @@ RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {
 /* static */
 void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
   MOZ_ASSERT(aGlobal);
-  DebugOnly<const js::Class*> clasp = js::GetObjectClass(aGlobal);
+  DebugOnly<const JSClass*> clasp = js::GetObjectClass(aGlobal);
   MOZ_ASSERT(clasp->flags &
                  (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE) ||
              dom::IsDOMClass(clasp));
@@ -3152,7 +3152,7 @@ bool XPCJSRuntime::InitializeStrings(JSContext* cx) {
   return true;
 }
 
-bool XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
+bool XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const JSClass* clasp,
                                          char (&name)[72]) const {
   if (clasp != &XPC_WN_Proto_JSClass) {
     return false;
@@ -3171,7 +3171,7 @@ bool XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
 }
 
 bool XPCJSRuntime::NoteCustomGCThingXPCOMChildren(
-    const js::Class* clasp, JSObject* obj,
+    const JSClass* clasp, JSObject* obj,
     nsCycleCollectionTraversalCallback& cb) const {
   if (clasp != &XPC_WN_Tearoff_JSClass) {
     return false;

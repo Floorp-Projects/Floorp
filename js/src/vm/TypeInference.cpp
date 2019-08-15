@@ -650,7 +650,7 @@ void TypeSet::addType(Type type, LifoAlloc* alloc) {
       // the normal object limit.
       if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT) {
         for (unsigned i = 0; i < objectCount; i++) {
-          const Class* clasp = getObjectClass(i);
+          const JSClass* clasp = getObjectClass(i);
           if (clasp && !clasp->isDOMClass()) {
             goto unknownObject;
           }
@@ -1319,7 +1319,7 @@ bool CompilerConstraintInstance<T>::generateTypeConstraint(
 
 } /* anonymous namespace */
 
-const Class* TypeSet::ObjectKey::clasp() {
+const JSClass* TypeSet::ObjectKey::clasp() {
   return isGroup() ? group()->clasp() : singleton()->getClass();
 }
 
@@ -2343,17 +2343,17 @@ TemporaryTypeSet::DoubleConversion TemporaryTypeSet::convertDoubleElements(
   return DontConvertToDoubles;
 }
 
-const Class* TemporaryTypeSet::getKnownClass(
+const JSClass* TemporaryTypeSet::getKnownClass(
     CompilerConstraintList* constraints) {
   if (unknownObject()) {
     return nullptr;
   }
 
-  const Class* clasp = nullptr;
+  const JSClass* clasp = nullptr;
   unsigned count = getObjectCount();
 
   for (unsigned i = 0; i < count; i++) {
-    const Class* nclasp = getObjectClass(i);
+    const JSClass* nclasp = getObjectClass(i);
     if (!nclasp) {
       continue;
     }
@@ -2389,7 +2389,7 @@ Realm* TemporaryTypeSet::getKnownRealm(CompilerConstraintList* constraints) {
   unsigned count = getObjectCount();
 
   for (unsigned i = 0; i < count; i++) {
-    const Class* clasp = getObjectClass(i);
+    const JSClass* clasp = getObjectClass(i);
     if (!clasp) {
       continue;
     }
@@ -2435,7 +2435,7 @@ void TemporaryTypeSet::getTypedArraySharedness(
 }
 
 TemporaryTypeSet::ForAllResult TemporaryTypeSet::forAllClasses(
-    CompilerConstraintList* constraints, bool (*func)(const Class* clasp)) {
+    CompilerConstraintList* constraints, bool (*func)(const JSClass* clasp)) {
   if (unknownObject()) {
     return ForAllResult::MIXED;
   }
@@ -2448,7 +2448,7 @@ TemporaryTypeSet::ForAllResult TemporaryTypeSet::forAllClasses(
   bool true_results = false;
   bool false_results = false;
   for (unsigned i = 0; i < count; i++) {
-    const Class* clasp = getObjectClass(i);
+    const JSClass* clasp = getObjectClass(i);
     if (!clasp) {
       continue;
     }
@@ -2475,7 +2475,7 @@ TemporaryTypeSet::ForAllResult TemporaryTypeSet::forAllClasses(
 
 Scalar::Type TemporaryTypeSet::getTypedArrayType(
     CompilerConstraintList* constraints, TypedArraySharedness* sharedness) {
-  const Class* clasp = getKnownClass(constraints);
+  const JSClass* clasp = getKnownClass(constraints);
 
   if (clasp && IsTypedArrayClass(clasp)) {
     if (sharedness) {
@@ -2497,7 +2497,7 @@ bool TemporaryTypeSet::isDOMClass(CompilerConstraintList* constraints,
 
   unsigned count = getObjectCount();
   for (unsigned i = 0; i < count; i++) {
-    const Class* clasp = getObjectClass(i);
+    const JSClass* clasp = getObjectClass(i);
     if (!clasp) {
       continue;
     }
@@ -2532,7 +2532,7 @@ bool TemporaryTypeSet::maybeCallable(CompilerConstraintList* constraints) {
 
   unsigned count = getObjectCount();
   for (unsigned i = 0; i < count; i++) {
-    const Class* clasp = getObjectClass(i);
+    const JSClass* clasp = getObjectClass(i);
     if (!clasp) {
       continue;
     }
@@ -2562,7 +2562,7 @@ bool TemporaryTypeSet::maybeEmulatesUndefined(
     // The object emulates undefined if clasp->emulatesUndefined() or if
     // it's a WrapperObject, see EmulatesUndefined. Since all wrappers are
     // proxies, we can just check for that.
-    const Class* clasp = getObjectClass(i);
+    const JSClass* clasp = getObjectClass(i);
     if (!clasp) {
       continue;
     }
@@ -2646,7 +2646,7 @@ bool TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList* constraints,
   return false;
 }
 
-bool js::ClassCanHaveExtraProperties(const Class* clasp) {
+bool js::ClassCanHaveExtraProperties(const JSClass* clasp) {
   return clasp->getResolve() || clasp->getOpsLookupProperty() ||
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
 }

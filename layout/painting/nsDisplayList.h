@@ -1650,6 +1650,17 @@ class nsDisplayListBuilder {
   }
   bool ContainsBlendMode() const { return mContainsBlendMode; }
 
+  /**
+   * mContainsBackdropFilter is true if we proccessed a display item that
+   * has a backdrop filter set. We track this so we can insert a
+   * nsDisplayBackdropRootContainer in the stacking context of the nearest
+   * ancestor that forms a backdrop root.
+   */
+  void SetContainsBackdropFilter(bool aContainsBackdropFilter) {
+    mContainsBackdropFilter = aContainsBackdropFilter;
+  }
+  bool ContainsBackdropFilter() const { return mContainsBackdropFilter; }
+
   DisplayListClipState& ClipState() { return mClipState; }
   const ActiveScrolledRoot* CurrentActiveScrolledRoot() {
     return mCurrentActiveScrolledRoot;
@@ -2025,6 +2036,7 @@ class nsDisplayListBuilder {
   bool mIsInActiveDocShell;
   bool mBuildAsyncZoomContainer;
   bool mBuildBackdropRootContainer;
+  bool mContainsBackdropFilter;
 
   nsRect mHitTestArea;
   CompositorHitTestInfo mHitTestInfo;

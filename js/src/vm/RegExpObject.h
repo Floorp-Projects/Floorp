@@ -62,8 +62,8 @@ class RegExpObject : public NativeObject {
   static const unsigned RESERVED_SLOTS = 3;
   static const unsigned PRIVATE_SLOT = 3;
 
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
   // The maximum number of pairs a MatchResult can have, without having to
   // allocate a bigger MatchResult.

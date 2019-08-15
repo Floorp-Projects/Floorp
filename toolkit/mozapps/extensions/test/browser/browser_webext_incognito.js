@@ -261,28 +261,31 @@ add_task(async function test_badge_and_toggle_incognito() {
     type: "extension",
   };
 
-  assertTelemetryMatches(
+  assertAboutAddonsTelemetryEvents(
     [
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "on",
         { ...expectedExtras, addonId: "@test-default" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "off",
         { ...expectedExtras, addonId: "@test-override" },
       ],
       [
+        "addonsManager",
         "action",
         "aboutAddons",
         "off",
         { ...expectedExtras, addonId: "@test-override-permanent" },
       ],
     ],
-    { filterMethods: ["action"] }
+    { methods: ["action"] }
   );
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");

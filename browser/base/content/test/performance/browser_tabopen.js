@@ -36,6 +36,9 @@ add_task(async function() {
     .querySelector("moz-input-box")
     .getBoundingClientRect();
   let historyDropmarkerRect = gURLBar.dropmarker.getBoundingClientRect();
+  let fxaAccountsButton = document
+    .getElementById("fxa-toolbar-menu-button")
+    .getBoundingClientRect();
 
   let inRange = (val, min, max) => min <= val && val <= max;
 
@@ -127,6 +130,15 @@ add_task(async function() {
               r.x2 <= historyDropmarkerRect.right &&
               r.y1 >= historyDropmarkerRect.y &&
               r.y2 <= historyDropmarkerRect.bottom,
+          },
+          {
+            name:
+              "FxA accounts button is intentionally badged 10s after startup",
+            condition: r =>
+              r.x1 >= fxaAccountsButton.left &&
+              r.x2 <= fxaAccountsButton.right &&
+              r.y1 >= fxaAccountsButton.top &&
+              r.y2 <= fxaAccountsButton.bottom,
           },
         ],
       },

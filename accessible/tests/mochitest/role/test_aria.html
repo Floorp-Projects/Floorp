@@ -87,7 +87,7 @@
       // role mapping. Similarly "strong foo" means there is a good foo-to-
       // platform role mapping.
 
-      testRole("articlemain", ROLE_ARTICLE);
+      testRole("articlemain", ROLE_LANDMARK);
       testRole("articleform", ROLE_FORM);
 
       // Test article exposed as article
@@ -105,17 +105,18 @@
       testRole("form", ROLE_FORM);
       testRole("application_table", ROLE_APPLICATION);
 
-      // weak landmarks
-      var weak_landmarks = ["banner", "complementary", "contentinfo",
+      // landmarks
+      let landmarks = ["banner", "complementary", "contentinfo",
           "main", "navigation", "search"];
-      for (l in weak_landmarks)
-        testRole(weak_landmarks[l], ROLE_SECTION);
+      for (l in landmarks) {
+        testRole(landmarks[l], ROLE_LANDMARK);
+      }
 
-      for (l in weak_landmarks) {
-        var id = weak_landmarks[l] + "_table";
-        testRole(id, ROLE_TABLE);
+      for (l in landmarks) {
+        let id = landmarks[l] + "_table";
+        testRole(id, ROLE_LANDMARK);
     
-        var accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
+        let accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
                                             DONOTFAIL_IF_NO_INTERFACE);
         ok(!!accessibleTable, "landmarked table should have nsIAccessibleTable");
     

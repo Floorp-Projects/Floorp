@@ -58,3 +58,4 @@ platform(linux,mac) == svg-filter-drop-shadow-on-viewport-edge.yaml svg-filter-d
 platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-filter-drop-shadow-perspective.png
 == backdrop-filter-basic.yaml backdrop-filter-basic-ref.yaml
 platform(linux,mac) == backdrop-filter-perspective.yaml backdrop-filter-perspective.png
+platform(linux,max) == svg-filter-offset.yaml svg-filter-offset-ref.yaml

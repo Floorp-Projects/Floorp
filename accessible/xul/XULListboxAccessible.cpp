@@ -437,10 +437,6 @@ XULListitemAccessible::XULListitemAccessible(nsIContent* aContent,
   mIsCheckbox = mContent->AsElement()->AttrValueIs(
       kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::checkbox, eCaseMatters);
   mType = eXULListItemType;
-
-  // Walk XBL anonymous children for list items. Overrides the flag value from
-  // base XULMenuitemAccessible class.
-  mStateFlags &= ~eNoXBLKids;
 }
 
 XULListitemAccessible::~XULListitemAccessible() {}

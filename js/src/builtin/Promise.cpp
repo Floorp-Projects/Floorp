@@ -211,7 +211,7 @@ class MutableWrappedPtrOperations<PromiseCapability, Wrapper>
 
 class PromiseAllDataHolder : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
   JSObject* promiseObj() {
     return &getFixedSlot(PromiseAllDataHolderSlot_Promise).toObject();
   }
@@ -242,7 +242,7 @@ class PromiseAllDataHolder : public NativeObject {
   }
 };
 
-const Class PromiseAllDataHolder::class_ = {
+const JSClass PromiseAllDataHolder::class_ = {
     "PromiseAllDataHolder",
     JSCLASS_HAS_RESERVED_SLOTS(PromiseAllDataHolderSlots)};
 
@@ -301,7 +301,7 @@ class PromiseDebugInfo : public NativeObject {
   };
 
  public:
-  static const Class class_;
+  static const JSClass class_;
   static PromiseDebugInfo* create(
       JSContext* cx, Handle<PromiseObject*> promise,
       const mozilla::Maybe<mozilla::TimeStamp>& maybeNow) {
@@ -424,8 +424,8 @@ class PromiseDebugInfo : public NativeObject {
   }
 };
 
-const Class PromiseDebugInfo::class_ = {"PromiseDebugInfo",
-                                        JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
+const JSClass PromiseDebugInfo::class_ = {
+    "PromiseDebugInfo", JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
 double PromiseObject::allocationTime() {
   auto debugInfo = PromiseDebugInfo::FromPromise(this);
@@ -593,7 +593,7 @@ class PromiseReactionRecord : public NativeObject {
   }
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   JSObject* promise() {
     return getFixedSlot(ReactionRecordSlot_Promise).toObjectOrNull();
@@ -689,7 +689,7 @@ class PromiseReactionRecord : public NativeObject {
   }
 };
 
-const Class PromiseReactionRecord::class_ = {
+const JSClass PromiseReactionRecord::class_ = {
     "PromiseReactionRecord", JSCLASS_HAS_RESERVED_SLOTS(ReactionRecordSlots)};
 
 static void AddPromiseFlags(PromiseObject& promise, int32_t flag) {
@@ -5785,13 +5785,13 @@ static const ClassSpec PromiseObjectClassSpec = {
     promise_methods,
     promise_properties};
 
-const Class PromiseObject::class_ = {
+const JSClass PromiseObject::class_ = {
     "Promise",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Promise) |
         JSCLASS_HAS_XRAYED_CONSTRUCTOR,
     JS_NULL_CLASS_OPS, &PromiseObjectClassSpec};
 
-const Class PromiseObject::protoClass_ = {
+const JSClass PromiseObject::protoClass_ = {
     "PromiseProto", JSCLASS_HAS_CACHED_PROTO(JSProto_Promise),
     JS_NULL_CLASS_OPS, &PromiseObjectClassSpec};

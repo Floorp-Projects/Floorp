@@ -22,8 +22,8 @@ class BigIntObject : public NativeObject {
 
  public:
   static const ClassSpec classSpec_;
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
   static JSObject* create(JSContext* cx, JS::Handle<JS::BigInt*> bi);
 

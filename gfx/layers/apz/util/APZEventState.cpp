@@ -35,6 +35,8 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/widget/nsAutoRollup.h"
 
@@ -93,9 +95,6 @@ int32_t WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers) {
 namespace mozilla {
 namespace layers {
 
-static int32_t sActiveDurationMs = 10;
-static bool sActiveDurationMsSet = false;
-
 APZEventState::APZEventState(nsIWidget* aWidget,
                              ContentReceivedInputBlockCallback&& aCallback)
     : mWidget(nullptr)  // initialized in constructor body
@@ -113,13 +112,6 @@ APZEventState::APZEventState(nsIWidget* aWidget,
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "APZEventState constructed with a widget that"
              " does not support weak references. APZ will NOT work!");
-
-  if (!sActiveDurationMsSet) {
-    Preferences::AddIntVarCache(&sActiveDurationMs,
-                                "ui.touch_activation.duration_ms",
-                                sActiveDurationMs);
-    sActiveDurationMsSet = true;
-  }
 }
 
 APZEventState::~APZEventState() {}
@@ -203,8 +195,9 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   }
   RefPtr<DelayedFireSingleTapEvent> callback = new DelayedFireSingleTapEvent(
       mWidget, ldPoint, aModifiers, aClickCount, timer, touchRollup);
-  nsresult rv = timer->InitWithCallback(callback, sActiveDurationMs,
-                                        nsITimer::TYPE_ONE_SHOT);
+  nsresult rv = timer->InitWithCallback(
+      callback, StaticPrefs::ui_touch_activation_duration_ms(),
+      nsITimer::TYPE_ONE_SHOT);
   if (NS_FAILED(rv)) {
     // Make |callback| not hold the timer, so they will both be destructed when
     // we leave the scope of this function.

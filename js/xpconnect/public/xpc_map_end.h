@@ -34,15 +34,12 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::GetClassName(nsACString& aClassName) {
 uint32_t XPC_MAP_CLASSNAME::GetScriptableFlags() { return (XPC_MAP_FLAGS); }
 
 // virtual
-const js::Class* XPC_MAP_CLASSNAME::GetClass() {
+const JSClass* XPC_MAP_CLASSNAME::GetJSClass() {
   static const JSClassOps classOps = XPC_MAKE_CLASS_OPS(GetScriptableFlags());
-  static const js::Class klass =
+  static const JSClass klass =
       XPC_MAKE_CLASS(XPC_MAP_QUOTED_CLASSNAME, GetScriptableFlags(), &classOps);
   return &klass;
 }
-
-// virtual
-const JSClass* XPC_MAP_CLASSNAME::GetJSClass() { return Jsvalify(GetClass()); }
 
 /**************************************************************/
 

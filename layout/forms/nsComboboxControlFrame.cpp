@@ -1237,19 +1237,27 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   ReflowInput state(aReflowInput);
+  WritingMode wm = aReflowInput.GetWritingMode();
+  LogicalMargin bp = state.ComputedLogicalBorderPadding();
   if (state.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(mComboBox);
     // We intentionally use the combobox frame's style here, which has
     // the 'line-height' specified by the author, if any.
     // (This frame has 'line-height: -moz-block-height' in the UA
     // sheet which is suitable when there's a specified block-size.)
-    auto lh = ReflowInput::CalcLineHeight(mComboBox->GetContent(),
-                                          mComboBox->Style(), aPresContext,
-                                          NS_UNCONSTRAINEDSIZE, inflation);
+    nscoord lh = ReflowInput::CalcLineHeight(mComboBox->GetContent(),
+                                             mComboBox->Style(), aPresContext,
+                                             NS_UNCONSTRAINEDSIZE, inflation);
+    if (!mComboBox->StyleText()->mLineHeight.IsNormal()) {
+      // If the author specified a different line-height than normal, or a
+      // different appearance, subtract the border-padding from the
+      // comboboxdisplay frame, so as to respect that line-height rather than
+      // that line-height + 2px (from the UA sheet).
+      lh = std::max(0, lh - bp.BStartEnd(wm));
+    }
     state.SetComputedBSize(lh);
   }
-  WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord inlineBp = state.ComputedLogicalBorderPadding().IStartEnd(wm);
+  nscoord inlineBp = bp.IStartEnd(wm);
   nscoord computedISize = mComboBox->mDisplayISize - inlineBp;
 
   // Other UAs ignore padding in some (but not all) platforms for (themed only)

@@ -186,7 +186,7 @@ inline bool GetElementNoGC(JSContext* cx, JSObject* obj,
 }
 
 static MOZ_ALWAYS_INLINE bool ClassMayResolveId(const JSAtomState& names,
-                                                const Class* clasp, jsid id,
+                                                const JSClass* clasp, jsid id,
                                                 JSObject* maybeObj) {
   MOZ_ASSERT_IF(maybeObj, maybeObj->getClass() == clasp);
 

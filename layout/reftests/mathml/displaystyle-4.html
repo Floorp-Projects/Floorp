@@ -11,6 +11,16 @@
       }
       window.addEventListener("MozReftestInvalidate", doTest);
     </script>
+    <style>
+      @font-face
+      {
+          font-family: Ahem;
+          src: url(../fonts/Ahem.ttf);
+      }
+      math {
+          font: 25px Ahem;
+      }
+    </style>
   </head>
   <body>
 
@@ -19,15 +29,15 @@
       <mstyle displaystyle="true">
         <mfrac>
           <mrow>
-            <mi>X</mi>
+            <mn>X</mn>
             <mo id="mathOperator">+</mo>
             <mfrac>
-              <mrow><mi>X</mi></mrow>
-              <mrow><mi>X</mi></mrow>
+              <mrow><mn>X</mn></mrow>
+              <mrow><mn>X</mn></mrow>
             </mfrac>
           </mrow>
           <mrow>
-            <mi>X</mi>
+            <mn>X</mn>
           </mrow>
         </mfrac>
       </mstyle>

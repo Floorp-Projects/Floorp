@@ -27,7 +27,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         hist = parse_histograms.Histogram('USE_COUNTER2_TEST_HISTOGRAM',
                                           histograms['USE_COUNTER2_TEST_HISTOGRAM'],
@@ -46,7 +46,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         hist = parse_histograms.Histogram('USE_COUNTER2_TEST_HISTOGRAM',
                                           histograms['USE_COUNTER2_TEST_HISTOGRAM'],

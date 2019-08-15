@@ -63,7 +63,7 @@ const JSClassOps DebuggerSource::classOps_ = {
     CallTraceMethod<DebuggerSource>, /* trace */
 };
 
-const Class DebuggerSource::class_ = {
+const JSClass DebuggerSource::class_ = {
     "Source", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS),
     &classOps_};
 

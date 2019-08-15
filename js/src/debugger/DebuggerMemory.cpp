@@ -65,7 +65,7 @@ bool DebuggerMemory::construct(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
-/* static */ const Class DebuggerMemory::class_ = {
+/* static */ const JSClass DebuggerMemory::class_ = {
     "Memory", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT)};
 
 /* static */

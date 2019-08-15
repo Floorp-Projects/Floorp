@@ -16,9 +16,20 @@ function promisePreferenceChanged(pref) {
 }
 
 function assertDoorhangerTelemetry(action) {
-  assertTelemetryMatches(
-    [["action", "doorhanger", null, { action, view: "privateBrowsing" }]],
-    { filterMethods: ["action"] }
+  TelemetryTestUtils.assertEvents(
+    [
+      [
+        "addonsManager",
+        "action",
+        "doorhanger",
+        null,
+        { action, view: "privateBrowsing" },
+      ],
+    ],
+    {
+      category: "addonsManager",
+      method: "action",
+    }
   );
 }
 

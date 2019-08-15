@@ -238,7 +238,7 @@ extern "C" {
                           aObj: JS::HandleObject,
                           aHandler: *const ::libc::c_void)
                           -> *mut JSObject;
-    pub fn GetWindowProxyClass() -> *const js::Class;
+    pub fn GetWindowProxyClass() -> *const JSClass;
     pub fn GetProxyPrivate(obj: *mut JSObject) -> JS::Value;
     pub fn SetProxyPrivate(obj: *mut JSObject, private: *const JS::Value);
     pub fn GetProxyReservedSlot(obj: *mut JSObject, slot: u32) -> JS::Value;

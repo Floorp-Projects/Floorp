@@ -17,6 +17,8 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
+// NOTE(emilio): If we stop inheriting from Link, we need to remove the
+// IsHTMLElement(nsGkAtoms::link) checks in Link.cpp.
 class HTMLLinkElement final : public nsGenericHTMLElement,
                               public nsStyleLinkElement,
                               public Link {
@@ -118,6 +120,10 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   void SetAs(const nsAString& aAs, ErrorResult& aRv) {
     SetAttr(nsGkAtoms::as, aAs, aRv);
   }
+
+  static void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
+  static nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
+
   nsDOMTokenList* Sizes() { return GetTokenList(nsGkAtoms::sizes); }
   void GetType(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
   void SetType(const nsAString& aType, ErrorResult& aRv) {
@@ -164,6 +170,14 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
 
  protected:
   virtual ~HTMLLinkElement();
+
+  void GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
+                                     nsContentPolicyType& aPolicyType,
+                                     nsString& aMimeType, nsAString& aMedia);
+  void TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
+  void UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
+                     const nsAttrValue* aOldValue);
+  void CancelPrefetchOrPreload();
 
   // nsStyleLinkElement
   Maybe<SheetInfo> GetStyleSheetInfo() final;

@@ -36,7 +36,7 @@ enum { JSSLOT_DEBUGOBJECT_OWNER, JSSLOT_DEBUGOBJECT_COUNT };
 
 class DebuggerObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static NativeObject* initClass(JSContext* cx, Handle<GlobalObject*> global,
                                  HandleObject debugCtor);

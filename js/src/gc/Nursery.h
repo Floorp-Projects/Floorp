@@ -156,7 +156,7 @@ class TenuringTracer : public JSTracer {
 // nursery allocated and not promoted to the tenured heap. The finalizers for
 // these classes must do nothing except free data which was allocated via
 // Nursery::allocateBuffer.
-inline bool CanNurseryAllocateFinalizedClass(const js::Class* const clasp) {
+inline bool CanNurseryAllocateFinalizedClass(const JSClass* const clasp) {
   MOZ_ASSERT(clasp->hasFinalize());
   return clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE;
 }
@@ -230,7 +230,7 @@ class Nursery {
   // Allocate and return a pointer to a new GC object with its |slots|
   // pointer pre-filled. Returns nullptr if the Nursery is full.
   JSObject* allocateObject(JSContext* cx, size_t size, size_t numDynamic,
-                           const js::Class* clasp);
+                           const JSClass* clasp);
 
   // Allocate and return a pointer to a new string. Returns nullptr if the
   // Nursery is full.

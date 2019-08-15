@@ -29,10 +29,6 @@ class nsIException;
 class nsIRunnable;
 class nsWrapperCache;
 
-namespace js {
-struct Class;
-}  // namespace js
-
 namespace mozilla {
 
 class JSGCThingParticipant : public nsCycleCollectionParticipant {
@@ -122,7 +118,7 @@ class CycleCollectedJSRuntime {
   void DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
                        nsCycleCollectionTraversalCallback& aCb) const;
 
-  virtual bool DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
+  virtual bool DescribeCustomObjects(JSObject* aObject, const JSClass* aClasp,
                                      char (&aName)[72]) const {
     return false;  // We did nothing.
   }
@@ -130,11 +126,11 @@ class CycleCollectedJSRuntime {
   void NoteGCThingJSChildren(JS::GCCellPtr aThing,
                              nsCycleCollectionTraversalCallback& aCb) const;
 
-  void NoteGCThingXPCOMChildren(const js::Class* aClasp, JSObject* aObj,
+  void NoteGCThingXPCOMChildren(const JSClass* aClasp, JSObject* aObj,
                                 nsCycleCollectionTraversalCallback& aCb) const;
 
   virtual bool NoteCustomGCThingXPCOMChildren(
-      const js::Class* aClasp, JSObject* aObj,
+      const JSClass* aClasp, JSObject* aObj,
       nsCycleCollectionTraversalCallback& aCb) const {
     return false;  // We did nothing.
   }

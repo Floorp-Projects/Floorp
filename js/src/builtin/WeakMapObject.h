@@ -36,8 +36,8 @@ class WeakCollectionObject : public NativeObject {
 
 class WeakMapObject : public WeakCollectionObject {
  public:
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
 
  private:
   static const ClassSpec classSpec_;

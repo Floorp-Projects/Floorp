@@ -340,7 +340,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
       return nullptr;
     }
 
-    const Class* clasp = TypedArrayObject::protoClassForType(ArrayTypeID());
+    const JSClass* clasp = TypedArrayObject::protoClassForType(ArrayTypeID());
     return GlobalObject::createBlankPrototypeInheriting(cx, clasp,
                                                         typedArrayProto);
   }
@@ -365,7 +365,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     return fun;
   }
 
-  static inline const Class* instanceClass() {
+  static inline const JSClass* instanceClass() {
     return TypedArrayObject::classForType(ArrayTypeID());
   }
 
@@ -1924,7 +1924,7 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     nullptr,
     ClassSpec::DontDefineConstructor};
 
-/* static */ const Class TypedArrayObject::sharedTypedArrayPrototypeClass = {
+/* static */ const JSClass TypedArrayObject::sharedTypedArrayPrototypeClass = {
     "TypedArrayPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
     JS_NULL_CLASS_OPS, &TypedArrayObjectSharedTypedArrayPrototypeClassSpec};
 
@@ -2175,7 +2175,7 @@ static const ClassSpec
 #undef IMPL_TYPED_ARRAY_CLASS_SPEC
 };
 
-const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
+const JSClass TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
 #define IMPL_TYPED_ARRAY_CLASS(NativeType, Name)                               \
   {#Name "Array",                                                              \
    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |              \
@@ -2202,7 +2202,7 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
 // with %TypedArray%.prototype.)  It's not clear this is desirable (see
 // above), but it's what we've always done, so keep doing it till we
 // implement @@toStringTag or ES6 changes.
-const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
+const JSClass TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {
 #define IMPL_TYPED_ARRAY_PROTO_CLASS(NativeType, Name)                      \
   {#Name "ArrayPrototype", JSCLASS_HAS_CACHED_PROTO(JSProto_##Name##Array), \
    JS_NULL_CLASS_OPS, &TypedArrayObjectClassSpecs[Scalar::Type::Name]},
@@ -2471,7 +2471,7 @@ struct ExternalTypeOf<uint8_clamped> {
     if (!obj) {                                                              \
       return nullptr;                                                        \
     }                                                                        \
-    const Class* clasp = obj->getClass();                                    \
+    const JSClass* clasp = obj->getClass();                                  \
     if (clasp != TypedArrayObjectTemplate<NativeType>::instanceClass()) {    \
       return nullptr;                                                        \
     }                                                                        \
@@ -2482,7 +2482,7 @@ struct ExternalTypeOf<uint8_clamped> {
     return js::Unwrap##Name##Array(obj) != nullptr;                          \
   }                                                                          \
                                                                              \
-  const js::Class* const js::detail::Name##ArrayClassPtr =                   \
+  const JSClass* const js::detail::Name##ArrayClassPtr =                     \
       &js::TypedArrayObject::classes                                         \
           [TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];             \
                                                                              \

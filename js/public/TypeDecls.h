@@ -26,6 +26,7 @@ typedef uint8_t jsbytecode;
 
 class JSAtom;
 struct JSContext;
+struct JSClass;
 class JSFunction;
 class JSFreeOp;
 class JSObject;

@@ -55,6 +55,9 @@ add_task(async function() {
 
   let alreadyFocused = false;
   let inRange = (val, min, max) => min <= val && val <= max;
+  let fxaAccountsButton = document
+    .getElementById("fxa-toolbar-menu-button")
+    .getBoundingClientRect();
   let expectations = {
     expectedReflows: EXPECTED_REFLOWS,
     frames: {
@@ -101,6 +104,14 @@ add_task(async function() {
               r.y2 <= inputFieldRect.bottom
             );
           },
+        },
+        {
+          name: "FxA accounts button is intentionally badged 10s after startup",
+          condition: r =>
+            r.x1 >= fxaAccountsButton.left &&
+            r.x2 <= fxaAccountsButton.right &&
+            r.y1 >= fxaAccountsButton.top &&
+            r.y2 <= fxaAccountsButton.bottom,
         },
       ],
     },

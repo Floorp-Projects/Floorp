@@ -7,7 +7,7 @@
 #ifndef xpc_make_class_h
 #define xpc_make_class_h
 
-// This file should be used to create js::Class instances for nsIXPCScriptable
+// This file should be used to create JSClass instances for nsIXPCScriptable
 // instances. This includes any file that uses xpc_map_end.h.
 
 #include "xpcpublic.h"

@@ -23,7 +23,7 @@ class StringObject : public NativeObject {
  public:
   static const unsigned RESERVED_SLOTS = 2;
 
-  static const Class class_;
+  static const JSClass class_;
 
   /*
    * Creates a new String object boxing the given string.  The object's

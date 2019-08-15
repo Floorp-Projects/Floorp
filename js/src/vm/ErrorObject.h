@@ -35,7 +35,7 @@ class ErrorObject : public NativeObject {
                    uint32_t columnNumber, HandleString message);
 
   static const ClassSpec classSpecs[JSEXN_ERROR_LIMIT];
-  static const Class protoClasses[JSEXN_ERROR_LIMIT];
+  static const JSClass protoClasses[JSEXN_ERROR_LIMIT];
 
  protected:
   static const uint32_t EXNTYPE_SLOT = 0;
@@ -51,14 +51,14 @@ class ErrorObject : public NativeObject {
   static const uint32_t RESERVED_SLOTS = TIME_WARP_SLOT + 1;
 
  public:
-  static const Class classes[JSEXN_ERROR_LIMIT];
+  static const JSClass classes[JSEXN_ERROR_LIMIT];
 
-  static const Class* classForType(JSExnType type) {
+  static const JSClass* classForType(JSExnType type) {
     MOZ_ASSERT(type < JSEXN_WARN);
     return &classes[type];
   }
 
-  static bool isErrorClass(const Class* clasp) {
+  static bool isErrorClass(const JSClass* clasp) {
     return &classes[0] <= clasp &&
            clasp < &classes[0] + mozilla::ArrayLength(classes);
   }

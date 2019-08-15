@@ -40,8 +40,8 @@ using mozilla::RangedPtr;
 
 using JS::AutoStableStringChars;
 
-const Class js::JSONClass = {js_JSON_str,
-                             JSCLASS_HAS_CACHED_PROTO(JSProto_JSON)};
+const JSClass js::JSONClass = {js_JSON_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_JSON)};
 
 /* ES5 15.12.3 Quote.
  * Requires that the destination has enough space allocated for src after

@@ -347,7 +347,7 @@ nsPIDOMWindowOuter* nsPIDOMWindowOuter::GetFromCurrentInner(
 // We store the nsGlobalWindowOuter* in our first slot.
 //
 // We store our holder weakmap in the second slot.
-const js::Class OuterWindowProxyClass = PROXY_CLASS_DEF(
+const JSClass OuterWindowProxyClass = PROXY_CLASS_DEF(
     "Proxy", JSCLASS_HAS_RESERVED_SLOTS(2)); /* additional class flags */
 
 static const size_t OUTER_WINDOW_SLOT = 0;

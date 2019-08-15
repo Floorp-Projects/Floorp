@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -627,58 +628,47 @@ void nsCSSRendering::ComputePixelRadii(const nscoord* aAppUnitsRadii,
       Size(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]);
 }
 
+static Maybe<nsStyleBorder> GetBorderIfVisited(const ComputedStyle& aStyle) {
+  Maybe<nsStyleBorder> result;
+  // Don't check RelevantLinkVisited here, since we want to take the
+  // same amount of time whether or not it's true.
+  const ComputedStyle* styleIfVisited = aStyle.GetStyleIfVisited();
+  if (MOZ_LIKELY(!styleIfVisited)) {
+    return result;
+  }
+
+  result.emplace(*aStyle.StyleBorder());
+  auto& newBorder = result.ref();
+  NS_FOR_CSS_SIDES(side) {
+    nscolor color = aStyle.GetVisitedDependentColor(
+        nsStyleBorder::BorderColorFieldFor(side));
+    newBorder.BorderColorFor(side) = StyleColor::FromColor(color);
+  }
+
+  return result;
+}
+
 ImgDrawResult nsCSSRendering::PaintBorder(
     nsPresContext* aPresContext, gfxContext& aRenderingContext,
     nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    ComputedStyle* aComputedStyle, PaintBorderFlags aFlags, Sides aSkipSides) {
+    ComputedStyle* aStyle, PaintBorderFlags aFlags, Sides aSkipSides) {
   AUTO_PROFILER_LABEL("nsCSSRendering::PaintBorder", GRAPHICS);
 
-  ComputedStyle* styleIfVisited = aComputedStyle->GetStyleIfVisited();
-  const nsStyleBorder* styleBorder = aComputedStyle->StyleBorder();
-  // Don't check RelevantLinkVisited here, since we want to take the
-  // same amount of time whether or not it's true.
-  if (!styleIfVisited) {
-    return PaintBorderWithStyleBorder(
-        aPresContext, aRenderingContext, aForFrame, aDirtyRect, aBorderArea,
-        *styleBorder, aComputedStyle, aFlags, aSkipSides);
-  }
-
-  nsStyleBorder newStyleBorder(*styleBorder);
-
-  NS_FOR_CSS_SIDES(side) {
-    nscolor color = aComputedStyle->GetVisitedDependentColor(
-        nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
-  }
-  return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
-                                    aDirtyRect, aBorderArea, newStyleBorder,
-                                    aComputedStyle, aFlags, aSkipSides);
+  Maybe<nsStyleBorder> visitedBorder = GetBorderIfVisited(*aStyle);
+  return PaintBorderWithStyleBorder(
+      aPresContext, aRenderingContext, aForFrame, aDirtyRect, aBorderArea,
+      visitedBorder.refOr(*aStyle->StyleBorder()), aStyle, aFlags, aSkipSides);
 }
 
 Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRenderer(
     nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
-    const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    ComputedStyle* aComputedStyle, bool* aOutBorderIsEmpty, Sides aSkipSides) {
-  ComputedStyle* styleIfVisited = aComputedStyle->GetStyleIfVisited();
-  const nsStyleBorder* styleBorder = aComputedStyle->StyleBorder();
-  // Don't check RelevantLinkVisited here, since we want to take the
-  // same amount of time whether or not it's true.
-  if (!styleIfVisited) {
-    return CreateBorderRendererWithStyleBorder(
-        aPresContext, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
-        *styleBorder, aComputedStyle, aOutBorderIsEmpty, aSkipSides);
-  }
-
-  nsStyleBorder newStyleBorder(*styleBorder);
-
-  NS_FOR_CSS_SIDES(side) {
-    nscolor color = aComputedStyle->GetVisitedDependentColor(
-        nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
-  }
+    const nsRect& aDirtyRect, const nsRect& aBorderArea, ComputedStyle* aStyle,
+    bool* aOutBorderIsEmpty, Sides aSkipSides) {
+  Maybe<nsStyleBorder> visitedBorder = GetBorderIfVisited(*aStyle);
   return CreateBorderRendererWithStyleBorder(
       aPresContext, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
-      newStyleBorder, aComputedStyle, aOutBorderIsEmpty, aSkipSides);
+      visitedBorder.refOr(*aStyle->StyleBorder()), aStyle, aOutBorderIsEmpty,
+      aSkipSides);
 }
 
 ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
@@ -688,10 +678,11 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorder(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  const nsStyleBorder* styleBorder = aForFrame->Style()->StyleBorder();
+  const auto* style = aForFrame->Style();
+  Maybe<nsStyleBorder> visitedBorder = GetBorderIfVisited(*style);
   return nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
       aItem, aForFrame, aBorderArea, aBuilder, aResources, aSc, aManager,
-      aDisplayListBuilder, *styleBorder);
+      aDisplayListBuilder, visitedBorder.refOr(*style->StyleBorder()));
 }
 
 void nsCSSRendering::CreateWebRenderCommandsForNullBorder(
@@ -767,7 +758,7 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
 }
 
 static nsCSSBorderRenderer ConstructBorderRenderer(
-    nsPresContext* aPresContext, ComputedStyle* aComputedStyle,
+    nsPresContext* aPresContext, ComputedStyle* aStyle,
     DrawTarget* aDrawTarget, nsIFrame* aForFrame, const nsRect& aDirtyRect,
     const nsRect& aBorderArea, const nsStyleBorder& aStyleBorder,
     Sides aSkipSides, bool* aNeedsClip) {
@@ -823,7 +814,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
   // pull out styles, colors
   NS_FOR_CSS_SIDES(i) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(*aComputedStyle);
+    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(*aStyle);
   }
 
   PrintAsFormatString(
@@ -847,7 +838,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
 ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
     nsPresContext* aPresContext, gfxContext& aRenderingContext,
     nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    const nsStyleBorder& aStyleBorder, ComputedStyle* aComputedStyle,
+    const nsStyleBorder& aStyleBorder, ComputedStyle* aStyle,
     PaintBorderFlags aFlags, Sides aSkipSides) {
   DrawTarget& aDrawTarget = *aRenderingContext.GetDrawTarget();
 
@@ -855,8 +846,8 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the
-  // passed in ComputedStyle may be different!  Always use |aComputedStyle|!
-  const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
+  // passed in ComputedStyle may be different!  Always use |aStyle|!
+  const nsStyleDisplay* displayData = aStyle->StyleDisplay();
   if (displayData->HasAppearance()) {
     nsITheme* theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -906,7 +897,7 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(
-      aPresContext, aComputedStyle, &aDrawTarget, aForFrame, aDirtyRect,
+      aPresContext, aStyle, &aDrawTarget, aForFrame, aDirtyRect,
       aBorderArea, aStyleBorder, aSkipSides, &needsClip);
   if (needsClip) {
     aDrawTarget.PushClipRect(NSRectToSnappedRect(
@@ -928,23 +919,23 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
 Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererWithStyleBorder(
     nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
     const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    const nsStyleBorder& aStyleBorder, ComputedStyle* aComputedStyle,
+    const nsStyleBorder& aStyleBorder, ComputedStyle* aStyle,
     bool* aOutBorderIsEmpty, Sides aSkipSides) {
   if (aStyleBorder.mBorderImageSource.GetType() != eStyleImageType_Null) {
     return Nothing();
   }
   return CreateNullBorderRendererWithStyleBorder(
       aPresContext, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
-      aStyleBorder, aComputedStyle, aOutBorderIsEmpty, aSkipSides);
+      aStyleBorder, aStyle, aOutBorderIsEmpty, aSkipSides);
 }
 
 Maybe<nsCSSBorderRenderer>
 nsCSSRendering::CreateNullBorderRendererWithStyleBorder(
     nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
     const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    const nsStyleBorder& aStyleBorder, ComputedStyle* aComputedStyle,
+    const nsStyleBorder& aStyleBorder, ComputedStyle* aStyle,
     bool* aOutBorderIsEmpty, Sides aSkipSides) {
-  const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
+  const nsStyleDisplay* displayData = aStyle->StyleDisplay();
   if (displayData->HasAppearance()) {
     nsITheme* theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
@@ -965,7 +956,7 @@ nsCSSRendering::CreateNullBorderRendererWithStyleBorder(
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(
-      aPresContext, aComputedStyle, aDrawTarget, aForFrame, aDirtyRect,
+      aPresContext, aStyle, aDrawTarget, aForFrame, aDirtyRect,
       aBorderArea, aStyleBorder, aSkipSides, &needsClip);
   return Some(br);
 }
@@ -985,11 +976,11 @@ static nsRect GetOutlineInnerRect(nsIFrame* aFrame) {
 Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
     nsPresContext* aPresContext, gfxContext* aRenderingContext,
     nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-    ComputedStyle* aComputedStyle) {
+    ComputedStyle* aStyle) {
   nscoord twipsRadii[8];
 
   // Get our ComputedStyle's color struct.
-  const nsStyleOutline* ourOutline = aComputedStyle->StyleOutline();
+  const nsStyleOutline* ourOutline = aStyle->StyleOutline();
 
   if (!ourOutline->ShouldPaintOutline()) {
     // Empty outline
@@ -999,7 +990,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
-      aComputedStyle->GetPseudoType() == PseudoStyleType::XULTree
+      aStyle->GetPseudoType() == PseudoStyleType::XULTree
 #else
       false
 #endif
@@ -1065,7 +1056,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
   // This handles treating the initial color as 'currentColor'; if we
   // ever want 'invert' back we'll need to do a bit of work here too.
   nscolor outlineColor =
-      aComputedStyle->GetVisitedDependentColor(&nsStyleOutline::mOutlineColor);
+      aStyle->GetVisitedDependentColor(&nsStyleOutline::mOutlineColor);
   nscolor outlineColors[4] = {outlineColor, outlineColor, outlineColor,
                               outlineColor};
 
@@ -1095,10 +1086,10 @@ void nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                   gfxContext& aRenderingContext,
                                   nsIFrame* aForFrame, const nsRect& aDirtyRect,
                                   const nsRect& aBorderArea,
-                                  ComputedStyle* aComputedStyle) {
+                                  ComputedStyle* aStyle) {
   Maybe<nsCSSBorderRenderer> br = CreateBorderRendererForOutline(
       aPresContext, &aRenderingContext, aForFrame, aDirtyRect, aBorderArea,
-      aComputedStyle);
+      aStyle);
   if (!br) {
     return;
   }
@@ -2353,9 +2344,8 @@ static Maybe<nscolor> CalcScrollbarColor(nsIFrame* aFrame,
   return Some(color.CalcColor(*scrollbarStyle));
 }
 
-static nscolor GetBackgroundColor(nsIFrame* aFrame,
-                                  ComputedStyle* aComputedStyle) {
-  switch (aComputedStyle->StyleDisplay()->mAppearance) {
+static nscolor GetBackgroundColor(nsIFrame* aFrame, ComputedStyle* aStyle) {
+  switch (aStyle->StyleDisplay()->mAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
       if (Maybe<nscolor> overrideColor =
@@ -2376,19 +2366,19 @@ static nscolor GetBackgroundColor(nsIFrame* aFrame,
     default:
       break;
   }
-  return aComputedStyle->GetVisitedDependentColor(
+  return aStyle->GetVisitedDependentColor(
       &nsStyleBackground::mBackgroundColor);
 }
 
 nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
-                                                 ComputedStyle* aComputedStyle,
+                                                 ComputedStyle* aStyle,
                                                  nsIFrame* aFrame,
                                                  bool& aDrawBackgroundImage,
                                                  bool& aDrawBackgroundColor) {
   aDrawBackgroundImage = true;
   aDrawBackgroundColor = true;
 
-  const nsStyleVisibility* visibility = aComputedStyle->StyleVisibility();
+  const nsStyleVisibility* visibility = aStyle->StyleVisibility();
 
   if (visibility->mColorAdjust != StyleColorAdjust::Exact &&
       aFrame->HonorPrintBackgroundSettings()) {
@@ -2396,10 +2386,10 @@ nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
-  const nsStyleBackground* bg = aComputedStyle->StyleBackground();
+  const nsStyleBackground* bg = aStyle->StyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
-    bgColor = GetBackgroundColor(aFrame, aComputedStyle);
+    bgColor = GetBackgroundColor(aFrame, aStyle);
     if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
     }
@@ -2409,7 +2399,7 @@ nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (aDrawBackgroundImage || !bg->IsTransparent(aComputedStyle)) {
+    if (aDrawBackgroundImage || !bg->IsTransparent(aStyle)) {
       aDrawBackgroundColor = true;
     } else {
       bgColor = NS_RGBA(0, 0, 0, 0);
