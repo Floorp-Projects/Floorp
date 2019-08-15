@@ -39,7 +39,7 @@ namespace google_breakpad {
 bool CrashGenerationClient::RequestDumpForException(
     int exception_type,
     int exception_code,
-    int exception_subcode,
+    int64_t exception_subcode,
     mach_port_t crashing_thread) {
   // The server will send a message to this port indicating that it
   // has finished its work.
