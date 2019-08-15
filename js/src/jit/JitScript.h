@@ -509,9 +509,11 @@ class alignas(uintptr_t) JitScript final {
     setBaselineScriptImpl(script, baselineScript);
     MOZ_ASSERT(hasBaselineScript());
   }
-  void clearBaselineScript(JSFreeOp* fop, JSScript* script) {
-    MOZ_ASSERT(hasBaselineScript());
+  MOZ_MUST_USE BaselineScript* clearBaselineScript(JSFreeOp* fop,
+                                                   JSScript* script) {
+    BaselineScript* baseline = baselineScript();
     setBaselineScriptImpl(fop, script, nullptr);
+    return baseline;
   }
 
  private:
@@ -537,9 +539,10 @@ class alignas(uintptr_t) JitScript final {
     setIonScriptImpl(script, ionScript);
     MOZ_ASSERT(hasIonScript());
   }
-  void clearIonScript(JSFreeOp* fop, JSScript* script) {
-    MOZ_ASSERT(hasIonScript());
+  MOZ_MUST_USE IonScript* clearIonScript(JSFreeOp* fop, JSScript* script) {
+    IonScript* ion = ionScript();
     setIonScriptImpl(fop, script, nullptr);
+    return ion;
   }
 
   // Methods for off-thread compilation.
