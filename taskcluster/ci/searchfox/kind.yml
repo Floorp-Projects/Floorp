@@ -10,7 +10,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -47,13 +46,14 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
-        toolchains:
-            - linux64-binutils
-            - linux64-clang
-            - linux64-nasm
-            - linux64-node
-            - linux64-rust
-            - linux64-cbindgen
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust
+                - linux64-cbindgen
 
     macosx64-searchfox/debug:
         description: "MacOS X x64 Debug Cross-compile Searchfox"
@@ -80,17 +80,18 @@ jobs:
             secrets: true
             tooltool-downloads: internal
             keep-artifacts: false
-        toolchains:
-            - linux64-binutils
-            - linux64-cctools-port
-            - linux64-clang-macosx-cross
-            - linux64-hfsplus
-            - linux64-libdmg
-            - linux64-llvm-dsymutil
-            - linux64-nasm
-            - linux64-node
-            - linux64-rust-macos
-            - linux64-cbindgen
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-cctools-port
+                - linux64-clang-macosx-cross
+                - linux64-hfsplus
+                - linux64-libdmg
+                - linux64-llvm-dsymutil
+                - linux64-nasm
+                - linux64-node
+                - linux64-rust-macos
+                - linux64-cbindgen
 
     win64-searchfox/debug:
         description: "Win64 Searchfox Debug (clang-cl)"
@@ -118,12 +119,13 @@ jobs:
                 - builds/taskcluster_base_windows.py
                 - builds/taskcluster_base_win64.py
                 - builds/taskcluster_sub_win64/searchfox_debug.py
-        toolchains:
-            - win64-clang-cl
-            - win64-node
-            - win64-rust
-            - win64-cbindgen
-            - win64-nasm
+        fetches:
+            toolchain:
+                - win64-clang-cl
+                - win64-node
+                - win64-rust
+                - win64-cbindgen
+                - win64-nasm
 
     android-armv7-searchfox/debug:
         description: "Android ARMv7 Debug Searchfox"
@@ -150,14 +152,15 @@ jobs:
             secrets: true
             custom-build-variant-cfg: api-16-debug-searchfox
             tooltool-downloads: internal
-        toolchains:
-            - android-gradle-dependencies
-            - android-ndk-linux
-            - android-sdk-linux
-            - linux64-clang
-            - linux64-rust-android
-            - linux64-rust-size
-            - linux64-cbindgen
-            - linux64-sccache
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - android-gradle-dependencies
+                - android-ndk-linux
+                - android-sdk-linux
+                - linux64-clang
+                - linux64-rust-android
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-sccache
+                - linux64-nasm
+                - linux64-node

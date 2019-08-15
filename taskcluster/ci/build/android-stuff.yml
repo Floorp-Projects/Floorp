@@ -40,10 +40,11 @@ android-geckoview-docs/opt:
         secrets: true
         custom-build-variant-cfg: android-geckoview-docs
         tooltool-downloads: internal
-    toolchains:
-        - android-gradle-dependencies
-        - android-sdk-linux
-        - linux64-node
+    fetches:
+        toolchain:
+            - android-gradle-dependencies
+            - android-sdk-linux
+            - linux64-node
     optimization:
         skip-unless-changed:
             - "mobile/android/**/*.java"

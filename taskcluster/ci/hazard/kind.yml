@@ -10,7 +10,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -43,13 +42,14 @@ jobs:
             files-changed:
                 - js/public/**
                 - js/src/**
-        toolchains:
-            - linux64-clang
-            - linux64-gcc-6
-            - linux64-gcc-sixgill
-            - linux64-rust
-            - linux64-cbindgen
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-gcc-6
+                - linux64-gcc-sixgill
+                - linux64-rust
+                - linux64-cbindgen
+                - linux64-node
 
     linux64-haz/debug:
         description: "Browser Hazard Analysis Linux"
@@ -65,11 +65,12 @@ jobs:
             command: >
                 cd /builds/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace
-        toolchains:
-            - linux64-clang
-            - linux64-gcc-6
-            - linux64-gcc-sixgill
-            - linux64-rust
-            - linux64-cbindgen
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-gcc-6
+                - linux64-gcc-sixgill
+                - linux64-rust
+                - linux64-cbindgen
+                - linux64-nasm
+                - linux64-node

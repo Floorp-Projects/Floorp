@@ -20,13 +20,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611189
 
 /** Test for Bug 611189 **/
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+addLoadEvent(async function() {
   var i = document.createElement("input");
   var b = document.getElementById("content");
   b.appendChild(i);
   b.clientWidth; // bind to frame
   i.focus(); // initialize editor
-  var before = snapshotWindow(window, true);
+  var before = await snapshotWindow(window, true);
   i.value = "L"; // set the value
   i.style.display = "none";
   b.clientWidth; // unbind from frame
@@ -34,7 +34,7 @@ addLoadEvent(function() {
   i.style.display = "";
   b.clientWidth; // rebind to frame
   is(i.value, "", "Input's value should be correctly updated");
-  var after = snapshotWindow(window, true);
+  var after = await snapshotWindow(window, true);
   ok(compareSnapshots(before, after, true), "The correct value should be rendered inside the control");
   SimpleTest.finish();
 });

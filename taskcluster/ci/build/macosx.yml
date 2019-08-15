@@ -29,19 +29,20 @@ macosx64/debug:
         custom-build-variant-cfg: cross-debug
         mozconfig-variant: debug
         tooltool-downloads: internal
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
@@ -69,19 +70,20 @@ macosx64/opt:
         secrets: true
         tooltool-downloads: internal
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
@@ -108,19 +110,20 @@ macosx64-asan-fuzzing/opt:
         custom-build-variant-cfg: cross-fuzzing-asan
         mozconfig-variant: nightly-fuzzing-asan
         tooltool-downloads: internal
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-fuzzing/debug:
     description: "MacOS X x64 Cross-compile Fuzzing Debug"
@@ -149,19 +152,20 @@ macosx64-fuzzing/debug:
         custom-build-variant-cfg: cross-fuzzing-debug
         mozconfig-variant: debug-fuzzing
         tooltool-downloads: internal
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-devedition-nightly/opt:
     description: "MacOS X Dev Edition x64 Nightly"
@@ -197,18 +201,19 @@ macosx64-devedition-nightly/opt:
         tooltool-downloads: internal
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
@@ -237,19 +242,20 @@ macosx64-noopt/debug:
         tooltool-downloads: internal
         keep-artifacts: false
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -277,19 +283,20 @@ macosx64-add-on-devel/opt:
         mozconfig-variant: add-on-devel
         tooltool-downloads: internal
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
@@ -321,18 +328,19 @@ macosx64-shippable/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
 
 macosx64-ccov/debug:
     description: "MacOS X x64 Cross-compile Code Coverage"
@@ -360,19 +368,20 @@ macosx64-ccov/debug:
         mozconfig-variant: code-coverage-debug
         tooltool-downloads: internal
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-nightly-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-nightly-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-gcp/debug:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -402,19 +411,20 @@ macosx64-gcp/debug:
         custom-build-variant-cfg: cross-debug
         mozconfig-variant: debug
         tooltool-downloads: internal
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
 
 macosx64-gcp/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
@@ -443,16 +453,17 @@ macosx64-gcp/opt:
         secrets: true
         tooltool-downloads: internal
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - linux64-binutils
-        - linux64-cctools-port
-        - linux64-clang-macosx-cross
-        - linux64-hfsplus
-        - linux64-libdmg
-        - linux64-llvm-dsymutil
-        - linux64-rust-macos
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-sccache
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-cctools-port
+            - linux64-clang-macosx-cross
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node

@@ -19,6 +19,6 @@ cp -rL $SRCDIR/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
 
 # Fuzzing users would really like to have llvm-symbolizer available in the same
 # directory as the built output.
-gzip -c $TOOLTOOL_CHECKOUT/clang/bin/llvm-symbolizer > $UPLOAD_DIR/llvm-symbolizer.gz || true
+gzip -c $MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer > $UPLOAD_DIR/llvm-symbolizer.gz || true
 
 exit $BUILD_STATUS

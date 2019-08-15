@@ -43,10 +43,10 @@ def set_fetches_and_locations(config, jobs):
             if aar_location.startswith(prefix):
                 aar_location = aar_location[len(prefix):]
 
-            job['fetches'][platform] = [{
+            job.setdefault('fetches', {}).setdefault(platform, []).append({
                 'artifact': aar_location,
                 'extract': False,
-            }]
+            })
 
             aar_file_name = aar_location.split('/')[-1]
             env_var = MOZ_ANDROID_FAT_AAR_ENV_MAP[platform]

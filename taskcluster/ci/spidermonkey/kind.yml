@@ -11,7 +11,6 @@ transforms:
     - taskgraph.transforms.spidermonkey:transforms
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -58,15 +57,16 @@ job-defaults:
             - test.mozbuild
             - toolkit/mozapps/installer/package-name.mk
             - toolkit/mozapps/installer/upload-files.mk
-    toolchains:
-        by-worker-type:
-            .*-b-win2012:
-                - win64-clang-cl
-                - win64-rust
-            default:
-                - linux64-clang
-                - linux64-gcc
-                - linux64-rust
+    fetches:
+        toolchain:
+            by-worker-type:
+                .*-b-win2012:
+                    - win64-clang-cl
+                    - win64-rust
+                default:
+                    - linux64-clang
+                    - linux64-gcc
+                    - linux64-rust
 
 jobs-from:
     - linux.yml

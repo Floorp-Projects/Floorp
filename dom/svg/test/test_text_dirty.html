@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=886230
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-function runTest() {
+async function runTest() {
   var svgText = document.getElementById("t");
 
   // Dirty the frames.
@@ -32,7 +32,7 @@ function runTest() {
 
   // Paint without flushing layout.  If the test fails, we'll trigger
   // an assertion.
-  SpecialPowers.snapshotWindowWithOptions(window, undefined, undefined, { DRAWWINDOW_DO_NOT_FLUSH: true });
+  await SpecialPowers.snapshotWindowWithOptions(window, undefined, undefined, { DRAWWINDOW_DO_NOT_FLUSH: true });
 
   ok(true);
   SimpleTest.finish();

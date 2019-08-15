@@ -512,8 +512,10 @@ def fetch_artifacts():
         sys.exit(1)
 
     cmd = [sys.executable, '-u', fetch_content, 'task-artifacts']
-    print_line(b'fetches', b'executing %r\n' % cmd)
-    subprocess.run(cmd, check=True, env=os.environ)
+    res = run_and_prefix_output(b'fetches', cmd)
+    if res:
+        sys.exit(res)
+
     print_line(b'fetches', b'finished fetching artifacts\n')
 
 
@@ -836,7 +838,9 @@ def main(args):
     try:
         for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR'):
             if k in os.environ:
-                os.environ[k] = os.path.abspath(os.environ[k])
+                # Normalize paths to use forward slashes. Some shell scripts
+                # tolerate that better on Windows.
+                os.environ[k] = os.path.abspath(os.environ[k]).replace(os.sep, '/')
                 print_line(b'setup', b'%s is %s\n' % (
                     k.encode('utf-8'),
                     os.environ[k].encode('utf-8')))

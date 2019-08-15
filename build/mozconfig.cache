@@ -58,7 +58,7 @@ if test -n "$bucket"; then
     else
         mk_add_options "export SCCACHE_BUCKET=$bucket"
     fi
-    export CCACHE="$topsrcdir/sccache/sccache"
+    export CCACHE="$MOZ_FETCHES_DIR/sccache/sccache"
     export SCCACHE_VERBOSE_STATS=1
-    mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${topsrcdir}/sccache/sccache
+    mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${MOZ_FETCHES_DIR}/sccache/sccache
 fi

@@ -57,11 +57,11 @@ var counter = -1;
 var baselineframe = document.getElementById("baselineframe");
 var testframe = document.getElementById("testframe");
 
-function checkResult() {
+async function checkResult() {
   testframe.removeEventListener('load', checkResult);
   try {
-    ok(compareSnapshots(snapshotWindow(baselineframe.contentWindow),
-                        snapshotWindow(testframe.contentWindow),
+    ok(compareSnapshots(await snapshotWindow(baselineframe.contentWindow),
+                        await snapshotWindow(testframe.contentWindow),
                         curTest.expected)[0],
                         curTest.description);
   } catch(err) {

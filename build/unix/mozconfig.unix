@@ -3,16 +3,16 @@
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
 if [ -n "$FORCE_GCC" ]; then
-    CC="$TOOLTOOL_DIR/gcc/bin/gcc"
-    CXX="$TOOLTOOL_DIR/gcc/bin/g++"
+    CC="$MOZ_FETCHES_DIR/gcc/bin/gcc"
+    CXX="$MOZ_FETCHES_DIR/gcc/bin/g++"
 
     # We want to make sure we use binutils and other binaries in the tooltool
     # package.
-    mk_add_options "export PATH=$TOOLTOOL_DIR/gcc/bin:$PATH"
-    ac_add_options --with-clang-path=$TOOLTOOL_DIR/clang/bin/clang
+    mk_add_options "export PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH"
+    ac_add_options --with-clang-path=$MOZ_FETCHES_DIR/clang/bin/clang
 else
-    CC="$TOOLTOOL_DIR/clang/bin/clang"
-    CXX="$TOOLTOOL_DIR/clang/bin/clang++"
+    CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+    CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
     export ENABLE_CLANG_PLUGIN=1
     case "$PERFHERDER_EXTRA_OPTIONS" in
     base-toolchains*)
@@ -33,13 +33,13 @@ else
                 ac_add_options --with-pgo-profile-path=/builds/worker/fetches
             fi
         fi
-        export LLVM_PROFDATA="$TOOLTOOL_DIR/clang/bin/llvm-profdata"
-        export AR="$topsrcdir/clang/bin/llvm-ar"
-        export NM="$topsrcdir/clang/bin/llvm-nm"
-        export RANLIB="$topsrcdir/clang/bin/llvm-ranlib"
+        export LLVM_PROFDATA="$MOZ_FETCHES_DIR/clang/bin/llvm-profdata"
+        export AR="$MOZ_FETCHES_DIR/clang/bin/llvm-ar"
+        export NM="$MOZ_FETCHES_DIR/clang/bin/llvm-nm"
+        export RANLIB="$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib"
     fi
 
-    mk_add_options "export PATH=$TOOLTOOL_DIR/binutils/bin:$PATH"
+    mk_add_options "export PATH=$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"

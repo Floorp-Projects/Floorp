@@ -31,16 +31,17 @@ job-defaults:
         secrets: true
         mozconfig-variant: null
         tooltool-downloads: internal
-    toolchains:
-        - android-gradle-dependencies
-        - android-ndk-linux
-        - android-sdk-linux
-        - linux64-clang
-        - linux64-rust-android
-        - linux64-rust-size
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - android-gradle-dependencies
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-clang
+            - linux64-rust-android
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
 
 android-api-16/debug:
     description: "Android 4.0 api-16+ Debug"
@@ -59,8 +60,9 @@ android-api-16/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86/opt:
     description: "Android 4.2 x86 Opt"
@@ -79,8 +81,9 @@ android-x86/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86-fuzzing/debug:
     description: "Android x86 Fuzzing Debug"
@@ -97,8 +100,9 @@ android-x86-fuzzing/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86-fuzzing-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
@@ -141,8 +145,9 @@ android-api-16/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-api-16/pgo:
     description: "Android 4.0 api-16+ PGO"
@@ -180,8 +185,9 @@ android-api-16-without-google-play-services/opt:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-without-google-play-services
     run-on-projects: ['mozilla-central']
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
@@ -225,8 +231,9 @@ android-aarch64/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-aarch64/pgo:
     description: "Android 5.0 AArch64 PGO"
@@ -264,8 +271,9 @@ android-aarch64/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
@@ -309,8 +317,9 @@ android-x86_64/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86_64-nightly/opt:
     description: "Android 5.0 x86-64 Nightly"
@@ -353,8 +362,9 @@ android-x86_64/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 
 android-api-16-gcp/debug:
@@ -376,8 +386,9 @@ android-api-16-gcp/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 
 android-x86-gcp/opt:
@@ -399,8 +410,9 @@ android-x86-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-api-16-gcp/opt:
     description: "Android 4.0 api-16+ Opt - built on GCP"
@@ -421,8 +433,9 @@ android-api-16-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-aarch64-gcp/opt:
     description: "Android 5.0 AArch64 Opt - built on GCP"
@@ -443,8 +456,9 @@ android-aarch64-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-aarch64-gcp/debug:
     description: "Android 5.0 AArch64 Debug - built on GCP"
@@ -465,8 +479,9 @@ android-aarch64-gcp/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86_64-gcp/opt:
     description: "Android 5.0 x86-64 Opt - built on GCP"
@@ -487,8 +502,9 @@ android-x86_64-gcp/opt:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache
 
 android-x86_64-gcp/debug:
     description: "Android 5.0 x86-64 Debug - built on GCP"
@@ -509,5 +525,6 @@ android-x86_64-gcp/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-debug
-    toolchains:
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-sccache

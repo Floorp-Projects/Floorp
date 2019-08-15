@@ -278,7 +278,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin,
         if not profraw_files:
             self.fatal('Could not find any profraw files in /builds/worker/workspace')
         merge_cmd = [
-            '/builds/worker/workspace/build/clang/bin/llvm-profdata',
+            os.path.join(os.environ['MOZ_FETCHES_DIR'], 'clang/bin/llvm-profdata'),
             'merge',
             '-o',
             '/builds/worker/workspace/merged.profraw',

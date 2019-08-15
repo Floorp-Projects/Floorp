@@ -42,20 +42,18 @@ def main():
         assert windows_sdk_dir is not None, 'WINDOWSSDKDIR should be in MOZ_CONFIGURE_OPTIONS'
 
         ignore_dir_abs = os.path.dirname(windows_sdk_dir)
-    else:
-        gcc_dir = os.path.join(buildconfig.topsrcdir, 'gcc')
-        ignore_dir_abs = gcc_dir
 
-    # globs passed to grcov must exist and must be relative to the source directory.
-    # If it doesn't exist, maybe it has moved and we need to update the paths above.
-    # If it is no longer relative to the source directory, we no longer need to ignore it and
-    # this code can be removed.
-    assert os.path.isdir(ignore_dir_abs), '{} is not a directory'.format(ignore_dir_abs)
-    assert ignore_dir_abs.startswith(buildconfig.topsrcdir), '{} should start with {}'.format(ignore_dir_abs, buildconfig.topsrcdir)
+        # globs passed to grcov must exist and must be relative to the source directory.
+        # If it doesn't exist, maybe it has moved and we need to update the paths above.
+        # If it is no longer relative to the source directory, we no longer need to ignore it and
+        # this code can be removed.
+        assert os.path.isdir(ignore_dir_abs), '{} is not a directory'.format(ignore_dir_abs)
+        assert ignore_dir_abs.startswith(buildconfig.topsrcdir), '{} should start with {}'.format(ignore_dir_abs, buildconfig.topsrcdir)
 
-    grcov_command += ['--ignore-dir', os.path.relpath(ignore_dir_abs, buildconfig.topsrcdir) + '*']
+        grcov_command += ['--ignore-dir', os.path.relpath(ignore_dir_abs, buildconfig.topsrcdir) + '*']
 
     if buildconfig.substs['OS_TARGET'] == 'Linux':
+        gcc_dir = os.path.join(os.environ['MOZ_FETCHES_DIR'], 'gcc')
         if 'LD_LIBRARY_PATH' in os.environ:
             os.environ['LD_LIBRARY_PATH'] = '{}/lib64/:{}'.format(gcc_dir, os.environ['LD_LIBRARY_PATH'])
         else:

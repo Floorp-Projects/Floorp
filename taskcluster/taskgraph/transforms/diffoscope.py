@@ -157,9 +157,9 @@ def fill_template(config, tasks):
         }
 
         if artifact.endswith('.dmg'):
-            taskdesc['toolchains'] = [
+            taskdesc.setdefault('fetches', {}).setdefault('toolchain', []).extend([
                 'linux64-cctools-port',
                 'linux64-libdmg',
-            ]
+            ])
 
         yield taskdesc

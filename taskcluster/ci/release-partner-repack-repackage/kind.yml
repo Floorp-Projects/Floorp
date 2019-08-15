@@ -8,7 +8,6 @@ transforms:
     - taskgraph.transforms.chunk_partners:transforms
     - taskgraph.transforms.name_sanity:transforms
     - taskgraph.transforms.repackage_partner:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 

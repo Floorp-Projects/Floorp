@@ -11,9 +11,11 @@ set -x -e -v
 #   DEBUG: | Error initalizing CEXEBuild: error setting
 #   ERROR: Failed to get nsis version.
 
-INSTALL_DIR=$GECKO_PATH/mingw32
+INSTALL_DIR=$MOZ_FETCHES_DIR/mingw32
 
 mkdir -p $INSTALL_DIR
+
+cd $MOZ_FETCHES_DIR
 
 # As explained above, we have to build nsis to the directory it
 # will eventually be run from, which is the same place we just
@@ -21,10 +23,8 @@ mkdir -p $INSTALL_DIR
 # to package up what we just built. If we don't move the compiler,
 # we will package up the compiler we downloaded along with the
 # stuff we just built.
-mv $MOZ_FETCHES_DIR/mingw32 $GECKO_PATH/mingw32-gcc
-export PATH="$GECKO_PATH/mingw32-gcc/bin:$PATH"
-
-cd $MOZ_FETCHES_DIR
+mv mingw32 mingw32-gcc
+export PATH="$MOZ_FETCHES_DIR/mingw32-gcc/bin:$PATH"
 
 # --------------
 
@@ -38,7 +38,8 @@ scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS 
 
 # --------------
 
-cd $GECKO_PATH
+cd $MOZ_FETCHES_DIR
+
 tar caf nsis.tar.xz mingw32
 
 mkdir -p $UPLOAD_DIR

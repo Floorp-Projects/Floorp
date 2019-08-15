@@ -52,7 +52,7 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
   ctx.fillStyle = "#00FF00";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  createImageBitmap(canvas1).then(function(bmp) {
+  createImageBitmap(canvas1).then(async function(bmp) {
     document.body.removeChild(canvas1);
 
     var canvas2 = createCanvas(90, 90);
@@ -64,11 +64,11 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
     // Exam render result
     canvasRef.style.display = "none";
     canvas2.style.display = "block";
-    var snapshot = snapshotWindow(window);
+    var snapshot = await snapshotWindow(window);
 
     canvasRef.style.display = "block";
     canvas2.style.display = "none";
-    var snapshotRef = snapshotWindow(window);
+    var snapshotRef = await snapshotWindow(window);
 
     // bitmaprenderers use an ImageLayer whereas a normal 2d canvas uses a canvas layer. This
     // can result in some anti-aliasing differences on the edge. We consider slight AA differences
@@ -102,7 +102,7 @@ function scaleTest() {
 
   var p1 = createImageBitmap(canvas1);
   var p2 = createImageBitmap(canvas2);
-  Promise.all([p1, p2]).then(function(bitmaps) {
+  Promise.all([p1, p2]).then(async function(bitmaps) {
     document.body.removeChild(canvas1);
     document.body.removeChild(canvas2);
 
@@ -110,22 +110,22 @@ function scaleTest() {
     var canvas3 = createCanvas(128, 128);
     var ctx3 = canvas3.getContext("bitmaprenderer");
     ctx3.transferFromImageBitmap(bitmaps[0]);
-    var snapshotLargeRef = snapshotWindow(window);
+    var snapshotLargeRef = await snapshotWindow(window);
 
     canvas3.width = 32;
     canvas3.height = 32;
-    var snapshotSmall = snapshotWindow(window);
+    var snapshotSmall = await snapshotWindow(window);
     document.body.removeChild(canvas3);
 
     // Create a small canvas then grow.
     var canvas4 = createCanvas(32, 32);
     var ctx4 = canvas4.getContext("bitmaprenderer");
     ctx4.transferFromImageBitmap(bitmaps[1]);
-    var snapshotSmallRef = snapshotWindow(window);
+    var snapshotSmallRef = await snapshotWindow(window);
 
     canvas4.width = 128;
     canvas4.height = 128;
-    var snapshotLarge = snapshotWindow(window);
+    var snapshotLarge = await snapshotWindow(window);
     document.body.removeChild(canvas4);
 
     var resultsLarge = compareSnapshots(snapshotLarge, snapshotLargeRef, true);

@@ -19,9 +19,10 @@ sm-plain-win64/debug:
     run:
         spidermonkey-variant: plaindebug
         spidermonkey-platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
 
 sm-plain-win32/debug:
     description: "Spidermonkey Plain win32 debug"
@@ -33,9 +34,10 @@ sm-plain-win32/debug:
     run:
         spidermonkey-variant: plaindebug
         spidermonkey-platform: win32
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
@@ -50,9 +52,10 @@ sm-plain-win64/opt:
     run:
         spidermonkey-variant: plain
         spidermonkey-platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
 
 sm-plain-win32/opt:
     description: "Spidermonkey Plain win32 opt"
@@ -64,9 +67,10 @@ sm-plain-win32/opt:
     run:
         spidermonkey-variant: plain
         spidermonkey-platform: win32
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
@@ -81,9 +85,10 @@ sm-compacting-win64/debug:
     run:
         spidermonkey-variant: compacting
         spidermonkey-platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
 
 sm-compacting-win32/debug:
     description: "Spidermonkey Compacting win32 debug"
@@ -96,9 +101,10 @@ sm-compacting-win32/debug:
         spidermonkey-variant: compacting
         spidermonkey-platform: win32
     run-on-projects: []
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
@@ -114,6 +120,7 @@ sm-plain-win64-aarch64/opt:
     run:
         spidermonkey-variant: plain
         spidermonkey-platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust

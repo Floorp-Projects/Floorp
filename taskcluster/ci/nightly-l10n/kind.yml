@@ -8,7 +8,6 @@ group-by: platform
 
 transforms:
     - taskgraph.transforms.l10n:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -69,15 +68,16 @@ job-template:
         by-build-platform:
             default: false
             android-api-16-nightly: true
-    toolchains:
-        by-build-platform:
-            default: []
-            macosx64.*:
-                - linux64-libdmg
-                - linux64-hfsplus
-            android-api-16-nightly:
-                - android-gradle-dependencies
-                - android-sdk-linux
+    fetches:
+        toolchain:
+            by-build-platform:
+                default: []
+                macosx64.*:
+                    - linux64-libdmg
+                    - linux64-hfsplus
+                android-api-16-nightly:
+                    - android-gradle-dependencies
+                    - android-sdk-linux
     tooltool:
         by-build-platform:
             default: internal

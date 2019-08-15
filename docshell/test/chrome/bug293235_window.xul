@@ -5,7 +5,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest, 0);"
+        onload="setTimeout(runTests, 0);"
         title="bug 293235 test">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/ChromePowers.js"/>
@@ -16,16 +16,6 @@
   <script type="application/javascript"><![CDATA[
     var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
-    ////
-    // Execute the next test in the generator function.
-    //
-    function nextTest() {
-      tests.next();
-    }
-
     // Return the Element object for the specified element id
     function $(id) { return TestWindow.getDocument().getElementById(id); }
 
@@ -35,8 +25,7 @@
     // to it when displayed on a page which was fetched from
     // the bfcache.
     //
-    function* testIterator()
-    {
+    async function runTests() {
       // Register our observer to know when the link lookup is complete.
       let testURI = NetUtil.newURI(getHttpUrl("bug293235_p2.html"));
       let os = Cc["@mozilla.org/observer-service;1"].
@@ -63,15 +52,17 @@
 
       // Load a test page containing a link that should be initially
       // blue, per the :link style.
-      doPageNavigation({
-        uri: getHttpUrl("bug293235.html"),
-        onNavComplete: nextTest
+      await new Promise(resolve => {
+        doPageNavigation({
+          uri: getHttpUrl("bug293235.html"),
+          onNavComplete: resolve,
+        });
       });
-      yield undefined;
 
       // Before we go any further, make sure our link has been notified.
-      waitForTrue(notified, nextTest);
-      yield undefined;
+      await new Promise(resolve => {
+        waitForTrue(notified, resolve);
+      });
 
       // Now that we've been notified, we can check our link color.
       // Since we can't use getComputedStyle() for this because
@@ -80,67 +71,68 @@
       // First, take two reference snapshots.
       var link1 = $("link1");
       link1.className = "forcelink";
-      var refLink = snapshotWindow(TestWindow.getWindow());
+      var refLink = await snapshotWindow(TestWindow.getWindow());
       link1.className = "forcevisited";
-      var refVisited = snapshotWindow(TestWindow.getWindow());
+      var refVisited = await snapshotWindow(TestWindow.getWindow());
       link1.className = "";
       function snapshotsEqual(snap1, snap2) {
         return compareSnapshots(snap1, snap2, true)[0];
       }
       ok(!snapshotsEqual(refLink, refVisited), "references should not match");
-      ok(snapshotsEqual(refLink, snapshotWindow(TestWindow.getWindow())),
+      ok(snapshotsEqual(refLink, await snapshotWindow(TestWindow.getWindow())),
          "link should initially be blue");
 
       let observedVisit = false, observedPageShow = false;
-      function maybeRunNextTest() {
-        ok(true, "maybe run next test? visited: " + observedVisit + " pageShow: " + observedPageShow);
-        if (observedVisit && observedPageShow)
-          nextTest();
-      }
-
-      // Because adding visits is async, we will not be notified imemdiately.
-      let visitObserver = {
-        observe: function(aSubject, aTopic, aData)
-        {
-          if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
-            return;
-          }
-          os.removeObserver(this, aTopic);
-          observedVisit = true;
-          maybeRunNextTest();
-        },
-      };
-      os.addObserver(visitObserver, "uri-visit-saved");
-      // Load the page that the link on the previous page points to.
-      doPageNavigation({
-        uri: getHttpUrl("bug293235_p2.html"),
-        onNavComplete: function() {
-          observedPageShow = true;
-          maybeRunNextTest();
+      await new Promise(resolve => {
+        function maybeResolve() {
+          ok(true, "maybe run next test? visited: " + observedVisit + " pageShow: " + observedPageShow);
+          if (observedVisit && observedPageShow)
+            resolve();
         }
-      });
-      yield undefined;
+
+        // Because adding visits is async, we will not be notified imemdiately.
+        let visitObserver = {
+          observe: function(aSubject, aTopic, aData)
+          {
+            if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
+              return;
+            }
+            os.removeObserver(this, aTopic);
+            observedVisit = true;
+            maybeResolve();
+          },
+        };
+        os.addObserver(visitObserver, "uri-visit-saved");
+        // Load the page that the link on the previous page points to.
+        doPageNavigation({
+          uri: getHttpUrl("bug293235_p2.html"),
+          onNavComplete: function() {
+            observedPageShow = true;
+            maybeResolve();
+          }
+        });
+      })
 
       // And the nodes get notified after the "uri-visit-saved" topic, so
       // we need to execute soon...
-      SimpleTest.executeSoon(nextTest);
-      yield undefined;
+      await new Promise(SimpleTest.executeSoon);
 
       // Go back, verify the original page was loaded from the bfcache,
       // and verify that the link is now purple, per the
       // :visited style.
-      doPageNavigation({
-        back: true,
-        eventsToListenFor: ["pageshow"],
-        expectedEvents: [ { type: "pageshow",
-                            persisted: true,
-                            title: "Bug 293235 page1" } ],
-        onNavComplete: nextTest
-      });
-      yield undefined;
+      await new Promise(resolve => {
+        doPageNavigation({
+          back: true,
+          eventsToListenFor: ["pageshow"],
+          expectedEvents: [ { type: "pageshow",
+                              persisted: true,
+                              title: "Bug 293235 page1" } ],
+          onNavComplete: resolve,
+        });
+      })
 
       // Now we can test the link color.
-      ok(snapshotsEqual(refVisited, snapshotWindow(TestWindow.getWindow())),
+      ok(snapshotsEqual(refVisited, await snapshotWindow(TestWindow.getWindow())),
          "visited link should be purple");
 
       // Tell the framework the test is finished.
