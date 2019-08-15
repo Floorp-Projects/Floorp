@@ -110,20 +110,15 @@ def make_beetmover_checksums_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(refs, platform, locale=None):
-    # Until bug 1331141 is fixed, if you are adding any new artifacts here that
-    # need to be transfered to S3, please be aware you also need to follow-up
-    # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-    # See example in bug 1348286
-    common_paths = [
-        "public/target.checksums",
-        "public/target.checksums.asc",
-    ]
-
+def generate_upstream_artifacts(locale=None):
+    # XXX: this function is called solely for Devedition, until we fix 1537713
+    # so that DevEdition uses in-tree manifests too. This will be fixed in Q3
     upstream_artifacts = [{
-        "taskId": {"task-reference": refs["signing"]},
-        "taskType": "signing",
-        "paths": common_paths,
+        "taskId": {"task-reference": "<beetmover-repackage>"},
+        "taskType": "beetmover",
+        "paths": [
+            "public/target.checksums",
+        ],
         "locale": locale or "en-US",
     }]
 
@@ -135,10 +130,6 @@ def make_beetmover_checksums_worker(config, jobs):
     for job in jobs:
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
-
-        refs = {
-            "signing": "<checksums-signing>",
-        }
 
         worker = {
             'implementation': 'beetmover',
@@ -153,7 +144,7 @@ def make_beetmover_checksums_worker(config, jobs):
                 config, job, platform=platform, locale=locale)
         else:
             upstream_artifacts = generate_upstream_artifacts(
-                refs, platform, locale
+                locale
             )
             # Clean up un-used artifact map, to avoid confusion
             if job['attributes'].get('artifact_map'):
