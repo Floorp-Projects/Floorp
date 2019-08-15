@@ -4,11 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/MessagePort.h"
+#include "RemoteWorkerController.h"
+
+#include <utility>
+
+#include "nsDebug.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
+#include "mozilla/dom/ServiceWorkerCloneData.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "RemoteWorkerController.h"
+#include "RemoteWorkerControllerParent.h"
 #include "RemoteWorkerManager.h"
 #include "RemoteWorkerParent.h"
 
@@ -22,8 +31,8 @@ namespace dom {
 already_AddRefed<RemoteWorkerController> RemoteWorkerController::Create(
     const RemoteWorkerData& aData, RemoteWorkerObserver* aObserver,
     base::ProcessId aProcessId) {
+  AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aObserver);
 
   RefPtr<RemoteWorkerController> controller =
@@ -45,21 +54,34 @@ RemoteWorkerController::RemoteWorkerController(const RemoteWorkerData& aData,
                        OptionalServiceWorkerData::TServiceWorkerData) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 }
 
 RemoteWorkerController::~RemoteWorkerController() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_DIAGNOSTIC_ASSERT(mPendingOps.IsEmpty());
 }
 
 void RemoteWorkerController::SetWorkerActor(RemoteWorkerParent* aActor) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!mActor);
   MOZ_ASSERT(aActor);
 
   mActor = aActor;
+}
+
+void RemoteWorkerController::NoteDeadWorkerActor() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mActor);
+
+  // The actor has been destroyed without a proper close() notification. Let's
+  // inform the observer.
+  if (mState == eReady) {
+    mObserver->Terminated();
+  }
+
+  mActor = nullptr;
+
+  Shutdown();
 }
 
 void RemoteWorkerController::CreationFailed() {
@@ -74,13 +96,13 @@ void RemoteWorkerController::CreationFailed() {
     return;
   }
 
-  Shutdown();
+  NoteDeadWorker();
+
   mObserver->CreationFailed();
 }
 
 void RemoteWorkerController::CreationSucceeded() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == ePending || mState == eTerminated);
 
   if (mState == eTerminated) {
@@ -95,238 +117,301 @@ void RemoteWorkerController::CreationSucceeded() {
 
   mObserver->CreationSucceeded();
 
-  for (UniquePtr<Op>& op : mPendingOps) {
-    switch (op->mType) {
-      case Op::eTerminate:
-        Terminate();
-        break;
+  auto pendingOps = std::move(mPendingOps);
 
-      case Op::eSuspend:
-        Suspend();
-        break;
-
-      case Op::eResume:
-        Resume();
-        break;
-
-      case Op::eFreeze:
-        Freeze();
-        break;
-
-      case Op::eThaw:
-        Thaw();
-        break;
-
-      case Op::ePortIdentifier:
-        AddPortIdentifier(op->mPortIdentifier);
-        break;
-
-      case Op::eAddWindowID:
-        AddWindowID(op->mWindowID);
-        break;
-
-      case Op::eRemoveWindowID:
-        RemoveWindowID(op->mWindowID);
-        break;
-
-      default:
-        MOZ_CRASH("Unknown op.");
-    }
-
-    op->Completed();
+  for (auto& op : pendingOps) {
+    DebugOnly<bool> started = op->MaybeStart(this);
+    MOZ_ASSERT(started);
   }
-
-  mPendingOps.Clear();
 }
 
 void RemoteWorkerController::ErrorPropagation(const ErrorValue& aValue) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
   mObserver->ErrorReceived(aValue);
 }
 
 void RemoteWorkerController::WorkerTerminated() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(mState == eReady);
+
+  NoteDeadWorker();
 
   mObserver->Terminated();
-  Shutdown();
+}
+
+void RemoteWorkerController::CancelAllPendingOps() {
+  AssertIsOnBackgroundThread();
+
+  auto pendingOps = std::move(mPendingOps);
+
+  for (auto& op : pendingOps) {
+    op->Cancel();
+  }
 }
 
 void RemoteWorkerController::Shutdown() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(mState == ePending || mState == eReady);
+  Unused << NS_WARN_IF(mIsServiceWorker && !mPendingOps.IsEmpty());
+
+  if (mState == eTerminated) {
+    MOZ_ASSERT(mPendingOps.IsEmpty());
+    return;
+  }
 
   mState = eTerminated;
 
-  mPendingOps.Clear();
+  CancelAllPendingOps();
 
-  if (mActor) {
-    mActor->SetController(nullptr);
+  if (!mActor) {
+    return;
+  }
+
+  mActor->SetController(nullptr);
+
+  /**
+   * The "non-remote-side" of the Service Worker will have ensured that the
+   * remote worker is terminated before calling `Shutdown().`
+   */
+  if (mIsServiceWorker) {
+    mActor->MaybeSendDelete();
+  } else {
     Unused << mActor->SendExecOp(RemoteWorkerTerminateOp());
-    mActor = nullptr;
+  }
+
+  mActor = nullptr;
+}
+
+void RemoteWorkerController::NoteDeadWorker() {
+  AssertIsOnBackgroundThread();
+
+  CancelAllPendingOps();
+
+  /**
+   * The "non-remote-side" of the Service Worker will initiate `Shutdown()`
+   * once it's notified that all dispatched operations have either completed
+   * or canceled. That is, it'll explicitly call `Shutdown()` later.
+   */
+  if (!mIsServiceWorker) {
+    Shutdown();
+  }
+}
+
+template <typename... Args>
+void RemoteWorkerController::MaybeStartSharedWorkerOp(Args&&... aArgs) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mIsServiceWorker);
+
+  UniquePtr<PendingSharedWorkerOp> op =
+      MakeUnique<PendingSharedWorkerOp>(std::forward<Args>(aArgs)...);
+
+  if (!op->MaybeStart(this)) {
+    mPendingOps.AppendElement(std::move(op));
   }
 }
 
 void RemoteWorkerController::AddWindowID(uint64_t aWindowID) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aWindowID);
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eAddWindowID, aWindowID));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerAddWindowIDOp(aWindowID));
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eAddWindowID, aWindowID);
 }
 
 void RemoteWorkerController::RemoveWindowID(uint64_t aWindowID) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aWindowID);
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eRemoveWindowID, aWindowID));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerRemoveWindowIDOp(aWindowID));
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eRemoveWindowID, aWindowID);
 }
 
 void RemoteWorkerController::AddPortIdentifier(
     const MessagePortIdentifier& aPortIdentifier) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(aPortIdentifier));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerPortIdentifierOp(aPortIdentifier));
-}
-
-void RemoteWorkerController::ForgetActorAndTerminate() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // The actor has been destroyed without a proper close() notification. Let's
-  // inform the observer.
-  if (mState == eReady) {
-    mObserver->Terminated();
-  }
-
-  mActor = nullptr;
-  Terminate();
+  MaybeStartSharedWorkerOp(aPortIdentifier);
 }
 
 void RemoteWorkerController::Terminate() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == eTerminated) {
-    return;
-  }
-
-  Shutdown();
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eTerminate);
 }
 
 void RemoteWorkerController::Suspend() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eSuspend));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerSuspendOp());
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eSuspend);
 }
 
 void RemoteWorkerController::Resume() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eResume));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerResumeOp());
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eResume);
 }
 
 void RemoteWorkerController::Freeze() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eFreeze));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerFreezeOp());
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eFreeze);
 }
 
 void RemoteWorkerController::Thaw() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mState == ePending) {
-    mPendingOps.AppendElement(new Op(Op::eThaw));
-    return;
-  }
-
-  if (mState == eTerminated) {
-    return;
-  }
-
-  MOZ_ASSERT(mState == eReady);
-  Unused << mActor->SendExecOp(RemoteWorkerThawOp());
+  MaybeStartSharedWorkerOp(PendingSharedWorkerOp::eThaw);
 }
 
-RemoteWorkerController::Op::~Op() {
-  MOZ_COUNT_DTOR(Op);
+RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
+    Type aType, uint64_t aWindowID)
+    : mType(aType), mWindowID(aWindowID) {
+  AssertIsOnBackgroundThread();
+}
+
+RemoteWorkerController::PendingSharedWorkerOp::PendingSharedWorkerOp(
+    const MessagePortIdentifier& aPortIdentifier)
+    : mType(ePortIdentifier), mPortIdentifier(aPortIdentifier) {
+  AssertIsOnBackgroundThread();
+}
+
+RemoteWorkerController::PendingSharedWorkerOp::~PendingSharedWorkerOp() {
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(mCompleted);
+}
+
+bool RemoteWorkerController::PendingSharedWorkerOp::MaybeStart(
+    RemoteWorkerController* const aOwner) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mCompleted);
+  MOZ_ASSERT(aOwner);
+
+  if (aOwner->mState == RemoteWorkerController::eTerminated) {
+    Cancel();
+    return true;
+  }
+
+  if (aOwner->mState == RemoteWorkerController::ePending &&
+      mType != eTerminate) {
+    return false;
+  }
+
+  switch (mType) {
+    case eTerminate:
+      aOwner->Shutdown();
+      break;
+    case eSuspend:
+      Unused << aOwner->mActor->SendExecOp(RemoteWorkerSuspendOp());
+      break;
+    case eResume:
+      Unused << aOwner->mActor->SendExecOp(RemoteWorkerResumeOp());
+      break;
+    case eFreeze:
+      Unused << aOwner->mActor->SendExecOp(RemoteWorkerFreezeOp());
+      break;
+    case eThaw:
+      Unused << aOwner->mActor->SendExecOp(RemoteWorkerThawOp());
+      break;
+    case ePortIdentifier:
+      Unused << aOwner->mActor->SendExecOp(
+          RemoteWorkerPortIdentifierOp(mPortIdentifier));
+      break;
+    case eAddWindowID:
+      Unused << aOwner->mActor->SendExecOp(
+          RemoteWorkerAddWindowIDOp(mWindowID));
+      break;
+    case eRemoveWindowID:
+      Unused << aOwner->mActor->SendExecOp(
+          RemoteWorkerRemoveWindowIDOp(mWindowID));
+      break;
+    default:
+      MOZ_CRASH("Unknown op.");
+  }
+
+  mCompleted = true;
+
+  return true;
+}
+
+void RemoteWorkerController::PendingSharedWorkerOp::Cancel() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mCompleted);
 
   // We don't want to leak the port if the operation has not been processed.
-  if (!mCompleted && mType == ePortIdentifier) {
+  if (mType == ePortIdentifier) {
     MessagePortParent::ForceClose(mPortIdentifier.uuid(),
                                   mPortIdentifier.destinationUuid(),
                                   mPortIdentifier.sequenceId());
   }
+
+  mCompleted = true;
+}
+
+RemoteWorkerController::PendingServiceWorkerOp::PendingServiceWorkerOp(
+    ServiceWorkerOpArgs&& aArgs,
+    RefPtr<ServiceWorkerOpPromise::Private> aPromise)
+    : mArgs(std::move(aArgs)), mPromise(std::move(aPromise)) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+}
+
+RemoteWorkerController::PendingServiceWorkerOp::~PendingServiceWorkerOp() {
+  AssertIsOnBackgroundThread();
+  MOZ_DIAGNOSTIC_ASSERT(!mPromise);
+}
+
+bool RemoteWorkerController::PendingServiceWorkerOp::MaybeStart(
+    RemoteWorkerController* const aOwner) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+  MOZ_ASSERT(aOwner);
+
+  if (NS_WARN_IF(aOwner->mState == RemoteWorkerController::eTerminated)) {
+    mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromise = nullptr;
+    return true;
+  }
+
+  // The target content process must still be starting up.
+  if (!aOwner->mActor) {
+    return false;
+  }
+
+  /**
+   * Allow termination operations to pass through while pending because the
+   * remote Service Worker can be terminated while still starting up.
+   */
+  if (aOwner->mState == RemoteWorkerController::ePending &&
+      mArgs.type() !=
+          ServiceWorkerOpArgs::TServiceWorkerTerminateWorkerOpArgs) {
+    return false;
+  }
+
+  if (mArgs.type() == ServiceWorkerOpArgs::TServiceWorkerMessageEventOpArgs) {
+    auto& args = mArgs.get_ServiceWorkerMessageEventOpArgs();
+
+    ServiceWorkerMessageEventOpArgs copyArgs;
+    copyArgs.clientInfoAndState() = std::move(args.clientInfoAndState());
+
+    RefPtr<ServiceWorkerCloneData> copyData = new ServiceWorkerCloneData();
+    copyData->StealFromClonedMessageDataForBackgroundParent(args.clonedData());
+
+    if (!copyData->BuildClonedMessageDataForBackgroundParent(
+            aOwner->mActor->Manager(), copyArgs.clonedData())) {
+      mPromise->Reject(NS_ERROR_DOM_DATA_CLONE_ERR, __func__);
+      mPromise = nullptr;
+      return true;
+    }
+
+    mArgs = std::move(copyArgs);
+  }
+
+  return true;
+}
+
+void RemoteWorkerController::PendingServiceWorkerOp::Cancel() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPromise);
+
+  mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+  mPromise = nullptr;
 }
 
 }  // namespace dom
