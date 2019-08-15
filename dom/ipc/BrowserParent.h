@@ -571,7 +571,8 @@ class BrowserParent final : public PBrowserParent,
   void SendRealMouseEvent(WidgetMouseEvent& aEvent);
 
   void SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
-                         uint32_t aDropEffect, nsIPrincipal* aPrincipal);
+                         uint32_t aDropEffect, nsIPrincipal* aPrincipal,
+                         nsIContentSecurityPolicy* aCsp);
 
   void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
@@ -681,7 +682,7 @@ class BrowserParent final : public PBrowserParent,
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
       Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
-      nsIPrincipal* aPrincipal);
+      nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp);
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal);
