@@ -4,26 +4,44 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
+import org.junit.Before
+import org.junit.After
 import org.junit.Test
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
  *  Tests for verifying the main three dot menu options
  *
- *  Including:
- * - Verify all menu items present
- * - Open library button opens library menu
- * - Open settings button opens settings menu
- * - Open Help button opens support page in browser
- *
  */
 
-class ThreeDotMenuTest {
+class ThreeDotMenuMainTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
+
+    private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var mockWebServer: MockWebServer
+
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+
+    @Before
+    fun setUp() {
+        mockWebServer = MockWebServer().apply {
+            setDispatcher(AndroidAssetDispatcher())
+            start()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+    }
+
     @Test
     fun threeDotMenuItemsTest() {
         homeScreen {
