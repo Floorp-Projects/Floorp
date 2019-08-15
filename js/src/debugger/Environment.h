@@ -26,7 +26,6 @@ struct JSContext;
 namespace js {
 
 class GlobalObject;
-struct Class;
 
 enum class DebuggerEnvironmentType { Declarative, With, Object };
 

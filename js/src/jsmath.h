@@ -15,7 +15,6 @@
 
 namespace js {
 
-struct Class;
 class GlobalObject;
 
 typedef double (*UnaryFunType)(double);
