@@ -67,6 +67,7 @@ let RPMAccessManager = {
         "browser.contentblocking.category",
         "browser.contentblocking.report.lockwise.url",
         "browser.contentblocking.report.monitor.url",
+        "browser.contentblocking.report.manage_devices.url",
       ],
       getFormatURLPref: [
         "browser.contentblocking.report.monitor.how_it_works.url",

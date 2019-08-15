@@ -8,6 +8,10 @@ const LOCKWISE_URL = RPMGetStringPref(
   "browser.contentblocking.report.lockwise.url",
   ""
 );
+const MANAGE_DEVICES_URL = RPMGetStringPref(
+  "browser.contentblocking.report.manage_devices.url",
+  ""
+);
 const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
   "browser.contentblocking.report.lockwise.how_it_works.url"
 );
@@ -149,6 +153,10 @@ export default class LockwiseCard {
     if (syncedDevices === 0) {
       const syncLink = this.doc.getElementById("turn-on-sync");
       syncLink.classList.remove("hidden");
+    } else {
+      const manageDevicesLink = this.doc.getElementById("manage-devices");
+      manageDevicesLink.href = MANAGE_DEVICES_URL;
+      manageDevicesLink.classList.remove("hidden");
     }
   }
 }
