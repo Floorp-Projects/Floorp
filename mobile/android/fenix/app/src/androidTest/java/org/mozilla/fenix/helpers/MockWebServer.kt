@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.content.Context
 import java.io.IOException
 
 import android.net.Uri
@@ -14,7 +15,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.helpers.ext.toUri
 
 object MockWebServerHelper {
@@ -48,7 +48,7 @@ class AndroidAssetDispatcher : Dispatcher() {
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
     override fun dispatch(request: RecordedRequest): MockResponse {
-        val assetManager = ApplicationProvider.getApplicationContext<HomeActivity>().assets
+        val assetManager = ApplicationProvider.getApplicationContext<Context>().assets
         val assetContents = try {
             val pathNoLeadingSlash = request.path.drop(1)
             assetManager.open(pathNoLeadingSlash).use { inputStream ->
