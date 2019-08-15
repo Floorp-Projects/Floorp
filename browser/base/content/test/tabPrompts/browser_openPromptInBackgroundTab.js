@@ -1,5 +1,9 @@
 "use strict";
 
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 const ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
   "http://example.com/"
@@ -66,10 +70,9 @@ add_task(async function() {
     Services.tm.dispatchToMainThread(resolve);
   });
   // check permission is set
-  let ps = Services.perms;
   is(
-    ps.ALLOW_ACTION,
-    ps.testPermission(makeURI(pageWithAlert), "focus-tab-by-prompt"),
+    Services.perms.ALLOW_ACTION,
+    PermissionTestUtils.testPermission(pageWithAlert, "focus-tab-by-prompt"),
     "Tab switching should now be allowed"
   );
 
