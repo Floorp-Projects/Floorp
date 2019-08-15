@@ -8,7 +8,7 @@ logActiveElement();
 
 async function waitForSearchBarFocus() {
   let searchbar = document.getElementById("searchbar");
-  await waitForCondition(function() {
+  await TestUtils.waitForCondition(function() {
     logActiveElement();
     return document.activeElement === searchbar.textbox.inputField;
   });
@@ -65,7 +65,7 @@ add_task(async function check_shortcut_when_in_overflow() {
   Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return (
       navbar.getAttribute("overflowing") == "true" &&
       !navbar.querySelector("#search-container")
@@ -81,7 +81,7 @@ add_task(async function check_shortcut_when_in_overflow() {
   await shownPanelPromise;
 
   let chevron = document.getElementById("nav-bar-overflow-button");
-  await waitForCondition(() => chevron.open);
+  await TestUtils.waitForCondition(() => chevron.open);
 
   await waitForSearchBarFocus();
 
@@ -93,7 +93,7 @@ add_task(async function check_shortcut_when_in_overflow() {
 
   navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   window.resizeTo(this.originalWindowWidth, window.outerHeight);
-  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(
     !navbar.hasAttribute("overflowing"),
     "Should not have an overflowing toolbar."
