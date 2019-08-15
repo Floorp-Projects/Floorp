@@ -2111,9 +2111,6 @@ pref("network.preload", false);
 //   [scheme "://"] [host [":" port]]
 // For example, "foo.com" would match "http://www.foo.com/bar", etc.
 
-// Force less-secure NTLMv1 when needed (NTLMv2 is the default).
-pref("network.auth.force-generic-ntlm-v1", false);
-
 // This list controls which URIs can use the negotiate-auth protocol.  This
 // list should be limited to the servers you know you'll need to login to.
 pref("network.negotiate-auth.trusted-uris", "");

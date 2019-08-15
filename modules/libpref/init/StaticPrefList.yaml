@@ -5706,6 +5706,12 @@
 # Prefs starting with "network."
 #---------------------------------------------------------------------------
 
+# Force less-secure NTLMv1 when needed (NTLMv2 is the default).
+- name: network.auth.force-generic-ntlm-v1
+  type: bool
+  value: false
+  mirror: always
+
 # Sub-resources HTTP-authentication:
 #   0 - don't allow sub-resources to open HTTP authentication credentials
 #       dialogs

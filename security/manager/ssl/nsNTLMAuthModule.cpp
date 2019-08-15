@@ -18,6 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -31,7 +32,6 @@
 #include "pk11pub.h"
 #include "prsystem.h"
 
-static bool sNTLMv1Forced = false;
 static mozilla::LazyLogModule sNTLMLog("NTLM");
 
 #define LOG(x) MOZ_LOG(sNTLMLog, mozilla::LogLevel::Debug, x)
@@ -497,7 +497,7 @@ static nsresult GenerateType3Msg(const nsString& domain,
 
   // There is no negotiation for NTLMv2, so we just do it unless we are forced
   // by explict user configuration to use the older DES-based cryptography.
-  bool ntlmv2 = (sNTLMv1Forced == false);
+  bool ntlmv2 = StaticPrefs::network_auth_force_generic_ntlm_v1() == false;
 
   // temporary buffers for unicode strings
 #ifdef IS_BIG_ENDIAN
@@ -910,13 +910,6 @@ NS_IMPL_ISUPPORTS(nsNTLMAuthModule, nsIAuthModule)
 nsNTLMAuthModule::~nsNTLMAuthModule() { ZapString(mPassword); }
 
 nsresult nsNTLMAuthModule::InitTest() {
-  static bool prefObserved = false;
-  if (!prefObserved) {
-    mozilla::Preferences::AddBoolVarCache(
-        &sNTLMv1Forced, "network.auth.force-generic-ntlm-v1", sNTLMv1Forced);
-    prefObserved = true;
-  }
-
   // disable NTLM authentication when FIPS mode is enabled.
   return PK11_IsFIPS() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
