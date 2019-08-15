@@ -11,7 +11,7 @@ import {
   makeSource,
   waitForState,
 } from "../../../utils/test-head";
-import { createSource } from "../../tests/helpers/threadFront";
+import { createSource } from "../../tests/helpers/mockCommandClient";
 
 describe("breakpointPositions", () => {
   it("fetches positions", async () => {

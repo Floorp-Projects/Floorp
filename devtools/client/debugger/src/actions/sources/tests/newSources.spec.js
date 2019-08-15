@@ -20,12 +20,11 @@ const {
 } = selectors;
 import sourceQueue from "../../../utils/source-queue";
 
-// eslint-disable-next-line max-len
-import { sourceThreadFront as threadFront } from "../../tests/helpers/threadFront.js";
+import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
 describe("sources - new sources", () => {
   it("should add sources to state", async () => {
-    const { dispatch, getState } = createStore(threadFront);
+    const { dispatch, getState } = createStore(mockCommandClient);
     await dispatch(actions.newGeneratedSource(makeSource("base.js")));
     await dispatch(actions.newGeneratedSource(makeSource("jquery.js")));
 
@@ -37,7 +36,7 @@ describe("sources - new sources", () => {
   });
 
   it("should not add multiple identical sources", async () => {
-    const { dispatch, getState } = createStore(threadFront);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("base.js")));
     await dispatch(actions.newGeneratedSource(makeSource("base.js")));
@@ -46,7 +45,7 @@ describe("sources - new sources", () => {
   });
 
   it("should automatically select a pending source", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
     const baseSourceURL = makeSourceURL("base.js");
     await dispatch(actions.selectSourceURL(cx, baseSourceURL));
 
@@ -61,7 +60,7 @@ describe("sources - new sources", () => {
 
   it("should add original sources", async () => {
     const { dispatch, getState } = createStore(
-      threadFront,
+      mockCommandClient,
       {},
       {
         getOriginalURLs: async () => ["magic.js"],
@@ -82,7 +81,7 @@ describe("sources - new sources", () => {
   it("should not attempt to fetch original sources if it's missing a source map url", async () => {
     const getOriginalURLs = jest.fn();
     const { dispatch } = createStore(
-      threadFront,
+      mockCommandClient,
       {},
       {
         getOriginalURLs,
@@ -97,7 +96,7 @@ describe("sources - new sources", () => {
   // eslint-disable-next-line
   it("should process new sources immediately, without waiting for source maps to be fetched first", async () => {
     const { dispatch, getState } = createStore(
-      threadFront,
+      mockCommandClient,
       {},
       {
         getOriginalURLs: async () => new Promise(_ => {}),
@@ -117,7 +116,7 @@ describe("sources - new sources", () => {
   // eslint-disable-next-line
   it("shouldn't let one slow loading source map delay all the other source maps", async () => {
     const dbg = createStore(
-      threadFront,
+      mockCommandClient,
       {},
       {
         getOriginalURLs: async source => {
@@ -153,7 +152,7 @@ describe("sources - new sources", () => {
     it(`should find two sources when same source with
       querystring`, async () => {
       const { getSourcesUrlsInSources } = selectors;
-      const { dispatch, getState } = createStore(threadFront);
+      const { dispatch, getState } = createStore(mockCommandClient);
       await dispatch(actions.newGeneratedSource(makeSource("base.js?v=1")));
       await dispatch(actions.newGeneratedSource(makeSource("base.js?v=2")));
       await dispatch(actions.newGeneratedSource(makeSource("diff.js?v=1")));

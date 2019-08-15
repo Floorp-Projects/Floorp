@@ -22,7 +22,7 @@ import { features } from "../../../utils/prefs";
 const { isStepping } = selectors;
 
 let stepInResolve = null;
-const mockThreadFront = {
+const mockCommandClient = {
   stepIn: () =>
     new Promise(_resolve => {
       stepInResolve = _resolve;
@@ -104,7 +104,7 @@ function createPauseInfo(
 describe("pause", () => {
   describe("stepping", () => {
     it("should set and clear the command", async () => {
-      const { dispatch, getState } = createStore(mockThreadFront);
+      const { dispatch, getState } = createStore(mockCommandClient);
       const mockPauseInfo = createPauseInfo();
 
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
@@ -129,7 +129,7 @@ describe("pause", () => {
     });
 
     it("should step when paused", async () => {
-      const { dispatch, getState } = createStore(mockThreadFront);
+      const { dispatch, getState } = createStore(mockCommandClient);
       const mockPauseInfo = createPauseInfo();
 
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
@@ -140,7 +140,7 @@ describe("pause", () => {
     });
 
     it("should step over when paused", async () => {
-      const store = createStore(mockThreadFront);
+      const store = createStore(mockCommandClient);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo();
 
@@ -155,7 +155,7 @@ describe("pause", () => {
 
     it("should step over when paused before an await", async () => {
       features.asyncStepping = true;
-      const store = createStore(mockThreadFront);
+      const store = createStore(mockCommandClient);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",
@@ -175,7 +175,7 @@ describe("pause", () => {
 
     it("should step over when paused after an await", async () => {
       const store = createStore({
-        ...mockThreadFront,
+        ...mockCommandClient,
         getBreakpointPositions: async () => ({ [2]: [1] }),
       });
       const { dispatch, getState } = store;
@@ -202,7 +202,7 @@ describe("pause", () => {
         column: 0,
       };
 
-      const store = createStore(mockThreadFront, {});
+      const store = createStore(mockCommandClient, {});
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation, {
         scope: {
@@ -279,7 +279,7 @@ describe("pause", () => {
         getGeneratedLocation: async location => location,
       };
 
-      const store = createStore(mockThreadFront, {}, sourceMapsMock);
+      const store = createStore(mockCommandClient, {}, sourceMapsMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
@@ -340,7 +340,7 @@ describe("pause", () => {
         getGeneratedRangesForOriginal: async () => [],
       };
 
-      const store = createStore(mockThreadFront, {}, sourceMapsMock);
+      const store = createStore(mockCommandClient, {}, sourceMapsMock);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation);
 
@@ -383,7 +383,7 @@ describe("pause", () => {
 
   describe("resumed", () => {
     it("should not evaluate expression while stepping", async () => {
-      const client = { ...mockThreadFront, evaluateExpressions: jest.fn() };
+      const client = { ...mockCommandClient, evaluateExpressions: jest.fn() };
       const { dispatch, getState } = createStore(client);
       const mockPauseInfo = createPauseInfo();
 
@@ -392,12 +392,12 @@ describe("pause", () => {
 
       const cx = selectors.getThreadContext(getState());
       dispatch(actions.stepIn(cx));
-      await dispatch(actions.resumed(mockThreadFront.actorID));
+      await dispatch(actions.resumed(mockCommandClient.actorID));
       expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
     });
 
     it("resuming - will re-evaluate watch expressions", async () => {
-      const client = { ...mockThreadFront, evaluateExpressions: jest.fn() };
+      const client = { ...mockCommandClient, evaluateExpressions: jest.fn() };
       const store = createStore(client);
       const { dispatch, getState, cx } = store;
       const mockPauseInfo = createPauseInfo();
@@ -410,7 +410,7 @@ describe("pause", () => {
       client.evaluateExpressions.mockReturnValue(Promise.resolve(["YAY"]));
       await dispatch(actions.paused(mockPauseInfo));
 
-      await dispatch(actions.resumed(mockThreadFront.actorID));
+      await dispatch(actions.resumed(mockCommandClient.actorID));
       const expression = selectors.getExpression(getState(), "foo");
       expect(expression && expression.value).toEqual("YAY");
     });

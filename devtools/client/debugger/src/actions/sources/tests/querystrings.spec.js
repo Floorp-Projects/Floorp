@@ -13,11 +13,11 @@ import {
 const { getSourcesUrlsInSources } = selectors;
 
 // eslint-disable-next-line max-len
-import { sourceThreadFront as threadFront } from "../../tests/helpers/threadFront.js";
+import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
 describe("sources - sources with querystrings", () => {
   it("should find two sources when same source with querystring", async () => {
-    const { dispatch, getState } = createStore(threadFront);
+    const { dispatch, getState } = createStore(mockCommandClient);
     await dispatch(actions.newGeneratedSource(makeSource("base.js?v=1")));
     await dispatch(actions.newGeneratedSource(makeSource("base.js?v=2")));
     await dispatch(actions.newGeneratedSource(makeSource("diff.js?v=1")));
