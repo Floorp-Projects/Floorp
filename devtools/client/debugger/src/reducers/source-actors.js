@@ -7,18 +7,33 @@
 import type { Action } from "../actions/types";
 import type { SourceId, ThreadId } from "../types";
 import {
+  asSettled,
+  type AsyncValue,
+  type SettledValue,
+} from "../utils/async-value";
+import {
   createInitial,
   insertResources,
+  updateResources,
   removeResources,
   hasResource,
   getResource,
+  getMappedResource,
+  makeWeakQuery,
   makeIdQuery,
   makeReduceAllQuery,
   type Resource,
   type ResourceState,
+  type WeakQuery,
   type IdQuery,
   type ReduceAllQuery,
 } from "../utils/resource";
+
+import { asyncActionAsValue } from "../actions/utils/middleware/promise";
+import type {
+  SourceActorBreakpointColumnsAction,
+  SourceActorBreakableLinesAction,
+} from "../actions/types/SourceActorAction";
 
 export opaque type SourceActorId: string = string;
 export type SourceActor = {|
@@ -47,6 +62,12 @@ export type SourceActor = {|
 
 type SourceActorResource = Resource<{
   ...SourceActor,
+
+  // The list of breakpoint positions on each line of the file.
+  breakpointPositions: Map<number, AsyncValue<Array<number>>>,
+
+  // The list of lines that contain breakpoints.
+  breakableLines: AsyncValue<Array<number>> | null,
 }>;
 export type SourceActorsState = ResourceState<SourceActorResource>;
 export type SourceActorOuterState = { sourceActors: SourceActorsState };
@@ -60,7 +81,14 @@ export default function update(
   switch (action.type) {
     case "INSERT_SOURCE_ACTORS": {
       const { items } = action;
-      state = insertResources(state, items);
+      state = insertResources(
+        state,
+        items.map(item => ({
+          ...item,
+          breakpointPositions: new Map(),
+          breakableLines: null,
+        }))
+      );
       break;
     }
     case "REMOVE_SOURCE_ACTORS": {
@@ -73,13 +101,58 @@ export default function update(
       state = initial;
       break;
     }
+
+    case "SET_SOURCE_ACTOR_BREAKPOINT_COLUMNS":
+      state = updateBreakpointColumns(state, action);
+      break;
+
+    case "SET_SOURCE_ACTOR_BREAKABLE_LINES":
+      state = updateBreakableLines(state, action);
+      break;
   }
 
   return state;
 }
 
-export function resourceAsSourceActor(r: SourceActorResource): SourceActor {
-  return r;
+function updateBreakpointColumns(
+  state: SourceActorsState,
+  action: SourceActorBreakpointColumnsAction
+): SourceActorsState {
+  const { sourceId, line } = action;
+  const value = asyncActionAsValue(action);
+
+  if (!hasResource(state, sourceId)) {
+    return state;
+  }
+
+  const breakpointPositions = new Map(
+    getResource(state, sourceId).breakpointPositions
+  );
+  breakpointPositions.set(line, value);
+
+  return updateResources(state, [{ id: sourceId, breakpointPositions }]);
+}
+
+function updateBreakableLines(
+  state: SourceActorsState,
+  action: SourceActorBreakableLinesAction
+): SourceActorsState {
+  const value = asyncActionAsValue(action);
+  const { sourceId } = action;
+
+  if (!hasResource(state, sourceId)) {
+    return state;
+  }
+
+  return updateResources(state, [{ id: sourceId, breakableLines: value }]);
+}
+
+export function resourceAsSourceActor({
+  breakpointPositions,
+  breakableLines,
+  ...sourceActor
+}: SourceActorResource): SourceActor {
+  return sourceActor;
 }
 
 // Because we are using an opaque type for our source actor IDs, these
@@ -101,7 +174,7 @@ export function getSourceActor(
   state: SourceActorOuterState,
   id: SourceActorId
 ): SourceActor {
-  return getResource(state.sourceActors, id);
+  return getMappedResource(state.sourceActors, id, resourceAsSourceActor);
 }
 
 /**
@@ -166,3 +239,40 @@ export function getThreadsBySource(
 ): { [SourceId]: Array<ThreadId> } {
   return queryThreadsBySourceObject(state.sourceActors);
 }
+
+export function getSourceActorBreakableLines(
+  state: SourceActorOuterState,
+  id: SourceActorId
+): SettledValue<Array<number>> | null {
+  const { breakableLines } = getResource(state.sourceActors, id);
+
+  return asSettled(breakableLines);
+}
+
+export function getSourceActorBreakpointColumns(
+  state: SourceActorOuterState,
+  id: SourceActorId,
+  line: number
+): SettledValue<Array<number>> | null {
+  const { breakpointPositions } = getResource(state.sourceActors, id);
+
+  return asSettled(breakpointPositions.get(line) || null);
+}
+
+export const getBreakableLinesForSourceActors: WeakQuery<
+  SourceActorResource,
+  Array<SourceActorId>,
+  Array<number>
+> = makeWeakQuery({
+  filter: (state, ids) => ids,
+  map: ({ breakableLines }) => breakableLines,
+  reduce: items =>
+    Array.from(
+      items.reduce((acc, item) => {
+        if (item && item.state === "fulfilled") {
+          acc = acc.concat(item.value);
+        }
+        return acc;
+      }, [])
+    ),
+});

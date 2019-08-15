@@ -61,8 +61,8 @@ describe("loadSourceText", () => {
       {
         ...mockCommandClient,
         sourceContents: async () => fooGenContent,
-        getBreakpointPositions: async () => ({ "1": [0] }),
-        getBreakableLines: async () => [],
+        getSourceActorBreakpointPositions: async () => ({ "1": [0] }),
+        getSourceActorBreakableLines: async () => [],
       },
       {},
       {
@@ -156,8 +156,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getBreakpointPositions: async () => ({}),
-      getBreakableLines: async () => [],
+      getSourceActorBreakpointPositions: async () => ({}),
+      getSourceActorBreakableLines: async () => [],
     });
     const id = "foo";
 
@@ -194,8 +194,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getBreakpointPositions: async () => ({}),
-      getBreakableLines: async () => [],
+      getSourceActorBreakpointPositions: async () => ({}),
+      getSourceActorBreakableLines: async () => [],
     });
     const id = "foo";
 

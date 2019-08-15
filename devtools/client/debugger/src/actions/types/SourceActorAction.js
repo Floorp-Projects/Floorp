@@ -4,7 +4,11 @@
 
 // @flow
 
-import type { SourceActor } from "../../reducers/source-actors.js";
+import { type PromiseAction } from "../utils/middleware/promise";
+import type {
+  SourceActorId,
+  SourceActor,
+} from "../../reducers/source-actors.js";
 
 export type SourceActorsInsertAction = {|
   type: "INSERT_SOURCE_ACTORS",
@@ -15,6 +19,25 @@ export type SourceActorsRemoveAction = {|
   items: Array<SourceActor>,
 |};
 
+export type SourceActorBreakpointColumnsAction = PromiseAction<
+  {|
+    type: "SET_SOURCE_ACTOR_BREAKPOINT_COLUMNS",
+    sourceId: SourceActorId,
+    line: number,
+  |},
+  Array<number>
+>;
+
+export type SourceActorBreakableLinesAction = PromiseAction<
+  {|
+    type: "SET_SOURCE_ACTOR_BREAKABLE_LINES",
+    sourceId: SourceActorId,
+  |},
+  Array<number>
+>;
+
 export type SourceActorAction =
   | SourceActorsInsertAction
-  | SourceActorsRemoveAction;
+  | SourceActorsRemoveAction
+  | SourceActorBreakpointColumnsAction
+  | SourceActorBreakableLinesAction;
