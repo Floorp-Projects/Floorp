@@ -115,7 +115,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
 {
     unsigned char *block;
     unsigned char *bp;
-    int padLen;
+    unsigned int padLen;
     int i, j;
     SECStatus rv;
 
@@ -135,14 +135,15 @@ rsa_FormatOneBlock(unsigned modulusLen,
     switch (blockType) {
 
         /*
-       * Blocks intended for private-key operation.
-       */
+         * Blocks intended for private-key operation.
+         */
         case RSA_BlockPrivate: /* preferred method */
             /*
-         * 0x00 || BT || Pad || 0x00 || ActualData
-         *   1      1   padLen    1      data->len
-         * Pad is either all 0x00 or all 0xff bytes, depending on blockType.
-         */
+             * 0x00 || BT || Pad || 0x00 || ActualData
+             *   1      1   padLen    1      data->len
+             * padLen must be at least RSA_BLOCK_MIN_PAD_LEN (8) bytes.
+             * Pad is either all 0x00 or all 0xff bytes, depending on blockType.
+             */
             padLen = modulusLen - data->len - 3;
             PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
             if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
@@ -162,7 +163,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
             /*
              * 0x00 || BT || Pad || 0x00 || ActualData
              *   1      1   padLen    1      data->len
-             * Pad is all non-zero random bytes.
+             * Pad is 8 or more non-zero random bytes.
              *
              * Build the block left to right.
              * Fill the entire block from Pad to the end with random bytes.
@@ -171,6 +172,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
              * If we need more than that, refill the bytes after Pad with
              * new random bytes as necessary.
              */
+
             padLen = modulusLen - (data->len + 3);
             PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
             if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
@@ -236,8 +238,9 @@ rsa_FormatBlock(SECItem *result,
              * The "3" below is the first octet + the second octet + the 0x00
              * octet that always comes just before the ActualData.
              */
-            PORT_Assert(data->len <= (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN)));
-
+            if (data->len > (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN))) {
+                return SECFailure;
+            }
             result->data = rsa_FormatOneBlock(modulusLen, blockType, data);
             if (result->data == NULL) {
                 result->len = 0;

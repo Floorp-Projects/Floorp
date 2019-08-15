@@ -665,6 +665,11 @@ SSLExp_DelegateCredential(const CERTCertificate *cert,
     sslDelegatedCredential *dc = NULL;
     sslBuffer dcBuf = SSL_BUFFER_EMPTY;
 
+    if (!cert || !certPriv || !dcPub || !out) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     dc = PORT_ZNew(sslDelegatedCredential);
     if (!dc) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
