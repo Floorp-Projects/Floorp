@@ -1,0 +1,5 @@
+[android-components](../../../index.md) / [mozilla.components.browser.session](../../index.md) / [Session](../index.md) / [Observer](index.md) / [onTrackerLoaded](./on-tracker-loaded.md)
+
+# onTrackerLoaded
+
+`open fun onTrackerLoaded(session: `[`Session`](../index.md)`, tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`, all: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L88)

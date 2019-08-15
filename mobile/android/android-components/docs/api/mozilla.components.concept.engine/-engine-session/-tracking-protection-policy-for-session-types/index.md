@@ -2,7 +2,7 @@
 
 # TrackingProtectionPolicyForSessionTypes
 
-`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L231)
+`class TrackingProtectionPolicyForSessionTypes : `[`TrackingProtectionPolicy`](../-tracking-protection-policy/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L280)
 
 Subtype of [TrackingProtectionPolicy](../-tracking-protection-policy/index.md) to control the type of session this policy
 should be applied to. By default, a policy will be applied to all sessions.
@@ -11,8 +11,9 @@ should be applied to. By default, a policy will be applied to all sessions.
 
 | Name | Summary |
 |---|---|
-| [categories](../-tracking-protection-policy/categories.md) | `val categories: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [cookiePolicy](../-tracking-protection-policy/cookie-policy.md) | `val cookiePolicy: `[`CookiePolicy`](../-tracking-protection-policy/-cookie-policy/index.md) |
+| [safeBrowsingCategories](../-tracking-protection-policy/safe-browsing-categories.md) | `val safeBrowsingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`SafeBrowsingCategory`](../-tracking-protection-policy/-safe-browsing-category/index.md)`>` |
+| [trackingCategories](../-tracking-protection-policy/tracking-categories.md) | `val trackingCategories: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`TrackingCategory`](../-tracking-protection-policy/-tracking-category/index.md)`>` |
 | [useForPrivateSessions](../-tracking-protection-policy/use-for-private-sessions.md) | `val useForPrivateSessions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [useForRegularSessions](../-tracking-protection-policy/use-for-regular-sessions.md) | `val useForRegularSessions: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 
@@ -27,6 +28,5 @@ should be applied to. By default, a policy will be applied to all sessions.
 
 | Name | Summary |
 |---|---|
-| [contains](../-tracking-protection-policy/contains.md) | `fun contains(category: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [equals](../-tracking-protection-policy/equals.md) | `open fun equals(other: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [hashCode](../-tracking-protection-policy/hash-code.md) | `open fun hashCode(): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
