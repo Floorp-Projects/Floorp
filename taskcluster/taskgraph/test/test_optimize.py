@@ -70,6 +70,7 @@ class TestOptimize(unittest.TestCase):
             ('t2', 't1', 'dep'))
 
     def assert_remove_tasks(self, graph, exp_removed, do_not_optimize=set()):
+        optimize.registry = self.strategies
         got_removed = optimize.remove_tasks(
             target_task_graph=graph,
             optimizations=optimize._get_optimizations(graph, self.strategies),

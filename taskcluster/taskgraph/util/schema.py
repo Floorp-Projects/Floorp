@@ -203,8 +203,10 @@ OptimizationSchema = voluptuous.Any(
     {'skip-unless-changed': [basestring]},
     # skip this task if unless the change files' SCHEDULES contains any of these components
     {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
-    # skip if SETA or skip-unless-schedules says to
-    {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
+    # optimize strategy aliases for the test kind
+    {'test': list(schedules.ALL_COMPONENTS)},
+    {'test-inclusive': list(schedules.ALL_COMPONENTS)},
+    {'test-try': list(schedules.ALL_COMPONENTS)},
 )
 
 # shortcut for a string where task references are allowed
