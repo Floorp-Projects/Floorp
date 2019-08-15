@@ -12,10 +12,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
@@ -125,9 +123,7 @@ class DefaultDeleteBrowsingDataControllerTest {
         controller = DefaultDeleteBrowsingDataController(context, coroutineContext)
         every { context.components.core.permissionStorage.deleteAllSitePermissions() } just Runs
 
-        launch(IO) {
-            controller.deleteSitePermissions()
-        }
+        controller.deleteSitePermissions()
 
         verify {
             context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.ALL_SITE_SETTINGS))

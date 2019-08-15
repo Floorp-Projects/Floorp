@@ -16,7 +16,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
@@ -62,15 +61,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     }
 
     var currentRoot: BookmarkNode? = null
-    private val navigation by lazy { findNavController() }
-    private val onDestinationChangedListener =
-        NavController.OnDestinationChangedListener { _, destination, args ->
-            if (destination.id != R.id.bookmarkFragment ||
-                args != null && BookmarkFragmentArgs.fromBundle(args).currentRoot != currentRoot?.guid) {
-
-                bookmarkInteractor.onAllBookmarksDeselected()
-            }
-        }
     lateinit var initialJob: Job
     private var pendingBookmarkDeletionJob: (suspend () -> Unit)? = null
     private var pendingBookmarksToDelete: MutableSet<BookmarkNode> = mutableSetOf()
@@ -101,6 +91,15 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
         bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor)
         signInView = SignInView(view.bookmarkLayout, bookmarkInteractor)
+
+        viewLifecycleOwner.lifecycle.addObserver(
+            BookmarkDeselectNavigationListener(
+                findNavController(),
+                sharedViewModel,
+                bookmarkInteractor
+            )
+        )
+
         return view
     }
 
@@ -131,7 +130,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         (activity as? AppCompatActivity)?.supportActionBar?.show()
         checkIfSignedIn()
 
-        navigation.addOnDestinationChangedListener(onDestinationChangedListener)
         val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Mobile.id }
 
         initialJob = loadInitialBookmarkFolder(currentGuid)
@@ -156,11 +154,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
             it.authenticatedAccount()?.let { bookmarkInteractor.onSignedIn() }
                 ?: bookmarkInteractor.onSignedOut()
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        navigation.removeOnDestinationChangedListener(onDestinationChangedListener)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
