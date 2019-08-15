@@ -189,43 +189,49 @@ export type Actions = {
   updateWorkers: () => void,
 };
 
+type ConsoleClient = {
+  evaluateJS: (
+    script: Script,
+    func: Function,
+    params?: { frameActor: ?FrameId }
+  ) => void,
+  evaluateJSAsync: (
+    script: Script,
+    func: Function,
+    params?: { frameActor: ?FrameId }
+  ) => Promise<{ result: Grip | null }>,
+  autocomplete: (
+    input: string,
+    cursor: number,
+    func: Function,
+    frameId: ?string
+  ) => void,
+  emit: (string, any) => void,
+};
+
 /**
  * Tab Target gives access to the browser tabs
  * @memberof firefox
  * @static
  */
-export type TabTarget = {
+export type Target = {
   on: (string, Function) => void,
   emit: (string, any) => void,
-  threadFront: ThreadFront,
-  activeConsole: {
-    evaluateJS: (
-      script: Script,
-      func: Function,
-      params?: { frameActor: ?FrameId }
-    ) => void,
-    evaluateJSAsync: (
-      script: Script,
-      func: Function,
-      params?: { frameActor: ?FrameId }
-    ) => Promise<{ result: Grip | null }>,
-    autocomplete: (
-      input: string,
-      cursor: number,
-      func: Function,
-      frameId: ?string
-    ) => void,
-    emit: (string, any) => void,
-  },
   form: { consoleActor: any },
   root: any,
   navigateTo: ({ url: string }) => Promise<*>,
   listWorkers: () => Promise<*>,
   reload: () => Promise<*>,
   destroy: () => void,
+  threadFront: ThreadFront,
+  activeConsole: ConsoleClient,
+
   isBrowsingContext: boolean,
   isContentProcess: boolean,
   traits: Object,
+  chrome: Boolean,
+  url: string,
+  isAddon: Boolean,
 };
 
 /**
@@ -247,6 +253,7 @@ export type DebuggerClient = {
   mainRoot: {
     traits: any,
     getFront: string => Promise<*>,
+    listProcesses: () => Promise<{ processes: ProcessDescriptor }>,
   },
   connect: () => Promise<*>,
   request: (packet: Object) => Promise<*>,
@@ -255,11 +262,7 @@ export type DebuggerClient = {
   release: (actor: String) => {},
 };
 
-export type TabClient = {
-  listWorkers: () => Promise<*>,
-  addListener: (string, Function) => void,
-  on: (string, Function) => void,
-};
+type ProcessDescriptor = Object;
 
 /**
  * A grip is a JSON value that refers to a specific JavaScript value in the
@@ -364,14 +367,15 @@ export type ThreadFront = {
   getSources: () => Promise<SourcesPacket>,
   reconfigure: ({ observeAsmJS: boolean }) => Promise<*>,
   getLastPausePacket: () => ?PausedPacket,
-  _parent: TabClient,
+  _parent: Target,
   actor: ActorId,
   actorID: ActorId,
   request: (payload: Object) => Promise<*>,
   url: string,
-  setActiveEventBreakpoints: (string[]) => void,
+  setActiveEventBreakpoints: (string[]) => Promise<void>,
   getAvailableEventBreakpoints: () => Promise<EventListenerCategoryList>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
+  detach: () => Promise<void>,
 };
 
 export type Panel = {|
