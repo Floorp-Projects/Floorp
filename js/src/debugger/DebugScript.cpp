@@ -34,6 +34,7 @@
 #include "gc/GC-inl.h"         // for ZoneCellIter
 #include "gc/Marking-inl.h"    // for CheckGCThingAfterMovingGC
 #include "vm/JSContext-inl.h"  // for JSContext::check
+#include "vm/JSScript-inl.h"   // for JSScript::hasBaselineScript
 #include "vm/Realm-inl.h"      // for AutoRealm::AutoRealm
 
 namespace js {

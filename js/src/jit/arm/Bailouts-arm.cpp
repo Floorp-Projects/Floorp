@@ -10,6 +10,8 @@
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
+#include "vm/JSScript-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
