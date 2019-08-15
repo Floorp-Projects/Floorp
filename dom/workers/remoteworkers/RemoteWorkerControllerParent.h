@@ -34,6 +34,15 @@ class RemoteWorkerControllerParent final : public PRemoteWorkerControllerParent,
  private:
   ~RemoteWorkerControllerParent();
 
+  PFetchEventOpParent* AllocPFetchEventOpParent(
+      const ServiceWorkerFetchEventOpArgs& aArgs);
+
+  mozilla::ipc::IPCResult RecvPFetchEventOpConstructor(
+      PFetchEventOpParent* aActor,
+      const ServiceWorkerFetchEventOpArgs& aArgs) override;
+
+  bool DeallocPFetchEventOpParent(PFetchEventOpParent* aActor);
+
   mozilla::ipc::IPCResult RecvShutdown(ShutdownResolver&& aResolve);
 
   mozilla::ipc::IPCResult Recv__delete__() override;
