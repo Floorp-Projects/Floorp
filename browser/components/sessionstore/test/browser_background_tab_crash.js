@@ -93,7 +93,7 @@ async function crashBackgroundTabs(tabs) {
     return promiseTabRestoring(t);
   });
 
-  await BrowserTestUtils.crashBrowser(tabs[0].linkedBrowser, false);
+  await BrowserTestUtils.crashFrame(tabs[0].linkedBrowser, false);
   await Promise.all(remotenessChangePromises);
   await Promise.all(tabsRevived);
 
