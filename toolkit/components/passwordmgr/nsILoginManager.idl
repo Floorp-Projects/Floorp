@@ -34,7 +34,6 @@ interface nsILoginManager : nsISupports {
   nsILoginInfo addLogin(in nsILoginInfo aLogin);
 
 
-
   /**
    * Like addLogin, but asynchronous and for many logins.
    *
