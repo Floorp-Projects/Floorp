@@ -15,18 +15,18 @@
   
     SimpleTest.waitForExplicitFinish();
   
-    function onBodyLoad() {
+    async function onBodyLoad() {
       window.frames[0].document.getElementById("test").selectedIndex = 0;
       window.frames[0].document.getElementById("test").selectedIndex = 1;
       
-      snap1 = snapshotWindow(window);
+      snap1 = await snapshotWindow(window);
       
       document.getElementById("test").onload = onFrameLoad;
       window.frames[0].location.reload();
     }
     
-    function onFrameLoad() {
-      snap2 = snapshotWindow(window);
+    async function onFrameLoad() {
+      snap2 = await snapshotWindow(window);
 
       var equal, str1, str2;
       [equal, str1, str2] = compareSnapshots(snap1, snap2, true);

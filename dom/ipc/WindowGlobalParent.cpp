@@ -173,6 +173,38 @@ bool WindowGlobalParent::IsProcessRoot() {
   return ContentParentId() != embedder->ContentParentId();
 }
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
+    dom::BrowsingContext* aTargetBC,
+    nsDocShellLoadState* aLoadState) {
+  if (!aTargetBC || aTargetBC->IsDiscarded()) {
+    MOZ_LOG(
+        BrowsingContext::GetLog(), LogLevel::Debug,
+        ("ParentIPC: Trying to send a message with dead or detached context"));
+    return IPC_OK();
+  }
+
+  // FIXME: For cross-process loads, we should double check CanAccess() for the
+  // source browsing context in the parent process.
+
+  if (aTargetBC->Group() != BrowsingContext()->Group()) {
+    return IPC_FAIL(this, "Illegal cross-group BrowsingContext load");
+  }
+
+  // FIXME: We should really initiate the load in the parent before bouncing
+  // back down to the child.
+
+  WindowGlobalParent* wgp = aTargetBC->Canonical()->GetCurrentWindowGlobal();
+  if (!wgp) {
+    MOZ_LOG(
+        BrowsingContext::GetLog(), LogLevel::Debug,
+        ("ParentIPC: Target BrowsingContext has no WindowGlobalParent"));
+    return IPC_OK();
+  }
+
+  Unused << wgp->SendLoadURIInChild(aLoadState);
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)

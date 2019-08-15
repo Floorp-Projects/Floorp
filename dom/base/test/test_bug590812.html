@@ -17,10 +17,18 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest() {
-  sNoXUL = snapshotWindow(window.frames[0], false);
-  sWithXUL = snapshotWindow(window.frames[1], false);
-  sRef = snapshotWindow(window.frames[2], false);
+async function runTest() {
+  // FIXME(Fission): The load event fires before cross-origin iframes have
+  // loaded (bug 1559841).
+  if (SpecialPowers.useRemoteSubframes) {
+    for (let i = 0; i < 100; i++) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+
+  let sNoXUL = await snapshotWindow(window.frames[0], false);
+  let sWithXUL = await snapshotWindow(window.frames[1], false);
+  let sRef = await snapshotWindow(window.frames[2], false);
   let res;
   ok(compareSnapshots(sNoXUL, sRef, true)[0],
      "noxul domain same as ref");

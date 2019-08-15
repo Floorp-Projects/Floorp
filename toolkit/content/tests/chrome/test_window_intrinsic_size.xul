@@ -11,7 +11,7 @@
 
   function openWindow(features = "") {
     return window.openDialog("window_intrinsic_size.xul",
-                             null, "chrome,dialog=no,all," + features);
+                             "", "chrome,dialog=no,all," + features);
   }
 
   function checkWindowSize(win, width, height, msg) {

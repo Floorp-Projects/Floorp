@@ -2,20 +2,20 @@
 
 [ -n "$WORKSPACE" ]
 [ -n "$MOZ_OBJDIR" ]
-[ -n "$GECKO_DIR" ]
+[ -n "$GECKO_PATH" ]
 
 HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
 JSBIN="$HAZARD_SHELL_OBJDIR/dist/bin/js"
-JS_SRCDIR=$GECKO_DIR/js/src
+JS_SRCDIR=$GECKO_PATH/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
-GCCDIR="$TOOLTOOL_DIR/gcc"
+GCCDIR="$MOZ_FETCHES_DIR/gcc"
 
 export CC="$GCCDIR/bin/gcc"
 export CXX="$GCCDIR/bin/g++"
-export PATH="$GCCDIR/bin:$TOOLTOOL_DIR/clang/bin:$PATH"
+export PATH="$GCCDIR/bin:$MOZ_FETCHES_DIR/clang/bin:$PATH"
 export LD_LIBRARY_PATH="$GCCDIR/lib64"
-export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
-export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
+export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
+export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
 
 PYTHON=python2.7
 if ! which $PYTHON; then
@@ -25,7 +25,7 @@ fi
 function check_commit_msg () {
     ( set +e;
     if [[ -n "$AUTOMATION" ]]; then
-        hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -F -q -- "$1"
+        hg --cwd "$GECKO_PATH" log -r. --template '{desc}\n' | grep -F -q -- "$1"
     else
         echo -- "$SCRIPT_FLAGS" | grep -F -q -- "$1"
     fi
@@ -71,13 +71,13 @@ function configure_analysis () {
 js = "$JSBIN"
 analysis_scriptdir = "$ANALYSIS_SRCDIR"
 objdir = "$MOZ_OBJDIR"
-source = "$GECKO_DIR"
-sixgill = "$TOOLTOOL_DIR/sixgill/usr/libexec/sixgill"
-sixgill_bin = "$TOOLTOOL_DIR/sixgill/usr/bin"
+source = "$GECKO_PATH"
+sixgill = "$MOZ_FETCHES_DIR/sixgill/usr/libexec/sixgill"
+sixgill_bin = "$MOZ_FETCHES_DIR/sixgill/usr/bin"
 EOF
 
         local rev
-        rev=$(cd $GECKO_DIR && hg log -r . -T '{node|short}')
+        rev=$(cd $GECKO_PATH && hg log -r . -T '{node|short}')
         cat > run-analysis.sh <<EOF
 #!/bin/sh
 if [ \$# -eq 0 ]; then
@@ -103,12 +103,12 @@ function run_analysis () {
 
     (
         cd "$analysis_dir"
-        $PYTHON "$ANALYSIS_SRCDIR/analyze.py" -v --buildcommand="$GECKO_DIR/taskcluster/scripts/builder/hazard-${build_type}.sh"
+        $PYTHON "$ANALYSIS_SRCDIR/analyze.py" -v --buildcommand="$GECKO_PATH/taskcluster/scripts/builder/hazard-${build_type}.sh"
     )
 }
 
 function analysis_self_test () {
-    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$TOOLTOOL_DIR/sixgill" --gccdir "$GCCDIR"
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(dirname "$JSBIN")" $PYTHON "$ANALYSIS_SRCDIR/run-test.py" -v --js "$JSBIN" --sixgill "$MOZ_FETCHES_DIR/sixgill" --gccdir "$GCCDIR"
 }
 
 function grab_artifacts () {

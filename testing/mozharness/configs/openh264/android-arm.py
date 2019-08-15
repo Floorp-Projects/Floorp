@@ -30,8 +30,9 @@ config = {
     'partial_env': {
         'CXXFLAGS': '-stdlib=libstdc++',
         'LDFLAGS': '-stdlib=libstdc++',
-        'PATH': ('%(abs_work_dir)s/src/android-sdk-linux/tools:'
-                 '%(abs_work_dir)s/src/clang/bin:'
-                 '%(abs_work_dir)s/src/nasm:%(PATH)s'),
+        'PATH': ('{MOZ_FETCHES_DIR}/android-sdk-linux/tools:'
+                 '{MOZ_FETCHES_DIR}/clang/bin:'
+                 '{MOZ_FETCHES_DIR}/nasm:%(PATH)s'
+                 .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
     },
 }

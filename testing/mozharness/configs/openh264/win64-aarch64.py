@@ -20,14 +20,14 @@ config = {
     'use_yasm': False,
     'partial_env': {
         'PATH': ('%(abs_work_dir)s\\openh264;'
-                 '%(abs_work_dir)s\\src\\clang\\bin\\;'
+                 '{MOZ_FETCHES_DIR}\\clang\\bin\\;'
                  '{_VSPATH}\\VC\\bin\\Hostx64\\arm64;'
                  '{_VSPATH}\\VC\\bin\\Hostx64\\x64;'
                  # 32-bit redist here for our dump_syms.exe
                  '{_VSPATH}/VC/redist/x86/Microsoft.VC141.CRT;'
                  '{_VSPATH}/SDK/Redist/ucrt/DLLs/x86;'
                  '{_VSPATH}/DIA SDK/bin;%(PATH)s;'
-        ).format(_VSPATH=VSPATH),
+        ).format(_VSPATH=VSPATH, MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR']),
         'INCLUDES': (
             '-I{_VSPATH}\\VC\\include '
             '-I{_VSPATH}\\VC\\atlmfc\\include '

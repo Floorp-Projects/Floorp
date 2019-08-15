@@ -11,8 +11,8 @@ interface BrowsingContext {
 
   static BrowsingContext? getFromWindow(WindowProxy window);
 
-  BrowsingContext? findChildWithName(DOMString name);
-  BrowsingContext? findWithName(DOMString name);
+  BrowsingContext? findChildWithName(DOMString name, BrowsingContext accessor);
+  BrowsingContext? findWithName(DOMString name, BrowsingContext accessor);
 
   readonly attribute DOMString name;
 

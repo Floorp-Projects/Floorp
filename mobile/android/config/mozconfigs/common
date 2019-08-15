@@ -15,21 +15,21 @@ MOZ_AUTOMATION_L10N_CHECK=0
 # the host compiler. Make sure clang uses the c++ headers included with
 # clang, rather than the system headers which leads to incompatibility
 # later (when linking against the clang-provided libstdc++).
-HOST_CC="$topsrcdir/clang/bin/clang --gcc-toolchain=$topsrcdir/clang"
-HOST_CXX="$topsrcdir/clang/bin/clang++ --gcc-toolchain=$topsrcdir/clang"
+HOST_CC="$MOZ_FETCHES_DIR/clang/bin/clang --gcc-toolchain=$MOZ_FETCHES_DIR/clang"
+HOST_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ --gcc-toolchain=$MOZ_FETCHES_DIR/clang"
 
 # Build Fennec
 ac_add_options --enable-application=mobile/android
-ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
+ac_add_options --with-android-sdk="$MOZ_FETCHES_DIR/android-sdk-linux"
 
-ac_add_options --with-gradle="$topsrcdir/android-gradle-dependencies/gradle-dist/bin/gradle"
-export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/google","file://$topsrcdir/android-gradle-dependencies/jcenter","file://$topsrcdir/android-gradle-dependencies/gradle-plugins"
+ac_add_options --with-gradle="$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-dist/bin/gradle"
+export GRADLE_MAVEN_REPOSITORIES="file://$MOZ_FETCHES_DIR/android-gradle-dependencies/google","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/jcenter","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-plugins"
 
 if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
     # We use our own clang instead of the NDK's clang.
-    CC="$topsrcdir/clang/bin/clang"
-    CXX="$topsrcdir/clang/bin/clang++"
-    ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
+    CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+    CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
+    ac_add_options --with-android-ndk="$MOZ_FETCHES_DIR/android-ndk"
     # Enable static analysis plugin
     export ENABLE_CLANG_PLUGIN=1
 fi
@@ -90,7 +90,7 @@ else
 fi
 
 if [ -n "$MOZ_PGO_PROFILE_USE" ]; then
-    export LLVM_PROFDATA="$topsrcdir/clang/bin/llvm-profdata"
+    export LLVM_PROFDATA="$MOZ_FETCHES_DIR/clang/bin/llvm-profdata"
 
     ac_add_options --enable-profile-use
 

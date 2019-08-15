@@ -4,19 +4,13 @@ set -x -e
 
 export MOZBUILD_STATE_PATH=$HOME/workspace
 
-# Setup toolchains
-pushd $MOZBUILD_STATE_PATH
-$HOME/checkouts/gecko/mach artifact toolchain -v $MOZ_TOOLCHAINS
-
 # Add toolchain binaries to PATH to run ./mach configure
-export PATH=$MOZBUILD_STATE_PATH/clang/bin:$PATH
-export PATH=$MOZBUILD_STATE_PATH/rustc/bin:$PATH
-export PATH=$MOZBUILD_STATE_PATH/cbindgen:$PATH
-export PATH=$MOZBUILD_STATE_PATH/nasm:$PATH
-export PATH=$MOZBUILD_STATE_PATH/node/bin:$PATH
+export PATH=$MOZ_FETCHES_DIR/clang/bin:$PATH
+export PATH=$MOZ_FETCHES_DIR/rustc/bin:$PATH
+export PATH=$MOZ_FETCHES_DIR/cbindgen:$PATH
+export PATH=$MOZ_FETCHES_DIR/nasm:$PATH
+export PATH=$MOZ_FETCHES_DIR/node/bin:$PATH
 
 # Use clang as host compiler
-export CC=$MOZBUILD_STATE_PATH/clang/bin/clang
-export CXX=$MOZBUILD_STATE_PATH/clang/bin/clang++
-
-popd
+export CC=$MOZ_FETCHES_DIR/clang/bin/clang
+export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++

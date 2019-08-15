@@ -1066,7 +1066,6 @@ class nsDocShell final : public nsDocLoader,
   nsString mTitle;
   nsString mCustomUserAgent;
   nsCString mOriginalUriString;
-  nsWeakPtr mOnePermittedSandboxedNavigator;
   nsWeakPtr mOpener;
   nsTObserverArray<nsWeakPtr> mPrivacyObservers;
   nsTObserverArray<nsWeakPtr> mReflowObservers;

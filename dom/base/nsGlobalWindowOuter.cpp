@@ -4039,7 +4039,7 @@ already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
     const nsAString& aName) {
   NS_ENSURE_TRUE(mBrowsingContext, nullptr);
 
-  return do_AddRef(mBrowsingContext->FindChildWithName(aName));
+  return do_AddRef(mBrowsingContext->FindChildWithName(aName, *mBrowsingContext));
 }
 
 bool nsGlobalWindowOuter::DispatchCustomEvent(const nsAString& aEventName) {
@@ -6331,6 +6331,8 @@ void nsGlobalWindowOuter::ForceClose() {
 void nsGlobalWindowOuter::FinalClose() {
   // Flag that we were closed.
   mIsClosed = true;
+
+  GetBrowsingContext()->SetClosed(true);
 
   // If we get here from CloseOuter then it means that the parent process is
   // going to close our window for us. It's just important to set mIsClosed.

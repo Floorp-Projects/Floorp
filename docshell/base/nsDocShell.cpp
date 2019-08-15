@@ -3007,14 +3007,14 @@ nsresult nsDocShell::DoFindItemWithName(const nsAString& aName,
   return NS_OK;
 }
 
-bool nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell) {
+bool nsDocShell::IsSandboxedFrom(BrowsingContext* aTargetBC) {
   // If no target then not sandboxed.
-  if (!aTargetDocShell) {
+  if (!aTargetBC) {
     return false;
   }
 
   // We cannot be sandboxed from ourselves.
-  if (aTargetDocShell == this) {
+  if (aTargetBC == mBrowsingContext) {
     return false;
   }
 
@@ -3033,45 +3033,37 @@ bool nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell) {
     return false;
   }
 
-  // If aTargetDocShell has an ancestor, it is not top level.
-  nsCOMPtr<nsIDocShellTreeItem> ancestorOfTarget;
-  aTargetDocShell->GetInProcessSameTypeParent(getter_AddRefs(ancestorOfTarget));
+  // If aTargetBC has an ancestor, it is not top level.
+  RefPtr<BrowsingContext> ancestorOfTarget(aTargetBC->GetParent());
   if (ancestorOfTarget) {
     do {
       // We are not sandboxed if we are an ancestor of target.
-      if (ancestorOfTarget == this) {
+      if (ancestorOfTarget == mBrowsingContext) {
         return false;
       }
-      nsCOMPtr<nsIDocShellTreeItem> tempTreeItem;
-      ancestorOfTarget->GetInProcessSameTypeParent(
-          getter_AddRefs(tempTreeItem));
-      tempTreeItem.swap(ancestorOfTarget);
+      ancestorOfTarget = ancestorOfTarget->GetParent();
     } while (ancestorOfTarget);
 
-    // Otherwise, we are sandboxed from aTargetDocShell.
+    // Otherwise, we are sandboxed from aTargetBC.
     return true;
   }
 
-  // aTargetDocShell is top level, are we the "one permitted sandboxed
-  // navigator", i.e. did we open aTargetDocShell?
-  nsCOMPtr<nsIDocShell> permittedNavigator;
-  aTargetDocShell->GetOnePermittedSandboxedNavigator(
-      getter_AddRefs(permittedNavigator));
-  if (permittedNavigator == this) {
+  // aTargetBC is top level, are we the "one permitted sandboxed
+  // navigator", i.e. did we open aTargetBC?
+  RefPtr<BrowsingContext> permittedNavigator(
+      aTargetBC->GetOnePermittedSandboxedNavigator());
+  if (permittedNavigator == mBrowsingContext) {
     return false;
   }
 
   // If SANDBOXED_TOPLEVEL_NAVIGATION flag is not on, we are not sandboxed
   // from our top.
-  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION)) {
-    nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-    GetInProcessSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
-    if (SameCOMIdentity(aTargetDocShell, rootTreeItem)) {
-      return false;
-    }
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) &&
+      aTargetBC == mBrowsingContext->Top()) {
+    return false;
   }
 
-  // Otherwise, we are sandboxed from aTargetDocShell.
+  // Otherwise, we are sandboxed from aTargetBC.
   return true;
 }
 
@@ -4967,8 +4959,6 @@ nsDocShell::Destroy() {
 
   mChromeEventHandler = nullptr;
 
-  mOnePermittedSandboxedNavigator = nullptr;
-
   // required to break ref cycle
   mSecurityUI = nullptr;
 
@@ -5265,11 +5255,6 @@ nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen) {
 
 NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive) {
-  // We disallow setting active on chrome docshells.
-  if (mItemType == nsIDocShellTreeItem::typeChrome) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Keep track ourselves.
   mIsActive = aIsActive;
 
@@ -5364,34 +5349,6 @@ nsDocShell::SetSandboxFlags(uint32_t aSandboxFlags) {
 NS_IMETHODIMP
 nsDocShell::GetSandboxFlags(uint32_t* aSandboxFlags) {
   *aSandboxFlags = mSandboxFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetOnePermittedSandboxedNavigator(
-    nsIDocShell* aSandboxedNavigator) {
-  if (mOnePermittedSandboxedNavigator) {
-    NS_ERROR("One Permitted Sandboxed Navigator should only be set once.");
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(!mIsBeingDestroyed);
-
-  mOnePermittedSandboxedNavigator = do_GetWeakReference(aSandboxedNavigator);
-  NS_ASSERTION(
-      mOnePermittedSandboxedNavigator,
-      "One Permitted Sandboxed Navigator must support weak references.");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetOnePermittedSandboxedNavigator(
-    nsIDocShell** aSandboxedNavigator) {
-  NS_ENSURE_ARG_POINTER(aSandboxedNavigator);
-  nsCOMPtr<nsIDocShell> permittedNavigator =
-      do_QueryReferent(mOnePermittedSandboxedNavigator);
-  permittedNavigator.forget(aSandboxedNavigator);
   return NS_OK;
 }
 
@@ -9300,7 +9257,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   // If a source docshell has been passed, check to see if we are sandboxed
   // from it as the result of an iframe or CSP sandbox.
   if (aLoadState->SourceDocShell() &&
-      aLoadState->SourceDocShell()->IsSandboxedFrom(this)) {
+      aLoadState->SourceDocShell()->IsSandboxedFrom(mBrowsingContext)) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 

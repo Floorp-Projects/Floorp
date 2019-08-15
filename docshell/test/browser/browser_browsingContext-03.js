@@ -26,7 +26,7 @@ add_task(async function() {
         browser,
         { base1: BASE1, base2: BASE2 },
         async function({ base1, base2 }) {
-          let top = content.window;
+          let top = content;
           top.name = "top";
           top.location.href += "#top";
 
@@ -41,24 +41,36 @@ add_task(async function() {
           };
 
           function addFrame(target, name) {
-            let doc = (target.contentWindow || target).document;
-            let frame = doc.createElement("iframe");
-            let p = new Promise(
-              resolve => (frame.onload = () => resolve(frame))
+            return content.SpecialPowers.spawn(
+              target,
+              [name, contexts[name]],
+              async (name, context) => {
+                let doc = this.content.document;
+
+                let frame = doc.createElement("iframe");
+                doc.body.appendChild(frame);
+                frame.name = name;
+                frame.src = context;
+                await new Promise(resolve => {
+                  frame.addEventListener("load", resolve, { once: true });
+                });
+                return frame.browsingContext;
+              }
             );
-            doc.body.appendChild(frame);
-            frame.name = name;
-            frame.src = contexts[name];
-            return p;
           }
 
           function addWindow(target, name) {
-            var win = target.contentWindow.open(contexts[name], name);
+            return content.SpecialPowers.spawn(
+              target,
+              [name, contexts[name]],
+              (name, context) => {
+                let win = this.content.open(context, name);
+                let bc = win && win.docShell.browsingContext;
 
-            return new Promise(resolve =>
-              target.contentWindow.addEventListener("message", () =>
-                resolve(win)
-              )
+                return new Promise(resolve =>
+                  this.content.addEventListener("message", () => resolve(bc))
+                );
+              }
             );
           }
 
@@ -103,10 +115,6 @@ add_task(async function() {
           // and ensure that the find algorithms return the same nodes
           // in the same order.
 
-          function bc(frame) {
-            return (frame.contentWindow || frame).docShell.browsingContext;
-          }
-
           let first = await addFrame(top, "first");
           let second = await addFrame(top, "second");
           let third = await addFrame(first, "third");
@@ -114,8 +122,15 @@ add_task(async function() {
           let fifth = await addFrame(fourth, "fifth");
           let sixth = await addWindow(fourth, "sixth");
 
-          let frames = [top, first, second, third, fourth, fifth, sixth];
-          let browsingContexts = frames.map(bc);
+          let browsingContexts = [
+            BrowsingContext.getFromWindow(top),
+            first,
+            second,
+            third,
+            fourth,
+            fifth,
+            sixth,
+          ];
           let docShells = browsingContexts.map(context => context.docShell);
 
           ok(
@@ -138,7 +153,10 @@ add_task(async function() {
                 null,
                 false
               );
-              let browsingContext = browsingContexts[i].findWithName("target");
+              let browsingContext = browsingContexts[i].findWithName(
+                "target",
+                browsingContexts[i]
+              );
               is(
                 docShell ? docShell.browsingContext : null,
                 browsingContext,
@@ -155,7 +173,10 @@ add_task(async function() {
                 null,
                 false
               );
-              let browsingContext = browsingContexts[i].findWithName(target);
+              let browsingContext = browsingContexts[i].findWithName(
+                target,
+                browsingContexts[i]
+              );
               is(
                 docShell ? docShell.browsingContext : null,
                 browsingContext,

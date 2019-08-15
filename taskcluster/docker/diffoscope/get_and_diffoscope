@@ -11,13 +11,6 @@ mkdir a b
 # implemented, it's better to first manually extract the data.
 # Plus dmg files are not supported yet.
 
-# duplicate the functionality of taskcluster-lib-urls, but in bash..
-if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
-    queue_base='https://queue.taskcluster.net/v1'
-else
-    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
-fi
-
 case "$ORIG_URL" in
 */target.zip|*/target.apk)
 	curl -L "$ORIG_URL" > a.zip
@@ -30,20 +23,15 @@ case "$ORIG_URL" in
 	curl -L "$NEW_URL" | tar -C b -jxf -
 	;;
 */target.dmg)
-	# We don't have mach available to call mach artifact toolchain.
-	# This is the trivial equivalent for those toolchains we use here.
-	for t in $MOZ_TOOLCHAINS; do
-		curl -L $queue_base/task/${t#*@}/artifacts/${t%@*} | tar -Jxf -
-	done
 	for tool in lipo otool; do
-		ln -s /builds/worker/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
+		ln -s $MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
 	done
 	export PATH=$PATH:/builds/worker/bin
 	curl -L "$ORIG_URL" > a.dmg
 	curl -L "$NEW_URL" > b.dmg
 	for i in a b; do
-		dmg/dmg extract $i.dmg $i.hfs
-		dmg/hfsplus $i.hfs extractall / $i
+		$MOZ_FETCHES_DIR/dmg/dmg extract $i.dmg $i.hfs
+		$MOZ_FETCHES_DIR/dmg/hfsplus $i.hfs extractall / $i
 	done
 	;;
 esac

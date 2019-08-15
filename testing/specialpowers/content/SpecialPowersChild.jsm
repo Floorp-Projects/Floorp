@@ -55,6 +55,7 @@ class SpecialPowersChild extends SpecialPowersAPI {
       this._windowID = window.windowUtils.currentInnerWindowID;
       this.DOMWindowUtils = bindDOMWindowUtils(window);
 
+      window.SpecialPowers = this;
       window.wrappedJSObject.SpecialPowers = this;
       if (this.IsInNestedFrame) {
         this.addPermission("allowXULXBL", true, window.document);

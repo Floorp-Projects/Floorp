@@ -4,7 +4,7 @@
     "debug": false,
     "compiler": "clang",
     "env": {
-        "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer",
+        "LLVM_SYMBOLIZER": "{MOZ_FETCHES_DIR}/clang/bin/llvm-symbolizer",
         "JITTEST_EXTRA_ARGS": "--jitflags=tsan --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt --unusable-error-status --exclude-from={DIR}/tsan-slow.txt",
         "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt"
     },

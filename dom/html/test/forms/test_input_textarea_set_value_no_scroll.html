@@ -22,16 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
 
   var gTestRunner = null;
 
-  function test(aElementName)
+  async function test(aElementName)
   {
     var element = document.getElementsByTagName(aElementName)[0];
     element.focus();
 
-    var baseSnapshot = snapshotWindow(window);
+    var baseSnapshot = await snapshotWindow(window);
 
     // This is a sanity check.
-    var s2 = snapshotWindow(window);
-    var results = compareSnapshots(baseSnapshot, snapshotWindow(window), true);
+    var s2 = await snapshotWindow(window);
+    var results = compareSnapshots(baseSnapshot, await snapshotWindow(window), true);
     ok(results[0], "sanity check: screenshots should be the same");
 
     element.selectionStart = element.selectionEnd = element.value.length;
@@ -39,13 +39,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     setTimeout(function() {
       sendString('f');
 
-      requestAnimationFrame(function() {
-        var selectionAtTheEndSnapshot = snapshotWindow(window);
+      requestAnimationFrame(async function() {
+        var selectionAtTheEndSnapshot = await snapshotWindow(window);
         results = compareSnapshots(baseSnapshot, selectionAtTheEndSnapshot, false);
         ok(results[0], "after appending a character, string should have changed");
 
         element.value = element.value;
-        var tmpSnapshot = snapshotWindow(window);
+        var tmpSnapshot = await snapshotWindow(window);
 
         results = compareSnapshots(baseSnapshot, tmpSnapshot, false);
         ok(results[0], "re-settig the value should change nothing");
@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
 
   // This test checks that when a textarea has a long list of values and the
   // textarea's value is then changed, the values are shown correctly.
-  function testCorrectUpdateOnScroll()
+  async function testCorrectUpdateOnScroll()
   {
     var textarea = document.createElement('textarea');
     textarea.rows = 5;
@@ -71,18 +71,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829606
     textarea.value = 'a\nb\nc\nd';
     document.getElementById('content').appendChild(textarea);
 
-    var baseSnapshot = snapshotWindow(window);
+    var baseSnapshot = await snapshotWindow(window);
 
     textarea.value = '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n';
     textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
 
-    var fullSnapshot = snapshotWindow(window);
+    var fullSnapshot = await snapshotWindow(window);
     var results = compareSnapshots(baseSnapshot, fullSnapshot, false);
     ok(results[0], "sanity check: screenshots should not be the same");
 
     textarea.value = 'a\nb\nc\nd';
 
-    var tmpSnapshot = snapshotWindow(window);
+    var tmpSnapshot = await snapshotWindow(window);
     results = compareSnapshots(baseSnapshot, tmpSnapshot, true);
     ok(results[0], "textarea view should look like the beginning");
 

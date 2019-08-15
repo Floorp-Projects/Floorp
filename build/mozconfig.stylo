@@ -1,2 +1,2 @@
 # Tell the build system where to find llvm-config for builds on automation.
-export LLVM_CONFIG="${TOOLTOOL_DIR:-$topsrcdir}/clang/bin/llvm-config"
+export LLVM_CONFIG="${MOZ_FETCHES_DIR}/clang/bin/llvm-config"
