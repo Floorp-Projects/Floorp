@@ -672,9 +672,13 @@ class HighlightersOverlay {
     // Since the subgrid and its parent grid container were previously both highlighted
     // and the parent grid container (the given node) has just been hidden, show a
     // translucent highlight of the parent grid container.
-    for (const parentGridNode of this.subgridToParentMap.values()) {
-      if (parentGridNode === node) {
-        await this.showParentGridHighlighter(parentGridNode);
+    for (const highlightedNode of this.gridHighlighters.keys()) {
+      const parentGridNode = await this.walker.getParentGridNode(
+        highlightedNode
+      );
+      if (node === parentGridNode) {
+        this.subgridToParentMap.set(highlightedNode, node);
+        await this.showParentGridHighlighter(node);
         break;
       }
     }
@@ -713,8 +717,10 @@ class HighlightersOverlay {
     }
 
     const highlighter = this.parentGridHighlighters.get(node);
-    await highlighter.hide();
-    this.extraGridHighlighterPool.push(highlighter);
+    if (highlighter) {
+      await highlighter.hide();
+      this.extraGridHighlighterPool.push(highlighter);
+    }
     this.state.grids.delete(node);
     this.parentGridHighlighters.delete(node);
   }
