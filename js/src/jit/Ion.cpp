@@ -447,12 +447,12 @@ void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
 
   // Clean up if compilation did not succeed.
   if (builder->script()->isIonCompilingOffThread()) {
-    IonScript* ion = nullptr;
+    builder->script()->clearIsIonCompilingOffThread(runtime);
+
     AbortReasonOr<Ok> status = builder->getOffThreadStatus();
     if (status.isErr() && status.unwrapErr() == AbortReason::Disable) {
-      ion = ION_DISABLED_SCRIPT;
+      builder->script()->disableIon(runtime);
     }
-    builder->script()->setIonScript(runtime, ion);
   }
 
   // Free Ion LifoAlloc off-thread. Free on the main thread if this OOMs.
@@ -1031,14 +1031,10 @@ const OsiIndex* IonScript::getOsiIndex(uint8_t* retAddr) const {
   return getOsiIndex(disp);
 }
 
-void IonScript::Trace(JSTracer* trc, IonScript* script) {
-  if (script != ION_DISABLED_SCRIPT) {
-    script->trace(trc);
-  }
-}
+void IonScript::Trace(JSTracer* trc, IonScript* script) { script->trace(trc); }
 
 void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
-  // This allocation is tracked by JSScript::setIonScript / clearIonScript.
+  // This allocation is tracked by JSScript::setIonScriptImpl.
   fop->deleteUntracked(script);
 }
 
@@ -1945,7 +1941,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     }
 
     if (!recompile) {
-      builderScript->setIonScript(cx->runtime(), ION_COMPILING_SCRIPT);
+      builderScript->setIsIonCompilingOffThread(cx->runtime());
     }
 
     // The allocator and associated data will be destroyed after being
@@ -2681,7 +2677,7 @@ void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
 
 static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
                                             bool resetUses) {
-  script->setIonScript(cx->runtime(), nullptr);
+  script->clearIonScript(cx->defaultFreeOp());
 
   // Wait for the scripts to get warm again before doing another
   // compile, unless we are recompiling *because* a script got hot
@@ -2827,7 +2823,7 @@ void jit::FinishInvalidation(JSFreeOp* fop, JSScript* script) {
 
   // In all cases, null out script->ion to avoid re-entry.
   IonScript* ion = script->ionScript();
-  script->setIonScript(fop, nullptr);
+  script->clearIonScript(fop);
 
   // If this script has Ion code on the stack, invalidated() will return
   // true. In this case we have to wait until destroying it.
@@ -2846,7 +2842,7 @@ void jit::ForbidCompilation(JSContext* cx, JSScript* script) {
     Invalidate(cx, script, false);
   }
 
-  script->setIonScript(cx->runtime(), ION_DISABLED_SCRIPT);
+  script->disableIon(cx->runtime());
 }
 
 AutoFlushICache* JSContext::autoFlushICache() const { return autoFlushICache_; }

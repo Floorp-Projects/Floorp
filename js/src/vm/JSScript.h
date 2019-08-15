@@ -2602,44 +2602,99 @@ class JSScript : public js::BaseScript {
     return offsetof(JSScript, jitScript_);
   }
 
-  bool hasAnyIonScript() const { return hasIonScript(); }
+ private:
+  // Methods to set |ion| to an IonScript*, nullptr, or one of the special
+  // ION_{DISABLED,COMPILING,PENDING}_SCRIPT values.
+  void setIonScriptImpl(JSFreeOp* fop, js::jit::IonScript* ionScript);
+  void setIonScriptImpl(JSRuntime* rt, js::jit::IonScript* ionScript);
 
+ public:
+  // Methods for getting/setting/clearing an IonScript*.
   bool hasIonScript() const {
     bool res = ion && ion != ION_DISABLED_SCRIPT &&
                ion != ION_COMPILING_SCRIPT && ion != ION_PENDING_SCRIPT;
     MOZ_ASSERT_IF(res, baseline);
     return res;
   }
-  bool canIonCompile() const { return ion != ION_DISABLED_SCRIPT; }
-  bool isIonCompilingOffThread() const { return ion == ION_COMPILING_SCRIPT; }
-
   js::jit::IonScript* ionScript() const {
     MOZ_ASSERT(hasIonScript());
     return ion;
   }
-  js::jit::IonScript* maybeIonScript() const { return ion; }
-  js::jit::IonScript* const* addressOfIonScript() const { return &ion; }
-  void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
-  void setIonScript(JSFreeOp* fop, js::jit::IonScript* ionScript);
-  inline void clearIonScript(JSFreeOp* fop);
+  void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript) {
+    MOZ_ASSERT(!hasIonScript());
+    setIonScriptImpl(rt, ionScript);
+    MOZ_ASSERT(hasIonScript());
+  }
+  void clearIonScript(JSFreeOp* fop) {
+    MOZ_ASSERT(hasIonScript());
+    setIonScriptImpl(fop, nullptr);
+  }
 
+  // Methods for the Ion-disabled status.
+  bool canIonCompile() const { return ion != ION_DISABLED_SCRIPT; }
+  void disableIon(JSRuntime* rt) { setIonScriptImpl(rt, ION_DISABLED_SCRIPT); }
+
+  // Methods for off-thread compilation.
+  bool isIonCompilingOffThread() const { return ion == ION_COMPILING_SCRIPT; }
+  void setIsIonCompilingOffThread(JSRuntime* rt) {
+    MOZ_ASSERT(!ion);
+    setIonScriptImpl(rt, ION_COMPILING_SCRIPT);
+  }
+  void clearIsIonCompilingOffThread(JSRuntime* rt) {
+    MOZ_ASSERT(isIonCompilingOffThread());
+    setIonScriptImpl(rt, nullptr);
+  }
+
+  // Methods for lazy linking after off-thread compilation. In this case the
+  // BaselineScript has a pending builder that is linked by the lazy link stub.
+  void setHasPendingIonScript(JSRuntime* rt) {
+    MOZ_ASSERT(isIonCompilingOffThread());
+    setIonScriptImpl(rt, ION_PENDING_SCRIPT);
+  }
+  void clearHasPendingIonScript(JSRuntime* rt) {
+    if (ion == ION_PENDING_SCRIPT) {
+      setIonScriptImpl(rt, nullptr);
+    }
+  }
+
+ private:
+  // Methods to set |baseline| to a BaselineScript*, nullptr, or
+  // BASELINE_DISABLED_SCRIPT.
+  void setBaselineScriptImpl(JSRuntime* rt,
+                             js::jit::BaselineScript* baselineScript);
+  void setBaselineScriptImpl(JSFreeOp* fop,
+                             js::jit::BaselineScript* baselineScript);
+
+ public:
+  // Methods for getting/setting/clearing a BaselineScript*.
   bool hasBaselineScript() const {
     bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
-    MOZ_ASSERT_IF(!res, !ion || ion == ION_DISABLED_SCRIPT);
+    MOZ_ASSERT_IF(!res, !hasIonScript());
     return res;
-  }
-  bool canBaselineCompile() const {
-    return baseline != BASELINE_DISABLED_SCRIPT;
   }
   js::jit::BaselineScript* baselineScript() const {
     MOZ_ASSERT(hasBaselineScript());
     return baseline;
   }
-  inline void setBaselineScript(JSRuntime* rt,
-                                js::jit::BaselineScript* baselineScript);
-  inline void setBaselineScript(JSFreeOp* fop,
-                                js::jit::BaselineScript* baselineScript);
-  inline void clearBaselineScript(JSFreeOp* fop);
+  void setBaselineScript(JSRuntime* rt,
+                         js::jit::BaselineScript* baselineScript) {
+    MOZ_ASSERT(!hasBaselineScript());
+    setBaselineScriptImpl(rt, baselineScript);
+    MOZ_ASSERT(hasBaselineScript());
+  }
+  void clearBaselineScript(JSFreeOp* fop) {
+    MOZ_ASSERT(hasBaselineScript());
+    setBaselineScriptImpl(fop, nullptr);
+  }
+
+  // Methods for the Baseline-disabled status.
+  bool canBaselineCompile() const {
+    return baseline != BASELINE_DISABLED_SCRIPT;
+  }
+  void disableBaselineCompile(JSRuntime* rt) {
+    MOZ_ASSERT(!hasBaselineScript());
+    setBaselineScriptImpl(rt, BASELINE_DISABLED_SCRIPT);
+  }
 
   void updateJitCodeRaw(JSRuntime* rt);
 
