@@ -43,9 +43,10 @@ type Args = { cx: Context, source: Source };
 export const setSymbols: MemoizedAction<Args, ?Symbols> = memoizeableAction(
   "setSymbols",
   {
-    exitEarly: ({ source }) => source.isWasm,
-    hasValue: ({ source }, { getState }) => hasSymbols(getState(), source),
-    getValue: ({ source }, { getState }) => getSymbols(getState(), source),
+    hasValue: ({ source }, { getState }) =>
+      source.isWasm || hasSymbols(getState(), source),
+    getValue: ({ source }, { getState }) =>
+      source.isWasm ? null : getSymbols(getState(), source),
     createKey: ({ source }) => source.id,
     action: ({ cx, source }, thunkArgs) => doSetSymbols(cx, source, thunkArgs),
   }
