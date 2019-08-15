@@ -139,14 +139,17 @@ export const loadSourceText: MemoizedAction<
   { cx: Context, source: Source },
   ?Source
 > = memoizeableAction("loadSourceText", {
-  exitEarly: ({ source }) => !source,
   hasValue: ({ source }, { getState }) => {
-    return !!(
-      getSource(getState(), source.id) &&
-      getSourceWithContent(getState(), source.id).content
+    return (
+      !source ||
+      !!(
+        getSource(getState(), source.id) &&
+        getSourceWithContent(getState(), source.id).content
+      )
     );
   },
-  getValue: ({ source }, { getState }) => getSource(getState(), source.id),
+  getValue: ({ source }, { getState }) =>
+    source ? getSource(getState(), source.id) : null,
   createKey: ({ source }, { getState }) => {
     const epoch = getSourcesEpoch(getState());
     return `${epoch}:${source.id}`;

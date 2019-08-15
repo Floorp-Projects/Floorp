@@ -6,12 +6,8 @@
 
 import type { ThunkArgs } from "../actions/types";
 
-export type MemoizedAction<
-  Args,
-  Result
-> = Args => ThunkArgs => Promise<?Result>;
+export type MemoizedAction<Args, Result> = Args => ThunkArgs => Promise<Result>;
 type MemoizableActionParams<Args, Result> = {
-  exitEarly?: (args: Args, thunkArgs: ThunkArgs) => boolean,
   hasValue: (args: Args, thunkArgs: ThunkArgs) => boolean,
   getValue: (args: Args, thunkArgs: ThunkArgs) => Result,
   createKey: (args: Args, thunkArgs: ThunkArgs) => string,
@@ -22,7 +18,6 @@ type MemoizableActionParams<Args, Result> = {
  * memoizableActon is a utility for actions that should only be performed
  * once per key. It is useful for loading sources, parsing symbols ...
  *
- * @exitEarly - if true, do not attempt to perform the action
  * @hasValue - checks to see if the result is in the redux store
  * @getValue - gets the result from the redux store
  * @createKey - creates a key for the requests map
@@ -49,15 +44,10 @@ export function memoizeableAction<Args, Result>(
     getValue,
     createKey,
     action,
-    exitEarly,
   }: MemoizableActionParams<Args, Result>
 ): MemoizedAction<Args, Result> {
   const requests = new Map();
   return args => async (thunkArgs: ThunkArgs) => {
-    if (exitEarly && exitEarly(args, thunkArgs)) {
-      return;
-    }
-
     if (hasValue(args, thunkArgs)) {
       return getValue(args, thunkArgs);
     }

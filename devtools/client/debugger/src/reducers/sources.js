@@ -68,9 +68,6 @@ import type { DebuggeeState } from "./debuggee";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
-type SourcesContentMap = {
-  [SourceId]: AsyncValue<SourceContent> | null,
-};
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 
 export type BreakpointPositionsMap = { [SourceId]: BreakpointPositions };
