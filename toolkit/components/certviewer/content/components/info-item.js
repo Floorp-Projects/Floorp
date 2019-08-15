@@ -39,6 +39,9 @@ export class InfoItem extends HTMLElement {
     // TODO: Use Fluent-friendly condition.
     if (this.item.label === "Modulus") {
       info.classList.add("long-hex");
+      this.addEventListener("click", () => {
+        info.classList.toggle("long-hex-open");
+      });
     }
   }
 }
