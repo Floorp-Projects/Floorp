@@ -406,6 +406,7 @@ DIRS += [
     'frontend',
     'gc',
     'jit',
+    'rust',
     'wasm',
     'zydis',
 ]
