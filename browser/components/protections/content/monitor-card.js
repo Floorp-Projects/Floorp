@@ -4,8 +4,12 @@
 
 /* eslint-env mozilla/frame-script */
 
-const MONITOR_SIGN_IN_URL = RPMGetStringPref(
+const MONITOR_URL = RPMGetStringPref(
   "browser.contentblocking.report.monitor.url",
+  ""
+);
+const MONITOR_SIGN_IN_URL = RPMGetStringPref(
+  "browser.contentblocking.report.monitor.sign_in_url",
   ""
 );
 const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
@@ -19,7 +23,7 @@ export default class MonitorClass {
 
   init() {
     const monitorLinkTag = this.doc.getElementById("monitor-inline-link");
-    monitorLinkTag.href = MONITOR_SIGN_IN_URL;
+    monitorLinkTag.href = MONITOR_URL;
 
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
       // Wait for monitor data and display the card.
@@ -99,16 +103,7 @@ export default class MonitorClass {
    * @return URL to Monitor website.
    */
   buildMonitorUrl(email = null) {
-    let url = MONITOR_SIGN_IN_URL;
-
-    if (email) {
-      url += `/oauth/init?email=${email}&entrypoint=protection_report_monitor&utm_source=about-protections`;
-    } else {
-      url +=
-        "/?entrypoint=protection_report_monitor&utm_source=about-protections";
-    }
-
-    return url;
+    return email ? `${MONITOR_SIGN_IN_URL}${email}` : MONITOR_URL;
   }
 
   renderContentForUserWithLogins(monitorData) {
