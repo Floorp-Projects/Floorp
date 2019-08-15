@@ -46,6 +46,8 @@ class MacIOSurface final
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(MacIOSurface)
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::BackendType BackendType;
 
   // The usage count of the IOSurface is increased by 1 during the lifetime
   // of the MacIOSurface instance.
@@ -84,6 +86,7 @@ class MacIOSurface final
   size_t GetBytesPerRow(size_t plane = 0) const;
   void Lock(bool aReadOnly = true);
   void Unlock(bool aReadOnly = true);
+  bool IsLocked() const { return mIsLocked; }
   void IncrementUseCount();
   void DecrementUseCount();
   bool HasAlpha() const { return mHasAlpha; }
@@ -111,6 +114,15 @@ class MacIOSurface final
                                   GLuint plane) const;
   already_AddRefed<SourceSurface> GetAsSurface();
 
+  // Creates a DrawTarget that wraps the data in the IOSurface. Rendering to
+  // this DrawTarget directly manipulates the contents of the IOSurface.
+  // Only call when the surface is already locked for writing!
+  // The returned DrawTarget must only be used while the surface is still
+  // locked.
+  // Also, only call this if you're reasonably sure that the DrawTarget of the
+  // selected backend supports the IOSurface's SurfaceFormat.
+  already_AddRefed<DrawTarget> GetAsDrawTargetLocked(BackendType aBackendType);
+
   static size_t GetMaxWidth();
   static size_t GetMaxHeight();
   CFTypeRefPtr<IOSurfaceRef> GetIOSurfaceRef() { return mIOSurfaceRef; }
@@ -119,6 +131,7 @@ class MacIOSurface final
   CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
   double mContentsScaleFactor;
   bool mHasAlpha;
+  bool mIsLocked = false;
   mozilla::gfx::YUVColorSpace mColorSpace =
       mozilla::gfx::YUVColorSpace::UNKNOWN;
 };

@@ -25,7 +25,10 @@ MacIOSurface::MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
   IncrementUseCount();
 }
 
-MacIOSurface::~MacIOSurface() { DecrementUseCount(); }
+MacIOSurface::~MacIOSurface() {
+  MOZ_RELEASE_ASSERT(!IsLocked(), "Destroying locked surface");
+  DecrementUseCount();
+}
 
 /* static */
 already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
@@ -149,13 +152,17 @@ void MacIOSurface::DecrementUseCount() {
 }
 
 void MacIOSurface::Lock(bool aReadOnly) {
+  MOZ_RELEASE_ASSERT(!mIsLocked, "double MacIOSurface lock");
   ::IOSurfaceLock(mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0,
                   nullptr);
+  mIsLocked = true;
 }
 
 void MacIOSurface::Unlock(bool aReadOnly) {
+  MOZ_RELEASE_ASSERT(mIsLocked, "MacIOSurface unlock without being locked");
   ::IOSurfaceUnlock(mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0,
                     nullptr);
+  mIsLocked = false;
 }
 
 using mozilla::gfx::IntSize;
@@ -192,6 +199,21 @@ already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
           &MacIOSurfaceBufferDeallocator, static_cast<void*>(dataCpy));
 
   return surf.forget();
+}
+
+already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
+    mozilla::gfx::BackendType aBackendType) {
+  MOZ_RELEASE_ASSERT(
+      IsLocked(),
+      "Only call GetAsDrawTargetLocked while the surface is locked.");
+
+  size_t bytesPerRow = GetBytesPerRow();
+  size_t ioWidth = GetDevicePixelWidth();
+  size_t ioHeight = GetDevicePixelHeight();
+  unsigned char* ioData = (unsigned char*)GetBaseAddress();
+  SurfaceFormat format = GetFormat();
+  return mozilla::gfx::Factory::CreateDrawTargetForData(
+      aBackendType, ioData, IntSize(ioWidth, ioHeight), bytesPerRow, format);
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
