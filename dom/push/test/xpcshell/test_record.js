@@ -90,7 +90,7 @@ function testPermissionCheck(props) {
     `Record ${JSON.stringify(props)} should not have permission yet`
   );
   let permURI = Services.io.newURI(props.scope);
-  Services.perms.add(
+  PermissionTestUtils.add(
     permURI,
     "desktop-notification",
     Ci.nsIPermissionManager.ALLOW_ACTION
@@ -101,7 +101,7 @@ function testPermissionCheck(props) {
       `Record ${JSON.stringify(props)} should have permission`
     );
   } finally {
-    Services.perms.remove(permURI, "desktop-notification");
+    PermissionTestUtils.remove(permURI, "desktop-notification");
   }
 }
 

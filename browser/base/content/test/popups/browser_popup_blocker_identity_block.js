@@ -7,6 +7,9 @@
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 
 const baseURL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
@@ -209,7 +212,7 @@ add_task(async function check_explicit_default_permission() {
 
   // DENY only works if triggered through Services.perms (it's very edge-casey),
   // since SitePermissions.jsm considers setting default permissions to be removal.
-  Services.perms.add(URI, "popup", Ci.nsIPermissionManager.DENY_ACTION);
+  PermissionTestUtils.add(URI, "popup", Ci.nsIPermissionManager.DENY_ACTION);
 
   await openIdentityPopup();
   let menulist = document.getElementById("identity-popup-popup-menulist");

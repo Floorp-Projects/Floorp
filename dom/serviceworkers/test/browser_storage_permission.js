@@ -1,5 +1,9 @@
 "use strict";
 
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 const BASE_URI = "http://mochi.test:8888/browser/dom/serviceworkers/test/";
 const PAGE_URI = BASE_URI + "empty.html";
 const SCOPE = PAGE_URI + "?storage_permission";
@@ -47,8 +51,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_allow_permission() {
-  Services.perms.add(
-    Services.io.newURI(PAGE_URI),
+  PermissionTestUtils.add(
+    PAGE_URI,
     "cookie",
     Ci.nsICookiePermission.ACCESS_ALLOW
   );
@@ -67,8 +71,8 @@ add_task(async function test_allow_permission() {
 });
 
 add_task(async function test_deny_permission() {
-  Services.perms.add(
-    Services.io.newURI(PAGE_URI),
+  PermissionTestUtils.add(
+    PAGE_URI,
     "cookie",
     Ci.nsICookiePermission.ACCESS_DENY
   );
@@ -84,12 +88,12 @@ add_task(async function test_deny_permission() {
   is(controller, null, "page should be not controlled with storage denied");
 
   BrowserTestUtils.removeTab(tab);
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 });
 
 add_task(async function test_session_permission() {
-  Services.perms.add(
-    Services.io.newURI(PAGE_URI),
+  PermissionTestUtils.add(
+    PAGE_URI,
     "cookie",
     Ci.nsICookiePermission.ACCESS_SESSION
   );
@@ -105,14 +109,14 @@ add_task(async function test_session_permission() {
   is(controller, null, "page should be not controlled with session storage");
 
   BrowserTestUtils.removeTab(tab);
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 });
 
 // Test to verify an about:blank iframe successfully inherits the
 // parent's controller when storage is blocked between opening the
 // parent page and creating the iframe.
 add_task(async function test_block_storage_before_blank_iframe() {
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -156,7 +160,7 @@ add_task(async function test_block_storage_before_blank_iframe() {
 // parent's controller when storage is blocked between opening the
 // parent page and creating the iframe.
 add_task(async function test_block_storage_before_blob_iframe() {
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -212,7 +216,7 @@ add_task(async function test_block_storage_before_blob_iframe() {
 // explicitly check if the worker is controlled since we don't expose
 // WorkerNavigator.serviceWorkers.controller yet.
 add_task(async function test_block_storage_before_blob_worker() {
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 
   let tab = BrowserTestUtils.addTab(gBrowser, SCOPE);
   let browser = gBrowser.getBrowserForTab(tab);
@@ -265,7 +269,7 @@ add_task(async function test_block_storage_before_blob_worker() {
 });
 
 add_task(async function cleanup() {
-  Services.perms.remove(Services.io.newURI(PAGE_URI), "cookie");
+  PermissionTestUtils.remove(PAGE_URI, "cookie");
 
   let tab = BrowserTestUtils.addTab(gBrowser, PAGE_URI);
   let browser = gBrowser.getBrowserForTab(tab);

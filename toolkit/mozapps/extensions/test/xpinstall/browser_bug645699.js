@@ -8,8 +8,11 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var pm = Services.perms;
-  pm.add(makeURI("http://example.org/"), "install", pm.ALLOW_ACTION);
+  PermissionTestUtils.add(
+    "http://example.org/",
+    "install",
+    Services.perms.ALLOW_ACTION
+  );
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.loadURI(gBrowser, TESTROOT + "bug645699.html");
@@ -36,7 +39,7 @@ function confirm_install(panel) {
 
 function finish_test(count) {
   is(count, 0, "0 Add-ons should have been successfully installed");
-  Services.perms.remove(makeURI("http://addons.mozilla.org"), "install");
+  PermissionTestUtils.remove("http://addons.mozilla.org", "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

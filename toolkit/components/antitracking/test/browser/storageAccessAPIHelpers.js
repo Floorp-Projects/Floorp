@@ -147,8 +147,13 @@ async function waitUntilPermission(url, name) {
     let id = setInterval(_ => {
       let Services = SpecialPowers.Services;
       let uri = Services.io.newURI(url);
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        {}
+      );
       if (
-        Services.perms.testPermission(uri, name) == Services.perms.ALLOW_ACTION
+        Services.perms.testPermissionFromPrincipal(principal, name) ==
+        Services.perms.ALLOW_ACTION
       ) {
         clearInterval(id);
         resolve();
@@ -174,11 +179,17 @@ async function interactWithTracker() {
 function isOnContentBlockingAllowList() {
   let url = new URL(SpecialPowers.wrap(top).location.href);
   let origin = SpecialPowers.Services.io.newURI("https://" + url.host);
+  let principal = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(
+    origin,
+    {}
+  );
   let types = ["trackingprotection", "trackingprotection-pb"];
   return types.some(type => {
     return (
-      SpecialPowers.Services.perms.testPermission(origin, type) ==
-      SpecialPowers.Services.perms.ALLOW_ACTION
+      SpecialPowers.Services.perms.testPermissionFromPrincipal(
+        principal,
+        type
+      ) == SpecialPowers.Services.perms.ALLOW_ACTION
     );
   });
 }
