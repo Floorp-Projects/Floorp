@@ -16,20 +16,29 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoWebExecutor;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
+import org.mozilla.geckoview.WebNotification;
+import org.mozilla.geckoview.WebNotificationDelegate;
+import org.mozilla.geckoview.WebRequest;
 import org.mozilla.geckoview.WebRequestError;
 import org.mozilla.geckoview.RuntimeTelemetry;
+import org.mozilla.geckoview.WebResponse;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -55,6 +64,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -89,6 +99,10 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mCanGoBack;
     private boolean mCanGoForward;
     private boolean mFullScreen;
+
+    private HashMap<String, Integer> mNotificationIDMap = new HashMap<>();
+    private HashMap<Integer, WebNotification> mNotificationMap = new HashMap<>();
+    private int mLastID = 100;
 
     private ProgressBar mProgressView;
 
@@ -175,6 +189,54 @@ public class GeckoViewActivity extends AppCompatActivity {
                     return GeckoResult.ALLOW;
                 }
             });
+
+            // `getSystemService` call requires API level 23
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                sGeckoRuntime.setWebNotificationDelegate(new WebNotificationDelegate() {
+                    NotificationManager notificationManager = getSystemService(NotificationManager.class);
+                    @Override
+                    public void onShowNotification(@NonNull WebNotification notification) {
+                        Intent clickIntent = new Intent(GeckoViewActivity.this, GeckoViewActivity.class);
+                        clickIntent.putExtra("onClick",notification.tag);
+                        PendingIntent dismissIntent = PendingIntent.getActivity(GeckoViewActivity.this, mLastID, clickIntent, 0);
+
+                        Notification.Builder builder = new Notification.Builder(GeckoViewActivity.this)
+                                .setContentTitle(notification.title)
+                                .setContentText(notification.text)
+                                .setSmallIcon(R.drawable.ic_status_logo)
+                                .setContentIntent(dismissIntent)
+                                .setAutoCancel(true);
+
+                        mNotificationIDMap.put(notification.tag, mLastID);
+                        mNotificationMap.put(mLastID, notification);
+
+                        if (notification.imageUrl != null && notification.imageUrl.length() > 0) {
+                            final GeckoWebExecutor executor = new GeckoWebExecutor(sGeckoRuntime);
+
+                            GeckoResult<WebResponse> response = executor.fetch(
+                                    new WebRequest.Builder(notification.imageUrl)
+                                            .addHeader("Accept", "image")
+                                            .build());
+                            response.accept(value -> {
+                                Bitmap bitmap = BitmapFactory.decodeStream(value.body);
+                                builder.setLargeIcon(Icon.createWithBitmap(bitmap));
+                                notificationManager.notify(mLastID++, builder.build());
+                            });
+                        } else {
+                            notificationManager.notify(mLastID++, builder.build());
+                        }
+
+                    }
+
+                    @Override
+                    public void onCloseNotification(@NonNull WebNotification notification) {
+                        notificationManager.cancel(mNotificationIDMap.get(notification.tag));
+                        mNotificationIDMap.remove(notification.tag);
+                    }
+                });
+
+
+            }
         }
 
         if(savedInstanceState == null) {
@@ -430,6 +492,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    @Override
     protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
 
@@ -440,6 +503,13 @@ public class GeckoViewActivity extends AppCompatActivity {
             }
             finish();
             return;
+        }
+
+        if (intent.hasExtra("onClick")) {
+            int key = intent.getExtras().getInt("onClick");
+            WebNotification notification = mNotificationMap.get(key);
+            notification.click();
+            mNotificationMap.remove(key);
         }
 
         setIntent(intent);

@@ -44,6 +44,19 @@ exclude: true
   ([bug 1567268]({{bugzilla}}1567268))
 - Added API for controlling Gecko logging [`GeckoRuntimeSettings.debugLogging`][70.14]
   ([bug 1573304]({{bugzilla}}1573304))
+- Added API for session context assignment
+  [`GeckoSessionSettings.Builder.contextId`][70.1] and deletion of data
+  related to a session context
+  [`StorageController.clearDataForSessionContext`][70.2].
+- Removed `setSession(session, runtime)` from [`GeckoView`][70.5]. With this change, `GeckoView` will no longer
+  manage opening/closing of the [`GeckoSession`][70.6] and instead leave that up to the app. It's also now allowed
+  to call [`setSession`][70.10] with a closed `GeckoSession`.
+- Added an overload of [`GeckoSession.loadUri()`][70.8] that accepts a referring [`GeckoSession`][70.6]. This should be used
+  when the URI we're loading originates from another page. A common example of this would be long pressing
+  a link and then opening that in a new `GeckoSession`.
+- Added capture parameter to [`onFilePrompt`][70.9] and corresponding [`CAPTURE_TYPE_*`][70.7] constants.
+- Added [`WebNotification`][70.11] and [`WebNotificationDelegate`][70.12] for handling Web Notifications.
+  ([bug 1533057]({{bugzilla}}1533057))
 
 [70.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: {{javadoc_uri}}/StorageController.html#clearDataForSessionContext-java.lang.String-
@@ -59,6 +72,8 @@ exclude: true
 [70.12]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html
 [70.13]: {{javadoc_uri}}/ContentBlocking.html
 [70.14]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#debugLogging-boolean-
+[70.11]: {{javadoc_uri}}/WebNotification.html
+[70.12]: {{javadoc_uri}}/WebNotificationDelegate.html
 
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
@@ -311,4 +326,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 99204a5c93667e6d440e55d5d330d01cf4e8783f
+[api-version]: 15b1503a237289c51c147c7760afd7ff726d8809
