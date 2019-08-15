@@ -676,24 +676,13 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
   rv = sourceBaseURI->GetScheme(sourceScheme);
   if (NS_FAILED(rv)) return rv;
 
-  // When comparing schemes, if the relevant pref is set, view-source URIs
-  // are reachable from same-protocol (so e.g. file: can link to
-  // view-source:file). This is required for reftests.
-  static bool sViewSourceReachableFromInner = false;
-  static bool sCachedViewSourcePref = false;
-  if (!sCachedViewSourcePref) {
-    sCachedViewSourcePref = true;
-    mozilla::Preferences::AddBoolVarCache(
-        &sViewSourceReachableFromInner,
-        "security.view-source.reachable-from-inner-protocol");
-  }
-
   if (sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME)) {
     // A null principal can target its own URI.
     if (sourceURI == aTargetURI) {
       return NS_OK;
     }
-  } else if (sViewSourceReachableFromInner &&
+  } else if (StaticPrefs::
+                 security_view_source_reachable_from_inner_protocol() &&
              sourceScheme.EqualsIgnoreCase(targetScheme.get()) &&
              aTargetURI->SchemeIs("view-source")) {
     // exception for foo: linking to view-source:foo for reftests...

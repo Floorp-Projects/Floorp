@@ -17,7 +17,7 @@
 
 using namespace js;
 
-static gc::AllocKind GetProxyGCObjectKind(const Class* clasp,
+static gc::AllocKind GetProxyGCObjectKind(const JSClass* clasp,
                                           const BaseProxyHandler* handler,
                                           const Value& priv) {
   MOZ_ASSERT(clasp->isProxy());
@@ -51,7 +51,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
                               const ProxyOptions& options) {
   Rooted<TaggedProto> proto(cx, proto_);
 
-  const Class* clasp = options.clasp();
+  const JSClass* clasp = options.clasp();
 
 #ifdef DEBUG
   MOZ_ASSERT(isValidProxyClass(clasp));
@@ -167,7 +167,7 @@ void ProxyObject::nuke() {
 }
 
 /* static */ JS::Result<ProxyObject*, JS::OOM&> ProxyObject::create(
-    JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     gc::AllocKind allocKind, NewObjectKind newKind) {
   MOZ_ASSERT(clasp->isProxy());
 

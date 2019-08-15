@@ -65,7 +65,7 @@ const JSClassOps DebuggerEnvironment::classOps_ = {
     CallTraceMethod<DebuggerEnvironment>, /* trace */
 };
 
-const Class DebuggerEnvironment::class_ = {
+const JSClass DebuggerEnvironment::class_ = {
     "Environment",
     JSCLASS_HAS_PRIVATE |
         JSCLASS_HAS_RESERVED_SLOTS(DebuggerEnvironment::RESERVED_SLOTS),

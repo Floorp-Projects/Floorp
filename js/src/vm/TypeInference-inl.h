@@ -1167,7 +1167,7 @@ inline bool TypeSet::hasSingleton(unsigned i) const {
   return getSingletonNoBarrier(i);
 }
 
-inline const Class* TypeSet::getObjectClass(unsigned i) const {
+inline const JSClass* TypeSet::getObjectClass(unsigned i) const {
   if (JSObject* object = getSingleton(i)) {
     return object->getClass();
   }

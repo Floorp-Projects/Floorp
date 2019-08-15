@@ -10613,9 +10613,9 @@ class MIsObject : public MUnaryInstruction, public BoxInputsPolicy::Data {
 };
 
 class MHasClass : public MUnaryInstruction, public SingleObjectPolicy::Data {
-  const Class* class_;
+  const JSClass* class_;
 
-  MHasClass(MDefinition* object, const Class* clasp)
+  MHasClass(MDefinition* object, const JSClass* clasp)
       : MUnaryInstruction(classOpcode, object), class_(clasp) {
     MOZ_ASSERT(object->type() == MIRType::Object ||
                (object->type() == MIRType::Value &&
@@ -10629,7 +10629,7 @@ class MHasClass : public MUnaryInstruction, public SingleObjectPolicy::Data {
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  const Class* getClass() const { return class_; }
+  const JSClass* getClass() const { return class_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isHasClass()) {
@@ -10644,9 +10644,9 @@ class MHasClass : public MUnaryInstruction, public SingleObjectPolicy::Data {
 
 class MGuardToClass : public MUnaryInstruction,
                       public SingleObjectPolicy::Data {
-  const Class* class_;
+  const JSClass* class_;
 
-  MGuardToClass(MDefinition* object, const Class* clasp)
+  MGuardToClass(MDefinition* object, const JSClass* clasp)
       : MUnaryInstruction(classOpcode, object), class_(clasp) {
     MOZ_ASSERT(object->type() == MIRType::Object);
     setResultType(MIRType::Object);
@@ -10662,7 +10662,7 @@ class MGuardToClass : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
-  const Class* getClass() const { return class_; }
+  const JSClass* getClass() const { return class_; }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardToClass()) {

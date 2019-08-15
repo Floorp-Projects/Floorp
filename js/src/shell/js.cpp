@@ -521,7 +521,7 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
  * where global |this| is a WindowProxy. All requests are forwarded to the
  * underlying global and no navigation is supported.
  */
-const js::Class ShellWindowProxyClass =
+const JSClass ShellWindowProxyClass =
     PROXY_CLASS_DEF("ShellWindowProxy", JSCLASS_HAS_RESERVED_SLOTS(1));
 
 JSObject* NewShellWindowProxy(JSContext* cx, JS::HandleObject global) {
@@ -2841,8 +2841,7 @@ static bool GetScriptAndPCArgs(JSContext* cx, CallArgs& args,
   if (!args.get(0).isUndefined()) {
     HandleValue v = args[0];
     unsigned intarg = 0;
-    if (v.isObject() &&
-        JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_)) {
+    if (v.isObject() && JS_GetClass(&v.toObject()) == &JSFunction::class_) {
       script = TestingFunctionArgumentToScript(cx, v);
       if (!script) {
         return false;
@@ -7019,7 +7018,7 @@ class StreamCacheEntryObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -7083,7 +7082,7 @@ const JSClassOps StreamCacheEntryObject::classOps_ = {
     nullptr, /* mayResolve */
     StreamCacheEntryObject::finalize};
 
-const Class StreamCacheEntryObject::class_ = {
+const JSClass StreamCacheEntryObject::class_ = {
     "StreamCacheEntryObject",
     JSCLASS_HAS_RESERVED_SLOTS(StreamCacheEntryObject::RESERVED_SLOTS) |
         JSCLASS_BACKGROUND_FINALIZE,
@@ -8099,7 +8098,7 @@ static const JSClass TransplantableDOMObjectClass = {
     "TransplantableDOMObject",
     JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1)};
 
-static const Class TransplantableDOMProxyObjectClass =
+static const JSClass TransplantableDOMProxyObjectClass =
     PROXY_CLASS_DEF("TransplantableDOMProxyObject",
                     JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(1));
 
@@ -8326,8 +8325,8 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
 
   if (!source) {
     if (!createProxy) {
-      source = NewBuiltinClassInstance(
-          cx, Valueify(&TransplantableDOMObjectClass), TenuredObject);
+      source = NewBuiltinClassInstance(cx, &TransplantableDOMObjectClass,
+                                       TenuredObject);
       if (!source) {
         return false;
       }
@@ -9786,7 +9785,7 @@ static void InitDOMObject(HandleObject obj) {
 
 static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global) {
   MOZ_ASSERT(JS_IsGlobalObject(global));
-  if (GetObjectJSClass(global) != &global_class) {
+  if (GetObjectClass(global) != &global_class) {
     JS_ReportErrorASCII(cx, "Can't get FakeDOMObject prototype in sandbox");
     return nullptr;
   }
@@ -9821,10 +9820,10 @@ static bool dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
-static bool InstanceClassHasProtoAtDepth(const Class* clasp, uint32_t protoID,
+static bool InstanceClassHasProtoAtDepth(const JSClass* clasp, uint32_t protoID,
                                          uint32_t depth) {
   // Only the (fake) DOM object supports any JIT optimizations.
-  return clasp == Valueify(GetDomClass());
+  return clasp == GetDomClass();
 }
 
 static bool ShellBuildId(JS::BuildIdCharVector* buildId) {

@@ -1663,41 +1663,6 @@ function assertAboutAddonsTelemetryEvents(events, filters = {}) {
   });
 }
 
-function assertTelemetryMatches(events, { filterMethods } = {}) {
-  let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-
-  if (events.length == 0) {
-    ok(
-      !snapshot.parent || snapshot.parent.length == 0,
-      "There are no telemetry events"
-    );
-    return;
-  }
-
-  // Make sure we got some data.
-  ok(
-    snapshot.parent && snapshot.parent.length > 0,
-    "Got parent telemetry events in the snapshot"
-  );
-
-  // Only look at the related events after stripping the timestamp and category (and optionally filter
-  // out the events related to methods that we are not interested in).
-  let relatedEvents = snapshot.parent
-    .filter(([timestamp, category, method]) => {
-      return (
-        category == "addonsManager" &&
-        (filterMethods ? filterMethods.includes(method) : true)
-      );
-    })
-    .map(relatedEvent => relatedEvent.slice(2, 6));
-
-  // Events are now [method, object, value, extra] as expected.
-  Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
-}
-
 /* HTML view helpers */
 async function loadInitialView(type) {
   // Force the first page load to be the view we want.

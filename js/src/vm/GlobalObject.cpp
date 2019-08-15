@@ -45,16 +45,16 @@
 using namespace js;
 
 struct ProtoTableEntry {
-  const Class* clasp;
+  const JSClass* clasp;
   ClassInitializerOp init;
 };
 
 namespace js {
 
-extern const Class IntlClass;
-extern const Class JSONClass;
-extern const Class MathClass;
-extern const Class WebAssemblyClass;
+extern const JSClass IntlClass;
+extern const JSClass JSONClass;
+extern const JSClass MathClass;
+extern const JSClass WebAssemblyClass;
 
 #define DECLARE_PROTOTYPE_CLASS_INIT(name, init, clasp) \
   extern JSObject* init(JSContext* cx, Handle<GlobalObject*> global);
@@ -75,7 +75,7 @@ static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
 #undef INIT_FUNC
 };
 
-JS_FRIEND_API const js::Class* js::ProtoKeyToClass(JSProtoKey key) {
+JS_FRIEND_API const JSClass* js::ProtoKeyToClass(JSProtoKey key) {
   MOZ_ASSERT(key < JSProto_LIMIT);
   return protoTable[key].clasp;
 }
@@ -153,7 +153,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
 
   // Some classes can be disabled at compile time, others at run time;
   // if a feature is compile-time disabled, init and clasp are both null.
-  const Class* clasp = ProtoKeyToClass(key);
+  const JSClass* clasp = ProtoKeyToClass(key);
   if ((!init && !clasp) || skipDeselectedConstructor(cx, key)) {
     if (mode == IfClassIsDisabled::Throw) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -349,7 +349,7 @@ JSObject* GlobalObject::createObject(JSContext* cx,
   return &global->getSlot(slot).toObject();
 }
 
-const Class GlobalObject::OffThreadPlaceholderObject::class_ = {
+const JSClass GlobalObject::OffThreadPlaceholderObject::class_ = {
     "off-thread-prototype-placeholder", JSCLASS_HAS_RESERVED_SLOTS(1)};
 
 /* static */ GlobalObject::OffThreadPlaceholderObject*
@@ -516,7 +516,8 @@ JSObject* GlobalObject::getOrCreateThrowTypeError(
   return throwTypeError;
 }
 
-GlobalObject* GlobalObject::createInternal(JSContext* cx, const Class* clasp) {
+GlobalObject* GlobalObject::createInternal(JSContext* cx,
+                                           const JSClass* clasp) {
   MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
   MOZ_ASSERT(clasp->isTrace(JS_GlobalObjectTraceHook));
 
@@ -561,7 +562,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx, const Class* clasp) {
 }
 
 /* static */
-GlobalObject* GlobalObject::new_(JSContext* cx, const Class* clasp,
+GlobalObject* GlobalObject::new_(JSContext* cx, const JSClass* clasp,
                                  JSPrincipals* principals,
                                  JS::OnNewGlobalHookOption hookOption,
                                  const JS::RealmOptions& options) {
@@ -665,7 +666,7 @@ bool GlobalObject::initStandardClasses(JSContext* cx,
 static bool InitBareBuiltinCtor(JSContext* cx, Handle<GlobalObject*> global,
                                 JSProtoKey protoKey) {
   MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
-  const Class* clasp = ProtoKeyToClass(protoKey);
+  const JSClass* clasp = ProtoKeyToClass(protoKey);
   RootedObject proto(cx);
   proto = clasp->specCreatePrototypeHook()(cx, protoKey);
   if (!proto) {
@@ -771,7 +772,7 @@ JSFunction* GlobalObject::createConstructor(JSContext* cx, Native ctor,
   return fun;
 }
 
-static NativeObject* CreateBlankProto(JSContext* cx, const Class* clasp,
+static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
                                       HandleObject proto) {
   MOZ_ASSERT(clasp != &JSFunction::class_);
 
@@ -787,7 +788,7 @@ static NativeObject* CreateBlankProto(JSContext* cx, const Class* clasp,
 /* static */
 NativeObject* GlobalObject::createBlankPrototype(JSContext* cx,
                                                  Handle<GlobalObject*> global,
-                                                 const Class* clasp) {
+                                                 const JSClass* clasp) {
   RootedObject objectProto(cx, getOrCreateObjectPrototype(cx, global));
   if (!objectProto) {
     return nullptr;
@@ -798,7 +799,7 @@ NativeObject* GlobalObject::createBlankPrototype(JSContext* cx,
 
 /* static */
 NativeObject* GlobalObject::createBlankPrototypeInheriting(JSContext* cx,
-                                                           const Class* clasp,
+                                                           const JSClass* clasp,
                                                            HandleObject proto) {
   return CreateBlankProto(cx, clasp, proto);
 }

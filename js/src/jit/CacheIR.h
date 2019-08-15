@@ -967,7 +967,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(kind));
   }
 
-  FieldOffset guardAnyClass(ObjOperandId obj, const Class* clasp) {
+  FieldOffset guardAnyClass(ObjOperandId obj, const JSClass* clasp) {
     writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
     return addStubField(uintptr_t(clasp), StubField::Type::RawWord);
   }

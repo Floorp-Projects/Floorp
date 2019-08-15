@@ -682,7 +682,7 @@ bool IonCacheIRCompiler::emitGuardAnyClass() {
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
-  const Class* clasp = classStubField(reader.stubOffset());
+  const JSClass* clasp = classStubField(reader.stubOffset());
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

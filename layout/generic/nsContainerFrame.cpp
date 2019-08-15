@@ -1732,25 +1732,19 @@ uint16_t nsContainerFrame::CSSAlignmentForAbsPosChild(
 
 #ifdef ACCESSIBILITY
 void nsContainerFrame::GetSpokenMarkerText(nsAString& aText) const {
+  aText.Truncate();
   const nsStyleList* myList = StyleList();
   if (myList->GetListStyleImage()) {
     char16_t kDiscCharacter = 0x2022;
     aText.Assign(kDiscCharacter);
     aText.Append(' ');
-  } else {
-    nsIContent* markerPseudo = nsLayoutUtils::GetMarkerPseudo(GetContent());
-    if (nsIFrame* marker = markerPseudo->GetPrimaryFrame()) {
-      if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
-        bullet->GetSpokenText(aText);
-      } else {
-        ErrorResult err;
-        markerPseudo->GetTextContent(aText, err);
-        if (err.Failed()) {
-          aText.Truncate();
-        }
-      }
+    return;
+  }
+  if (nsIFrame* marker = nsLayoutUtils::GetMarkerFrame(GetContent())) {
+    if (nsBulletFrame* bullet = do_QueryFrame(marker)) {
+      bullet->GetSpokenText(aText);
     } else {
-      aText.Truncate();
+      marker->GetContent()->GetTextContent(aText, IgnoreErrors());
     }
   }
 }

@@ -205,6 +205,11 @@ add_task(async function test_graph_display() {
       DATA_TYPES.length + 2,
       "Table has the right number of columns"
     );
+    is(
+      content.document.getElementById("graph").getAttribute("aria-labelledby"),
+      "graphLegendDescription",
+      "Table has an accessible label"
+    );
 
     // today has each type
     // yesterday will have no tracking cookies
@@ -391,43 +396,69 @@ add_task(async function test_graph_display() {
       "Row has the columns in the right order"
     );
 
-    // Check that each tab has the correct aria-describedby value. This helps screen readers
-    // know what type of tracker the reported tab number is referencing.
+    // Check that each tab has the correct aria-labelledby and aria-describedby
+    // values. This helps screen readers know what type of tracker the reported
+    // tab number is referencing.
     const socialTab = content.document.getElementById("tab-social");
     is(
+      socialTab.getAttribute("aria-labelledby"),
+      "socialLabel socialTitle",
+      "aria-labelledby attribute is socialLabel socialTitle"
+    );
+    is(
       socialTab.getAttribute("aria-describedby"),
-      "socialTitle",
-      "aria-describedby attribute is socialTitle"
+      "socialContent",
+      "aria-describedby attribute is socialContent"
     );
 
     const cookieTab = content.document.getElementById("tab-cookie");
     is(
+      cookieTab.getAttribute("aria-labelledby"),
+      "cookieLabel cookieTitle",
+      "aria-labelledby attribute is cookieLabel cookieTitle"
+    );
+    is(
       cookieTab.getAttribute("aria-describedby"),
-      "cookieTitle",
-      "aria-describedby attribute is cookieTitle"
+      "cookieContent",
+      "aria-describedby attribute is cookieContent"
     );
 
     const trackerTab = content.document.getElementById("tab-tracker");
     is(
+      trackerTab.getAttribute("aria-labelledby"),
+      "trackerLabel trackerTitle",
+      "aria-labelledby attribute is trackerLabel trackerTitle"
+    );
+    is(
       trackerTab.getAttribute("aria-describedby"),
-      "trackerTitle",
-      "aria-describedby attribute is trackerTitle"
+      "trackerContent",
+      "aria-describedby attribute is trackerContent"
     );
 
     const fingerprinterTab = content.document.getElementById(
       "tab-fingerprinter"
     );
     is(
+      fingerprinterTab.getAttribute("aria-labelledby"),
+      "fingerprinterLabel fingerprinterTitle",
+      "aria-labelledby attribute is fingerprinterLabel fingerprinterTitle"
+    );
+    is(
       fingerprinterTab.getAttribute("aria-describedby"),
-      "fingerprinterTitle",
-      "aria-describedby attribute is fingerprinterTitle"
+      "fingerprinterContent",
+      "aria-describedby attribute is fingerprinterContent"
     );
 
     const cryptominerTab = content.document.getElementById("tab-cryptominer");
     is(
+      cryptominerTab.getAttribute("aria-labelledby"),
+      "cryptominerLabel cryptominerTitle",
+      "aria-labelledby attribute is cryptominerLabel cryptominerTitle"
+    );
+    is(
       cryptominerTab.getAttribute("aria-describedby"),
-      "cryptominerTitle",
-      "aria-describedby attribute is cryptominerTitle"
+      "cryptominerContent",
+      "aria-describedby attribute is cryptominerContent"
     );
   });
 

@@ -1682,7 +1682,7 @@ static const JSClassOps ScriptSourceObjectClassOps = {
     nullptr, /* construct */
     ScriptSourceObject::trace};
 
-const Class ScriptSourceObject::class_ = {
+const JSClass ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
     &ScriptSourceObjectClassOps};

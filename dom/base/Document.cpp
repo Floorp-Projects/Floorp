@@ -14399,7 +14399,8 @@ void Document::ReportUseCounters(UseCounterReportKind aKind) {
       (IsContentDocument() || IsResourceDoc())) {
     nsCOMPtr<nsIURI> uri;
     NodePrincipal()->GetURI(getter_AddRefs(uri));
-    if (!uri || uri->SchemeIs("about") || uri->SchemeIs("chrome")) {
+    if (!uri || uri->SchemeIs("about") || uri->SchemeIs("chrome") ||
+        uri->SchemeIs("resource")) {
       return;
     }
 

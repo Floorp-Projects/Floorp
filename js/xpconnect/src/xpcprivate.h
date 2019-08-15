@@ -196,7 +196,7 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 
 // If IS_WN_CLASS for the JSClass of an object is true, the object is a
 // wrappednative wrapper, holding the XPCWrappedNative in its private slot.
-static inline bool IS_WN_CLASS(const js::Class* clazz) {
+static inline bool IS_WN_CLASS(const JSClass* clazz) {
   return clazz->isWrappedNative();
 }
 
@@ -507,10 +507,10 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   bool InitializeStrings(JSContext* cx);
 
-  virtual bool DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
+  virtual bool DescribeCustomObjects(JSObject* aObject, const JSClass* aClasp,
                                      char (&aName)[72]) const override;
   virtual bool NoteCustomGCThingXPCOMChildren(
-      const js::Class* aClasp, JSObject* aObj,
+      const JSClass* aClasp, JSObject* aObj,
       nsCycleCollectionTraversalCallback& aCb) const override;
 
   /**
@@ -793,12 +793,12 @@ class MOZ_STACK_CLASS XPCCallContext final {
 // These are the various JSClasses and callbacks whose use that required
 // visibility from more than one .cpp file.
 
-extern const js::Class XPC_WN_NoHelper_JSClass;
-extern const js::Class XPC_WN_Proto_JSClass;
-extern const js::Class XPC_WN_Tearoff_JSClass;
+extern const JSClass XPC_WN_NoHelper_JSClass;
+extern const JSClass XPC_WN_Proto_JSClass;
+extern const JSClass XPC_WN_Tearoff_JSClass;
 #define XPC_WN_TEAROFF_RESERVED_SLOTS 1
 #define XPC_WN_TEAROFF_FLAT_OBJECT_SLOT 0
-extern const js::Class XPC_WN_NoHelper_Proto_JSClass;
+extern const JSClass XPC_WN_NoHelper_Proto_JSClass;
 
 extern bool XPC_WN_CallMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 

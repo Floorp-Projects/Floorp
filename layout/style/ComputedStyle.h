@@ -254,7 +254,7 @@ class ComputedStyle {
    *               been listed in nsCSSVisitedDependentPropList.h.
    */
   template <typename T, typename S>
-  nscolor GetVisitedDependentColor(T S::*aField);
+  nscolor GetVisitedDependentColor(T S::*aField) const;
 
   /**
    * aColors should be a two element array of nscolor in which the first

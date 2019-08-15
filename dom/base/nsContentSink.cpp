@@ -800,8 +800,8 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
 
       if (preload) {
         nsAttrValue asAttr;
-        Link::ParseAsValue(aAs, asAttr);
-        policyType = Link::AsValueToContentPolicy(asAttr);
+        HTMLLinkElement::ParseAsValue(aAs, asAttr);
+        policyType = HTMLLinkElement::AsValueToContentPolicy(asAttr);
 
         if (policyType == nsIContentPolicy::TYPE_INVALID) {
           // Ignore preload with a wrong or empty as attribute.

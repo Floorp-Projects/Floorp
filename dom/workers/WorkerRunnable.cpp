@@ -269,15 +269,8 @@ WorkerRunnable::Run() {
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
   RefPtr<WorkerPrivate> kungFuDeathGrip;
   if (targetIsWorkerThread) {
-    JSContext* cx = GetCurrentWorkerThreadJSContext();
-    if (NS_WARN_IF(!cx)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JSObject* global = JS::CurrentGlobalOrNull(cx);
-    if (global) {
-      globalObject = xpc::NativeGlobal(global);
-    } else {
+    globalObject = mWorkerPrivate->GetCurrentEventLoopGlobal();
+    if (!globalObject) {
       globalObject = DefaultGlobalObject();
     }
 

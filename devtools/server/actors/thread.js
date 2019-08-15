@@ -929,7 +929,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Continue if:
     // 1. the location is not a valid breakpoint position
     // 2. the source is not blackboxed
-    // 3. has not moved
+    // 3. we have not moved since the last pause
     if (
       !meta.isBreakpoint ||
       this.sources.isFrameBlackBoxed(frame) ||
@@ -942,6 +942,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // 1. the frame has changed
     // 2. the location is a step position.
     return frame !== startFrame || meta.isStepStart;
+  },
+
+  atBreakpointLocation(frame) {
+    const location = this.sources.getFrameLocation(frame);
+    return !!this.breakpointActorMap.get(location);
   },
 
   createCompletionGrip: function(packet, completion) {
@@ -1760,16 +1765,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    */
   onDebuggerStatement: function(frame) {
     const location = this.sources.getFrameLocation(frame);
-    const url = location.sourceActor.url;
 
     // Don't pause if
-    // 1. the debugger is in the same position
+    // 1. we have not moved since the last pause
     // 2. breakpoints are disabled
     // 3. the source is blackboxed
+    // 4. there is a breakpoint at the same location
     if (
       !this.hasMoved(frame, "debuggerStatement") ||
       this.skipBreakpoints ||
-      this.sources.isBlackBoxed(url)
+      this.sources.isBlackBoxed(location.sourceUrl) ||
+      this.atBreakpointLocation(frame)
     ) {
       return undefined;
     }

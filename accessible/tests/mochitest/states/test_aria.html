@@ -216,11 +216,12 @@
       testStates("aria_link_link", STATE_LINKED);
       testStates("aria_link_anchor", STATE_SELECTABLE);
 
-      // some weak landmarks
-      testStates("aria_main_link", STATE_LINKED);
-      testStates("aria_navigation_link", STATE_LINKED);
-      testStates("aria_main_anchor", STATE_SELECTABLE);
-      testStates("aria_navigation_anchor", STATE_SELECTABLE);
+      // some landmarks that break accessibility for these native elements
+      // Note that these are illegal uses by web authors as per WAI-ARIA in HTML
+      testStates("aria_main_link", 0, 0, STATE_LINKED);
+      testStates("aria_navigation_link", 0, 0, STATE_LINKED);
+      testStates("aria_main_anchor", 0, 0, STATE_SELECTABLE);
+      testStates("aria_navigation_anchor", 0, 0, STATE_SELECTABLE);
 
       // aria-orientation
       testStates("aria_combobox", 0, 0, 0, EXT_STATE_HORIZONTAL | EXT_STATE_VERTICAL);

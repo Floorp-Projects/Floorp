@@ -3360,14 +3360,14 @@ static const ClassSpec DateObjectClassSpec = {
     nullptr,
     FinishDateClassInit};
 
-const Class DateObject::class_ = {js_Date_str,
-                                  JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
-                                      JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
-                                  JS_NULL_CLASS_OPS, &DateObjectClassSpec};
+const JSClass DateObject::class_ = {js_Date_str,
+                                    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
+                                        JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
+                                    JS_NULL_CLASS_OPS, &DateObjectClassSpec};
 
-const Class DateObject::protoClass_ = {js_Object_str,
-                                       JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
-                                       JS_NULL_CLASS_OPS, &DateObjectClassSpec};
+const JSClass DateObject::protoClass_ = {
+    js_Object_str, JSCLASS_HAS_CACHED_PROTO(JSProto_Date), JS_NULL_CLASS_OPS,
+    &DateObjectClassSpec};
 
 JSObject* js::NewDateObjectMsec(JSContext* cx, ClippedTime t,
                                 HandleObject proto /* = nullptr */) {

@@ -9134,7 +9134,7 @@
     "description": "Security-related UI events (addons, form submission, TLS certs, Safe Browsing, updates and geolocation). See /security/manager/ssl/nsISecurityUITelemetry.idl for the specific values."
   },
   "STORAGE_ACCESS_API_UI": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "ehsan+telemetry@mozilla.com"],
     "bug_numbers": [1513309],

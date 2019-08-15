@@ -25,7 +25,7 @@ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
 }
 
 /* static */ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::dynamicSlotsCount(
-    uint32_t nfixed, uint32_t span, const Class* clasp) {
+    uint32_t nfixed, uint32_t span, const JSClass* clasp) {
   if (span <= nfixed) {
     return 0;
   }
@@ -60,7 +60,7 @@ inline void JSObject::finalize(JSFreeOp* fop) {
   }
 #endif
 
-  const js::Class* clasp = getClass();
+  const JSClass* clasp = getClass();
   js::NativeObject* nobj = nullptr;
   if (clasp->isNative()) {
     nobj = &as<js::NativeObject>();
@@ -178,7 +178,7 @@ inline bool JSObject::isUnqualifiedVarObj() const {
 
 namespace js {
 
-inline bool ClassCanHaveFixedData(const Class* clasp) {
+inline bool ClassCanHaveFixedData(const JSClass* clasp) {
   // Normally, the number of fixed slots given an object is the maximum
   // permitted for its size class. For array buffers and non-shared typed
   // arrays we only use enough to cover the class reserved slots, so that
@@ -377,7 +377,7 @@ inline bool IsInternalFunctionObject(JSObject& funobj) {
 }
 
 inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
-                                      const Class* clasp) {
+                                      const JSClass* clasp) {
   if (newKind == NurseryAllocatedProxy) {
     MOZ_ASSERT(clasp->isProxy());
     MOZ_ASSERT(clasp->hasFinalize());
@@ -407,14 +407,14 @@ inline gc::InitialHeap GetInitialHeap(NewObjectKind newKind,
  * Make an object with the specified prototype. If parent is null, it will
  * default to the prototype's global if the prototype is non-null.
  */
-JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const Class* clasp,
+JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                         Handle<TaggedProto> proto,
                                         gc::AllocKind allocKind,
                                         NewObjectKind newKind,
                                         uint32_t initialShapeFlags = 0);
 
 inline JSObject* NewObjectWithGivenTaggedProto(
-    JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
     NewObjectKind newKind = GenericObject, uint32_t initialShapeFlags = 0) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
   return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, newKind,
@@ -452,14 +452,14 @@ inline T* NewObjectWithNullTaggedProto(JSContext* cx,
 }
 
 inline JSObject* NewObjectWithGivenProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
   return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
                                        allocKind, newKind);
 }
 
 inline JSObject* NewObjectWithGivenProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     NewObjectKind newKind = GenericObject) {
   return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
                                        newKind);
@@ -482,19 +482,19 @@ inline T* NewObjectWithGivenProto(JSContext* cx, HandleObject proto,
 
 // Make an object with the prototype set according to the cached prototype or
 // Object.prototype.
-JSObject* NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp,
+JSObject* NewObjectWithClassProtoCommon(JSContext* cx, const JSClass* clasp,
                                         HandleObject proto,
                                         gc::AllocKind allocKind,
                                         NewObjectKind newKind);
 
 inline JSObject* NewObjectWithClassProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
   return NewObjectWithClassProtoCommon(cx, clasp, proto, allocKind, newKind);
 }
 
 inline JSObject* NewObjectWithClassProto(
-    JSContext* cx, const Class* clasp, HandleObject proto,
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
     NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
   return NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind);
@@ -521,13 +521,14 @@ inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto,
  * according to the context's active global.
  */
 inline JSObject* NewBuiltinClassInstance(
-    JSContext* cx, const Class* clasp, gc::AllocKind allocKind,
+    JSContext* cx, const JSClass* clasp, gc::AllocKind allocKind,
     NewObjectKind newKind = GenericObject) {
   return NewObjectWithClassProto(cx, clasp, nullptr, allocKind, newKind);
 }
 
 inline JSObject* NewBuiltinClassInstance(
-    JSContext* cx, const Class* clasp, NewObjectKind newKind = GenericObject) {
+    JSContext* cx, const JSClass* clasp,
+    NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
   return NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
 }
@@ -601,7 +602,7 @@ inline bool GetClassOfValue(JSContext* cx, HandleValue v, ESClass* cls) {
 }
 
 extern NativeObject* InitClass(JSContext* cx, HandleObject obj,
-                               HandleObject parent_proto, const Class* clasp,
+                               HandleObject parent_proto, const JSClass* clasp,
                                JSNative constructor, unsigned nargs,
                                const JSPropertySpec* ps,
                                const JSFunctionSpec* fs,

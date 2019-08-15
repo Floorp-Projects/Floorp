@@ -1654,7 +1654,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
   MOZ_CRASH("Unexpected ProxyStubType");
 }
 
-static TypedThingLayout GetTypedThingLayout(const Class* clasp) {
+static TypedThingLayout GetTypedThingLayout(const JSClass* clasp) {
   if (IsTypedArrayClass(clasp)) {
     return Layout_TypedArray;
   }
@@ -3676,7 +3676,7 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
       return false;
     }
 
-    const Class* clasp = obj->getClass();
+    const JSClass* clasp = obj->getClass();
     if (clasp != &ArrayObject::class_ &&
         (clasp->getAddProperty() || clasp->getResolve() ||
          clasp->getOpsLookupProperty() || clasp->getOpsSetProperty())) {
@@ -5444,8 +5444,8 @@ void CallIRGenerator::trackAttached(const char* name) {
 
 // Class which holds a shape pointer for use when caches might reference data in
 // other zones.
-static const Class shapeContainerClass = {"ShapeContainer",
-                                          JSCLASS_HAS_RESERVED_SLOTS(1)};
+static const JSClass shapeContainerClass = {"ShapeContainer",
+                                            JSCLASS_HAS_RESERVED_SLOTS(1)};
 
 static const size_t SHAPE_CONTAINER_SLOT = 0;
 
