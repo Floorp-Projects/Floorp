@@ -2383,24 +2383,15 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
 bool jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
                                       jsbytecode* pc) {
-  // A TI OOM will disable TI and Ion.
-  if (!jit::IsIonEnabled()) {
-    return true;
-  }
+  MOZ_ASSERT(IsIonEnabled());
 
   RootedScript script(cx, frame->script());
   bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
 
   MOZ_ASSERT(!isLoopEntry || LoopEntryCanIonOsr(pc));
 
-  if (!script->canIonCompile()) {
-    // TODO: ASSERT that ion-compilation-disabled checker stub doesn't exist.
-    // TODO: Clear all optimized stubs.
-    // TODO: Add a ion-compilation-disabled checker IC stub
-    script->resetWarmUpCounterToDelayIonCompilation();
-    return true;
-  }
-
+  // The Baseline JIT code checks for Ion disabled or compiling off-thread.
+  MOZ_ASSERT(script->canIonCompile());
   MOZ_ASSERT(!script->isIonCompilingOffThread());
 
   // If Ion script exists, but PC is not at a loop entry, then Ion will be

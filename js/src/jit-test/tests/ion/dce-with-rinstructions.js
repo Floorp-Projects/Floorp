@@ -3,6 +3,9 @@ setJitCompilerOption("ion.warmup.trigger", 20);
 setJitCompilerOption("ion.full.warmup.trigger", 20);
 var i;
 
+// Prevent GC from cancelling/discarding Ion compilations.
+gczeal(0);
+
 var config = getBuildConfiguration();
 var max = 200;
 
