@@ -802,7 +802,7 @@ function getSourceWithContentInner(
       contentValue = null;
     }
     result = {
-      source,
+      ...source,
       content: contentValue,
     };
     contentLookup.set(source, result);

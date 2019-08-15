@@ -11,7 +11,7 @@ import type { Symbols } from "../reducers/ast";
 
 export function findFunctionText(
   line: number,
-  { source, content }: SourceWithContent,
+  source: SourceWithContent,
   symbols: ?Symbols
 ): ?string {
   const func = findClosestFunction(symbols, {
@@ -23,9 +23,9 @@ export function findFunctionText(
   if (
     source.isWasm ||
     !func ||
-    !content ||
-    !isFulfilled(content) ||
-    content.value.type !== "text"
+    !source.content ||
+    !isFulfilled(source.content) ||
+    source.content.value.type !== "text"
   ) {
     return null;
   }
@@ -33,7 +33,7 @@ export function findFunctionText(
   const {
     location: { start, end },
   } = func;
-  const lines = content.value.value.split("\n");
+  const lines = source.content.value.value.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);
   const lastLine = lines[end.line - 1].slice(0, end.column);
   const middle = lines.slice(start.line, end.line - 1);

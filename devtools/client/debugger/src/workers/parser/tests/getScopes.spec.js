@@ -12,7 +12,7 @@ import cases from "jest-in-case";
 cases(
   "Parser.getScopes",
   ({ name, file, type, locations }) => {
-    const { source } = populateOriginalSource(file, type);
+    const source = populateOriginalSource(file, type);
 
     locations.forEach(([line, column]) => {
       const scopes = getScopes({
