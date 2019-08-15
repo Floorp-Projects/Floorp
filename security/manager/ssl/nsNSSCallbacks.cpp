@@ -1044,22 +1044,17 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
 
   // We don't own these pointers.
   const SECItemArray* stapledOCSPResponses = SSL_PeerStapledOCSPResponses(fd);
-  Maybe<nsTArray<uint8_t>> stapledOCSPResponse;
+  const SECItem* stapledOCSPResponse = nullptr;
   // we currently only support single stapled responses
   if (stapledOCSPResponses && stapledOCSPResponses->len == 1) {
-    stapledOCSPResponse.emplace();
-    stapledOCSPResponse->SetCapacity(stapledOCSPResponses->items[0].len);
-    stapledOCSPResponse->AppendElements(stapledOCSPResponses->items[0].data,
-        stapledOCSPResponses->items[0].len);
+    stapledOCSPResponse = &stapledOCSPResponses->items[0];
   }
-
-  Maybe<nsTArray<uint8_t>> sctsFromTLSExtension;
-  const SECItem* sctsFromTLSExtensionSECItem = SSL_PeerSignedCertTimestamps(fd);
-  if (sctsFromTLSExtensionSECItem) {
-    sctsFromTLSExtension.emplace();
-    sctsFromTLSExtension->SetCapacity(sctsFromTLSExtensionSECItem->len);
-    sctsFromTLSExtension->AppendElements(sctsFromTLSExtensionSECItem->data,
-        sctsFromTLSExtensionSECItem->len);
+  const SECItem* sctsFromTLSExtension = SSL_PeerSignedCertTimestamps(fd);
+  if (sctsFromTLSExtension && sctsFromTLSExtension->len == 0) {
+    // SSL_PeerSignedCertTimestamps returns null on error and empty item
+    // when no extension was returned by the server. We always use null when
+    // no extension was received (for whatever reason), ignoring errors.
+    sctsFromTLSExtension = nullptr;
   }
 
   int flags = mozilla::psm::CertVerifier::FLAG_LOCAL_ONLY;
@@ -1073,9 +1068,9 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   UniqueCERTCertList builtChain;
   const bool saveIntermediates = false;
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
-      cert, stapledOCSPResponse, sctsFromTLSExtension,
-      mozilla::pkix::Now(), infoObject, infoObject->GetHostName(), builtChain,
-      saveIntermediates, flags, infoObject->GetOriginAttributes(), &evOidPolicy,
+      cert, stapledOCSPResponse, sctsFromTLSExtension, mozilla::pkix::Now(),
+      infoObject, infoObject->GetHostName(), builtChain, saveIntermediates,
+      flags, infoObject->GetOriginAttributes(), &evOidPolicy,
       nullptr,  // OCSP stapling telemetry
       nullptr,  // key size telemetry
       nullptr,  // SHA-1 telemetry
