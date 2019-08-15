@@ -135,7 +135,6 @@ let LEGACY_ACTORS = {
         AboutLoginsCopyLoginDetail: { wantUntrusted: true },
         AboutLoginsCreateLogin: { wantUntrusted: true },
         AboutLoginsDeleteLogin: { wantUntrusted: true },
-        AboutLoginsHideFooter: { wantUntrusted: true },
         AboutLoginsImport: { wantUntrusted: true },
         AboutLoginsInit: { wantUntrusted: true },
         AboutLoginsOpenFAQ: { wantUntrusted: true },
@@ -151,7 +150,6 @@ let LEGACY_ACTORS = {
       },
       messages: [
         "AboutLogins:AllLogins",
-        "AboutLogins:LocalizeBadges",
         "AboutLogins:LoginAdded",
         "AboutLogins:LoginModified",
         "AboutLogins:LoginRemoved",
@@ -638,7 +636,6 @@ const listeners = {
   mm: {
     "AboutLogins:CreateLogin": ["AboutLoginsParent"],
     "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
-    "AboutLogins:HideFooter": ["AboutLoginsParent"],
     "AboutLogins:Import": ["AboutLoginsParent"],
     "AboutLogins:MasterPasswordRequest": ["AboutLoginsParent"],
     "AboutLogins:OpenFAQ": ["AboutLoginsParent"],
