@@ -58,7 +58,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
       let originalEmail = prefs.getCharPref("email");
 
       let tab = gBrowser.getTabForBrowser(browser);
-      await BrowserTestUtils.crashBrowser(browser);
+      await BrowserTestUtils.crashFrame(browser);
       let doc = browser.contentDocument;
 
       // Since about:tabcrashed will run in the parent process, we can safely
