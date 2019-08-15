@@ -130,5 +130,3 @@ confirm-discard-changes-dialog-confirm-button = Discard
 
 breach-alert-text = Passwords were leaked or stolen from this website since you last updated your login details. Change your password to protect your account.
 breach-alert-link = Learn more about this breach.
-breach-alert-dismiss = 
-    .title = Close this alert

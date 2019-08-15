@@ -90,15 +90,16 @@ export default class LoginList extends HTMLElement {
     // Show, hide, and update state of the list items per the applied search filter.
     for (let guid of this._loginGuidsSortedOrder) {
       let { listItem } = this._logins[guid];
-
       if (guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
-      listItem.classList.toggle(
-        "breached",
+      if (
         this._breachesByLoginGUID &&
-          this._breachesByLoginGUID.has(listItem.dataset.guid)
-      );
+        this._breachesByLoginGUID.has(listItem.dataset.guid)
+      ) {
+        listItem.classList.add("breached");
+      }
+
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
 
