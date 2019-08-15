@@ -1628,6 +1628,12 @@
   value: false
   mirror: always
 
+# Enable mapped array buffer by default.
+- name: dom.mapped_arraybuffer.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # This pref is used to enable/disable the `document.autoplayPolicy` API which
 # returns a enum string which presents current autoplay policy and can change
 # overtime based on user session activity.
