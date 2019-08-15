@@ -10,7 +10,6 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.build_lints:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -54,15 +53,16 @@ jobs:
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
             tooltool-downloads: public
             keep-artifacts: false
-        toolchains:
-            - linux64-clang
-            - linux64-clang-tidy
-            - linux64-infer
-            - linux64-rust
-            - linux64-sccache
-            - linux64-cbindgen
-            - linux64-nasm
-            - linux64-node
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-clang-tidy
+                - linux64-infer
+                - linux64-rust
+                - linux64-sccache
+                - linux64-cbindgen
+                - linux64-nasm
+                - linux64-node
 
     win64-st-autotest/debug:
         description: "Win64 Debug Static Analysis Autotest"
@@ -83,11 +83,12 @@ jobs:
                 - builds/taskcluster_sub_win64/debug.py
             extra-config:
                 mozconfig_variant: debug
-        toolchains:
-            - win64-clang-cl
-            - win64-rust
-            - win64-sccache
-            - win64-cbindgen
-            - win64-clang-tidy
-            - win64-nasm
-            - win64-node
+        fetches:
+            toolchain:
+                - win64-clang-cl
+                - win64-rust
+                - win64-sccache
+                - win64-cbindgen
+                - win64-clang-tidy
+                - win64-nasm
+                - win64-node

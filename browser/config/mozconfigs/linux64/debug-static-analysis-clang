@@ -9,8 +9,8 @@ ac_add_options --enable-debug
 . $topsrcdir/build/mozconfig.stylo
 
 # Use Clang as specified in manifest
-export CC="$topsrcdir/clang/bin/clang"
-export CXX="$topsrcdir/clang/bin/clang++"
+export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
 
 # Add the static checker
 ac_add_options --enable-clang-plugin

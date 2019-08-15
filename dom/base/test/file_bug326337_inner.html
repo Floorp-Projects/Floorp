@@ -21,7 +21,9 @@ function runTest() {
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
       check(xhr.responseXML.documentElement.getAttribute("root"));
-      SpecialPowers.wrap(parent).location.hash = "#done";
+      SpecialPowers.spawn(parent, [], () => {
+        content.location.hash = "#done";
+      });
     }
   }
   xhr.send(null);
@@ -29,7 +31,9 @@ function runTest() {
 
 function check(attr) {
   if (attr != "yes") {
-    SpeciaPowers.wrap(parent).location.hash = "#fail";
+    SpecialPowers.spawn(parent, [], () => {
+      content.location.hash = "#fail";
+    });
     throw 1;
   }
 }

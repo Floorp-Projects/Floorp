@@ -20,14 +20,17 @@ config = {
     'operating_system': 'darwin',
     'partial_env': {
         'CXXFLAGS': ('-target x86_64-apple-darwin '
-                     '-B %(abs_work_dir)s/src/cctools/bin '
+                     '-B {MOZ_FETCHES_DIR}/cctools/bin '
                      '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
-                     '-mmacosx-version-min=10.11'),
+                     '-mmacosx-version-min=10.11'
+                     .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
         'LDFLAGS': ('-target x86_64-apple-darwin '
-                    '-B %(abs_work_dir)s/src/cctools/bin '
+                    '-B {MOZ_FETCHES_DIR}/cctools/bin '
                     '-isysroot %(abs_work_dir)s/src/MacOSX10.11.sdk '
-                    '-mmacosx-version-min=10.11'),
-        'PATH': '%(abs_work_dir)s/src/clang/bin/:%(PATH)s',
+                    '-mmacosx-version-min=10.11'
+                     .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
+        'PATH': ('{MOZ_FETCHES_DIR}/clang/bin/:%(PATH)s'
+                 .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
     },
     "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
     "tooltool_url": 'http://taskcluster/tooltool.mozilla-releng.net/',

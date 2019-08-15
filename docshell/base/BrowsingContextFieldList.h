@@ -19,6 +19,8 @@ MOZ_BC_FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)
 // stored as the opener ID.
 MOZ_BC_FIELD(OpenerId, uint64_t)
 
+MOZ_BC_FIELD(OnePermittedSandboxedNavigatorId, uint64_t)
+
 // Toplevel browsing contexts only. This field controls whether the browsing
 // context is currently considered to be activated by a gesture.
 MOZ_BC_FIELD(IsActivatedByUserGesture, bool)
