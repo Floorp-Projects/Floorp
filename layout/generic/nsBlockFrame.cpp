@@ -5624,7 +5624,8 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
 nsContainerFrame* nsBlockFrame::GetRubyContentPseudoFrame() {
   auto* firstChild = PrincipalChildList().FirstChild();
   if (firstChild && firstChild->IsRubyFrame() &&
-      firstChild->Style()->GetPseudoType() == mozilla::PseudoStyleType::blockRubyContent) {
+      firstChild->Style()->GetPseudoType() ==
+          mozilla::PseudoStyleType::blockRubyContent) {
     return static_cast<nsContainerFrame*>(firstChild);
   }
   return nullptr;
