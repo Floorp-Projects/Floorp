@@ -138,8 +138,9 @@ add_task(async function testMainViewVisible() {
     await closeIdentityPopup();
 
     let uri = Services.io.newURI(AUTOPLAY_PAGE);
-    let state = SitePermissions.get(uri, AUTOPLAY_PERM).state;
-    Assert.equal(state, SitePermissions.ALLOW);
+    let state = PermissionTestUtils.getPermissionObject(uri, AUTOPLAY_PERM)
+      .capability;
+    Assert.equal(state, Services.perms.ALLOW_ACTION);
   });
 
   Services.perms.removeAll();
@@ -148,27 +149,50 @@ add_task(async function testMainViewVisible() {
 add_task(async function testGloballyBlockedOnNewWindow() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  let uri = Services.io.newURI(AUTOPLAY_PAGE);
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    AUTOPLAY_PAGE
+  );
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    AUTOPLAY_PAGE
+  );
   await blockedIconShown();
 
-  Assert.deepEqual(SitePermissions.get(uri, AUTOPLAY_PERM, tab.linkedBrowser), {
-    state: SitePermissions.BLOCK,
-    scope: SitePermissions.SCOPE_PERSISTENT,
-  });
+  Assert.deepEqual(
+    SitePermissions.getForPrincipal(
+      principal,
+      AUTOPLAY_PERM,
+      tab.linkedBrowser
+    ),
+    {
+      state: SitePermissions.BLOCK,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    }
+  );
 
   let promiseWin = BrowserTestUtils.waitForNewWindow();
   gBrowser.replaceTabWithWindow(tab);
   let win = await promiseWin;
   tab = win.gBrowser.selectedTab;
 
-  Assert.deepEqual(SitePermissions.get(uri, AUTOPLAY_PERM, tab.linkedBrowser), {
-    state: SitePermissions.BLOCK,
-    scope: SitePermissions.SCOPE_PERSISTENT,
-  });
+  Assert.deepEqual(
+    SitePermissions.getForPrincipal(
+      principal,
+      AUTOPLAY_PERM,
+      tab.linkedBrowser
+    ),
+    {
+      state: SitePermissions.BLOCK,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    }
+  );
 
-  SitePermissions.remove(uri, AUTOPLAY_PERM, tab.linkedBrowser);
+  SitePermissions.removeFromPrincipal(
+    principal,
+    AUTOPLAY_PERM,
+    tab.linkedBrowser
+  );
   await BrowserTestUtils.closeWindow(win);
 });
 

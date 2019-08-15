@@ -434,7 +434,7 @@ var TESTS = [
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-    SitePermissions.remove(NetUtil.newURI(target), "install");
+    PermissionTestUtils.remove(target, "install");
   },
 
   async function test_permaBlockedInstallNoPrompt() {
@@ -445,11 +445,7 @@ var TESTS = [
     );
     let target = TESTROOT + "installtrigger.html?" + triggers;
 
-    SitePermissions.set(
-      NetUtil.newURI(target),
-      "install",
-      SitePermissions.BLOCK
-    );
+    PermissionTestUtils.add(target, "install", Services.perms.DENY_ACTION);
     await BrowserTestUtils.openNewForegroundTab(gBrowser, target);
 
     let panelOpened;
@@ -469,7 +465,7 @@ var TESTS = [
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-    SitePermissions.remove(NetUtil.newURI(target), "install");
+    PermissionTestUtils.remove(target, "install");
   },
 
   async function test_whitelistedInstall() {

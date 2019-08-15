@@ -9,6 +9,9 @@
 ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
 ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
 ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 
 /**
  * Tests the PermissionPromptForRequest prototype to ensure that a prompt
@@ -197,7 +200,7 @@ add_task(async function test_with_permission_key() {
       let mockRequest = makeMockPermissionRequest(browser);
       let principal = mockRequest.principal;
       registerCleanupFunction(function() {
-        SitePermissions.remove(principal.URI, kTestPermissionKey);
+        PermissionTestUtils.remove(principal.URI, kTestPermissionKey);
       });
 
       let TestPrompt = {
@@ -228,8 +231,8 @@ add_task(async function test_with_permission_key() {
       );
       Assert.ok(notification, "Should have gotten the notification");
 
-      let curPerm = SitePermissions.get(
-        principal.URI,
+      let curPerm = SitePermissions.getForPrincipal(
+        principal,
         kTestPermissionKey,
         browser
       );
@@ -249,7 +252,11 @@ add_task(async function test_with_permission_key() {
         "There should only be 1 secondary action"
       );
       await clickSecondaryAction();
-      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
+      curPerm = SitePermissions.getForPrincipal(
+        principal,
+        kTestPermissionKey,
+        browser
+      );
       Assert.deepEqual(
         curPerm,
         {
@@ -259,13 +266,13 @@ add_task(async function test_with_permission_key() {
         "Should have denied the action temporarily"
       );
       // Try getting the permission without passing the browser object (should fail).
-      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-      Assert.deepEqual(
+      curPerm = PermissionTestUtils.getPermissionObject(
+        principal.URI,
+        kTestPermissionKey
+      );
+      Assert.equal(
         curPerm,
-        {
-          state: SitePermissions.UNKNOWN,
-          scope: SitePermissions.SCOPE_PERSISTENT,
-        },
+        null,
         "Should have made no permanent permission entry"
       );
       Assert.ok(denied, "The secondaryAction callback should have fired");
@@ -280,7 +287,11 @@ add_task(async function test_with_permission_key() {
       );
 
       // Clear the permission and pretend we never denied
-      SitePermissions.remove(principal.URI, kTestPermissionKey, browser);
+      SitePermissions.removeFromPrincipal(
+        principal,
+        kTestPermissionKey,
+        browser
+      );
       denied = false;
       mockRequest._cancelled = false;
 
@@ -299,15 +310,16 @@ add_task(async function test_with_permission_key() {
         "There should only be 1 secondary action"
       );
       await clickSecondaryAction();
-      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-      Assert.deepEqual(
-        curPerm,
-        {
-          state: SitePermissions.BLOCK,
-          scope: SitePermissions.SCOPE_PERSISTENT,
-        },
+      curPerm = PermissionTestUtils.getPermissionObject(
+        principal.URI,
+        kTestPermissionKey
+      );
+      Assert.equal(
+        curPerm.capability,
+        Services.perms.DENY_ACTION,
         "Should have denied the action"
       );
+      Assert.equal(curPerm.expireTime, 0, "Deny should be permanent");
       Assert.ok(denied, "The secondaryAction callback should have fired");
       Assert.ok(!allowed, "The mainAction callback should not have fired");
       Assert.ok(
@@ -320,7 +332,7 @@ add_task(async function test_with_permission_key() {
       );
 
       // Clear the permission and pretend we never denied
-      SitePermissions.remove(principal.URI, kTestPermissionKey);
+      PermissionTestUtils.remove(principal.URI, kTestPermissionKey);
       denied = false;
       mockRequest._cancelled = false;
 
@@ -334,15 +346,16 @@ add_task(async function test_with_permission_key() {
 
       // Test allowing the permission request.
       await clickMainAction();
-      curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
-      Assert.deepEqual(
-        curPerm,
-        {
-          state: SitePermissions.ALLOW,
-          scope: SitePermissions.SCOPE_PERSISTENT,
-        },
+      curPerm = PermissionTestUtils.getPermissionObject(
+        principal.URI,
+        kTestPermissionKey
+      );
+      Assert.equal(
+        curPerm.capability,
+        Services.perms.ALLOW_ACTION,
         "Should have allowed the action"
       );
+      Assert.equal(curPerm.expireTime, 0, "Allow should be permanent");
       Assert.ok(!denied, "The secondaryAction callback should not have fired");
       Assert.ok(allowed, "The mainAction callback should have fired");
       Assert.ok(
