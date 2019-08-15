@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/third-party/app-store/   (content/third-party/app-store/*.png)
+  content/browser/aboutlogins/third-party/play-store/  (content/third-party/play-store/*.png)
   content/browser/aboutlogins/components/confirmation-dialog.css      (content/components/confirmation-dialog.css)
   content/browser/aboutlogins/components/confirmation-dialog.js       (content/components/confirmation-dialog.js)
   content/browser/aboutlogins/components/fxaccounts-button.css (content/components/fxaccounts-button.css)
@@ -11,6 +13,8 @@ browser.jar:
   content/browser/aboutlogins/components/login-filter.js       (content/components/login-filter.js)
   content/browser/aboutlogins/components/login-intro.css       (content/components/login-intro.css)
   content/browser/aboutlogins/components/login-intro.js        (content/components/login-intro.js)
+  content/browser/aboutlogins/components/login-footer.css      (content/components/login-footer.css)
+  content/browser/aboutlogins/components/login-footer.js       (content/components/login-footer.js)
   content/browser/aboutlogins/components/login-item.css        (content/components/login-item.css)
   content/browser/aboutlogins/components/login-item.js         (content/components/login-item.js)
   content/browser/aboutlogins/components/login-list.css        (content/components/login-list.css)
@@ -20,7 +24,6 @@ browser.jar:
   content/browser/aboutlogins/components/menu-button.js        (content/components/menu-button.js)
   content/browser/aboutlogins/icons/delete.svg        (content/icons/delete.svg)
   content/browser/aboutlogins/icons/edit.svg          (content/icons/edit.svg)
-  content/browser/aboutlogins/icons/favicon.svg       (content/icons/favicon.svg)
   content/browser/aboutlogins/icons/hide-password.svg (content/icons/hide-password.svg)
   content/browser/aboutlogins/icons/show-password.svg (content/icons/show-password.svg)
   content/browser/aboutlogins/icons/intro-illustration.svg (content/icons/intro-illustration.svg)
