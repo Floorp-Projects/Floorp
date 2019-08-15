@@ -259,7 +259,7 @@ const resourceAsSourceBase = memoizeResourceShallow(
 const resourceAsSourceWithContent = memoizeResourceShallow(
   ({ content, ...source }: SourceResource): SourceWithContent => ({
     ...source,
-    content: content && content.state !== "pending" ? content : null,
+    content: asyncValue.asSettled(content),
   })
 );
 
@@ -788,12 +788,7 @@ export function getSourceContent(
   id: SourceId
 ): SettledValue<SourceContent> | null {
   const { content } = getResource(state.sources.sources, id);
-
-  if (!content || content.state === "pending") {
-    return null;
-  }
-
-  return content;
+  return asyncValue.asSettled(content);
 }
 
 export function getSelectedSourceId(state: OuterState) {

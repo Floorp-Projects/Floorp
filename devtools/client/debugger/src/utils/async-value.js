@@ -28,6 +28,12 @@ export function rejected(value: mixed): RejectedValue {
   return { state: "rejected", value };
 }
 
+export function asSettled<T>(
+  value: AsyncValue<T> | null
+): SettledValue<T> | null {
+  return value && value.state !== "pending" ? value : null;
+}
+
 export function isPending(value: AsyncValue<mixed>): boolean %checks {
   return value.state === "pending";
 }

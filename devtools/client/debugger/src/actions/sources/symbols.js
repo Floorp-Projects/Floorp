@@ -4,7 +4,7 @@
 
 // @flow
 
-import { hasSymbols, getSymbols } from "../../selectors";
+import { getSymbols } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 import { updateTab } from "../tabs";
@@ -14,6 +14,7 @@ import {
   memoizeableAction,
   type MemoizedAction,
 } from "../../utils/memoizableAction";
+import { fulfilled } from "../../utils/async-value";
 
 import type { Source, Context } from "../../types";
 import type { Symbols } from "../../reducers/types";
@@ -41,10 +42,18 @@ type Args = { cx: Context, source: Source };
 export const setSymbols: MemoizedAction<Args, ?Symbols> = memoizeableAction(
   "setSymbols",
   {
-    hasValue: ({ source }, { getState }) =>
-      source.isWasm || hasSymbols(getState(), source),
-    getValue: ({ source }, { getState }) =>
-      source.isWasm ? null : getSymbols(getState(), source),
+    getValue: ({ source }, { getState }) => {
+      if (source.isWasm) {
+        return fulfilled(null);
+      }
+
+      const symbols = getSymbols(getState(), source);
+      if (!symbols || symbols.loading) {
+        return null;
+      }
+
+      return fulfilled(symbols);
+    },
     createKey: ({ source }) => source.id,
     action: ({ cx, source }, thunkArgs) => doSetSymbols(cx, source, thunkArgs),
   }
