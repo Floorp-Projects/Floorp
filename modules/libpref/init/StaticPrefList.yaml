@@ -2066,6 +2066,18 @@
 #endif
   mirror: always
 
+# LocalStorage data limit as determined by summing up the lengths of all string
+# keys and values. This is consistent with the legacy implementation and other
+# browser engines. This value should really only ever change in unit testing
+# where being able to lower it makes it easier for us to test certain edge
+# cases. Measured in KiBs.
+- name: dom.storage.default_quota
+  type: RelaxedAtomicUint32
+  # Only allow relatively small amounts of data since performance of the
+  # synchronous IO is very bad. We are enforcing simple per-origin quota only.
+  value: 5 * 1024
+  mirror: always
+
 # Is support for Storage test APIs enabled?
 - name: dom.storage.testing
   type: bool
