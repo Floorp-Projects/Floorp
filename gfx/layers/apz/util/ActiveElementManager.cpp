@@ -7,8 +7,8 @@
 #include "ActiveElementManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/dom/Element.h"
@@ -20,17 +20,8 @@
 namespace mozilla {
 namespace layers {
 
-static int32_t sActivationDelayMs = 100;
-static bool sActivationDelayMsSet = false;
-
 ActiveElementManager::ActiveElementManager()
     : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {
-  if (!sActivationDelayMsSet) {
-    Preferences::AddIntVarCache(&sActivationDelayMs,
-                                "ui.touch_activation.delay_ms",
-                                sActivationDelayMs);
-    sActivationDelayMsSet = true;
-  }
 }
 
 ActiveElementManager::~ActiveElementManager() {}
@@ -88,7 +79,8 @@ void ActiveElementManager::TriggerElementActivation() {
             "layers::ActiveElementManager::SetActiveTask", this,
             &ActiveElementManager::SetActiveTask, mTarget);
     mSetActiveTask = task;
-    MessageLoop::current()->PostDelayedTask(task.forget(), sActivationDelayMs);
+    MessageLoop::current()->PostDelayedTask(
+        task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
     AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask);
   }
 }
