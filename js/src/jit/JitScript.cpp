@@ -199,14 +199,12 @@ void JSScript::releaseJitScriptOnFinalize(JSFreeOp* fop) {
   MOZ_ASSERT(hasJitScript());
 
   if (hasIonScript()) {
-    IonScript* ion = ionScript();
-    jitScript()->clearIonScript(fop, this);
+    IonScript* ion = jitScript()->clearIonScript(fop, this);
     jit::IonScript::Destroy(fop, ion);
   }
 
   if (hasBaselineScript()) {
-    BaselineScript* baseline = baselineScript();
-    jitScript()->clearBaselineScript(fop, this);
+    BaselineScript* baseline = jitScript()->clearBaselineScript(fop, this);
     jit::BaselineScript::Destroy(fop, baseline);
   }
 
