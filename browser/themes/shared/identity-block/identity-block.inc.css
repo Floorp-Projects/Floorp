@@ -12,6 +12,8 @@
      Individual icons can override this. */
   fill: currentColor;
   fill-opacity: .6;
+  /* This is needed in order to position the permission indicator. */
+  position: relative;
 }
 
 /* The tracking protection icon will be hidden if it is a chrome page. There
@@ -173,6 +175,21 @@
 #urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #identity-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #identity-icon {
   list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.grantedPermissions::before {
+  background: url(chrome://browser/skin/badge-blue.svg);
+  content: "";
+  position: absolute;
+  bottom: 15px;
+  left: 14px;
+  height: 14px;
+  width: 14px;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.grantedPermissions:-moz-locale-dir(rtl)::before {
+  left: unset;
+  right: 16px;
 }
 
 /* SHARING ICON */
