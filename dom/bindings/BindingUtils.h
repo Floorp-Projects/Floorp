@@ -83,27 +83,15 @@ inline bool IsDOMClass(const JSClass* clasp) {
   return clasp->flags & JSCLASS_IS_DOMJSCLASS;
 }
 
-inline bool IsDOMClass(const js::Class* clasp) {
-  return IsDOMClass(Jsvalify(clasp));
-}
-
 // Return true if the JSClass is used for non-proxy DOM objects.
-inline bool IsNonProxyDOMClass(const js::Class* clasp) {
-  return IsDOMClass(clasp) && !clasp->isProxy();
-}
-
 inline bool IsNonProxyDOMClass(const JSClass* clasp) {
-  return IsNonProxyDOMClass(js::Valueify(clasp));
+  return IsDOMClass(clasp) && !clasp->isProxy();
 }
 
 // Returns true if the JSClass is used for DOM interface and interface
 // prototype objects.
 inline bool IsDOMIfaceAndProtoClass(const JSClass* clasp) {
   return clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS;
-}
-
-inline bool IsDOMIfaceAndProtoClass(const js::Class* clasp) {
-  return IsDOMIfaceAndProtoClass(Jsvalify(clasp));
 }
 
 static_assert(DOM_OBJECT_SLOT == 0,

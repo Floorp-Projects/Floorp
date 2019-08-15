@@ -26,6 +26,7 @@ typedef uint8_t jsbytecode;
 
 class JSAtom;
 struct JSContext;
+struct JSClass;
 class JSFunction;
 class JSFreeOp;
 class JSObject;
@@ -35,6 +36,7 @@ class JSString;
 
 namespace js {
 class TempAllocPolicy;
+using Class = JSClass;
 };  // namespace js
 
 namespace JS {

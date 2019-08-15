@@ -1058,22 +1058,22 @@ JSObject* InitTypedObjectModuleObject(JSContext* cx,
 
 template <>
 inline bool JSObject::is<js::SimpleTypeDescr>() const {
-  return IsSimpleTypeDescrClass(getClass());
+  return js::IsSimpleTypeDescrClass(getClass());
 }
 
 template <>
 inline bool JSObject::is<js::ComplexTypeDescr>() const {
-  return IsComplexTypeDescrClass(getClass());
+  return js::IsComplexTypeDescrClass(getClass());
 }
 
 template <>
 inline bool JSObject::is<js::TypeDescr>() const {
-  return IsTypeDescrClass(getClass());
+  return js::IsTypeDescrClass(getClass());
 }
 
 template <>
 inline bool JSObject::is<js::TypedObject>() const {
-  return IsTypedObjectClass(getClass());
+  return js::IsTypedObjectClass(getClass());
 }
 
 template <>

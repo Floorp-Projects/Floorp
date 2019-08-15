@@ -452,10 +452,6 @@ struct DOMJSClass {
     return reinterpret_cast<const DOMJSClass*>(base);
   }
 
-  static const DOMJSClass* FromJSClass(const js::Class* base) {
-    return FromJSClass(Jsvalify(base));
-  }
-
   const JSClass* ToJSClass() const { return Jsvalify(&mBase); }
 };
 
@@ -490,9 +486,6 @@ struct DOMIfaceAndProtoJSClass {
   static const DOMIfaceAndProtoJSClass* FromJSClass(const JSClass* base) {
     MOZ_ASSERT(base->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS);
     return reinterpret_cast<const DOMIfaceAndProtoJSClass*>(base);
-  }
-  static const DOMIfaceAndProtoJSClass* FromJSClass(const js::Class* base) {
-    return FromJSClass(Jsvalify(base));
   }
 
   const JSClass* ToJSClass() const { return Jsvalify(&mBase); }

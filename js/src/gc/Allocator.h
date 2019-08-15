@@ -15,8 +15,6 @@ class JSFatInlineString;
 
 namespace js {
 
-struct Class;
-
 // Allocate a new GC thing that's not a JSObject or a string.
 //
 // After a successful allocation the caller must fully initialize the thing

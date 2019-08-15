@@ -29,10 +29,6 @@ class nsIException;
 class nsIRunnable;
 class nsWrapperCache;
 
-namespace js {
-struct Class;
-}  // namespace js
-
 namespace mozilla {
 
 class JSGCThingParticipant : public nsCycleCollectionParticipant {
