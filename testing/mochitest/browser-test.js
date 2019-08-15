@@ -477,6 +477,9 @@ function Tester(aTests, structuredLogger, aCallback) {
   );
   this.SimpleTest = simpleTestScope.SimpleTest;
 
+  window.SpecialPowers.SimpleTest = this.SimpleTest;
+  window.SpecialPowers.setAsDefaultAssertHandler();
+
   var extensionUtilsScope = {
     registerCleanupFunction: fn => {
       this.currentTest.scope.registerCleanupFunction(fn);
