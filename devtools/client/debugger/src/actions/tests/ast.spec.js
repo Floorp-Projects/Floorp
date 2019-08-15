@@ -17,7 +17,7 @@ import {
 import readFixture from "./helpers/readFixture";
 const { getSymbols, isSymbolsLoading, getFramework } = selectors;
 
-const threadFront = {
+const mockCommandClient = {
   sourceContents: async ({ source }) => ({
     source: sourceTexts[source],
     contentType: "text/javascript",
@@ -26,8 +26,8 @@ const threadFront = {
   evaluate: async expression => ({ result: evaluationResult[expression] }),
   evaluateExpressions: async expressions =>
     expressions.map(expression => ({ result: evaluationResult[expression] })),
-  getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => [],
+  getSourceActorBreakpointPositions: async () => ({}),
+  getSourceActorBreakableLines: async () => [],
 };
 
 const sourceMaps = {
@@ -56,7 +56,7 @@ describe("ast", () => {
   describe("setSymbols", () => {
     describe("when the source is loaded", () => {
       it("should be able to set symbols", async () => {
-        const store = createStore(threadFront);
+        const store = createStore(mockCommandClient);
         const { dispatch, getState, cx } = store;
         const base = await dispatch(
           actions.newGeneratedSource(makeSource("base.js"))
@@ -74,7 +74,7 @@ describe("ast", () => {
 
     describe("when the source is not loaded", () => {
       it("should return null", async () => {
-        const { getState, dispatch } = createStore(threadFront);
+        const { getState, dispatch } = createStore(mockCommandClient);
         const base = await dispatch(
           actions.newGeneratedSource(makeSource("base.js"))
         );
@@ -86,7 +86,7 @@ describe("ast", () => {
 
     describe("when there is no source", () => {
       it("should return null", async () => {
-        const { getState } = createStore(threadFront);
+        const { getState } = createStore(mockCommandClient);
         const baseSymbols = getSymbols(getState());
         expect(baseSymbols).toEqual(null);
       });
@@ -94,7 +94,7 @@ describe("ast", () => {
 
     describe("frameworks", () => {
       it("should detect react components", async () => {
-        const store = createStore(threadFront, {}, sourceMaps);
+        const store = createStore(mockCommandClient, {}, sourceMaps);
         const { cx, dispatch, getState } = store;
 
         const genSource = await dispatch(
@@ -113,7 +113,7 @@ describe("ast", () => {
       });
 
       it("should not give false positive on non react components", async () => {
-        const store = createStore(threadFront);
+        const store = createStore(mockCommandClient);
         const { cx, dispatch, getState } = store;
         const base = await dispatch(
           actions.newGeneratedSource(makeSource("base.js"))
