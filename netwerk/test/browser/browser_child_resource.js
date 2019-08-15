@@ -86,7 +86,7 @@ var restart = async function() {
     return browser;
   }
 
-  await BrowserTestUtils.crashBrowser(browser);
+  await BrowserTestUtils.crashFrame(browser);
 
   browser.reload();
 
