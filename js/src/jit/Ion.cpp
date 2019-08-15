@@ -6,6 +6,7 @@
 
 #include "jit/Ion.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
@@ -67,6 +68,8 @@
 #if defined(ANDROID)
 #  include <sys/system_properties.h>
 #endif
+
+using mozilla::DebugOnly;
 
 using namespace js;
 using namespace js::jit;
@@ -2666,8 +2669,13 @@ void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
 }
 
 static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
+                                            IonScript* ionScript,
                                             bool resetUses) {
-  script->jitScript()->clearIonScript(cx->defaultFreeOp(), script);
+  // Null out the JitScript's IonScript pointer. The caller is responsible for
+  // destroying the IonScript using the invalidation count mechanism.
+  DebugOnly<IonScript*> clearedIonScript =
+      script->jitScript()->clearIonScript(cx->defaultFreeOp(), script);
+  MOZ_ASSERT(clearedIonScript == ionScript);
 
   // Wait for the scripts to get warm again before doing another
   // compile, unless we are recompiling *because* a script got hot
@@ -2727,10 +2735,10 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
 
     if (ionScript->invalidationCount() == 1) {
       // decrementInvalidationCount will destroy the IonScript so null out
-      // script->ion now. We don't want to do this unconditionally because
-      // maybeIonScriptToInvalidate depends on script->ion (we would leak
-      // the IonScript if |invalid| contains duplicates).
-      ClearIonScriptAfterInvalidation(cx, info.script(), resetUses);
+      // jitScript->ionScript_ now. We don't want to do this unconditionally
+      // because maybeIonScriptToInvalidate depends on script->ionScript() (we
+      // would leak the IonScript if |invalid| contains duplicates).
+      ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
 
     ionScript->decrementInvalidationCount(fop);
@@ -2741,10 +2749,11 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
   // multiple times in the above loop.
   MOZ_ASSERT(!numInvalidations);
 
-  // Finally, null out script->ion for IonScripts that are still on the stack.
+  // Finally, null out jitScript->ionScript_ for IonScripts that are still on
+  // the stack.
   for (const RecompileInfo& info : invalid) {
-    if (info.maybeIonScriptToInvalidate(types)) {
-      ClearIonScriptAfterInvalidation(cx, info.script(), resetUses);
+    if (IonScript* ionScript = info.maybeIonScriptToInvalidate(types)) {
+      ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
   }
 }
@@ -2811,9 +2820,8 @@ void jit::FinishInvalidation(JSFreeOp* fop, JSScript* script) {
     return;
   }
 
-  // In all cases, null out script->ion to avoid re-entry.
-  IonScript* ion = script->ionScript();
-  script->jitScript()->clearIonScript(fop, script);
+  // In all cases, null out jitScript->ionScript_ to avoid re-entry.
+  IonScript* ion = script->jitScript()->clearIonScript(fop, script);
 
   // If this script has Ion code on the stack, invalidated() will return
   // true. In this case we have to wait until destroying it.
