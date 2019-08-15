@@ -4339,8 +4339,6 @@ niepce.museum
 norfolk.museum
 north.museum
 nrw.museum
-nuernberg.museum
-nuremberg.museum
 nyc.museum
 nyny.museum
 oceanographic.museum
@@ -7064,7 +7062,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-06-14T10:00:50-04:00
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-08-08T16:16:58Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7429,9 +7427,6 @@ bms
 // bmw : 2014-01-09 Bayerische Motoren Werke Aktiengesellschaft
 bmw
 
-// bnl : 2014-07-24 Banca Nazionale del Lavoro
-bnl
-
 // bnpparibas : 2014-05-29 BNP Paribas
 bnpparibas
 
@@ -7744,7 +7739,7 @@ community
 // company : 2013-11-07 Binky Moon, LLC
 company
 
-// compare : 2015-10-08 iSelect Ltd
+// compare : 2015-10-08 Registry Services, LLC
 compare
 
 // computer : 2013-10-24 Binky Moon, LLC
@@ -8089,7 +8084,7 @@ family
 // fan : 2014-03-06 Dog Beach, LLC
 fan
 
-// fans : 2014-11-07 Fans TLD Limited
+// fans : 2014-11-07 ZDNS International Limited
 fans
 
 // farm : 2013-11-07 Binky Moon, LLC
@@ -8485,9 +8480,6 @@ homesense
 // honda : 2014-12-18 Honda Motor Co., Ltd.
 honda
 
-// honeywell : 2015-07-23 Honeywell GTLD LLC
-honeywell
-
 // horse : 2013-11-21 Minds + Machines Group Limited
 horse
 
@@ -8604,9 +8596,6 @@ ipiranga
 
 // irish : 2014-08-07 Binky Moon, LLC
 irish
-
-// iselect : 2015-02-11 iSelect Ltd
-iselect
 
 // ismaili : 2015-08-06 Fondation Aga Khan (Aga Khan Foundation)
 ismaili
@@ -9709,7 +9698,7 @@ security
 // seek : 2014-12-04 Seek Limited
 seek
 
-// select : 2015-10-08 iSelect Ltd
+// select : 2015-10-08 Registry Services, LLC
 select
 
 // sener : 2014-10-24 Sener Ingeniería y Sistemas, S.A.
@@ -9867,9 +9856,6 @@ staples
 
 // star : 2015-01-08 Star India Private Limited
 star
-
-// starhub : 2015-02-05 StarHub Ltd
-starhub
 
 // statebank : 2015-03-12 STATE BANK OF INDIA
 statebank
