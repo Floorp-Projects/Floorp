@@ -63,7 +63,6 @@ class JitScript;
 
 #define ION_DISABLED_SCRIPT ((js::jit::IonScript*)0x1)
 #define ION_COMPILING_SCRIPT ((js::jit::IonScript*)0x2)
-#define ION_PENDING_SCRIPT ((js::jit::IonScript*)0x3)
 
 #define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
 
@@ -2285,9 +2284,7 @@ class JSScript : public js::BaseScript {
 
   /*
    * Information attached by Ion. Nexto a valid IonScript this could be
-   * ION_DISABLED_SCRIPT, ION_COMPILING_SCRIPT or ION_PENDING_SCRIPT.
-   * The later is a ion compilation that is ready, but hasn't been linked
-   * yet.
+   * ION_DISABLED_SCRIPT or ION_COMPILING_SCRIPT.
    */
   js::jit::IonScript* ion = nullptr;
 
@@ -2611,8 +2608,7 @@ class JSScript : public js::BaseScript {
  public:
   // Methods for getting/setting/clearing an IonScript*.
   bool hasIonScript() const {
-    bool res = ion && ion != ION_DISABLED_SCRIPT &&
-               ion != ION_COMPILING_SCRIPT && ion != ION_PENDING_SCRIPT;
+    bool res = ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     MOZ_ASSERT_IF(res, baseline);
     return res;
   }
@@ -2643,18 +2639,6 @@ class JSScript : public js::BaseScript {
   void clearIsIonCompilingOffThread(JSRuntime* rt) {
     MOZ_ASSERT(isIonCompilingOffThread());
     setIonScriptImpl(rt, nullptr);
-  }
-
-  // Methods for lazy linking after off-thread compilation. In this case the
-  // BaselineScript has a pending builder that is linked by the lazy link stub.
-  void setHasPendingIonScript(JSRuntime* rt) {
-    MOZ_ASSERT(isIonCompilingOffThread());
-    setIonScriptImpl(rt, ION_PENDING_SCRIPT);
-  }
-  void clearHasPendingIonScript(JSRuntime* rt) {
-    if (ion == ION_PENDING_SCRIPT) {
-      setIonScriptImpl(rt, nullptr);
-    }
   }
 
  private:

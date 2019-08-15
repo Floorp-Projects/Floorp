@@ -380,19 +380,22 @@ struct BaselineScript final {
   void setPendingIonBuilder(JSRuntime* rt, JSScript* script,
                             js::jit::IonBuilder* builder) {
     MOZ_ASSERT(script->baselineScript() == this);
-    MOZ_ASSERT(!builder || !hasPendingIonBuilder());
+    MOZ_ASSERT(builder);
+    MOZ_ASSERT(!hasPendingIonBuilder());
 
     if (script->isIonCompilingOffThread()) {
-      script->setHasPendingIonScript(rt);
+      script->clearIsIonCompilingOffThread(rt);
     }
 
     pendingBuilder_ = builder;
-
     script->updateJitCodeRaw(rt);
   }
   void removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
-    setPendingIonBuilder(rt, script, nullptr);
-    script->clearHasPendingIonScript(rt);
+    MOZ_ASSERT(script->baselineScript() == this);
+    MOZ_ASSERT(hasPendingIonBuilder());
+
+    pendingBuilder_ = nullptr;
+    script->updateJitCodeRaw(rt);
   }
 
   size_t allocBytes() const { return allocBytes_; }
