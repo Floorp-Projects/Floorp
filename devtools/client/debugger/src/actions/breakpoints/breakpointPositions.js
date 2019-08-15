@@ -178,8 +178,6 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
     source: source,
     positions,
   });
-
-  return positions;
 }
 
 function generatedSourceActorKey(state, sourceId) {
