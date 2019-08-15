@@ -73,7 +73,7 @@ add_task(async function test_content_url_annotation() {
       await promise;
 
       // Crash the tab
-      let annotations = await BrowserTestUtils.crashFrame(browser);
+      let annotations = await BrowserTestUtils.crashBrowser(browser);
 
       ok("URL" in annotations, "annotated a URL");
       is(

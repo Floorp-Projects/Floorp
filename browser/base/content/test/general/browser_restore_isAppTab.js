@@ -48,7 +48,7 @@ var restart = async function(browser) {
   // Make sure the main process has all of the current tab state before crashing
   await TabStateFlusher.flush(browser);
 
-  await BrowserTestUtils.crashFrame(browser);
+  await BrowserTestUtils.crashBrowser(browser);
 
   let tab = gBrowser.getTabForBrowser(browser);
   SessionStore.reviveCrashedTab(tab);

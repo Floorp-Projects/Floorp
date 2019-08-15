@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { BrowserTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BrowserTestUtils.jsm"
-);
-
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
@@ -32,19 +28,22 @@ let { Management } = ChromeUtils.import(
 );
 
 // Crashes a <browser>'s remote process.
-// Based on BrowserTestUtils.crashFrame.
-function crashFrame(browser) {
+// Based on BrowserTestUtils.crashBrowser.
+function crashBrowser(browser) {
   if (!browser.isRemoteBrowser) {
     // The browser should be remote, or the test runner would be killed.
     throw new Error("<browser> must be remote");
   }
 
-  // Trigger crash by sending a message to BrowserTestUtils actor.
-  BrowserTestUtils.sendAsyncMessage(
-    browser.browsingContext,
-    "BrowserTestUtils:CrashFrame",
-    {}
-  );
+  let frameScript = () => {
+    const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+    privateNoteIntentionalCrash(); /* eslint-disable-line no-undef */
+    let zero = new ctypes.intptr_t(8);
+    let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+    dump("Intentionally crashing extension process...\n");
+    badptr.contents; /* eslint-disable-line no-unused-expressions */
+  };
+  browser.messageManager.loadFrameScript(`data:,(${frameScript})();`, false);
 }
 
 // Verifies that a delayed background page is not loaded when an extension is
@@ -164,7 +163,7 @@ add_task(async function test_unload_extension_during_background_page_startup() {
 
         // And force the extension process to crash.
         if (browser.isRemote) {
-          crashFrame(browser);
+          crashBrowser(browser);
         } else {
           // If extensions are not running in out-of-process mode, then the
           // non-remote process should not be killed (or the test runner dies).

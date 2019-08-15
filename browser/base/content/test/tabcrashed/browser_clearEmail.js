@@ -37,7 +37,7 @@ add_task(async function test_clear_email() {
       prefs.setBoolPref("emailMe", true);
 
       let tab = gBrowser.getTabForBrowser(browser);
-      await BrowserTestUtils.crashFrame(
+      await BrowserTestUtils.crashBrowser(
         browser,
         /* shouldShowTabCrashPage */ true,
         /* shouldClearMinidumps */ false
