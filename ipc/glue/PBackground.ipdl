@@ -27,6 +27,7 @@ include protocol PIPCBlobInputStream;
 include protocol PMediaTransport;
 include protocol PPendingIPCBlob;
 include protocol PRemoteWorker;
+include protocol PRemoteWorkerController;
 include protocol PRemoteWorkerService;
 include protocol PSharedWorker;
 include protocol PTemporaryIPCBlob;
@@ -94,6 +95,7 @@ sync protocol PBackground
   manages PMediaTransport;
   manages PPendingIPCBlob;
   manages PRemoteWorker;
+  manages PRemoteWorkerController;
   manages PRemoteWorkerService;
   manages PSharedWorker;
   manages PTemporaryIPCBlob;
@@ -215,6 +217,8 @@ parent:
   async StorageActivity(PrincipalInfo principalInfo);
 
   async PServiceWorker(IPCServiceWorkerDescriptor aDescriptor);
+
+  async PRemoteWorkerController(RemoteWorkerData aData);
 
   async PRemoteWorkerService();
 
