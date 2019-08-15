@@ -2409,7 +2409,7 @@ impl BatchBuilder {
                     local_rect: backdrop_picture.snapped_local_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     transform_id,
-                    snap_offsets,
+                    snap_offsets: SnapOffsets::empty(),
                     specific_prim_address: prim_cache_address,
                 };
 
