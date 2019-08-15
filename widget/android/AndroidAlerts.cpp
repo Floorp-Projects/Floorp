@@ -13,8 +13,6 @@ namespace widget {
 NS_IMPL_ISUPPORTS(AndroidAlerts, nsIAlertsService)
 
 StaticAutoPtr<AndroidAlerts::ListenerMap> AndroidAlerts::sListenerMap;
-nsDataHashtable<nsStringHashKey, java::WebNotification::GlobalRef>
-    AndroidAlerts::mNotificationsMap;
 
 NS_IMETHODIMP
 AndroidAlerts::ShowAlertNotification(
@@ -63,18 +61,6 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
   rv = aAlert->GetName(name);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
-  nsAutoString lang;
-  rv = aAlert->GetLang(lang);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  nsAutoString dir;
-  rv = aAlert->GetDir(dir);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  bool requireInteraction;
-  rv = aAlert->GetRequireInteraction(&requireInteraction);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
   nsCOMPtr<nsIPrincipal> principal;
   rv = aAlert->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -90,41 +76,19 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
     sListenerMap->Put(name, aAlertListener);
   }
 
-  if (jni::IsFennec()) {
-    java::GeckoAppShell::ShowNotification(
-        name, cookie, title, text, host, imageUrl,
-        !aPersistentData.IsEmpty() ? jni::StringParam(aPersistentData)
-                                   : jni::StringParam(nullptr));
-  } else {
-    java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-    java::WebNotificationDelegate::LocalRef delegate =
-        runtime->GetWebNotificationDelegate();
-    java::WebNotification::LocalRef notification = notification->New(
-        title, name, cookie, text, imageUrl, dir, lang, requireInteraction);
-    runtime->NotifyOnShow(notification);
-    mNotificationsMap.Put(name, notification);
-  }
-
+  java::GeckoAppShell::ShowNotification(
+      name, cookie, title, text, host, imageUrl,
+      !aPersistentData.IsEmpty() ? jni::StringParam(aPersistentData)
+                                 : jni::StringParam(nullptr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AndroidAlerts::CloseAlert(const nsAString& aAlertName,
                           nsIPrincipal* aPrincipal) {
-  if (jni::IsFennec()) {
-    // We delete the entry in sListenerMap later, when CloseNotification calls
-    // NotifyListener.
-    java::GeckoAppShell::CloseNotification(aAlertName);
-  } else {
-    java::WebNotification::LocalRef notification =
-        mNotificationsMap.Get(aAlertName);
-    java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-    java::WebNotificationDelegate::LocalRef delegate =
-        runtime->GetWebNotificationDelegate();
-    runtime->NotifyOnClose(notification);
-    mNotificationsMap.Remove(aAlertName);
-  }
-
+  // We delete the entry in sListenerMap later, when CloseNotification calls
+  // NotifyListener.
+  java::GeckoAppShell::CloseNotification(aAlertName);
   return NS_OK;
 }
 
@@ -143,7 +107,6 @@ void AndroidAlerts::NotifyListener(const nsAString& aName, const char* aTopic,
 
   if (NS_LITERAL_CSTRING("alertfinished").Equals(aTopic)) {
     sListenerMap->Remove(aName);
-    mNotificationsMap.Remove(aName);
   }
 }
 
