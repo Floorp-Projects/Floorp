@@ -15,7 +15,11 @@ function* testSteps() {
 
   info("Setting permissions");
 
-  Services.perms.add(uri, "indexedDB", Ci.nsIPermissionManager.ALLOW_ACTION);
+  Services.perms.addFromPrincipal(
+    principal,
+    "indexedDB",
+    Ci.nsIPermissionManager.ALLOW_ACTION
+  );
 
   // The idle-daily notification is disabled in xpchsell tests, so we don't
   // need to do anything special to disable it for this test.
