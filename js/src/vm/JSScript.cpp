@@ -1511,16 +1511,40 @@ size_t ScriptCounts::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
          ionCounts_->sizeOfIncludingThis(mallocSizeOf);
 }
 
-void JSScript::setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript) {
-  setIonScript(rt->defaultFreeOp(), ionScript);
+void JSScript::setBaselineScriptImpl(JSRuntime* rt,
+                                     js::jit::BaselineScript* baselineScript) {
+  setBaselineScriptImpl(rt->defaultFreeOp(), baselineScript);
 }
 
-void JSScript::setIonScript(JSFreeOp* fop, js::jit::IonScript* ionScript) {
+void JSScript::setBaselineScriptImpl(JSFreeOp* fop,
+                                     js::jit::BaselineScript* baselineScript) {
+  if (hasBaselineScript()) {
+    js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
+    fop->removeCellMemory(this, baseline->allocBytes(),
+                          js::MemoryUse::BaselineScript);
+    baseline = nullptr;
+  }
+  MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
+
+  baseline = baselineScript;
+  if (hasBaselineScript()) {
+    AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
+  }
+  resetWarmUpResetCounter();
+  updateJitCodeRaw(fop->runtime());
+}
+
+void JSScript::setIonScriptImpl(JSRuntime* rt, js::jit::IonScript* ionScript) {
+  setIonScriptImpl(rt->defaultFreeOp(), ionScript);
+}
+
+void JSScript::setIonScriptImpl(JSFreeOp* fop, js::jit::IonScript* ionScript) {
   MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT,
                 !baselineScript()->hasPendingIonBuilder());
   if (hasIonScript()) {
     js::jit::IonScript::writeBarrierPre(zone(), ion);
-    clearIonScript(fop);
+    fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
+    ion = nullptr;
   }
   ion = ionScript;
   MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());

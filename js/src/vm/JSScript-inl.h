@@ -160,40 +160,6 @@ inline js::Shape* JSScript::initialEnvironmentShape() const {
 
 inline JSPrincipals* JSScript::principals() { return realm()->principals(); }
 
-inline void JSScript::setBaselineScript(
-    JSRuntime* rt, js::jit::BaselineScript* baselineScript) {
-  setBaselineScript(rt->defaultFreeOp(), baselineScript);
-}
-
-inline void JSScript::setBaselineScript(
-    JSFreeOp* fop, js::jit::BaselineScript* baselineScript) {
-  if (hasBaselineScript()) {
-    js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
-    clearBaselineScript(fop);
-  }
-  MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
-
-  baseline = baselineScript;
-  if (hasBaselineScript()) {
-    AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
-  }
-  resetWarmUpResetCounter();
-  updateJitCodeRaw(fop->runtime());
-}
-
-inline void JSScript::clearBaselineScript(JSFreeOp* fop) {
-  MOZ_ASSERT(hasBaselineScript());
-  fop->removeCellMemory(this, baseline->allocBytes(),
-                        js::MemoryUse::BaselineScript);
-  baseline = nullptr;
-}
-
-inline void JSScript::clearIonScript(JSFreeOp* fop) {
-  MOZ_ASSERT(hasIonScript());
-  fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
-  ion = nullptr;
-}
-
 inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
   if (analyzedArgsUsage()) {
     return true;
