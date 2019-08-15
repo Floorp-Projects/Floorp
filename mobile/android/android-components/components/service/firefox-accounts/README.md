@@ -63,7 +63,7 @@ accountManager.register(accountObserver, owner = this, autoPause = true)
 accountManager.registerForSyncEvents(syncObserver, owner = this, autoPause = true)
 
 // Observe incoming device events (e.g. SEND_TAB events from other devices).
-// Note that since device is configured with a SEND_TAB capability, device constellation will be
+// Note that since the device is configured with a SEND_TAB capability, device constellation will be
 // automatically updated during any account initialization flow (restore, login, sign-up, recovery).
 // It is up to the application to keep it up-to-date beyond that.
 // See `account.deviceConstellation().refreshDeviceStateAsync()`.

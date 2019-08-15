@@ -537,14 +537,9 @@ class FxaAccountManagerTest {
         verify(constellation).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
-        // Assert that periodic account refresh never started.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
-        // Assert that we cancel any existing periodic jobs.
-        verify(constellation).stopPeriodicRefresh()
-
         // Assert that we refresh device state.
-        verify(constellation).refreshDeviceStateAsync()
+        verify(constellation).refreshDevicesAsync()
+        verify(constellation).pollForEventsAsync()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -578,10 +573,6 @@ class FxaAccountManagerTest {
         // Assert that ensureCapabilities fired, but not the device initialization (since we're restoring).
         verify(constellation).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
-
-        // Assert that periodic account refresh never started.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -692,17 +683,10 @@ class FxaAccountManagerTest {
 
         assertEquals("auth://url", manager.beginAuthenticationAsync().await())
 
-        // Assert that periodic account refresh didn't start after kicking off auth.
-        verify(constellation, never()).startPeriodicRefresh()
-
         manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
 
         // Assert that persistence callback is set.
         assertNotNull(account.persistenceCallback)
-
-        // Assert that periodic account refresh is never started after finishing auth.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
 
         // Assert that initDevice fired, but not ensureCapabilities (since we're initing a new account).
         verify(constellation).initDeviceAsync(any(), any(), eq(setOf(DeviceCapability.SEND_TAB)))
@@ -899,7 +883,8 @@ class FxaAccountManagerTest {
         assertEquals(profile, manager.accountProfile())
 
         // Assert that we don't refresh device state for non-SEND_TAB enabled devices.
-        verify(constellation, never()).refreshDeviceStateAsync()
+        verify(constellation, never()).refreshDevicesAsync()
+        verify(constellation, never()).pollForEventsAsync()
 
         // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
@@ -1588,7 +1573,8 @@ class FxaAccountManagerTest {
 
     private fun mockDeviceConstellation(): DeviceConstellation {
         val c: DeviceConstellation = mock()
-        `when`(c.refreshDeviceStateAsync()).thenReturn(CompletableDeferred(true))
+        `when`(c.refreshDevicesAsync()).thenReturn(CompletableDeferred(true))
+        `when`(c.pollForEventsAsync()).thenReturn(CompletableDeferred(true))
         return c
     }
 }

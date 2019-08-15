@@ -111,7 +111,7 @@ class MainActivity :
         }
 
         findViewById<View>(R.id.refreshDevice).setOnClickListener {
-            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDeviceStateAsync()?.await() }
+            launch { accountManager.authenticatedAccount()?.deviceConstellation()?.refreshDevicesAsync()?.await() }
         }
 
         findViewById<View>(R.id.sendTab).setOnClickListener {

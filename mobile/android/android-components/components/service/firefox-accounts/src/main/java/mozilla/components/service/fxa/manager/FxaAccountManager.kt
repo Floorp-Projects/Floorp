@@ -586,12 +586,6 @@ open class FxaAccountManager(
                             logger.warn("Failed to ensure device capabilities.")
                         }
 
-                        // We used to perform a periodic device event polling, but for now we do not.
-                        // This cancels any periodic jobs device may still have active.
-                        // See https://github.com/mozilla-mobile/android-components/issues/3433
-                        logger.info("Stopping periodic refresh of the device constellation")
-                        account.deviceConstellation().stopPeriodicRefresh()
-
                         postAuthenticated(false)
 
                         Event.FetchProfile
@@ -763,7 +757,8 @@ open class FxaAccountManager(
         // If device supports SEND_TAB...
         if (deviceConfig.capabilities.contains(DeviceCapability.SEND_TAB)) {
             // ... update constellation state, and poll for any pending device events.
-            account.deviceConstellation().refreshDeviceStateAsync().await()
+            account.deviceConstellation().refreshDevicesAsync().await()
+            account.deviceConstellation().pollForEventsAsync().await()
         }
     }
 

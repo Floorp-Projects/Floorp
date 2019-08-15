@@ -140,7 +140,8 @@ class WorkManagerSyncDispatcher(
         val delayMs = if (startup) {
             // Startup delay is there to avoid SQLITE_BUSY crashes, since we currently do a poor job
             // of managing database connections, and we expect there to be database writes at the start.
-            // FIXME https://github.com/mozilla-mobile/android-components/issues/1369
+            // We've done bunch of work to make this better (see https://github.com/mozilla-mobile/android-components/issues/1369),
+            // but it's not clear yet this delay is completely safe to remove.
             SYNC_STARTUP_DELAY_MS
         } else {
             0L

@@ -90,7 +90,6 @@ class FirefoxAccount internal constructor(
     ) : this(InternalFxAcct(config, persistCallback))
 
     override fun close() {
-        deviceConstellation.stopPeriodicRefresh()
         job.cancel()
         inner.close()
     }
