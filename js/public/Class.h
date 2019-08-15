@@ -939,11 +939,6 @@ struct JSClass {
   }
 };
 
-// Initializer for unused members of statically initialized JSClass structs.
-#define JSCLASS_NO_INTERNAL_MEMBERS \
-  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-#define JSCLASS_NO_OPTIONAL_MEMBERS 0, 0, 0, 0, 0, JSCLASS_NO_INTERNAL_MEMBERS
-
 namespace js {
 
 /**
