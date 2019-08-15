@@ -3,7 +3,7 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="700" height="200">
-  <g style="font: 16px sans-serif">
+  <g style="font: 16px sans-serif; text-decoration-skip-ink: none;">
     <text x="100" y="100" text-decoration="underline">hello there everyone</text>
     <text x="100" y="120">and good night</text>
   </g>

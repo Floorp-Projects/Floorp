@@ -4456,7 +4456,7 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
     return WHENEVER_POSSIBLE;
   }
 
-  if (nsLayoutUtils::AnimatedImageLayersEnabled() && mBackgroundStyle) {
+  if (StaticPrefs::layout_animated_image_layers_enabled() && mBackgroundStyle) {
     const nsStyleImageLayers::Layer& layer =
         mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
     const nsStyleImage* image = &layer.mImage;
@@ -5404,7 +5404,8 @@ bool nsDisplayOutline::CreateWebRenderCommands(
   ContainerLayerParameters parameter;
 
   const auto& outlineStyle = mFrame->StyleOutline()->mOutlineStyle;
-  if (outlineStyle.IsAuto() && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+  if (outlineStyle.IsAuto() &&
+      StaticPrefs::layout_css_outline_style_auto_enabled()) {
     nsITheme* theme = mFrame->PresContext()->GetTheme();
     if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
                                             StyleAppearance::FocusOutline)) {

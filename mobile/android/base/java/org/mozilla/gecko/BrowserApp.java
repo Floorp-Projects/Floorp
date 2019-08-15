@@ -329,7 +329,6 @@ public class BrowserApp extends GeckoApp
             new ScreenshotDelegate(),
             new BookmarkStateChangeDelegate(),
             new ReaderViewBookmarkPromotion(),
-            new PostUpdateHandler(),
             mTelemetryCorePingDelegate,
             mTelemetryActivationPingDelegate,
             new OfflineTabStatusDelegate(),
@@ -649,6 +648,11 @@ public class BrowserApp extends GeckoApp
         // layout, which GeckoApp takes care of.
         final GeckoApplication app = (GeckoApplication) getApplication();
         app.prepareLightweightTheme();
+
+        // Copying features out the APK races Gecko startup: the first time the profile is read by
+        // Gecko, it needs to find the copied features.  `super.onCreate(...)` initiates Gecko
+        // startup, so this must come first -- and be synchronous!
+        new PostUpdateHandler().onCreate(this, savedInstanceState);
 
         super.onCreate(savedInstanceState);
 

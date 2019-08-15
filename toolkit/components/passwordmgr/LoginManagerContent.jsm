@@ -210,6 +210,12 @@ const observer = {
         break;
       }
 
+      // Used to watch for changes to fields filled with generated passwords.
+      case "input": {
+        LoginManagerContent._maybeStopTreatingAsGeneratedPasswordField(aEvent);
+        break;
+      }
+
       case "keydown": {
         if (
           aEvent.keyCode == aEvent.DOM_VK_TAB ||
@@ -1000,9 +1006,9 @@ this.LoginManagerContent = {
     if (LoginHelper.isUsernameFieldType(acInputField)) {
       this.onUsernameAutocompleted(acInputField, loginGUID);
     } else if (acInputField.hasBeenTypePassword) {
-      // Ensure the field gets re-masked in case a generated password was
-      // filled into it previously.
-      this._disableAutomaticPasswordFieldUnmasking(acInputField);
+      // Ensure the field gets re-masked and edits don't overwrite the generated
+      // password in case a generated password was filled into it previously.
+      this._stopTreatingAsGeneratedPasswordField(acInputField);
       this._highlightFilledField(acInputField);
     }
   },
@@ -1522,6 +1528,32 @@ this.LoginManagerContent = {
     });
   },
 
+  _maybeStopTreatingAsGeneratedPasswordField(event) {
+    let passwordField = event.target;
+    let { value } = passwordField;
+
+    // If the field is now empty or the inserted text replaced the whole value
+    // then stop treating it as a generated password field.
+    if (!value || (event.data && event.data == value)) {
+      this._stopTreatingAsGeneratedPasswordField(passwordField);
+    }
+  },
+
+  _stopTreatingAsGeneratedPasswordField(passwordField) {
+    log("_stopTreatingAsGeneratedPasswordField");
+
+    // Remove all the event listeners added in _generatedPasswordFilledOrEdited
+    for (let eventType of ["blur", "change", "focus", "input"]) {
+      passwordField.removeEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
+
+    // Mask the password field
+    this._togglePasswordFieldMasking(passwordField, false);
+  },
+
   /**
    * Notify the parent that a generated password was filled into a field or
    * edited so that it can potentially be saved.
@@ -1540,23 +1572,16 @@ this.LoginManagerContent = {
 
     this._highlightFilledField(passwordField);
 
-    passwordField.addEventListener("blur", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    passwordField.addEventListener("focus", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-
+    // change: Listen for changes to the field filled with the generated password so we can preserve edits.
+    // input: Listen for the field getting blanked (without blurring) or a paste
+    for (let eventType of ["blur", "change", "focus", "input"]) {
+      passwordField.addEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
     // Unmask the password field
     this._togglePasswordFieldMasking(passwordField, true);
-
-    // Listen for changes to the field filled with the generated password so we can preserve edits.
-    passwordField.addEventListener("change", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
 
     if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
       log(
@@ -1612,18 +1637,6 @@ this.LoginManagerContent = {
       return;
     }
     editor.mask();
-  },
-
-  _disableAutomaticPasswordFieldUnmasking(passwordField) {
-    passwordField.removeEventListener("blur", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    passwordField.removeEventListener("focus", observer, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    this._togglePasswordFieldMasking(passwordField, false);
   },
 
   /** Remove login field highlight when its value is cleared or overwritten.
@@ -1993,7 +2006,7 @@ this.LoginManagerContent = {
       if (passwordField.value != selectedLogin.password) {
         // Ensure the field gets re-masked in case a generated password was
         // filled into it previously.
-        this._disableAutomaticPasswordFieldUnmasking(passwordField);
+        this._stopTreatingAsGeneratedPasswordField(passwordField);
         passwordField.setUserInput(selectedLogin.password);
         let autoFilledLogin = {
           guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,

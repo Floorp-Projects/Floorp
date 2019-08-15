@@ -33,7 +33,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let logger = LoginHelper.createLogger("nsLoginManager");
+  let logger = LoginHelper.createLogger("LoginManager");
   return logger;
 });
 

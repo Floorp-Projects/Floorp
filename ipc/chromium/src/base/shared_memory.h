@@ -18,6 +18,8 @@
 
 #include "base/basictypes.h"
 #include "base/process.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace base {
 
@@ -57,12 +59,21 @@ class SharedMemory {
   // invalid value; NULL for a HANDLE and -1 for a file descriptor)
   static bool IsHandleValid(const SharedMemoryHandle& handle);
 
+  // IsHandleValid applied to this object's handle.
+  bool IsValid() const;
+
   // Return invalid handle (see comment above for exact definition).
   static SharedMemoryHandle NULLHandle();
 
   // Creates a shared memory segment.
   // Returns true on success, false on failure.
-  bool Create(size_t size);
+  bool Create(size_t size) { return CreateInternal(size, false); }
+
+  // Creates a shared memory segment that supports the Freeze()
+  // method; see below.  (Warning: creating freezeable shared memory
+  // within a sandboxed process isn't possible on some platforms.)
+  // Returns true on success, false on failure.
+  bool CreateFreezeable(size_t size) { return CreateInternal(size, true); }
 
   // Maps the shared memory into the caller's address space.
   // Returns true on success, false otherwise.  The memory address
@@ -89,10 +100,29 @@ class SharedMemory {
   // Mapped via Map().  Returns NULL if it is not mapped.
   void* memory() const { return memory_; }
 
-  // Get access to the underlying OS handle for this segment.
-  // Use of this handle for anything other than an opaque
-  // identifier is not portable.
-  SharedMemoryHandle handle() const;
+  // Extracts the underlying file handle; similar to
+  // GiveToProcess(GetCurrentProcId(), ...) but returns a RAII type.
+  // Like GiveToProcess, this unmaps the memory as a side-effect.
+  mozilla::UniqueFileHandle TakeHandle();
+
+#ifdef OS_WIN
+  // Used only in gfx/ipc/SharedDIBWin.cpp; should be removable once
+  // NPAPI goes away.
+  HANDLE GetHandle() {
+    freezeable_ = false;
+    return mapped_file_;
+  }
+#endif
+
+  // Make the shared memory object read-only, such that it cannot be
+  // written even if it's sent to an untrusted process.  If it was
+  // mapped in this process, it will be unmapped.  The object must
+  // have been created with CreateFreezeable(), and must not have
+  // already been shared to another process.
+  //
+  // (See bug 1479960 comment #0 for OS-specific implementation
+  // details.)
+  MOZ_MUST_USE bool Freeze();
 
   // Closes the open shared memory segment.
   // It is safe to call Close repeatedly.
@@ -140,6 +170,8 @@ class SharedMemory {
   bool ShareToProcessCommon(ProcessId target_pid,
                             SharedMemoryHandle* new_handle, bool close_self);
 
+  bool CreateInternal(size_t size, bool freezeable);
+
 #if defined(OS_WIN)
   // If true indicates this came from an external source so needs extra checks
   // before being mapped.
@@ -147,9 +179,12 @@ class SharedMemory {
   HANDLE mapped_file_;
 #elif defined(OS_POSIX)
   int mapped_file_;
+  int frozen_file_;
+  size_t mapped_size_;
 #endif
   void* memory_;
   bool read_only_;
+  bool freezeable_;
   size_t max_size_;
 
   DISALLOW_EVIL_CONSTRUCTORS(SharedMemory);

@@ -39,9 +39,10 @@ add_task(async function() {
 
   type(dbg, "con");
   await waitForSearchState(dbg);
+  await waitForDispatch(dbg, "UPDATE_SEARCH_RESULTS");
 
   const state = cm.state.search;
-
+  
   pressKey(dbg, "Enter");
   is(state.posFrom.line, 3);
 
@@ -75,4 +76,5 @@ add_task(async function() {
   await clickElement(dbg, "codeMirror");
   pressKey(dbg, "fileSearch");
   is(dbg.win.document.activeElement.tagName, "INPUT", "Search field focused");
+  
 });

@@ -1121,9 +1121,6 @@ pref("nglayout.debug.paint_flashing_chrome", false);
 // BasicLayers (other layer managers always update the entire widget area)
 pref("nglayout.debug.widget_update_flashing", false);
 
-// Enable/disable display list invalidation logging --- useful for debugging.
-pref("nglayout.debug.invalidation", false);
-
 // Whether frame visibility tracking is enabled globally.
 pref("layout.framevisibility.enabled", true);
 
@@ -2930,9 +2927,6 @@ pref("layout.css.scroll-snap.prediction-max-velocity", 2000);
 // gestures.
 pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
 
-// Is layout of CSS outline-style:auto enabled?
-pref("layout.css.outline-style-auto.enabled", false);
-
 // Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 pref("layout.css.scroll-behavior.enabled", true);
 
@@ -2952,9 +2946,6 @@ pref("layout.css.scroll-behavior.spring-constant", "250.0");
 // at the greatest speed without overshooting.
 pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 
-// Are inter-character ruby annotations enabled?
-pref("layout.css.ruby.intercharacter.enabled", false);
-
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
@@ -2964,11 +2955,6 @@ pref("layout.scrollbar.side", 0);
 
 // pref to stop overlay scrollbars from fading out, for testing purposes
 pref("layout.testing.overlay-scrollbars.always-visible", false);
-
-// Enable/disable interruptible reflow, which allows reflows to stop
-// before completion (and display the partial results) when user events
-// are pending.
-pref("layout.interruptible-reflow.enabled", true);
 
 // pref to control browser frame rate, in Hz. A value <= 0 means choose
 // automatically based on knowledge of the platform (or 60Hz if no platform-
@@ -2995,14 +2981,6 @@ pref("layout.display-list.rebuild-frame-limit", 500);
 
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
-
-// The number of frames times the frame rate is the time required to
-// pass without painting used to guess that we'll not paint again soon
-pref("layout.idle_period.required_quiescent_frames", 2);
-
-// The amount of time (milliseconds) needed between an idle period's
-// end and the start of the next tick to avoid jank.
-pref("layout.idle_period.time_limit", 1);
 
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
@@ -3359,118 +3337,6 @@ pref("font.default.x-math", "serif");
 pref("font.minimum-size.x-math", 0);
 pref("font.size.variable.x-math", 16);
 pref("font.size.monospace.x-math", 13);
-
-/*
- * A value greater than zero enables font size inflation for
- * pan-and-zoom UIs, so that the fonts in a block are at least the size
- * that, if a block's width is scaled to match the device's width, the
- * fonts in the block are big enough that at most the pref value ems of
- * text fit in *the width of the device*.
- *
- * When both this pref and the next are set, the larger inflation is
- * used.
- */
-pref("font.size.inflation.emPerLine", 0);
-/*
- * A value greater than zero enables font size inflation for
- * pan-and-zoom UIs, so that if a block's width is scaled to match the
- * device's width, the fonts in a block are at least the font size
- * given.  The value given is in twips, i.e., 1/20 of a point, or 1/1440
- * of an inch.
- *
- * When both this pref and the previous are set, the larger inflation is
- * used.
- */
-pref("font.size.inflation.minTwips", 0);
-/*
- * In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
- * this pref forces font inflation to always be enabled in all modes.
- * That is, any heuristics used to detect pan-and-zoom
- * vs. non-pan-and-zoom modes are disabled and all content is treated
- * as pan-and-zoom mode wrt font inflation.
- *
- * This pref has no effect if font inflation is not enabled through
- * either of the prefs above.  It has no meaning in single-mode UIs.
- */
-pref("font.size.inflation.forceEnabled", false);
-/*
- * In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
- * this pref disables font inflation in master-process contexts where
- * existing heuristics can't be used determine enabled-ness.
- *
- * This pref has no effect if font inflation is not enabled through
- * either of the prefs above.  The "forceEnabled" pref above overrides
- * this pref.
- */
-pref("font.size.inflation.disabledInMasterProcess", false);
-/*
- * Since the goal of font size inflation is to avoid having to
- * repeatedly scroll side to side to read a block of text, and there are
- * a number of page layouts where a relatively small chunk of text is
- * better of not being inflated according to the same algorithm we use
- * for larger chunks of text, we want a threshold for an amount of text
- * that triggers font size inflation.  This preference controls that
- * threshold.
- *
- * It controls the threshold used within an *approximation* of the
- * number of lines of text we use.  In particular, if we assume that
- * each character (collapsing collapsible whitespace) has a width the
- * same as the em-size of the font (when, normally, it's actually quite
- * a bit smaller on average), this preference gives the percentage of a
- * number of lines of text we'd need to trigger inflation.  This means
- * that a percentage of 100 means that we'd need a number of characters
- * (we know the font size and the width) equivalent to one line of
- * square text (which is actually a lot less than a real line of text).
- *
- * A value of 0 means there's no character length threshold.
- */
-pref("font.size.inflation.lineThreshold", 400);
-
-/*
- * Defines the font size inflation mapping intercept parameter.
- *
- * Font size inflation computes a minimum font size, m, based on
- * other preferences (see font.size.inflation.minTwips and
- * font.size.inflation.emPerLine, above) and the width of the
- * frame in which the text resides. Using this minimum, a specified
- * font size, s, is mapped to an inflated font size, i, using an
- * equation that varies depending on the value of the font size
- * inflation mapping intercept parameter, P:
- *
- * If the intercept parameter is negative, then the following mapping
- * function is used:
- *
- * i = m + s
- *
- * If the intercept parameter is non-negative, then the mapping function
- * is a function such that its graph meets the graph of i = s at the
- * point where both i and s are (1 + P/2) * m for values of s that are
- * large enough. This means that when s=0, i is always equal to m.
- */
-pref("font.size.inflation.mappingIntercept", 1);
-
-/*
- * This controls the percentage that fonts will be inflated, if font
- * size inflation is enabled. Essentially, if we have a specified font
- * size, s, and an inflated font size, i, this specifies that the ratio
- * i/s * 100 should never exceed the value of this preference.
- *
- * In order for this preference to have any effect, its value must be
- * greater than 100, since font inflation can never decrease the ratio
- * i/s.
- */
-pref("font.size.inflation.maxRatio", 0);
-
-/**
- * This setting corresponds to a global text zoom setting affecting
- * all content that is not already subject to font size inflation.
- * It is interpreted as a percentage value that is applied on top
- * of the document's current text zoom setting.
- *
- * The resulting total zoom factor (text zoom * system font scale)
- * will be limited by zoom.minPercent and maxPercent.
- */
-pref("font.size.systemFontScale", 100);
 
 /*
  * When enabled, the touch.radius and mouse.radius prefs allow events to be dispatched
@@ -4546,8 +4412,6 @@ pref("browser.formfill.prefixWeight",     5);
 
 // Zoom prefs
 pref("browser.zoom.full", false);
-pref("zoom.minPercent", 30);
-pref("zoom.maxPercent", 300);
 pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3");
 
 //
@@ -4785,12 +4649,6 @@ pref("layers.tiles.edge-padding", true);
 pref("layers.tiles.edge-padding", false);
 #endif
 
-// Whether to animate simple opacity and transforms on the compositor
-pref("layers.offmainthreadcomposition.async-animations", true);
-
-// Whether to log information about off main thread animations to stderr
-pref("layers.offmainthreadcomposition.log-animations", false);
-
 pref("layers.draw-mask-debug", false);
 
 pref("gfx.content.always-paint", false);
@@ -4955,9 +4813,6 @@ pref("full-screen-api.warning.delay", 500);
 // DOM pointerlock API
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("pointer-lock-api.warning.timeout", 3000);
-
-// Whether we should layerize all animated images (if otherwise possible).
-pref("layout.animated-image-layers.enabled", false);
 
 pref("dom.vibrator.enabled", true);
 pref("dom.vibrator.max_vibrate_ms", 10000);

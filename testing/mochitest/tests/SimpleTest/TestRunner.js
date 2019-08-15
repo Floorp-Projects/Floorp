@@ -124,12 +124,12 @@ TestRunner._checkForHangs = function() {
     }
   }
 
-  function killTest(win) {
+  async function killTest(win) {
     if ("SimpleTest" in win) {
-      win.SimpleTest.timeout();
+      await win.SimpleTest.timeout();
       win.SimpleTest.finish();
     } else if ("W3CTest" in win) {
-      win.W3CTest.timeout();
+      await win.W3CTest.timeout();
     }
   }
 
@@ -154,7 +154,14 @@ TestRunner._checkForHangs = function() {
 
       // Add a little (1 second) delay to ensure automation.py has time to notice
       // "Test timed out" log and process it (= take a screenshot).
-      setTimeout(function delayedKillTest() { killTest(frameWindow); }, 1000);
+      setTimeout(async function delayedKillTest() {
+        try {
+          await killTest(frameWindow);
+        } catch(e) {
+          reportError(frameWindow, "Test error: " + e);
+        }
+      }, 1000);
+
 
       if (TestRunner._haltTests)
         return;

@@ -12,6 +12,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/WritingModes.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
@@ -312,7 +313,7 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
 
     LogicalPoint position(lineWM);
     if (side.isSome()) {
-      if (nsLayoutUtils::IsInterCharacterRubyEnabled() &&
+      if (StaticPrefs::layout_css_ruby_intercharacter_enabled() &&
           rtcWM.IsVerticalRL() &&
           lineWM.GetInlineDir() == WritingMode::eInlineLTR) {
         // Inter-character ruby annotations are only supported for vertical-rl

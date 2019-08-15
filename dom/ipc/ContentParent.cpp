@@ -5706,6 +5706,13 @@ mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvAutomaticStorageAccessCanBeGranted(
+    const Principal& aPrincipal,
+    AutomaticStorageAccessCanBeGrantedResolver&& aResolver) {
+  aResolver(Document::AutomaticStorageAccessCanBeGranted(aPrincipal));
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
     const Principal& aParentPrincipal, const Principal& aTrackingPrincipal,

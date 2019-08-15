@@ -26,6 +26,7 @@
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -167,16 +168,6 @@ using namespace mozilla::gfx;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_METADATA;
 using mozilla::dom::HTMLMediaElement_Binding::HAVE_NOTHING;
 
-#define INTERCHARACTER_RUBY_ENABLED_PREF_NAME \
-  "layout.css.ruby.intercharacter.enabled"
-
-// The time in number of frames that we estimate for a refresh driver
-// to be quiescent
-#define DEFAULT_QUIESCENT_FRAMES 2
-// The time (milliseconds) we estimate is needed between the end of an
-// idle time and the next Tick.
-#define DEFAULT_IDLE_PERIOD_TIME_LIMIT 1.0f
-
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
 bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
@@ -184,37 +175,6 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 
 typedef ScrollableLayerGuid::ViewID ViewID;
 typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
-
-/* static */
-uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
-/* static */
-uint32_t nsLayoutUtils::sFontSizeInflationMinTwips;
-/* static */
-uint32_t nsLayoutUtils::sFontSizeInflationLineThreshold;
-/* static */
-int32_t nsLayoutUtils::sFontSizeInflationMappingIntercept;
-/* static */
-uint32_t nsLayoutUtils::sFontSizeInflationMaxRatio;
-/* static */
-bool nsLayoutUtils::sFontSizeInflationForceEnabled;
-/* static */
-bool nsLayoutUtils::sFontSizeInflationDisabledInMasterProcess;
-/* static */
-uint32_t nsLayoutUtils::sSystemFontScale;
-/* static */
-uint32_t nsLayoutUtils::sZoomMaxPercent;
-/* static */
-uint32_t nsLayoutUtils::sZoomMinPercent;
-/* static */
-bool nsLayoutUtils::sInvalidationDebuggingIsEnabled;
-/* static */
-bool nsLayoutUtils::sInterruptibleReflowEnabled;
-/* static */
-bool nsLayoutUtils::sSVGTransformBoxEnabled;
-/* static */
-uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
-/* static */
-uint32_t nsLayoutUtils::sQuiescentFramesBeforeIdlePeriod;
 
 static ViewID sScrollIdCounter = ScrollableLayerGuid::START_SCROLL_ID;
 
@@ -517,31 +477,8 @@ Size nsLayoutUtils::ComputeSuitableScaleForAnimation(
 }
 
 bool nsLayoutUtils::AreAsyncAnimationsEnabled() {
-  static bool sAreAsyncAnimationsEnabled;
-  static bool sAsyncPrefCached = false;
-
-  if (!sAsyncPrefCached) {
-    sAsyncPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sAreAsyncAnimationsEnabled,
-        "layers.offmainthreadcomposition.async-animations");
-  }
-
-  return sAreAsyncAnimationsEnabled &&
+  return StaticPrefs::layers_offmainthreadcomposition_async_animations() &&
          gfxPlatform::OffMainThreadCompositingEnabled();
-}
-
-bool nsLayoutUtils::IsAnimationLoggingEnabled() {
-  static bool sShouldLog;
-  static bool sShouldLogPrefCached;
-
-  if (!sShouldLogPrefCached) {
-    sShouldLogPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sShouldLog, "layers.offmainthreadcomposition.log-animations");
-  }
-
-  return sShouldLog;
 }
 
 bool nsLayoutUtils::AreRetainedDisplayListsEnabled() {
@@ -578,32 +515,6 @@ bool nsLayoutUtils::GPUImageScalingEnabled() {
   }
 
   return sGPUImageScalingEnabled;
-}
-
-bool nsLayoutUtils::AnimatedImageLayersEnabled() {
-  static bool sAnimatedImageLayersEnabled;
-  static bool sAnimatedImageLayersPrefCached = false;
-
-  if (!sAnimatedImageLayersPrefCached) {
-    sAnimatedImageLayersPrefCached = true;
-    Preferences::AddBoolVarCache(&sAnimatedImageLayersEnabled,
-                                 "layout.animated-image-layers.enabled", false);
-  }
-
-  return sAnimatedImageLayersEnabled;
-}
-
-bool nsLayoutUtils::IsInterCharacterRubyEnabled() {
-  static bool sInterCharacterRubyEnabled;
-  static bool sInterCharacterRubyEnabledPrefCached = false;
-
-  if (!sInterCharacterRubyEnabledPrefCached) {
-    sInterCharacterRubyEnabledPrefCached = true;
-    Preferences::AddBoolVarCache(&sInterCharacterRubyEnabled,
-                                 INTERCHARACTER_RUBY_ENABLED_PREF_NAME, false);
-  }
-
-  return sInterCharacterRubyEnabled;
 }
 
 void nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
@@ -8038,37 +7949,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
 
 /* static */
 void nsLayoutUtils::Initialize() {
-  Preferences::AddUintVarCache(&sFontSizeInflationMaxRatio,
-                               "font.size.inflation.maxRatio");
-  Preferences::AddUintVarCache(&sFontSizeInflationEmPerLine,
-                               "font.size.inflation.emPerLine");
-  Preferences::AddUintVarCache(&sFontSizeInflationMinTwips,
-                               "font.size.inflation.minTwips");
-  Preferences::AddUintVarCache(&sFontSizeInflationLineThreshold,
-                               "font.size.inflation.lineThreshold");
-  Preferences::AddIntVarCache(&sFontSizeInflationMappingIntercept,
-                              "font.size.inflation.mappingIntercept");
-  Preferences::AddBoolVarCache(&sFontSizeInflationForceEnabled,
-                               "font.size.inflation.forceEnabled");
-  Preferences::AddBoolVarCache(&sFontSizeInflationDisabledInMasterProcess,
-                               "font.size.inflation.disabledInMasterProcess");
-  Preferences::AddUintVarCache(&sSystemFontScale, "font.size.systemFontScale",
-                               100);
-  Preferences::AddUintVarCache(&sZoomMaxPercent, "zoom.maxPercent", 300);
-  Preferences::AddUintVarCache(&sZoomMinPercent, "zoom.minPercent", 30);
-  Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
-                               "nglayout.debug.invalidation");
-  Preferences::AddBoolVarCache(&sInterruptibleReflowEnabled,
-                               "layout.interruptible-reflow.enabled");
-  Preferences::AddBoolVarCache(&sSVGTransformBoxEnabled,
-                               "svg.transform-box.enabled");
-  Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,
-                               "layout.idle_period.time_limit",
-                               DEFAULT_IDLE_PERIOD_TIME_LIMIT);
-  Preferences::AddUintVarCache(&sQuiescentFramesBeforeIdlePeriod,
-                               "layout.idle_period.required_quiescent_frames",
-                               DEFAULT_QUIESCENT_FRAMES);
-
   nsComputedDOMStyle::RegisterPrefChangeCallbacks();
 }
 
@@ -8299,8 +8179,8 @@ float nsLayoutUtils::FontSizeInflationInner(const nsIFrame* aFrame,
     }
   }
 
-  int32_t interceptParam = nsLayoutUtils::FontSizeInflationMappingIntercept();
-  float maxRatio = (float)nsLayoutUtils::FontSizeInflationMaxRatio() / 100.0f;
+  int32_t interceptParam = StaticPrefs::font_size_inflation_mappingIntercept();
+  float maxRatio = (float)StaticPrefs::font_size_inflation_maxRatio() / 100.0f;
 
   float ratio = float(styleFontSize) / float(aMinFontSize);
   float inflationRatio;
@@ -8854,20 +8734,6 @@ void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager,
 
 }  // namespace layout
 }  // namespace mozilla
-
-/* static */
-bool nsLayoutUtils::IsOutlineStyleAutoEnabled() {
-  static bool sOutlineStyleAutoEnabled;
-  static bool sOutlineStyleAutoPrefCached = false;
-
-  if (!sOutlineStyleAutoPrefCached) {
-    sOutlineStyleAutoPrefCached = true;
-    Preferences::AddBoolVarCache(&sOutlineStyleAutoEnabled,
-                                 "layout.css.outline-style-auto.enabled",
-                                 false);
-  }
-  return sOutlineStyleAutoEnabled;
-}
 
 /* static */
 void nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,

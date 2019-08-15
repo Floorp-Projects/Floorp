@@ -247,7 +247,7 @@ function transformConsoleAPICallPacket(packet) {
     : null;
 
   if (type === "logPointError" || type === "logPoint") {
-    frame.origin = "logPoint";
+    frame.options = { logPoint: true };
   }
 
   return new ConsoleMessage({

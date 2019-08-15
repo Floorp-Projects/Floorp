@@ -13,12 +13,19 @@ namespace mozilla {
 namespace ipc {
 
 void SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights) {
+  if (!SystemProtectFallible(aAddr, aSize, aRights)) {
+    MOZ_CRASH("can't mprotect()");
+  }
+}
+
+bool SharedMemory::SystemProtectFallible(char* aAddr, size_t aSize,
+                                         int aRights) {
   int flags = 0;
   if (aRights & RightsRead) flags |= PROT_READ;
   if (aRights & RightsWrite) flags |= PROT_WRITE;
   if (RightsNone == aRights) flags = PROT_NONE;
 
-  if (0 < mprotect(aAddr, aSize, flags)) MOZ_CRASH("can't mprotect()");
+  return 0 == mprotect(aAddr, aSize, flags);
 }
 
 size_t SharedMemory::SystemPageSize() { return sysconf(_SC_PAGESIZE); }

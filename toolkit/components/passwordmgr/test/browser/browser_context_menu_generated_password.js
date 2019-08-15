@@ -278,7 +278,69 @@ add_task(async function fill_generated_password_with_matching_logins() {
           LTU.loginField.checkPasswordMasked(input, false, "after fill");
         }
       );
+
+      await openPasswordContextMenu(browser, passwordInputSelector);
+
+      // Execute the command of the first login menuitem found at the context menu.
+      let passwordChangedPromise = ContentTask.spawn(
+        browser,
+        null,
+        async function() {
+          let passwordInput = content.document.getElementById(
+            "form-basic-password"
+          );
+          await ContentTaskUtils.waitForEvent(passwordInput, "input");
+        }
+      );
+
+      let popupMenu = document.getElementById("fill-login-popup");
+      let firstLoginItem = popupMenu.getElementsByClassName(
+        "context-login-item"
+      )[0];
+      firstLoginItem.doCommand();
+
+      await passwordChangedPromise;
+
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      contextMenu.hidePopup();
+
+      // Blur the field to trigger a 'change' event.
+      await BrowserTestUtils.synthesizeKey("KEY_Tab", undefined, browser);
+      await BrowserTestUtils.synthesizeKey(
+        "KEY_Tab",
+        { shiftKey: true },
+        browser
+      );
+
+      await ContentTask.spawn(
+        browser,
+        [passwordInputSelector],
+        function checkFieldNotGeneratedPassword(inputSelector) {
+          let { LoginTestUtils: LTU } = ChromeUtils.import(
+            "resource://testing-common/LoginTestUtils.jsm"
+          );
+          const input = content.document.querySelector(inputSelector);
+          is(
+            input.value,
+            "pass1",
+            "Password field was filled with the saved password"
+          );
+          LTU.loginField.checkPasswordMasked(
+            input,
+            true,
+            "after fill of a saved login"
+          );
+        }
+      );
     }
+  );
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 2, "Check 2 logins");
+  isnot(
+    logins[0].password,
+    logins[1].password,
+    "Generated password shouldn't have changed to match the filled password"
   );
 
   Services.logins.removeAllLogins();

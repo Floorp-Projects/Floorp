@@ -25,6 +25,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"  // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TypeTraits.h"  // For std::forward<>
 #include "nsContentUtils.h"
@@ -73,7 +74,7 @@ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
   }
 
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+    if (StaticPrefs::layers_offmainthreadcomposition_log_animations()) {
       nsCString message;
       message.AppendLiteral(
           "Performance warning: Async animations are "

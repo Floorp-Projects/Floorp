@@ -7,7 +7,6 @@
 
 #include "gfxQuartzSurface.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/MacIOSurface.h"
 
 #include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
@@ -75,8 +74,6 @@ gfxPlatformMac::gfxPlatformMac() {
   mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
   InitBackendPrefs(GetBackendPrefs());
-
-  MacIOSurfaceLib::LoadLibrary();
 
   if (nsCocoaFeatures::OnHighSierraOrLater()) {
     mHasNativeColrFontSupport = true;

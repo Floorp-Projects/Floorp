@@ -9970,6 +9970,21 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "text-decoration-skip-ink": {
+    "isInherited": true,
+    "subproperties": [
+      "text-decoration-skip-ink"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "text-decoration-style": {
     "isInherited": false,
     "subproperties": [
@@ -9987,6 +10002,21 @@ exports.CSS_PROPERTIES = {
       "solid",
       "unset",
       "wavy"
+    ]
+  },
+  "text-decoration-thickness": {
+    "isInherited": false,
+    "subproperties": [
+      "text-decoration-thickness"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "from-font",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
     ]
   },
   "text-emphasis": {
@@ -10200,6 +10230,21 @@ exports.CSS_PROPERTIES = {
       "revert",
       "unset",
       "uppercase"
+    ]
+  },
+  "text-underline-offset": {
+    "isInherited": true,
+    "subproperties": [
+      "text-underline-offset"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "from-font",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
     ]
   },
   "top": {

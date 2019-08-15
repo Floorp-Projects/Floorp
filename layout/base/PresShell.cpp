@@ -29,6 +29,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
@@ -1032,14 +1033,14 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
   QueryIsActive();
 
   // Setup our font inflation preferences.
-  mFontSizeInflationEmPerLine = nsLayoutUtils::FontSizeInflationEmPerLine();
-  mFontSizeInflationMinTwips = nsLayoutUtils::FontSizeInflationMinTwips();
+  mFontSizeInflationEmPerLine = StaticPrefs::font_size_inflation_emPerLine();
+  mFontSizeInflationMinTwips = StaticPrefs::font_size_inflation_minTwips();
   mFontSizeInflationLineThreshold =
-      nsLayoutUtils::FontSizeInflationLineThreshold();
+      StaticPrefs::font_size_inflation_lineThreshold();
   mFontSizeInflationForceEnabled =
-      nsLayoutUtils::FontSizeInflationForceEnabled();
+      StaticPrefs::font_size_inflation_forceEnabled();
   mFontSizeInflationDisabledInMasterProcess =
-      nsLayoutUtils::FontSizeInflationDisabledInMasterProcess();
+      StaticPrefs::font_size_inflation_disabledInMasterProcess();
   // We'll compute the font size inflation state in Initialize(), when we know
   // the document type.
 
@@ -10750,7 +10751,8 @@ nsSize PresShell::GetLayoutViewportSize() const {
 void PresShell::RecomputeFontSizeInflationEnabled() {
   mFontSizeInflationEnabled = DetermineFontSizeInflationState();
 
-  float fontScale = nsLayoutUtils::SystemFontScale();
+  // Divide by 100 to convert the pref from a percentage to a fraction.
+  float fontScale = StaticPrefs::font_size_systemFontScale() / 100.0f;
   if (fontScale == 0.0f) {
     return;
   }
