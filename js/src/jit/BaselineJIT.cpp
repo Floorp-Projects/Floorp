@@ -221,7 +221,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
   MOZ_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
 
   if (status == Method_CantCompile) {
-    script->disableBaselineCompile(cx->runtime());
+    script->disableBaselineCompile();
   }
 
   return status;
@@ -235,7 +235,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (!IsBaselineJitEnabled()) {
-    script->disableBaselineCompile(cx->runtime());
+    script->disableBaselineCompile();
     return Method_CantCompile;
   }
 
@@ -265,12 +265,12 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->length() > BaselineMaxScriptLength) {
-    script->disableBaselineCompile(cx->runtime());
+    script->disableBaselineCompile();
     return Method_CantCompile;
   }
 
   if (script->nslots() > BaselineMaxScriptSlots) {
-    script->disableBaselineCompile(cx->runtime());
+    script->disableBaselineCompile();
     return Method_CantCompile;
   }
 
@@ -294,7 +294,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->hasForceInterpreterOp()) {
-    script->disableBaselineCompile(cx->runtime());
+    script->disableBaselineCompile();
     return Method_CantCompile;
   }
 
@@ -741,6 +741,28 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
   }
 }
 
+void BaselineScript::setPendingIonBuilder(JSRuntime* rt, JSScript* script,
+                                          js::jit::IonBuilder* builder) {
+  MOZ_ASSERT(script->baselineScript() == this);
+  MOZ_ASSERT(builder);
+  MOZ_ASSERT(!hasPendingIonBuilder());
+
+  if (script->isIonCompilingOffThread()) {
+    script->jitScript()->clearIsIonCompilingOffThread(script);
+  }
+
+  pendingBuilder_ = builder;
+  script->updateJitCodeRaw(rt);
+}
+
+void BaselineScript::removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
+  MOZ_ASSERT(script->baselineScript() == this);
+  MOZ_ASSERT(hasPendingIonBuilder());
+
+  pendingBuilder_ = nullptr;
+  script->updateJitCodeRaw(rt);
+}
+
 #ifdef JS_TRACE_LOGGING
 void BaselineScript::initTraceLogger(JSScript* script,
                                      const Vector<CodeOffset>& offsets) {
@@ -919,7 +941,7 @@ void jit::FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script) {
   MOZ_ASSERT(!script->jitScript()->active());
 
   BaselineScript* baseline = script->baselineScript();
-  script->clearBaselineScript(fop);
+  script->jitScript()->clearBaselineScript(fop, script);
   BaselineScript::Destroy(fop, baseline);
 }
 

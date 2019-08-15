@@ -10856,7 +10856,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
     ionScript->setHasProfilingInstrumentation();
   }
 
-  script->setIonScript(cx->runtime(), ionScript);
+  script->jitScript()->setIonScript(script, ionScript);
 
   Assembler::PatchDataWithValueCheck(
       CodeLocationLabel(code, invalidateEpilogueData_), ImmPtr(ionScript),

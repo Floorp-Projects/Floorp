@@ -35,6 +35,14 @@ struct IonBytecodeInfo {
   bool modifiesArguments = false;
 };
 
+// Magic BaselineScript value indicating Baseline compilation has been disabled.
+#define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
+
+// Magic IonScript values indicating Ion compilation has been disabled or the
+// script is being Ion-compiled off-thread.
+#define ION_DISABLED_SCRIPT ((js::jit::IonScript*)0x1)
+#define ION_COMPILING_SCRIPT ((js::jit::IonScript*)0x2)
+
 // [SMDOC] JitScript
 //
 // JitScript stores type inference data, Baseline ICs and other JIT-related data
@@ -153,6 +161,14 @@ class alignas(uintptr_t) JitScript final {
     void trace(JSTracer* trc);
   };
   js::UniquePtr<CachedIonData> cachedIonData_;
+
+  // Baseline code for the script. Either nullptr, BASELINE_DISABLED_SCRIPT or
+  // a valid BaselineScript*.
+  BaselineScript* baselineScript_ = nullptr;
+
+  // Ion code for this script. Either nullptr, ION_DISABLED_SCRIPT,
+  // ION_COMPILING_SCRIPT or a valid IonScript*.
+  IonScript* ionScript_ = nullptr;
 
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
@@ -364,6 +380,10 @@ class alignas(uintptr_t) JitScript final {
   static constexpr size_t offsetOfJitCodeSkipArgCheck() {
     return offsetof(JitScript, jitCodeSkipArgCheck_);
   }
+  static size_t offsetOfBaselineScript() {
+    return offsetof(JitScript, baselineScript_);
+  }
+  static size_t offsetOfIonScript() { return offsetof(JitScript, ionScript_); }
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);
@@ -460,6 +480,75 @@ class alignas(uintptr_t) JitScript final {
       len = UINT16_MAX;
     }
     cachedIonData().inlinedBytecodeLength = len;
+  }
+
+ private:
+  // Methods to set baselineScript_ to a BaselineScript*, nullptr, or
+  // BASELINE_DISABLED_SCRIPT.
+  void setBaselineScriptImpl(JSScript* script, BaselineScript* baselineScript);
+  void setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
+                             BaselineScript* baselineScript);
+
+ public:
+  // Methods for getting/setting/clearing a BaselineScript*.
+  bool hasBaselineScript() const {
+    bool res = baselineScript_ && baselineScript_ != BASELINE_DISABLED_SCRIPT;
+    MOZ_ASSERT_IF(!res, !hasIonScript());
+    return res;
+  }
+  BaselineScript* baselineScript() const {
+    MOZ_ASSERT(hasBaselineScript());
+    return baselineScript_;
+  }
+  void setBaselineScript(JSScript* script, BaselineScript* baselineScript) {
+    MOZ_ASSERT(!hasBaselineScript());
+    setBaselineScriptImpl(script, baselineScript);
+    MOZ_ASSERT(hasBaselineScript());
+  }
+  void clearBaselineScript(JSFreeOp* fop, JSScript* script) {
+    MOZ_ASSERT(hasBaselineScript());
+    setBaselineScriptImpl(fop, script, nullptr);
+  }
+
+ private:
+  // Methods to set ionScript_ to an IonScript*, nullptr, or one of the special
+  // ION_{DISABLED,COMPILING}_SCRIPT values.
+  void setIonScriptImpl(JSFreeOp* fop, JSScript* script, IonScript* ionScript);
+  void setIonScriptImpl(JSScript* script, IonScript* ionScript);
+
+ public:
+  // Methods for getting/setting/clearing an IonScript*.
+  bool hasIonScript() const {
+    bool res = ionScript_ && ionScript_ != ION_DISABLED_SCRIPT &&
+               ionScript_ != ION_COMPILING_SCRIPT;
+    MOZ_ASSERT_IF(res, baselineScript_);
+    return res;
+  }
+  IonScript* ionScript() const {
+    MOZ_ASSERT(hasIonScript());
+    return ionScript_;
+  }
+  void setIonScript(JSScript* script, IonScript* ionScript) {
+    MOZ_ASSERT(!hasIonScript());
+    setIonScriptImpl(script, ionScript);
+    MOZ_ASSERT(hasIonScript());
+  }
+  void clearIonScript(JSFreeOp* fop, JSScript* script) {
+    MOZ_ASSERT(hasIonScript());
+    setIonScriptImpl(fop, script, nullptr);
+  }
+
+  // Methods for off-thread compilation.
+  bool isIonCompilingOffThread() const {
+    return ionScript_ == ION_COMPILING_SCRIPT;
+  }
+  void setIsIonCompilingOffThread(JSScript* script) {
+    MOZ_ASSERT(ionScript_ == nullptr);
+    setIonScriptImpl(script, ION_COMPILING_SCRIPT);
+  }
+  void clearIsIonCompilingOffThread(JSScript* script) {
+    MOZ_ASSERT(isIonCompilingOffThread());
+    setIonScriptImpl(script, nullptr);
   }
 };
 
