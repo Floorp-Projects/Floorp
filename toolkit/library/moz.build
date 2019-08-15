@@ -24,6 +24,7 @@ def Libxul(name, output_category=None):
 
     DELAYLOAD_DLLS += [
         'comdlg32.dll',
+        'credui.dll',
         'hid.dll',
         'msimg32.dll',
         'netapi32.dll',
