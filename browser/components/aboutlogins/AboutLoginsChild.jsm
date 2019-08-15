@@ -90,12 +90,6 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
-      case "AboutLoginsDismissBreachAlert": {
-        this.mm.sendAsyncMessage("AboutLogins:DismissBreachAlert", {
-          login: event.detail,
-        });
-        break;
-      }
       case "AboutLoginsImport": {
         this.mm.sendAsyncMessage("AboutLogins:Import");
         break;

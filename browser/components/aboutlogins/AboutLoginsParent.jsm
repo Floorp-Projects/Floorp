@@ -123,21 +123,6 @@ var AboutLoginsParent = {
         Services.logins.removeLogin(login);
         break;
       }
-      case "AboutLogins:DismissBreachAlert": {
-        const login = message.data.login;
-
-        await LoginHelper.recordBreachAlertDismissal(login.guid);
-        const logins = await this.getAllLogins();
-        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-          logins
-        );
-        const messageManager = message.target.messageManager;
-        messageManager.sendAsyncMessage(
-          "AboutLogins:UpdateBreaches",
-          breachesByLoginGUID
-        );
-        break;
-      }
       case "AboutLogins:SyncEnable": {
         message.target.ownerGlobal.gSync.openFxAEmailFirstPage(
           "password-manager"
