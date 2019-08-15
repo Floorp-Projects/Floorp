@@ -37,7 +37,6 @@ using namespace mozilla::a11y;
 XULMenuitemAccessible::XULMenuitemAccessible(nsIContent* aContent,
                                              DocAccessible* aDoc)
     : AccessibleWrap(aContent, aDoc) {
-  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t XULMenuitemAccessible::NativeState() const {
@@ -351,8 +350,6 @@ XULMenupopupAccessible::XULMenupopupAccessible(nsIContent* aContent,
     mSelectControl = nullptr;
     mGenericTypes &= ~eSelect;
   }
-
-  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t XULMenupopupAccessible::NativeState() const {
