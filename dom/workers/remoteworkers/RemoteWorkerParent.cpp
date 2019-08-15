@@ -136,7 +136,8 @@ IPCResult RemoteWorkerParent::RecvClose() {
     mController->WorkerTerminated();
   }
 
-  Unused << Send__delete__(this);
+  MaybeSendDelete();
+
   return IPC_OK();
 }
 
