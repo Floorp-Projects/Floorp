@@ -102,3 +102,42 @@ add_task(async function check_openURL_listener() {
   ];
   await Promise.all(windows.map(win => BrowserTestUtils.closeWindow(win)));
 });
+
+add_task(async function check_newSavedLogin_listener() {
+  const TEST_URL =
+    "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
+
+  let loginsSaved = 0;
+  const triggerHandler = () => loginsSaved++;
+  const newSavedLoginListener = ASRouterTriggerListeners.get("newSavedLogin");
+
+  // Previously initialized by the Router
+  newSavedLoginListener.uninit();
+
+  // Initialise listener
+  await newSavedLoginListener.init(triggerHandler);
+
+  await BrowserTestUtils.withNewTab(
+    TEST_URL,
+    async function triggerNewSavedPassword(browser) {
+      Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
+      await BrowserTestUtils.waitForCondition(
+        () => loginsSaved !== 0,
+        "Wait for the observer notification to run"
+      );
+      is(loginsSaved, 1, "should receive observer notification");
+    }
+  );
+
+  // Uninitialise listener
+  newSavedLoginListener.uninit();
+
+  await BrowserTestUtils.withNewTab(
+    TEST_URL,
+    async function triggerNewSavedPasswordAfterUninit(browser) {
+      Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
+      await new Promise(resolve => executeSoon(resolve));
+      is(loginsSaved, 1, "shouldn't receive obs. notification after uninit");
+    }
+  );
+});
