@@ -43,7 +43,7 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
     0,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    "rgb(255, 255, 255)",
+    "rgb(255, 255, 255)"
   );
   refCx.fillStyle = "fuchsia";
   refCx.fillRect(10, 10, 20, 20);
@@ -67,7 +67,7 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
     0,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    "rgb(255, 255, 0)",
+    "rgb(255, 255, 0)"
   );
   assertSnapshots(
     testCanvas,
