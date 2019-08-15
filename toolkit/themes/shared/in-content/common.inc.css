@@ -89,7 +89,6 @@
   --yellow-10: #ffff98;
   --yellow-50: #ffe900;
   --yellow-60: #d7b600;
-  --yellow-60-a30: rgba(215, 182, 0, 0.3);
   --yellow-70: #a47f00;
   --yellow-80: #715100;
   --yellow-90: #3e2800;
@@ -959,11 +958,6 @@ xul|treechildren::-moz-tree-image(selected) {
 
 .message-bar-warning > .message-bar-icon {
   list-style-image: url("chrome://browser/skin/warning.svg");
-}
-
-input[type="text"][warning]:enabled:not(:focus) {
-  border-color: var(--yellow-60);
-  box-shadow: 0 0 0 1px var(--yellow-60), 0 0 0 4px var(--yellow-60-a30);
 }
 
 .card {
