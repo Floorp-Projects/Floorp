@@ -4,9 +4,9 @@
 if test `uname -s` = "Linux"; then
   # We need to indicate the target for cross builds
   ac_add_options --target=x86_64-apple-darwin
-  export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
-  export DMG_TOOL=$topsrcdir/dmg/dmg
-  export HFS_TOOL=$topsrcdir/dmg/hfsplus
+  export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
+  export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
+  export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
 fi
 
 ac_add_options --with-l10n-base=../../l10n

@@ -1,13 +1,13 @@
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 
-if [ -d "$topsrcdir/clang" ]; then
-    CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
+if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
+    CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
 
     export LIB=$LIB:$CLANG_LIB_DIR
     export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
 
     export MOZ_COPY_PDBS=1
-    export LLVM_SYMBOLIZER="$topsrcdir/clang/bin/llvm-symbolizer.exe"
+    export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/clang/bin/llvm-symbolizer.exe"
     export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
 fi
 

@@ -39,15 +39,15 @@ function runTest() {
   iframe.height = "1000px";
 
   var step1, stepfinish;
-  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", async function(e) {
     switch (e.detail.message) {
       case "step 1":
-        step1 = SpecialPowers.snapshotWindow(iframe.contentWindow);
+        step1 = await SpecialPowers.snapshotWindow(iframe.contentWindow);
         break;
       case "step 2":
         // The page has now attempted to load the X-Frame-Options page; take
         // another screenshot.
-        stepfinish = SpecialPowers.snapshotWindow(iframe.contentWindow);
+        stepfinish = await SpecialPowers.snapshotWindow(iframe.contentWindow);
         ok(
           step1.toDataURL() == stepfinish.toDataURL(),
           "Screenshots should be identical"

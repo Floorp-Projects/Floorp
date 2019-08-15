@@ -5,7 +5,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest, 0);"
+        onload="setTimeout(runTests, 0);"
         title="bug 89419 test">
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
@@ -14,59 +14,49 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <script type="application/javascript"><![CDATA[
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
     ////
-    // Execute the next test in the generator function.
-    //
-    function nextTest() {
-      tests.next();
-    }
-
-    ////
-    // Generator function for test steps for bug 89419:
     // A visited link should have the :visited style applied
     // to it when displayed on a page which was fetched from
     // the bfcache.
     //
-    function* testIterator()
-    {
+    async function runTests() {
       // Disable rcwn to make cache behavior deterministic.
-      var SpecialPowers = window.opener.wrappedJSObject.SpecialPowers;
-      SpecialPowers.pushPrefEnv({"set":[["network.http.rcwn.enabled", false]]}, nextTest);
-      yield undefined;
+      var {SpecialPowers} = opener;
+      await SpecialPowers.pushPrefEnv({"set":[["network.http.rcwn.enabled", false]]});
 
       // Load a test page containing an image referring to the sjs that returns
       // a different redirect every time it's loaded.
-      doPageNavigation({
-        uri: getHttpUrl("89419.html"),
-        onNavComplete: nextTest,
-        preventBFCache: true
+      await new Promise(resolve => {
+        doPageNavigation({
+          uri: getHttpUrl("89419.html"),
+          onNavComplete: resolve,
+          preventBFCache: true,
+        });
+      })
+
+      var first = await snapshotWindow(TestWindow.getWindow());
+
+      await new Promise(resolve => {
+        doPageNavigation({
+          uri: "about:blank",
+          onNavComplete: resolve,
+        });
       });
-      yield undefined;
 
-      var first = snapshotWindow(TestWindow.getWindow());
-
-      doPageNavigation({
-        uri: "about:blank",
-        onNavComplete: nextTest
-      });
-      yield undefined;
-
-      var second = snapshotWindow(TestWindow.getWindow());
+      var second = await snapshotWindow(TestWindow.getWindow());
       function snapshotsEqual(snap1, snap2) {
         return compareSnapshots(snap1, snap2, true)[0];
       }
       ok(!snapshotsEqual(first, second), "about:blank should not be the same as the image web page");
 
-      doPageNavigation({
-        back: true,
-        onNavComplete: nextTest
+      await new Promise(resolve => {
+        doPageNavigation({
+          back: true,
+          onNavComplete: resolve,
+        });
       });
-      yield undefined;
 
-      var third = snapshotWindow(TestWindow.getWindow());
+      var third = await snapshotWindow(TestWindow.getWindow());
       ok(!snapshotsEqual(third, second), "going back should not be the same as about:blank");
       ok(snapshotsEqual(first, third), "going back should be the same as the initial load");
 

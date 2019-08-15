@@ -12,7 +12,6 @@ transforms:
     - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.release_deps:transforms
     - taskgraph.transforms.run_pgo_profile:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -127,8 +126,9 @@ jobs:
                 - android/android_common.py
                 - android/androidarm_4_3.py
                 - android/android_pgo.py
-        toolchains:
-            - linux64-clang
+        fetches:
+            toolchain:
+                - linux64-clang
 
     win32-shippable/opt:
         description: "Win32 Profile Generation"

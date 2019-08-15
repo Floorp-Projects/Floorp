@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "mozilla/dom/DocShellMessageUtils.h";
+
 include protocol PBrowser;
 include protocol PInProcess;
 include protocol PBrowserBridge;
@@ -14,6 +16,7 @@ using JSWindowActorMessageKind from "mozilla/dom/JSWindowActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";
+using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 
 namespace mozilla {
 namespace dom {
@@ -50,10 +53,17 @@ child:
    */
   async GetSecurityInfo() returns(nsCString? serializedSecInfo);
 
+  async LoadURIInChild(nsDocShellLoadState aLoadState);
+
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
 
 parent:
+  // Load the given URI load state into the current owner process of the given
+  // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
+  // window global.
+  async LoadURI(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState);
+
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
 

@@ -11,10 +11,6 @@ NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
-# Until normal mozconfigs also use MOZ_FETCHES_DIR
-ac_add_options --with-android-sdk="$MOZ_FETCHES_DIR/android-sdk-linux"
-export NODEJS=$MOZ_FETCHES_DIR/node/bin/node
-
 # We want to download Gradle.
 ac_add_options --with-gradle
 # We want to use (and populate!) the local Nexus repositories.

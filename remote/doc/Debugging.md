@@ -11,4 +11,4 @@ If you use mach to start the Firefox:
 
 	./mach run --setpref "remote.enabled=true" --setpref "remote.log.level=Debug" --remote-debugger
 
-[preference]: ./Prefs.md
+[preference]: ./Prefs.html

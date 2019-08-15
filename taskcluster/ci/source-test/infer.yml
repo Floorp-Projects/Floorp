@@ -23,15 +23,16 @@ job-defaults:
     run:
         using: run-task
         tooltool-downloads: public
-    toolchains:
-        - linux64-infer
-        - linux64-android-sdk-linux-repack
-        - linux64-android-ndk-linux-repack
-        - linux64-rust-android
-        - linux64-clang
-        - linux64-cbindgen
-        - linux64-nasm
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-infer
+            - linux64-android-sdk-linux-repack
+            - linux64-android-ndk-linux-repack
+            - linux64-rust-android
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
     when:
         files-changed:
             - 'mobile/**/*.java'

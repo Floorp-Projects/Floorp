@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
     if (++gLoadCount == 2)
       go();
   }
-  function go() {
+  async function go() {
     // Both same-origin and cross-origin names should be visible if they're set
     // on the iframe element.
     ok('winA' in window, "same-origin named access works");
@@ -30,13 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916945
     // Setting the 'name' attribute should propagate to the docshell.
     var ifrB = document.getElementById('ifrB');
     ifrB.setAttribute('name', 'foo');
-    is(SpecialPowers.wrap(ifrB).contentWindow.name, 'foo', 'attribute sets propagate to the docshell');
+    await SpecialPowers.spawn(ifrB, [], () => {
+      Assert.equal(this.content.name, 'foo',
+                   'attribute sets propagate to the docshell');
+    });
     ok('foo' in window, "names are dynamic if updated via setAttribute");
     // XXXbholley - flip me when Window moves to new bindings.
     todo('foo' instanceof Window, "names are dynamic if updated via setAttribute");
 
     // Setting window.name on the subframe should not propagate to the attribute.
-    SpecialPowers.wrap(ifrB).contentWindow.name = 'bar';
+    await SpecialPowers.spawn(ifrB, [], () => {
+      this.content.name = "bar";
+    });
     is(ifrB.getAttribute('name'), 'foo', 'docshell updates dont propagate to the attribute');
 
     // When the frame element attribute and docshell name don't match, nothing is returned.

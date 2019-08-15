@@ -18,8 +18,8 @@ export MOZILLA_OFFICIAL=1
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
-if [ -d "$topsrcdir/clang" ]; then
-    CLANG_LIB_DIR="$(cd $topsrcdir/clang/lib/clang/* && cd lib/windows && pwd)"
+if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
+    CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
 
     export LIB=$LIB:$CLANG_LIB_DIR
     export LDFLAGS="clang_rt.profile-x86_64.lib"
