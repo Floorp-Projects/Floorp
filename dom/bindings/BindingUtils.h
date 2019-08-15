@@ -1388,7 +1388,8 @@ inline void ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj) {
   // released, if we are finalizing later than we did while recording, and the
   // cache may have already been deleted.
   if (!recordreplay::IsReplaying()) {
-    MOZ_ASSERT(cache->GetWrapperMaybeDead() == obj);
+    MOZ_ASSERT(cache->GetWrapperMaybeDead() == obj ||
+               (js::RuntimeIsBeingDestroyed() && !cache->GetWrapperMaybeDead()));
     cache->ClearWrapper(obj);
   }
 }
