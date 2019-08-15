@@ -397,7 +397,7 @@ export type SourceWithContentAndType<+Content: SourceContent> = {|
  * @static
  */
 
-export type Source = {|
+export type Source = {
   +id: SourceId,
   +url: string,
   +sourceMapURL?: string,
@@ -409,7 +409,7 @@ export type Source = {|
   +extensionName: ?string,
   +isExtension: boolean,
   +isWasm: boolean,
-|};
+};
 
 /**
  * Script
