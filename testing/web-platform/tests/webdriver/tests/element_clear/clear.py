@@ -278,7 +278,7 @@ def test_designmode(session):
 
     response = element_clear(session, element)
     assert_success(response)
-    assert element.property("innerHTML") == ""
+    assert element.property("innerHTML") == "<br>"
     assert_element_has_focus(session.execute_script("return document.body"))
 
 
