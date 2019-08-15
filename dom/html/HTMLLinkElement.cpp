@@ -8,6 +8,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Components.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
@@ -16,12 +17,14 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "nsContentUtils.h"
+#include "nsDOMTokenList.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsDOMTokenList.h"
+#include "nsHTMLDNSPrefetch.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsINode.h"
+#include "nsIPrefetchService.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
 #include "nsPIDOMWindow.h"
@@ -326,9 +329,9 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (aName == nsGkAtoms::rel) {
         nsAutoString value;
         aValue->ToString(value);
-        uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(value);
+        uint32_t linkTypes = ParseLinkTypes(value);
         if (GetSheet()) {
-          dropSheet = !(linkTypes & nsStyleLinkElement::eSTYLESHEET);
+          dropSheet = !(linkTypes & eSTYLESHEET);
         }
       }
 
@@ -419,8 +422,8 @@ already_AddRefed<nsIURI> HTMLLinkElement::GetHrefURI() const {
 Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
-  uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(rel);
-  if (!(linkTypes & nsStyleLinkElement::eSTYLESHEET)) {
+  uint32_t linkTypes = ParseLinkTypes(rel);
+  if (!(linkTypes & eSTYLESHEET)) {
     return Nothing();
   }
 
@@ -436,7 +439,7 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   nsAutoString media;
   GetTitleAndMediaForElement(*this, title, media);
 
-  bool alternate = linkTypes & nsStyleLinkElement::eALTERNATE;
+  bool alternate = linkTypes & eALTERNATE;
   if (alternate && title.IsEmpty()) {
     // alternates must have title.
     return Nothing();
@@ -486,6 +489,269 @@ void HTMLLinkElement::GetAs(nsAString& aResult) {
   GetEnumAttr(nsGkAtoms::as, EmptyCString().get(), aResult);
 }
 
+static const nsAttrValue::EnumTable kAsAttributeTable[] = {
+    {"", DESTINATION_INVALID},      {"audio", DESTINATION_AUDIO},
+    {"font", DESTINATION_FONT},     {"image", DESTINATION_IMAGE},
+    {"script", DESTINATION_SCRIPT}, {"style", DESTINATION_STYLE},
+    {"track", DESTINATION_TRACK},   {"video", DESTINATION_VIDEO},
+    {"fetch", DESTINATION_FETCH},   {nullptr, 0}};
+
+/* static */
+void HTMLLinkElement::ParseAsValue(const nsAString& aValue,
+                                   nsAttrValue& aResult) {
+  DebugOnly<bool> success =
+      aResult.ParseEnumValue(aValue, kAsAttributeTable, false,
+                             // default value is a empty string
+                             // if aValue is not a value we
+                             // understand
+                             &kAsAttributeTable[0]);
+  MOZ_ASSERT(success);
+}
+
+/* static */
+nsContentPolicyType HTMLLinkElement::AsValueToContentPolicy(
+    const nsAttrValue& aValue) {
+  switch (aValue.GetEnumValue()) {
+    case DESTINATION_INVALID:
+      return nsIContentPolicy::TYPE_INVALID;
+    case DESTINATION_AUDIO:
+      return nsIContentPolicy::TYPE_INTERNAL_AUDIO;
+    case DESTINATION_TRACK:
+      return nsIContentPolicy::TYPE_INTERNAL_TRACK;
+    case DESTINATION_VIDEO:
+      return nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+    case DESTINATION_FONT:
+      return nsIContentPolicy::TYPE_FONT;
+    case DESTINATION_IMAGE:
+      return nsIContentPolicy::TYPE_IMAGE;
+    case DESTINATION_SCRIPT:
+      return nsIContentPolicy::TYPE_SCRIPT;
+    case DESTINATION_STYLE:
+      return nsIContentPolicy::TYPE_STYLESHEET;
+    case DESTINATION_FETCH:
+      return nsIContentPolicy::TYPE_OTHER;
+  }
+  return nsIContentPolicy::TYPE_INVALID;
+}
+
+void HTMLLinkElement::GetContentPolicyMimeTypeMedia(
+    nsAttrValue& aAsAttr, nsContentPolicyType& aPolicyType, nsString& aMimeType,
+    nsAString& aMedia) {
+  nsAutoString as;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::as, as);
+  ParseAsValue(as, aAsAttr);
+  aPolicyType = AsValueToContentPolicy(aAsAttr);
+
+  nsAutoString type;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  nsAutoString notUsed;
+  nsContentUtils::SplitMimeType(type, aMimeType, notUsed);
+
+  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
+}
+
+void HTMLLinkElement::
+    TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
+  MOZ_ASSERT(IsInComposedDoc());
+  if (!ElementHasHref()) {
+    return;
+  }
+
+  nsAutoString rel;
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
+    return;
+  }
+
+  if (!nsContentUtils::PrefetchPreloadEnabled(OwnerDoc()->GetDocShell())) {
+    return;
+  }
+
+  uint32_t linkTypes = ParseLinkTypes(rel);
+
+  if ((linkTypes & ePREFETCH) || (linkTypes & eNEXT) ||
+      (linkTypes & ePRELOAD)) {
+    nsCOMPtr<nsIPrefetchService> prefetchService(
+        components::Prefetch::Service());
+    if (prefetchService) {
+      nsCOMPtr<nsIURI> uri(GetURI());
+      if (uri) {
+        bool preload = !!(linkTypes & ePRELOAD);
+        nsContentPolicyType policyType;
+
+        if (preload) {
+          nsAttrValue asAttr;
+          nsAutoString mimeType;
+          nsAutoString media;
+          GetContentPolicyMimeTypeMedia(asAttr, policyType, mimeType, media);
+
+          if (policyType == nsIContentPolicy::TYPE_INVALID) {
+            // Ignore preload with a wrong or empty as attribute.
+            return;
+          }
+
+          if (!CheckPreloadAttrs(asAttr, mimeType, media, OwnerDoc())) {
+            policyType = nsIContentPolicy::TYPE_INVALID;
+          }
+        }
+
+        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+        referrerInfo->InitWithNode(this);
+        if (preload) {
+          prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
+        } else {
+          prefetchService->PrefetchURI(uri, referrerInfo, this,
+                                       linkTypes & ePREFETCH);
+        }
+        return;
+      }
+    }
+  }
+
+  if (linkTypes & ePRECONNECT) {
+    if (nsCOMPtr<nsIURI> uri = GetURI()) {
+      OwnerDoc()->MaybePreconnect(
+          uri, AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)));
+      return;
+    }
+  }
+
+  if (linkTypes & eDNS_PREFETCH) {
+    if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
+      nsHTMLDNSPrefetch::PrefetchLow(this);
+    }
+  }
+}
+
+void HTMLLinkElement::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue) {
+  MOZ_ASSERT(IsInComposedDoc());
+
+  if (!ElementHasHref()) {
+    return;
+  }
+
+  nsAutoString rel;
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel)) {
+    return;
+  }
+
+  if (!nsContentUtils::PrefetchPreloadEnabled(OwnerDoc()->GetDocShell())) {
+    return;
+  }
+
+  uint32_t linkTypes = ParseLinkTypes(rel);
+
+  if (!(linkTypes & ePRELOAD)) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrefetchService> prefetchService(components::Prefetch::Service());
+  if (!prefetchService) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri(GetURI());
+  if (!uri) {
+    return;
+  }
+
+  nsAttrValue asAttr;
+  nsContentPolicyType asPolicyType;
+  nsAutoString mimeType;
+  nsAutoString media;
+  GetContentPolicyMimeTypeMedia(asAttr, asPolicyType, mimeType, media);
+
+  if (asPolicyType == nsIContentPolicy::TYPE_INVALID) {
+    // Ignore preload with a wrong or empty as attribute, but be sure to cancel
+    // the old one.
+    prefetchService->CancelPrefetchPreloadURI(uri, this);
+    return;
+  }
+
+  nsContentPolicyType policyType = asPolicyType;
+  if (!CheckPreloadAttrs(asAttr, mimeType, media, OwnerDoc())) {
+    policyType = nsIContentPolicy::TYPE_INVALID;
+  }
+
+  if (aName == nsGkAtoms::crossorigin) {
+    CORSMode corsMode = AttrValueToCORSMode(aValue);
+    CORSMode oldCorsMode = AttrValueToCORSMode(aOldValue);
+    if (corsMode != oldCorsMode) {
+      prefetchService->CancelPrefetchPreloadURI(uri, this);
+
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithNode(this);
+      prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
+    }
+    return;
+  }
+
+  nsContentPolicyType oldPolicyType;
+
+  if (aName == nsGkAtoms::as) {
+    if (aOldValue) {
+      oldPolicyType = AsValueToContentPolicy(*aOldValue);
+      if (!CheckPreloadAttrs(*aOldValue, mimeType, media, OwnerDoc())) {
+        oldPolicyType = nsIContentPolicy::TYPE_INVALID;
+      }
+    } else {
+      oldPolicyType = nsIContentPolicy::TYPE_INVALID;
+    }
+  } else if (aName == nsGkAtoms::type) {
+    nsAutoString oldType;
+    nsAutoString notUsed;
+    if (aOldValue) {
+      aOldValue->ToString(oldType);
+    } else {
+      oldType = EmptyString();
+    }
+    nsAutoString oldMimeType;
+    nsContentUtils::SplitMimeType(oldType, oldMimeType, notUsed);
+    if (CheckPreloadAttrs(asAttr, oldMimeType, media, OwnerDoc())) {
+      oldPolicyType = asPolicyType;
+    } else {
+      oldPolicyType = nsIContentPolicy::TYPE_INVALID;
+    }
+  } else {
+    MOZ_ASSERT(aName == nsGkAtoms::media);
+    nsAutoString oldMedia;
+    if (aOldValue) {
+      aOldValue->ToString(oldMedia);
+    } else {
+      oldMedia = EmptyString();
+    }
+    if (CheckPreloadAttrs(asAttr, mimeType, oldMedia, OwnerDoc())) {
+      oldPolicyType = asPolicyType;
+    } else {
+      oldPolicyType = nsIContentPolicy::TYPE_INVALID;
+    }
+  }
+
+  if ((policyType != oldPolicyType) &&
+      (oldPolicyType != nsIContentPolicy::TYPE_INVALID)) {
+    prefetchService->CancelPrefetchPreloadURI(uri, this);
+  }
+
+  // Trigger a new preload if the policy type has changed.
+  // Also trigger load if the new policy type is invalid, this will only
+  // trigger an error event.
+  if ((policyType != oldPolicyType) ||
+      (policyType == nsIContentPolicy::TYPE_INVALID)) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithNode(this);
+    prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
+  }
+}
+
+void HTMLLinkElement::CancelPrefetchOrPreload() {
+  nsCOMPtr<nsIPrefetchService> prefetchService(components::Prefetch::Service());
+  if (prefetchService) {
+    if (nsCOMPtr<nsIURI> uri = GetURI()) {
+      prefetchService->CancelPrefetchPreloadURI(uri, this);
+    }
+  }
+}
+
 // We will use official mime-types from:
 // https://www.iana.org/assignments/media-types/media-types.xhtml#font
 // We do not support old deprecated mime-types for preload feature.
@@ -510,7 +776,7 @@ bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
                                         const nsAString& aType,
                                         const nsAString& aMedia,
                                         Document* aDocument) {
-  nsContentPolicyType policyType = Link::AsValueToContentPolicy(aAs);
+  nsContentPolicyType policyType = AsValueToContentPolicy(aAs);
   if (policyType == nsIContentPolicy::TYPE_INVALID) {
     return false;
   }

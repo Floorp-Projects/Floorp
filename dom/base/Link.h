@@ -119,16 +119,10 @@ class Link : public nsISupports {
 
   virtual bool ElementHasHref() const;
 
-  // This is called by HTMLAnchorElement.
+  // This is called by HTMLAnchorElement and HTMLLinkElement.
   void TryDNSPrefetch();
   void CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
                          nsWrapperCache::FlagsType aRequestedFlag);
-
-  // This is called by HTMLLinkElement.
-  void TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
-  void UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
-                     const nsAttrValue* aOldValue);
-  void CancelPrefetchOrPreload();
 
   bool HasPendingLinkUpdate() const { return mHasPendingLinkUpdate; }
   void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
@@ -143,9 +137,6 @@ class Link : public nsISupports {
   bool IsInDNSPrefetch() { return mInDNSPrefetch; }
   void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }
   void ClearIsInDNSPrefetch() { mInDNSPrefetch = false; }
-
-  static void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
-  static nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
 
  protected:
   virtual ~Link();
@@ -172,10 +163,6 @@ class Link : public nsISupports {
   void UnregisterFromHistory();
 
   void SetHrefAttribute(nsIURI* aURI);
-
-  void GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
-                                     nsContentPolicyType& aPolicyType,
-                                     nsString& aMimeType, nsAString& aMedia);
 
   mutable nsCOMPtr<nsIURI> mCachedURI;
 
