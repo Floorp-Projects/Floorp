@@ -1,9 +1,4 @@
 'use strict';
-
-// Imported from:
-// https://github.com/WICG/import-maps/blob/master/reference-implementation/__tests__/resolving.js
-// TODO: Upstream local changes.
-
 const { URL } = require('url');
 const { parseFromString } = require('../lib/parser.js');
 const { resolve } = require('../lib/resolver.js');
@@ -89,7 +84,8 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
         "lodash-dot": "./node_modules/lodash-es/lodash.js",
         "lodash-dot/": "./node_modules/lodash-es/",
         "lodash-dotdot": "../node_modules/lodash-es/lodash.js",
-        "lodash-dotdot/": "../node_modules/lodash-es/"
+        "lodash-dotdot/": "../node_modules/lodash-es/",
+        "nowhere/": []
       }
     }`);
 
@@ -113,6 +109,10 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
     it('should still fail for package modules that are not declared', () => {
       expect(() => resolveUnderTest('underscore/')).toThrow(TypeError);
       expect(() => resolveUnderTest('underscore/foo')).toThrow(TypeError);
+    });
+
+    it('should fail for package submodules that map to nowhere', () => {
+      expect(() => resolveUnderTest('nowhere/foo')).toThrow(TypeError);
     });
   });
 
@@ -149,7 +149,7 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
   describe('URL-like specifiers', () => {
     const resolveUnderTest = makeResolveUnderTest(`{
       "imports": {
-        "/node_modules/als-polyfill/index.mjs": "@std/kv-storage",
+        "/node_modules/als-polyfill/index.mjs": "std:kv-storage",
 
         "/lib/foo.mjs": "./more/bar.mjs",
         "./dotrelative/foo.mjs": "/lib/dot.mjs",
@@ -158,19 +158,16 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
         "/lib/no.mjs": null,
         "./dotrelative/no.mjs": [],
 
-        "/": "/lib/slash-only.mjs",
-        "./": "/lib/dotslash-only.mjs",
+        "/": "/lib/slash-only/",
+        "./": "/lib/dotslash-only/",
+
+        "/test/": "/lib/url-trailing-slash/",
+        "./test/": "/lib/url-trailing-slash-dot/",
 
         "/test": "/lib/test1.mjs",
         "../test": "/lib/test2.mjs"
       }
     }`);
-
-    it('should remap to built-in modules', () => {
-      expect(resolveUnderTest('/node_modules/als-polyfill/index.mjs')).toMatchURL('import:@std/kv-storage');
-      expect(resolveUnderTest('https://example.com/node_modules/als-polyfill/index.mjs')).toMatchURL('import:@std/kv-storage');
-      expect(resolveUnderTest('https://///example.com/node_modules/als-polyfill/index.mjs')).toMatchURL('import:@std/kv-storage');
-    });
 
     it('should remap to other URLs', () => {
       expect(resolveUnderTest('https://example.com/lib/foo.mjs')).toMatchURL('https://example.com/app/more/bar.mjs');
@@ -195,13 +192,18 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
     });
 
     it('should remap URLs that are just composed from / and .', () => {
-      expect(resolveUnderTest('https://example.com/')).toMatchURL('https://example.com/lib/slash-only.mjs');
-      expect(resolveUnderTest('/')).toMatchURL('https://example.com/lib/slash-only.mjs');
-      expect(resolveUnderTest('../')).toMatchURL('https://example.com/lib/slash-only.mjs');
+      expect(resolveUnderTest('https://example.com/')).toMatchURL('https://example.com/lib/slash-only/');
+      expect(resolveUnderTest('/')).toMatchURL('https://example.com/lib/slash-only/');
+      expect(resolveUnderTest('../')).toMatchURL('https://example.com/lib/slash-only/');
 
-      expect(resolveUnderTest('https://example.com/app/')).toMatchURL('https://example.com/lib/dotslash-only.mjs');
-      expect(resolveUnderTest('/app/')).toMatchURL('https://example.com/lib/dotslash-only.mjs');
-      expect(resolveUnderTest('../app/')).toMatchURL('https://example.com/lib/dotslash-only.mjs');
+      expect(resolveUnderTest('https://example.com/app/')).toMatchURL('https://example.com/lib/dotslash-only/');
+      expect(resolveUnderTest('/app/')).toMatchURL('https://example.com/lib/dotslash-only/');
+      expect(resolveUnderTest('../app/')).toMatchURL('https://example.com/lib/dotslash-only/');
+    });
+
+    it('should remap URLs that are prefix-matched by keys with trailing slashes', () => {
+      expect(resolveUnderTest('/test/foo.mjs')).toMatchURL('https://example.com/lib/url-trailing-slash/foo.mjs');
+      expect(resolveUnderTest('https://example.com/app/test/foo.mjs')).toMatchURL('https://example.com/lib/url-trailing-slash-dot/foo.mjs');
     });
 
     it('should use the last entry\'s address when URL-like specifiers parse to the same absolute URL', () => {
@@ -209,22 +211,60 @@ describe('Mapped using the "imports" key only (no scopes)', () => {
     });
   });
 
-  describe('overlapping entries with trailing slashes', () => {
-    const resolveUnderTest = makeResolveUnderTest(`{
-      "imports": {
-        "a": "/1",
-        "a/": "/2/",
-        "a/b": "/3",
-        "a/b/": "/4/"
-      }
-    }`);
+  describe('Overlapping entries with trailing slashes', () => {
+    it('should favor the most-specific key (no empty arrays)', () => {
+      const resolveUnderTest = makeResolveUnderTest(`{
+        "imports": {
+          "a": "/1",
+          "a/": "/2/",
+          "a/b": "/3",
+          "a/b/": "/4/"
+        }
+      }`);
 
-    it('most-specific wins', () => {
       expect(resolveUnderTest('a')).toMatchURL('https://example.com/1');
       expect(resolveUnderTest('a/')).toMatchURL('https://example.com/2/');
       expect(resolveUnderTest('a/b')).toMatchURL('https://example.com/3');
       expect(resolveUnderTest('a/b/')).toMatchURL('https://example.com/4/');
       expect(resolveUnderTest('a/b/c')).toMatchURL('https://example.com/4/c');
+    });
+
+    it('should favor the most-specific key when empty arrays are involved for less-specific keys', () => {
+      const resolveUnderTest = makeResolveUnderTest(`{
+        "imports": {
+          "a": [],
+          "a/": [],
+          "a/b": "/3",
+          "a/b/": "/4/"
+        }
+      }`);
+
+      expect(() => resolveUnderTest('a')).toThrow(TypeError);
+      expect(() => resolveUnderTest('a/')).toThrow(TypeError);
+      expect(() => resolveUnderTest('a/x')).toThrow(TypeError);
+      expect(resolveUnderTest('a/b')).toMatchURL('https://example.com/3');
+      expect(resolveUnderTest('a/b/')).toMatchURL('https://example.com/4/');
+      expect(resolveUnderTest('a/b/c')).toMatchURL('https://example.com/4/c');
+      expect(() => resolveUnderTest('a/x/c')).toThrow(TypeError);
+    });
+
+    it('should favor the most-specific key when empty arrays are involved for more-specific keys', () => {
+      const resolveUnderTest = makeResolveUnderTest(`{
+        "imports": {
+          "a": "/1",
+          "a/": "/2/",
+          "a/b": [],
+          "a/b/": []
+        }
+      }`);
+
+      expect(resolveUnderTest('a')).toMatchURL('https://example.com/1');
+      expect(resolveUnderTest('a/')).toMatchURL('https://example.com/2/');
+      expect(resolveUnderTest('a/x')).toMatchURL('https://example.com/2/x');
+      expect(() => resolveUnderTest('a/b')).toThrow(TypeError);
+      expect(() => resolveUnderTest('a/b/')).toThrow(TypeError);
+      expect(() => resolveUnderTest('a/b/c')).toThrow(TypeError);
+      expect(resolveUnderTest('a/x/c')).toMatchURL('https://example.com/2/x/c');
     });
   });
 });
