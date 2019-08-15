@@ -413,7 +413,7 @@ static bool RecompileBaselineScriptForDebugMode(
           observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
   AutoKeepJitScripts keepJitScripts(cx);
-  script->setBaselineScript(cx->runtime(), nullptr);
+  script->clearBaselineScript(cx->defaultFreeOp());
 
   MethodStatus status =
       BaselineCompile(cx, script, /* forceDebugMode = */ observing);

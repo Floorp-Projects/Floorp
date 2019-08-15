@@ -221,7 +221,7 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
   MOZ_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
 
   if (status == Method_CantCompile) {
-    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    script->disableBaselineCompile(cx->runtime());
   }
 
   return status;
@@ -235,7 +235,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (!IsBaselineJitEnabled()) {
-    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    script->disableBaselineCompile(cx->runtime());
     return Method_CantCompile;
   }
 
@@ -265,12 +265,12 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->length() > BaselineMaxScriptLength) {
-    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    script->disableBaselineCompile(cx->runtime());
     return Method_CantCompile;
   }
 
   if (script->nslots() > BaselineMaxScriptSlots) {
-    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    script->disableBaselineCompile(cx->runtime());
     return Method_CantCompile;
   }
 
@@ -294,7 +294,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   if (script->hasForceInterpreterOp()) {
-    script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
+    script->disableBaselineCompile(cx->runtime());
     return Method_CantCompile;
   }
 
@@ -514,8 +514,7 @@ void BaselineScript::Trace(JSTracer* trc, BaselineScript* script) {
 void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonBuilder());
 
-  // This allocation is tracked by JSScript::setBaselineScript /
-  // clearBaselineScript.
+  // This allocation is tracked by JSScript::setBaselineScriptImpl.
   fop->deleteUntracked(script);
 }
 
@@ -920,7 +919,7 @@ void jit::FinishDiscardBaselineScript(JSFreeOp* fop, JSScript* script) {
   MOZ_ASSERT(!script->jitScript()->active());
 
   BaselineScript* baseline = script->baselineScript();
-  script->setBaselineScript(fop, nullptr);
+  script->clearBaselineScript(fop);
   BaselineScript::Destroy(fop, baseline);
 }
 

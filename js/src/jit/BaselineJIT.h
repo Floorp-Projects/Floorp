@@ -383,7 +383,7 @@ struct BaselineScript final {
     MOZ_ASSERT(!builder || !hasPendingIonBuilder());
 
     if (script->isIonCompilingOffThread()) {
-      script->setIonScript(rt, ION_PENDING_SCRIPT);
+      script->setHasPendingIonScript(rt);
     }
 
     pendingBuilder_ = builder;
@@ -392,9 +392,7 @@ struct BaselineScript final {
   }
   void removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
     setPendingIonBuilder(rt, script, nullptr);
-    if (script->maybeIonScript() == ION_PENDING_SCRIPT) {
-      script->setIonScript(rt, nullptr);
-    }
+    script->clearHasPendingIonScript(rt);
   }
 
   size_t allocBytes() const { return allocBytes_; }
