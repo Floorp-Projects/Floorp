@@ -14,8 +14,6 @@ import { uniqBy, zip } from "lodash";
 import {
   getSource,
   getSourceFromId,
-  hasBreakpointPositions,
-  hasBreakpointPositionsForLine,
   getBreakpointPositionsForSource,
   getSourceActorsForSource,
 } from "../../selectors";
@@ -33,6 +31,7 @@ import {
   memoizeableAction,
   type MemoizedAction,
 } from "../../utils/memoizableAction";
+import { fulfilled } from "../../utils/async-value";
 import type { ThunkArgs } from "../../actions/types";
 
 async function mapLocations(
@@ -197,12 +196,20 @@ export const setBreakpointPositions: MemoizedAction<
   { cx: Context, sourceId: string, line?: number },
   ?BreakpointPositions
 > = memoizeableAction("setBreakpointPositions", {
-  hasValue: ({ sourceId, line }, { getState }) =>
-    isGeneratedId(sourceId) && line
-      ? hasBreakpointPositionsForLine(getState(), sourceId, line)
-      : hasBreakpointPositions(getState(), sourceId),
-  getValue: ({ sourceId, line }, { getState }) =>
-    getBreakpointPositionsForSource(getState(), sourceId),
+  getValue: ({ sourceId, line }, { getState }) => {
+    const positions = getBreakpointPositionsForSource(getState(), sourceId);
+    if (!positions) {
+      return null;
+    }
+
+    if (isGeneratedId(sourceId) && line && !positions[line]) {
+      // We always return the full position dataset, but if a given line is
+      // not available, we treat the whole set as loading.
+      return null;
+    }
+
+    return fulfilled(positions);
+  },
   createKey({ sourceId, line }, { getState }) {
     const key = generatedSourceActorKey(getState(), sourceId);
     return isGeneratedId(sourceId) && line ? `${key}-${line}` : key;
