@@ -1511,49 +1511,6 @@ size_t ScriptCounts::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
          ionCounts_->sizeOfIncludingThis(mallocSizeOf);
 }
 
-void JSScript::setBaselineScriptImpl(JSRuntime* rt,
-                                     js::jit::BaselineScript* baselineScript) {
-  setBaselineScriptImpl(rt->defaultFreeOp(), baselineScript);
-}
-
-void JSScript::setBaselineScriptImpl(JSFreeOp* fop,
-                                     js::jit::BaselineScript* baselineScript) {
-  if (hasBaselineScript()) {
-    js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
-    fop->removeCellMemory(this, baseline->allocBytes(),
-                          js::MemoryUse::BaselineScript);
-    baseline = nullptr;
-  }
-  MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
-
-  baseline = baselineScript;
-  if (hasBaselineScript()) {
-    AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
-  }
-  resetWarmUpResetCounter();
-  updateJitCodeRaw(fop->runtime());
-}
-
-void JSScript::setIonScriptImpl(JSRuntime* rt, js::jit::IonScript* ionScript) {
-  setIonScriptImpl(rt->defaultFreeOp(), ionScript);
-}
-
-void JSScript::setIonScriptImpl(JSFreeOp* fop, js::jit::IonScript* ionScript) {
-  MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT,
-                !baselineScript()->hasPendingIonBuilder());
-  if (hasIonScript()) {
-    js::jit::IonScript::writeBarrierPre(zone(), ion);
-    fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
-    ion = nullptr;
-  }
-  ion = ionScript;
-  MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
-  if (hasIonScript()) {
-    AddCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
-  }
-  updateJitCodeRaw(fop->runtime());
-}
-
 js::PCCounts* JSScript::maybeGetPCCounts(jsbytecode* pc) {
   MOZ_ASSERT(containsPC(pc));
   return getScriptCounts().maybeGetPCCounts(pcToOffset(pc));
@@ -5341,15 +5298,16 @@ LazyScript* LazyScript::CreateForXDR(
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(rt);
   uint8_t* jitCodeSkipArgCheck;
-  if (hasBaselineScript() && baseline->hasPendingIonBuilder()) {
+  if (hasBaselineScript() && baselineScript()->hasPendingIonBuilder()) {
     MOZ_ASSERT(!isIonCompilingOffThread());
     jitCodeRaw_ = rt->jitRuntime()->lazyLinkStub().value;
     jitCodeSkipArgCheck = jitCodeRaw_;
   } else if (hasIonScript()) {
+    jit::IonScript* ion = ionScript();
     jitCodeRaw_ = ion->method()->raw();
     jitCodeSkipArgCheck = jitCodeRaw_ + ion->getSkipArgCheckEntryOffset();
   } else if (hasBaselineScript()) {
-    jitCodeRaw_ = baseline->method()->raw();
+    jitCodeRaw_ = baselineScript()->method()->raw();
     jitCodeSkipArgCheck = jitCodeRaw_;
   } else if (jitScript() && js::jit::IsBaselineInterpreterEnabled()) {
     jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();

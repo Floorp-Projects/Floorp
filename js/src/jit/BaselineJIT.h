@@ -378,25 +378,8 @@ struct BaselineScript final {
     return pendingBuilder_;
   }
   void setPendingIonBuilder(JSRuntime* rt, JSScript* script,
-                            js::jit::IonBuilder* builder) {
-    MOZ_ASSERT(script->baselineScript() == this);
-    MOZ_ASSERT(builder);
-    MOZ_ASSERT(!hasPendingIonBuilder());
-
-    if (script->isIonCompilingOffThread()) {
-      script->clearIsIonCompilingOffThread(rt);
-    }
-
-    pendingBuilder_ = builder;
-    script->updateJitCodeRaw(rt);
-  }
-  void removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
-    MOZ_ASSERT(script->baselineScript() == this);
-    MOZ_ASSERT(hasPendingIonBuilder());
-
-    pendingBuilder_ = nullptr;
-    script->updateJitCodeRaw(rt);
-  }
+                            js::jit::IonBuilder* builder);
+  void removePendingIonBuilder(JSRuntime* rt, JSScript* script);
 
   size_t allocBytes() const { return allocBytes_; }
 };
