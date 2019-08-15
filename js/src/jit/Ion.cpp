@@ -3000,26 +3000,6 @@ size_t jit::SizeOfIonData(JSScript* script,
   return result;
 }
 
-void jit::DestroyJitScripts(JSFreeOp* fop, JSScript* script) {
-  if (!script->hasJitScript()) {
-    return;
-  }
-
-  if (script->hasIonScript()) {
-    IonScript* ion = script->ionScript();
-    script->jitScript()->clearIonScript(fop, script);
-    jit::IonScript::Destroy(fop, ion);
-  }
-
-  if (script->hasBaselineScript()) {
-    BaselineScript* baseline = script->baselineScript();
-    script->jitScript()->clearBaselineScript(fop, script);
-    jit::BaselineScript::Destroy(fop, baseline);
-  }
-
-  script->releaseJitScript(fop);
-}
-
 bool jit::JitSupportsSimd() { return js::jit::MacroAssembler::SupportsSimd(); }
 
 bool jit::JitSupportsAtomics() {
