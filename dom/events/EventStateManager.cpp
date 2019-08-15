@@ -31,7 +31,9 @@
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "mozilla/StaticPrefs_zoom.h"
 
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
@@ -250,7 +252,6 @@ EventStateManager::EventStateManager()
     UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
-  WheelTransaction::InitializeStatics();
 }
 
 nsresult EventStateManager::UpdateUserActivityTimer() {
@@ -2127,8 +2128,8 @@ nsresult EventStateManager::ChangeTextSize(int32_t change) {
 
   if (cv) {
     float textzoom;
-    float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
-    float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
+    float zoomMin = ((float)StaticPrefs::zoom_minPercent()) / 100;
+    float zoomMax = ((float)StaticPrefs::zoom_maxPercent()) / 100;
     cv->GetTextZoom(&textzoom);
     textzoom += ((float)change) / 10;
     if (textzoom < zoomMin)
@@ -2148,8 +2149,8 @@ nsresult EventStateManager::ChangeFullZoom(int32_t change) {
 
   if (cv) {
     float fullzoom;
-    float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
-    float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
+    float zoomMin = ((float)StaticPrefs::zoom_minPercent()) / 100;
+    float zoomMax = ((float)StaticPrefs::zoom_maxPercent()) / 100;
     cv->GetFullZoom(&fullzoom);
     fullzoom += ((float)change) / 10;
     if (fullzoom < zoomMin)
@@ -5840,7 +5841,8 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   // Reset if the previous wheel event is too old.
   if (!mLastTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastTime;
-    if (duration.ToMilliseconds() > WheelTransaction::GetTimeoutTime()) {
+    if (duration.ToMilliseconds() >
+        StaticPrefs::mousewheel_transaction_timeout()) {
       Reset();
     }
   }

@@ -22,11 +22,7 @@ nsresult SharedDIB::Create(uint32_t aSize) {
   return NS_OK;
 }
 
-bool SharedDIB::IsValid() {
-  if (!mShMem) return false;
-
-  return base::SharedMemory::IsHandleValid(mShMem->handle());
-}
+bool SharedDIB::IsValid() { return mShMem && mShMem->IsValid(); }
 
 nsresult SharedDIB::Close() {
   delete mShMem;

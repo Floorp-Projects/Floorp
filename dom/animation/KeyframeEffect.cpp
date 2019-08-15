@@ -25,6 +25,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h"              // For Layer
 #include "nsComputedDOMStyle.h"  // nsComputedDOMStyle::GetComputedStyle
@@ -49,7 +50,7 @@ void AnimationProperty::SetPerformanceWarning(
   mPerformanceWarning = Some(aWarning);
 
   nsAutoString localizedString;
-  if (nsLayoutUtils::IsAnimationLoggingEnabled() &&
+  if (StaticPrefs::layers_offmainthreadcomposition_log_animations() &&
       mPerformanceWarning->ToLocalizedString(localizedString)) {
     nsAutoCString logMessage = NS_ConvertUTF16toUTF8(localizedString);
     AnimationUtils::LogAsyncAnimationFailure(logMessage, aElement);

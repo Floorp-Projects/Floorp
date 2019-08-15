@@ -1857,23 +1857,15 @@ function mediaTestCleanup(callback) {
 async function dumpDebugInfoForToken(token) {
   for (let v of document.getElementsByTagName("video")) {
     if (token === v.token) {
-      return v.mozDumpDebugInfo();
+      info(JSON.stringify(await SpecialPowers.wrap(v).mozRequestDebugInfo()));
+      return;
     }
   }
   for (let a of document.getElementsByTagName("audio")) {
     if (token === a.token) {
-      return a.mozDumpDebugInfo();
+      info(JSON.stringify(await SpecialPowers.wrap(a).mozRequestDebugInfo()));
+      return;
     }
-  }
-  return Promise.resolve();
-}
-
-function dumpDebugInfo() {
-  for (var v of document.getElementsByTagName("video")) {
-    v.mozDumpDebugInfo();
-  }
-  for (var a of document.getElementsByTagName("audio")) {
-    a.mozDumpDebugInfo();
   }
 }
 
@@ -1883,5 +1875,12 @@ if ("SimpleTest" in window) {
   SimpleTest.requestFlakyTimeout("untriaged");
 
   // Register timeout function to dump debugging logs.
-  SimpleTest.registerTimeoutFunction(dumpDebugInfo);
+  SimpleTest.registerTimeoutFunction(async function() {
+    for (const v of document.getElementsByTagName("video")) {
+      SimpleTest.info(JSON.stringify(await SpecialPowers.wrap(v).mozRequestDebugInfo()));
+    }
+    for (const a of document.getElementsByTagName("audio")) {
+      SimpleTest.info(JSON.stringify(await SpecialPowers.wrap(a).mozRequestDebugInfo()));
+    }
+  });
 }

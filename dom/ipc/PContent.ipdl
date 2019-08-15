@@ -1379,6 +1379,13 @@ parent:
     async AddPerformanceMetrics(nsID aID, PerformanceInfo[] aMetrics);
 
     /*
+     * Determines whether storage access can be granted automatically by the
+     * storage access API without showing a user prompt.
+     */
+    async AutomaticStorageAccessCanBeGranted(Principal aPrincipal)
+          returns (bool success);
+
+    /*
      * A 3rd party tracking origin (aTrackingOrigin) has received the permission
      * granted to have access to aGrantedOrigin when loaded by aParentPrincipal.
      */

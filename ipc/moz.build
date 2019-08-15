@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'app',
     'chromium',
     'glue',
     'ipdl',
@@ -17,7 +18,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['mscom']
 
-DIRS += ['app']
+TEST_DIRS += [
+    'gtest',
+]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "IPC")

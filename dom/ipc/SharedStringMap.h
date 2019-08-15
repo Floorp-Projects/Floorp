@@ -59,6 +59,7 @@ class SharedStringMap {
    *   encoded as character (*not* byte) offsets into this region.
    */
   struct Header {
+    uint32_t mMagic;
     // The number of entries in this map.
     uint32_t mEntryCount;
 

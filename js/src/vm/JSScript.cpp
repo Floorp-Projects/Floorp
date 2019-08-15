@@ -1149,7 +1149,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     script->column_ = column;
     script->immutableFlags_ = immutableFlags;
 
-    if (script->hasFlag(ImmutableFlags::ArgsHasVarBinding)) {
+    if (script->argumentsHasVarBinding()) {
       // Call setArgumentsHasVarBinding to initialize the
       // NeedsArgsAnalysis flag.
       script->setArgumentsHasVarBinding();
@@ -4931,7 +4931,7 @@ Scope* JSScript::innermostScope(jsbytecode* pc) {
 }
 
 void JSScript::setArgumentsHasVarBinding() {
-  setFlag(ImmutableFlags::ArgsHasVarBinding);
+  setFlag(ImmutableFlags::ArgumentsHasVarBinding);
   setFlag(MutableFlags::NeedsArgsAnalysis);
 }
 

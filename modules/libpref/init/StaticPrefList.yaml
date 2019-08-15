@@ -2006,7 +2006,12 @@
   value: true
   mirror: always
 
-# Are shared memory User Agent style sheets enabled?
+# Whether automatic storage access granting heuristics should be turned on.
+- name: dom.storage_access.auto_grants
+  type: bool
+  value: true
+  mirror: always
+
 - name: dom.storage_access.auto_grants.delayed
   type: bool
   value: true
@@ -2016,6 +2021,14 @@
 - name: dom.storage_access.enabled
   type: bool
   value: false
+  mirror: always
+
+# The maximum number of origins that a given third-party tracker is allowed
+# to have concurrent access to before the user is presented with a storage
+# access prompt.  Only effective when the auto_grants pref is turned on.
+- name: dom.storage_access.max_concurrent_auto_grants
+  type: int32_t
+  value: 5
   mirror: always
 
 # Enable Storage API for all platforms except Android.
@@ -2526,6 +2539,129 @@
 - name: fission.preserve_browsing_contexts
   type: bool
   value: false
+  mirror: always
+
+#---------------------------------------------------------------------------
+# Prefs starting with "font."
+#---------------------------------------------------------------------------
+
+# A value greater than zero enables font size inflation for
+# pan-and-zoom UIs, so that the fonts in a block are at least the size
+# that, if a block's width is scaled to match the device's width, the
+# fonts in the block are big enough that at most the pref value ems of
+# text fit in *the width of the device*.
+#
+# When both this pref and the next are set, the larger inflation is used.
+- name: font.size.inflation.emPerLine
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# A value greater than zero enables font size inflation for
+# pan-and-zoom UIs, so that if a block's width is scaled to match the
+# device's width, the fonts in a block are at least the given font size.
+# The value given is in twips, i.e., 1/20 of a point, or 1/1440 of an inch.
+#
+# When both this pref and the previous are set, the larger inflation is used.
+- name: font.size.inflation.minTwips
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
+# this pref forces font inflation to always be enabled in all modes.
+# That is, any heuristics used to detect pan-and-zoom
+# vs. non-pan-and-zoom modes are disabled and all content is treated
+# as pan-and-zoom mode wrt font inflation.
+#
+# This pref has no effect if font inflation is not enabled through
+# either of the prefs above.  It has no meaning in single-mode UIs.
+- name: font.size.inflation.forceEnabled
+  type: bool
+  value: false
+  mirror: always
+
+# In products with multi-mode pan-and-zoom and non-pan-and-zoom UIs,
+# this pref disables font inflation in master-process contexts where
+# existing heuristics can't be used determine enabled-ness.
+#
+# This pref has no effect if font inflation is not enabled through
+# either of the prefs above.  The "forceEnabled" pref above overrides
+# this pref.
+- name: font.size.inflation.disabledInMasterProcess
+  type: bool
+  value: false
+  mirror: always
+
+# Defines the font size inflation mapping intercept parameter.
+#
+# Font size inflation computes a minimum font size, m, based on
+# other preferences (see font.size.inflation.minTwips and
+# font.size.inflation.emPerLine, above) and the width of the
+# frame in which the text resides. Using this minimum, a specified
+# font size, s, is mapped to an inflated font size, i, using an
+# equation that varies depending on the value of the font size
+# inflation mapping intercept parameter, P.
+#
+# If the intercept parameter is negative, then the following mapping
+# function is used:
+#
+# i = m + s
+#
+# If the intercept parameter is non-negative, then the mapping function
+# is a function such that its graph meets the graph of i = s at the
+# point where both i and s are (1 + P/2) * m for values of s that are
+# large enough. This means that when s=0, i is always equal to m.
+- name: font.size.inflation.mappingIntercept
+  type: int32_t
+  value: 1
+  mirror: always
+
+# Since the goal of font size inflation is to avoid having to
+# repeatedly scroll side to side to read a block of text, and there are
+# a number of page layouts where a relatively small chunk of text is
+# better off not being inflated according to the same algorithm we use
+# for larger chunks of text, we want a threshold for an amount of text
+# that triggers font size inflation.  This preference controls that
+# threshold.
+#
+# It controls the threshold used within an *approximation* of the
+# number of lines of text we use.  In particular, if we assume that
+# each character (collapsing collapsible whitespace) has a width the
+# same as the em-size of the font (when, normally, it's actually quite
+# a bit smaller on average), this preference gives the percentage of a
+# number of lines of text we'd need to trigger inflation.  This means
+# that a percentage of 100 means that we'd need a number of characters
+# (we know the font size and the width) equivalent to one line of
+# square text (which is actually a lot less than a real line of text).
+#
+# A value of 0 means there's no character length threshold.
+- name: font.size.inflation.lineThreshold
+  type: uint32_t
+  value: 400
+  mirror: always
+
+# This controls the percentage that fonts will be inflated, if font
+# size inflation is enabled. Essentially, if we have a specified font
+# size, s, and an inflated font size, i, this specifies that the ratio
+# i/s * 100 should never exceed the value of this preference. In order
+# for this preference to have any effect, its value must be greater
+# than 100, since font inflation can never decrease the ratio i/s.
+- name: font.size.inflation.maxRatio
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# This setting corresponds to a global text zoom setting affecting
+# all content that is not already subject to font size inflation.
+# It is interpreted as a percentage value that is applied on top
+# of the document's current text zoom setting.
+#
+# The resulting total zoom factor (text zoom * system font scale)
+# will be limited by zoom.minPercent and maxPercent.
+- name: font.size.systemFontScale
+  type: uint32_t
+  value: 100
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -3780,6 +3916,18 @@
 #endif
   mirror: once
 
+# Whether to animate simple opacity and transforms on the compositor.
+- name: layers.offmainthreadcomposition.async-animations
+  type: bool
+  value: true
+  mirror: always
+
+# Whether to log information about off main thread animations to stderr.
+- name: layers.offmainthreadcomposition.log-animations
+  type: bool
+  value: false
+  mirror: always
+
 - name: layers.offmainthreadcomposition.force-disabled
   type: bool
   value: false
@@ -4015,6 +4163,12 @@
   value: false
   mirror: always
 
+# Whether we should layerize all animated images (if otherwise possible).
+- name: layout.animated-image-layers.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: layout.animation.prerender.partial
   type: RelaxedAtomicBool
   value: false
@@ -4056,19 +4210,19 @@
 # text underline offset
 - name: layout.css.text-underline-offset.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # text decoration thickness
 - name: layout.css.text-decoration-thickness.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # text decoration skip ink
 - name: layout.css.text-decoration-skip-ink.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Is support for CSS column-span enabled?
@@ -4311,6 +4465,12 @@
   value: true
   mirror: always
 
+# Are inter-character ruby annotations enabled?
+- name: layout.css.ruby.intercharacter.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: layout.css.scroll-behavior.damping-ratio
   type: AtomicFloat
   value: 1.0f
@@ -4502,6 +4662,28 @@
   value: -1
   mirror: always
 
+# The time in number of frames that we estimate for a refresh driver
+# to be quiescent.
+- name: layout.idle_period.required_quiescent_frames
+  type: uint32_t
+  value: 2
+  mirror: always
+
+# The amount of time (milliseconds) needed between an idle period's
+# end and the start of the next tick to avoid jank.
+- name: layout.idle_period.time_limit
+  type: uint32_t
+  value: 1
+  mirror: always
+
+# Enable/disable interruptible reflow, which allows reflows to stop
+# before completion (and display the partial results) when user events
+# are pending.
+- name: layout.interruptible-reflow.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: layout.min-active-layer-size
   type: int32_t
   value: 64
@@ -4544,6 +4726,12 @@
 - name: layout.lower_priority_refresh_driver_during_load
   type: bool
   value: true
+  mirror: always
+
+# Is layout of CSS outline-style:auto enabled?
+- name: layout.css.outline-style-auto.enabled
+  type: bool
+  value: false
   mirror: always
 
 # Pref to control enabling scroll anchoring.
@@ -5499,12 +5687,12 @@
 
 - name: mousewheel.transaction.ignoremovedelay
   type: RelaxedAtomicInt32
-  value: (int32_t)100
+  value: 100
   mirror: always
 
 - name: mousewheel.transaction.timeout
   type: RelaxedAtomicInt32
-  value: (int32_t)1500
+  value: 1500
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -5730,11 +5918,16 @@
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
 
+# Enable/disable display list invalidation logging --- useful for debugging.
+- name: nglayout.debug.invalidation
+  type: bool
+  value: false
+  mirror: always
+
 - name: nglayout.debug.widget_update_flashing
   type: RelaxedAtomicBool
   value: false
   mirror: always
-
 
 #---------------------------------------------------------------------------
 # Prefs starting with "page_load."
@@ -6515,6 +6708,27 @@
 #endif
   mirror: always
 
+#---------------------------------------------------------------------------
+# Prefs starting with "zoom."
+#---------------------------------------------------------------------------
+
+- name: zoom.maxPercent
+  type: uint32_t
+#ifdef ANDROID
+  value: 400
+#else
+  value: 300
+#endif
+  mirror: always
+
+- name: zoom.minPercent
+  type: uint32_t
+#ifdef ANDROID
+  value: 20
+#else
+  value: 30
+#endif
+  mirror: always
 
 #---------------------------------------------------------------------------
 # End of prefs

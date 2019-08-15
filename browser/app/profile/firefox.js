@@ -1568,9 +1568,6 @@ pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
 
-pref("dom.storage_access.auto_grants", true);
-pref("dom.storage_access.max_concurrent_auto_grants", 5);
-
 pref("browser.contentblocking.control-center.ui.showBlockedLabels", true);
 pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 

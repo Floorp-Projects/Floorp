@@ -59,6 +59,7 @@
 #include "nsCSSRenderingBorders.h"
 #include "mozilla/css/ImageLoader.h"
 #include "ImageContainer.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
@@ -1038,7 +1039,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
 
   StyleBorderStyle outlineStyle;
   if (ourOutline->mOutlineStyle.IsAuto()) {
-    if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+    if (StaticPrefs::layout_css_outline_style_auto_enabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                               StyleAppearance::FocusOutline)) {
@@ -3742,27 +3743,56 @@ static bool GetSkFontFromGfxFont(DrawTarget& aDrawTarget, gfxFont* aFont,
   return true;
 }
 
-// Computes data used to position text and the decoration line within a
-// SkTextBlob, data is returned through aTextPos and aBounds
+// Computes data used to position the decoration line within a
+// SkTextBlob, data is returned through aBounds
 static void GetPositioning(
     const nsCSSRendering::PaintDecorationLineParams& aParams, const Rect& aRect,
-    Float aOneCSSPixel, SkScalar aBounds[], SkPoint& aTextPos) {
+    Float aOneCSSPixel, Float aCenterBaselineOffset, SkScalar aBounds[]) {
+  /**
+   * How Positioning in Skia Works
+   *  Take the letter "n" for example
+   *  We set textPos as 0, 0
+   *  This is represented in Skia like so (not to scale)
+   *        ^
+   *  -10px |  _ __
+   *        | | '_ \
+   *   -5px | | | | |
+   * y-axis | |_| |_|
+   *  (0,0) ----------------------->
+   *        |     5px        10px
+   *    5px |
+   *        |
+   *   10px |
+   *        v
+   *  0 on the x axis is a line that touches the bottom of the n
+   *  (0,0) is the bottom left-hand corner of the n character
+   *  Moving "up" from the n is going in a negative y direction
+   *  Moving "down" from the n is going in a positive y direction
+   *
+   *  The intercepts that are returned in this arrangement will be
+   *  offset by the original point it starts at. (This happens in
+   *  the SkipInk function below).
+   *
+   *  In Skia, text MUST be laid out such that the next character
+   *  in the RunBuffer is further along the x-axis than the previous
+   *  character, otherwise there is undefined/strange behavior.
+   */
+
+  Float rectThickness = aParams.vertical ? aRect.Width() : aRect.Height();
+
   // the upper and lower lines/edges of the under or over line
   SkScalar upperLine, lowerLine;
-
-  // TextPos is the x,y coordinates of where the text is positioned, offset
-  // from the page boundaries. It should be the baseline of the text
-  // on the y axis, and offset to the start of the text for the x axis
   if (aParams.decoration == mozilla::StyleTextDecorationLine_OVERLINE) {
-    aTextPos = {aParams.pt.x,
-                aParams.pt.y + aParams.offset + (2 * aParams.lineSize.height)};
-    lowerLine = aTextPos.fY - aParams.offset + aParams.defaultLineThickness;
-    upperLine = lowerLine - aRect.Height();
+    lowerLine =
+        -aParams.offset + aParams.defaultLineThickness - aCenterBaselineOffset;
+    upperLine = lowerLine - rectThickness;
   } else {
-    aTextPos = {aParams.pt.x,
-                aParams.pt.y - aParams.offset - aParams.lineSize.height};
-    upperLine = aTextPos.fY - aParams.offset;
-    lowerLine = upperLine + aRect.Height();
+    // underlines in vertical text are offset from the center of
+    // the text, and not the baseline
+    // Skia sets the text at it's baseline so we have to offset it
+    // for text in vertical-* writing modes
+    upperLine = -aParams.offset - aCenterBaselineOffset;
+    lowerLine = upperLine + rectThickness;
   }
 
   // set up the bounds, add in a little padding to the thickness of the line
@@ -3948,19 +3978,36 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   SkScalar startIntercept = 0;
   SkScalar endIntercept = 0;
 
+  // keep track of the direction we are drawing the clipped rects in
+  // for sideways text, our intercepts from the first glyph are actually
+  // decreasing (towards the top edge of the page), so we use a negative
+  // direction
+  Float dir = 1.0f;
+  Float lineStart = aParams.vertical ? aParams.pt.y : aParams.pt.x;
+  Float lineEnd = lineStart + aParams.lineSize.width;
+  if (aParams.sidewaysLeft) {
+    dir = -1.0f;
+    std::swap(lineStart, lineEnd);
+  }
+
   for (int i = 0; i <= length; i += 2) {
     // handle start/end edge cases and set up general case
-    startIntercept = (i > 0) ? aIntercepts[i - 1] : aParams.pt.x - padding;
-    endIntercept = (i < length)
-                       ? aIntercepts[i]
-                       : aParams.pt.x + aParams.lineSize.width + padding;
+    startIntercept = (i > 0) ? (dir * aIntercepts[i - 1]) + lineStart
+                             : lineStart - (dir * padding);
+    endIntercept = (i < length) ? (dir * aIntercepts[i]) + lineStart
+                                : lineEnd + (dir * padding);
 
     // remove padding at both ends for width
     // the start of the line is calculated so the padding removes just
     // enough so that the line starts at its normal position
     clipParams.lineSize.width =
-        (endIntercept - startIntercept) - (2.0 * padding);
-    aRect.width = clipParams.lineSize.width;
+        (dir * (endIntercept - startIntercept)) - (2.0 * padding);
+
+    if (aParams.vertical) {
+      aRect.height = clipParams.lineSize.width;
+    } else {
+      aRect.width = clipParams.lineSize.width;
+    }
 
     // Don't draw decoration lines that have a smaller width than 1, or half the
     // decoration thickness
@@ -3971,8 +4018,14 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
 
     // start the line right after the intercept's location plus room for
     // padding
-    clipParams.pt.x = startIntercept + padding;
-    aRect.x = clipParams.pt.x;
+    if (aParams.vertical) {
+      clipParams.pt.y = aParams.sidewaysLeft ? endIntercept + padding
+                                             : startIntercept + padding;
+      aRect.y = clipParams.pt.y;
+    } else {
+      clipParams.pt.x = startIntercept + padding;
+      aRect.x = clipParams.pt.x;
+    }
 
     nsCSSRendering::PaintDecorationLineInternal(aFrame, aDrawTarget, clipParams,
                                                 aRect);
@@ -4034,7 +4087,9 @@ void nsCSSRendering::PaintDecorationLine(
   SkPoint textPos = {0, 0};
   SkScalar bounds[] = {0, 0};
   Float oneCSSPixel = aFrame->PresContext()->CSSPixelsToDevPixels(1.0f);
-  GetPositioning(aParams, rect, oneCSSPixel, bounds, textPos);
+  if (!textRun->UseCenterBaseline()) {
+    GetPositioning(aParams, rect, oneCSSPixel, 0, bounds);
+  }
 
   // array for the text intercepts
   nsTArray<SkScalar> intercepts;
@@ -4053,6 +4108,13 @@ void nsCSSRendering::PaintDecorationLine(
   gfxTextRun::GlyphRunIterator iter(textRun, aParams.glyphRange, isRTL);
 
   while (iter.NextRun()) {
+    if (iter.GetGlyphRun()->mOrientation ==
+        mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT) {
+      // we don't support upright text in vertical modes currently
+      // see Bug 1572294 (https://bugzilla.mozilla.org/show_bug.cgi?id=1572294)
+      continue;
+    }
+
     // get the glyph run's font
     SkFont font;
     if (!GetSkFontFromGfxFont(aDrawTarget, iter.GetGlyphRun()->mFont, font)) {
@@ -4065,6 +4127,17 @@ void nsCSSRendering::PaintDecorationLine(
         CreateTextBlob(textRun, characterGlyphs, font, spacing.Elements(),
                        iter.GetStringStart(), iter.GetStringEnd(),
                        (float)appUnitsPerDevPixel, textPos, spacingOffset);
+
+    if (textRun->UseCenterBaseline()) {
+      // writing modes that use a center baseline need to be adjusted on a
+      // font-by-font basis since Skia lines up the text on a alphabetic
+      // baseline, but for some vertical-* writing modes the offset is from the
+      // center.
+      gfxFont::Metrics metrics =
+          iter.GetGlyphRun()->mFont->GetMetrics(nsFontMetrics::eHorizontal);
+      Float centerToBaseline = (metrics.emAscent - metrics.emDescent) / 2.0f;
+      GetPositioning(aParams, rect, oneCSSPixel, centerToBaseline, bounds);
+    }
 
     // compute the text intercepts that need to be skipped
     GetTextIntercepts(textBlob, bounds, intercepts);

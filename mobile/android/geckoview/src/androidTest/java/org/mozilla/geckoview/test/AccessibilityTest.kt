@@ -47,7 +47,8 @@ const val DISPLAY_HEIGHT = 640
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @WithDisplay(width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT)
-class AccessibilityTest : BaseSessionTest() {
+// TODO: Bug 1564507, to work around it we run AccessibilityTest at the end
+class ZZAccessibilityTest : BaseSessionTest() {
     lateinit var view: View
     val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
     val provider: AccessibilityNodeProvider get() = view.accessibilityNodeProvider

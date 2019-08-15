@@ -35,6 +35,10 @@ class UrlbarView {
     this.document = this.panel.ownerDocument;
     this.window = this.document.defaultView;
 
+    if (this.input.megabar) {
+      this.panel.classList.add("megabar");
+    }
+
     this._mainContainer = this.panel.querySelector(".urlbarView-body-inner");
     this._rows = this.panel.querySelector("#urlbarView-results");
 
@@ -423,66 +427,76 @@ class UrlbarView {
 
     this.panel.removeAttribute("actionoverride");
 
-    // Make the panel span the width of the window.
-    let px = number => number.toFixed(2) + "px";
-    let documentRect = this._getBoundsWithoutFlushing(
-      this.document.documentElement
-    );
-    let width = documentRect.right - documentRect.left;
-    this.panel.setAttribute("width", width);
-    this._mainContainer.style.maxWidth = px(width);
-
-    // Keep the popup items' site icons aligned with the input's identity
-    // icon if it's not too far from the edge of the window.  We define
-    // "too far" as "more than 30% of the window's width AND more than
-    // 250px".
-    let boundToCheck = this.window.RTL_UI ? "right" : "left";
     let inputRect = this._getBoundsWithoutFlushing(this.input.textbox);
-    let startOffset = Math.abs(
-      inputRect[boundToCheck] - documentRect[boundToCheck]
-    );
-    let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
-    if (alignSiteIcons) {
-      // Calculate the end margin if we have a start margin.
-      let boundToCheckEnd = this.window.RTL_UI ? "left" : "right";
-      let endOffset = Math.abs(
-        inputRect[boundToCheckEnd] - documentRect[boundToCheckEnd]
-      );
-      if (endOffset > startOffset * 2) {
-        // Provide more space when aligning would result in an unbalanced
-        // margin. This allows the location bar to be moved to the start
-        // of the navigation toolbar to reclaim space for results.
-        endOffset = startOffset;
-      }
 
-      // We need to align with the tracking protection icon if the
-      // 'pageproxystate' is valid since the tracking protection icon would be
-      // at the first position instead of the identity icon in this case.
-      let alignIcon;
-      if (this.input.getAttribute("pageproxystate") === "valid") {
-        alignIcon = this.document.getElementById(
-          "tracking-protection-icon-box"
-        );
-      } else {
-        alignIcon = this.document.getElementById("identity-icon");
-      }
-      let alignRect = this._getBoundsWithoutFlushing(alignIcon);
-      let start = this.window.RTL_UI
-        ? documentRect.right - alignRect.right
-        : alignRect.left;
-
-      this.panel.style.setProperty("--item-padding-start", px(start));
-      this.panel.style.setProperty("--item-padding-end", px(endOffset));
+    let px = number => number.toFixed(2) + "px";
+    let width;
+    if (this.input.megabar) {
+      // Make the panel span the width of the textbox.
+      width = inputRect.width;
     } else {
-      this.panel.style.removeProperty("--item-padding-start");
-      this.panel.style.removeProperty("--item-padding-end");
+      // Make the panel span the width of the window.
+      let documentRect = this._getBoundsWithoutFlushing(
+        this.document.documentElement
+      );
+      width = documentRect.right - documentRect.left;
+
+      // Keep the popup items' site icons aligned with the input's identity
+      // icon if it's not too far from the edge of the window.  We define
+      // "too far" as "more than 30% of the window's width AND more than
+      // 250px".
+      let boundToCheck = this.window.RTL_UI ? "right" : "left";
+      let startOffset = Math.abs(
+        inputRect[boundToCheck] - documentRect[boundToCheck]
+      );
+      let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
+
+      if (alignSiteIcons) {
+        // Calculate the end margin if we have a start margin.
+        let boundToCheckEnd = this.window.RTL_UI ? "left" : "right";
+        let endOffset = Math.abs(
+          inputRect[boundToCheckEnd] - documentRect[boundToCheckEnd]
+        );
+        if (endOffset > startOffset * 2) {
+          // Provide more space when aligning would result in an unbalanced
+          // margin. This allows the location bar to be moved to the start
+          // of the navigation toolbar to reclaim space for results.
+          endOffset = startOffset;
+        }
+
+        // We need to align with the tracking protection icon if the
+        // 'pageproxystate' is valid since the tracking protection icon would be
+        // at the first position instead of the identity icon in this case.
+        let alignIcon;
+        if (this.input.getAttribute("pageproxystate") === "valid") {
+          alignIcon = this.document.getElementById(
+            "tracking-protection-icon-box"
+          );
+        } else {
+          alignIcon = this.document.getElementById("identity-icon");
+        }
+        let alignRect = this._getBoundsWithoutFlushing(alignIcon);
+        let start = this.window.RTL_UI
+          ? documentRect.right - alignRect.right
+          : alignRect.left;
+
+        this.panel.style.setProperty("--item-padding-start", px(start));
+        this.panel.style.setProperty("--item-padding-end", px(endOffset));
+      } else {
+        this.panel.style.removeProperty("--item-padding-start");
+        this.panel.style.removeProperty("--item-padding-end");
+      }
     }
 
-    // Align the panel with the input's parent toolbar.
-    let toolbarRect = this._getBoundsWithoutFlushing(
-      this.input.textbox.closest("toolbar")
-    );
-    this.panel.style.top = px(toolbarRect.bottom);
+    this.panel.style.width = px(width);
+    this._mainContainer.style.maxWidth = px(width);
+
+    // Align the panel with the input or the input's parent toolbar, depending
+    // on megabar status.
+    let alignmentRect = this.input.megabar
+      ? this._getBoundsWithoutFlushing(this.input.textbox)
+      : this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
+    this.panel.style.top = px(alignmentRect.bottom);
 
     this.panel.removeAttribute("hidden");
     this.input.inputField.setAttribute("aria-expanded", "true");

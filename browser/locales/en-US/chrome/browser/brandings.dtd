@@ -5,7 +5,5 @@
 	- Transliterated.
 	- Translated. -->
 
-<!ENTITY sendShortName "Send">
 <!ENTITY sendFullName "Firefox Send">
-<!ENTITY monitorShortName "Monitor">
 <!ENTITY monitorFullName "Firefox Monitor">

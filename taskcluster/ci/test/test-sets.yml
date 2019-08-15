@@ -405,15 +405,10 @@ android-opt-tests:
     # Robocop tests often fail on Debug builds
     - robocop
 
-android-debug-tests:
-    - geckoview-junit
-
-android-x86_64-opt-tests:
-    - geckoview-junit
-
 android-x86_64-tests:
     - cppunit
     - crashtest
+    - geckoview-junit
     - gtest
     - marionette
     - mochitest
