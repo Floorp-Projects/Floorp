@@ -283,12 +283,6 @@ void AudioNode::SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue) {
   mStream->SetInt32Parameter(aIndex, aValue);
 }
 
-void AudioNode::SendThreeDPointParameterToStream(uint32_t aIndex,
-                                                 const ThreeDPoint& aValue) {
-  MOZ_ASSERT(mStream, "How come we don't have a stream here?");
-  mStream->SetThreeDPointParameter(aIndex, aValue);
-}
-
 void AudioNode::SendChannelMixingParametersToStream() {
   if (mStream) {
     mStream->SetChannelMixingParameters(mChannelCount, mChannelCountMode,

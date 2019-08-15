@@ -74,8 +74,6 @@ class PannerNode final : public AudioNode {
     mPositionX->SetValue(aX);
     mPositionY->SetValue(aY);
     mPositionZ->SetValue(aZ);
-    SendThreeDPointParameterToStream(
-        POSITION, ConvertAudioParamTo3DP(mPositionX, mPositionY, mPositionZ));
   }
 
   void SetOrientation(double aX, double aY, double aZ) {
@@ -87,9 +85,6 @@ class PannerNode final : public AudioNode {
     mOrientationX->SetValue(aX);
     mOrientationY->SetValue(aY);
     mOrientationZ->SetValue(aZ);
-    SendThreeDPointParameterToStream(
-        ORIENTATION,
-        ConvertAudioParamTo3DP(mOrientationX, mOrientationY, mOrientationZ));
   }
 
   double RefDistance() const { return mRefDistance; }
