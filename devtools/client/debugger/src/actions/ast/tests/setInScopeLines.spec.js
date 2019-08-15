@@ -28,8 +28,8 @@ const mockCommandClient = {
   }),
   evaluateExpressions: async () => {},
   getFrameScopes: async () => {},
-  getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => [],
+  getSourceActorBreakpointPositions: async () => ({}),
+  getSourceActorBreakableLines: async () => [],
 };
 
 describe("getInScopeLine", () => {

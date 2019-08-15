@@ -6,7 +6,6 @@
 
 import { fromPairs, toPairs } from "lodash";
 import { executeSoon } from "../../../utils/DevToolsUtils";
-
 import type { ThunkArgs } from "../../types";
 
 type BasePromiseAction = {|
@@ -30,7 +29,25 @@ export type ErrorPromiseAction = {|
   +error: any,
 |};
 
-export type PromiseAction<Action, Value = any> =
+import {
+  pending,
+  rejected,
+  fulfilled,
+  type AsyncValue,
+} from "../../../utils/async-value";
+export function asyncActionAsValue<T>(
+  action: PromiseAction<mixed, T>
+): AsyncValue<T> {
+  if (action.status === "start") {
+    return pending();
+  }
+  if (action.status === "error") {
+    return rejected(action.error);
+  }
+  return fulfilled(action.value);
+}
+
+export type PromiseAction<+Action, Value = any> =
   // | {| ...Action, "@@dispatch/promise": Promise<Object> |}
   | {|
       ...BasePromiseAction,
