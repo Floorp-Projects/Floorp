@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-test-appservices**
+  * 🆕 New component for synchronizing Application Services' unit testing dependencies used in Android Components.
+
 # 9.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v8.0.0...v9.0.0)

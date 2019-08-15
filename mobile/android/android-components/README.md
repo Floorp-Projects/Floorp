@@ -199,6 +199,8 @@ _Supporting components with generic helper code._
 
 * 🔵 [**Test**](components/support/test/README.md) - A collection of helpers for testing components in local unit tests (`src/test`).
 
+* 🔵 [**Test Appservices**](components/support/test-appservices/README.md) - A component for synchronizing Application Services' unit testing dependencies used in Android Components.
+
 * 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
 ## Standalone libraries
