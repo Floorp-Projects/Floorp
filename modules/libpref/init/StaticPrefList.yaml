@@ -3784,6 +3784,12 @@
   value: false
   mirror: always
 
+# Force all possible layers to be always active layers.
+- name: layers.force-active
+  type: bool
+  value: false
+  mirror: always
+
 - name: layers.force-shmem-tiles
   type: bool
   value: false
