@@ -1,7 +1,7 @@
 const CANVAS_WIDTH = 200;
 const CANVAS_HEIGHT = 100;
 
-async function runDrawWindowTests(snapshotCallback, transparentBackground) {
+function runDrawWindowTests(win, drawWindowFlags, transparentBackground) {
   function make_canvas() {
     var canvas = document.createElement("canvas");
     canvas.setAttribute("height", CANVAS_HEIGHT);
@@ -37,13 +37,14 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
   // Basic tests of drawing the whole document on a background
 
   clear("white");
-  await snapshotCallback(
-    testWrapCx,
+  testWrapCx.drawWindow(
+    win,
     0,
     0,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    "rgb(255, 255, 255)"
+    "rgb(255, 255, 255)",
+    drawWindowFlags
   );
   refCx.fillStyle = "fuchsia";
   refCx.fillRect(10, 10, 20, 20);
@@ -61,13 +62,14 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
   );
 
   clearTest("white");
-  await snapshotCallback(
-    testWrapCx,
+  testWrapCx.drawWindow(
+    win,
     0,
     0,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    "rgb(255, 255, 0)"
+    "rgb(255, 255, 0)",
+    drawWindowFlags
   );
   assertSnapshots(
     testCanvas,
@@ -100,7 +102,7 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
   clear("white");
 
   testCx.translate(17, 31);
-  await snapshotCallback(testWrapCx, 40, 0, 40, 40, "white");
+  testWrapCx.drawWindow(win, 40, 0, 40, 40, "white", drawWindowFlags);
 
   refCx.fillStyle = "aqua";
   refCx.fillRect(17 + 10, 31 + 10, 20, 20);
@@ -117,7 +119,7 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
   clear("blue");
 
   testCx.translate(17, 31);
-  await snapshotCallback(testWrapCx, 40, 0, 35, 45, "green");
+  testWrapCx.drawWindow(win, 40, 0, 35, 45, "green", drawWindowFlags);
 
   if (transparentBackground) {
     refCx.fillStyle = "green";
@@ -141,7 +143,7 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
   clear("blue");
 
   testCx.translate(17, 31);
-  await snapshotCallback(testWrapCx, 40, 0, 35, 45, "transparent");
+  testWrapCx.drawWindow(win, 40, 0, 35, 45, "transparent", drawWindowFlags);
 
   if (!transparentBackground) {
     refCx.fillStyle = "white";
@@ -164,12 +166,12 @@ async function runDrawWindowTests(snapshotCallback, transparentBackground) {
 
   testCx.translate(9, 3);
   // 5, 8 is 5, 2 from the corner of the fuchsia square
-  await snapshotCallback(testWrapCx, 5, 8, 30, 25, "maroon");
+  testWrapCx.drawWindow(win, 5, 8, 30, 25, "maroon", drawWindowFlags);
   // 35, 0 is 15, 10 from the corner of the aqua square
-  await snapshotCallback(testWrapCx, 35, 0, 50, 40, "transparent");
+  testWrapCx.drawWindow(win, 35, 0, 50, 40, "transparent", drawWindowFlags);
   testCx.translate(15, 0);
   // 85, 5 is 5, 5 from the corner of the yellow square
-  await snapshotCallback(testWrapCx, 85, 5, 30, 25, "transparent");
+  testWrapCx.drawWindow(win, 85, 5, 30, 25, "transparent", drawWindowFlags);
 
   if (transparentBackground) {
     refCx.fillStyle = "maroon";
