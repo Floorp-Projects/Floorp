@@ -16,6 +16,10 @@ if (file('local.properties').canRead()) {
 }
 
 if (localProperties != null) {
+    localProperties.each { prop ->
+        gradle.ext.set("localProperties.${prop.key}", prop.value)
+    }
+
     String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
 
     if (appServicesLocalPath != null) {
