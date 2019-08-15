@@ -1082,7 +1082,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
       nsPIDOMWindowOuter* aWindow, nsIContent* aSelectionTarget,
       dom::DataTransfer* aDataTransfer, dom::Selection** aSelection,
       dom::RemoteDragStartData** aRemoteDragStartData, nsIContent** aTargetNode,
-      nsIPrincipal** aPrincipal);
+      nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp);
 
   /*
    * Perform the default handling for the dragstart event and set up a
@@ -1103,7 +1103,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                           dom::DataTransfer* aDataTransfer,
                           nsIContent* aDragTarget, dom::Selection* aSelection,
                           dom::RemoteDragStartData* aDragStartData,
-                          nsIPrincipal* aPrincipal);
+                          nsIPrincipal* aPrincipal,
+                          nsIContentSecurityPolicy* aCsp);
 
   bool IsTrackingDragGesture() const { return mGestureDownContent != nullptr; }
   /**

@@ -161,6 +161,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   nsCOMPtr<nsINode> mSourceNode;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
 
   // the document at the drag source. will be null if it came from outside the
   // app.
