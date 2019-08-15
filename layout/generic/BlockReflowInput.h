@@ -199,12 +199,6 @@ class BlockReflowInput {
    */
   const mozilla::LogicalMargin& BorderPadding() const { return mBorderPadding; }
 
-  /**
-   * Retrieve the block-axis content size "consumed" by any prev-in-flows.
-   * @note the value is cached so subsequent calls will return the same value
-   */
-  nscoord ConsumedBSize();
-
   // Reconstruct the previous block-end margin that goes before |aLine|.
   void ReconstructMarginBefore(nsLineList::iterator aLine);
 
@@ -384,9 +378,9 @@ class BlockReflowInput {
 
   StyleClear mFloatBreakType;
 
-  // The amount of computed block-direction size "consumed" by
-  // previous-in-flows.
-  nscoord mConsumedBSize;
+  // The amount of computed content block-size "consumed" by our previous
+  // continuations.
+  const nscoord mConsumedBSize;
 
   // Cache the current line's BSize if nsBlockFrame::PlaceLine() fails to
   // place the line. When redoing the line, it will be used to query the
