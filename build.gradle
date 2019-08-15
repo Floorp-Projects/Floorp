@@ -209,16 +209,6 @@ def createMachStagePackageTask(name) {
 
         dependsOn rootProject.machBuildFaster
 
-        // We'd prefer to take these from the :omnijar project directly, but
-        // it's awkward to reach across projects at evaluation time, so we
-        // duplicate the list here.
-        inputs.dir "${topsrcdir}/mobile/android/chrome"
-        inputs.dir "${topsrcdir}/mobile/android/components"
-        inputs.dir "${topsrcdir}/mobile/android/locales"
-        inputs.dir "${topsrcdir}/mobile/android/modules"
-        inputs.dir "${topsrcdir}/mobile/android/themes"
-        inputs.dir "${topsrcdir}/toolkit"
-
         workingDir "${topobjdir}"
 
         // We'd prefer this to be a `mach` invocation, but `mach build
@@ -230,6 +220,9 @@ def createMachStagePackageTask(name) {
 
         outputs.file "${topobjdir}/dist/fennec/assets/${mozconfig.substs.ANDROID_CPU_ARCH}/libxul.so"
         outputs.file "${topobjdir}/dist/fennec/lib/${mozconfig.substs.ANDROID_CPU_ARCH}/libmozglue.so"
+
+        // Force running `stage-package`.
+        outputs.upToDateWhen { false }
 
         // `path` is like `:machStagePackage`.
         standardOutput = new TaggedLogOutputStream("${path}>", logger)

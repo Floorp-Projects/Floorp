@@ -7,7 +7,6 @@
 #include "AppleATDecoder.h"
 #include "AppleDecoderModule.h"
 #include "AppleVTDecoder.h"
-#include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -27,11 +26,7 @@ void AppleDecoderModule::Init() {
     return;
   }
 
-  // Ensure IOSurface framework is loaded.
-  MacIOSurfaceLib::LoadLibrary();
-
-  sCanUseHardwareVideoDecoder =
-      MacIOSurfaceLib::isInit() && gfx::gfxVars::CanUseHardwareVideoDecoding();
+  sCanUseHardwareVideoDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding();
 
   sInitialized = true;
 }

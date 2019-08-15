@@ -8,6 +8,7 @@
 #define StorageAccessPermissionRequest_h_
 
 #include "nsContentPermissionHelper.h"
+#include "mozilla/MozPromise.h"
 
 #include <functional>
 
@@ -28,34 +29,30 @@ class StorageAccessPermissionRequest final
   NS_IMETHOD Allow(JS::HandleValue choices) override;
 
   typedef std::function<void()> AllowCallback;
-  typedef std::function<void()> AllowAutoGrantCallback;
   typedef std::function<void()> AllowAnySiteCallback;
   typedef std::function<void()> CancelCallback;
 
   static already_AddRefed<StorageAccessPermissionRequest> Create(
       nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
-      AllowAutoGrantCallback&& aAllowAutoGrantCallback,
       AllowAnySiteCallback&& aAllowAnySiteCallback,
       CancelCallback&& aCancelCallback);
 
+  typedef MozPromise<bool, bool, true> AutoGrantDelayPromise;
+  RefPtr<AutoGrantDelayPromise> MaybeDelayAutomaticGrants();
+
  private:
-  StorageAccessPermissionRequest(
-      nsPIDOMWindowInner* aWindow, nsIPrincipal* aNodePrincipal,
-      AllowCallback&& aAllowCallback,
-      AllowAutoGrantCallback&& aAllowAutoGrantCallback,
-      AllowAnySiteCallback&& aAllowAnySiteCallback,
-      CancelCallback&& aCancelCallback);
+  StorageAccessPermissionRequest(nsPIDOMWindowInner* aWindow,
+                                 nsIPrincipal* aNodePrincipal,
+                                 AllowCallback&& aAllowCallback,
+                                 AllowAnySiteCallback&& aAllowAnySiteCallback,
+                                 CancelCallback&& aCancelCallback);
   ~StorageAccessPermissionRequest();
 
   unsigned CalculateSimulatedDelay();
 
-  static void CallAutoGrantCallback(nsITimer* aTimer, void* aClosure);
-
   AllowCallback mAllowCallback;
-  AllowAutoGrantCallback mAllowAutoGrantCallback;
   AllowAnySiteCallback mAllowAnySiteCallback;
   CancelCallback mCancelCallback;
-  nsCOMPtr<nsITimer> mTimer;
   nsTArray<PermissionRequest> mPermissionRequests;
   bool mCallbackCalled;
 };

@@ -256,6 +256,7 @@ Result CallScriptMethod(HandleDebuggerScript obj,
     return (script->*ifJSScript)();
   }
 
+  MOZ_ASSERT(obj->getReferent().is<LazyScript*>());
   LazyScript* lazyScript = obj->getReferent().as<LazyScript*>();
   return (lazyScript->*ifLazyScript)();
 }
@@ -265,8 +266,7 @@ bool DebuggerScript::getIsGeneratorFunction(JSContext* cx, unsigned argc,
                                             Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isGeneratorFunction)",
                                      args, obj);
-  args.rval().setBoolean(
-      CallScriptMethod(obj, &JSScript::isGenerator, &LazyScript::isGenerator));
+  args.rval().setBoolean(obj->getReferentScript()->isGenerator());
   return true;
 }
 
@@ -275,8 +275,7 @@ bool DebuggerScript::getIsAsyncFunction(JSContext* cx, unsigned argc,
                                         Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isAsyncFunction)",
                                      args, obj);
-  args.rval().setBoolean(
-      CallScriptMethod(obj, &JSScript::isAsync, &LazyScript::isAsync));
+  args.rval().setBoolean(obj->getReferentScript()->isAsync());
   return true;
 }
 

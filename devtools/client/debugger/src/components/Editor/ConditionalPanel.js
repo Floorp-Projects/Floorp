@@ -12,7 +12,7 @@ import { toEditorLine } from "../../utils/editor";
 import actions from "../../actions";
 
 import {
-  getBreakpointForLocation,
+  getBreakpoint,
   getConditionalPanelLocation,
   getLogPointStatus,
   getContext,
@@ -231,7 +231,7 @@ const mapStateToProps = state => {
   const location = getConditionalPanelLocation(state);
   return {
     cx: getContext(state),
-    breakpoint: getBreakpointForLocation(state, location),
+    breakpoint: getBreakpoint(state, location),
     location,
     log: getLogPointStatus(state),
   };

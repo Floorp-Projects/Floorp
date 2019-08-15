@@ -61,9 +61,9 @@ runWithMSE(async function(ms, el) {
       await once(el, "seeked");
       dump("dump: seeked to " + seekTime);
       is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
-      await audiosb.appendBufferAsync(audioBuffer).catch(function(ex2) {
+      await audiosb.appendBufferAsync(audioBuffer).catch(async function(ex2) {
         ok(false, "Shouldn't throw another time when data can be evicted");
-        el.mozDumpDebugInfo();
+        dump(JSON.stringify(await SpecialPowers.wrap(el).mozRequestDebugInfo()));
         SimpleTest.finish();
       });
       // Test that an error in remove return a rejected promise

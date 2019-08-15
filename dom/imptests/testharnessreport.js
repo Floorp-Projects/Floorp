@@ -278,7 +278,7 @@ var W3CTest = {
    * Timeout the current test. Intended to be used from harness code, not
    * from tests.
    */
-  "timeout": function() {
+  "timeout": async function() {
     this.logFailure("Timeout", "Test runner timed us out.");
     timeout();
   }

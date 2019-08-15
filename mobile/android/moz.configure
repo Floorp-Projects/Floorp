@@ -126,6 +126,15 @@ imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 imply_option('MOZ_ANDROID_HISTORY', True)
 imply_option('--enable-small-chunk-size', True)
 
+option('--without-fennec',
+       help='Build only GeckoView, do not build and package Fennec (Firefox for Android)')
+
+@depends('--with-fennec')
+def with_fennec(value):
+    return bool(value)
+
+set_config('MOZ_ANDROID_WITH_FENNEC', depends_if(with_fennec)(lambda _: True))
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':

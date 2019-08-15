@@ -233,7 +233,7 @@ class MediaElementTest : BaseSessionTest() {
 
     @Test
     fun oggTimeMedia() {
-        timeMedia(VIDEO_OGG_PATH, 2.0)
+        timeMedia(VIDEO_OGG_PATH, 0.2)
     }
 
     @Test

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure that reload after replaceState after 3xx redirect does the right thing.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function() {
+      var ifr = document.querySelector("iframe");
+      var win = ifr.contentWindow;
+      is(win.location.href,
+         location.href.replace("mochitest/test_bug1422334.html",
+                               "navigation/blank.html?x=y"),
+         "Should have the right location on initial load");
+
+      win.history.replaceState(null, '', win.location.pathname);
+      is(win.location.href,
+         location.href.replace("mochitest/test_bug1422334.html",
+                               "navigation/blank.html"),
+         "Should have the right location after replaceState call");
+
+      ifr.onload = function() {
+        is(win.location.href,
+           location.href.replace("mochitest/test_bug1422334.html",
+                                 "navigation/blank.html"),
+           "Should have the right location after reload");
+        SimpleTest.finish();
+      }
+      win.location.reload();
+    })
+  </script>
+</head>
+<body>
+<p id="display"><iframe src="bug1422334_redirect.html"></iframe></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

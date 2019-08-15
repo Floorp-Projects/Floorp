@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
     'nsIBrowser.idl',
     'nsIBrowserChild.idl',
     'nsIBrowserDOMWindow.idl',
+    'nsIBrowserUsage.idl',
     'nsIContentPermissionPrompt.idl',
     'nsIContentPrefService2.idl',
     'nsIContentProcess.idl',

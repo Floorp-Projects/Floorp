@@ -184,7 +184,8 @@ function removeXHRBreakpoint(path: string, method: string) {
 function locationKey(location: BreakpointLocation) {
   const { sourceUrl, line, column } = location;
   const sourceId = location.sourceId || "";
-  return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
+  // $FlowIgnore
+  return `${sourceUrl}:${sourceId}:${line}:${column}`;
 }
 
 function detachWorkers() {
