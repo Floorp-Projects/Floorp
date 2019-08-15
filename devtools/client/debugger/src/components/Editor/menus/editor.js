@@ -123,9 +123,11 @@ const blackBoxMenuItem = (
 ) => ({
   id: "node-menu-blackbox",
   label: selectedSource.isBlackBoxed
-    ? L10N.getStr("sourceFooter.unblackbox")
-    : L10N.getStr("sourceFooter.blackbox"),
-  accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
+    ? L10N.getStr("blackboxContextItem.unblackbox")
+    : L10N.getStr("blackboxContextItem.blackbox"),
+  accesskey: selectedSource.isBlackBoxed
+    ? L10N.getStr("blackboxContextItem.unblackbox.accesskey")
+    : L10N.getStr("blackboxContextItem.blackbox.accesskey"),
   disabled: !shouldBlackbox(selectedSource),
   click: () => editorActions.toggleBlackBox(cx, selectedSource),
 });
