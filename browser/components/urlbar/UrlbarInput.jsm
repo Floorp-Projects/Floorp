@@ -859,6 +859,16 @@ class UrlbarInput {
     return this._openViewOnFocus;
   }
 
+  get openViewOnFocusForCurrentTab() {
+    return (
+      this.openViewOnFocus &&
+      !["about:newtab", "about:home"].includes(
+        this.window.gBrowser.currentURI.spec
+      ) &&
+      !this.isPrivate
+    );
+  }
+
   // Private methods below.
 
   _setOpenViewOnFocus() {
@@ -1534,7 +1544,7 @@ class UrlbarInput {
       if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
         this.editor.selectAll();
         event.preventDefault();
-      } else if (this.openViewOnFocus && !this.view.isOpen) {
+      } else if (this.openViewOnFocusForCurrentTab && !this.view.isOpen) {
         this.controller.engagementEvent.start(event);
         this.startQuery({
           allowAutofill: false,
