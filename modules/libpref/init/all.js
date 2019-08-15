@@ -5035,9 +5035,6 @@ pref("captivedetect.maxWaitingTime", 5000);
 pref("captivedetect.pollingTime", 3000);
 pref("captivedetect.maxRetryCount", 5);
 
-// Enable mapped array buffer by default.
-pref("dom.mapped_arraybuffer.enabled", true);
-
 // The tables used for Safebrowsing phishing and malware checks
 pref("urlclassifier.malwareTable", "goog-malware-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");
 #ifdef MOZILLA_OFFICIAL
