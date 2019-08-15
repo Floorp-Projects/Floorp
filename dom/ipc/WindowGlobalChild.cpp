@@ -228,6 +228,12 @@ void WindowGlobalChild::Destroy() {
   }
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvLoadURIInChild(
+    nsDocShellLoadState* aLoadState) {
+  mWindowGlobal->GetDocShell()->LoadURI(aLoadState);
+  return IPC_OK();
+}
+
 static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
                                       BrowsingContext* aBc,
                                       const nsString& aRemoteType,

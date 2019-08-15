@@ -33,14 +33,15 @@ win32/debug:
             - builds/taskcluster_base_win32.py
             - builds/taskcluster_sub_win32/debug.py
         mozconfig-variant: debug
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win32/opt:
     description: "Win32 Opt"
@@ -69,14 +70,15 @@ win32/opt:
         extra-config:
             stage_platform: win32
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64/debug:
     description: "Win64 Debug"
@@ -104,14 +106,15 @@ win64/debug:
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/debug.py
         mozconfig-variant: debug
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-fuzzing/debug:
     description: "Win64 Fuzzing Debug"
@@ -141,14 +144,15 @@ win64-fuzzing/debug:
             - builds/taskcluster_sub_win64/debug.py
         mozconfig-variant: debug-fuzzing
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-plain/debug:
     description: "Win64 Debug Plain"
@@ -178,12 +182,13 @@ win64-plain/debug:
             stage_platform: win64
         mozconfig-variant: plain-debug
     run-on-projects: ['trunk']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-node
-        - win64-nasm
-        - win64-cbindgen
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-node
+            - win64-nasm
+            - win64-cbindgen
 
 win64/opt:
     description: "Win64 Opt"
@@ -212,14 +217,15 @@ win64/opt:
         extra-config:
             stage_platform: win64
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-plain/opt:
     description: "Win64 Opt Plain"
@@ -249,12 +255,13 @@ win64-plain/opt:
             stage_platform: win64
         mozconfig-variant: plain-opt
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-nasm
-        - win64-node
-        - win64-cbindgen
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-nasm
+            - win64-node
+            - win64-cbindgen
 
 win32-shippable/opt:
     description: "Win32 Opt Shippable"
@@ -299,13 +306,14 @@ win32-shippable/opt:
             - taskcluster_nightly.py
         extra-config:
             stage_platform: win32
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 win64-shippable/opt:
     description: "Win64 Shippable"
@@ -339,13 +347,14 @@ win64-shippable/opt:
             - taskcluster_nightly.py
         extra-config:
             stage_platform: win64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 win32-add-on-devel/opt:
     description: "Windows32 add-on-devel"
@@ -373,14 +382,15 @@ win32-add-on-devel/opt:
             stage_platform: win32-add-on-devel
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-add-on-devel/opt:
     description: "Windows64 add-on-devel"
@@ -408,14 +418,15 @@ win64-add-on-devel/opt:
             stage_platform: win64-on-devel
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-noopt/debug:
     description: "Win64 No-optimize Debug"
@@ -442,14 +453,15 @@ win64-noopt/debug:
             - builds/taskcluster_sub_win64/noopt_debug.py
         mozconfig-variant: noopt-debug
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win32-noopt/debug:
     description: "Win32 No-optimize Debug"
@@ -476,14 +488,15 @@ win32-noopt/debug:
             - builds/taskcluster_sub_win32/noopt_debug.py
         mozconfig-variant: noopt-debug
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win32-rusttests/opt:
     description: "Win32 Rust Tests Opt"
@@ -515,13 +528,14 @@ win32-rusttests/opt:
             disable_package_metrics: true
         mozconfig-variant: rusttests
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win32-rusttests/debug:
     description: "Win32 Rust Tests Debug"
@@ -553,13 +567,14 @@ win32-rusttests/debug:
             disable_package_metrics: true
         mozconfig-variant: rusttests-debug
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-rusttests/opt:
     description: "Win64 Rust Tests Opt"
@@ -588,13 +603,14 @@ win64-rusttests/opt:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-rusttests/debug:
     description: "Win64 Rust Tests Debug"
@@ -623,13 +639,14 @@ win64-rusttests/debug:
             - builds/taskcluster_sub_win64/rusttests_opt.py
         mozconfig-variant: rusttests-debug
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-ccov/debug:
     description: "Win64 Debug Code Coverage"
@@ -660,17 +677,16 @@ win64-ccov/debug:
             - builds/taskcluster_sub_win64/ccov_debug.py
         mozconfig-variant: code-coverage
     run-on-projects: ['mozilla-central', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust-nightly
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
     fetches:
         toolchain:
+            - win64-clang-cl
+            - win64-rust-nightly
+            - win64-rust-size
+            - win64-cbindgen
             - win64-grcov
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
@@ -698,14 +714,15 @@ win64-asan/debug:
             - builds/taskcluster_sub_win64/asan_debug.py
         mozconfig-variant: debug-asan
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
@@ -734,14 +751,15 @@ win64-asan/opt:
             stage_platform: win64-asan
         mozconfig-variant: nightly-asan
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-asan-reporter-nightly/opt:
     description: "Win64 Opt ASAN Reporter Nightly"
@@ -780,13 +798,14 @@ win64-asan-reporter-nightly/opt:
         mar-channel-id:
             firefox-mozilla-central-asan
     run-on-projects: ['mozilla-central']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 win64-asan-fuzzing/opt:
     description: "Win64 Fuzzing Opt ASAN"
@@ -814,14 +833,15 @@ win64-asan-fuzzing/opt:
             stage_platform: win64-fuzzing-asan
         mozconfig-variant: nightly-fuzzing-asan
     run-on-projects: ['trunk', 'try']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win32-devedition-nightly/opt:
     description: "Win32 Dev Edition Nightly"
@@ -867,13 +887,14 @@ win32-devedition-nightly/opt:
             stage_platform: win32-devedition
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 win64-devedition-nightly/opt:
     description: "Win64 Dev Edition Nightly"
@@ -909,13 +930,14 @@ win64-devedition-nightly/opt:
             stage_platform: win64-devedition
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 win64-aarch64/debug:
     description: "AArch64 Win64 Debug"
@@ -946,14 +968,15 @@ win64-aarch64/debug:
         extra-config:
             mozconfig_platform: win64-aarch64
         mozconfig-variant: debug
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-aarch64/opt:
     description: "AArch64 Win64 Opt"
@@ -984,14 +1007,15 @@ win64-aarch64/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-sccache
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-sccache
+            - win64-nasm
+            - win64-node
 
 win64-aarch64-eme/opt:
     description: "AArch64 Win64 Opt w/ EME"
@@ -1026,8 +1050,9 @@ win64-aarch64-eme/opt:
     dependencies:
         win32-opt: build-win32/opt
         win64-aarch64-opt: build-win64-aarch64/opt
-    toolchains:
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-node
 
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
@@ -1114,8 +1139,8 @@ win64-aarch64-shippable/opt:
             - artifact: target.langpack.xpi
               extract: false
               dest: ../public/build
-    toolchains:
-        - win64-node
+        toolchain:
+            - win64-node
 
 win64-aarch64-shippable-no-eme/opt:
     description: "AArch64 Win64 Shippable w/o EME"
@@ -1151,13 +1176,14 @@ win64-aarch64-shippable-no-eme/opt:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
     run-on-projects: []
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node
 
 
 win64-aarch64-devedition-nightly/opt:
@@ -1195,10 +1221,11 @@ win64-aarch64-devedition-nightly/opt:
             mozconfig_platform: win64-aarch64
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
-    toolchains:
-        - win64-clang-cl
-        - win64-rust
-        - win64-rust-size
-        - win64-cbindgen
-        - win64-nasm
-        - win64-node
+    fetches:
+        toolchain:
+            - win64-clang-cl
+            - win64-rust
+            - win64-rust-size
+            - win64-cbindgen
+            - win64-nasm
+            - win64-node

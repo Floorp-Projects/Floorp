@@ -21,19 +21,19 @@ var correct, val1, val2;
 
 SimpleTest.waitForExplicitFinish();
 
-function snapshotFirst()
+async function snapshotFirst()
 {
   var iframeelem = document.getElementById('test-iframe');
-  first = snapshotWindow(iframeelem.contentWindow, false);
+  first = await snapshotWindow(iframeelem, false);
 
   iframeelem.onload = snapshotSecond;
   iframeelem.src = "http://example.com/tests/image/test/mochitest/bug671906-iframe.html";
 }
 
-function snapshotSecond()
+async function snapshotSecond()
 {
   var iframeelem = document.getElementById('test-iframe');
-  second = snapshotWindow(iframeelem.contentWindow, false);
+  second = await snapshotWindow(iframeelem, false);
 
   // We must have loaded the image again, because the principals for the
   // loading document are different.
@@ -44,10 +44,10 @@ function snapshotSecond()
   iframeelem.src = "http://mochi.test:8888/tests/image/test/mochitest/bug671906-iframe.html";
 }
 
-function snapshotThird()
+async function snapshotThird()
 {
   var iframeelem = document.getElementById('test-iframe');
-  third = snapshotWindow(iframeelem.contentWindow, false);
+  third = await snapshotWindow(iframeelem, false);
 
   // We must have loaded the image again, because the principals for the
   // loading document are different.

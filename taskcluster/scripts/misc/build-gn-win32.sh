@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e -v
+set -e -v -x
 
 # This script is for building GN on Windows.
 
@@ -8,8 +8,8 @@ COMPRESS_EXT=bz2
 
 cd $GECKO_PATH
 
-export PATH="$MOZ_FETCHES_DIR/ninja/bin:$PATH"
-export PATH="$MOZ_FETCHES_DIR/mingw64/bin:$PATH"
+export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/ninja/bin:$PATH"
+export PATH="$(cd $MOZ_FETCHES_DIR && pwd)/mingw64/bin:$PATH"
 
 . taskcluster/scripts/misc/vs-setup.sh
 . taskcluster/scripts/misc/tooltool-download.sh

@@ -30,6 +30,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/RemoteObjectProxy.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsZipArchive.h"
@@ -1910,6 +1911,17 @@ nsXPCComponents_Utils::IsDeadWrapper(HandleValue obj, bool* out) {
                 !JS_IsDeadWrapper(js::UncheckedUnwrap(&obj.toObject())));
 
   *out = JS_IsDeadWrapper(&obj.toObject());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsRemoteProxy(HandleValue val, bool* out) {
+  if (val.isObject()) {
+    *out = dom::IsRemoteObjectProxy(UncheckedUnwrap(&val.toObject()));
+    ;
+  } else {
+    *out = false;
+  }
   return NS_OK;
 }
 

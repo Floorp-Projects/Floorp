@@ -366,4 +366,8 @@ class nsDocLoader : public nsIDocumentLoader,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsDocLoader, NS_THIS_DOCLOADER_IMPL_CID)
 
+static inline nsISupports* ToSupports(nsDocLoader* aDocLoader) {
+  return static_cast<nsIDocumentLoader*>(aDocLoader);
+}
+
 #endif /* nsDocLoader_h__ */
