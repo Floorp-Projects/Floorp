@@ -263,10 +263,13 @@ class SETA(object):
 is_low_value_task = SETA().is_low_value_task
 
 
-@register_strategy('seta')
+@register_strategy('seta', args=(5, 60))
+@register_strategy('seta_10_120', args=(10, 120))
 class SkipLowValue(OptimizationStrategy):
-    push_interval = 5
-    time_interval = 60
+
+    def __init__(self, push_interval, time_interval):
+        self.push_interval = push_interval
+        self.time_interval = time_interval
 
     def should_remove_task(self, task, params, _):
         label = task.label
