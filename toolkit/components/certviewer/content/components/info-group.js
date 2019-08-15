@@ -28,6 +28,10 @@ export class InfoGroup extends HTMLElement {
       this.item.sectionTitle.replace(/\s+/g, "-").toLowerCase()
     );
 
+    this.classList.add(
+      this.item.sectionTitle.replace(/\s+/g, "-").toLowerCase()
+    );
+
     for (let i = 0; i < this.item.sectionItems.length; i++) {
       this.shadowRoot.append(new InfoItem(this.item.sectionItems[i]));
     }
