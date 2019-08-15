@@ -1314,9 +1314,9 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   // been disabled for this script.
   masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
   masm.loadPtr(Address(scriptReg, JitScript::offsetOfIonScript()), scriptReg);
-  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(ION_COMPILING_SCRIPT),
+  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonCompilingScriptPtr),
                  &skipCall);
-  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(ION_DISABLED_SCRIPT),
+  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonDisabledScriptPtr),
                  &skipCall);
 
   // Try to compile and/or finish a compilation.
@@ -1367,7 +1367,7 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   masm.loadPtr(Address(scriptReg, JSScript::offsetOfJitScript()), scriptReg);
   masm.branchPtr(Assembler::Equal,
                  Address(scriptReg, JitScript::offsetOfBaselineScript()),
-                 ImmPtr(BASELINE_DISABLED_SCRIPT), &done);
+                 ImmPtr(BaselineDisabledScriptPtr), &done);
   {
     prepareVMCall();
 
@@ -5987,11 +5987,15 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
                                                       Register resumeIndex,
                                                       Register scratch) {
   // Resume in either the BaselineScript (if present) or Baseline Interpreter.
+
+  static_assert(BaselineDisabledScript == 0x1,
+                "Comparison below requires specific sentinel encoding");
+
   Label noBaselineScript;
   masm.loadPtr(Address(script, JSScript::offsetOfJitScript()), scratch);
   masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch,
-                 ImmPtr(BASELINE_DISABLED_SCRIPT), &noBaselineScript);
+                 ImmPtr(BaselineDisabledScriptPtr), &noBaselineScript);
   masm.load32(Address(scratch, BaselineScript::offsetOfResumeEntriesOffset()),
               script);
   masm.addPtr(scratch, script);

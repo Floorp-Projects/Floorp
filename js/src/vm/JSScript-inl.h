@@ -188,7 +188,7 @@ inline bool JSScript::canBaselineCompile() const {
 #ifdef DEBUG
   if (jitScript_) {
     bool jitScriptDisabled =
-        jitScript_->baselineScript_ == BASELINE_DISABLED_SCRIPT;
+        jitScript_->baselineScript_ == js::jit::BaselineDisabledScriptPtr;
     MOZ_ASSERT(disabled == jitScriptDisabled);
   }
 #endif
@@ -199,7 +199,8 @@ inline bool JSScript::canIonCompile() const {
   bool disabled = hasFlag(MutableFlags::IonDisabled);
 #ifdef DEBUG
   if (jitScript_) {
-    bool jitScriptDisabled = jitScript_->ionScript_ == ION_DISABLED_SCRIPT;
+    bool jitScriptDisabled =
+        jitScript_->ionScript_ == js::jit::IonDisabledScriptPtr;
     MOZ_ASSERT(disabled == jitScriptDisabled);
   }
 #endif
@@ -210,14 +211,14 @@ inline void JSScript::disableBaselineCompile() {
   MOZ_ASSERT(!hasBaselineScript());
   setFlag(MutableFlags::BaselineDisabled);
   if (jitScript_) {
-    jitScript_->setBaselineScriptImpl(this, BASELINE_DISABLED_SCRIPT);
+    jitScript_->setBaselineScriptImpl(this, js::jit::BaselineDisabledScriptPtr);
   }
 }
 
 inline void JSScript::disableIon() {
   setFlag(MutableFlags::IonDisabled);
   if (jitScript_) {
-    jitScript_->setIonScriptImpl(this, ION_DISABLED_SCRIPT);
+    jitScript_->setIonScriptImpl(this, js::jit::IonDisabledScriptPtr);
   }
 }
 
