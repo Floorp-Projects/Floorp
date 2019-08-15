@@ -12,6 +12,7 @@ SpecialPowers.pushPrefEnv({
   "set": [
     ["apz.allow_zooming", true],
     ["dom.meta-viewport.enabled", true],
+    ["layout.viewport_contains_no_contents_area", true],
   ]
 }, () => {
   // We need to open a new window to avoid running tests in an iframe since
