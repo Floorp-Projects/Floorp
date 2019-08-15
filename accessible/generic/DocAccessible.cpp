@@ -673,10 +673,20 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
     mStateBitWasOn = accessible->Unavailable();
 }
 
-// We don't use this for insertions or removals because the frame tree
-// may be in a transitional state.
 void DocAccessible::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                   bool aIsRemove) {}
+                                                   bool aIsRemove) {
+  if (aIsRemove) {
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eTree)) {
+      logging::MsgBegin("TREE", "Anonymous content removed; doc: %p", this);
+      logging::Node("node", aContent);
+      logging::MsgEnd();
+    }
+#endif
+
+    ContentRemoved(aContent);
+  }
+}
 
 void DocAccessible::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
@@ -1323,22 +1333,6 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     if (frame && (acc->IsImage() != (frame->AccessibleType() == eImageType))) {
       ContentRemoved(aRoot);
       return true;
-    }
-
-    // Content may have, or may previously have had, anonymous items
-    // that were removed during frame reconstruction. We check here
-    // for any dangling anonymous content and remove their accessibles.
-    if (aRoot->MayHaveAnonymousChildren()) {
-      auto child = acc->FirstChild();
-      while (child) {
-        auto nextChild = child->NextSibling();
-        auto childContent = child->GetContent();
-        if (childContent && childContent->IsInAnonymousSubtree() &&
-            !childContent->GetPrimaryFrame()) {
-          ContentRemoved(child);
-        }
-        child = nextChild;
-      }
     }
   } else {
     // If there is no current accessible, and the node has a frame, or is
