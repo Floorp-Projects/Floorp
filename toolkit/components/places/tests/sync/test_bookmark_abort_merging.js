@@ -11,8 +11,8 @@ add_task(async function test_abort_merging() {
   let controller = new AbortController();
   controller.abort();
   await Assert.rejects(
-    buf.merge(controller.signal),
-    /Operation aborted/,
+    buf.apply({ signal: controller.signal }),
+    ex => ex.name == "InterruptedError",
     "Should abort merge when signaled"
   );
 
