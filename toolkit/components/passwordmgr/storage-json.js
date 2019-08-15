@@ -283,6 +283,23 @@ this.LoginManagerStorage_json.prototype = {
     LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
   },
 
+  async recordBreachAlertDismissal(loginGUID) {
+    this._store.ensureDataReady();
+    const dismissedBreachAlertsByLoginGUID = this._store._data
+      .dismissedBreachAlertsByLoginGUID;
+
+    dismissedBreachAlertsByLoginGUID[loginGUID] = {
+      timeBreachAlertDismissed: new Date().getTime(),
+    };
+
+    return this._store.saveSoon();
+  },
+
+  getBreachAlertDismissalsByLoginGUID() {
+    this._store.ensureDataReady();
+    return this._store._data.dismissedBreachAlertsByLoginGUID;
+  },
+
   /**
    * @return {nsILoginInfo[]}
    */

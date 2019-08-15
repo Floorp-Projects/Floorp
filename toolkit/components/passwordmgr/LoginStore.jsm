@@ -98,6 +98,10 @@ LoginStore.prototype._dataPostProcessor = function(data) {
     data.logins = [];
   }
 
+  if (!data.dismissedBreachAlertsByLoginGUID) {
+    data.dismissedBreachAlertsByLoginGUID = {};
+  }
+
   // Indicate that the current version of the code has touched the file.
   data.version = kDataVersion;
 
