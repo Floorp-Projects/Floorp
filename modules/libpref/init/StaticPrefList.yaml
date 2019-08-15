@@ -123,6 +123,11 @@
 #
 # - Spaces aren't permitted between the leading '#' and the name of a
 #   directive, e.g. `#ifdef XYZ` works but `# ifdef XYZ` does not.
+#
+# Please indent all prefs defined within #ifdef/#ifndef conditions. This
+# improves readability, particular for conditional blocks that exceed a single
+# screen. But note that the leading '-' in a definition must remain in the
+# first column for it to be valid YAML.
 
 #ifdef RELEASE_OR_BETA
 #define IS_NOT_RELEASE_OR_BETA false
@@ -377,10 +382,10 @@
   mirror: always
 
 #ifdef MOZ_WIDGET_GTK
-- name: apz.gtk.kinetic_scroll.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: apz.gtk.kinetic_scroll.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 #endif
 
 - name: apz.keyboard.enabled
@@ -979,11 +984,11 @@
 #---------------------------------------------------------------------------
 
 #if defined(ANDROID)
-# Disable sending console to logcat on release builds.
-- name: consoleservice.logcat
-  type: RelaxedAtomicBool
-  value: @IS_NOT_RELEASE_OR_BETA@
-  mirror: always
+  # Disable sending console to logcat on release builds.
+-   name: consoleservice.logcat
+    type: RelaxedAtomicBool
+    value: @IS_NOT_RELEASE_OR_BETA@
+    mirror: always
 #endif
 
 #---------------------------------------------------------------------------
@@ -1893,15 +1898,15 @@
   mirror: always
 
 #ifdef JS_BUILD_BINAST
-- name: dom.script_loader.binast_encoding.domain.restrict
-  type: bool
-  value: true
-  mirror: always
+-   name: dom.script_loader.binast_encoding.domain.restrict
+    type: bool
+    value: true
+    mirror: always
 
-- name: dom.script_loader.binast_encoding.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: dom.script_loader.binast_encoding.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 # Whether to enable the JavaScript start-up cache. This causes one of the first
@@ -2207,10 +2212,10 @@
 - name: dom.vr.oculus.enabled
   type: bool
 #if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-# We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
+  # We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
   value: true
 #else
-# On Android, this pref is irrelevant.
+  # On Android, this pref is irrelevant.
   value: false
 #endif
   mirror: once
@@ -2229,13 +2234,13 @@
 - name: dom.vr.openvr.enabled
   type: bool
 #if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-# We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
+  # We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
   value: false
 #elif defined(XP_WIN) || defined(XP_MACOSX)
-# We enable OpenVR by default for Windows and macOS.
+  # We enable OpenVR by default for Windows and macOS.
   value: true
 #else
-# See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
+  # See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
   value: false
 #endif
   mirror: once
@@ -2696,15 +2701,15 @@
 #---------------------------------------------------------------------------
 
 #ifdef FUZZING
-- name: fuzzing.enabled
-  type: bool
-  value: false
-  mirror: always
+-   name: fuzzing.enabled
+    type: bool
+    value: false
+    mirror: always
 
-- name: fuzzing.necko.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: fuzzing.necko.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 #---------------------------------------------------------------------------
@@ -2911,27 +2916,27 @@
   mirror: once
 
 #if defined(MOZ_WIDGET_ANDROID)
-# Overrides the glClear color used when the surface origin is not (0, 0)
-# Used for drawing a border around the content.
-- name: gfx.compositor.override.clear-color.r
-  type: AtomicFloat
-  value: 0.0f
-  mirror: always
+  # Overrides the glClear color used when the surface origin is not (0, 0)
+  # Used for drawing a border around the content.
+-   name: gfx.compositor.override.clear-color.r
+    type: AtomicFloat
+    value: 0.0f
+    mirror: always
 
-- name: gfx.compositor.override.clear-color.g
-  type: AtomicFloat
-  value: 0.0f
-  mirror: always
+-   name: gfx.compositor.override.clear-color.g
+    type: AtomicFloat
+    value: 0.0f
+    mirror: always
 
-- name: gfx.compositor.override.clear-color.b
-  type: AtomicFloat
-  value: 0.0f
-  mirror: always
+-   name: gfx.compositor.override.clear-color.b
+    type: AtomicFloat
+    value: 0.0f
+    mirror: always
 
-- name: gfx.compositor.override.clear-color.a
-  type: AtomicFloat
-  value: 0.0f
-  mirror: always
+-   name: gfx.compositor.override.clear-color.a
+    type: AtomicFloat
+    value: 0.0f
+    mirror: always
 #endif  # defined(MOZ_WIDGET_ANDROID)
 
 - name: gfx.content.always-paint
@@ -3046,10 +3051,10 @@
   mirror: always
 
 #if defined(XP_MACOSX)
-- name: gfx.font_rendering.coretext.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: gfx.font_rendering.coretext.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 - name: gfx.font_rendering.opentype_svg.enabled
@@ -3291,10 +3296,10 @@
   mirror: always
 
 #if defined(XP_MACOSX)
-- name: gl.multithreaded
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: gl.multithreaded
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 - name: gl.require-hardware
@@ -3552,10 +3557,10 @@
 - name: javascript.options.gc_on_memory_pressure
   type: bool
 #ifdef ANDROID
-# Disable the JS engine's GC on memory pressure, since we do one in the
-# mobile browser (bug 669346).
-# XXX: this value possibly should be changed, or the pref removed entirely.
-#      See bug 1450787.
+  # Disable the JS engine's GC on memory pressure, since we do one in the
+  # mobile browser (bug 669346).
+  # XXX: this value possibly should be changed, or the pref removed entirely.
+  #      See bug 1450787.
   value: false
 #else
   value: true
@@ -3662,11 +3667,11 @@
 
 - name: layers.componentalpha.enabled
   type: bool
-# Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
-# pref was always false. But we go to the effort of setting it to false so
-# that telemetry's reporting of the pref value is more likely to reflect
-# what the code is doing.
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  # Nb: we ignore this pref if MOZ_GFX_OPTIMIZE_MOBILE is defined, as if this
+  # pref was always false. But we go to the effort of setting it to false so
+  # that telemetry's reporting of the pref value is more likely to reflect what
+  # the code is doing.
   value: false
 #else
   value: true
@@ -3715,10 +3720,10 @@
   mirror: always
 
 #ifdef MOZ_DUMP_PAINTING
-- name: layers.dump-decision
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: layers.dump-decision
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 - name: layers.dump-client-layers
@@ -3964,10 +3969,10 @@
   mirror: always
 
 #ifdef XP_WIN
-- name: layers.prefer-opengl
-  type: bool
-  value: false
-  mirror: once
+-   name: layers.prefer-opengl
+    type: bool
+    value: false
+    mirror: once
 #endif
 
 - name: layers.progressive-paint
@@ -4967,13 +4972,12 @@
 #if defined(ANDROID)
   value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_LINUX)
-# On Linux EME is visible but disabled by default. This is so that the "Play
-# DRM content" checkbox in the Firefox UI is unchecked by default. DRM
-# requires downloading and installing proprietary binaries, which users on
-# an open source operating systems didn't opt into. The first time a site
-# using EME is encountered, the user will be prompted to enable DRM,
-# whereupon the EME plugin binaries will be downloaded if permission is
-# granted.
+  # On Linux EME is visible but disabled by default. This is so that the "Play
+  # DRM content" checkbox in the Firefox UI is unchecked by default. DRM
+  # requires downloading and installing proprietary binaries, which users on an
+  # open source operating systems didn't opt into. The first time a site using
+  # EME is encountered, the user will be prompted to enable DRM, whereupon the
+  # EME plugin binaries will be downloaded if permission is granted.
   value: false
 #else
   value: true
@@ -5002,13 +5006,13 @@
   mirror: always
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-# Whether to allow, on a Linux system that doesn't support the necessary
-# sandboxing features, loading Gecko Media Plugins unsandboxed.  However, EME
-# CDMs will not be loaded without sandboxing even if this pref is changed.
-- name: media.gmp.insecure.allow
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+  # Whether to allow, on a Linux system that doesn't support the necessary
+  # sandboxing features, loading Gecko Media Plugins unsandboxed.  However, EME
+  # CDMs will not be loaded without sandboxing even if this pref is changed.
+-   name: media.gmp.insecure.allow
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 # Specifies whether the PDMFactory can create a test decoder that just outputs
@@ -5086,131 +5090,128 @@
   mirror: always
 
 #ifdef ANDROID
+  # Enable the MediaCodec PlatformDecoderModule by default.
+-   name: media.android-media-codec.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 
-# Enable the MediaCodec PlatformDecoderModule by default.
-- name: media.android-media-codec.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-- name: media.android-media-codec.preferred
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
+-   name: media.android-media-codec.preferred
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 #endif  # ANDROID
 
 #ifdef MOZ_OMX
-- name: media.omx.enabled
-  type: bool
-  value: false
-  mirror: always
+-   name: media.omx.enabled
+    type: bool
+    value: false
+    mirror: always
 #endif
 
 #ifdef MOZ_FFMPEG
+-   name: media.ffmpeg.enabled
+    type: RelaxedAtomicBool
+  #if defined(XP_MACOSX)
+    value: false
+  #else
+    value: true
+  #endif
+    mirror: always
 
-- name: media.ffmpeg.enabled
-  type: RelaxedAtomicBool
-#if defined(XP_MACOSX)
-  value: false
-#else
-  value: true
-#endif
-  mirror: always
-
-- name: media.libavcodec.allow-obsolete
-  type: bool
-  value: false
-  mirror: always
-
+-   name: media.libavcodec.allow-obsolete
+    type: bool
+    value: false
+    mirror: always
 #endif  # MOZ_FFMPEG
 
 #ifdef MOZ_FFVPX
-- name: media.ffvpx.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: media.ffvpx.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 #endif
 
 #if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
-- name: media.ffmpeg.low-latency.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.ffmpeg.low-latency.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 #ifdef MOZ_WMF
 
-- name: media.wmf.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: media.wmf.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 
-# Whether DD should consider WMF-disabled a WMF failure, useful for testing.
-- name: media.decoder-doctor.wmf-disabled-is-failure
-  type: bool
-  value: false
-  mirror: always
+  # Whether DD should consider WMF-disabled a WMF failure, useful for testing.
+-   name: media.decoder-doctor.wmf-disabled-is-failure
+    type: bool
+    value: false
+    mirror: always
 
-- name: media.wmf.dxva.d3d11.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: media.wmf.dxva.d3d11.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 
-- name: media.wmf.dxva.max-videos
-  type: RelaxedAtomicUint32
-  value: 8
-  mirror: always
+-   name: media.wmf.dxva.max-videos
+    type: RelaxedAtomicUint32
+    value: 8
+    mirror: always
 
-- name: media.wmf.use-nv12-format
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: media.wmf.use-nv12-format
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 
-- name: media.wmf.force.allow-p010-format
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.force.allow-p010-format
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.use-sync-texture
-  type: bool
-  value: true
-  mirror: once
+-   name: media.wmf.use-sync-texture
+    type: bool
+    value: true
+    mirror: once
 
-- name: media.wmf.low-latency.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.low-latency.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.low-latency.force-disabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.low-latency.force-disabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.skip-blacklist
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.skip-blacklist
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.deblacklisting-for-telemetry-in-gpu-process
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.deblacklisting-for-telemetry-in-gpu-process
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.amd.highres.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
+-   name: media.wmf.amd.highres.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 
-- name: media.wmf.allow-unsupported-resolutions
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: media.wmf.allow-unsupported-resolutions
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
-- name: media.wmf.vp9.enabled
-  type: bool
-  value: true
-  mirror: once
+-   name: media.wmf.vp9.enabled
+    type: bool
+    value: true
+    mirror: once
+
 #endif  # MOZ_WMF
 
 - name: media.hardware-video-decoding.force-enabled
@@ -5312,10 +5313,10 @@
   mirror: always
 
 #ifdef MOZ_WEBSPEECH
-- name: media.webspeech.recognition.enable
-  type: bool
-  value: false
-  mirror: always
+-   name: media.webspeech.recognition.enable
+    type: bool
+    value: false
+    mirror: always
 #endif
 
 - name: media.webspeech.recognition.force_enable
@@ -5324,10 +5325,10 @@
   mirror: always
 
 #ifdef MOZ_WEBSPEECH
-- name: media.webspeech.synth.enabled
-  type: bool
-  value: false
-  mirror: always
+-   name: media.webspeech.synth.enabled
+    type: bool
+    value: false
+    mirror: always
 #endif  # MOZ_WEBSPEECH
 
 - name: media.encoder.webm.enabled
@@ -5344,7 +5345,7 @@
 #if defined(RELEASE_OR_BETA)
   value: 3
 #else
-# Zero tolerance in pre-release builds to detect any decoder regression.
+  # Zero tolerance in pre-release builds to detect any decoder regression.
   value: 0
 #endif
   mirror: always
@@ -5354,7 +5355,7 @@
 #if defined(RELEASE_OR_BETA)
   value: 2
 #else
-# Zero tolerance in pre-release builds to detect any decoder regression.
+  # Zero tolerance in pre-release builds to detect any decoder regression.
   value: 0
 #endif
   mirror: always
@@ -5433,10 +5434,10 @@
 # Max number of HLS players that can be created concurrently. Used only on
 # Android and when "media.hls.enabled" is true.
 #ifdef ANDROID
-- name: media.hls.max-allocations
-  type: uint32_t
-  value: 20
-  mirror: always
+-   name: media.hls.max-allocations
+    type: uint32_t
+    value: 20
+    mirror: always
 #endif
 
 - name: media.mp4.enabled
@@ -5568,47 +5569,45 @@
   mirror: always
 
 #ifdef MOZ_WEBRTC
-#ifdef ANDROID
+  #ifdef ANDROID
+-     name: media.navigator.hardware.vp8_encode.acceleration_remote_enabled
+      type: bool
+      value: true
+      mirror: always
 
-- name: media.navigator.hardware.vp8_encode.acceleration_remote_enabled
-  type: bool
-  value: true
-  mirror: always
+-     name: media.navigator.hardware.vp8_encode.acceleration_enabled
+      type: bool
+      value: true
+      mirror: never
 
-- name: media.navigator.hardware.vp8_encode.acceleration_enabled
-  type: bool
-  value: true
-  mirror: never
+-     name: media.navigator.hardware.vp8_decode.acceleration_enabled
+      type: bool
+      value: false
+      mirror: never
+  #endif  # ANDROID
 
-- name: media.navigator.hardware.vp8_decode.acceleration_enabled
-  type: bool
-  value: false
-  mirror: never
+  # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
+  # acceleration for decoding.
+  # disable on android bug 1509316
+-   name: media.navigator.mediadatadecoder_vpx_enabled
+    type: RelaxedAtomicBool
+  #if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+    value: true
+  #else
+    value: false
+  #endif
+    mirror: always
 
-#endif  # ANDROID
-
-# Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
-# acceleration for decoding.
-# disable on android bug 1509316
-- name: media.navigator.mediadatadecoder_vpx_enabled
-  type: RelaxedAtomicBool
-#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
-  value: true
-#else
-  value: false
-#endif
-  mirror: always
-
-# Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
-# acceleration for decoding. False on Android due to bug 1509316.
-- name: media.navigator.mediadatadecoder_h264_enabled
-  type: RelaxedAtomicBool
-#if defined(ANDROID)
-  value: false
-#else
-  value: true
-#endif
-  mirror: always
+  # Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
+  # acceleration for decoding. False on Android due to bug 1509316.
+-   name: media.navigator.mediadatadecoder_h264_enabled
+    type: RelaxedAtomicBool
+  #if defined(ANDROID)
+    value: false
+  #else
+    value: true
+  #endif
+    mirror: always
 
 #endif  # MOZ_WEBRTC
 
@@ -5974,21 +5973,21 @@
   mirror: never
 
 #ifdef DEBUG
-# If set to true, setting a Preference matched to a `Once` StaticPref will
-# assert that the value matches. Such assertion being broken is a clear flag
-# that the Once policy shouldn't be used.
-- name: preferences.check.once.policy
-  type: bool
-  value: false
-  mirror: always
+  # If set to true, setting a Preference matched to a `Once` StaticPref will
+  # assert that the value matches. Such assertion being broken is a clear flag
+  # that the Once policy shouldn't be used.
+-   name: preferences.check.once.policy
+    type: bool
+    value: false
+    mirror: always
 
-# If set to true, StaticPrefs Once policy check will be skipped during
-# automation regression test. Use with care. This pref must be set back to
-# false as soon as specific test has completed.
-- name: preferences.force-disable.check.once.policy
-  type: bool
-  value: false
-  mirror: always
+  # If set to true, StaticPrefs Once policy check will be skipped during
+  # automation regression test. Use with care. This pref must be set back to
+  # false as soon as specific test has completed.
+-   name: preferences.force-disable.check.once.policy
+    type: bool
+    value: false
+    mirror: always
 #endif
 
 #---------------------------------------------------------------------------
@@ -6280,12 +6279,12 @@
   mirror: always
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-# Whether win32k is disabled for content processes.
-# true means win32k system calls are not permitted.
-- name: security.sandbox.content.win32k-disable
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+  # Whether win32k is disabled for content processes.
+  # true means win32k system calls are not permitted.
+-   name: security.sandbox.content.win32k-disable
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 # Hardware Origin-bound Second Factor Support
