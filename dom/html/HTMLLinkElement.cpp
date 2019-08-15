@@ -124,9 +124,6 @@ nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {
-    if (!aContext.OwnerDoc().NodePrincipal()->IsSystemPrincipal()) {
-      aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
-    }
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
 

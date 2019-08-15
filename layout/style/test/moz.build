@@ -53,6 +53,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/css-visited/color-choice-1.html',
     '/layout/reftests/css-visited/color-on-bullets-1-ref.html',
     '/layout/reftests/css-visited/color-on-bullets-1.html',
+    '/layout/reftests/css-visited/color-on-htmllinkelement-1-ref.html',
+    '/layout/reftests/css-visited/color-on-htmllinkelement-1.html',
     '/layout/reftests/css-visited/color-on-link-1-ref.html',
     '/layout/reftests/css-visited/color-on-link-1.html',
     '/layout/reftests/css-visited/color-on-link-before-1.html',
