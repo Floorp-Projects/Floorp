@@ -456,7 +456,7 @@ void VRManagerChild::FireDOMVRDisplayConnectEventsForLoadInternal(
 
 void VRManagerChild::NotifyPresentationGenerationChangedInternal(
     uint32_t aDisplayID) {
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners;
+  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
   for (auto& listener : listeners) {
     listener->NotifyPresentationGenerationChanged(aDisplayID);
   }
