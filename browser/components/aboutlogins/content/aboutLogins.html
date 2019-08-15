@@ -16,7 +16,6 @@
     <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-intro.js"></script>
-    <script type="module" src="chrome://browser/content/aboutlogins/components/login-footer.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
@@ -37,7 +36,6 @@
     <login-list></login-list>
     <login-item></login-item>
     <login-intro></login-intro>
-    <login-footer hidden></login-footer>
     <confirmation-dialog hidden></confirmation-dialog>
 
     <template id="confirmation-dialog-template">
@@ -214,26 +212,6 @@
         <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-android ghost-button" data-event-name="AboutLoginsOpenMobileAndroid" data-l10n-id="menu-menuitem-android-app"></button>
         <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-ios ghost-button" data-event-name="AboutLoginsOpenMobileIos" data-l10n-id="menu-menuitem-iphone-app"></button>
       </ul>
-    </template>
-
-    <template id="login-footer-template">
-      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-footer.css">
-      <footer>
-        <div class="footer-content message-bar">
-          <span class="close" data-event-name="AboutLoginsHideFooter"></span>
-          <p>
-            <strong data-l10n-id="login-app-promo-title"></strong><br>
-            <span data-l10n-id="login-app-promo-subtitle"></span>
-          </p>
-          <button class="app-store">
-            <img class="image-app-store" data-event-name="AboutLoginsOpenMobileIos" data-l10n-id="login-app-promo-apple" src="" alt=""/>
-          </button>
-          <button class="play-store" >
-            <img class="image-play-store" data-event-name="AboutLoginsOpenMobileAndroid" data-l10n-id="login-app-promo-android" src="" alt=""/>
-          </button>
-        </div>
-      </footer>
     </template>
   </body>
 </html>

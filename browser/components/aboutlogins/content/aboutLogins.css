@@ -51,10 +51,6 @@ login-item {
   max-width: 800px;
 }
 
-login-footer {
-  grid-area: login;
-}
-
 #branding-logo {
   height: 32px;
   margin-inline-end: 18px;
