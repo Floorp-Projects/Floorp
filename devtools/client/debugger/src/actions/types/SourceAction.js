@@ -77,7 +77,7 @@ export type SourceAction =
       +tabs: any,
     |}
   | {|
-      type: "SET_BREAKABLE_LINES",
+      type: "SET_ORIGINAL_BREAKABLE_LINES",
       +cx: Context,
       breakableLines: number[],
       sourceId: string,

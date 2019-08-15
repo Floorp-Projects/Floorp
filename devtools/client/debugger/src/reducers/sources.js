@@ -47,6 +47,7 @@ import {
   getSourceActor,
   getSourceActors,
   getThreadsBySource,
+  getBreakableLinesForSourceActors,
   type SourceActorId,
   type SourceActorOuterState,
 } from "./source-actors";
@@ -216,7 +217,7 @@ function update(
     case "SET_PROJECT_DIRECTORY_ROOT":
       return updateProjectDirectoryRoot(state, action.url);
 
-    case "SET_BREAKABLE_LINES": {
+    case "SET_ORIGINAL_BREAKABLE_LINES": {
       const { breakableLines, sourceId } = action;
       return {
         ...state,
@@ -964,18 +965,34 @@ export function getBreakpointPositionsForLocation(
   return findPosition(positions, location);
 }
 
-export function getBreakableLines(state: OuterState, sourceId: string) {
+export function getBreakableLines(
+  state: OuterState & SourceActorOuterState,
+  sourceId: string
+): ?Array<number> {
   if (!sourceId) {
     return null;
   }
+  const source = getSource(state, sourceId);
+  if (!source) {
+    return null;
+  }
 
-  return state.sources.breakableLines[sourceId];
+  if (isOriginalSource(source)) {
+    return state.sources.breakableLines[sourceId];
+  }
+
+  // We pull generated file breakable lines directly from the source actors
+  // so that breakable lines can be added as new source actors on HTML loads.
+  return getBreakableLinesForSourceActors(
+    state.sourceActors,
+    state.sources.actors[sourceId]
+  );
 }
 
 export const getSelectedBreakableLines: Selector<Set<number>> = createSelector(
   state => {
     const sourceId = getSelectedSourceId(state);
-    return sourceId && state.sources.breakableLines[sourceId];
+    return sourceId && getBreakableLines(state, sourceId);
   },
   breakableLines => new Set(breakableLines || [])
 );

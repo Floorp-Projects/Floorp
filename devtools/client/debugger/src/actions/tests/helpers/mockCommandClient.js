@@ -49,6 +49,6 @@ export const mockCommandClient = {
   threadFront: async () => {},
   getFrameScopes: async () => {},
   evaluateExpressions: async () => {},
-  getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => [],
+  getSourceActorBreakpointPositions: async () => ({}),
+  getSourceActorBreakableLines: async () => [],
 };

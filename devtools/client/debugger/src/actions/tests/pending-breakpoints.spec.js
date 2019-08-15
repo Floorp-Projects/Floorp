@@ -49,8 +49,8 @@ function mockClient(bpPos = {}) {
   return {
     ...mockCommandClient,
 
-    getBreakpointPositions: async () => bpPos,
-    getBreakableLines: async () => [],
+    getSourceActorBreakpointPositions: async () => bpPos,
+    getSourceActorBreakableLines: async () => [],
   };
 }
 

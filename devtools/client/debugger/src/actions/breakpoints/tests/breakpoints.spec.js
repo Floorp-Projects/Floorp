@@ -17,8 +17,8 @@ import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 function mockClient(positionsResponse = {}) {
   return {
     ...mockCommandClient,
-    getBreakpointPositions: async () => positionsResponse,
-    getBreakableLines: async () => [],
+    getSourceActorBreakpointPositions: async () => positionsResponse,
+    getSourceActorBreakableLines: async () => [],
   };
 }
 
