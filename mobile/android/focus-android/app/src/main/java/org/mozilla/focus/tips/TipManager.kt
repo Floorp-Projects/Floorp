@@ -9,9 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.preference.PreferenceManager
 import mozilla.components.browser.session.Session
-import org.mozilla.focus.R
 import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_add_to_homescreen
 import org.mozilla.focus.R.string.tip_autocomplete_url
@@ -22,18 +20,16 @@ import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
 import org.mozilla.focus.R.string.tip_set_default_browser
 import org.mozilla.focus.R.string.tip_take_survey
-import org.mozilla.focus.R.string.tip_take_survey_fr
-import org.mozilla.focus.R.string.tip_take_survey_es
 import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.homeScreenTipsExperimentDescriptor
 import org.mozilla.focus.utils.isInExperiment
-import org.mozilla.focus.utils.Browsers
 import java.util.Locale
 import java.util.Random
 
@@ -71,41 +67,6 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
             }
 
             return Tip(id, name, shouldDisplayTrackingProtection)
-        }
-
-        fun createSurveyTip(context: Context, locale: Locale?): Tip? {
-            val id: Int
-            val surveyURL: String
-
-            when (locale?.language) {
-                "en" -> {
-                    surveyURL = "https://qsurvey.mozilla.com/s3/Focus-2019-User-Survey"
-                    id = tip_take_survey
-                }
-                "fr" -> {
-                    surveyURL = "https://qsurvey.mozilla.com/s3/d028b4c4d560"
-                    id = tip_take_survey_fr
-                }
-                "es" -> {
-                    surveyURL = "https://qsurvey.mozilla.com/s3/8bbcb0edc4ff"
-                    id = tip_take_survey_es
-                }
-                else -> return null
-            }
-
-            val name = context.resources.getString(id)
-
-            val deepLinkTakeSurvey = {
-                val session = Session(surveyURL, source = Session.Source.MENU)
-                context.components.sessionManager.add(session, selected = true)
-                PreferenceManager.getDefaultSharedPreferences(context).edit()
-                        .putBoolean(context.getString(R.string.has_taken_survey), true).apply()
-                TelemetryWrapper.pressTipEvent(id)
-            }
-
-            val shouldDisplaySurveyTip = { !Settings.getInstance(context).hasTakenSurvey() }
-
-            return Tip(id, name, shouldDisplaySurveyTip, deepLinkTakeSurvey)
         }
 
         fun createHomescreenTip(context: Context): Tip {
@@ -256,11 +217,6 @@ object TipManager {
         addOpenInNewTabTip(context)
         addRequestDesktopTip(context)
         addDisableTipsTip(context)
-        if (locale != null) {
-            addSurveyTip(context, locale)
-        } else {
-            addSurveyTip(context, Locale.getDefault())
-        }
     }
 
     // Will not return a tip if tips are disabled or if MAX TIPS have already been shown.
@@ -354,10 +310,5 @@ object TipManager {
     private fun addDisableTipsTip(context: Context) {
         val tip = Tip.createDisableTipsTip(context)
         listOfTips.add(tip)
-    }
-
-    private fun addSurveyTip(context: Context, locale: Locale?) {
-        val tip = Tip.createSurveyTip(context, locale)
-        if (tip != null) { listOfTips.add(tip) }
     }
 }
