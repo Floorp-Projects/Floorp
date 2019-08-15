@@ -1032,8 +1032,6 @@ const OsiIndex* IonScript::getOsiIndex(uint8_t* retAddr) const {
   return getOsiIndex(disp);
 }
 
-void IonScript::Trace(JSTracer* trc, IonScript* script) { script->trace(trc); }
-
 void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
   // This allocation is tracked by JSScript::setIonScriptImpl.
   fop->deleteUntracked(script);
@@ -3020,20 +3018,6 @@ void jit::DestroyJitScripts(JSFreeOp* fop, JSScript* script) {
   }
 
   script->releaseJitScript(fop);
-}
-
-void jit::TraceJitScripts(JSTracer* trc, JSScript* script) {
-  if (script->hasIonScript()) {
-    jit::IonScript::Trace(trc, script->ionScript());
-  }
-
-  if (script->hasBaselineScript()) {
-    jit::BaselineScript::Trace(trc, script->baselineScript());
-  }
-
-  if (script->hasJitScript()) {
-    script->jitScript()->trace(trc);
-  }
 }
 
 bool jit::JitSupportsSimd() { return js::jit::MacroAssembler::SupportsSimd(); }
