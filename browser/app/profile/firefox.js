@@ -1310,6 +1310,15 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr
 // repackager of this code using an alternate snippet url, please keep your users safe
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 
+// These prefs control if Discovery Stream is enabled.
+#ifdef NIGHTLY_BUILD
+pref("browser.newtabpage.activity-stream.discoverystream.enabled", true);
+#else
+pref("browser.newtabpage.activity-stream.discoverystream.enabled", false);
+#endif
+pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout", false);
+pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
+
 // The pref controls if search hand-off is enabled for Activity Stream.
 #ifdef NIGHTLY_BUILD
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
