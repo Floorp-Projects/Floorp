@@ -201,6 +201,7 @@ input[type="url"][readOnly]:hover:active {
   margin-inline-end: 12px;
   height: 24px;
   width: 24px;
+  flex-shrink: 0;
   background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   background-repeat: no-repeat;
   background-size: contain;
