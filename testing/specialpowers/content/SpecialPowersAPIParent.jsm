@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PerTestCoverageUtils: "resource://testing-common/PerTestCoverageUtils.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   SpecialPowersSandbox: "resource://specialpowers/SpecialPowersSandbox.jsm",
-  HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
 });
 
 class SpecialPowersError extends Error {
@@ -857,28 +856,6 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
           .sendQuery("Spawn", { task, args, caller, taskId })
           .finally(() => {
             spParent._taskActors.delete(taskId);
-          });
-      }
-
-      case "Snapshot": {
-        let { browsingContext, rect, background } = aMessage.data;
-
-        return browsingContext.currentWindowGlobal
-          .drawSnapshot(rect, 1.0, background)
-          .then(async image => {
-            let hiddenFrame = new HiddenFrame();
-            let win = await hiddenFrame.get();
-
-            let canvas = win.document.createElement("canvas");
-            canvas.width = image.width;
-            canvas.height = image.height;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(image, 0, 0);
-
-            let data = ctx.getImageData(0, 0, image.width, image.height);
-            hiddenFrame.destroy();
-            return data;
           });
       }
 

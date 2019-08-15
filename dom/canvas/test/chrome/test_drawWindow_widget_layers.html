@@ -34,16 +34,12 @@
     SimpleTest.waitForFocus(runTests, sourceWindow);
   }
 
-  async function runTests() {
+  function runTests() {
     var cxInterfaceWrap = SpecialPowers.wrap(CanvasRenderingContext2D);
-    
-    let snapshot = function(context, x, y, width, height, bg) {
-      var flags = cxInterfaceWrap.DRAWWINDOW_USE_WIDGET_LAYERS |
-                  cxInterfaceWrap.DRAWWINDOW_DRAW_CARET |
-                  cxInterfaceWrap.DRAWWINDOW_DRAW_VIEW;
-      context.drawWindow(sourceWindow, x, y, width, height, bg, flags);
-    }
-    await runDrawWindowTests(snapshot, true);
+    var flags = cxInterfaceWrap.DRAWWINDOW_USE_WIDGET_LAYERS |
+                cxInterfaceWrap.DRAWWINDOW_DRAW_CARET |
+                cxInterfaceWrap.DRAWWINDOW_DRAW_VIEW;
+    runDrawWindowTests(sourceWindow, flags, true);
 
     sourceWindow.close();
 
