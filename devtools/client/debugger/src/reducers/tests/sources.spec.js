@@ -10,7 +10,7 @@ declare var expect: (value: any) => any;
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
 import { initialDebuggeeState } from "../debuggee";
 import updateSourceActors from "../source-actors";
-import type { SourceActor } from "../../types";
+import type { Source, SourceActor } from "../../types";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource, mockcx } from "../../utils/test-mockup";
 import { getResourceIds } from "../../utils/resource";
@@ -82,7 +82,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
-        sources: mockedSources,
+        sources: ((mockedSources: any): Source[]),
       }),
       sourceActors: undefined,
     };
@@ -106,7 +106,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
-        sources: mockedSources,
+        sources: ((mockedSources: any): Source[]),
       }),
       sourceActors: undefined,
     };

@@ -29,8 +29,8 @@ function generateDefaults(overrides) {
       },
     },
     endPanelCollapsed: false,
-    selectedSource: {
-      ...createSourceObject("foo"),
+    selectedSourceWithContent: {
+      source: createSourceObject("foo"),
       content: null,
     },
     ...overrides,
@@ -42,7 +42,7 @@ function render(overrides = {}, position = { line: 0, column: 0 }) {
   const props = generateDefaults(overrides);
 
   const doc = createMockDocument(clear, position);
-  setDocument(props.selectedSource.id, doc);
+  setDocument(props.selectedSourceWithContent.source.id, doc);
 
   // $FlowIgnore
   const component = shallow(<SourceFooter.WrappedComponent {...props} />, {

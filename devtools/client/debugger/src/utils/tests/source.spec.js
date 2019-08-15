@@ -237,43 +237,47 @@ describe("sources", () => {
   describe("isJavaScript", () => {
     it("is not JavaScript", () => {
       {
-        const source = makeMockSourceAndContent("foo.html", undefined, "");
-        expect(isJavaScript(source, source.content)).toBe(false);
+        const { source, content } = makeMockSourceAndContent(
+          "foo.html",
+          undefined,
+          ""
+        );
+        expect(isJavaScript(source, content)).toBe(false);
       }
       {
-        const source = makeMockSourceAndContent(
+        const { source, content } = makeMockSourceAndContent(
           undefined,
           undefined,
           "text/html"
         );
-        expect(isJavaScript(source, source.content)).toBe(false);
+        expect(isJavaScript(source, content)).toBe(false);
       }
     });
 
     it("is JavaScript", () => {
       {
-        const source = makeMockSourceAndContent("foo.js");
-        expect(isJavaScript(source, source.content)).toBe(true);
+        const { source, content } = makeMockSourceAndContent("foo.js");
+        expect(isJavaScript(source, content)).toBe(true);
       }
       {
-        const source = makeMockSourceAndContent("bar.jsm");
-        expect(isJavaScript(source, source.content)).toBe(true);
+        const { source, content } = makeMockSourceAndContent("bar.jsm");
+        expect(isJavaScript(source, content)).toBe(true);
       }
       {
-        const source = makeMockSourceAndContent(
+        const { source, content } = makeMockSourceAndContent(
           undefined,
           undefined,
           "text/javascript"
         );
-        expect(isJavaScript(source, source.content)).toBe(true);
+        expect(isJavaScript(source, content)).toBe(true);
       }
       {
-        const source = makeMockSourceAndContent(
+        const { source, content } = makeMockSourceAndContent(
           undefined,
           undefined,
           "application/javascript"
         );
-        expect(isJavaScript(source, source.content)).toBe(true);
+        expect(isJavaScript(source, content)).toBe(true);
       }
     });
   });
@@ -296,124 +300,121 @@ describe("sources", () => {
 
   describe("getMode", () => {
     it("//@flow", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/javascript",
         "// @flow"
       );
-      expect(getMode(source, source.content)).toEqual({
+      expect(getMode(source, content)).toEqual({
         name: "javascript",
         typescript: true,
       });
     });
 
     it("/* @flow */", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/javascript",
         "   /* @flow */"
       );
-      expect(getMode(source, source.content)).toEqual({
+      expect(getMode(source, content)).toEqual({
         name: "javascript",
         typescript: true,
       });
     });
 
     it("mixed html", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "",
         " <html"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "htmlmixed" });
+      expect(getMode(source, content)).toEqual({ name: "htmlmixed" });
     });
 
     it("elm", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/x-elm",
         'main = text "Hello, World!"'
       );
-      expect(getMode(source, source.content)).toEqual({ name: "elm" });
+      expect(getMode(source, content)).toEqual({ name: "elm" });
     });
 
     it("returns jsx if contentType jsx is given", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/jsx",
         "<h1></h1>"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "jsx" });
+      expect(getMode(source, content)).toEqual({ name: "jsx" });
     });
 
     it("returns jsx if sourceMetaData says it's a react component", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "",
         "<h1></h1>"
       );
       expect(
-        getMode(source, source.content, {
-          ...defaultSymbolDeclarations,
-          hasJsx: true,
-        })
+        getMode(source, content, { ...defaultSymbolDeclarations, hasJsx: true })
       ).toEqual({ name: "jsx" });
     });
 
     it("returns jsx if the fileExtension is .jsx", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "myComponent.jsx",
         undefined,
         "",
         "<h1></h1>"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "jsx" });
+      expect(getMode(source, content)).toEqual({ name: "jsx" });
     });
 
     it("returns text/x-haxe if the file extension is .hx", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "myComponent.hx",
         undefined,
         "",
         "function foo(){}"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "text/x-haxe" });
+      expect(getMode(source, content)).toEqual({ name: "text/x-haxe" });
     });
 
     it("typescript", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/typescript",
         "function foo(){}"
       );
-      expect(getMode(source, source.content)).toEqual({
+      expect(getMode(source, content)).toEqual({
         name: "javascript",
         typescript: true,
       });
     });
 
     it("typescript-jsx", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/typescript-jsx",
         "<h1></h1>"
       );
-      expect(getMode(source, source.content).base).toEqual({
+      expect(getMode(source, content).base).toEqual({
         name: "javascript",
         typescript: true,
       });
     });
 
     it("cross-platform clojure(script) with reader conditionals", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "my-clojurescript-source-with-reader-conditionals.cljc",
         undefined,
         "text/x-clojure",
@@ -421,54 +422,54 @@ describe("sources", () => {
           "  #?(:clj  (java.lang.Integer/parseInt s) " +
           "     :cljs (js/parseInt s)))"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "clojure" });
+      expect(getMode(source, content)).toEqual({ name: "clojure" });
     });
 
     it("clojurescript", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "my-clojurescript-source.cljs",
         undefined,
         "text/x-clojurescript",
         "(+ 1 2 3)"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "clojure" });
+      expect(getMode(source, content)).toEqual({ name: "clojure" });
     });
 
     it("coffeescript", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         undefined,
         undefined,
         "text/coffeescript",
         "x = (a) -> 3"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "coffeescript" });
+      expect(getMode(source, content)).toEqual({ name: "coffeescript" });
     });
 
     it("wasm", () => {
-      const source = makeMockWasmSourceWithContent({
+      const { source, content } = makeMockWasmSourceWithContent({
         binary: "\x00asm\x01\x00\x00\x00",
       });
-      expect(getMode(source, source.content.value)).toEqual({ name: "text" });
+      expect(getMode(source, content.value)).toEqual({ name: "text" });
     });
 
     it("marko", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "http://localhost.com:7999/increment/sometestfile.marko",
         undefined,
         "does not matter",
         "function foo(){}"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "javascript" });
+      expect(getMode(source, content)).toEqual({ name: "javascript" });
     });
 
     it("es6", () => {
-      const source = makeMockSourceAndContent(
+      const { source, content } = makeMockSourceAndContent(
         "http://localhost.com:7999/increment/sometestfile.es6",
         undefined,
         "does not matter",
         "function foo(){}"
       );
-      expect(getMode(source, source.content)).toEqual({ name: "javascript" });
+      expect(getMode(source, content)).toEqual({ name: "javascript" });
     });
   });
 

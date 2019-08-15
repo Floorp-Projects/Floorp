@@ -10,7 +10,6 @@ import path from "path";
 import type {
   Source,
   TextSourceContent,
-  SourceBase,
   SourceWithContent,
 } from "../../../../types";
 import { makeMockSourceAndContent } from "../../../../utils/test-mockup";
@@ -48,20 +47,20 @@ function getSourceContent(
 }
 
 export function getSource(name: string, type?: string): Source {
-  return getSourceWithContent(name, type);
+  return getSourceWithContent(name, type).source;
 }
 
 export function getSourceWithContent(
   name: string,
   type?: string
-): { ...SourceBase, content: TextSourceContent } {
+): { source: Source, content: TextSourceContent } {
   const { value: text, contentType } = getSourceContent(name, type);
 
   return makeMockSourceAndContent(undefined, name, contentType, text);
 }
 
 export function populateSource(name: string, type?: string): SourceWithContent {
-  const { content, ...source } = getSourceWithContent(name, type);
+  const { source, content } = getSourceWithContent(name, type);
   setSource({
     id: source.id,
     text: content.value,
@@ -69,19 +68,19 @@ export function populateSource(name: string, type?: string): SourceWithContent {
     isWasm: false,
   });
   return {
-    ...source,
+    source,
     content: asyncValue.fulfilled(content),
   };
 }
 
 export function getOriginalSource(name: string, type?: string): Source {
-  return getOriginalSourceWithContent(name, type);
+  return getOriginalSourceWithContent(name, type).source;
 }
 
 export function getOriginalSourceWithContent(
   name: string,
   type?: string
-): { ...SourceBase, content: TextSourceContent } {
+): { source: Source, content: TextSourceContent } {
   const { value: text, contentType } = getSourceContent(name, type);
 
   return makeMockSourceAndContent(
@@ -96,7 +95,7 @@ export function populateOriginalSource(
   name: string,
   type?: string
 ): SourceWithContent {
-  const { content, ...source } = getOriginalSourceWithContent(name, type);
+  const { source, content } = getOriginalSourceWithContent(name, type);
   setSource({
     id: source.id,
     text: content.value,
@@ -104,7 +103,7 @@ export function populateOriginalSource(
     isWasm: false,
   });
   return {
-    ...source,
+    source,
     content: asyncValue.fulfilled(content),
   };
 }

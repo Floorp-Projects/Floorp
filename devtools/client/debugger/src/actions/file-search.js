@@ -35,8 +35,8 @@ type Match = Object;
 
 export function doSearch(cx: Context, query: string, editor: Editor) {
   return ({ getState, dispatch }: ThunkArgs) => {
-    const selectedSource = getSelectedSourceWithContent(getState());
-    if (!selectedSource || !selectedSource.content) {
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
+    if (!selectedSourceWithContent || !selectedSourceWithContent.content) {
       return;
     }
 
@@ -52,8 +52,8 @@ export function doSearchForHighlight(
   ch: number
 ) {
   return async ({ getState, dispatch }: ThunkArgs) => {
-    const selectedSource = getSelectedSourceWithContent(getState());
-    if (!selectedSource || !selectedSource.content) {
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
+    if (!selectedSourceWithContent || !selectedSourceWithContent.content) {
       return;
     }
     dispatch(searchContentsForHighlight(query, editor, line, ch));
@@ -105,18 +105,19 @@ export function searchContents(
 ) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const modifiers = getFileSearchModifiers(getState());
-    const selectedSource = getSelectedSourceWithContent(getState());
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
 
     if (
       !editor ||
-      !selectedSource ||
-      !selectedSource.content ||
-      !isFulfilled(selectedSource.content) ||
+      !selectedSourceWithContent ||
+      !selectedSourceWithContent.content ||
+      !isFulfilled(selectedSourceWithContent.content) ||
       !modifiers
     ) {
       return;
     }
-    const selectedContent = selectedSource.content.value;
+    const selectedSource = selectedSourceWithContent.source;
+    const selectedContent = selectedSourceWithContent.content.value;
 
     const ctx = { ed: editor, cm: editor.codeMirror };
 

@@ -10,7 +10,6 @@ import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 import { union } from "lodash";
 import type { Context } from "../../types";
 import type { ThunkArgs } from "../../actions/types";
-import { loadSourceActorBreakableLines } from "../source-actors";
 
 function calculateBreakableLines(positions) {
   const lines = [];
@@ -31,26 +30,22 @@ export function setBreakableLines(cx: Context, sourceId: string) {
         setBreakpointPositions({ cx, sourceId })
       );
       breakableLines = calculateBreakableLines(positions);
-
-      const existingBreakableLines = getBreakableLines(getState(), sourceId);
-      if (existingBreakableLines) {
-        breakableLines = union(existingBreakableLines, breakableLines);
-      }
-
-      dispatch({
-        type: "SET_ORIGINAL_BREAKABLE_LINES",
-        cx,
-        sourceId,
-        breakableLines,
-      });
     } else {
-      const actors = getSourceActorsForSource(getState(), sourceId);
-
-      await Promise.all(
-        actors.map(actor =>
-          dispatch(loadSourceActorBreakableLines({ id: actor.id }))
-        )
+      breakableLines = await client.getBreakableLines(
+        getSourceActorsForSource(getState(), sourceId)
       );
     }
+
+    const existingBreakableLines = getBreakableLines(getState(), sourceId);
+    if (existingBreakableLines) {
+      breakableLines = union(existingBreakableLines, breakableLines);
+    }
+
+    dispatch({
+      type: "SET_BREAKABLE_LINES",
+      cx,
+      sourceId,
+      breakableLines,
+    });
   };
 }

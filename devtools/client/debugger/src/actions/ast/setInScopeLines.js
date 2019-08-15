@@ -32,7 +32,10 @@ function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
 }
 
 async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
-  const source = getSourceWithContent(getState(), location.sourceId);
+  const { source, content } = getSourceWithContent(
+    getState(),
+    location.sourceId
+  );
 
   let locations = null;
   if (location.line && source && !source.isWasm) {
@@ -44,9 +47,7 @@ async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
 
   const linesOutOfScope = getOutOfScopeLines(locations);
   const sourceNumLines =
-    !source.content || !isFulfilled(source.content)
-      ? 0
-      : getSourceLineCount(source.content.value);
+    !content || !isFulfilled(content) ? 0 : getSourceLineCount(content.value);
 
   const sourceLines = range(1, sourceNumLines + 1);
 
