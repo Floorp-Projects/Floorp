@@ -1017,12 +1017,15 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   RootedFunction fun(cx);
   RootedWasmInstanceObject instanceObj(cx, instance->object());
-  if (WasmInstanceObject::getExportedFunction(cx, instanceObj, funcIndex,
-                                              &fun)) {
-    return AnyRef::fromJSObject(fun).forCompiledCode();
+  if (!WasmInstanceObject::getExportedFunction(cx, instanceObj, funcIndex,
+                                               &fun)) {
+    // Validation ensures that we always have a valid funcIndex, so we must
+    // have OOM'ed
+    ReportOutOfMemory(cx);
+    return AnyRef::invalid().forCompiledCode();
   }
 
-  return AnyRef::invalid().forCompiledCode();
+  return AnyRef::fromJSObject(fun).forCompiledCode();
 }
 
 /* static */ void Instance::postBarrier(Instance* instance,

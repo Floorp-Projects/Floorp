@@ -335,7 +335,7 @@ static const JSClassOps ForOfPICClassOps = {nullptr,
                                             nullptr, /* construct   */
                                             ForOfPIC_traceObject};
 
-const Class ForOfPIC::class_ = {
+const JSClass ForOfPIC::class_ = {
     "ForOfPIC", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
     &ForOfPICClassOps};
 

@@ -52,7 +52,6 @@ class TempAllocator;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepBase;
 class AutoSweepObjectGroup;
-struct Class;
 class CompilerConstraintList;
 class HeapTypeSetKey;
 class LifoAlloc;
@@ -291,7 +290,7 @@ class TypeSet {
     inline ObjectGroup* groupNoBarrier();
     inline JSObject* singletonNoBarrier();
 
-    const Class* clasp();
+    const JSClass* clasp();
     TaggedProto proto();
     TypeNewScript* newScript();
 
@@ -484,7 +483,7 @@ class TypeSet {
   inline ObjectGroup* getGroupNoBarrier(unsigned i) const;
 
   /* The Class of an object in this set. */
-  inline const Class* getObjectClass(unsigned i) const;
+  inline const JSClass* getObjectClass(unsigned i) const;
 
   bool canSetDefinite(unsigned slot) {
     // Note: the cast is required to work around an MSVC issue.
@@ -790,7 +789,7 @@ class TemporaryTypeSet : public TypeSet {
                       ObjectGroupFlags flags);
 
   /* Get the class shared by all objects in this set, or nullptr. */
-  const Class* getKnownClass(CompilerConstraintList* constraints);
+  const JSClass* getKnownClass(CompilerConstraintList* constraints);
 
   /*
    * Get the realm shared by all objects in this set, or nullptr. Returns
@@ -813,7 +812,7 @@ class TemporaryTypeSet : public TypeSet {
    * The iteration may end early if the result becomes known early.
    */
   ForAllResult forAllClasses(CompilerConstraintList* constraints,
-                             bool (*func)(const Class* clasp));
+                             bool (*func)(const JSClass* clasp));
 
   /*
    * Returns true if all objects in this set have the same prototype, and

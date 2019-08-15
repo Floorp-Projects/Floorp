@@ -5649,7 +5649,7 @@ bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
   }
 
   // Typed arrays are native classes but do not have dense elements.
-  const Class* clasp = types->getKnownClass(constraints);
+  const JSClass* clasp = types->getKnownClass(constraints);
   return clasp && clasp->isNative() && !IsTypedArrayClass(clasp);
 }
 
@@ -5989,7 +5989,7 @@ AbortReasonOr<bool> PrototypeHasIndexedProperty(IonBuilder* builder,
 // Whether obj or any of its prototypes have an indexed property.
 AbortReasonOr<bool> jit::TypeCanHaveExtraIndexedProperties(
     IonBuilder* builder, TemporaryTypeSet* types) {
-  const Class* clasp = types->getKnownClass(builder->constraints());
+  const JSClass* clasp = types->getKnownClass(builder->constraints());
 
   // Note: typed arrays have indexed properties not accounted for by type
   // information, though these are all in bounds and will be accounted for

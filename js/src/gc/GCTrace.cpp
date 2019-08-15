@@ -132,7 +132,7 @@ void GCTrace::traceTenuredAlloc(Cell* thing, AllocKind kind) {
   }
 }
 
-void js::gc::GCTrace::maybeTraceClass(const Class* clasp) {
+void js::gc::GCTrace::maybeTraceClass(const JSClass* clasp) {
   if (tracedClasses.has(clasp)) {
     return;
   }

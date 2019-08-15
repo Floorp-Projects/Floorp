@@ -31,6 +31,8 @@ export class InfoItem extends HTMLElement {
       .toLowerCase();
     label.setAttribute("data-l10n-id", "certificate-viewer-" + labelText);
 
+    this.classList.add(labelText);
+
     let info = this.shadowRoot.querySelector(".info");
     info.textContent = this.item.info;
 

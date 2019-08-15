@@ -22,8 +22,8 @@ class SavedFrame : public NativeObject {
   static const ClassSpec classSpec_;
 
  public:
-  static const Class class_;
-  static const Class protoClass_;
+  static const JSClass class_;
+  static const JSClass protoClass_;
   static const JSPropertySpec protoAccessors[];
   static const JSFunctionSpec protoFunctions[];
   static const JSFunctionSpec staticFunctions[];

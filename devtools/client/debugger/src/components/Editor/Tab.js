@@ -144,8 +144,8 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.toggleBlackBox,
           label: source.isBlackBoxed
-            ? L10N.getStr("sourceFooter.unblackbox")
-            : L10N.getStr("sourceFooter.blackbox"),
+            ? L10N.getStr("blackboxContextItem.unblackbox")
+            : L10N.getStr("blackboxContextItem.blackbox"),
           disabled: !shouldBlackbox(source),
           click: () => toggleBlackBox(cx, source),
         },

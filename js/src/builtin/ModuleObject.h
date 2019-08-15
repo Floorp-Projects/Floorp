@@ -41,7 +41,7 @@ class ImportEntryObject : public NativeObject {
     SlotCount
   };
 
-  static const Class class_;
+  static const JSClass class_;
   static bool isInstance(HandleValue value);
   static ImportEntryObject* create(JSContext* cx, HandleAtom moduleRequest,
                                    HandleAtom importName, HandleAtom localName,
@@ -68,7 +68,7 @@ class ExportEntryObject : public NativeObject {
     SlotCount
   };
 
-  static const Class class_;
+  static const JSClass class_;
   static bool isInstance(HandleValue value);
   static ExportEntryObject* create(JSContext* cx, HandleAtom maybeExportName,
                                    HandleAtom maybeModuleRequest,
@@ -90,7 +90,7 @@ class RequestedModuleObject : public NativeObject {
  public:
   enum { ModuleSpecifierSlot = 0, LineNumberSlot, ColumnNumberSlot, SlotCount };
 
-  static const Class class_;
+  static const JSClass class_;
   static bool isInstance(HandleValue value);
   static RequestedModuleObject* create(JSContext* cx,
                                        HandleAtom moduleSpecifier,
@@ -256,7 +256,7 @@ class ModuleObject : public NativeObject {
   static_assert(DFSAncestorIndexSlot == MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT,
                 "DFSAncestorIndexSlot must match self-hosting define");
 
-  static const Class class_;
+  static const JSClass class_;
 
   static bool isInstance(HandleValue value);
 

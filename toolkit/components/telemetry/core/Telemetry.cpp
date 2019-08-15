@@ -1398,7 +1398,7 @@ nsCString TelemetryImpl::SanitizeSQL(const nsACString& sql) {
   return output;
 }
 
-// A whitelist mechanism to prevent Telemetry reporting on Addon & Thunderbird
+// An allowlist mechanism to prevent Telemetry reporting on Addon & Thunderbird
 // DBs.
 struct TrackedDBEntry {
   const char* mName;
@@ -1415,7 +1415,7 @@ struct TrackedDBEntry {
 #define TRACKEDDB_ENTRY(_name) \
   { _name, (sizeof(_name) - 1) }
 
-// A whitelist of database names. If the database name exactly matches one of
+// An allowlist of database names. If the database name exactly matches one of
 // these then its SQL statements will always be recorded.
 static constexpr TrackedDBEntry kTrackedDBs[] = {
     // IndexedDB for about:home, see aboutHome.js
@@ -1436,7 +1436,7 @@ static constexpr TrackedDBEntry kTrackedDBs[] = {
     TRACKEDDB_ENTRY("urlclassifier3.sqlite"),
     TRACKEDDB_ENTRY("webappsstore.sqlite")};
 
-// A whitelist of database name prefixes. If the database name begins with
+// An allowlist of database name prefixes. If the database name begins with
 // one of these prefixes then its SQL statements will always be recorded.
 static const TrackedDBEntry kTrackedDBPrefixes[] = {
     TRACKEDDB_ENTRY("indexedDB-")};
@@ -1901,7 +1901,7 @@ void RecordShutdownEndTimeStamp() {
   // On a normal release build this should be called just before
   // calling _exit, but on a debug build or when the user forces a full
   // shutdown this is called as late as possible, so we have to
-  // white list this write as write poisoning will be enabled.
+  // allow this write as write poisoning will be enabled.
   MozillaRegisterDebugFILE(f);
 
   TimeStamp now = TimeStamp::Now();

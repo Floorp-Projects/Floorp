@@ -15,7 +15,7 @@ using namespace mozilla;
 using namespace xpc;
 using namespace JS;
 
-static inline bool IsTearoffClass(const js::Class* clazz) {
+static inline bool IsTearoffClass(const JSClass* clazz) {
   return clazz == &XPC_WN_Tearoff_JSClass;
 }
 
@@ -69,7 +69,7 @@ XPCCallContext::XPCCallContext(
     mState = INIT_FAILED;
     return;
   }
-  const js::Class* clasp = js::GetObjectClass(unwrapped);
+  const JSClass* clasp = js::GetObjectClass(unwrapped);
   if (IS_WN_CLASS(clasp)) {
     mWrapper = XPCWrappedNative::Get(unwrapped);
   } else if (IsTearoffClass(clasp)) {

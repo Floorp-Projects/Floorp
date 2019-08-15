@@ -116,7 +116,7 @@ bool IsSharedWasmMemoryObject(JSObject* obj);
 
 // The class of the WebAssembly global namespace object.
 
-extern const Class WebAssemblyClass;
+extern const JSClass WebAssemblyClass;
 
 JSObject* InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global);
 
@@ -134,7 +134,7 @@ class WasmModuleObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
@@ -184,7 +184,7 @@ class WasmGlobalObject : public NativeObject {
   };
 
   static const unsigned RESERVED_SLOTS = 3;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
@@ -239,7 +239,7 @@ class WasmInstanceObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 6;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
@@ -304,7 +304,7 @@ class WasmMemoryObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 2;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];
@@ -360,7 +360,7 @@ class WasmTableObject : public NativeObject {
 
  public:
   static const unsigned RESERVED_SLOTS = 1;
-  static const Class class_;
+  static const JSClass class_;
   static const JSPropertySpec properties[];
   static const JSFunctionSpec methods[];
   static const JSFunctionSpec static_methods[];

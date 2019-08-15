@@ -177,7 +177,7 @@ class ByteStreamChunk : public NativeObject
     };
 
   public:
-    static const Class class_;
+    static const JSClass class_;
 
     ArrayBufferObject* buffer() {
         return &getFixedSlot(Slot_Buffer).toObject().as<ArrayBufferObject>();
@@ -206,7 +206,7 @@ class ByteStreamChunk : public NativeObject
     }
 };
 
-const Class ByteStreamChunk::class_ = {
+const JSClass ByteStreamChunk::class_ = {
     "ByteStreamChunk",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount)
 };
@@ -227,7 +227,7 @@ class PullIntoDescriptor : public NativeObject {
   };
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   ArrayBufferObject* buffer() {
     return &getFixedSlot(Slot_buffer).toObject().as<ArrayBufferObject>();
@@ -281,7 +281,7 @@ class PullIntoDescriptor : public NativeObject {
   }
 };
 
-const Class PullIntoDescriptor::class_ = {
+const JSClass PullIntoDescriptor::class_ = {
     "PullIntoDescriptor", JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
 class QueueEntry : public NativeObject {
@@ -289,7 +289,7 @@ class QueueEntry : public NativeObject {
   enum Slots { Slot_Value = 0, Slot_Size, SlotCount };
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   Value value() { return getFixedSlot(Slot_Value); }
   double size() { return getFixedSlot(Slot_Size).toNumber(); }
@@ -307,8 +307,8 @@ class QueueEntry : public NativeObject {
   }
 };
 
-const Class QueueEntry::class_ = {"QueueEntry",
-                                  JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
+const JSClass QueueEntry::class_ = {"QueueEntry",
+                                    JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
 /**
  * TeeState objects implement the local variables in Streams spec 3.3.9
@@ -359,7 +359,7 @@ class TeeState : public NativeObject {
   void setFlags(uint32_t flags) { setFixedSlot(Slot_Flags, Int32Value(flags)); }
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   bool cloneForBranch2() const { return flags() & Flag_CloneForBranch2; }
 
@@ -448,30 +448,30 @@ class TeeState : public NativeObject {
   }
 };
 
-const Class TeeState::class_ = {"TeeState",
-                                JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
+const JSClass TeeState::class_ = {"TeeState",
+                                  JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
 
-#define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags, classFlags, classOps) \
-  const ClassSpec cls::classSpec_ = {                                       \
-      GenericCreateConstructor<cls::constructor, nCtorArgs,                 \
-                               gc::AllocKind::FUNCTION>,                    \
-      GenericCreatePrototype<cls>,                                          \
-      nullptr,                                                              \
-      nullptr,                                                              \
-      cls##_methods,                                                        \
-      cls##_properties,                                                     \
-      nullptr,                                                              \
-      specFlags};                                                           \
-                                                                            \
-  const Class cls::class_ = {#cls,                                          \
-                             JSCLASS_HAS_RESERVED_SLOTS(nSlots) |           \
-                                 JSCLASS_HAS_CACHED_PROTO(JSProto_##cls) |  \
-                                 classFlags,                                \
-                             classOps, &cls::classSpec_};                   \
-                                                                            \
-  const Class cls::protoClass_ = {"object",                                 \
-                                  JSCLASS_HAS_CACHED_PROTO(JSProto_##cls),  \
-                                  JS_NULL_CLASS_OPS, &cls::classSpec_};
+#define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags, classFlags, classOps)  \
+  const ClassSpec cls::classSpec_ = {                                        \
+      GenericCreateConstructor<cls::constructor, nCtorArgs,                  \
+                               gc::AllocKind::FUNCTION>,                     \
+      GenericCreatePrototype<cls>,                                           \
+      nullptr,                                                               \
+      nullptr,                                                               \
+      cls##_methods,                                                         \
+      cls##_properties,                                                      \
+      nullptr,                                                               \
+      specFlags};                                                            \
+                                                                             \
+  const JSClass cls::class_ = {#cls,                                         \
+                               JSCLASS_HAS_RESERVED_SLOTS(nSlots) |          \
+                                   JSCLASS_HAS_CACHED_PROTO(JSProto_##cls) | \
+                                   classFlags,                               \
+                               classOps, &cls::classSpec_};                  \
+                                                                             \
+  const JSClass cls::protoClass_ = {"object",                                \
+                                    JSCLASS_HAS_CACHED_PROTO(JSProto_##cls), \
+                                    JS_NULL_CLASS_OPS, &cls::classSpec_};
 
 /*** 3.2. Class ReadableStream **********************************************/
 
@@ -2035,7 +2035,7 @@ static const JSFunctionSpec ReadableStreamDefaultReader_methods[] = {
 static const JSPropertySpec ReadableStreamDefaultReader_properties[] = {
     JS_PSG("closed", ReadableStreamDefaultReader_closed, 0), JS_PS_END};
 
-const Class ReadableStreamReader::class_ = {"ReadableStreamReader"};
+const JSClass ReadableStreamReader::class_ = {"ReadableStreamReader"};
 
 CLASS_SPEC(ReadableStreamDefaultReader, 1, SlotCount,
            ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);

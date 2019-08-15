@@ -116,7 +116,7 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
    * failed after creating the object.
    */
   void GetOrCreateProxyObject(JSContext* aCx, void* aNative,
-                              const js::Class* aClasp,
+                              const JSClass* aClasp,
                               JS::Handle<JSObject*> aTransplantTo,
                               JS::MutableHandle<JSObject*> aProxy,
                               bool& aNewObjectCreated) const;
@@ -170,7 +170,7 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
         aCx, aProxy, /* slot = */ 0, P, F, aHolder);
   }
 
-  static const js::Class sClass;
+  static const JSClass sClass;
 };
 
 /**

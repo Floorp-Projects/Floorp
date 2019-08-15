@@ -501,8 +501,8 @@ bool js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-const Class js::IntlClass = {js_Object_str,
-                             JSCLASS_HAS_CACHED_PROTO(JSProto_Intl)};
+const JSClass js::IntlClass = {js_Object_str,
+                               JSCLASS_HAS_CACHED_PROTO(JSProto_Intl)};
 
 static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);

@@ -83,7 +83,7 @@ def make_task_description(config, jobs):
         treeherder.setdefault('symbol', 'langpack(BM{})'.format(attributes.get('l10n_chunk', '')))
 
         job['attributes'].update(copy_attributes_from_dependent_job(dep_job))
-        job['attributes']['chunk_locales'] = dep_job.attributes.get('chunk_locales', ['en-us'])
+        job['attributes']['chunk_locales'] = dep_job.attributes.get('chunk_locales', ['en-US'])
 
         job['description'] = job['description'].format(
             locales='/'.join(job['attributes']['chunk_locales']),

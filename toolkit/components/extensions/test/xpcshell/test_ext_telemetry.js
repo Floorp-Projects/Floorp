@@ -1,7 +1,14 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+const { TelemetryArchive } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
+const { TelemetryUtils } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryUtils.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 // All tests run privileged unless otherwise specified not to.
 function createExtension(backgroundScript, permissions, isPrivileged = true) {
@@ -253,12 +260,16 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "record_event_ok",
     });
 
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
+    TelemetryTestUtils.assertEvents(
+      [
+        {
+          category: "telemetry.test",
+          method: "test1",
+          object: "object1",
+        },
+      ],
+      { category: "telemetry.test" }
     );
-    equal(events.parent.length, 1);
-    equal(events.parent[0][1], "telemetry.test");
 
     Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
     Services.telemetry.clearEvents();
@@ -290,14 +301,17 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
       doneSignal: "record_event_string_value",
     });
 
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
+    TelemetryTestUtils.assertEvents(
+      [
+        {
+          category: "telemetry.test",
+          method: "test1",
+          object: "object1",
+          value: "value1",
+        },
+      ],
+      { category: "telemetry.test" }
     );
-    equal(events.parent.length, 1);
-    equal(events.parent[0][1], "telemetry.test");
-    equal(events.parent[0][3], "object1");
-    equal(events.parent[0][4], "value1");
 
     Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
     Services.telemetry.clearEvents();

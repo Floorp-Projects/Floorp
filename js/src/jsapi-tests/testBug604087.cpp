@@ -12,7 +12,7 @@
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 
-const js::Class OuterWrapperClass = PROXY_CLASS_DEF(
+const JSClass OuterWrapperClass = PROXY_CLASS_DEF(
     "Proxy", JSCLASS_HAS_RESERVED_SLOTS(1) /* additional class flags */);
 
 static JSObject* wrap(JSContext* cx, JS::HandleObject toWrap,

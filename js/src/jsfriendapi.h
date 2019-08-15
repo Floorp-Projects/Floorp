@@ -537,13 +537,13 @@ extern JS_FRIEND_API bool IsSharableCompartment(JS::Compartment* comp);
 namespace shadow {
 
 struct ObjectGroup {
-  const Class* clasp;
+  const JSClass* clasp;
   JSObject* proto;
   JS::Realm* realm;
 };
 
 struct BaseShape {
-  const js::Class* clasp_;
+  const JSClass* clasp_;
   JSObject* parent;
 };
 
@@ -602,17 +602,13 @@ struct Function {
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
 // to #include vm/JSObject.h.
-extern JS_FRIEND_DATA const js::Class* const ObjectClassPtr;
+extern JS_FRIEND_DATA const JSClass* const ObjectClassPtr;
 
-inline const js::Class* GetObjectClass(const JSObject* obj) {
+inline const JSClass* GetObjectClass(const JSObject* obj) {
   return reinterpret_cast<const shadow::Object*>(obj)->group->clasp;
 }
 
-inline const JSClass* GetObjectJSClass(JSObject* obj) {
-  return js::Jsvalify(GetObjectClass(obj));
-}
-
-JS_FRIEND_API const Class* ProtoKeyToClass(JSProtoKey key);
+JS_FRIEND_API const JSClass* ProtoKeyToClass(JSProtoKey key);
 
 // Returns the key for the class inherited by a given standard class (that
 // is to say, the prototype of this standard class's prototype).
@@ -1110,7 +1106,7 @@ JS_FRIEND_API JSString* GetPCCountScriptContents(JSContext* cx, size_t script);
  */
 JS_FRIEND_API char* GetCodeCoverageSummary(JSContext* cx, size_t* length);
 
-typedef bool (*DOMInstanceClassHasProtoAtDepth)(const Class* instanceClass,
+typedef bool (*DOMInstanceClassHasProtoAtDepth)(const JSClass* instanceClass,
                                                 uint32_t protoID,
                                                 uint32_t depth);
 struct JSDOMCallbacks {
@@ -1661,17 +1657,17 @@ extern JS_FRIEND_API JSObject* UnwrapReadableStream(JSObject* obj);
 
 namespace detail {
 
-extern JS_FRIEND_DATA const Class* const Int8ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Uint8ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Uint8ClampedArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Int16ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Uint16ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Int32ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Uint32ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const BigInt64ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const BigUint64ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Float32ArrayClassPtr;
-extern JS_FRIEND_DATA const Class* const Float64ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Int8ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Uint8ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Uint8ClampedArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Int16ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Uint16ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Int32ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Uint32ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const BigInt64ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const BigUint64ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Float32ArrayClassPtr;
+extern JS_FRIEND_DATA const JSClass* const Float64ArrayClassPtr;
 
 const size_t TypedArrayLengthSlot = 1;
 
@@ -2556,7 +2552,7 @@ extern JS_FRIEND_API JSObject* ConvertArgsToArray(JSContext* cx,
  * functions below.
  */
 extern JS_FRIEND_API void SetWindowProxyClass(JSContext* cx,
-                                              const Class* clasp);
+                                              const JSClass* clasp);
 
 /**
  * Associates a WindowProxy with a Window (global object). `windowProxy` must

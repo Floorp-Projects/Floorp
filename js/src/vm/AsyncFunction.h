@@ -45,7 +45,7 @@ class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
     RESERVED_SLOTS
   };
 
-  static const Class class_;
+  static const JSClass class_;
 
   static AsyncFunctionGeneratorObject* create(JSContext* cx,
                                               HandleFunction asyncGen);

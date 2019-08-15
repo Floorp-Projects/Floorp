@@ -18,21 +18,21 @@
 
 namespace js {
 
-inline bool NewObjectCache::lookupProto(const Class* clasp, JSObject* proto,
+inline bool NewObjectCache::lookupProto(const JSClass* clasp, JSObject* proto,
                                         gc::AllocKind kind,
                                         EntryIndex* pentry) {
   MOZ_ASSERT(!proto->is<GlobalObject>());
   return lookup(clasp, proto, kind, pentry);
 }
 
-inline bool NewObjectCache::lookupGlobal(const Class* clasp,
+inline bool NewObjectCache::lookupGlobal(const JSClass* clasp,
                                          GlobalObject* global,
                                          gc::AllocKind kind,
                                          EntryIndex* pentry) {
   return lookup(clasp, global, kind, pentry);
 }
 
-inline void NewObjectCache::fillGlobal(EntryIndex entry, const Class* clasp,
+inline void NewObjectCache::fillGlobal(EntryIndex entry, const JSClass* clasp,
                                        GlobalObject* global, gc::AllocKind kind,
                                        NativeObject* obj) {
   // MOZ_ASSERT(global == obj->getGlobal());

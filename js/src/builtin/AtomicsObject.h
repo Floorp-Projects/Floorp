@@ -23,7 +23,7 @@ class SharedArrayRawBuffer;
 
 class AtomicsObject : public NativeObject {
  public:
-  static const Class class_;
+  static const JSClass class_;
   static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
   static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc,
                                     Value* vp);

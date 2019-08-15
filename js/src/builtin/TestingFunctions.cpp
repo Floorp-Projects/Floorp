@@ -2937,10 +2937,10 @@ class CloneBufferObject : public NativeObject {
   static const size_t NUM_SLOTS = 2;
 
  public:
-  static const Class class_;
+  static const JSClass class_;
 
   static CloneBufferObject* Create(JSContext* cx) {
-    RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&class_)));
+    RootedObject obj(cx, JS_NewObject(cx, &class_));
     if (!obj) {
       return nullptr;
     }
@@ -3161,7 +3161,7 @@ static const JSClassOps CloneBufferObjectClassOps = {
     nullptr, /* mayResolve */
     CloneBufferObject::Finalize};
 
-const Class CloneBufferObject::class_ = {
+const JSClass CloneBufferObject::class_ = {
     "CloneBuffer",
     JSCLASS_HAS_RESERVED_SLOTS(CloneBufferObject::NUM_SLOTS) |
         JSCLASS_FOREGROUND_FINALIZE,
@@ -4343,7 +4343,7 @@ static bool AllocationMarker(JSContext* cx, unsigned argc, Value* vp) {
     allocateInsideNursery = ToBoolean(nurseryVal);
   }
 
-  static const Class cls = {"AllocationMarker"};
+  static const JSClass cls = {"AllocationMarker"};
 
   auto newKind = allocateInsideNursery ? GenericObject : TenuredObject;
   RootedObject obj(cx, NewObjectWithGivenProto(cx, &cls, nullptr, newKind));

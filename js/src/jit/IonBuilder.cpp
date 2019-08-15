@@ -5645,7 +5645,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
   // If we know class, ensure it is what we expected
   MDefinition* argument = current->peek(-1);
   if (TemporaryTypeSet* objTypes = argument->resultTypeSet()) {
-    if (const Class* clasp = objTypes->getKnownClass(constraints())) {
+    if (const JSClass* clasp = objTypes->getKnownClass(constraints())) {
       MOZ_ASSERT(clasp == &ArrayObject::class_);
     }
   }
@@ -7684,7 +7684,7 @@ void IonBuilder::maybeMarkEmpty(MDefinition* ins) {
 }
 
 // Return whether property lookups can be performed effectlessly on clasp.
-static bool ClassHasEffectlessLookup(const Class* clasp) {
+static bool ClassHasEffectlessLookup(const JSClass* clasp) {
   return IsTypedObjectClass(clasp) ||
          (clasp->isNative() && !clasp->getOpsLookupProperty());
 }
@@ -7699,7 +7699,7 @@ static bool ObjectHasExtraOwnProperty(CompileRealm* realm,
                                                     id);
   }
 
-  const Class* clasp = object->clasp();
+  const JSClass* clasp = object->clasp();
 
   // Array |length| properties are not reflected in type information.
   if (clasp == &ArrayObject::class_) {
@@ -7862,7 +7862,7 @@ JSObject* IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id) {
           key->ensureTrackedProperty(analysisContext, id);
         }
 
-        const Class* clasp = key->clasp();
+        const JSClass* clasp = key->clasp();
         if (!ClassHasEffectlessLookup(clasp) ||
             ObjectHasExtraOwnProperty(realm, key, id)) {
           return nullptr;
@@ -7931,7 +7931,7 @@ AbortReasonOr<bool> IonBuilder::testNotDefinedProperty(
         return false;
       }
 
-      const Class* clasp = key->clasp();
+      const JSClass* clasp = key->clasp();
       if (!ClassHasEffectlessLookup(clasp) ||
           ObjectHasExtraOwnProperty(realm, key, id)) {
         return false;
@@ -8871,8 +8871,8 @@ AbortReasonOr<Ok> IonBuilder::pushDerivedTypedObject(
   // The prototype will be determined based on the type descriptor (and is
   // immutable).
   TemporaryTypeSet* objTypes = obj->resultTypeSet();
-  const Class* expectedClass = nullptr;
-  if (const Class* objClass =
+  const JSClass* expectedClass = nullptr;
+  if (const JSClass* objClass =
           objTypes ? objTypes->getKnownClass(constraints()) : nullptr) {
     MOZ_ASSERT(IsTypedObjectClass(objClass));
     expectedClass =
@@ -8884,7 +8884,7 @@ AbortReasonOr<Ok> IonBuilder::pushDerivedTypedObject(
   // Determine (if possible) the class/proto that the observed type set
   // describes.
   TemporaryTypeSet* observedTypes = bytecodeTypes(pc);
-  const Class* observedClass = observedTypes->getKnownClass(constraints());
+  const JSClass* observedClass = observedTypes->getKnownClass(constraints());
 
   // If expectedClass/expectedProto are both non-null (and hence known), we
   // can predict precisely what object group derivedTypedObj will have.
@@ -9904,7 +9904,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemTryCache(bool* emitted,
   MOZ_TRY_VAR(guardHoles, ElementAccessHasExtraIndexedProperty(this, object));
 
   // Make sure the object being written to doesn't have copy on write elements.
-  const Class* clasp =
+  const JSClass* clasp =
       object->resultTypeSet()
           ? object->resultTypeSet()->getKnownClass(constraints())
           : nullptr;
@@ -10510,7 +10510,7 @@ NativeObject* IonBuilder::commonPrototypeWithGetterSetter(
         return nullptr;
       }
 
-      const Class* clasp = key->clasp();
+      const JSClass* clasp = key->clasp();
       if (!ClassHasEffectlessLookup(clasp)) {
         return nullptr;
       }
@@ -10741,7 +10741,7 @@ AbortReasonOr<Ok> IonBuilder::annotateGetPropertyCache(
     }
     JSObject* proto = checkNurseryObject(key->proto().toObject());
 
-    const Class* clasp = key->clasp();
+    const JSClass* clasp = key->clasp();
     if (!ClassHasEffectlessLookup(clasp) ||
         ObjectHasExtraOwnProperty(realm, key, NameToId(name))) {
       continue;
@@ -13747,7 +13747,7 @@ AbortReasonOr<Ok> IonBuilder::loadTypedObjectElements(
   }
 
   TemporaryTypeSet* ownerTypes = owner->resultTypeSet();
-  const Class* clasp =
+  const JSClass* clasp =
       ownerTypes ? ownerTypes->getKnownClass(constraints()) : nullptr;
   if (clasp && IsInlineTypedObjectClass(clasp)) {
     // Perform the load directly from the owner pointer.

@@ -31,7 +31,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         hist = parse_histograms.Histogram('TEST_VALID_HISTOGRAM',
                                           histograms['TEST_VALID_HISTOGRAM'],
@@ -45,7 +45,7 @@ class TestParser(unittest.TestCase):
 
     def test_missing_bug_numbers(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS": {
+            "TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS": {
                 "record_in_processes": ["main", "content"],
                 "alert_emails": ["team@mozilla.xyz"],
                 "expires_in_version": "never",
@@ -55,27 +55,27 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS',
-                                   histograms['TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS'],
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS',
+                                   histograms['TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS'],
                                    strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [
-                "TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS"
+                "TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS"
             ],
             "n_buckets": [],
             "expiry_default": [],
             "kind": []
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_BUG_NUMBERS'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_BUG_NUMBERS'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -84,11 +84,11 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_missing_alert_emails(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS": {
+            "TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS": {
                 "record_in_processes": ["main", "content"],
                 "bug_numbers": [1383793],
                 "expires_in_version": "never",
@@ -98,18 +98,18 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS',
-                                   histograms['TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS'],
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS',
+                                   histograms['TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS'],
                                    strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [
-                "TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS"
+                "TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS"
             ],
             "bug_numbers": [],
             "n_buckets": [],
@@ -117,8 +117,8 @@ class TestParser(unittest.TestCase):
             "kind": []
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_ALERT_EMAILS'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_ALERT_EMAILS'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -127,11 +127,11 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_high_value(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_N_BUCKETS": {
+            "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS": {
                 "record_in_processes": ["main", "content"],
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
@@ -145,17 +145,17 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_N_BUCKETS',
-                                   histograms['TEST_HISTOGRAM_WHITELIST_N_BUCKETS'],
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
+                                   histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
                                    strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
     def test_high_n_buckets(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_N_BUCKETS": {
+            "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS": {
                 "record_in_processes": ["main", "content"],
                 "alert_emails": ["team@mozilla.xyz"],
                 "bug_numbers": [1383793],
@@ -169,27 +169,27 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_N_BUCKETS',
-                                   histograms['TEST_HISTOGRAM_WHITELIST_N_BUCKETS'],
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
+                                   histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
                                    strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [],
             "n_buckets": [
-                "TEST_HISTOGRAM_WHITELIST_N_BUCKETS"
+                "TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS"
             ],
             "expiry_default": [],
             "kind": []
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_N_BUCKETS',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_N_BUCKETS'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_N_BUCKETS'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -201,11 +201,11 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.high(), 16777216)
         self.assertEqual(hist.n_buckets(), 200)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_expiry_default(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT": {
+            "TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT": {
                 "record_in_processes": ["main", "content"],
                 "expires_in_version": "default",
                 "alert_emails": ["team@mozilla.xyz"],
@@ -216,27 +216,27 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
-        parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT',
-                                   histograms['TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT'],
+        parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT',
+                                   histograms['TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT'],
                                    strict_type_checks=True)
 
         self.assertRaises(SystemExit, ParserError.exit_func)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [
-                "TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT"
+                "TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT"
             ],
             "kind": []
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_EXPIRY_DEFAULT'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_EXPIRY_DEFAULT'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -245,11 +245,11 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_unsupported_kind_count(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_KIND": {
+            "TEST_HISTOGRAM_ALLOWLIST_KIND": {
                 "record_in_processes": ["main", "content"],
                 "expires_in_version": "never",
                 "kind": "count",
@@ -261,26 +261,26 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         self.assertRaises(SystemExit, parse_histograms.Histogram,
-                          'TEST_HISTOGRAM_WHITELIST_KIND',
-                          histograms['TEST_HISTOGRAM_WHITELIST_KIND'],
+                          'TEST_HISTOGRAM_ALLOWLIST_KIND',
+                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
                           strict_type_checks=True)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [],
             "kind": [
-                "TEST_HISTOGRAM_WHITELIST_KIND"
+                "TEST_HISTOGRAM_ALLOWLIST_KIND"
             ]
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_KIND',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_KIND'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_KIND',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -289,11 +289,11 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_unsupported_kind_flag(self):
         SAMPLE_HISTOGRAM = {
-            "TEST_HISTOGRAM_WHITELIST_KIND": {
+            "TEST_HISTOGRAM_ALLOWLIST_KIND": {
                 "record_in_processes": ["main", "content"],
                 "expires_in_version": "never",
                 "kind": "flag",
@@ -304,26 +304,26 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         self.assertRaises(SystemExit, parse_histograms.Histogram,
-                          'TEST_HISTOGRAM_WHITELIST_KIND',
-                          histograms['TEST_HISTOGRAM_WHITELIST_KIND'],
+                          'TEST_HISTOGRAM_ALLOWLIST_KIND',
+                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
                           strict_type_checks=True)
 
-        # Set global whitelists for parse_histograms.
-        parse_histograms.whitelists = {
+        # Set global allowlists for parse_histograms.
+        parse_histograms.allowlists = {
             "alert_emails": [],
             "bug_numbers": [],
             "n_buckets": [],
             "expiry_default": [],
             "kind": [
-                "TEST_HISTOGRAM_WHITELIST_KIND"
+                "TEST_HISTOGRAM_ALLOWLIST_KIND"
             ]
         }
 
-        hist = parse_histograms.Histogram('TEST_HISTOGRAM_WHITELIST_KIND',
-                                          histograms['TEST_HISTOGRAM_WHITELIST_KIND'],
+        hist = parse_histograms.Histogram('TEST_HISTOGRAM_ALLOWLIST_KIND',
+                                          histograms['TEST_HISTOGRAM_ALLOWLIST_KIND'],
                                           strict_type_checks=True)
 
         ParserError.exit_func()
@@ -332,7 +332,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(hist.record_in_processes(), ["main", "content"])
         self.assertEqual(hist.keyed(), False)
 
-        parse_histograms.whitelists = None
+        parse_histograms.allowlists = None
 
     def test_multistore(self):
         SAMPLE_HISTOGRAM = {
@@ -348,7 +348,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         hist = parse_histograms.Histogram('TEST_VALID_HISTOGRAM',
                                           histograms['TEST_VALID_HISTOGRAM'],
@@ -373,7 +373,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         parse_histograms.Histogram('TEST_HISTOGRAM_EMPTY_MULTISTORE',
                                    histograms['TEST_HISTOGRAM_EMPTY_MULTISTORE'],
@@ -392,7 +392,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         def test_parse(): return parse_histograms.Histogram('TEST_NO_PRODUCTS',
                                                             histograms['TEST_NO_PRODUCTS'],
@@ -412,7 +412,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         def test_parse(): return parse_histograms.Histogram('TEST_EMPTY_PRODUCTS',
                                                             histograms['TEST_EMPTY_PRODUCTS'],
@@ -432,7 +432,7 @@ class TestParser(unittest.TestCase):
             }
         }
         histograms = load_histogram(SAMPLE_HISTOGRAM)
-        parse_histograms.load_whitelist()
+        parse_histograms.load_allowlist()
 
         parse_histograms.Histogram('TEST_HISTOGRAM_ALL_PRODUCTS',
                                    histograms['TEST_HISTOGRAM_ALL_PRODUCTS'],
