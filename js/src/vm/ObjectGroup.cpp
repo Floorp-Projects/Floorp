@@ -404,21 +404,6 @@ struct ObjectGroupRealm::NewEntry {
     }
   };
 
-  bool needsSweep() {
-    return IsAboutToBeFinalized(&group) ||
-           (associated && IsAboutToBeFinalizedUnbarriered(&associated));
-  }
-
-  bool operator==(const NewEntry& other) const {
-    return group == other.group && associated == other.associated;
-  }
-};
-
-template <>
-struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
-  using Key = ObjectGroupRealm::NewEntry;
-  using Lookup = ObjectGroupRealm::NewEntry::Lookup;
-
   static bool hasHash(const Lookup& l) {
     return MovableCellHasher<TaggedProto>::hasHash(l.proto) &&
            MovableCellHasher<JSObject*>::hasHash(l.associated);
@@ -450,13 +435,37 @@ struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
     return MovableCellHasher<JSObject*>::match(key.associated,
                                                lookup.associated);
   }
+
+  static void rekey(NewEntry& k, const NewEntry& newKey) { k = newKey; }
+
+  bool needsSweep() {
+    return IsAboutToBeFinalized(&group) ||
+           (associated && IsAboutToBeFinalizedUnbarriered(&associated));
+  }
+
+  bool operator==(const NewEntry& other) const {
+    return group == other.group && associated == other.associated;
+  }
 };
 
+namespace mozilla {
+template <>
+struct FallibleHashMethods<ObjectGroupRealm::NewEntry> {
+  template <typename Lookup>
+  static bool hasHash(Lookup&& l) {
+    return ObjectGroupRealm::NewEntry::hasHash(std::forward<Lookup>(l));
+  }
+  template <typename Lookup>
+  static bool ensureHash(Lookup&& l) {
+    return ObjectGroupRealm::NewEntry::ensureHash(std::forward<Lookup>(l));
+  }
+};
+}  // namespace mozilla
+
 class ObjectGroupRealm::NewTable
-    : public JS::WeakCache<js::GCHashSet<NewEntry, MovableCellHasher<NewEntry>,
-                                         SystemAllocPolicy>> {
-  using Table =
-      js::GCHashSet<NewEntry, MovableCellHasher<NewEntry>, SystemAllocPolicy>;
+    : public JS::WeakCache<
+          js::GCHashSet<NewEntry, NewEntry, SystemAllocPolicy>> {
+  using Table = js::GCHashSet<NewEntry, NewEntry, SystemAllocPolicy>;
   using Base = JS::WeakCache<Table>;
 
  public:
@@ -1317,7 +1326,8 @@ JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
 // ObjectGroupRealm AllocationSiteTable
 /////////////////////////////////////////////////////////////////////
 
-struct ObjectGroupRealm::AllocationSiteKey {
+struct ObjectGroupRealm::AllocationSiteKey
+    : public DefaultHasher<AllocationSiteKey> {
   WeakHeapPtrScript script;
 
   uint32_t offset : 24;
@@ -1352,6 +1362,23 @@ struct ObjectGroupRealm::AllocationSiteKey {
     proto = std::move(key.proto);
   }
 
+  static inline HashNumber hash(const AllocationSiteKey& key) {
+    JSScript* script = key.script.unbarrieredGet();
+    JSObject* proto = key.proto.unbarrieredGet();
+    HashNumber hash = mozilla::HashGeneric(key.offset, key.kind);
+    hash = mozilla::AddToHash(hash, MovableCellHasher<JSScript*>::hash(script));
+    hash = mozilla::AddToHash(hash, MovableCellHasher<JSObject*>::hash(proto));
+    return hash;
+  }
+
+  static inline bool match(const AllocationSiteKey& a,
+                           const AllocationSiteKey& b) {
+    return a.offset == b.offset && a.kind == b.kind &&
+           MovableCellHasher<JSScript*>::match(a.script.unbarrieredGet(),
+                                               b.script.unbarrieredGet()) &&
+           MovableCellHasher<JSObject*>::match(a.proto, b.proto);
+  }
+
   void trace(JSTracer* trc) {
     TraceRoot(trc, &script, "AllocationSiteKey script");
     TraceNullableRoot(trc, &proto, "AllocationSiteKey proto");
@@ -1368,45 +1395,12 @@ struct ObjectGroupRealm::AllocationSiteKey {
   }
 };
 
-template <>
-struct MovableCellHasher<ObjectGroupRealm::AllocationSiteKey> {
-  using Key = ObjectGroupRealm::AllocationSiteKey;
-  using Lookup = ObjectGroupRealm::AllocationSiteKey;
-
-  static bool hasHash(const Lookup& l) {
-    return MovableCellHasher<JSScript*>::hasHash(l.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::hasHash(l.proto.unbarrieredGet());
-  }
-  static bool ensureHash(const Lookup& l) {
-    return MovableCellHasher<JSScript*>::ensureHash(
-               l.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::ensureHash(l.proto.unbarrieredGet());
-  }
-  static inline HashNumber hash(const Key& key) {
-    HashNumber hash = mozilla::HashGeneric(key.offset, key.kind);
-    hash = mozilla::AddToHash(
-        hash, MovableCellHasher<JSScript*>::hash(key.script.unbarrieredGet()));
-    hash = mozilla::AddToHash(
-        hash, MovableCellHasher<JSObject*>::hash(key.proto.unbarrieredGet()));
-    return hash;
-  }
-
-  static inline bool match(const Key& a, const Lookup& b) {
-    return a.offset == b.offset && a.kind == b.kind &&
-           MovableCellHasher<JSScript*>::match(a.script.unbarrieredGet(),
-                                               b.script.unbarrieredGet()) &&
-           MovableCellHasher<JSObject*>::match(a.proto.unbarrieredGet(),
-                                               b.proto.unbarrieredGet());
-  }
-};
-
 class ObjectGroupRealm::AllocationSiteTable
-    : public JS::WeakCache<js::GCHashMap<
-          AllocationSiteKey, WeakHeapPtrObjectGroup,
-          MovableCellHasher<AllocationSiteKey>, SystemAllocPolicy>> {
-  using Table =
-      js::GCHashMap<AllocationSiteKey, WeakHeapPtrObjectGroup,
-                    MovableCellHasher<AllocationSiteKey>, SystemAllocPolicy>;
+    : public JS::WeakCache<
+          js::GCHashMap<AllocationSiteKey, WeakHeapPtrObjectGroup,
+                        AllocationSiteKey, SystemAllocPolicy>> {
+  using Table = js::GCHashMap<AllocationSiteKey, WeakHeapPtrObjectGroup,
+                              AllocationSiteKey, SystemAllocPolicy>;
   using Base = JS::WeakCache<Table>;
 
  public:
