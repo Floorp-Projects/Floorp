@@ -7,6 +7,8 @@
 #include "InternalResponse.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -39,7 +41,111 @@ InternalResponse::InternalResponse(uint16_t aStatus,
       mErrorCode(NS_OK),
       mCredentialsMode(aCredentialsMode) {}
 
+/* static */ RefPtr<InternalResponse> InternalResponse::FromIPC(
+    const IPCInternalResponse& aIPCResponse) {
+  if (aIPCResponse.type() == ResponseType::Error) {
+    return InternalResponse::NetworkError(aIPCResponse.errorCode());
+  }
+
+  RefPtr<InternalResponse> response =
+      new InternalResponse(aIPCResponse.status(), aIPCResponse.statusText());
+
+  response->SetURLList(aIPCResponse.urlList());
+  response->mHeaders =
+      new InternalHeaders(aIPCResponse.headers(), aIPCResponse.headersGuard());
+
+  nsCOMPtr<nsIInputStream> body =
+      mozilla::ipc::DeserializeIPCStream(aIPCResponse.body());
+  response->SetBody(body, aIPCResponse.bodySize());
+
+  response->SetAlternativeDataType(aIPCResponse.alternativeDataType());
+
+  nsCOMPtr<nsIInputStream> alternativeBody =
+      mozilla::ipc::DeserializeIPCStream(aIPCResponse.alternativeBody());
+  response->SetAlternativeBody(alternativeBody);
+
+  response->InitChannelInfo(aIPCResponse.channelInfo());
+
+  if (aIPCResponse.principalInfo()) {
+    response->SetPrincipalInfo(MakeUnique<mozilla::ipc::PrincipalInfo>(
+        aIPCResponse.principalInfo().ref()));
+  }
+
+  switch (aIPCResponse.type()) {
+    case ResponseType::Basic:
+      response = response->BasicResponse();
+      break;
+    case ResponseType::Cors:
+      response = response->CORSResponse();
+      break;
+    case ResponseType::Default:
+      break;
+    case ResponseType::Opaque:
+      response = response->OpaqueResponse();
+      break;
+    case ResponseType::Opaqueredirect:
+      response = response->OpaqueRedirectResponse();
+      break;
+    default:
+      MOZ_CRASH("Unexpected ResponseType!");
+  }
+
+  MOZ_ASSERT(response);
+
+  return response;
+}
+
 InternalResponse::~InternalResponse() {}
+
+template void InternalResponse::ToIPC<mozilla::ipc::PBackgroundChild>(
+    IPCInternalResponse* aIPCResponse, mozilla::ipc::PBackgroundChild* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
+
+template <typename M>
+void InternalResponse::ToIPC(
+    IPCInternalResponse* aIPCResponse, M* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
+  MOZ_ASSERT(aIPCResponse);
+
+  aIPCResponse->type() = mType;
+  GetUnfilteredURLList(aIPCResponse->urlList());
+  aIPCResponse->status() = GetUnfilteredStatus();
+  aIPCResponse->statusText() = GetUnfilteredStatusText();
+  UnfilteredHeaders()->ToIPC(aIPCResponse->headers(),
+                             aIPCResponse->headersGuard());
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    aAutoBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->body()));
+    DebugOnly<bool> ok = aAutoBodyStream->Serialize(body, aManager);
+    MOZ_ASSERT(ok);
+  }
+
+  aIPCResponse->bodySize() = bodySize;
+  aIPCResponse->errorCode() = mErrorCode;
+  aIPCResponse->alternativeDataType() = GetAlternativeDataType();
+
+  nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
+  if (alternativeBody) {
+    aAutoAlternativeBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->alternativeBody()));
+    DebugOnly<bool> ok =
+        aAutoAlternativeBodyStream->Serialize(alternativeBody, aManager);
+    MOZ_ASSERT(ok);
+  }
+
+  aIPCResponse->channelInfo() = mChannelInfo.AsIPCChannelInfo();
+
+  if (mPrincipalInfo) {
+    aIPCResponse->principalInfo().emplace(*mPrincipalInfo);
+  }
+}
 
 already_AddRefed<InternalResponse> InternalResponse::Clone(
     CloneType aCloneType) {
