@@ -119,6 +119,10 @@ function doPrefEnvOp(fn) {
 // used to bounce assertion messages back down to the correct child.
 let nextTaskID = 1;
 
+// The default actor to send assertions to if a task originated in a
+// window without a test harness.
+let defaultAssertHandler;
+
 class SpecialPowersParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -200,6 +204,10 @@ class SpecialPowersParent extends JSWindowActorParent {
   }
 
   uninit() {
+    if (defaultAssertHandler === this) {
+      defaultAssertHandler = null;
+    }
+
     var obs = Services.obs;
     obs.removeObserver(this._observer, "http-on-modify-request");
     this._registerObservers._topics.splice(0).forEach(element => {
@@ -1030,15 +1038,22 @@ class SpecialPowersParent extends JSWindowActorParent {
         });
       }
 
+      case "SetAsDefaultAssertHandler": {
+        defaultAssertHandler = this;
+        return undefined;
+      }
+
       case "Spawn": {
-        let { browsingContext, task, args, caller } = aMessage.data;
+        let { browsingContext, task, args, caller, hasHarness } = aMessage.data;
 
         let spParent = browsingContext.currentWindowGlobal.getActor(
           "SpecialPowers"
         );
 
         let taskId = nextTaskID++;
-        spParent._taskActors.set(taskId, this);
+        if (hasHarness) {
+          spParent._taskActors.set(taskId, this);
+        }
 
         return spParent
           .sendQuery("Spawn", { task, args, caller, taskId })
@@ -1071,9 +1086,10 @@ class SpecialPowersParent extends JSWindowActorParent {
 
       case "ProxiedAssert": {
         let { taskId, data } = aMessage.data;
-        let actor = this._taskActors.get(taskId);
 
+        let actor = this._taskActors.get(taskId) || defaultAssertHandler;
         actor.sendAsyncMessage("Assert", data);
+
         return undefined;
       }
 
