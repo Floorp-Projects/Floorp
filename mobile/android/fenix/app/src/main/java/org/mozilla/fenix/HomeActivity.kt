@@ -192,7 +192,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
             components.analytics.metrics.track(Event.SearchWidgetNewTabPressed)
-            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null))
+            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
             return
         } else if (intent?.scheme == "fenix") {
             intent.data?.let { handleDeepLink(it) }

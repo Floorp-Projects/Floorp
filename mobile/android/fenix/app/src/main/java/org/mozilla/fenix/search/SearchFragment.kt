@@ -74,6 +74,10 @@ class SearchFragment : Fragment(), BackHandler {
             ?.let { it.sessionId }
             ?.let(requireComponents.core.sessionManager::findSessionById)
 
+        val displayShortcutEnginePicker = arguments
+            ?.let(SearchFragmentArgs.Companion::fromBundle)
+            ?.let { it.showShortcutEnginePicker } ?: false
+
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url ?: ""
         val currentSearchEngine = SearchEngineSource.Default(
@@ -84,7 +88,7 @@ class SearchFragment : Fragment(), BackHandler {
             SearchStore(
                 SearchState(
                     query = url,
-                    showShortcutEnginePicker = true,
+                    showShortcutEnginePicker = displayShortcutEnginePicker,
                     searchEngineSource = currentSearchEngine,
                     defaultEngineSource = currentSearchEngine,
                     showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,

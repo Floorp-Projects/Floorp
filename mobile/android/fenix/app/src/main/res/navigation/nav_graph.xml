@@ -15,7 +15,7 @@
         android:id="@+id/action_global_search"
         app:destination="@id/searchFragment"
         app:popUpTo="@id/nav_graph"
-        app:popUpToInclusive="true"/>
+        app:popUpToInclusive="true" />
 
     <action
         android:id="@+id/action_global_crash_reporter"
@@ -72,6 +72,10 @@
             android:name="session_id"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="showShortcutEnginePicker"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_searchFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment"
