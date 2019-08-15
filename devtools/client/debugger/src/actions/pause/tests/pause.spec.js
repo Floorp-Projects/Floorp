@@ -71,8 +71,8 @@ const mockCommandClient = {
       }
     });
   },
-  getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => [],
+  getSourceActorBreakpointPositions: async () => ({}),
+  getSourceActorBreakableLines: async () => [],
   actorID: "threadActorID",
 };
 
@@ -176,7 +176,7 @@ describe("pause", () => {
     it("should step over when paused after an await", async () => {
       const store = createStore({
         ...mockCommandClient,
-        getBreakpointPositions: async () => ({ [2]: [1] }),
+        getSourceActorBreakpointPositions: async () => ({ [2]: [1] }),
       });
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
