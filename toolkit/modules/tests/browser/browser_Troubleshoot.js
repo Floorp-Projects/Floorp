@@ -285,6 +285,7 @@ const SNAPSHOT_SCHEMA = {
     lockedPreferences: {
       required: true,
       type: "object",
+      properties: {},
     },
     graphics: {
       required: true,
