@@ -10,6 +10,10 @@
  * callback based.
  */
 
+// Disable ownerGlobal use since that's not available on content-privileged elements.
+
+/* eslint-disable mozilla/use-ownerGlobal */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = ["ContentTaskUtils"];
@@ -29,7 +33,7 @@ var ContentTaskUtils = {
    * @return {boolean}
    */
   is_hidden(element) {
-    var style = element.ownerGlobal.getComputedStyle(element);
+    let style = element.ownerDocument.defaultView.getComputedStyle(element);
     if (style.display == "none") {
       return true;
     }
@@ -54,7 +58,7 @@ var ContentTaskUtils = {
    * @return {boolean}
    */
   is_visible(element) {
-    var style = element.ownerGlobal.getComputedStyle(element);
+    let style = element.ownerDocument.defaultView.getComputedStyle(element);
     if (style.display == "none") {
       return false;
     }

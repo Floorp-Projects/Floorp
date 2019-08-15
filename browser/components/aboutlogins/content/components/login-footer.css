@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+footer {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  position: absolute;
+  margin-inline-start: 40px;
+  bottom: 40px;
+}
+
+.footer-content {
+  background-color: var(--in-content-box-background);
+  box-shadow: var(--shadow-10);
+  max-width: 700px;
+  position: relative;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  padding-inline-start: 40px;
+  padding-inline-end: 80px;
+}
+
+.footer-content > p {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.5;
+  padding-inline-end: 40px;
+}
+
+.footer-content button {
+  background-color: transparent;
+  padding: 0;
+}
+
+.footer-content button:hover {
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.footer-content button img {
+  width: auto;
+  height: 40px;
+  display: block;
+}
+
+.footer-content button + button img {
+  height: 60px;
+}
+
+.footer-content .close {
+  -moz-context-properties: fill, fill-opacity;
+  background-image: url("chrome://global/skin/icons/close.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  display: block;
+  fill: currentColor;
+  fill-opacity: 0;
+  height: 16px;
+  position: absolute;
+  inset-inline-end: 12px;
+  top: 12px;
+  width: 16px;
+}
