@@ -4676,9 +4676,6 @@ pref("widget.window-transforms.disabled", false);
 // Copy-on-write canvas
 pref("layers.shared-buffer-provider.enabled", true);
 
-// Force all possible layers to be always active layers
-pref("layers.force-active", false);
-
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
 
