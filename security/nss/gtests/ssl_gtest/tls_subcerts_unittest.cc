@@ -240,6 +240,7 @@ TEST_P(TlsConnectTls13, DCAbortBadSignature) {
   StackSECItem dc;
   TlsAgent::DelegateCredential(kDelegatorId, pub, kDCScheme, kDCValidFor, now(),
                                &dc);
+  ASSERT_TRUE(dc.data != nullptr);
 
   // Flip the first bit of the DC so that the signature is invalid.
   dc.data[0] ^= 0x01;

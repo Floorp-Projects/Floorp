@@ -258,6 +258,11 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx, unsigned char *output,
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
         return SECFailure;
     }
+    // ChaCha has a 64 octet block, with a 32-bit block counter.
+    if (inputLen >= (1ULL << (6 + 32)) + ctx->tagLen) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
+    }
 
     PORT_Memset(block, 0, sizeof(block));
     // Generate a block of keystream. The first 32 bytes will be the poly1305

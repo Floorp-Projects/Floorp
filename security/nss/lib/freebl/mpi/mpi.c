@@ -344,6 +344,8 @@ mp_set_int(mp_int *mp, long z)
     unsigned long v = labs(z);
     mp_err res;
 
+    ARGCHK(mp != NULL, MP_BADARG);
+
     /* https://bugzilla.mozilla.org/show_bug.cgi?id=1509432 */
     if ((res = mp_set_ulong(mp, v)) != MP_OKAY) { /* avoids duplicated code */
         return res;
@@ -1427,7 +1429,7 @@ s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c)
     mp_digit d;
     unsigned int dig, bit;
 
-    ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
+    ARGCHK(a != NULL && b != NULL && c != NULL && m != NULL, MP_BADARG);
 
     if (mp_cmp_z(b) < 0 || mp_cmp_z(m) <= 0)
         return MP_RANGE;
@@ -1514,7 +1516,7 @@ mp_exptmod_d(const mp_int *a, mp_digit d, const mp_int *m, mp_int *c)
     mp_int s, x;
     mp_err res;
 
-    ARGCHK(a != NULL && c != NULL, MP_BADARG);
+    ARGCHK(a != NULL && c != NULL && m != NULL, MP_BADARG);
 
     if ((res = mp_init(&s)) != MP_OKAY)
         return res;
@@ -1567,6 +1569,8 @@ X:
 int
 mp_cmp_z(const mp_int *a)
 {
+    ARGMPCHK(a != NULL);
+
     if (SIGN(a) == NEG)
         return MP_LT;
     else if (USED(a) == 1 && DIGIT(a, 0) == 0)
@@ -1657,7 +1661,7 @@ mp_cmp_mag(const mp_int *a, const mp_int *b)
 int
 mp_isodd(const mp_int *a)
 {
-    ARGCHK(a != NULL, 0);
+    ARGMPCHK(a != NULL);
 
     return (int)(DIGIT(a, 0) & 1);
 
@@ -2001,7 +2005,7 @@ s_mp_almost_inverse(const mp_int *a, const mp_int *p, mp_int *c)
     mp_err k = 0;
     mp_int d, f, g;
 
-    ARGCHK(a && p && c, MP_BADARG);
+    ARGCHK(a != NULL && p != NULL && c != NULL, MP_BADARG);
 
     MP_DIGITS(&d) = 0;
     MP_DIGITS(&f) = 0;
@@ -2135,7 +2139,7 @@ s_mp_invmod_odd_m(const mp_int *a, const mp_int *m, mp_int *c)
     mp_err res;
     mp_int x;
 
-    ARGCHK(a && m && c, MP_BADARG);
+    ARGCHK(a != NULL && m != NULL && c != NULL, MP_BADARG);
 
     if (mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
         return MP_RANGE;
@@ -2173,7 +2177,7 @@ mp_invmod_xgcd(const mp_int *a, const mp_int *m, mp_int *c)
     mp_int g, x;
     mp_err res;
 
-    ARGCHK(a && m && c, MP_BADARG);
+    ARGCHK(a != NULL && m != NULL && c != NULL, MP_BADARG);
 
     if (mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
         return MP_RANGE;
@@ -2269,6 +2273,8 @@ s_mp_invmod_even_m(const mp_int *a, const mp_int *m, mp_int *c)
     mp_int oddPart, evenPart;     /* parts to combine via CRT. */
     mp_int C2, tmp1, tmp2;
 
+    ARGCHK(a != NULL && m != NULL && c != NULL, MP_BADARG);
+
     /*static const mp_digit d1 = 1; */
     /*static const mp_int one = { MP_ZPOS, 1, 1, (mp_digit *)&d1 }; */
 
@@ -2347,8 +2353,7 @@ CLEANUP:
 mp_err
 mp_invmod(const mp_int *a, const mp_int *m, mp_int *c)
 {
-
-    ARGCHK(a && m && c, MP_BADARG);
+    ARGCHK(a != NULL && m != NULL && c != NULL, MP_BADARG);
 
     if (mp_cmp_z(a) == 0 || mp_cmp_z(m) == 0)
         return MP_RANGE;
@@ -2715,6 +2720,8 @@ mp_strerror(mp_err ec)
 mp_err
 s_mp_grow(mp_int *mp, mp_size min)
 {
+    ARGCHK(mp != NULL, MP_BADARG);
+
     if (min > ALLOC(mp)) {
         mp_digit *tmp;
 
@@ -2744,6 +2751,8 @@ s_mp_grow(mp_int *mp, mp_size min)
 mp_err
 s_mp_pad(mp_int *mp, mp_size min)
 {
+    ARGCHK(mp != NULL, MP_BADARG);
+
     if (min > USED(mp)) {
         mp_err res;
 
@@ -2862,6 +2871,8 @@ s_mp_lshd(mp_int *mp, mp_size p)
 {
     mp_err res;
     unsigned int ix;
+
+    ARGCHK(mp != NULL, MP_BADARG);
 
     if (p == 0)
         return MP_OKAY;
@@ -2995,6 +3006,8 @@ s_mp_mul_2(mp_int *mp)
     unsigned int ix, used;
     mp_digit kin = 0;
 
+    ARGCHK(mp != NULL, MP_BADARG);
+
     /* Shift digits leftward by 1 bit */
     used = MP_USED(mp);
     pd = MP_DIGITS(mp);
@@ -3103,6 +3116,8 @@ s_mp_norm(mp_int *a, mp_int *b, mp_digit *pd)
     mp_digit mask;
     mp_digit b_msd;
     mp_err res = MP_OKAY;
+
+    ARGCHK(a != NULL && b != NULL && pd != NULL, MP_BADARG);
 
     d = 0;
     mask = DIGIT_MAX & ~(DIGIT_MAX >> 1); /* mask is msb of digit */
@@ -4368,6 +4383,8 @@ CLEANUP:
 int
 s_mp_cmp(const mp_int *a, const mp_int *b)
 {
+    ARGMPCHK(a != NULL && b != NULL);
+
     mp_size used_a = MP_USED(a);
     {
         mp_size used_b = MP_USED(b);
@@ -4419,6 +4436,8 @@ IS_GT:
 int
 s_mp_cmp_d(const mp_int *a, mp_digit d)
 {
+    ARGMPCHK(a != NULL);
+
     if (USED(a) > 1)
         return MP_GT;
 
@@ -4444,6 +4463,8 @@ s_mp_ispow2(const mp_int *v)
 {
     mp_digit d;
     int extra = 0, ix;
+
+    ARGMPCHK(v != NULL);
 
     ix = MP_USED(v) - 1;
     d = MP_DIGIT(v, ix); /* most significant digit of v */
@@ -4772,10 +4793,7 @@ mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size length)
     int ix, jx;
     unsigned int bytes;
 
-    ARGCHK(mp != NULL, MP_BADARG);
-    ARGCHK(str != NULL, MP_BADARG);
-    ARGCHK(!SIGN(mp), MP_BADARG);
-    ARGCHK(length > 0, MP_BADARG);
+    ARGCHK(mp != NULL && str != NULL && !SIGN(mp) && length > 0, MP_BADARG);
 
     /* Constant time on the value of mp.  Don't use mp_unsigned_octet_size. */
     bytes = USED(mp) * MP_DIGIT_SIZE;

@@ -423,6 +423,7 @@ static int32_t SwitchCertificates(TlsAgent* agent, const SECItem* srvNameArr,
 TEST_P(TlsConnectGeneric, ServerSNICertSwitch) {
   Connect();
   ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
 
   Reset();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
@@ -431,6 +432,7 @@ TEST_P(TlsConnectGeneric, ServerSNICertSwitch) {
 
   Connect();
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   CheckKeys();
   EXPECT_FALSE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
@@ -439,6 +441,7 @@ TEST_P(TlsConnectGeneric, ServerSNICertTypeSwitch) {
   Reset(TlsAgent::kServerEcdsa256);
   Connect();
   ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
 
   Reset();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
@@ -449,6 +452,7 @@ TEST_P(TlsConnectGeneric, ServerSNICertTypeSwitch) {
 
   Connect();
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
@@ -533,6 +537,7 @@ TEST_P(TlsConnectTls13, TestTls13ResumeNoCertificateRequest) {
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
   ScopedCERTCertificate cert1(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -548,6 +553,7 @@ TEST_P(TlsConnectTls13, TestTls13ResumeNoCertificateRequest) {
   // Sanity check whether the client certificate matches the one
   // decrypted from ticket.
   ScopedCERTCertificate cert2(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
 
@@ -563,6 +569,7 @@ TEST_P(TlsConnectTls13, WriteBeforeHandshakeCompleteOnResumption) {
   Connect();
   SendReceive();  // Absorb the session ticket.
   ScopedCERTCertificate cert1(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -579,6 +586,7 @@ TEST_P(TlsConnectTls13, WriteBeforeHandshakeCompleteOnResumption) {
 
   // Check whether the client certificate matches the one from the ticket.
   ScopedCERTCertificate cert2(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
 
@@ -759,7 +767,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ASSERT_LT(0U, initialTicket.len());
 
   ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
-  ASSERT_TRUE(!!cert1.get());
+  ASSERT_NE(nullptr, cert1.get());
 
   Reset();
   ClearStats();
@@ -775,7 +783,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ASSERT_LT(0U, c2->extension().len());
 
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
-  ASSERT_TRUE(!!cert2.get());
+  ASSERT_NE(nullptr, cert2.get());
 
   // Check that the cipher suite is reported the same on both sides, though in
   // TLS 1.3 resumption actually negotiates a different cipher suite.
@@ -1176,6 +1184,7 @@ TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfo) {
   client_->GetTokenInfo(token);
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
+  ASSERT_NE(nullptr, cert.get());
 
   CheckGetInfoResult(now(), 0, 0, cert, token);
 
@@ -1256,6 +1265,7 @@ TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfoAlpn) {
   client_->GetTokenInfo(token);
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
+  ASSERT_NE(nullptr, cert.get());
 
   CheckGetInfoResult(now(), 1, 0, cert, token);
 
@@ -1291,7 +1301,7 @@ TEST_P(TlsConnectTls13ResumptionToken, ConnectResumeGetInfoZeroRtt) {
   client_->GetTokenInfo(token);
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
-
+  ASSERT_NE(nullptr, cert.get());
   CheckGetInfoResult(now(), 1, 1024, cert, token);
 
   ZeroRttSendReceive(true, true);

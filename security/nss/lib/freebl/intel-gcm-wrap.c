@@ -62,6 +62,12 @@ intel_AES_GCM_CreateContext(void *context,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
+    // Limit AADLen in accordance with SP800-38D
+    if (sizeof(AAD_whole_len) >= 8 && AAD_whole_len > (1ULL << 61) - 1) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return NULL;
+    }
+
     gcm = PORT_ZNew(intel_AES_GCMContext);
     if (gcm == NULL) {
         return NULL;
@@ -160,6 +166,14 @@ intel_AES_GCM_EncryptUpdate(intel_AES_GCMContext *gcm,
     unsigned char T[AES_BLOCK_SIZE];
     unsigned int j;
 
+    // GCM has a 16 octet block, with a 32-bit block counter
+    // Limit in accordance with SP800-38D
+    if (sizeof(inlen) > 4 &&
+        inlen >= ((1ULL << 32) - 2) * AES_BLOCK_SIZE) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
+    }
+
     tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
     if (UINT_MAX - inlen < tagBytes) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
@@ -216,6 +230,14 @@ intel_AES_GCM_DecryptUpdate(intel_AES_GCMContext *gcm,
 
     inlen -= tagBytes;
     intag = inbuf + inlen;
+
+    // GCM has a 16 octet block, with a 32-bit block counter
+    // Limit in accordance with SP800-38D
+    if (sizeof(inlen) > 4 &&
+        inlen >= ((1ULL << 32) - 2) * AES_BLOCK_SIZE) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
+    }
 
     if (maxout < inlen) {
         *outlen = inlen;
