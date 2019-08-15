@@ -1,9 +1,10 @@
 .body {
   margin-inline-start: 28px;
-  width: 664px;
 }
 
 .shortcut.card {
+  /* Preferences content is 664px and the cards have 16px of left/right padding. */
+  width: 632px;
   margin-bottom: 16px;
 }
 
@@ -52,13 +53,6 @@
   margin: 8px 0 0;
 }
 
-.expand-button[warning]:not(:focus) {
-  outline: 2px solid var(--yellow-60);
-  outline-offset: -1px;
-  -moz-outline-radius: 3px;
-  box-shadow: 0 0 0 4px var(--yellow-60-a30);
-}
-
 .shortcut-input {
   font-size: 12px;
   padding: 4px 8px;
@@ -70,8 +64,6 @@
 
 .error-message {
   --error-background: var(--red-60);
-  --warning-background: var(--yellow-50);
-  --warning-text-color: var(--yellow-90);
   color: white;
   display: flex;
   flex-direction: column;
@@ -88,11 +80,6 @@
   -moz-context-properties: fill, stroke;
 }
 
-.error-message[type="warning"] > .error-message-icon {
-  fill: var(--warning-background);
-  stroke: var(--warning-background);
-}
-
 .error-message-label {
   background-color: var(--error-background);
   border-radius: 2px;
@@ -103,11 +90,6 @@
   word-wrap: break-word;
 }
 
-.error-message[type="warning"] > .error-message-label {
-  background-color: var(--warning-background);
-  color: var(--warning-text-color);
-}
-
 .error-message-arrow {
   background-color: var(--error-background);
   content: "";
@@ -115,9 +97,4 @@
   width: 8px;
   transform: translate(4px, -6px) rotate(45deg);
   position: absolute;
-}
-
-/* The margin between message bars. */
-message-bar-stack > * {
-  margin-bottom: 8px;
 }
