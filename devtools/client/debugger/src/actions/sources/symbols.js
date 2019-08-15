@@ -34,8 +34,6 @@ async function doSetSymbols(cx, source, { dispatch, getState, parser }) {
   if (symbols && symbols.framework) {
     dispatch(updateTab(source, symbols.framework));
   }
-
-  return symbols;
 }
 
 type Args = { cx: Context, source: Source };
