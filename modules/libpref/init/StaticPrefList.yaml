@@ -928,6 +928,12 @@
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
 
+# Limit for the canvas image cache. 0 means unlimited.
+- name: canvas.image.cache.limit
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Add support for canvas path objects
 - name: canvas.path.enabled
   type: bool

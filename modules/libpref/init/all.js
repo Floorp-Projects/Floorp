@@ -4488,10 +4488,6 @@ pref("image.mem.allow_locking_in_content_processes", true);
 // Whether we attempt to decode WebP images or not.
 pref("image.webp.enabled", true);
 
-// Limit for the canvas image cache. 0 means we don't limit the size of the
-// cache.
-pref("canvas.image.cache.limit", 0);
-
 // WebGL prefs
 pref("gl.require-hardware", false);
 #ifdef XP_MACOSX
