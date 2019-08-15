@@ -30,6 +30,7 @@
 #include "nsIAuthPrompt2.h"
 #include "nsIAuthPromptAdapterFactory.h"
 #include "nsIBufferedStreams.h"
+#include "nsBufferedStreams.h"
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
 #include "mozilla/dom/Document.h"
@@ -1269,7 +1270,9 @@ MOZ_MUST_USE nsresult NS_NewBufferedInputStream(
   if (NS_SUCCEEDED(rv)) {
     rv = in->Init(inputStream, aBufferSize);
     if (NS_SUCCEEDED(rv)) {
-      in.forget(aResult);
+      *aResult = static_cast<nsBufferedInputStream*>(in.get())
+                     ->GetInputStream()
+                     .take();
     }
   }
   return rv;
