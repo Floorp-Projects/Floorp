@@ -82,6 +82,8 @@ import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebExtensionEventDispatcher;
 import org.mozilla.geckoview.WebMessage;
+import org.mozilla.geckoview.WebNotification;
+import org.mozilla.geckoview.WebNotificationDelegate;
 import org.mozilla.geckoview.WebRequest;
 import org.mozilla.geckoview.WebRequestError;
 import org.mozilla.geckoview.WebResponse;
@@ -298,7 +300,6 @@ package org.mozilla.geckoview {
   }
 
   public final class GeckoRuntime implements Parcelable {
-    ctor public GeckoRuntime();
     method @UiThread public void attachTo(@NonNull Context);
     method @UiThread public void configurationChanged(@NonNull Configuration);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context);
@@ -310,11 +311,13 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public StorageController getStorageController();
     method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
     method @UiThread @NonNull public WebExtensionController getWebExtensionController();
+    method @UiThread @Nullable public WebNotificationDelegate getWebNotificationDelegate();
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
+    method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
     method @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
     field public static final String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
@@ -1240,6 +1243,23 @@ package org.mozilla.geckoview {
     method @NonNull public WebMessage.Builder addHeader(@NonNull String, @NonNull String);
     method @NonNull public WebMessage.Builder header(@NonNull String, @NonNull String);
     method @NonNull public WebMessage.Builder uri(@NonNull String);
+  }
+
+  public class WebNotification {
+    method @UiThread public void click();
+    method @UiThread public void dismiss();
+    field @Nullable public final String imageUrl;
+    field @Nullable public final String lang;
+    field @NonNull public final boolean requireInteraction;
+    field @NonNull public final String tag;
+    field @Nullable public final String text;
+    field @Nullable public final String textDirection;
+    field @Nullable public final String title;
+  }
+
+  public interface WebNotificationDelegate {
+    method @AnyThread default public void onCloseNotification(@NonNull WebNotification);
+    method @AnyThread default public void onShowNotification(@NonNull WebNotification);
   }
 
   @AnyThread public class WebRequest extends WebMessage {
