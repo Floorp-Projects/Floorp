@@ -37,7 +37,7 @@ add_task(async function test_revive_bg_tabs_on_demand() {
 
   // Now crash the selected tab
   let windowReady = BrowserTestUtils.waitForEvent(window, "SSWindowStateReady");
-  await BrowserTestUtils.crashFrame(browser1);
+  await BrowserTestUtils.crashBrowser(browser1);
 
   ok(newTab1.hasAttribute("crashed"), "Selected tab should be crashed");
   ok(!newTab2.hasAttribute("crashed"), "Background tab should not be crashed");

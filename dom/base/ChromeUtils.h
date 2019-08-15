@@ -192,9 +192,6 @@ class ChromeUtils {
 
   static bool IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                             uint32_t aError);
-
-  static void PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
-                                          ErrorResult& aError);
 };
 
 }  // namespace dom

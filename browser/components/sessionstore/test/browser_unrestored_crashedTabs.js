@@ -44,7 +44,7 @@ add_task(async function test() {
       ok(unrestoredTab.hasAttribute("pending"), "tab is pending");
 
       // Now crash the selected browser.
-      await BrowserTestUtils.crashFrame(browser);
+      await BrowserTestUtils.crashBrowser(browser);
 
       ok(!unrestoredTab.hasAttribute("crashed"), "tab is still not crashed");
       ok(unrestoredTab.hasAttribute("pending"), "tab is still pending");

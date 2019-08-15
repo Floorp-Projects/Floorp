@@ -10,7 +10,7 @@ function* runTests() {
 
   // Nothing is pending - crash the process.
   info("Crashing the thumbnail content process.");
-  let crash = yield BrowserTestUtils.crashFrame(
+  let crash = yield BrowserTestUtils.crashBrowser(
     BackgroundPageThumbs._thumbBrowser,
     false
   );
