@@ -14,6 +14,7 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
@@ -193,7 +194,6 @@ const uint32_t kFlushTimeoutMs = 5000;
 const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const uint32_t kDefaultNextGen = false;
-const uint32_t kDefaultOriginLimitKB = 5 * 1024;
 const uint32_t kDefaultShadowWrites = true;
 const uint32_t kDefaultSnapshotPrefill = 16384;
 const uint32_t kDefaultSnapshotGradualPrefill = 4096;
@@ -202,14 +202,6 @@ const uint32_t kDefaultClientValidation = true;
  *
  */
 const char kNextGenPref[] = "dom.storage.next_gen";
-/**
- * LocalStorage data limit as determined by summing up the lengths of all string
- * keys and values.  This is consistent with the legacy implementation and other
- * browser engines.  This value should really only ever change in unit testing
- * where being able to lower it makes it easier for us to test certain edge
- * cases.
- */
-const char kDefaultQuotaPref[] = "dom.storage.default_quota";
 /**
  * Should all mutations also be reflected in the "shadow" database, which is
  * the legacy webappsstore.sqlite database.  When this is enabled, users can
@@ -2915,7 +2907,6 @@ typedef nsClassHashtable<nsCStringHashKey, nsTArray<Observer*>>
 StaticAutoPtr<ObserverHashtable> gObservers;
 
 Atomic<bool> gNextGen(kDefaultNextGen);
-Atomic<uint32_t, Relaxed> gOriginLimitKB(kDefaultOriginLimitKB);
 Atomic<bool> gShadowWrites(kDefaultShadowWrites);
 Atomic<int32_t, Relaxed> gSnapshotPrefill(kDefaultSnapshotPrefill);
 Atomic<int32_t, Relaxed> gSnapshotGradualPrefill(
@@ -3269,9 +3260,6 @@ void InitializeLocalStorage() {
   }
 
   Preferences::AddAtomicBoolVarCache(&gNextGen, kNextGenPref, kDefaultNextGen);
-
-  Preferences::AddAtomicUintVarCache(&gOriginLimitKB, kDefaultQuotaPref,
-                                     kDefaultOriginLimitKB);
 
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);
@@ -5414,7 +5402,7 @@ bool Datastore::UpdateUsage(int64_t aDelta) {
 
   MOZ_ASSERT(newUsage >= 0);
 
-  if (newUsage > gOriginLimitKB * 1024) {
+  if (newUsage > StaticPrefs::dom_storage_default_quota() * 1024) {
     return false;
   }
 
