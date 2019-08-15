@@ -1034,11 +1034,6 @@ nsDefaultCommandLineHandler.prototype = {
       if (win) {
         win.close();
       }
-      // If this is a silent run, we must notify shutdown so that the
-      // quit-application-granted notification will happen.  This is
-      // required in the AddonManager to properly handle shutdown
-      // blockers for Telemetry and XPIDatabase.
-      Services.startup.quit(Services.startup.eForceQuit);
     }
   },
 
