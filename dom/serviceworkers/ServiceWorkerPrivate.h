@@ -268,6 +268,8 @@ class ServiceWorkerPrivate final {
   // the worker activating.  Main thread only.
   nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
 
+  RefPtr<Inner> mInner;
+
   // Used by the owning `ServiceWorkerRegistrationInfo` when it wants to call
   // `Clear` after being unregistered and isn't controlling any clients but this
   // worker (i.e. the registration's active worker) isn't idle yet. Note that
