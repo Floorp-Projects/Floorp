@@ -94,6 +94,12 @@ const startupPhases = {
       maxCount: 1,
     },
     {
+      name: "PWebRenderBridge::Msg_GetSnapshot",
+      condition: WIN && WEBRENDER,
+      ignoreIfUnused: true, // Sometimes in the next phase on Windows10 QR
+      maxCount: 1,
+    },
+    {
       name: "PCompositorBridge::Msg_WillClose",
       condition: WIN,
       ignoreIfUnused: true, // Only on Win10 64
