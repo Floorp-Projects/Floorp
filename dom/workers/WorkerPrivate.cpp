@@ -36,6 +36,7 @@
 #include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/StorageAccess.h"
@@ -53,6 +54,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsRFPService.h"
 #include "nsSandboxFlags.h"
@@ -4856,6 +4858,40 @@ RemoteWorkerChild* WorkerPrivate::GetRemoteWorkerController() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mRemoteWorkerController);
   return mRemoteWorkerController;
+}
+
+void WorkerPrivate::SetRemoteWorkerControllerWeakRef(
+    ThreadSafeWeakPtr<RemoteWorkerChild> aWeakRef) {
+  MOZ_ASSERT(aWeakRef);
+  MOZ_ASSERT(!mRemoteWorkerControllerWeakRef);
+  MOZ_ASSERT(IsServiceWorker());
+
+  mRemoteWorkerControllerWeakRef = std::move(aWeakRef);
+}
+
+ThreadSafeWeakPtr<RemoteWorkerChild>
+WorkerPrivate::GetRemoteWorkerControllerWeakRef() {
+  MOZ_ASSERT(IsServiceWorker());
+  return mRemoteWorkerControllerWeakRef;
+}
+
+RefPtr<GenericPromise> WorkerPrivate::SetServiceWorkerSkipWaitingFlag() {
+  AssertIsOnWorkerThread();
+  MOZ_ASSERT(IsServiceWorker());
+
+  RefPtr<RemoteWorkerChild> rwc(mRemoteWorkerControllerWeakRef);
+
+  if (!rwc) {
+    return GenericPromise::CreateAndReject(NS_ERROR_DOM_ABORT_ERR, __func__);
+  }
+
+  RefPtr<GenericPromise> promise =
+      rwc->MaybeSendSetServiceWorkerSkipWaitingFlag();
+
+  NS_ProxyRelease("WorkerPrivate::mRemoteWorkerControllerWeakRef",
+                  RemoteWorkerService::Thread(), rwc.forget());
+
+  return promise;
 }
 
 nsAString& WorkerPrivate::Id() {
