@@ -31,6 +31,9 @@ permalink: /changelog/
 * **lib-push-adm**, **lib-push-firebase**, **concept-push**
   * Added `isServiceAvailable` to signify if the push service is supported on the device.
 
+* **concept-engine**
+  * Added `WebNotification` data class for the web notifications API.
+
 # 9.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v8.0.0...v9.0.0)
