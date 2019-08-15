@@ -44,6 +44,9 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   mozilla::ipc::IPCResult RecvCreated(const bool& aStatus);
 
+  mozilla::ipc::IPCResult RecvSetServiceWorkerSkipWaitingFlag(
+      SetServiceWorkerSkipWaitingFlagResolver&& aResolve);
+
   bool mDeleteSent = false;
   RefPtr<RemoteWorkerController> mController;
 };
