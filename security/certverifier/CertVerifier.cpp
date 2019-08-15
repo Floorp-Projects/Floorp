@@ -447,8 +447,8 @@ Result CertVerifier::VerifyCert(
     const char* hostname,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ const Flags flags,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponseArg,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
+    /*optional*/ const SECItem* stapledOCSPResponseSECItem,
+    /*optional*/ const SECItem* sctsFromTLSSECItem,
     /*optional*/ const OriginAttributes& originAttributes,
     /*optional out*/ SECOidTag* evOidPolicy,
     /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
@@ -516,9 +516,9 @@ Result CertVerifier::VerifyCert(
 
   Input stapledOCSPResponseInput;
   const Input* stapledOCSPResponse = nullptr;
-  if (stapledOCSPResponseArg) {
-    rv = stapledOCSPResponseInput.Init(stapledOCSPResponseArg->Elements(),
-                                       stapledOCSPResponseArg->Length());
+  if (stapledOCSPResponseSECItem) {
+    rv = stapledOCSPResponseInput.Init(stapledOCSPResponseSECItem->data,
+                                       stapledOCSPResponseSECItem->len);
     if (rv != Success) {
       // The stapled OCSP response was too big.
       return Result::ERROR_OCSP_MALFORMED_RESPONSE;
@@ -527,12 +527,12 @@ Result CertVerifier::VerifyCert(
   }
 
   Input sctsFromTLSInput;
-  if (sctsFromTLS) {
-    rv = sctsFromTLSInput.Init(sctsFromTLS->Elements(),
-                               sctsFromTLS->Length());
-    if (rv != Success && sctsFromTLSInput.GetLength() != 0) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
+  if (sctsFromTLSSECItem) {
+    rv = sctsFromTLSInput.Init(sctsFromTLSSECItem->data,
+                               sctsFromTLSSECItem->len);
+    // Silently discard the error of the extension being too big,
+    // do not fail the verification.
+    MOZ_ASSERT(rv == Success);
   }
 
   switch (usage) {
@@ -854,8 +854,8 @@ static bool CertIsSelfSigned(const UniqueCERTCertificate& cert, void* pinarg) {
 
 Result CertVerifier::VerifySSLServerCert(
     const UniqueCERTCertificate& peerCert,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS, Time time,
+    /*optional*/ const SECItem* stapledOCSPResponse,
+    /*optional*/ const SECItem* sctsFromTLS, Time time,
     /*optional*/ void* pinarg, const nsACString& hostname,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ bool saveIntermediatesInPermanentDatabase,
@@ -924,8 +924,8 @@ Result CertVerifier::VerifySSLServerCert(
   Input stapledOCSPResponseInput;
   Input* responseInputPtr = nullptr;
   if (stapledOCSPResponse) {
-    rv = stapledOCSPResponseInput.Init(stapledOCSPResponse->Elements(),
-                                       stapledOCSPResponse->Length());
+    rv = stapledOCSPResponseInput.Init(stapledOCSPResponse->data,
+                                       stapledOCSPResponse->len);
     if (rv != Success) {
       // The stapled OCSP response was too big.
       return Result::ERROR_OCSP_MALFORMED_RESPONSE;
