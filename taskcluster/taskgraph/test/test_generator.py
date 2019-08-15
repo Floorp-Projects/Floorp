@@ -96,12 +96,11 @@ class TestGenerator(unittest.TestCase):
         def target_tasks_method(full_task_graph, parameters, graph_config):
             return self.target_tasks
 
-        def make_fake_strategies():
-            return {mode: FakeOptimization(mode)
-                    for mode in ('always', 'never', 'even', 'odd')}
+        fake_registry = {mode: FakeOptimization(mode)
+                         for mode in ('always', 'never', 'even', 'odd')}
 
         target_tasks_mod._target_task_methods['test_method'] = target_tasks_method
-        self.patch.setattr(optimize_mod, '_make_default_strategies', make_fake_strategies)
+        self.patch.setattr(optimize_mod, 'registry', fake_registry)
 
         parameters = FakeParameters({
             '_kinds': kinds,
