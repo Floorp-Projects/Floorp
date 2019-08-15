@@ -65,6 +65,9 @@ export default class LoginItem extends HTMLElement {
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
     this._timeUsed = this.shadowRoot.querySelector(".time-used");
     this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
+    this._dismissBreachAlert = this.shadowRoot.querySelector(
+      ".dismiss-breach-alert"
+    );
 
     this.render();
 
@@ -73,6 +76,7 @@ export default class LoginItem extends HTMLElement {
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
     this._deleteButton.addEventListener("click", this);
+    this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
     this._form.addEventListener("submit", this);
     this._openSiteButton.addEventListener("click", this);
@@ -92,6 +96,10 @@ export default class LoginItem extends HTMLElement {
         ".breach-alert-link"
       );
       breachAlertLink.href = breachDetails.breachAlertURL;
+      document.l10n.setAttributes(
+        this._dismissBreachAlert,
+        "breach-alert-dismiss"
+      );
       this._breachAlert.hidden = false;
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
@@ -133,6 +141,15 @@ export default class LoginItem extends HTMLElement {
   updateBreaches(breachesByLoginGUID) {
     this._breachesMap = breachesByLoginGUID;
     this.render();
+  }
+
+  dismissBreachAlert() {
+    document.dispatchEvent(
+      new CustomEvent("AboutLoginsDismissBreachAlert", {
+        bubbles: true,
+        detail: this._login,
+      })
+    );
   }
 
   async handleEvent(event) {
@@ -249,6 +266,10 @@ export default class LoginItem extends HTMLElement {
               })
             );
           });
+          return;
+        }
+        if (classList.contains("dismiss-breach-alert")) {
+          this.dismissBreachAlert();
           return;
         }
         if (classList.contains("edit-button")) {

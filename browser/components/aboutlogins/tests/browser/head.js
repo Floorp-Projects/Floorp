@@ -6,6 +6,7 @@ let nsLoginInfo = new Components.Constructor(
   Ci.nsILoginInfo,
   "init"
 );
+
 let TEST_LOGIN1 = new nsLoginInfo(
   "https://example.com/",
   "https://example.com/",
@@ -22,6 +23,16 @@ let TEST_LOGIN2 = new nsLoginInfo(
   "user2",
   "pass2",
   "username",
+  "password"
+);
+
+let TEST_LOGIN3 = new nsLoginInfo(
+  "https://breached.com/",
+  "https://breached.com/",
+  null,
+  "breachedLogin1",
+  "pass3",
+  "breachedLogin",
   "password"
 );
 
