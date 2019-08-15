@@ -6476,6 +6476,14 @@
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------
 
+# If the user puts a finger down on an element and we think the user might be
+# executing a pan gesture, how long do we wait before tentatively deciding the
+# gesture is actually a tap and activating the target element?
+- name: ui.touch_activation.delay_ms
+  type: int32_t
+  value: 100
+  mirror: always
+
 # Prevent system colors from being exposed to CSS or canvas.
 - name: ui.use_standins_for_native_colors
   type: RelaxedAtomicBool
