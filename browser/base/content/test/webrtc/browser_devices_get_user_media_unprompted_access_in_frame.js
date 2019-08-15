@@ -45,9 +45,21 @@ var gTests = [
 
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
 
       // If there's an active audio+camera stream in frame 1,
       // gUM(audio+camera) in frame 1 returns a stream without prompting;
@@ -106,9 +118,21 @@ var gTests = [
 
       // close the stream
       await closeStream(false, "frame1");
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 
@@ -161,9 +185,21 @@ var gTests = [
 
       await expectObserverCalled("getUserMedia:response:deny");
       await expectObserverCalled("recording-window-ended");
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 
@@ -210,9 +246,21 @@ var gTests = [
 
       // close the stream
       await closeStream();
-      SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "screen",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "camera",
+        gBrowser.selectedBrowser
+      );
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 ];
