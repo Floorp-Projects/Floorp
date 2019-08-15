@@ -3529,6 +3529,11 @@
   value: true
   mirror: always
 
+- name: intl.charset.fallback.tld
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
