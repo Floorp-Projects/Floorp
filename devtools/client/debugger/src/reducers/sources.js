@@ -77,8 +77,22 @@ type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 type UrlsMap = { [string]: SourceId[] };
 type PlainUrlsMap = { [string]: string[] };
 
+export type SourceBase = {|
+  +id: SourceId,
+  +url: string,
+  +sourceMapURL?: string,
+  +isBlackBoxed: boolean,
+  +isPrettyPrinted: boolean,
+  +relativeUrl: string,
+  +introductionUrl: ?string,
+  +introductionType: ?string,
+  +extensionName: ?string,
+  +isExtension: boolean,
+  +isWasm: boolean,
+|};
+
 type SourceResource = Resource<{
-  ...Source,
+  ...SourceBase,
 }>;
 export type SourceResourceState = ResourceState<SourceResource>;
 
@@ -241,7 +255,7 @@ function update(
 }
 
 function resourceAsSource(r: SourceResource): Source {
-  return r;
+  return { ...r };
 }
 
 /*
@@ -249,7 +263,7 @@ function resourceAsSource(r: SourceResource): Source {
  * - Add the source to the sources store
  * - Add the source URL to the urls map
  */
-function addSources(state: SourcesState, sources: Source[]): SourcesState {
+function addSources(state: SourcesState, sources: SourceBase[]): SourcesState {
   state = {
     ...state,
     content: { ...state.content },
@@ -353,7 +367,7 @@ function updateProjectDirectoryRoot(state: SourcesState, root: string) {
 
 function updateRootRelativeValues(
   state: SourcesState,
-  sources?: Array<Source>
+  sources?: $ReadOnlyArray<Source>
 ) {
   const ids = sources
     ? sources.map(source => source.id)

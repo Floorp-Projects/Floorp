@@ -27,8 +27,12 @@ import type {
   Why,
 } from "../types";
 import * as asyncValue from "./async-value";
+import type { SourceBase } from "../reducers/sources";
 
-function makeMockSource(url: string = "url", id: SourceId = "source"): Source {
+function makeMockSource(
+  url: string = "url",
+  id: SourceId = "source"
+): SourceBase {
   return {
     id,
     url,
