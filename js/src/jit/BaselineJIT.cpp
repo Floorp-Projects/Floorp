@@ -507,10 +507,6 @@ void BaselineScript::writeBarrierPre(Zone* zone, BaselineScript* script) {
   }
 }
 
-void BaselineScript::Trace(JSTracer* trc, BaselineScript* script) {
-  script->trace(trc);
-}
-
 void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonBuilder());
 

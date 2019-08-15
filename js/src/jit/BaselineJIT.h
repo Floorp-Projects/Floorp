@@ -180,8 +180,6 @@ struct BaselineScript final {
 #endif
 
  private:
-  void trace(JSTracer* trc);
-
   uint32_t retAddrEntriesOffset_ = 0;
   uint32_t retAddrEntries_ = 0;
 
@@ -288,8 +286,9 @@ struct BaselineScript final {
                              size_t debugTrapEntries, size_t resumeEntries,
                              size_t traceLoggerToggleOffsetEntries);
 
-  static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(JSFreeOp* fop, BaselineScript* script);
+
+  void trace(JSTracer* trc);
 
   static inline size_t offsetOfMethod() {
     return offsetof(BaselineScript, method_);
