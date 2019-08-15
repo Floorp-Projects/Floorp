@@ -12,8 +12,10 @@
 #include "mozilla/Array.h"
 #include "MainThreadUtils.h"
 
+#include <functional>
+
 /*
- * This header exports one public method in the mozilla namespace:
+ * This header exports two public methods in the mozilla namespace:
  *
  *   template<class SmartPtr>
  *   void ClearOnShutdown(SmartPtr *aPtr, aPhase=ShutdownPhase::ShutdownFinal)
@@ -35,9 +37,18 @@
  * know will live until the program shuts down.  In practice, these are likely
  * global variables, which should be Static{Ref,Auto}Ptr.
  *
- * ClearOnShutdown is currently main-thread only because we don't want to
- * accidentally free an object from a different thread than the one it was
- * created on.
+ *   template <typename CallableT>
+ *   void RunOnShutdown(CallableT&& aCallable,
+ *                      aPhase = ShutdownPhase::ShutdownFinal)
+ *
+ * This function takes a callable and executes it upon shutdown at the start of
+ * the specified phase. If the phase has already occurred when RunOnShutdown()
+ * is called, it will cause a MOZ_ASSERT. In case a phase is not explicitly
+ * cleared, we will clear it on the next phase that occurs.
+ *
+ * ClearOnShutdown and RunOnShutdown are both currently main-thread only because
+ * we don't want to accidentally free an object from a different thread than the
+ * one it was created on.
  */
 
 namespace mozilla {
@@ -79,6 +90,27 @@ class PointerClearer : public ShutdownObserver {
   SmartPtr* mPtr;
 };
 
+class FunctionInvoker : public ShutdownObserver {
+ public:
+  template <typename CallableT>
+  explicit FunctionInvoker(CallableT&& aCallable)
+      : mCallable(std::forward<CallableT>(aCallable)) {}
+
+  virtual void Shutdown() override {
+    if (!mCallable) {
+      return;
+    }
+
+    mCallable();
+  }
+
+ private:
+  std::function<void()> mCallable;
+};
+
+void InsertIntoShutdownList(ShutdownObserver* aShutdownObserver,
+                            ShutdownPhase aPhase);
+
 typedef LinkedList<ShutdownObserver> ShutdownList;
 extern Array<StaticAutoPtr<ShutdownList>,
              static_cast<size_t>(ShutdownPhase::ShutdownPhase_Length)>
@@ -95,19 +127,19 @@ inline void ClearOnShutdown(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPhase != ShutdownPhase::ShutdownPhase_Length);
 
-  // Adding a ClearOnShutdown for a "past" phase is an error.
-  if (!(static_cast<size_t>(sCurrentShutdownPhase) <
-        static_cast<size_t>(aPhase))) {
-    MOZ_ASSERT(false, "ClearOnShutdown for phase that already was cleared");
-    *aPtr = nullptr;
-    return;
-  }
+  InsertIntoShutdownList(new PointerClearer<SmartPtr>(aPtr), aPhase);
+}
 
-  if (!(sShutdownObservers[static_cast<size_t>(aPhase)])) {
-    sShutdownObservers[static_cast<size_t>(aPhase)] = new ShutdownList();
-  }
-  sShutdownObservers[static_cast<size_t>(aPhase)]->insertBack(
-      new PointerClearer<SmartPtr>(aPtr));
+template <typename CallableT>
+inline void RunOnShutdown(CallableT&& aCallable,
+                          ShutdownPhase aPhase = ShutdownPhase::ShutdownFinal) {
+  using namespace ClearOnShutdown_Internal;
+
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPhase != ShutdownPhase::ShutdownPhase_Length);
+
+  InsertIntoShutdownList(
+      new FunctionInvoker(std::forward<CallableT>(aCallable)), aPhase);
 }
 
 // Called when XPCOM is shutting down, after all shutdown notifications have
