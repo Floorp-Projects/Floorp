@@ -241,8 +241,8 @@ function waitForSelectedSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const { source, content } = getSelectedSourceWithContent() || {};
-      if (!content) {
+      const source = getSelectedSourceWithContent() || {};
+      if (!source.content) {
         return false;
       }
 
@@ -318,9 +318,8 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const { source, content } =
-    dbg.selectors.getSelectedSourceWithContent() || {};
-  if (source && !content) {
+  const source = dbg.selectors.getSelectedSourceWithContent() || {};
+  if (source && !source.content) {
     const url = source.url;
     ok(
       false,
@@ -515,14 +514,9 @@ function isSelectedFrameSelected(dbg, state) {
   // Make sure the source text is completely loaded for the
   // source we are paused in.
   const sourceId = frame.location.sourceId;
-  const { source, content } =
-    dbg.selectors.getSelectedSourceWithContent() || {};
+  const source = dbg.selectors.getSelectedSourceWithContent() || {};
 
-  if (!source) {
-    return false;
-  }
-
-  if (!content) {
+  if (!source || !source.content) {
     return false;
   }
 
