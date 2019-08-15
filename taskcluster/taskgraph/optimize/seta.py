@@ -8,9 +8,12 @@ import json
 import logging
 import requests
 from collections import defaultdict
+
+import attr
 from redo import retry
 from requests import exceptions
-import attr
+
+from taskgraph.optimize import OptimizationStrategy, register_strategy
 
 logger = logging.getLogger(__name__)
 
@@ -258,3 +261,25 @@ class SETA(object):
 # create a single instance of this class, and expose its `is_low_value_task`
 # bound method as a module-level function
 is_low_value_task = SETA().is_low_value_task
+
+
+@register_strategy('seta')
+class SkipLowValue(OptimizationStrategy):
+    push_interval = 5
+    time_interval = 60
+
+    def should_remove_task(self, task, params, _):
+        label = task.label
+
+        # we would like to return 'False, None' while it's high_value_task
+        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
+        if is_low_value_task(label,
+                             params.get('project'),
+                             params.get('pushlog_id'),
+                             params.get('pushdate'),
+                             self.push_interval,
+                             self.time_interval):
+            # Always optimize away low-value tasks
+            return True
+        else:
+            return False
