@@ -78,10 +78,12 @@ class nsSplittableFrame : public nsFrame {
         mNextContinuation(nullptr) {}
 
   /**
-   * Return the sum of the block-axis content size of our prev-in-flows.
+   * Return the sum of the block-axis content size of our previous
+   * continuations.
+   *
    * @param aWM a writing-mode to determine the block-axis
    *
-   * @note (bz) This makes laying out a splittable frame with N in-flows
+   * @note (bz) This makes laying out a splittable frame with N continuations
    *       O(N^2)! So, use this function with caution and minimize the number
    *       of calls to this method.
    */
@@ -90,7 +92,7 @@ class nsSplittableFrame : public nsFrame {
   /**
    * Retrieve the effective computed block size of this frame, which is the
    * computed block size, minus the block size consumed by any previous
-   * in-flows.
+   * continuations.
    */
   nscoord GetEffectiveComputedBSize(
       const ReflowInput& aReflowInput,
