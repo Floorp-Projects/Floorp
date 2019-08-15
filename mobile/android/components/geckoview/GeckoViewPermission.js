@@ -263,12 +263,6 @@ GeckoViewPermission.prototype = {
       })
       .then(granted => {
         (granted ? aRequest.allow : aRequest.cancel)();
-        Services.perms.addFromPrincipal(
-          aRequest.principal,
-          "desktop-notification",
-          Services.perms.ALLOW_ACTION,
-          Services.perms.EXPIRE_SESSION
-        );
         // Manually release the target request here to facilitate garbage collection.
         aRequest = undefined;
       });
