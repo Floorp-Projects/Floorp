@@ -14,7 +14,6 @@
 
 namespace js {
 
-struct Class;
 class GlobalObject;
 
 extern const Class IntlClass;

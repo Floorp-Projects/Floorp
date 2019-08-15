@@ -52,7 +52,6 @@ class TempAllocator;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepBase;
 class AutoSweepObjectGroup;
-struct Class;
 class CompilerConstraintList;
 class HeapTypeSetKey;
 class LifoAlloc;

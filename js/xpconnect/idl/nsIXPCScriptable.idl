@@ -14,9 +14,6 @@
 
 #include "js/TypeDecls.h"
 
-namespace js {
-struct Class;
-}
 %}
 
 interface nsIXPConnectWrappedNative;

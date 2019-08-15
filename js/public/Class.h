@@ -20,7 +20,7 @@
 /*
  * A JSClass acts as a vtable for JS objects that allows JSAPI clients to
  * control various aspects of the behavior of an object like property lookup.
- * js::Class is an engine-private extension that allows more control over
+ * It contains some engine-private extensions that allows more control over
  * object behavior and, e.g., allows custom slow layout.
  */
 
@@ -29,7 +29,6 @@ struct JSFunctionSpec;
 
 namespace js {
 
-struct Class;
 class Shape;
 
 // This is equal to JSFunction::class_.  Use it in places where you don't want
@@ -493,9 +492,9 @@ typedef void (*JSTraceOp)(JSTracer* trc, JSObject* obj);
 
 typedef size_t (*JSObjectMovedOp)(JSObject* obj, JSObject* old);
 
-/* js::Class operation signatures. */
-
 namespace js {
+
+/* Internal / friend API operation signatures. */
 
 typedef bool (*LookupPropertyOp)(JSContext* cx, JS::HandleObject obj,
                                  JS::HandleId id, JS::MutableHandleObject objp,
@@ -572,50 +571,6 @@ class JS_FRIEND_API ElementAdder {
 typedef bool (*GetElementsOp)(JSContext* cx, JS::HandleObject obj,
                               uint32_t begin, uint32_t end,
                               ElementAdder* adder);
-
-// The special treatment of |finalize| and |trace| is necessary because if we
-// assign either of those hooks to a local variable and then call it -- as is
-// done with the other hooks -- the GC hazard analysis gets confused.
-#define JS_CLASS_MEMBERS                                                       \
-  const char* name;                                                            \
-  uint32_t flags;                                                              \
-  const JSClassOps* cOps;                                                      \
-                                                                               \
-  JSAddPropertyOp getAddProperty() const {                                     \
-    return cOps ? cOps->addProperty : nullptr;                                 \
-  }                                                                            \
-  JSDeletePropertyOp getDelProperty() const {                                  \
-    return cOps ? cOps->delProperty : nullptr;                                 \
-  }                                                                            \
-  JSEnumerateOp getEnumerate() const {                                         \
-    return cOps ? cOps->enumerate : nullptr;                                   \
-  }                                                                            \
-  JSNewEnumerateOp getNewEnumerate() const {                                   \
-    return cOps ? cOps->newEnumerate : nullptr;                                \
-  }                                                                            \
-  JSResolveOp getResolve() const { return cOps ? cOps->resolve : nullptr; }    \
-  JSMayResolveOp getMayResolve() const {                                       \
-    return cOps ? cOps->mayResolve : nullptr;                                  \
-  }                                                                            \
-  JSNative getCall() const { return cOps ? cOps->call : nullptr; }             \
-  JSHasInstanceOp getHasInstance() const {                                     \
-    return cOps ? cOps->hasInstance : nullptr;                                 \
-  }                                                                            \
-  JSNative getConstruct() const { return cOps ? cOps->construct : nullptr; }   \
-                                                                               \
-  bool hasFinalize() const { return cOps && cOps->finalize; }                  \
-  bool hasTrace() const { return cOps && cOps->trace; }                        \
-                                                                               \
-  bool isTrace(JSTraceOp trace) const { return cOps && cOps->trace == trace; } \
-                                                                               \
-  void doFinalize(JSFreeOp* fop, JSObject* obj) const {                        \
-    MOZ_ASSERT(cOps && cOps->finalize);                                        \
-    cOps->finalize(fop, obj);                                                  \
-  }                                                                            \
-  void doTrace(JSTracer* trc, JSObject* obj) const {                           \
-    MOZ_ASSERT(cOps && cOps->trace);                                           \
-    cOps->trace(trc, obj);                                                     \
-  }
 
 /** Callback for the creation of constructor and prototype objects. */
 typedef JSObject* (*ClassObjectCreationOp)(JSContext* cx, JSProtoKey key);
@@ -707,31 +662,6 @@ struct MOZ_STATIC_CLASS ObjectOps {
 }  // namespace js
 
 // Classes, objects, and properties.
-
-typedef void (*JSClassInternal)();
-
-struct MOZ_STATIC_CLASS JSClassOps {
-  /* Function pointer members (may be null). */
-  JSAddPropertyOp addProperty;
-  JSDeletePropertyOp delProperty;
-  JSEnumerateOp enumerate;
-  JSNewEnumerateOp newEnumerate;
-  JSResolveOp resolve;
-  JSMayResolveOp mayResolve;
-  JSFinalizeOp finalize;
-  JSNative call;
-  JSHasInstanceOp hasInstance;
-  JSNative construct;
-  JSTraceOp trace;
-};
-
-#define JS_NULL_CLASS_OPS nullptr
-
-struct JSClass {
-  JS_CLASS_MEMBERS;
-
-  void* reserved[3];
-};
 
 // Objects have private slot.
 static const uint32_t JSCLASS_HAS_PRIVATE = 1 << 0;
@@ -842,18 +772,72 @@ static const uint32_t JSCLASS_CACHED_PROTO_MASK =
   ((JSProtoKey)(((clasp)->flags >> JSCLASS_CACHED_PROTO_SHIFT) & \
                 JSCLASS_CACHED_PROTO_MASK))
 
-// Initializer for unused members of statically initialized JSClass structs.
-#define JSCLASS_NO_INTERNAL_MEMBERS \
-  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
-#define JSCLASS_NO_OPTIONAL_MEMBERS 0, 0, 0, 0, 0, JSCLASS_NO_INTERNAL_MEMBERS
+struct MOZ_STATIC_CLASS JSClassOps {
+  /* Function pointer members (may be null). */
+  JSAddPropertyOp addProperty;
+  JSDeletePropertyOp delProperty;
+  JSEnumerateOp enumerate;
+  JSNewEnumerateOp newEnumerate;
+  JSResolveOp resolve;
+  JSMayResolveOp mayResolve;
+  JSFinalizeOp finalize;
+  JSNative call;
+  JSHasInstanceOp hasInstance;
+  JSNative construct;
+  JSTraceOp trace;
+};
 
-namespace js {
+#define JS_NULL_CLASS_OPS nullptr
 
-struct MOZ_STATIC_CLASS Class {
-  JS_CLASS_MEMBERS;
-  const ClassSpec* spec;
-  const ClassExtension* ext;
-  const ObjectOps* oOps;
+struct JSClass {
+  const char* name;
+  uint32_t flags;
+  const JSClassOps* cOps;
+
+  const js::ClassSpec* spec;
+  const js::ClassExtension* ext;
+  const js::ObjectOps* oOps;
+
+  // Public accessors:
+
+  JSAddPropertyOp getAddProperty() const {
+    return cOps ? cOps->addProperty : nullptr;
+  }
+  JSDeletePropertyOp getDelProperty() const {
+    return cOps ? cOps->delProperty : nullptr;
+  }
+  JSEnumerateOp getEnumerate() const {
+    return cOps ? cOps->enumerate : nullptr;
+  }
+  JSNewEnumerateOp getNewEnumerate() const {
+    return cOps ? cOps->newEnumerate : nullptr;
+  }
+  JSResolveOp getResolve() const { return cOps ? cOps->resolve : nullptr; }
+  JSMayResolveOp getMayResolve() const {
+    return cOps ? cOps->mayResolve : nullptr;
+  }
+  JSNative getCall() const { return cOps ? cOps->call : nullptr; }
+  JSHasInstanceOp getHasInstance() const {
+    return cOps ? cOps->hasInstance : nullptr;
+  }
+  JSNative getConstruct() const { return cOps ? cOps->construct : nullptr; }
+
+  bool hasFinalize() const { return cOps && cOps->finalize; }
+  bool hasTrace() const { return cOps && cOps->trace; }
+
+  bool isTrace(JSTraceOp trace) const { return cOps && cOps->trace == trace; }
+
+  // The special treatment of |finalize| and |trace| is necessary because if we
+  // assign either of those hooks to a local variable and then call it -- as is
+  // done with the other hooks -- the GC hazard analysis gets confused.
+  void doFinalize(JSFreeOp* fop, JSObject* obj) const {
+    MOZ_ASSERT(cOps && cOps->finalize);
+    cOps->finalize(fop, obj);
+  }
+  void doTrace(JSTracer* trc, JSObject* obj) const {
+    MOZ_ASSERT(cOps && cOps->trace);
+    cOps->trace(trc, obj);
+  }
 
   /*
    * Objects of this class aren't native objects. They don't have Shapes that
@@ -889,7 +873,9 @@ struct MOZ_STATIC_CLASS Class {
 
   bool isWrappedNative() const { return flags & JSCLASS_IS_WRAPPED_NATIVE; }
 
-  static size_t offsetOfFlags() { return offsetof(Class, flags); }
+  static size_t offsetOfFlags() { return offsetof(JSClass, flags); }
+
+  // Internal / friend API accessors:
 
   bool specDefined() const { return spec ? spec->defined() : false; }
   JSProtoKey specInheritanceProtoKey() const {
@@ -898,10 +884,10 @@ struct MOZ_STATIC_CLASS Class {
   bool specShouldDefineConstructor() const {
     return spec ? spec->shouldDefineConstructor() : true;
   }
-  ClassObjectCreationOp specCreateConstructorHook() const {
+  js::ClassObjectCreationOp specCreateConstructorHook() const {
     return spec ? spec->createConstructor : nullptr;
   }
-  ClassObjectCreationOp specCreatePrototypeHook() const {
+  js::ClassObjectCreationOp specCreatePrototypeHook() const {
     return spec ? spec->createPrototype : nullptr;
   }
   const JSFunctionSpec* specConstructorFunctions() const {
@@ -916,7 +902,7 @@ struct MOZ_STATIC_CLASS Class {
   const JSPropertySpec* specPrototypeProperties() const {
     return spec ? spec->prototypeProperties : nullptr;
   }
-  FinishClassInitOp specFinishInitHook() const {
+  js::FinishClassInitOp specFinishInitHook() const {
     return spec ? spec->finishInit : nullptr;
   }
 
@@ -924,28 +910,28 @@ struct MOZ_STATIC_CLASS Class {
     return ext ? ext->objectMovedOp : nullptr;
   }
 
-  LookupPropertyOp getOpsLookupProperty() const {
+  js::LookupPropertyOp getOpsLookupProperty() const {
     return oOps ? oOps->lookupProperty : nullptr;
   }
-  DefinePropertyOp getOpsDefineProperty() const {
+  js::DefinePropertyOp getOpsDefineProperty() const {
     return oOps ? oOps->defineProperty : nullptr;
   }
-  HasPropertyOp getOpsHasProperty() const {
+  js::HasPropertyOp getOpsHasProperty() const {
     return oOps ? oOps->hasProperty : nullptr;
   }
-  GetPropertyOp getOpsGetProperty() const {
+  js::GetPropertyOp getOpsGetProperty() const {
     return oOps ? oOps->getProperty : nullptr;
   }
-  SetPropertyOp getOpsSetProperty() const {
+  js::SetPropertyOp getOpsSetProperty() const {
     return oOps ? oOps->setProperty : nullptr;
   }
-  GetOwnPropertyOp getOpsGetOwnPropertyDescriptor() const {
+  js::GetOwnPropertyOp getOpsGetOwnPropertyDescriptor() const {
     return oOps ? oOps->getOwnPropertyDescriptor : nullptr;
   }
-  DeletePropertyOp getOpsDeleteProperty() const {
+  js::DeletePropertyOp getOpsDeleteProperty() const {
     return oOps ? oOps->deleteProperty : nullptr;
   }
-  GetElementsOp getOpsGetElements() const {
+  js::GetElementsOp getOpsGetElements() const {
     return oOps ? oOps->getElements : nullptr;
   }
   JSFunToStringOp getOpsFunToString() const {
@@ -953,14 +939,12 @@ struct MOZ_STATIC_CLASS Class {
   }
 };
 
-static_assert(offsetof(JSClass, name) == offsetof(Class, name),
-              "Class and JSClass must be consistent");
-static_assert(offsetof(JSClass, flags) == offsetof(Class, flags),
-              "Class and JSClass must be consistent");
-static_assert(offsetof(JSClass, cOps) == offsetof(Class, cOps),
-              "Class and JSClass must be consistent");
-static_assert(sizeof(JSClass) == sizeof(Class),
-              "Class and JSClass must be consistent");
+// Initializer for unused members of statically initialized JSClass structs.
+#define JSCLASS_NO_INTERNAL_MEMBERS \
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+#define JSCLASS_NO_OPTIONAL_MEMBERS 0, 0, 0, 0, 0, JSCLASS_NO_INTERNAL_MEMBERS
+
+namespace js {
 
 static MOZ_ALWAYS_INLINE const JSClass* Jsvalify(const Class* c) {
   return (const JSClass*)c;
@@ -1005,5 +989,9 @@ JS_FRIEND_API bool HasObjectMovedOp(JSObject* obj);
 #endif
 
 } /* namespace js */
+
+// Alias these into global scope for now.
+using js::Jsvalify;
+using js::Valueify;
 
 #endif /* js_Class_h */

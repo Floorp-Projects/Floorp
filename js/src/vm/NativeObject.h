@@ -411,7 +411,6 @@ static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) ==
 extern HeapSlot* const emptyObjectElements;
 extern HeapSlot* const emptyObjectElementsShared;
 
-struct Class;
 class AutoCheckShapeConsistency;
 class GCMarker;
 class Shape;
