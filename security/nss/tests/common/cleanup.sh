@@ -6,6 +6,12 @@
 
 
 if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
+    if [ -z "${BUILD_OPT}" ] && [ "$OBJDIR" == "Debug"  ]; then
+        BUILD_OPT=0;
+    elif [ -z "${BUILD_OPT}" ] && [ "$OBJDIR" == "Release" ]; then
+        BUILD_OPT=1;
+    fi
+
     echo
     echo "SUMMARY:"
     echo "========"
@@ -51,9 +57,10 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo
 
     html "END_OF_TEST<BR>"
-    html "</BODY></HTML>" 
+    html "</BODY></HTML>"
     rm -f ${TEMPFILES} 2>/dev/null
-    if [ ${FAILED_CNT} -gt 0 ] || [ ${ASAN_CNT} -gt 0 ]; then
+    if [ ${FAILED_CNT} -gt 0 ] || [ ${ASAN_CNT} -gt 0 ] ||
+       ([ ${BUILD_OPT} -eq 1 ] && [ ${CORE_CNT} -gt 0 ]); then
         exit 1
     fi
 
