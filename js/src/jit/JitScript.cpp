@@ -58,10 +58,10 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
   if (!script->canBaselineCompile()) {
-    setBaselineScriptImpl(script, BASELINE_DISABLED_SCRIPT);
+    setBaselineScriptImpl(script, BaselineDisabledScriptPtr);
   }
   if (!script->canIonCompile()) {
-    setIonScriptImpl(script, ION_DISABLED_SCRIPT);
+    setIonScriptImpl(script, IonDisabledScriptPtr);
   }
 }
 
@@ -605,7 +605,7 @@ void JitScript::setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
     baselineScript_ = nullptr;
   }
 
-  MOZ_ASSERT(!ionScript_ || ionScript_ == ION_DISABLED_SCRIPT);
+  MOZ_ASSERT(ionScript_ == nullptr || ionScript_ == IonDisabledScriptPtr);
 
   baselineScript_ = baselineScript;
   if (hasBaselineScript()) {
@@ -624,7 +624,7 @@ void JitScript::setIonScriptImpl(JSScript* script, IonScript* ionScript) {
 
 void JitScript::setIonScriptImpl(JSFreeOp* fop, JSScript* script,
                                  IonScript* ionScript) {
-  MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT,
+  MOZ_ASSERT_IF(ionScript != IonDisabledScriptPtr,
                 !baselineScript()->hasPendingIonBuilder());
 
   if (hasIonScript()) {
