@@ -23,25 +23,23 @@
                                "width=200,height=100");
     sourceWindow.addEventListener("load", runTests);
   }
-    
-  async function runTests(event) {
+
+  function runTests(event) {
     if (event.target != sourceWindow.document) {
       return;
     }
 
-    let win = document.getElementById("source").contentWindow;
-    let snapshot = function(context, x, y, width, height, bg) {
-      context.drawWindow(win, x, y, width, height, bg, 0);
-    }
-
     // Run the tests with the source document in an <iframe> within this
     // page, which we expect to have transparency.
-    await runDrawWindowTests(snapshot, true);
+    runDrawWindowTests(document.getElementById("source").contentWindow,
+                       0, true);
 
     // Run the tests on the same source document, but in a window opened
-    // by window.open.  We do not expect this to have transparency.
-    win = sourceWindow;
-    await runDrawWindowTests(snapshot, false);
+    // by window.open.  We do not expect this to have transparency...
+    // except on B2G.  (This is *probably* a bug in B2G.)
+    var isB2G = /Mobile|Tablet/.test(navigator.userAgent) &&
+                !navigator.userAgent.includes("Android");
+    runDrawWindowTests(sourceWindow, 0, isB2G);
 
     sourceWindow.close();
 
