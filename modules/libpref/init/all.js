@@ -4965,12 +4965,6 @@ pref("gfx.vr.osvr.clientKitLibPath", "");
 // are rejecting frames, it determines the rate at which RAF callbacks will be called.
 pref("dom.vr.display.rafMaxDuration", 50);
 
-// If the user puts a finger down on an element and we think the user
-// might be executing a pan gesture, how long do we wait before
-// tentatively deciding the gesture is actually a tap and activating
-// the target element?
-pref("ui.touch_activation.delay_ms", 100);
-
 // If the user has clicked an element, how long do we keep the
 // :active state before it is cleared by the mouse sequences
 // fired after a touchstart/touchend.
