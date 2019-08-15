@@ -1397,6 +1397,14 @@
   value: false
   mirror: always
 
+# This pref just controls whether we format the number with grouping separator
+# characters when the internal value is set or updated. It does not stop the
+# user from typing in a number and using grouping separators.
+- name: dom.forms.number.grouping
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the Gamepad API is enabled
 - name: dom.gamepad.enabled
   type: bool
