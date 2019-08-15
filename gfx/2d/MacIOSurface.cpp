@@ -195,27 +195,25 @@ already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
 }
 
 SurfaceFormat MacIOSurface::GetFormat() const {
-  OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-    return SurfaceFormat::NV12;
-  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
-    return SurfaceFormat::YUV422;
-  } else {
-    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
+  switch (GetPixelFormat()) {
+    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+      return SurfaceFormat::NV12;
+    case kCVPixelFormatType_422YpCbCr8:
+      return SurfaceFormat::YUV422;
+    case kCVPixelFormatType_32BGRA:
+      return HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
+    default:
+      return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
   }
 }
 
 SurfaceFormat MacIOSurface::GetReadFormat() const {
-  OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-    return SurfaceFormat::NV12;
-  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
+  SurfaceFormat format = GetFormat();
+  if (format == SurfaceFormat::YUV422) {
     return SurfaceFormat::R8G8B8X8;
-  } else {
-    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
   }
+  return format;
 }
 
 CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
