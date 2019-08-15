@@ -1,0 +1,126 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Substitute a local GeckoView AAR into a consuming Gradle project.
+//
+// To use this, in a consuming Gradle project's `/build.gradle` add a stanza like:
+//
+// ext.topsrcdir = '/absolute/path/to/mozilla-central'; apply from: "${ext.topsrcdir}/substitute-local-geckoview.gradle"
+//
+// The object directory will be determined using `mach environment` and will agree with `./mach
+// gradle` and Android Studio.  Or, specify the exact object directory with a stanza like:
+//
+// ext.topsrcdir = '/absolute/path/to/mozilla-central'
+// ext.topobjdir = '/absolute/path/to/objdir'
+// apply from: "${ext.topsrcdir}/substitute-local-geckoview.gradle"
+//
+// Substitution works with artifact and non-artifact builds.
+//
+// If you get errors about .jar files not being found, ensure that the consuming
+// application is using a recent Android-Gradle plugin (say, 3.4+).  There were
+// issues with Jetifier, and issues with .jar vs. .aar extensions, in older
+// versions.
+
+import groovy.json.JsonSlurper
+
+def log(message) {
+    logger.lifecycle("[substitute-local-geckoview] ${message}")
+}
+
+if (!project.ext.has('topsrcdir')) {
+    throw new GradleException("ext.topsrcdir must be specified to substitute for a local GeckoView")
+}
+
+// Cribbed from https://hg.mozilla.org/mozilla-central/file/tip/settings.gradle.  When run in
+// topobjdir, `mach environment` correctly finds the mozconfig corresponding to that object
+// directory.
+def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+def proc = commandLine.execute(null, new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
+def standardOutput = new ByteArrayOutputStream()
+proc.consumeProcessOutput(standardOutput, standardOutput)
+proc.waitFor()
+
+// Only show the output if something went wrong.
+if (proc.exitValue() != 0) {
+    throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n${standardOutput.toString()}")
+}
+
+def slurper = new JsonSlurper()
+def mozconfig = slurper.parseText(standardOutput.toString())
+
+if (topsrcdir != mozconfig.topsrcdir) {
+    throw new GradleException("Specified topsrcdir ('${topsrcdir}') is not mozconfig topsrcdir ('${mozconfig.topsrcdir}')")
+}
+
+if (!ext.has('topobjdir')) {
+    ext.topobjdir = mozconfig.topobjdir
+    log("Found topobjdir ${topobjdir} from topsrcdir ${topsrcdir}")
+}
+
+if (mozconfig.substs.MOZ_BUILD_APP != 'mobile/android') {
+    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.")
+}
+
+log("Will substitute GeckoView (geckoview-{nightly,beta}) with local GeckoView (geckoview-default) from ${topobjdir}/gradle/build/mobile/android/geckoview/maven")
+
+if (!mozconfig.substs.COMPILE_ENVIRONMENT) {
+    log("To update the local GeckoView, run `./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
+} else {
+    log("To update the local GeckoView, run `./mach build binaries && ./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
+}
+
+repositories {
+    maven {
+        name "Local GeckoView Maven repository"
+        url "${topobjdir}/gradle/build/mobile/android/geckoview/maven"
+    }
+}
+
+configurations.all { config ->
+    // Like `geckoview-nightly` for a multi-architecture fat AAR or
+    // `geckoview-nightly-armeabi-v7a` for an architecture-specific AAR.
+    def geckoviewModules = [
+        'geckoview-nightly',
+        'geckoview-nightly-armeabi-v7a',
+        'geckoview-nightly-arm64-v8a',
+        'geckoview-nightly-x86',
+        'geckoview-nightly-x86_64',
+        'geckoview-beta',
+        'geckoview-beta-armeabi-v7a',
+        'geckoview-beta-arm64-v8a',
+        'geckoview-beta-x86',
+        'geckoview-beta-x86_64',
+    ]
+
+    if (config.isCanBeResolved()) {
+        config.resolutionStrategy { strategy ->
+            dependencySubstitution {
+                all { dependency ->
+                    // We could restrict based on target architecture, but there doesn't seem to
+                    // be much advantage to doing so right now.
+
+                    if (!(dependency.requested instanceof ModuleComponentSelector)) {
+                        // We can only substitute for a module: we're never going to substitute
+                        // for a project.
+                        return
+                    }
+
+                    def group = dependency.requested.group
+                    if (group == 'org.mozilla.geckoview' && geckoviewModules.contains(dependency.requested.module)) {
+                        def name = 'geckoview-default'
+                        log("Substituting ${group}:${dependency.requested.module} with local GeckoView ${group}:${name} in ${config}")
+
+                        dependency.useTarget([group: group, name: name, version: '+'])
+
+                        // We substitute with a dynamic version ('+').  It seems that Gradle
+                        // discovers the underlying AAR is out of date correctly based on file
+                        // timestamp already, but let's try to avoid some class of cache
+                        // invalidation error while we're here.
+                        strategy.cacheDynamicVersionsFor 0, 'seconds'
+                    }
+                }
+            }
+        }
+    }
+}
