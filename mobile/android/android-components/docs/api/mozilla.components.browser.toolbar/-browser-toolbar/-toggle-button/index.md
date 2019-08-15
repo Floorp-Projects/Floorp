@@ -2,7 +2,7 @@
 
 # ToggleButton
 
-`class ToggleButton : `[`ActionToggleButton`](../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L727)
+`class ToggleButton : `[`ActionToggleButton`](../../../mozilla.components.concept.toolbar/-toolbar/-action-toggle-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L737)
 
 An action button with two states, selected and unselected. When the button is pressed, the
 state changes automatically.

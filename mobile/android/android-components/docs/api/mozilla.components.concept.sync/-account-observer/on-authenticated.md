@@ -10,4 +10,4 @@ Account was successfully authenticated.
 
 `account` - An authenticated instance of a [OAuthAccount](../-o-auth-account/index.md).
 
-`newAccount` - True if this is a new account that was authenticated.
+`newAccount` - True if an account was just signed in.

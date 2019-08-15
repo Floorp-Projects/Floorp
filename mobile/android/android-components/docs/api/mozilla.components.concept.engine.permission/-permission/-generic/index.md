@@ -2,7 +2,7 @@
 
 # Generic
 
-`data class Generic : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L78)
+`data class Generic : `[`Permission`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L80)
 
 ### Constructors
 

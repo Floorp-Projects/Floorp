@@ -2,7 +2,7 @@
 
 # ACCEPT_NON_TRACKERS
 
-`ACCEPT_NON_TRACKERS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L133)
+`ACCEPT_NON_TRACKERS` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L137)
 
 Accept only first-party and non-tracking third-party cookies and site data
 to block cookies which are not associated with the domain of the visited

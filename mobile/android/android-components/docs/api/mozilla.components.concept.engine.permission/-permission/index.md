@@ -2,7 +2,7 @@
 
 # Permission
 
-`sealed class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L61)
+`sealed class Permission` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L60)
 
 Represents all the different supported permission types.
 
@@ -33,8 +33,8 @@ Represents all the different supported permission types.
 
 | Name | Summary |
 |---|---|
-| [desc](desc.md) | `open val desc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>an optional description of what this permission type is for. |
-| [id](id.md) | `open val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>an optional native engine-specific ID of this permission. |
+| [desc](desc.md) | `abstract val desc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>an optional description of what this permission type is for. |
+| [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>an optional native engine-specific ID of this permission. |
 
 ### Inheritors
 

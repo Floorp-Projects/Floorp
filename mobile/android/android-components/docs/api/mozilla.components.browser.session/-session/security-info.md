@@ -2,7 +2,7 @@
 
 # securityInfo
 
-`var securityInfo: `[`SecurityInfo`](-security-info/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L252)
+`var securityInfo: `[`SecurityInfo`](-security-info/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L253)
 
 Security information indicating whether or not the current session is
 for a secure URL, as well as the host and SSL certificate authority, if applicable.

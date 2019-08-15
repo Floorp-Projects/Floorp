@@ -42,6 +42,7 @@ implemented by the DisplayToolbar and EditToolbar classes.
 |---|---|
 | [browserActionMargin](browser-action-margin.md) | `var browserActionMargin: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the margin to be used between browser actions. |
 | [clearViewColor](clear-view-color.md) | `var clearViewColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the color tint of the cancel button. |
+| [displaySeparatorView](display-separator-view.md) | `var displaySeparatorView: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a separator view should be visible between the tracking protection icon and the security indicator icon. |
 | [displaySiteSecurityIcon](display-site-security-icon.md) | `var displaySiteSecurityIcon: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL. |
 | [displayTrackingProtectionIcon](display-tracking-protection-icon.md) | `var displayTrackingProtectionIcon: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a tracking protection icon (usually a shield icon) should be visible. |
 | [hint](hint.md) | `var hint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets the text to be displayed when the URL of the toolbar is empty. |

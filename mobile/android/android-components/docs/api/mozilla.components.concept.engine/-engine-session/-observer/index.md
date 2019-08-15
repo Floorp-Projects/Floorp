@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L33)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L35)
 
 Interface to be implemented by classes that want to observe this engine session.
 
@@ -37,4 +37,5 @@ Interface to be implemented by classes that want to observe this engine session.
 | [onTitleChange](on-title-change.md) | `open fun onTitleChange(title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTrackerBlocked](on-tracker-blocked.md) | `open fun onTrackerBlocked(tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTrackerBlockingEnabledChange](on-tracker-blocking-enabled-change.md) | `open fun onTrackerBlockingEnabledChange(enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onTrackerLoaded](on-tracker-loaded.md) | `open fun onTrackerLoaded(tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onWebAppManifestLoaded](on-web-app-manifest-loaded.md) | `open fun onWebAppManifestLoaded(manifest: `[`WebAppManifest`](../../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

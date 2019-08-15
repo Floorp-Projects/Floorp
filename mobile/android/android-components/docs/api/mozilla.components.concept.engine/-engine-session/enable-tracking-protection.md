@@ -2,7 +2,7 @@
 
 # enableTrackingProtection
 
-`abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.all()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L356)
+`abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.strict()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L412)
 
 Enables tracking protection for this engine session.
 

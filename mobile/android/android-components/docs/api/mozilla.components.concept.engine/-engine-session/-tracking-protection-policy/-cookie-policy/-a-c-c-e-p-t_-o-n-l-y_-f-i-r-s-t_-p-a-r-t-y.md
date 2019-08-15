@@ -2,7 +2,7 @@
 
 # ACCEPT_ONLY_FIRST_PARTY
 
-`ACCEPT_ONLY_FIRST_PARTY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L115)
+`ACCEPT_ONLY_FIRST_PARTY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L119)
 
 Accept only first-party cookies and site data to block cookies which are
 not associated with the domain of the visited site.

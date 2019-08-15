@@ -2,7 +2,7 @@
 
 # EngineSession
 
-`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L27)
+`abstract class EngineSession : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L29)
 
 Class representing a single engine session.
 
@@ -37,7 +37,7 @@ In browsers usually a session corresponds to a tab.
 | [clearFindMatches](clear-find-matches.md) | `abstract fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](find-all.md) / [findNext](find-next.md). |
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Close the session. This may free underlying objects. Call this when you are finished using this session. |
 | [disableTrackingProtection](disable-tracking-protection.md) | `abstract fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disables tracking protection for this engine session. |
-| [enableTrackingProtection](enable-tracking-protection.md) | `abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.all()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables tracking protection for this engine session. |
+| [enableTrackingProtection](enable-tracking-protection.md) | `abstract fun enableTrackingProtection(policy: `[`TrackingProtectionPolicy`](-tracking-protection-policy/index.md)` = TrackingProtectionPolicy.strict()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Enables tracking protection for this engine session. |
 | [exitFullScreenMode](exit-full-screen-mode.md) | `abstract fun exitFullScreenMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Exits fullscreen mode if currently in it that state. |
 | [findAll](find-all.md) | `abstract fun findAll(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Finds and highlights all occurrences of the provided String and highlights them asynchronously. |
 | [findNext](find-next.md) | `abstract fun findNext(forward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Finds and highlights the next or previous match found by [findAll](find-all.md). |
