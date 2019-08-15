@@ -785,17 +785,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute unsigned long sandboxFlags;
 
   /**
-   * When a new browsing context is opened by a sandboxed document, it needs to
-   * keep track of the browsing context that opened it, so that it can be
-   * navigated by it.  This is the "one permitted sandboxed navigator".
-   */
-  attribute nsIDocShell onePermittedSandboxedNavigator;
-
-  /**
    * Returns true if we are sandboxed from aTargetDocShell.
    * aTargetDocShell - the browsing context we are attempting to navigate.
    */
-  [noscript,notxpcom,nostdcall] bool isSandboxedFrom(in nsIDocShell aTargetDocShell);
+  [noscript,notxpcom,nostdcall] bool isSandboxedFrom(in BrowsingContext aTargetBC);
 
   /**
    * This member variable determines whether a document has Mixed Active Content that

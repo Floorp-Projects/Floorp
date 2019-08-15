@@ -46,24 +46,24 @@ ac_add_options --disable-webrtc # Bug 1393901
 ac_add_options --disable-geckodriver # Bug 1489320
 
 # Find our toolchain
-HOST_CC="$TOOLTOOL_DIR/clang/bin/clang"
-HOST_CXX="$TOOLTOOL_DIR/clang/bin/clang++"
-CC="$TOOLTOOL_DIR/clang/bin/i686-w64-mingw32-clang"
-CXX="$TOOLTOOL_DIR/clang/bin/i686-w64-mingw32-clang++"
+HOST_CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+HOST_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
+CC="$MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-clang"
+CXX="$MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-clang++"
 ac_add_options --with-clang-path="$CC"
-ac_add_options --with-libclang-path="$TOOLTOOL_DIR/clang/lib"
+ac_add_options --with-libclang-path="$MOZ_FETCHES_DIR/clang/lib"
 CXXFLAGS="-fms-extensions"
 AR=llvm-ar
 RANLIB=llvm-ranlib
 
 # For Stylo
-BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include"
+BINDGEN_CFLAGS="-I$MOZ_FETCHES_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$MOZ_FETCHES_DIR/clang/i686-w64-mingw32/include"
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
-mk_add_options "export PATH=$TOOLTOOL_DIR/clang/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
+mk_add_options "export PATH=$MOZ_FETCHES_DIR/clang/bin:$MOZ_FETCHES_DIR/mingw32/bin:$MOZ_FETCHES_DIR/wine/bin:$MOZ_FETCHES_DIR/upx/bin:$MOZ_FETCHES_DIR/fxc2/bin:$PATH"
 
-LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/mingw32/lib64:$TOOLTOOL_DIR/clang/lib
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$MOZ_FETCHES_DIR/mingw32/lib64:$MOZ_FETCHES_DIR/clang/lib
 mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
 # Do not include the visual studio related mozconfigs of course

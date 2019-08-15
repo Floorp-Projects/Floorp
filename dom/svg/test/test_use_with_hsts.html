@@ -73,11 +73,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     // Capture a snapshot with nothing in the iframe, so we can do a
     // sanity-check not-equal comparison against our reference case, to be
     // sure we're rendering anything at all:
-    let blankSnapshot = snapshotWindow(iframeWin);
+    let blankSnapshot = await snapshotWindow(iframeWin);
 
     // Load & snapshot a reference case (fully lime):
     await LoadIframeAsync("data:text/html,<body style='background:lime'>");
-    let refSnapshot = snapshotWindow(iframeWin);
+    let refSnapshot = await snapshotWindow(iframeWin);
 
     // Ensure reference snapshot looks different from blank snapshot:
     assertSnapshots(refSnapshot, blankSnapshot,
@@ -92,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
 
     // Load & snapshot secure (HTTPS) version of testcase, & check against ref:
     await LoadIframeAsync(secureURI);
-    let secureSnapshot = snapshotWindow(iframeWin);
+    let secureSnapshot = await snapshotWindow(iframeWin);
     assertSnapshots(secureSnapshot, refSnapshot,
                     true /* equal*/, null /* no fuzz*/,
                     "secureSnapshot", "refSnapshot");
@@ -108,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
        "test should've attempted to load insecure HTTP URI, to exercise HSTS");
 
     // Capture snapshot of iframe showing upgraded-to-HTTPS version of testcase:
-    let upgradedSnapshot = snapshotWindow(iframeWin);
+    let upgradedSnapshot = await snapshotWindow(iframeWin);
     assertSnapshots(upgradedSnapshot, refSnapshot,
                     true /* equal*/, null /* no fuzz*/,
                     "upgradedSnapshot", "refSnapshot");

@@ -19,13 +19,13 @@ config = {
     'arch': 'x64',
     'use_yasm': True,
     'partial_env': {
-        'PATH': ('%(abs_work_dir)s\\src\\clang\\bin\\;'
+        'PATH': ('{MOZ_FETCHES_DIR}\\clang\\bin\\;'
                  '{_VSPATH}\\VC\\bin\\Hostx64\\x64;%(PATH)s;'
                  # 32-bit redist here for our dump_syms.exe
                  '{_VSPATH}/VC/redist/x86/Microsoft.VC141.CRT;'
                  '{_VSPATH}/SDK/Redist/ucrt/DLLs/x86;'
                  '{_VSPATH}/DIA SDK/bin'
-        ).format(_VSPATH=VSPATH),
+        ).format(_VSPATH=VSPATH, MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR']),
         'INCLUDES': (
             '-I{_VSPATH}\\VC\\include '
             '-I{_VSPATH}\\VC\\atlmfc\\include '

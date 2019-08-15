@@ -170,7 +170,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         self.fatal("can't determine platform")
 
     def query_make_params(self):
-        dirs = self.query_abs_dirs()
         retval = []
         if self.config['debug_build']:
             retval.append('BUILDTYPE=Debug')
@@ -194,7 +193,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                     retval.append("ARCH=arm")
                 retval.append('TARGET=invalid')
                 retval.append('NDKLEVEL=%s' % self.config['min_sdk'])
-                retval.append('NDKROOT=%s/src/android-ndk' % dirs['abs_work_dir'])
+                retval.append('NDKROOT=%s/android-ndk' % os.environ['MOZ_FETCHES_DIR'])
                 retval.append('NDK_TOOLCHAIN_VERSION=clang')
             if self.config["operating_system"] == "darwin":
                 retval.append('OS=darwin')
@@ -281,7 +280,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                 # os.symlink is not available on Windows until we switch to
                 # Python 3.
                 os.system('ln -s %s %s' % (
-                          os.path.join(dirs['abs_work_dir'], 'src', 'clang',
+                          os.path.join(os.environ['MOZ_FETCHES_DIR'], 'clang',
                                        'bin', 'clang.exe'),
                           os.path.join(openh264_dir, 'cpp')))
             return 0

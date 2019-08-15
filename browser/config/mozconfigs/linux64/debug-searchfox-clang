@@ -9,8 +9,8 @@ ac_add_options --enable-debug
 . $topsrcdir/build/mozconfig.stylo
 
 # Use Clang as specified in manifest
-export CC="$topsrcdir/clang/bin/clang"
-export CXX="$topsrcdir/clang/bin/clang++"
+export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
 
 # Save rust analysis (this requires unlocking the unstable features,
 # which is done in the taskcluster task definition via RUSTC_BOOTSTRAP)

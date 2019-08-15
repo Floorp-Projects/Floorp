@@ -218,6 +218,9 @@ def use_fetches(config, jobs):
                         'task': '<{label}>'.format(label=label),
                         'extract': True,
                     })
+
+                    if kind == 'toolchain' and fetch_name.endswith('-sccache'):
+                        job['needs-sccache'] = True
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
