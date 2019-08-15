@@ -1202,13 +1202,21 @@ class SpecialPowersAPI extends JSWindowActorChild {
       el.width = imageData.width;
       el.height = imageData.height;
 
-      let ctx = el.getContext("2d");
-      ctx.putImageData(imageData, 0, 0);
+      if (ImageData.isInstance(imageData)) {
+        let ctx = el.getContext("2d");
+        ctx.putImageData(imageData, 0, 0);
+      }
 
       return el;
     };
 
     if (Window.isInstance(content)) {
+      // Hack around tests that try to snapshot 0 width or height
+      // elements.
+      if (rect && !(rect.width && rect.height)) {
+        return toCanvas(rect);
+      }
+
       // This is an in-process window. Snapshot it synchronously.
       return toCanvas(getImageData(rect, bgcolor, options));
     }
