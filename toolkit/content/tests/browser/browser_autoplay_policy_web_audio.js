@@ -8,7 +8,10 @@
  */
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 const PAGE =
   "https://example.com/browser/toolkit/content/tests/browser/file_empty.html";
 
@@ -121,14 +124,14 @@ async function testAutoplayExistingPermission({ name, permission }) {
   info(`- set the 'autoplay-media' permission -`);
   const promptShow = () =>
     PopupNotifications.getNotification("autoplay-media", browser);
-  SitePermissions.set(browser.currentURI, "autoplay-media", permission);
+  PermissionTestUtils.add(browser.currentURI, "autoplay-media", permission);
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
   info(`- create audio context -`);
   loadFrameScript(browser, createAudioContext);
 
   info(`- check AudioContext status -`);
-  const isAllowedToStart = permission === SitePermissions.ALLOW;
+  const isAllowedToStart = permission === Services.perms.ALLOW_ACTION;
   await ContentTask.spawn(
     browser,
     isAllowedToStart,
@@ -137,7 +140,7 @@ async function testAutoplayExistingPermission({ name, permission }) {
   await ContentTask.spawn(browser, isAllowedToStart, resumeAudioContext);
 
   info(`- remove tab -`);
-  SitePermissions.remove(browser.currentURI, "autoplay-media");
+  PermissionTestUtils.remove(browser.currentURI, "autoplay-media");
   await BrowserTestUtils.removeTab(tab);
 }
 
@@ -152,10 +155,10 @@ async function testAutoplayUnknownPermission({ name, method }) {
   info(`- set the 'autoplay-media' permission to UNKNOWN -`);
   const promptShow = () =>
     PopupNotifications.getNotification("autoplay-media", browser);
-  SitePermissions.set(
+  PermissionTestUtils.add(
     browser.currentURI,
     "autoplay-media",
-    SitePermissions.UNKNOWN
+    Services.perms.UNKNOWN_ACTION
   );
   ok(!promptShow(), `should not be showing permission prompt yet`);
 
@@ -184,7 +187,7 @@ async function testAutoplayUnknownPermission({ name, method }) {
   );
 
   info(`- remove tab -`);
-  SitePermissions.remove(browser.currentURI, "autoplay-media");
+  PermissionTestUtils.remove(browser.currentURI, "autoplay-media");
   await BrowserTestUtils.removeTab(tab);
 }
 
@@ -194,11 +197,11 @@ add_task(async function start_tests() {
 
   await testAutoplayExistingPermission({
     name: "Prexisting allow permission",
-    permission: SitePermissions.ALLOW,
+    permission: Services.perms.ALLOW_ACTION,
   });
   await testAutoplayExistingPermission({
     name: "Prexisting block permission",
-    permission: SitePermissions.BLOCK,
+    permission: Services.perms.DENY_ACTION,
   });
   const startMethods = [
     "AudioContext",
