@@ -31,7 +31,7 @@ class InlinePreview extends PureComponent<Props> {
         className="inline-preview-outer"
         onClick={() => this.showInScopes(variable)}
       >
-        <span className="inline-preview-label">{variable}</span>
+        <span className="inline-preview-label">{variable}:</span>
         <span className="inline-preview-value">
           <Rep object={value} mode={MODE.SHORT} noGrip={true} />
         </span>
