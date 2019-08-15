@@ -265,8 +265,6 @@ bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
 //   number)"
 //
 /* static */
-// XXXfredw: Deprecate legacy MathML syntax and use the CSS parser instead.
-// See https://github.com/mathml-refresh/mathml/issues/63
 bool nsMathMLElement::ParseNumericValue(const nsString& aString,
                                         nsCSSValue& aCSSValue, uint32_t aFlags,
                                         Document* aDocument) {
@@ -361,23 +359,23 @@ bool nsMathMLElement::ParseNumericValue(const nsString& aString,
   } else if (unit.EqualsLiteral("%")) {
     aCSSValue.SetPercentValue(floatValue / 100.0f);
     return true;
-  } else if (unit.LowerCaseEqualsLiteral("em"))
+  } else if (unit.EqualsLiteral("em"))
     cssUnit = eCSSUnit_EM;
-  else if (unit.LowerCaseEqualsLiteral("ex"))
+  else if (unit.EqualsLiteral("ex"))
     cssUnit = eCSSUnit_XHeight;
-  else if (unit.LowerCaseEqualsLiteral("px"))
+  else if (unit.EqualsLiteral("px"))
     cssUnit = eCSSUnit_Pixel;
-  else if (unit.LowerCaseEqualsLiteral("in"))
+  else if (unit.EqualsLiteral("in"))
     cssUnit = eCSSUnit_Inch;
-  else if (unit.LowerCaseEqualsLiteral("cm"))
+  else if (unit.EqualsLiteral("cm"))
     cssUnit = eCSSUnit_Centimeter;
-  else if (unit.LowerCaseEqualsLiteral("mm"))
+  else if (unit.EqualsLiteral("mm"))
     cssUnit = eCSSUnit_Millimeter;
-  else if (unit.LowerCaseEqualsLiteral("pt"))
+  else if (unit.EqualsLiteral("pt"))
     cssUnit = eCSSUnit_Point;
-  else if (unit.LowerCaseEqualsLiteral("pc"))
+  else if (unit.EqualsLiteral("pc"))
     cssUnit = eCSSUnit_Pica;
-  else if (unit.LowerCaseEqualsLiteral("q"))
+  else if (unit.EqualsLiteral("q"))
     cssUnit = eCSSUnit_Quarter;
   else {  // unexpected unit
     if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
@@ -675,7 +673,7 @@ void nsMathMLElement::MapMathMLAttributesInto(
         NS_MATHML_MATHVARIANT_LOOPED,
         NS_MATHML_MATHVARIANT_STRETCHED};
     for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
-      if (str.LowerCaseEqualsASCII(sizes[i])) {
+      if (str.EqualsASCII(sizes[i])) {
         aDecls.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
         break;
       }
@@ -801,7 +799,7 @@ void nsMathMLElement::MapMathMLAttributesInto(
     static const int32_t dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
         NS_STYLE_DIRECTION_LTR, NS_STYLE_DIRECTION_RTL};
     for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {
-      if (str.LowerCaseEqualsASCII(dirs[i])) {
+      if (str.EqualsASCII(dirs[i])) {
         aDecls.SetKeywordValue(eCSSProperty_direction, dirValues[i]);
         break;
       }
