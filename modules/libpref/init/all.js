@@ -4965,11 +4965,6 @@ pref("gfx.vr.osvr.clientKitLibPath", "");
 // are rejecting frames, it determines the rate at which RAF callbacks will be called.
 pref("dom.vr.display.rafMaxDuration", 50);
 
-// If the user has clicked an element, how long do we keep the
-// :active state before it is cleared by the mouse sequences
-// fired after a touchstart/touchend.
-pref("ui.touch_activation.duration_ms", 10);
-
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.
 pref("memory_info_dumper.watch_fifo.enabled", false);
