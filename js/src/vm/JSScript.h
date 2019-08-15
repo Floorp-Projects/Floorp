@@ -2702,6 +2702,7 @@ class JSScript : public js::BaseScript {
 
   void maybeReleaseJitScript(JSFreeOp* fop);
   void releaseJitScript(JSFreeOp* fop);
+  void releaseJitScriptOnFinalize(JSFreeOp* fop);
 
   inline bool hasBaselineScript() const;
   inline bool hasIonScript() const;

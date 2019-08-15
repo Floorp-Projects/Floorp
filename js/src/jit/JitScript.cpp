@@ -184,6 +184,8 @@ void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
 }
 
 void JSScript::releaseJitScript(JSFreeOp* fop) {
+  MOZ_ASSERT(hasJitScript());
+  MOZ_ASSERT(!hasBaselineScript());
   MOZ_ASSERT(!hasIonScript());
 
   fop->removeCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);
@@ -191,6 +193,24 @@ void JSScript::releaseJitScript(JSFreeOp* fop) {
   JitScript::Destroy(zone(), jitScript_);
   jitScript_ = nullptr;
   updateJitCodeRaw(fop->runtime());
+}
+
+void JSScript::releaseJitScriptOnFinalize(JSFreeOp* fop) {
+  MOZ_ASSERT(hasJitScript());
+
+  if (hasIonScript()) {
+    IonScript* ion = ionScript();
+    jitScript()->clearIonScript(fop, this);
+    jit::IonScript::Destroy(fop, ion);
+  }
+
+  if (hasBaselineScript()) {
+    BaselineScript* baseline = baselineScript();
+    jitScript()->clearBaselineScript(fop, this);
+    jit::BaselineScript::Destroy(fop, baseline);
+  }
+
+  releaseJitScript(fop);
 }
 
 void JitScript::CachedIonData::trace(JSTracer* trc) {

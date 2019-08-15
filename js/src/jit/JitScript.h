@@ -239,6 +239,10 @@ class alignas(uintptr_t) JitScript final {
     // The contents of the fallback stub space are removed and freed
     // separately after the next minor GC. See prepareForDestruction.
     MOZ_ASSERT(fallbackStubSpace_.isEmpty());
+
+    // BaselineScript and IonScript must have been destroyed at this point.
+    MOZ_ASSERT(!hasBaselineScript());
+    MOZ_ASSERT(!hasIonScript());
   }
 #endif
 
