@@ -2289,7 +2289,6 @@ pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.proper
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
 pref("intl.charset.fallback.override",      "");
-pref("intl.charset.fallback.tld",           true);
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 // this pref allows user to request that all internationalization formatters
 // like date/time formatting, unit formatting, calendars etc. should use
