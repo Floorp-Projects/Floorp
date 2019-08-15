@@ -331,7 +331,6 @@
 #include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ResultExtensions.h"
 #include "nsHTMLTags.h"
 #include "MobileViewportManager.h"
 #include "NodeUbiReporting.h"
@@ -5749,14 +5748,6 @@ void Document::SetBaseURI(nsIURI* aURI) {
 
   mDocumentBaseURI = aURI;
   RefreshLinkHrefs();
-}
-
-Result<nsCOMPtr<nsIURI>, nsresult> Document::ResolveWithBaseURI(
-    const nsAString& aURI) {
-  nsCOMPtr<nsIURI> resolvedUri;
-  MOZ_TRY(
-      NS_NewURI(getter_AddRefs(resolvedUri), aURI, nullptr, GetDocBaseURI()));
-  return std::move(resolvedURI);
 }
 
 URLExtraData* Document::DefaultStyleAttrURLData() {
