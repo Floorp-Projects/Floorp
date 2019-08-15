@@ -1543,24 +1543,31 @@ class BaseScript : public gc::TenuredCell {
     HadFrequentBailouts = 1 << 17,
     HadOverflowBailout = 1 << 18,
 
+    // Whether Baseline or Ion compilation has been disabled for this script.
+    // IonDisabled is equivalent to |jitScript->canIonCompile() == false| but
+    // JitScript can be discarded on GC and we don't want this to affect
+    // observable behavior (see ArgumentsGetterImpl comment).
+    BaselineDisabled = 1 << 19,
+    IonDisabled = 1 << 20,
+
     // Explicitly marked as uninlineable.
-    Uninlineable = 1 << 19,
+    Uninlineable = 1 << 21,
 
     // Idempotent cache has triggered invalidation.
-    InvalidatedIdempotentCache = 1 << 20,
+    InvalidatedIdempotentCache = 1 << 22,
 
     // Lexical check did fail and bail out.
-    FailedLexicalCheck = 1 << 21,
+    FailedLexicalCheck = 1 << 23,
 
     // See comments below.
-    NeedsArgsAnalysis = 1 << 22,
-    NeedsArgsObj = 1 << 23,
+    NeedsArgsAnalysis = 1 << 24,
+    NeedsArgsObj = 1 << 25,
 
     // Set if the debugger's onNewScript hook has not yet been called.
-    HideScriptFromDebugger = 1 << 24,
+    HideScriptFromDebugger = 1 << 26,
 
     // Set if the script has opted into spew
-    SpewEnabled = 1 << 25,
+    SpewEnabled = 1 << 27,
   };
 
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
@@ -2627,8 +2634,15 @@ class JSScript : public js::BaseScript {
   }
 
   // Methods for the Ion-disabled status.
-  bool canIonCompile() const { return ion != ION_DISABLED_SCRIPT; }
-  void disableIon(JSRuntime* rt) { setIonScriptImpl(rt, ION_DISABLED_SCRIPT); }
+  bool canIonCompile() const {
+    bool disabled = hasFlag(MutableFlags::IonDisabled);
+    MOZ_ASSERT_IF(disabled, ion == ION_DISABLED_SCRIPT);
+    return !disabled;
+  }
+  void disableIon(JSRuntime* rt) {
+    setFlag(MutableFlags::IonDisabled);
+    setIonScriptImpl(rt, ION_DISABLED_SCRIPT);
+  }
 
   // Methods for off-thread compilation.
   bool isIonCompilingOffThread() const { return ion == ION_COMPILING_SCRIPT; }
@@ -2673,10 +2687,13 @@ class JSScript : public js::BaseScript {
 
   // Methods for the Baseline-disabled status.
   bool canBaselineCompile() const {
-    return baseline != BASELINE_DISABLED_SCRIPT;
+    bool disabled = hasFlag(MutableFlags::BaselineDisabled);
+    MOZ_ASSERT_IF(disabled, baseline == BASELINE_DISABLED_SCRIPT);
+    return !disabled;
   }
   void disableBaselineCompile(JSRuntime* rt) {
     MOZ_ASSERT(!hasBaselineScript());
+    setFlag(MutableFlags::BaselineDisabled);
     setBaselineScriptImpl(rt, BASELINE_DISABLED_SCRIPT);
   }
 
