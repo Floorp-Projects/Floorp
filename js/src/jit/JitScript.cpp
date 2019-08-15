@@ -198,6 +198,14 @@ void JitScript::CachedIonData::trace(JSTracer* trc) {
 }
 
 void JitScript::trace(JSTracer* trc) {
+  if (hasBaselineScript()) {
+    baselineScript()->trace(trc);
+  }
+
+  if (hasIonScript()) {
+    ionScript()->trace(trc);
+  }
+
   if (hasCachedIonData()) {
     cachedIonData().trace(trc);
   }
