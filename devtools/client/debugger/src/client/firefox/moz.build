@@ -11,5 +11,5 @@ CompiledModules(
     'commands.js',
     'create.js',
     'events.js',
-    'workers.js',
+    'targets.js',
 )
