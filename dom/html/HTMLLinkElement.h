@@ -17,6 +17,8 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
+// NOTE(emilio): If we stop inheriting from Link, we need to remove the
+// IsHTMLElement(nsGkAtoms::link) checks in Link.cpp.
 class HTMLLinkElement final : public nsGenericHTMLElement,
                               public nsStyleLinkElement,
                               public Link {
