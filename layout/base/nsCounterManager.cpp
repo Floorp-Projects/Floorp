@@ -176,8 +176,7 @@ void nsCounterList::RecalcAll() {
     SetScope(node);
     if (node->IsContentBasedReset()) {
       node->mValueAfter = 1;
-    } else if ((node->mType == nsCounterChangeNode::INCREMENT ||
-                node->mType == nsCounterChangeNode::SET) &&
+    } else if (node->mType == nsCounterChangeNode::INCREMENT &&
                node->mScopeStart && node->mScopeStart->IsContentBasedReset()) {
       ++node->mScopeStart->mValueAfter;
     }
