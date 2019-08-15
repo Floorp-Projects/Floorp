@@ -6295,6 +6295,14 @@
     mirror: always
 #endif
 
+# When comparing schemes, if this pref is set, view-source URIs are reachable
+# from same-protocol (so e.g. file: can link to view-source:file). This is
+# required for reftests.
+- name: security.view-source.reachable-from-inner-protocol
+  type: bool
+  value: false
+  mirror: always
+
 # Hardware Origin-bound Second Factor Support
 - name: security.webauth.webauthn
   type: bool

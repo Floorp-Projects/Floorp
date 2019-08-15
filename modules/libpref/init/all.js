@@ -2596,10 +2596,6 @@ pref("security.cert_pinning.enforcement_level", 0);
 // for tests.
 pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 
-// If set to true, allow view-source URIs to be opened from URIs that share
-// their protocol with the inner URI of the view-source URI
-pref("security.view-source.reachable-from-inner-protocol", false);
-
 // If set to true strict checks will happen on the triggering principal for loads.
 // Android is disabled at the moment pending Bug 1504968
 #if !defined(RELEASE_OR_BETA) && !defined(ANDROID)
