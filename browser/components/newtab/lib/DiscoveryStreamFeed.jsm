@@ -55,6 +55,9 @@ const FETCH_TIMEOUT = 45 * 1000;
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
 const PREF_IMPRESSION_ID = "browser.newtabpage.activity-stream.impressionId";
+const PREF_ENABLED = "discoverystream.enabled";
+const PREF_HARDCODED_BASIC_LAYOUT = "discoverystream.hardcoded-basic-layout";
+const PREF_SPOCS_ENDPOINT = "discoverystream.spocs-endpoint";
 const PREF_TOPSTORIES = "feeds.section.topstories";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
@@ -62,6 +65,7 @@ const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 
 let defaultLayoutResp;
+let basicLayoutResp;
 
 this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   constructor() {
@@ -147,6 +151,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         `Could not parse preference. Try resetting ${PREF_CONFIG} in about:config. ${e}`
       );
     }
+    this._prefCache.config.enabled =
+      this._prefCache.config.enabled &&
+      this.store.getState().Prefs.values[PREF_ENABLED];
+
     return this._prefCache.config;
   }
 
@@ -321,7 +329,24 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
 
     if (!layout || !layout.layout) {
-      layout = { lastUpdate: Date.now(), ...defaultLayoutResp };
+      if (
+        this.config.hardcoded_basic_layout ||
+        this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT]
+      ) {
+        layout = { lastUpdate: Date.now(), ...basicLayoutResp };
+      } else {
+        layout = { lastUpdate: Date.now(), ...defaultLayoutResp };
+      }
+    }
+
+    if (
+      layout.spocs &&
+      (this.store.getState().Prefs.values[PREF_SPOCS_ENDPOINT] ||
+        this.config.spocs_endpoint)
+    ) {
+      layout.spocs.url =
+        this.store.getState().Prefs.values[PREF_SPOCS_ENDPOINT] ||
+        this.config.spocs_endpoint;
     }
 
     sendUpdate({
@@ -1226,6 +1251,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.PREF_CHANGED:
         switch (action.data.name) {
           case PREF_CONFIG:
+          case PREF_ENABLED:
+          case PREF_HARDCODED_BASIC_LAYOUT:
+          case PREF_SPOCS_ENDPOINT:
             // Clear the cached config and broadcast the newly computed value
             this._prefCache.config = null;
             this.store.dispatch(
@@ -1367,6 +1395,98 @@ defaultLayoutResp = {
           },
           styles: {
             ".ds-navigation": "margin-top: -10px;",
+          },
+        },
+      ],
+    },
+  ],
+};
+
+// Hardcoded version of layout_variant `basic`
+basicLayoutResp = {
+  spocs: {
+    url: "https://spocs.getpocket.com/spocs",
+    spocs_per_domain: 1,
+  },
+  layout: [
+    {
+      width: 12,
+      components: [
+        {
+          type: "TopSites",
+          header: {
+            title: "Top Sites",
+          },
+          properties: {},
+        },
+        {
+          type: "Message",
+          header: {
+            title: "Recommended by Pocket",
+            subtitle: "",
+            link_text: "How it works",
+            link_url: "https://getpocket.com/firefox/new_tab_learn_more",
+            icon:
+              "resource://activity-stream/data/content/assets/glyph-pocket-16.svg",
+          },
+          properties: {},
+          styles: {
+            ".ds-message": "margin-bottom: -20px",
+          },
+        },
+        {
+          type: "CardGrid",
+          properties: {
+            items: 3,
+          },
+          header: {
+            title: "",
+          },
+          feed: {
+            embed_reference: null,
+            url:
+              "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=default_spocs_on",
+          },
+          spocs: {
+            probability: 1,
+            positions: [
+              {
+                index: 2,
+              },
+            ],
+          },
+        },
+        {
+          type: "Navigation",
+          properties: {
+            alignment: "left-align",
+            links: [
+              {
+                name: "Must Reads",
+                url: "https://getpocket.com/explore/must-reads?src=fx_new_tab",
+              },
+              {
+                name: "Productivity",
+                url:
+                  "https://getpocket.com/explore/productivity?src=fx_new_tab",
+              },
+              {
+                name: "Health",
+                url: "https://getpocket.com/explore/health?src=fx_new_tab",
+              },
+              {
+                name: "Finance",
+                url: "https://getpocket.com/explore/finance?src=fx_new_tab",
+              },
+              {
+                name: "Technology",
+                url: "https://getpocket.com/explore/technology?src=fx_new_tab",
+              },
+              {
+                name: "More Recommendations ›",
+                url: "https://getpocket.com/explore/trending?src=fx_new_tab",
+              },
+            ],
           },
         },
       ],
