@@ -326,9 +326,8 @@ void Link::CancelPrefetchOrPreload() {
 }
 
 void Link::SetLinkState(nsLinkState aState) {
-  NS_ASSERTION(mRegistered, "Setting the link state of an unregistered Link!");
-  NS_ASSERTION(mLinkState != aState,
-               "Setting state to the currently set state!");
+  MOZ_ASSERT(mRegistered, "Setting the link state of an unregistered Link!");
+  MOZ_ASSERT(mLinkState != aState, "Setting state to the currently set state!");
 
   // Set our current state as appropriate.
   mLinkState = aState;
@@ -347,6 +346,8 @@ void Link::SetLinkState(nsLinkState aState) {
 EventStates Link::LinkState() const {
   // We are a constant method, but we are just lazily doing things and have to
   // track that state.  Cast away that constness!
+  //
+  // XXX(emilio): that's evil.
   Link* self = const_cast<Link*>(this);
 
   Element* element = self->mElement;
@@ -747,8 +748,12 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
     }
   }
 
-  // If we have an href, we should register with the history.
-  mNeedsRegistration = aHasHref;
+  // If we have an href, and we're not a <link>, we should register with the
+  // history.
+  //
+  // FIXME(emilio): Do we really want to allow all MathML elements to be
+  // :visited? That seems not great.
+  mNeedsRegistration = aHasHref && !mElement->IsHTMLElement(nsGkAtoms::link);
 
   // If we've cached the URI, reset always invalidates it.
   UnregisterFromHistory();
