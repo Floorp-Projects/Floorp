@@ -124,8 +124,6 @@ async function loadSourceTextPromise(
       await dispatch(addBreakpoint(cx, location, options, disabled));
     }
   }
-
-  return newSource;
 }
 
 export function loadSourceById(cx: Context, sourceId: string) {
