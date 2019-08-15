@@ -111,7 +111,12 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         }
 
         val threadPolicyBuilder = StrictMode.ThreadPolicy.Builder().detectAll()
-        val vmPolicyBuilder = StrictMode.VmPolicy.Builder().detectAll()
+        val vmPolicyBuilder = StrictMode.VmPolicy.Builder()
+                .detectActivityLeaks()
+                .detectFileUriExposure()
+                .detectLeakedClosableObjects()
+                .detectLeakedRegistrationObjects()
+                .detectLeakedSqlLiteObjects()
 
         threadPolicyBuilder.penaltyLog()
         vmPolicyBuilder.penaltyLog()

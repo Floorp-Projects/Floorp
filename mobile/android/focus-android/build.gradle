@@ -6,10 +6,8 @@ buildscript {
     ext.espresso_version = '3.1.0-alpha4'
     ext.kotlin_version = '1.3.0'
     ext.coroutines_version = '1.0.1'
-    ext.geckoview_revision = '8a4c14d86baa1ab9a8b42cecc0675316de6b9abc'
-    ext.geckoview_version = '68.0.20190611143747' // GV 68 Beta Branch 6.11.2019
     ext.spotbugs_version = '3.1.4'
-    ext.mozilla_components_version = '0.56.0'
+    ext.mozilla_components_version = '8.0.0'
 
     repositories {
         google()

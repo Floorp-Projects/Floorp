@@ -51,8 +51,8 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         tempMap.put(context.getString(R.string.pref_key_privacy_block_analytics), "Analytics");
         tempMap.put(context.getString(R.string.pref_key_privacy_block_social), "Social");
         tempMap.put(context.getString(R.string.pref_key_privacy_block_other), "Content");
-        tempMap.put(context.getString(R.string.pref_key_privacy_block_fingerprinting), "Fingerprinting");
         tempMap.put(context.getString(R.string.pref_key_privacy_block_cryptomining), "Cryptomining");
+        tempMap.put(context.getString(R.string.pref_key_privacy_block_fingerprinting), "Fingerprinting");
 
         // This is a "fake" category - webfont handling is independent of the blocklists
         tempMap.put(context.getString(R.string.pref_key_performance_block_webfonts), WEBFONTS);

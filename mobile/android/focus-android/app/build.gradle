@@ -19,7 +19,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.15"
+        versionName "8.0.16"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -138,40 +138,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
                 "-Xuse-experimental=kotlinx.coroutines.ObsoleteCoroutinesApi"]
 }
 
-repositories {
-    maven {
-        //  For the latest version of GeckoView (moving target!):
-        //
-        //  Look at the Latest Firefox 64 on the mozilla-release repository:
-        //  hg.mozilla.org/releases/mozilla-release/branches
-        //
-        //  Click on the changeset ID to find the matching changeset/commit ID (shortened).
-        //  For the example tag above that's 5b5e620e33ee.
-        //
-        //  Now go to the list of revisions to find the matching changeset
-        //  (It should start with the ID you got from the tag, remember the full ID!):
-        //  tools.taskcluster.net/index/gecko.v2.mozilla-release.revision
-        //
-        //  Click through until you find the artifacts (revision -> mobile -> android-api-16-opt).
-        //
-        //  Remember the version of the artifacts. In the example above that's: 61.0.20180611134439
-
-        // ARM GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision" +
-                ".${geckoview_revision}.mobile.android-api-16-opt/artifacts/public/android/maven"
-    }
-    maven {
-        // x86 GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision" +
-                ".${geckoview_revision}.mobile.android-x86-opt/artifacts/public/android/maven"
-    }
-    maven {
-        // aarch64 builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-release.revision" +
-                ".${geckoview_revision}.mobile.android-aarch64-opt/artifacts/public/android/maven"
-    }
-}
-
 dependencies {
     implementation "androidx.appcompat:appcompat:$support_libraries_version"
     implementation "androidx.browser:browser:$support_libraries_version"
@@ -191,6 +157,7 @@ dependencies {
     implementation "org.mozilla.components:browser-session:$mozilla_components_version"
     implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
     implementation "org.mozilla.components:browser-search:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-customtabs:$mozilla_components_version"
     implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
     implementation "org.mozilla.components:ui-autocomplete:$mozilla_components_version"
     implementation "org.mozilla.components:ui-colors:$mozilla_components_version"
@@ -213,9 +180,7 @@ dependencies {
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
 
-    armImplementation "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${geckoview_version}"
-    x86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${geckoview_version}"
-    aarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${geckoview_version}"
+    implementation "org.mozilla.components:browser-engine-gecko-beta:$mozilla_components_version"
     implementation "androidx.palette:palette:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
@@ -346,14 +311,6 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'ADJUST_TOKEN', 'null'
         println("--")
     }
-}
-
-// -------------------------------------------------------------------------------------------------
-// Gecko: Put GeckoVersion into BuildConfig
-// -------------------------------------------------------------------------------------------------
-
-android.applicationVariants.all {
-    buildConfigField 'String', 'GECKOVIEW_VERSION', "\"${geckoview_version}\""
 }
 
 // -------------------------------------------------------------------------------------------------

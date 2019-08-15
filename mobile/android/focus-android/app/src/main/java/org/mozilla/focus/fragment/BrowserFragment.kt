@@ -56,6 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.ColorUtils
 import mozilla.components.support.utils.DownloadUtils
@@ -1459,7 +1460,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             progressView?.progress = progress
         }
 
-        override fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) {
+        override fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) {
             menuWeakReference?.let {
                 val menu = it.get()
 

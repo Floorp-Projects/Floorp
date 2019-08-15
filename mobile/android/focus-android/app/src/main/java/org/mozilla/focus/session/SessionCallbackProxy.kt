@@ -10,6 +10,7 @@ import org.mozilla.focus.web.Download
 import org.mozilla.focus.web.IWebView
 
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.engine.content.blocking.Tracker
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.utils.AppConstants
@@ -86,7 +87,7 @@ class SessionCallbackProxy(private val session: Session, private val delegate: I
     override fun countBlockedTracker() {
         // The browser-engine component will fill "trackersBlocked" with blocked URLs. Until we use
         // this component we just add a random string because we only display the count currently.
-        session.trackersBlocked = session.trackersBlocked + listOf("-")
+        session.trackersBlocked = session.trackersBlocked + listOf(Tracker(session.url))
     }
 
     override fun resetBlockedTrackers() {

@@ -46,7 +46,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     protected open val currentSessionForActivity: Session
         get() = components.sessionManager.selectedSessionOrThrow
 
-    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
+    private val intentProcessor by lazy { IntentProcessor(this, components.sessionManager) }
 
     private var previousSessionCount = 0
 

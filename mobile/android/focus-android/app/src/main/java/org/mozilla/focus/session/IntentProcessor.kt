@@ -10,7 +10,8 @@ import android.os.Bundle
 import android.text.TextUtils
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
+import mozilla.components.feature.customtabs.isCustomTabIntent
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
 import org.mozilla.focus.activity.TextActionActivity
@@ -23,6 +24,7 @@ import org.mozilla.focus.utils.UrlUtils
  * component soon.
  */
 class IntentProcessor(
+    private val context: Context,
     private val sessionManager: SessionManager
 ) {
     /**
@@ -131,9 +133,9 @@ class IntentProcessor(
     }
 
     private fun createSession(source: Session.Source, intent: SafeIntent, url: String): Session {
-        return if (CustomTabConfig.isCustomTabIntent(intent)) {
+        return if (isCustomTabIntent(intent.unsafe)) {
             Session(url, source = Session.Source.CUSTOM_TAB).apply {
-                customTabConfig = CustomTabConfig.createFromIntent(intent)
+                customTabConfig = createCustomTabConfigFromIntent(intent.unsafe, context.resources)
                 sessionManager.add(this, selected = false)
             }
         } else {
@@ -150,9 +152,9 @@ class IntentProcessor(
         blockingEnabled: Boolean,
         requestDesktop: Boolean
     ): Session {
-        val session = if (CustomTabConfig.isCustomTabIntent(intent)) {
+        val session = if (isCustomTabIntent(intent)) {
             Session(url, source = Session.Source.CUSTOM_TAB).apply {
-                customTabConfig = CustomTabConfig.createFromIntent(intent)
+                customTabConfig = createCustomTabConfigFromIntent(intent.unsafe, context.resources)
             }
         } else {
             Session(url, source = source)

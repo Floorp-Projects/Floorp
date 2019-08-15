@@ -17,6 +17,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.utils.EngineVersion
 import org.json.JSONObject
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
@@ -49,6 +50,7 @@ class Components {
  * the <code>SessionManager</code> for now.
  */
 private class DummyEngine : Engine {
+    override val version: EngineVersion = EngineVersion(1, 0, 0)
     override val settings: Settings = DefaultSettings()
 
     override fun createSession(private: Boolean): EngineSession {

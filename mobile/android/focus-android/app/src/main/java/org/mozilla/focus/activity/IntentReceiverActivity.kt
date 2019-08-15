@@ -17,7 +17,7 @@ import org.mozilla.focus.utils.SupportUtils
  * This activity receives VIEW intents and either forwards them to MainActivity or CustomTabActivity.
  */
 class IntentReceiverActivity : Activity() {
-    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
+    private val intentProcessor by lazy { IntentProcessor(this, components.sessionManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
