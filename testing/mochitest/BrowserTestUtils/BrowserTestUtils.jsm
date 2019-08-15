@@ -1615,7 +1615,7 @@ var BrowserTestUtils = {
   },
 
   /**
-   * Crashes a remote browser tab and cleans up the generated minidumps.
+   * Crashes a remote frame tab and cleans up the generated minidumps.
    * Resolves with the data from the .extra file (the crash annotations).
    *
    * @param (Browser) browser
@@ -1626,15 +1626,19 @@ var BrowserTestUtils = {
    *        tab crash page has loaded.
    * @param (bool) shouldClearMinidumps
    *        True if the minidumps left behind by the crash should be removed.
+   * @param (BrowsingContext) browsingContext
+   *        The context where the frame leaves. Default to
+   *        top level context if not supplied.
    *
    * @returns (Promise)
    * @resolves An Object with key-value pairs representing the data from the
    *           crash report's extra file (if applicable).
    */
-  async crashBrowser(
+  async crashFrame(
     browser,
     shouldShowTabCrashPage = true,
-    shouldClearMinidumps = true
+    shouldClearMinidumps = true,
+    browsingContext
   ) {
     let extra = {};
     let KeyValueParser = {};
@@ -1770,7 +1774,7 @@ var BrowserTestUtils = {
 
     // Trigger crash by sending a message to BrowserTestUtils actor.
     this.sendAsyncMessage(
-      browser.browsingContext,
+      browsingContext || browser.browsingContext,
       "BrowserTestUtils:CrashFrame",
       {}
     );
