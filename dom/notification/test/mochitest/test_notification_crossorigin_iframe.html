@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
     });
 
     let checkRequest = async (expectedResponse, msg) => {
-      /* import-globals-from ../../../testing/modules/Assert.jsm */
+      /* import-globals-from ../../../../testing/modules/Assert.jsm */
       let response = await this.content.Notification.requestPermission();
       Assert.equal(response, expectedResponse, msg);
     };
