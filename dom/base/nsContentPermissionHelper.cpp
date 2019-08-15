@@ -515,12 +515,15 @@ nsContentPermissionRequester::GetOnVisibilityChange(
 static nsIPrincipal* GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
-  nsPIDOMWindowOuter* top = aWindow->GetInProcessScriptableTop();
-  if (!top) {
+  BrowsingContext* top = aWindow->GetBrowsingContext()->Top();
+  MOZ_ASSERT(top);
+
+  nsPIDOMWindowOuter* outer = top->GetDOMWindow();
+  if (!outer) {
     return nullptr;
   }
 
-  nsPIDOMWindowInner* inner = top->GetCurrentInnerWindow();
+  nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
   if (!inner) {
     return nullptr;
   }
