@@ -3175,16 +3175,16 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
 
   nsBlockFrame* blockFrame = NS_NewBlockFrame(mPresShell, computedStyle);
   nsContainerFrame* newFrame = blockFrame;
+  nsContainerFrame* geometricParent =
+      aState.GetGeometricParent(*aStyleDisplay, aParentFrame);
   if ((aItem.mFCData->mBits & FCDATA_MAY_NEED_SCROLLFRAME) &&
       aStyleDisplay->IsScrollableOverflow()) {
-    nsContainerFrame* geometricParent =
-        aState.GetGeometricParent(*aStyleDisplay, aParentFrame);
     nsContainerFrame* scrollframe = nullptr;
     BuildScrollFrame(aState, content, computedStyle, blockFrame,
                      geometricParent, scrollframe);
     newFrame = scrollframe;
   } else {
-    InitAndRestoreFrame(aState, content, aParentFrame, blockFrame);
+    InitAndRestoreFrame(aState, content, geometricParent, blockFrame);
   }
 
   RefPtr<ComputedStyle> rubyStyle =
