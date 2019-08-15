@@ -38,7 +38,7 @@ type CursorPosition = {
 
 type Props = {
   cx: Context,
-  selectedSource: ?SourceWithContent,
+  selectedSourceWithContent: ?SourceWithContent,
   mappedSource: Source,
   endPanelCollapsed: boolean,
   horizontal: boolean,
@@ -84,13 +84,16 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   prettyPrintButton() {
-    const { cx, selectedSource, togglePrettyPrint } = this.props;
+    const { cx, selectedSourceWithContent, togglePrettyPrint } = this.props;
 
-    if (!selectedSource) {
+    if (!selectedSourceWithContent) {
       return;
     }
 
-    if (!selectedSource.content && selectedSource.isPrettyPrinted) {
+    if (
+      !selectedSourceWithContent.content &&
+      selectedSourceWithContent.source.isPrettyPrinted
+    ) {
       return (
         <div className="loader" key="pretty-loader">
           <AccessibleImage className="loader" />
@@ -99,12 +102,13 @@ class SourceFooter extends PureComponent<Props, State> {
     }
 
     const sourceContent =
-      selectedSource.content && isFulfilled(selectedSource.content)
-        ? selectedSource.content.value
+      selectedSourceWithContent.content &&
+      isFulfilled(selectedSourceWithContent.content)
+        ? selectedSourceWithContent.content.value
         : null;
     if (
       !shouldShowPrettyPrint(
-        selectedSource,
+        selectedSourceWithContent.source,
         sourceContent || { type: "text", value: "", contentType: undefined }
       )
     ) {
@@ -112,15 +116,17 @@ class SourceFooter extends PureComponent<Props, State> {
     }
 
     const tooltip = L10N.getStr("sourceTabs.prettyPrint");
-    const sourceLoaded = !!selectedSource.content;
+    const sourceLoaded = !!selectedSourceWithContent.content;
 
     const type = "prettyPrint";
     return (
       <button
-        onClick={() => togglePrettyPrint(cx, selectedSource.id)}
+        onClick={() =>
+          togglePrettyPrint(cx, selectedSourceWithContent.source.id)
+        }
         className={classnames("action", type, {
           active: sourceLoaded,
-          pretty: isPretty(selectedSource),
+          pretty: isPretty(selectedSourceWithContent.source),
         })}
         key={type}
         title={tooltip}
@@ -132,18 +138,19 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   blackBoxButton() {
-    const { cx, selectedSource, toggleBlackBox } = this.props;
-    const sourceLoaded = selectedSource && selectedSource.content;
+    const { cx, selectedSourceWithContent, toggleBlackBox } = this.props;
+    const sourceLoaded =
+      selectedSourceWithContent && selectedSourceWithContent.content;
 
-    if (!selectedSource) {
+    if (!selectedSourceWithContent) {
       return;
     }
 
-    if (!shouldBlackbox(selectedSource)) {
+    if (!shouldBlackbox(selectedSourceWithContent.source)) {
       return;
     }
 
-    const blackboxed = selectedSource.isBlackBoxed;
+    const blackboxed = selectedSourceWithContent.source.isBlackBoxed;
 
     const tooltip = blackboxed
       ? L10N.getStr("sourceFooter.unblackbox")
@@ -153,7 +160,7 @@ class SourceFooter extends PureComponent<Props, State> {
 
     return (
       <button
-        onClick={() => toggleBlackBox(cx, selectedSource)}
+        onClick={() => toggleBlackBox(cx, selectedSourceWithContent.source)}
         className={classnames("action", type, {
           active: sourceLoaded,
           blackboxed: blackboxed,
@@ -196,10 +203,14 @@ class SourceFooter extends PureComponent<Props, State> {
       cx,
       mappedSource,
       jumpToMappedLocation,
-      selectedSource,
+      selectedSourceWithContent,
     } = this.props;
 
-    if (!mappedSource || !selectedSource || !isOriginal(selectedSource)) {
+    if (
+      !mappedSource ||
+      !selectedSourceWithContent ||
+      !isOriginal(selectedSourceWithContent.source)
+    ) {
       return null;
     }
 
@@ -210,7 +221,7 @@ class SourceFooter extends PureComponent<Props, State> {
     );
     const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
     const mappedSourceLocation = {
-      sourceId: selectedSource.id,
+      sourceId: selectedSourceWithContent.source.id,
       line: 1,
       column: 1,
     };
@@ -231,7 +242,7 @@ class SourceFooter extends PureComponent<Props, State> {
   };
 
   renderCursorPosition() {
-    if (!this.props.selectedSource) {
+    if (!this.props.selectedSourceWithContent) {
       return null;
     }
 
@@ -269,15 +280,18 @@ class SourceFooter extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSourceWithContent(state);
+  const selectedSourceWithContent = getSelectedSourceWithContent(state);
 
   return {
     cx: getContext(state),
-    selectedSource,
-    mappedSource: getGeneratedSource(state, selectedSource),
+    selectedSourceWithContent,
+    mappedSource: getGeneratedSource(
+      state,
+      selectedSourceWithContent && selectedSourceWithContent.source
+    ),
     prettySource: getPrettySource(
       state,
-      selectedSource ? selectedSource.id : null
+      selectedSourceWithContent ? selectedSourceWithContent.source.id : null
     ),
     endPanelCollapsed: getPaneCollapse(state, "end"),
   };

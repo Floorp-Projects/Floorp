@@ -23,7 +23,7 @@ const {
   getSelectedLocation,
 } = selectors;
 
-import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
+import { sourceThreadFront } from "../../tests/helpers/threadFront.js";
 
 process.on("unhandledRejection", (reason, p) => {});
 
@@ -35,7 +35,7 @@ describe("sources", () => {
   it("should select a source", async () => {
     // Note that we pass an empty client in because the action checks
     // if it exists.
-    const store = createStore(mockCommandClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, getState } = store;
 
     const frame = makeFrame({ id: "1", sourceId: "foo1" });
@@ -69,7 +69,7 @@ describe("sources", () => {
   });
 
   it("should select next tab on tab closed if no previous tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -98,7 +98,7 @@ describe("sources", () => {
   });
 
   it("should open a tab for the source", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
 
@@ -108,7 +108,7 @@ describe("sources", () => {
   });
 
   it("should select previous tab on tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
 
@@ -127,7 +127,7 @@ describe("sources", () => {
   });
 
   it("should keep the selected source when other tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
@@ -154,7 +154,7 @@ describe("sources", () => {
   });
 
   it("should not select new sources that lack a URL", async () => {
-    const { dispatch, getState } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(sourceThreadFront);
 
     await dispatch(
       actions.newGeneratedSource({
@@ -169,7 +169,7 @@ describe("sources", () => {
   });
 
   it("sets and clears selected location correctly", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("testSource"))
     );
@@ -188,7 +188,7 @@ describe("sources", () => {
   });
 
   it("sets and clears pending selected location correctly", () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState, cx } = createStore(sourceThreadFront);
     const url = "testURL";
     const options = { location: { line: "testLine" } };
 
@@ -207,7 +207,7 @@ describe("sources", () => {
   });
 
   it("should keep the generated the viewing context", async () => {
-    const store = createStore(mockCommandClient);
+    const store = createStore(sourceThreadFront);
     const { dispatch, getState, cx } = store;
     const baseSource = await dispatch(
       actions.newGeneratedSource(makeSource("base.js"))
@@ -224,7 +224,7 @@ describe("sources", () => {
 
   it("should keep the original the viewing context", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockCommandClient,
+      sourceThreadFront,
       {},
       {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
@@ -258,7 +258,7 @@ describe("sources", () => {
 
   it("should change the original the viewing context", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockCommandClient,
+      sourceThreadFront,
       {},
       {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
@@ -290,7 +290,7 @@ describe("sources", () => {
 
   describe("selectSourceURL", () => {
     it("should automatically select a pending source", async () => {
-      const { dispatch, getState, cx } = createStore(mockCommandClient);
+      const { dispatch, getState, cx } = createStore(sourceThreadFront);
       const baseSourceURL = makeSourceURL("base.js");
       await dispatch(actions.selectSourceURL(cx, baseSourceURL));
 

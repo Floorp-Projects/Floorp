@@ -39,8 +39,8 @@ const sources = {
 
 const threadFront = {
   sourceContents: async ({ source }) => sources[source],
-  getSourceActorBreakpointPositions: async () => ({}),
-  getSourceActorBreakableLines: async () => [],
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => [],
 };
 
 describe("project text search", () => {

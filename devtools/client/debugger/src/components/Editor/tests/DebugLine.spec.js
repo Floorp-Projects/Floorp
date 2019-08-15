@@ -34,7 +34,7 @@ function generateDefaults(editor, overrides) {
     },
     frame: null,
     source: ({
-      ...createSourceObject("foo"),
+      source: createSourceObject("foo"),
       content: null,
     }: SourceWithContent),
     ...overrides,
@@ -57,7 +57,7 @@ function render(overrides = {}) {
   const props = generateDefaults(editor, overrides);
 
   const doc = createMockDocument(clear);
-  setDocument(props.source.id, doc);
+  setDocument(props.source.source.id, doc);
 
   // $FlowIgnore
   const component = shallow(<DebugLine.WrappedComponent {...props} />, {
@@ -71,7 +71,7 @@ describe("DebugLine Component", () => {
     it("should show a new debug line", async () => {
       const { component, props, doc } = render({
         source: {
-          ...createSourceObject("foo"),
+          source: createSourceObject("foo"),
           content: asyncValue.fulfilled({
             type: "text",
             value: "",
@@ -94,7 +94,7 @@ describe("DebugLine Component", () => {
       it("should replace the first debug line", async () => {
         const { props, component, clear, doc } = render({
           source: {
-            ...createSourceObject("foo"),
+            source: createSourceObject("foo"),
             content: asyncValue.fulfilled({
               type: "text",
               value: "",

@@ -15,7 +15,7 @@ describe("blackbox", () => {
   it("should blackbox a source", async () => {
     const store = createStore({
       blackBox: async () => true,
-      getSourceActorBreakableLines: async () => [],
+      getBreakableLines: async () => [],
     });
     const { dispatch, getState, cx } = store;
 

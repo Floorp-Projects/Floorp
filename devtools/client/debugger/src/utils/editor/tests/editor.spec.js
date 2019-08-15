@@ -26,7 +26,7 @@ import { makeMockSource, makeMockSourceAndContent } from "../../test-mockup";
 
 describe("shouldShowPrettyPrint", () => {
   it("shows pretty print for a source", () => {
-    const { content, ...source } = makeMockSourceAndContent(
+    const { source, content } = makeMockSourceAndContent(
       "http://example.com/index.js",
       "test-id-123",
       "text/javascript",

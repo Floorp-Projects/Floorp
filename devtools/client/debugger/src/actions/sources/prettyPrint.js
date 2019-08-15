@@ -66,7 +66,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
     const url = getPrettySourceURL(source.url);
     const id = generatedToOriginalId(sourceId, url);
 
-    const prettySource = {
+    const prettySource: Source = {
       id,
       url,
       relativeUrl: url,

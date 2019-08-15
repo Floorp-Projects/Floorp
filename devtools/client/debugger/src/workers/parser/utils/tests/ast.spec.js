@@ -23,11 +23,16 @@ const astKeys = [
 cases(
   "ast.getAst",
   ({ name }) => {
-    const source = makeMockSourceAndContent(undefined, "foo", name, "2");
+    const { source, content } = makeMockSourceAndContent(
+      undefined,
+      "foo",
+      name,
+      "2"
+    );
     setSource({
       id: source.id,
-      text: source.content.value || "",
-      contentType: source.content.contentType,
+      text: content.value || "",
+      contentType: content.contentType,
       isWasm: false,
     });
     const ast = getAst("foo");

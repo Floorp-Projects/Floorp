@@ -168,7 +168,7 @@ const downloadFileItem = (
 export function editorMenuItems({
   cx,
   editorActions,
-  selectedSource,
+  selectedSourceWithContent,
   location,
   selectionText,
   hasPrettySource,
@@ -177,7 +177,7 @@ export function editorMenuItems({
 }: {
   cx: ThreadContext,
   editorActions: EditorItemActions,
-  selectedSource: SourceWithContent,
+  selectedSourceWithContent: SourceWithContent,
   location: SourceLocation,
   selectionText: string,
   hasPrettySource: boolean,
@@ -185,11 +185,7 @@ export function editorMenuItems({
   isPaused: boolean,
 }) {
   const items = [];
-
-  const content =
-    selectedSource.content && isFulfilled(selectedSource.content)
-      ? selectedSource.content.value
-      : null;
+  const { source: selectedSource, content } = selectedSourceWithContent;
 
   items.push(
     jumpToMappedLocationItem(
@@ -201,15 +197,17 @@ export function editorMenuItems({
     ),
     continueToHereItem(cx, location, isPaused, editorActions),
     { type: "separator" },
-    ...(content ? [copyToClipboardItem(content, editorActions)] : []),
+    ...(content && isFulfilled(content)
+      ? [copyToClipboardItem(content.value, editorActions)]
+      : []),
     ...(!selectedSource.isWasm
       ? [
           copySourceItem(selectedSource, selectionText, editorActions),
           copySourceUri2Item(selectedSource, editorActions),
         ]
       : []),
-    ...(content
-      ? [downloadFileItem(selectedSource, content, editorActions)]
+    ...(content && isFulfilled(content)
+      ? [downloadFileItem(selectedSource, content.value, editorActions)]
       : []),
     { type: "separator" },
     showSourceMenuItem(cx, selectedSource, editorActions),

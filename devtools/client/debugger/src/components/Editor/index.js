@@ -95,7 +95,7 @@ const cssVars = {
 export type Props = {
   cx: ThreadContext,
   selectedLocation: ?SourceLocation,
-  selectedSource: ?SourceWithContent,
+  selectedSourceWithContent: ?SourceWithContent,
   searchOn: boolean,
   startPanelSize: number,
   endPanelSize: number,
@@ -139,7 +139,7 @@ class Editor extends PureComponent<Props, State> {
   componentWillReceiveProps(nextProps: Props) {
     let editor = this.state.editor;
 
-    if (!this.state.editor && nextProps.selectedSource) {
+    if (!this.state.editor && nextProps.selectedSourceWithContent) {
       editor = this.setupEditor();
     }
 
@@ -149,7 +149,10 @@ class Editor extends PureComponent<Props, State> {
     this.scrollToLocation(nextProps, editor);
     endOperation();
 
-    if (this.props.selectedSource != nextProps.selectedSource) {
+    if (
+      this.props.selectedSourceWithContent !=
+      nextProps.selectedSourceWithContent
+    ) {
       this.props.updateViewport();
       resizeBreakpointGutter(editor.codeMirror);
       resizeToggleButton(editor.codeMirror);
@@ -227,11 +230,11 @@ class Editor extends PureComponent<Props, State> {
   }
 
   onClosePress = (key, e: KeyboardEvent) => {
-    const { cx, selectedSource } = this.props;
-    if (selectedSource) {
+    const { cx, selectedSourceWithContent } = this.props;
+    if (selectedSourceWithContent) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.closeTab(cx, selectedSource);
+      this.props.closeTab(cx, selectedSourceWithContent.source);
     }
   };
 
@@ -251,13 +254,13 @@ class Editor extends PureComponent<Props, State> {
 
   getCurrentLine() {
     const { codeMirror } = this.state.editor;
-    const { selectedSource } = this.props;
-    if (!selectedSource) {
+    const { selectedSourceWithContent } = this.props;
+    if (!selectedSourceWithContent) {
       return;
     }
 
     const line = getCursorLine(codeMirror);
-    return toSourceLine(selectedSource.id, line);
+    return toSourceLine(selectedSourceWithContent.source.id, line);
   }
 
   onToggleBreakpoint = (key, e: KeyboardEvent) => {
@@ -328,7 +331,7 @@ class Editor extends PureComponent<Props, State> {
 
     const {
       cx,
-      selectedSource,
+      selectedSourceWithContent,
       breakpointActions,
       editorActions,
       isPaused,
@@ -336,7 +339,7 @@ class Editor extends PureComponent<Props, State> {
       closeConditionalPanel,
     } = this.props;
     const { editor } = this.state;
-    if (!selectedSource || !editor) {
+    if (!selectedSourceWithContent || !editor) {
       return;
     }
 
@@ -346,7 +349,7 @@ class Editor extends PureComponent<Props, State> {
     }
 
     const target: Element = (event.target: any);
-    const { id: sourceId } = selectedSource;
+    const { id: sourceId } = selectedSourceWithContent.source;
     const line = lineAtHeight(editor, sourceId, event);
 
     if (typeof line != "number") {
@@ -382,7 +385,7 @@ class Editor extends PureComponent<Props, State> {
   ) => {
     const {
       cx,
-      selectedSource,
+      selectedSourceWithContent,
       conditionalPanelLocation,
       closeConditionalPanel,
       addBreakpointAtLine,
@@ -391,13 +394,20 @@ class Editor extends PureComponent<Props, State> {
     } = this.props;
 
     // ignore right clicks in the gutter
-    if ((ev.ctrlKey && ev.button === 0) || ev.button === 2 || !selectedSource) {
+    if (
+      (ev.ctrlKey && ev.button === 0) ||
+      ev.button === 2 ||
+      !selectedSourceWithContent
+    ) {
       return;
     }
 
     // if user clicks gutter to set breakpoint on blackboxed source, un-blackbox the source.
-    if (selectedSource && selectedSource.isBlackBoxed) {
-      toggleBlackBox(cx, selectedSource);
+    if (
+      selectedSourceWithContent &&
+      selectedSourceWithContent.source.isBlackBoxed
+    ) {
+      toggleBlackBox(cx, selectedSourceWithContent.source);
     }
 
     if (conditionalPanelLocation) {
@@ -408,7 +418,7 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    const sourceLine = toSourceLine(selectedSource.id, line);
+    const sourceLine = toSourceLine(selectedSourceWithContent.source.id, line);
     if (typeof sourceLine !== "number") {
       return;
     }
@@ -425,12 +435,12 @@ class Editor extends PureComponent<Props, State> {
   };
 
   onClick(e: MouseEvent) {
-    const { cx, selectedSource, jumpToMappedLocation } = this.props;
+    const { cx, selectedSourceWithContent, jumpToMappedLocation } = this.props;
 
-    if (selectedSource && e.metaKey && e.altKey) {
+    if (selectedSourceWithContent && e.metaKey && e.altKey) {
       const sourceLocation = getSourceLocationFromMouseEvent(
         this.state.editor,
-        selectedSource,
+        selectedSourceWithContent.source,
         e
       );
       jumpToMappedLocation(cx, sourceLocation);
@@ -442,42 +452,42 @@ class Editor extends PureComponent<Props, State> {
       conditionalPanelLocation,
       closeConditionalPanel,
       openConditionalPanel,
-      selectedSource,
+      selectedSourceWithContent,
     } = this.props;
 
     if (conditionalPanelLocation) {
       return closeConditionalPanel();
     }
 
-    if (!selectedSource) {
+    if (!selectedSourceWithContent) {
       return;
     }
 
     return openConditionalPanel(
       {
         line: line,
-        sourceId: selectedSource.id,
-        sourceUrl: selectedSource.url,
+        sourceId: selectedSourceWithContent.source.id,
+        sourceUrl: selectedSourceWithContent.source.url,
       },
       log
     );
   };
 
   shouldScrollToLocation(nextProps, editor) {
-    const { selectedLocation, selectedSource } = this.props;
+    const { selectedLocation, selectedSourceWithContent } = this.props;
     if (
       !editor ||
-      !nextProps.selectedSource ||
+      !nextProps.selectedSourceWithContent ||
       !nextProps.selectedLocation ||
       !nextProps.selectedLocation.line ||
-      !nextProps.selectedSource.content
+      !nextProps.selectedSourceWithContent.content
     ) {
       return false;
     }
 
     const isFirstLoad =
-      (!selectedSource || !selectedSource.content) &&
-      nextProps.selectedSource.content;
+      (!selectedSourceWithContent || !selectedSourceWithContent.content) &&
+      nextProps.selectedSourceWithContent.content;
     const locationChanged = selectedLocation !== nextProps.selectedLocation;
     const symbolsChanged = nextProps.symbols != this.props.symbols;
 
@@ -485,13 +495,16 @@ class Editor extends PureComponent<Props, State> {
   }
 
   scrollToLocation(nextProps, editor) {
-    const { selectedLocation, selectedSource } = nextProps;
+    const { selectedLocation, selectedSourceWithContent } = nextProps;
 
     if (selectedLocation && this.shouldScrollToLocation(nextProps, editor)) {
       let { line, column } = toEditorPosition(selectedLocation);
 
-      if (selectedSource && hasDocument(selectedSource.id)) {
-        const doc = getDocument(selectedSource.id);
+      if (
+        selectedSourceWithContent &&
+        hasDocument(selectedSourceWithContent.source.id)
+      ) {
+        const doc = getDocument(selectedSourceWithContent.source.id);
         const lineText: ?string = doc.getLine(line);
         column = Math.max(column, getIndentation(lineText));
       }
@@ -514,23 +527,23 @@ class Editor extends PureComponent<Props, State> {
   }
 
   setText(props, editor) {
-    const { selectedSource, symbols } = props;
+    const { selectedSourceWithContent, symbols } = props;
 
     if (!editor) {
       return;
     }
 
     // check if we previously had a selected source
-    if (!selectedSource) {
+    if (!selectedSourceWithContent) {
       return this.clearEditor();
     }
 
-    if (!selectedSource.content) {
+    if (!selectedSourceWithContent.content) {
       return showLoading(editor);
     }
 
-    if (selectedSource.content.state === "rejected") {
-      let { value } = selectedSource.content;
+    if (selectedSourceWithContent.content.state === "rejected") {
+      let { value } = selectedSourceWithContent.content;
       if (typeof value !== "string") {
         value = "Unexpected source error";
       }
@@ -540,8 +553,8 @@ class Editor extends PureComponent<Props, State> {
 
     return showSourceText(
       editor,
-      selectedSource,
-      selectedSource.content.value,
+      selectedSourceWithContent.source,
+      selectedSourceWithContent.content.value,
       symbols
     );
   }
@@ -581,13 +594,17 @@ class Editor extends PureComponent<Props, State> {
   renderItems() {
     const {
       cx,
-      selectedSource,
+      selectedSourceWithContent,
       conditionalPanelLocation,
       isPaused,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
-    if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
+    if (
+      !selectedSourceWithContent ||
+      !editor ||
+      !getDocument(selectedSourceWithContent.source.id)
+    ) {
       return null;
     }
 
@@ -604,7 +621,7 @@ class Editor extends PureComponent<Props, State> {
             editor={editor}
             contextMenu={contextMenu}
             clearContextMenu={this.clearContextMenu}
-            selectedSource={selectedSource}
+            selectedSourceWithContent={selectedSourceWithContent}
           />
         }
         {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
@@ -612,7 +629,10 @@ class Editor extends PureComponent<Props, State> {
           <ColumnBreakpoints editor={editor} />
         ) : null}
         {isPaused && features.inlinePreview ? (
-          <InlinePreviews editor={editor} selectedSource={selectedSource} />
+          <InlinePreviews
+            editor={editor}
+            selectedSource={selectedSourceWithContent.source}
+          />
         ) : null}
       </div>
     );
@@ -621,7 +641,7 @@ class Editor extends PureComponent<Props, State> {
   renderSearchBar() {
     const { editor } = this.state;
 
-    if (!this.props.selectedSource) {
+    if (!this.props.selectedSourceWithContent) {
       return null;
     }
 
@@ -629,11 +649,13 @@ class Editor extends PureComponent<Props, State> {
   }
 
   render() {
-    const { selectedSource, skipPausing } = this.props;
+    const { selectedSourceWithContent, skipPausing } = this.props;
     return (
       <div
         className={classnames("editor-wrapper", {
-          blackboxed: selectedSource && selectedSource.isBlackBoxed,
+          blackboxed:
+            selectedSourceWithContent &&
+            selectedSourceWithContent.source.isBlackBoxed,
           "skip-pausing": skipPausing,
         })}
         ref={c => (this.$editorWrapper = c)}
@@ -654,15 +676,18 @@ Editor.contextTypes = {
 };
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSourceWithContent(state);
+  const selectedSourceWithContent = getSelectedSourceWithContent(state);
 
   return {
     cx: getThreadContext(state),
     selectedLocation: getSelectedLocation(state),
-    selectedSource,
+    selectedSourceWithContent,
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
-    symbols: getSymbols(state, selectedSource),
+    symbols: getSymbols(
+      state,
+      selectedSourceWithContent ? selectedSourceWithContent.source : null
+    ),
     isPaused: getIsPaused(state, getCurrentThread(state)),
     skipPausing: getSkipPausing(state),
   };

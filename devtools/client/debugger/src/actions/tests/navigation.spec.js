@@ -27,8 +27,8 @@ const threadFront = {
     source: "function foo1() {\n  const foo = 5; return foo;\n}",
     contentType: "text/javascript",
   }),
-  getSourceActorBreakpointPositions: async () => ({}),
-  getSourceActorBreakableLines: async () => [],
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => [],
   detachWorkers: () => {},
 };
 

@@ -6,7 +6,6 @@
 
 import type { SourceId, Source, SourceLocation, Context } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
-import type { SourceBase } from "../../reducers/sources";
 
 export type LoadSourceAction = PromiseAction<
   {|
@@ -25,12 +24,12 @@ export type SourceAction =
   | {|
       +type: "ADD_SOURCE",
       +cx: Context,
-      +source: SourceBase,
+      +source: Source,
     |}
   | {|
       +type: "ADD_SOURCES",
       +cx: Context,
-      +sources: Array<SourceBase>,
+      +sources: Array<Source>,
     |}
   | {|
       +type: "CLEAR_SOURCE_MAP_URL",
@@ -77,7 +76,7 @@ export type SourceAction =
       +tabs: any,
     |}
   | {|
-      type: "SET_ORIGINAL_BREAKABLE_LINES",
+      type: "SET_BREAKABLE_LINES",
       +cx: Context,
       breakableLines: number[],
       sourceId: string,

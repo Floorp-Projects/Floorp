@@ -10,7 +10,7 @@ import {
   mockPendingBreakpoint,
 } from "./helpers/breakpoints.js";
 
-import { mockCommandClient } from "./helpers/mockCommandClient";
+import { simpleMockThreadFront } from "./helpers/threadFront.js";
 
 import { asyncStore } from "../../utils/prefs";
 
@@ -47,10 +47,10 @@ import sourceMaps from "devtools-source-map";
 import { makePendingLocationId } from "../../utils/breakpoint";
 function mockClient(bpPos = {}) {
   return {
-    ...mockCommandClient,
+    ...simpleMockThreadFront,
 
-    getSourceActorBreakpointPositions: async () => bpPos,
-    getSourceActorBreakableLines: async () => [],
+    getBreakpointPositions: async () => bpPos,
+    getBreakableLines: async () => [],
   };
 }
 
