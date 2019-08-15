@@ -38,8 +38,7 @@ HTMLLIAccessible::HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc), mBullet(nullptr) {
   mType = eHTMLLiType;
 
-  nsIContent* marker = nsLayoutUtils::GetMarkerPseudo(aContent);
-  if (marker && marker->GetPrimaryFrame()) {
+  if (nsLayoutUtils::GetMarkerFrame(aContent)) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     Document()->BindToDocument(mBullet, nullptr);
     AppendChild(mBullet);
@@ -119,8 +118,7 @@ HTMLListBulletAccessible::HTMLListBulletAccessible(nsIContent* aContent,
 // HTMLListBulletAccessible: Accessible
 
 nsIFrame* HTMLListBulletAccessible::GetFrame() const {
-  nsIContent* marker = nsLayoutUtils::GetMarkerPseudo(mContent);
-  return marker ? marker->GetPrimaryFrame() : nullptr;
+  return nsLayoutUtils::GetMarkerFrame(mContent);
 }
 
 ENameValueFlag HTMLListBulletAccessible::Name(nsString& aName) const {
