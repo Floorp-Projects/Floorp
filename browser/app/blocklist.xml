@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1564671502746">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1565344753436">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3350,6 +3350,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="5aa0a7da-cf9e-4bac-bbed-1b7625109cc7" id="/^((\{8842eb7c-5f5c-4d33-aabe-81c27ae87dcc\})|(web@1A72D794-697C-11E8-9D8C-1C0018C6383E)|(web@2a366bba-0a94-11e8-ba89-0ed5f89f718b)|(web@2bf1a18d-3240-42ad-9f7d-46017edc432c)|(web@2DC2452E-6999-11E8-A1CA-6C6318C6383E)|(web@2DC2452E-6999-11E8-A1CA-6C6318C63000)|(web@3)|(web@3ab4d660-8caf-412a-84eb-9cf2924f54c7)|(web@4)|(web@5)|(web@48F0D4BC-6FB8-11E8-B36A-905EE70C2B9F)|(web@82FCE0DC-836E-11E8-9E9B-164B9D46D017)|(web@90c91611-b4c8-470a-b251-77bb1f859dba)|(web@899ce5cc-06fc-436e-a59e-93a70eb4c810)|(web@3681a37c-6383-4e94-8076-28496af53983)|(web@7398cc9a-684e-40a4-afe1-b620e1a863b2)|(web@7398cc9a-684e-40a4-afe1-b620e1a86000)|(web@8842eb7c-5f5c-4d33-aabe-81c27ae87dcc)|(web@10722358-d56d-4f5e-a89c-d4534d7c5000)|(web@10722358-d56d-4f5e-a89c-d4534d7c5565)|(web@67887931-77b9-4b1b-baee-9f23a4a384de)|(web@a3ea9864-1034-47b9-a25a-e9cc207a9319)|(web@af1e58bc-4ead-11e8-81fc-065ad97f23a5)|(web@af1e58bc-4ead-11e8-81fc-065ad97f2000)|(web@B7CCDA78-8455-11E8-91A4-ED179E46D017)|(web@ca5a2803-6421-4582-97e1-9e30fe44e100)|(web@ca5a2803-6421-4582-97e1-9e30fe44ee00)|(web@ca5a2803-6421-4582-97e1-9e30fe44eee0)|(web@cacf1377-a1b0-43e6-84bc-c0518922b22c)|(web@e7a72615-19b1-42a5-8e34-ddfa89ce006e)|(web@e7a72615-19b1-42a5-8e34-ddfa89ce0060)|(web@e7a72615-19b1-42a5-8e34-ddfa89ced000)|(web@e7a72615-19b1-42a5-8e34-ddfa89cee000)|(web@e4058a8a-59ca-4ba7-b503-dfcf75639305)|(web@f3ac4769-1d70-444e-aa46-06d0427473b9)|(web@FACD83DA-68CC-11E8-8484-3DA118C6383E)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c000)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c32e)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c39e)|(web@ourdom)|(web@oursrchdom)|(web@test)|(web@testss))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ae64120f-d93a-4224-ac75-4038b0d2a33b" id="{f2539eac-e545-475a-85b4-822347022dd8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="0f73f6c1-38cf-4255-bb8f-8a61f19afd99" id="{4f71ae77-8abe-43df-bb9f-cf440d6f7756}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="74e070ac-891b-4f79-ac76-09a170d21a91" id="Shield_My_Searches_ehHQAdRPxE@shieldmysearches.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="85411892-1225-46fb-8f1b-5aa424bc2c01" id="/^((AKMWWOEASKZXXCCRFA@AXXX)|(RF_WOEKTAMS@BASDFZMD)|(TI_BOAMZKXFFEE@ZCAOKEE)|(BMMAOSIKZX_TI_EE@BOASLL)|(ZN_ASVVZXLEOOO@ABOVVAE)|(MZXVCKMSSD_ZN_EF@GBOAAOS)|(UA_CZVVMSOEEE@DOPEEZXA)|(ZXCLASKDASD_UA_VV@AVLLZAA)|(VS_SOEOKAKXC@BOOCLLAA)|(AIWEKDZSV_VS_ASCZ@SAAAOOBB)|(IF_AZXOOVVVAA@EALXCOAA)|(VVALLEIASD_IF_AZ@OOBAAXXA)|(ZN_BF_AOXZAOKSD@VZXMASLX)|(VMZKMALSKD_BF_ZN@VIAAEOOSL)|(aunastralaa_1@auzn\.ne)|(VXKCVLSO_ON_SOC@KIZIAO)|(ON_OPPOWOAKKS@BLZOAAAASL)|(nostallkka@iofjjakk\.me)|(VZKKAKOOEE_LN_FK@BOOAASSDD)|(LN_VSOAJKXXXZZ@UDPPPADK)|(BNKZKASKDIE_EB_AKK@BLALEEKK)|(EB_AISJIKZLAA@DFKKAKE)|(NLDFKOBASOKCK@KFOLAAAEE)|(BBDMLDSFKER_AF_GG@AYYRR)|(OMVXNSDF_R_F_W@BMAMSEEE)|(EIGKFDAODS_RF_PDNAP_WEN@HUUUHJAA)|(GOEORG_RF_ANA_N@BDOFKOKK)|(BFDISDF_RG_AZXC@BDOFKAQ)|(OKOKDFBDFBDFG_RG_KS_BDK@AAAJAHU)|(ODKFOBKDPFB_PJ_FGK_AKK@AJIIJAA)|(UBXODJ_PA_PJ@XMVCOAKS))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
