@@ -6,3 +6,7 @@ coverage:
   precision: 2
   round: down
   range: 60..80
+  status:
+    project:
+      default:
+        threshold: 0.5 # allow coverage to fall by 0.5% without failing
