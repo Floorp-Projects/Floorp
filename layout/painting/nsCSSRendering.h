@@ -167,44 +167,44 @@ struct nsCSSRendering {
   static ImgDrawResult PaintBorder(
       nsPresContext* aPresContext, gfxContext& aRenderingContext,
       nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      mozilla::ComputedStyle* aComputedStyle, mozilla::PaintBorderFlags aFlags,
+      mozilla::ComputedStyle* aStyle, mozilla::PaintBorderFlags aFlags,
       Sides aSkipSides = Sides());
 
   /**
    * Like PaintBorder, but taking an nsStyleBorder argument instead of
-   * getting it from aComputedStyle. aSkipSides says which sides to skip
+   * getting it from aStyle. aSkipSides says which sides to skip
    * when rendering, the default is to skip none.
    */
   static ImgDrawResult PaintBorderWithStyleBorder(
       nsPresContext* aPresContext, gfxContext& aRenderingContext,
       nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aComputedStyle,
+      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aStyle,
       mozilla::PaintBorderFlags aFlags, Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer> CreateBorderRenderer(
       nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
       const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      mozilla::ComputedStyle* aComputedStyle, bool* aOutBorderIsEmpty,
+      mozilla::ComputedStyle* aStyle, bool* aOutBorderIsEmpty,
       Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer>
   CreateBorderRendererWithStyleBorder(
       nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
       const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aComputedStyle,
+      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aStyle,
       bool* aOutBorderIsEmpty, Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer>
   CreateNullBorderRendererWithStyleBorder(
       nsPresContext* aPresContext, DrawTarget* aDrawTarget, nsIFrame* aForFrame,
       const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aComputedStyle,
+      const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aStyle,
       bool* aOutBorderIsEmpty, Sides aSkipSides = Sides());
 
   static mozilla::Maybe<nsCSSBorderRenderer> CreateBorderRendererForOutline(
       nsPresContext* aPresContext, gfxContext* aRenderingContext,
       nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      mozilla::ComputedStyle* aComputedStyle);
+      mozilla::ComputedStyle* aStyle);
 
   static ImgDrawResult CreateWebRenderCommandsForBorder(
       nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
@@ -237,7 +237,7 @@ struct nsCSSRendering {
   static void PaintOutline(nsPresContext* aPresContext,
                            gfxContext& aRenderingContext, nsIFrame* aForFrame,
                            const nsRect& aDirtyRect, const nsRect& aBorderArea,
-                           mozilla::ComputedStyle* aComputedStyle);
+                           mozilla::ComputedStyle* aStyle);
 
   /**
    * Render keyboard focus on an element.
@@ -344,7 +344,7 @@ struct nsCSSRendering {
    * Determine the background color to draw taking into account print settings.
    */
   static nscolor DetermineBackgroundColor(
-      nsPresContext* aPresContext, mozilla::ComputedStyle* aComputedStyle,
+      nsPresContext* aPresContext, mozilla::ComputedStyle* aStyle,
       nsIFrame* aFrame, bool& aDrawBackgroundImage, bool& aDrawBackgroundColor);
 
   static nsRect ComputeImageLayerPositioningArea(
