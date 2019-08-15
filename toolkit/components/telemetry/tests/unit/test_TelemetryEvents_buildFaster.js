@@ -164,6 +164,7 @@ add_task(
 
 add_task(async function test_dynamicBuiltinEvents() {
   Telemetry.clearEvents();
+  Telemetry.clearScalars();
   Telemetry.canRecordExtended = true;
 
   const TEST_EVENT_NAME = "telemetry.test.dynamicbuiltin";
@@ -200,6 +201,13 @@ add_task(async function test_dynamicBuiltinEvents() {
   );
   Assert.ok("parent" in snapshot, "Should have parent events in the snapshot.");
 
+  // For checking event summaries
+  const scalars = Telemetry.getSnapshotForKeyedScalars("main", true);
+  Assert.ok(
+    "parent" in scalars,
+    "Should have parent scalars in the main snapshot."
+  );
+
   let expected = [
     [TEST_EVENT_NAME, "test1", "object1"],
     [TEST_EVENT_NAME, "test2", "object1", null, { key1: "foo", key2: "bar" }],
@@ -217,6 +225,13 @@ add_task(async function test_dynamicBuiltinEvents() {
       expected[i],
       "Should have recorded the expected event data."
     );
+
+    const uniqueEventName = `${expected[i][0]}#${expected[i][1]}#${
+      expected[i][2]
+    }`;
+    const summaryCount =
+      scalars.parent["telemetry.event_counts"][uniqueEventName];
+    Assert.equal(1, summaryCount, `${uniqueEventName} had wrong summary count`);
   }
 });
 
