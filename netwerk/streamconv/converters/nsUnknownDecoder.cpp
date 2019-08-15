@@ -412,6 +412,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest) {
   if (channel) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     if (loadInfo->GetSkipContentSniffing()) {
+      MutexAutoLock lock(mMutex);
+      mContentType = UNKNOWN_CONTENT_TYPE;
       return;
     }
   }
