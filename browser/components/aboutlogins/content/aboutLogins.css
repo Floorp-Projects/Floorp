@@ -4,7 +4,7 @@
 
 body {
   display: grid;
-  grid-template-columns: minmax(320px, max-content) 1fr;
+  grid-template-columns: 320px 1fr;
   grid-template-rows: 75px 1fr;
   grid-template-areas: "header header"
                        "logins login";
