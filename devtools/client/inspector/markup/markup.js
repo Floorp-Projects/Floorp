@@ -318,11 +318,11 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.walker.on("mutations", this._mutationObserver);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
-  this.inspector.inspectorFront.nodePicker.on(
+  this.inspector.toolbox.nodePicker.on(
     "picker-node-canceled",
     this._onToolboxPickerCanceled
   );
-  this.inspector.inspectorFront.nodePicker.on(
+  this.inspector.toolbox.nodePicker.on(
     "picker-node-hovered",
     this._onToolboxPickerHover
   );
@@ -2269,7 +2269,7 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.inspector.inspectorFront.nodePicker.off(
+    this.inspector.toolbox.nodePicker.off(
       "picker-node-hovered",
       this._onToolboxPickerHover
     );
