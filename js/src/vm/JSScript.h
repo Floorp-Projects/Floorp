@@ -2698,7 +2698,14 @@ class JSScript : public js::BaseScript {
   inline bool ensureHasJitScript(JSContext* cx, js::jit::AutoKeepJitScripts&);
 
   bool hasJitScript() const { return jitScript_ != nullptr; }
-  js::jit::JitScript* jitScript() { return jitScript_; }
+
+  js::jit::JitScript* jitScript() {
+    MOZ_ASSERT(hasJitScript());
+    return jitScript_;
+  }
+  js::jit::JitScript* maybeJitScript() {
+    return hasJitScript() ? jitScript() : nullptr;
+  }
 
   void maybeReleaseJitScript(JSFreeOp* fop);
   void releaseJitScript(JSFreeOp* fop);

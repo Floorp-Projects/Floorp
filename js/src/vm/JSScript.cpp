@@ -4803,8 +4803,8 @@ void JSScript::traceChildren(JSTracer* trc) {
     scriptData()->traceChildren(trc);
   }
 
-  if (hasJitScript()) {
-    jitScript()->trace(trc);
+  if (jit::JitScript* jitScript = maybeJitScript()) {
+    jitScript->trace(trc);
   }
 
   if (maybeLazyScript()) {
@@ -5313,7 +5313,7 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   } else if (hasBaselineScript()) {
     jitCodeRaw_ = baselineScript()->method()->raw();
     jitCodeSkipArgCheck = jitCodeRaw_;
-  } else if (jitScript() && js::jit::IsBaselineInterpreterEnabled()) {
+  } else if (hasJitScript() && js::jit::IsBaselineInterpreterEnabled()) {
     jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
     jitCodeSkipArgCheck = jitCodeRaw_;
   } else {
