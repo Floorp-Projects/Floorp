@@ -176,8 +176,8 @@ class NeckoParent : public PNeckoParent {
   virtual mozilla::ipc::IPCResult RecvPSimpleChannelConstructor(
       PSimpleChannelParent* aActor, const uint32_t& channelId) override;
 
-  PFileChannelParent* AllocPFileChannelParent(const uint32_t& channelId);
-  bool DeallocPFileChannelParent(PFileChannelParent* parent);
+  already_AddRefed<PFileChannelParent> AllocPFileChannelParent(
+      const uint32_t& channelId);
 
   virtual mozilla::ipc::IPCResult RecvPFileChannelConstructor(
       PFileChannelParent* aActor, const uint32_t& channelId) override;

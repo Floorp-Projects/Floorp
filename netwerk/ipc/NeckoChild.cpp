@@ -220,17 +220,6 @@ bool NeckoChild::DeallocPWebSocketEventListenerChild(
   return true;
 }
 
-PFileChannelChild* NeckoChild::AllocPFileChannelChild(
-    const uint32_t& channelId) {
-  MOZ_ASSERT_UNREACHABLE("Should never get here");
-  return nullptr;
-}
-
-bool NeckoChild::DeallocPFileChannelChild(PFileChannelChild* child) {
-  static_cast<FileChannelChild*>(child)->Release();
-  return true;
-}
-
 PSimpleChannelChild* NeckoChild::AllocPSimpleChannelChild(
     const uint32_t& channelId) {
   MOZ_ASSERT_UNREACHABLE("Should never get here");
