@@ -46,6 +46,7 @@ from ..frontend.data import (
     HostGeneratedSources,
     HostLibrary,
     HostProgram,
+    HostRustLibrary,
     HostRustProgram,
     HostSimpleProgram,
     HostSources,
@@ -678,7 +679,7 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
 
-        elif isinstance(obj, RustLibrary):
+        elif isinstance(obj, (RustLibrary, HostRustLibrary)):
             self.backend_input_files.add(obj.cargo_file)
             self._process_rust_library(obj, backend_file)
             # No need to call _process_linked_libraries, because Rust

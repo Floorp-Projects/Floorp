@@ -670,9 +670,8 @@ class StaticLibrary(Library):
         self.no_expand_lib = no_expand_lib
 
 
-class RustLibrary(StaticLibrary):
-    """Context derived container object for a static library"""
-    __slots__ = (
+class BaseRustLibrary(object):
+    slots = (
         'cargo_file',
         'crate_type',
         'dependencies',
@@ -681,13 +680,9 @@ class RustLibrary(StaticLibrary):
         'target_dir',
         'output_category',
     )
-    TARGET_SUBST_VAR = 'RUST_TARGET'
-    FEATURES_VAR = 'RUST_LIBRARY_FEATURES'
-    LIB_FILE_VAR = 'RUST_LIBRARY_FILE'
 
-    def __init__(self, context, basename, cargo_file, crate_type, dependencies,
-                 features, target_dir, **args):
-        StaticLibrary.__init__(self, context, basename, **args)
+    def init(self, context, basename, cargo_file, crate_type, dependencies,
+             features, target_dir):
         self.cargo_file = cargo_file
         self.crate_type = crate_type
         # We need to adjust our naming here because cargo replaces '-' in
@@ -713,6 +708,21 @@ class RustLibrary(StaticLibrary):
                                  cargo_output_directory(context, self.TARGET_SUBST_VAR))
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
+
+
+class RustLibrary(StaticLibrary, BaseRustLibrary):
+    """Context derived container object for a rust static library"""
+    KIND = 'target'
+    TARGET_SUBST_VAR = 'RUST_TARGET'
+    FEATURES_VAR = 'RUST_LIBRARY_FEATURES'
+    LIB_FILE_VAR = 'RUST_LIBRARY_FILE'
+    __slots__ = BaseRustLibrary.slots
+
+    def __init__(self, context, basename, cargo_file, crate_type, dependencies,
+                 features, target_dir, link_into=None):
+        StaticLibrary.__init__(self, context, basename, link_into=link_into)
+        BaseRustLibrary.init(self, context, basename, cargo_file,
+                             crate_type, dependencies, features, target_dir)
 
 
 class SharedLibrary(Library):
@@ -830,12 +840,19 @@ class HostLibrary(HostMixin, BaseLibrary):
     KIND = 'host'
 
 
-class HostRustLibrary(HostMixin, RustLibrary):
+class HostRustLibrary(HostLibrary, BaseRustLibrary):
     """Context derived container object for a host rust library"""
     KIND = 'host'
     TARGET_SUBST_VAR = 'RUST_HOST_TARGET'
     FEATURES_VAR = 'HOST_RUST_LIBRARY_FEATURES'
     LIB_FILE_VAR = 'HOST_RUST_LIBRARY_FILE'
+    __slots__ = BaseRustLibrary.slots
+
+    def __init__(self, context, basename, cargo_file, crate_type, dependencies,
+                 features, target_dir):
+        HostLibrary.__init__(self, context, basename)
+        BaseRustLibrary.init(self, context, basename, cargo_file,
+                             crate_type, dependencies, features, target_dir)
 
 
 class TestManifest(ContextDerived):
