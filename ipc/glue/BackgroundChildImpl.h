@@ -254,12 +254,6 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPWebAuthnTransactionChild(
       PWebAuthnTransactionChild* aActor) override;
 
-  virtual PHttpBackgroundChannelChild* AllocPHttpBackgroundChannelChild(
-      const uint64_t& aChannelId) override;
-
-  virtual bool DeallocPHttpBackgroundChannelChild(
-      PHttpBackgroundChannelChild* aActor) override;
-
   virtual PMIDIPortChild* AllocPMIDIPortChild(
       const MIDIPortInfo& aPortInfo, const bool& aSysexEnabled) override;
   virtual bool DeallocPMIDIPortChild(PMIDIPortChild*) override;
