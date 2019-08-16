@@ -326,7 +326,11 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
 
   EventRegionsOverride GetEventRegionsOverride() const {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetEventRegionsOverride();
+    // Only ref layers can have an event regions override.
+    if (GetReferentId()) {
+      return mLayer->GetEventRegionsOverride();
+    }
+    return EventRegionsOverride::NoOverride;
   }
 
   const ScrollbarData& GetScrollbarData() const {
