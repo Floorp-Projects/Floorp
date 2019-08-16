@@ -211,8 +211,15 @@ class WidgetRenderingContext;
   NSView* mVibrancyViewsContainer;      // [STRONG]
   NSView* mNonDraggableViewsContainer;  // [STRONG]
 
-  // The view that does our drawing. This is a subview of self so that it can
-  // be ordered on top of mVibrancyViewsContainer.
+  // The view that does our drawing. Always non-null.
+  // This is a subview of self so that it can be ordered on top of
+  // mVibrancyViewsContainer. Drawing in this view can be performed in different
+  // ways:
+  // If mUsingOMTCompositor is false, drawing is performed on the main thread
+  // inside the view's drawRect handler. If mUsingOMTCompositor is true,
+  // mGLContext will be non-null and will be associated with mPixelHostingView,
+  // and rendering will be performed on the compositor thread into mGLContext's
+  // primary framebuffer.
   PixelHostingView* mPixelHostingView;
 
   // Last pressure stage by trackpad's force click
