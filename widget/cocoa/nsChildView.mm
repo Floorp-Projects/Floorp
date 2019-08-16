@@ -2802,7 +2802,6 @@ class WidgetsReleaserRunnable final : public mozilla::Runnable {
 }
 
 @end
-;
 
 @implementation ChildView
 
@@ -2994,13 +2993,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return false;
   }
 
+  CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
   if (!mGLContext) {
     mGLContext = aGLContext;
     [mGLContext retain];
-    mNeedsGLUpdate = true;
+    mNeedsGLUpdate = YES;
   }
-
-  CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
 
   if (mNeedsGLUpdate) {
     [self updateGLContext];
