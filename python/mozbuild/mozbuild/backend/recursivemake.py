@@ -839,29 +839,10 @@ class RecursiveMakeBackend(CommonBackend):
             # rest of the compile graph.
             target_name = mozpath.basename(root)
 
-            if target_name not in ('target', 'target-shared', 'host'):
+            if target_name not in ('target', 'host'):
                 non_default_roots[target_name].append(root)
                 non_default_graphs[target_name][root] = self._compile_graph[root]
                 del self._compile_graph[root]
-
-        targets_per_directory = defaultdict(list)
-        for target in self._compile_graph.iterkeys():
-            targets_per_directory[mozpath.dirname(target)].append(
-                mozpath.basename(target))
-
-        # In directories that have both a shared and a static library, there
-        # may also be source files that are applied to both. What can happen
-        # then is that both the shared and static library are attempted to be
-        # built in parallel via other dependencies, and both try to build the
-        # same source files at the same time, and that can lead to race
-        # conditions and build failures. This means we need an implicit
-        # dependency between the shared and the static library that the library
-        # graph doesn't necessarily know about, so we encode it in the compile
-        # graph manually.
-        for directory, targets in targets_per_directory.iteritems():
-            if 'target-shared' in targets and 'target' in targets:
-                self._compile_graph[mozpath.join(directory, 'target-shared')].add(
-                    mozpath.join(directory, 'target'))
 
         for root in chain(*non_default_roots.values()):
             compile_roots.remove(root)
@@ -869,8 +850,7 @@ class RecursiveMakeBackend(CommonBackend):
             # If a directory only contains non-default compile targets, we don't
             # attempt to dump symbols there.
             if (dirname in self._no_skip['syms'] and
-                '%s/target' % dirname not in self._compile_graph and
-                '%s/target-shared' % dirname not in self._compile_graph):
+                '%s/target' % dirname not in self._compile_graph):
                 self._no_skip['syms'].remove(dirname)
 
         add_category_rules('compile', compile_roots, self._compile_graph)
@@ -1388,9 +1368,6 @@ class RecursiveMakeBackend(CommonBackend):
     def _build_target_for_obj(self, obj):
         if hasattr(obj, 'output_category') and obj.output_category:
             target_name = obj.output_category
-        elif isinstance(obj, SharedLibrary):
-            assert obj.KIND == 'target'
-            target_name = 'target-shared'
         else:
             target_name = obj.KIND
         return '%s/%s' % (mozpath.relpath(obj.objdir,
