@@ -16,8 +16,11 @@ class nsHyphenator;
 class nsAtom;
 class nsIURI;
 
-class nsHyphenationManager {
+class nsHyphenationManager : public nsIObserver {
  public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   nsHyphenationManager();
 
   already_AddRefed<nsHyphenator> GetHyphenator(nsAtom* aLocale);
@@ -29,17 +32,9 @@ class nsHyphenationManager {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  private:
-  ~nsHyphenationManager();
+  virtual ~nsHyphenationManager();
 
  protected:
-  class MemoryPressureObserver final : public nsIObserver {
-    ~MemoryPressureObserver() {}
-
-   public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-  };
-
   void LoadPatternList();
   void LoadPatternListFromOmnijar(mozilla::Omnijar::Type aType);
   void LoadPatternListFromDir(nsIFile* aDir);
