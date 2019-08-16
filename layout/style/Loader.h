@@ -168,13 +168,14 @@ class Loader final {
    *
    * @param aParentSheet the parent of this child sheet
    * @param aParentData the SheetLoadData corresponding to the load of the
-   *                    parent sheet.
+   *                    parent sheet. May be null for @import rules inserted via
+   *                    CSSOM.
    * @param aURL the URL of the child sheet
    * @param aMedia the already-parsed media list for the child sheet
    * @param aSavedSheets any saved style sheets which could be reused
    *              for this load
    */
-  nsresult LoadChildSheet(StyleSheet* aParentSheet, SheetLoadData* aParentData,
+  nsresult LoadChildSheet(StyleSheet& aParentSheet, SheetLoadData* aParentData,
                           nsIURI* aURL, dom::MediaList* aMedia,
                           LoaderReusableStyleSheets* aSavedSheets);
 
@@ -385,12 +386,11 @@ class Loader final {
   // Start the loads of all the sheets in mPendingDatas
   void StartDeferredLoads();
 
-  // Handle an event posted by PostLoadEvent
-  void HandleLoadEvent(SheetLoadData* aEvent);
+  void HandleLoadEvent(SheetLoadData&);
 
-  // Note: LoadSheet is responsible for releasing the load data and setting the
-  // sheet to complete on failure.
-  nsresult LoadSheet(SheetLoadData*, SheetState, IsPreload);
+  // Note: LoadSheet is responsible for setting the sheet to complete on
+  // failure.
+  nsresult LoadSheet(SheetLoadData&, SheetState, IsPreload);
 
   enum class AllowAsyncParse {
     Yes,
@@ -404,22 +404,21 @@ class Loader final {
   //
   // If this function returns Completed::Yes, then ParseSheet also called
   // SheetComplete on aLoadData.
-  Completed ParseSheet(const nsACString& aBytes, SheetLoadData*,
-                       AllowAsyncParse);
+  Completed ParseSheet(const nsACString&, SheetLoadData&, AllowAsyncParse);
 
-  // The load of the sheet in aLoadData is done, one way or another.  Do final
-  // cleanup, including releasing aLoadData.
-  void SheetComplete(SheetLoadData* aLoadData, nsresult aStatus);
+  // The load of the sheet in the load data is done, one way or another.
+  // Do final cleanup.
+  void SheetComplete(SheetLoadData&, nsresult aStatus);
 
   // The guts of SheetComplete.  This may be called recursively on parent datas
   // or datas that had glommed on to a single load.  The array is there so load
   // datas whose observers need to be notified can be added to it.
-  void DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify);
+  void DoSheetComplete(SheetLoadData&, LoadDataArray& aDatasToNotify);
 
   // Mark the given SheetLoadData, as well as any of its siblings, parents, etc
   // transitively, as failed.  The idea is to mark as failed any load that was
   // directly or indirectly @importing the sheet this SheetLoadData represents.
-  void MarkLoadTreeFailed(SheetLoadData* aLoadData);
+  void MarkLoadTreeFailed(SheetLoadData&);
 
   struct Sheets;
   UniquePtr<Sheets> mSheets;

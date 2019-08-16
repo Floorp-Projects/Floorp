@@ -46,49 +46,6 @@ namespace mozilla {
 class CSSStyleSheet;
 }  // namespace mozilla
 
-// Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
-#define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_) \
-  {                                                     \
-    type_* cur = (ptr_)->member_;                       \
-    (ptr_)->member_ = nullptr;                          \
-    while (cur) {                                       \
-      type_* dlm_next = cur->member_;                   \
-      cur->member_ = nullptr;                           \
-      delete cur;                                       \
-      cur = dlm_next;                                   \
-    }                                                   \
-  }
-// Ditto, but use NS_RELEASE instead of 'delete' (bug 1221902).
-#define NS_CSS_NS_RELEASE_LIST_MEMBER(type_, ptr_, member_) \
-  {                                                         \
-    type_* cur = (ptr_)->member_;                           \
-    (ptr_)->member_ = nullptr;                              \
-    while (cur) {                                           \
-      type_* dlm_next = cur->member_;                       \
-      cur->member_ = nullptr;                               \
-      NS_RELEASE(cur);                                      \
-      cur = dlm_next;                                       \
-    }                                                       \
-  }
-
-// Clones a linked list iteratively to avoid blowing up the stack.
-// If it fails to clone the entire list then 'to_' is deleted and
-// we return null.
-#define NS_CSS_CLONE_LIST_MEMBER(type_, from_, member_, to_, args_)      \
-  {                                                                      \
-    type_* dest = (to_);                                                 \
-    (to_)->member_ = nullptr;                                            \
-    for (const type_* src = (from_)->member_; src; src = src->member_) { \
-      type_* clm_clone = src->Clone args_;                               \
-      if (!clm_clone) {                                                  \
-        delete (to_);                                                    \
-        return nullptr;                                                  \
-      }                                                                  \
-      dest->member_ = clm_clone;                                         \
-      dest = clm_clone;                                                  \
-    }                                                                    \
-  }
-
 // Forward declaration copied here since ServoBindings.h #includes nsCSSValue.h.
 extern "C" {
 mozilla::URLExtraData* Servo_CssUrlData_GetExtraData(const RawServoCssUrlData*);

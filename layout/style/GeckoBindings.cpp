@@ -1747,7 +1747,7 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
-    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media,
+    rv = aLoader->LoadChildSheet(*aParent, aParentLoadData, uri, media,
                                  aReusableSheets);
   }
 
