@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const FileSaver = require("devtools/client/shared/file-saver");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const JSZip = require("devtools/client/shared/vendor/jszip");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarBuilder } = require("./har-builder");
@@ -86,16 +86,14 @@ const HarExporter = {
         .generateAsync({
           compression: "DEFLATE",
           platform: Services.appinfo.OS === "WINNT" ? "DOS" : "UNIX",
-          type: "blob",
+          type: "uint8array",
         });
+    } else {
+      data = new TextEncoder().encode(data);
     }
 
     fileName = `${fileName}${compress ? ".zip" : ""}`;
-    const blob = compress
-      ? data
-      : new Blob([data], { type: "application/json" });
-
-    FileSaver.saveAs(blob, fileName, document);
+    DevToolsUtils.saveAs(window, data, fileName);
   },
 
   formatDate(date) {
