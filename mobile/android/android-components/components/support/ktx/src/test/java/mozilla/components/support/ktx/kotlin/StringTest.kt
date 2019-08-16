@@ -95,6 +95,16 @@ class StringTest {
     }
 
     @Test
+    fun `string to date conversion using multiple formats`() {
+
+        assertEquals("2019-08-16T01:02".toDate("yyyy-MM-dd'T'HH:mm"), "2019-08-16T01:02".toDate())
+
+        assertEquals("2019-08-16T01:02:03".toDate("yyyy-MM-dd'T'HH:mm"), "2019-08-16T01:02:03".toDate())
+
+        assertEquals("2019-08-16".toDate("yyyy-MM-dd"), "2019-08-16".toDate())
+    }
+
+    @Test
     fun sha1() {
         assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", "".sha1())
 

@@ -370,8 +370,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         onConfirm: (String) -> Unit
     ) {
         val initialDate = initialDateString.toDate(format)
-        val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate(format)
-        val maxDate = if (maxDateString.isNullOrEmpty()) null else maxDateString.toDate(format)
+        val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate()
+        val maxDate = if (maxDateString.isNullOrEmpty()) null else maxDateString.toDate()
         val onSelect: (Date) -> Unit = {
             val stringDate = it.toString(format)
             onConfirm(stringDate)
