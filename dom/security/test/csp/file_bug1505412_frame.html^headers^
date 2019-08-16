@@ -1,1 +1,0 @@
-Content-Security-Policy-Report-Only: script-src 'nonce-foobar'; report-uri /report/
