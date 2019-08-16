@@ -14,29 +14,27 @@ See ``taskcluster/docs/optimization.rst`` for more information.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import os
 from collections import defaultdict
 
+from .graph import Graph
+from . import files_changed
+from .taskgraph import TaskGraph
+from .util.seta import is_low_value_task
+from .util.perfile import perfile_number_of_chunks
+from .util.taskcluster import find_task_id
+from .util.parameterization import resolve_task_references
+from mozbuild.util import memoize
 from slugid import nice as slugid
-
-from taskgraph.graph import Graph
-from taskgraph.taskgraph import TaskGraph
-from taskgraph.util.parameterization import resolve_task_references
-from taskgraph.util.python_path import import_sibling_modules
+from mozbuild.base import MozbuildObject
 
 logger = logging.getLogger(__name__)
-registry = {}
 
-
-def register_strategy(name, args=()):
-    def wrap(cls):
-        if name not in registry:
-            registry[name] = cls(*args)
-        return cls
-    return wrap
+TOPSRCDIR = os.path.abspath(os.path.join(__file__, '../../../'))
 
 
 def optimize_task_graph(target_task_graph, params, do_not_optimize,
-                        existing_tasks=None, strategy_override=None):
+                        existing_tasks=None, strategies=None):
     """
     Perform task optimization, returning a taskgraph and a map from label to
     assigned taskId, including replacement tasks.
@@ -46,9 +44,8 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize,
         existing_tasks = {}
 
     # instantiate the strategies for this optimization process
-    strategies = registry.copy()
-    if strategy_override:
-        strategies.update(strategy_override)
+    if not strategies:
+        strategies = _make_default_strategies()
 
     optimizations = _get_optimizations(target_task_graph, strategies)
 
@@ -72,15 +69,23 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize,
             label_to_taskid), label_to_taskid
 
 
+def _make_default_strategies():
+    return {
+        'never': OptimizationStrategy(),  # "never" is the default behavior
+        'index-search': IndexSearch(),
+        'seta': SETA(),
+        'skip-unless-changed': SkipUnlessChanged(),
+        'skip-unless-schedules': SkipUnlessSchedules(),
+        'skip-unless-schedules-or-seta': Either(SkipUnlessSchedules(), SETA()),
+    }
+
+
 def _get_optimizations(target_task_graph, strategies):
     def optimizations(label):
         task = target_task_graph.tasks[label]
         if task.optimization:
             opt_by, arg = task.optimization.items()[0]
-            strategy = strategies[opt_by]
-            if hasattr(strategy, 'description'):
-                opt_by += " ({})".format(strategy.description)
-            return (opt_by, strategy, arg)
+            return (opt_by, strategies[opt_by], arg)
         else:
             return ('never', strategies['never'], None)
     return optimizations
@@ -241,7 +246,6 @@ def get_subgraph(target_task_graph, removed_tasks, replaced_tasks, label_to_task
         Graph(set(tasks_by_taskid), edges_by_taskid))
 
 
-@register_strategy('never')
 class OptimizationStrategy(object):
     def should_remove_task(self, task, params, arg):
         """Determine whether to optimize this task by removing it.  Returns
@@ -261,13 +265,7 @@ class Either(OptimizationStrategy):
     earliest).  By default, each substrategy gets the same arg, but split_args
     can return a list of args for each strategy, if desired."""
     def __init__(self, *substrategies, **kwargs):
-        missing = set(substrategies) - set(registry.keys())
-        if missing:
-            raise TypeError("substrategies aren't registered: {}".format(
-                ",  ".join(sorted(missing))))
-
-        self.description = "-or-".join(substrategies)
-        self.substrategies = [registry[sub] for sub in substrategies]
+        self.substrategies = substrategies
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
             self.split_args = lambda arg: [arg] * len(substrategies)
@@ -292,29 +290,104 @@ class Either(OptimizationStrategy):
             lambda sub, arg: sub.should_replace_task(task, params, arg))
 
 
-class Alias(Either):
-    """Provides an alias to an existing strategy.
+class IndexSearch(OptimizationStrategy):
 
-    This can be useful to swap strategies in and out without needing to modify
-    the task transforms.
-    """
-    def __init__(self, strategy):
-        super(Alias, self).__init__(strategy)
+    # A task with no dependencies remaining after optimization will be replaced
+    # if artifacts exist for the corresponding index_paths.
+    # Otherwise, we're in one of the following cases:
+    # - the task has un-optimized dependencies
+    # - the artifacts have expired
+    # - some changes altered the index_paths and new artifacts need to be
+    # created.
+    # In every of those cases, we need to run the task to create or refresh
+    # artifacts.
+
+    def should_replace_task(self, task, params, index_paths):
+        "Look for a task with one of the given index paths"
+        for index_path in index_paths:
+            try:
+                task_id = find_task_id(
+                    index_path,
+                    use_proxy=bool(os.environ.get('TASK_ID')))
+                return task_id
+            except KeyError:
+                # 404 will end up here and go on to the next index path
+                pass
+
+        return False
 
 
-# Trigger registration in sibling modules.
-import_sibling_modules()
+class SETA(OptimizationStrategy):
+    def should_remove_task(self, task, params, _):
+        label = task.label
+
+        # we would like to return 'False, None' while it's high_value_task
+        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
+        if is_low_value_task(label,
+                             params.get('project'),
+                             params.get('pushlog_id'),
+                             params.get('pushdate')):
+            # Always optimize away low-value tasks
+            return True
+        else:
+            return False
 
 
-# Register composite strategies.
-register_strategy('test', args=('skip-unless-schedules', 'seta'))(Either)
-register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
-register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
+class SkipUnlessChanged(OptimizationStrategy):
+    def should_remove_task(self, task, params, file_patterns):
+        # pushlog_id == -1 - this is the case when run from a cron.yml job
+        if params.get('pushlog_id') == -1:
+            return False
+
+        changed = files_changed.check(params, file_patterns)
+        if not changed:
+            logger.debug('no files found matching a pattern in `skip-unless-changed` for ' +
+                         task.label)
+            return True
+        return False
 
 
-# Experimental strategy that replaces the default SETA with a version that runs
-# all tasks every 10th push or 2 hours.
-seta_10_120 = {
-    'seta': Alias('seta_10_120'),
-    'test': Either('skip-unless-schedules', 'seta_10_120'),
-}
+class SkipUnlessSchedules(OptimizationStrategy):
+
+    @memoize
+    def scheduled_by_push(self, repository, revision):
+        changed_files = files_changed.get_changed_files(repository, revision)
+
+        mbo = MozbuildObject.from_environment()
+        # the decision task has a sparse checkout, so, mozbuild_reader will use
+        # a MercurialRevisionFinder with revision '.', which should be the same
+        # as `revision`; in other circumstances, it will use a default reader
+        rdr = mbo.mozbuild_reader(config_mode='empty')
+
+        components = set()
+        for p, m in rdr.files_info(changed_files).items():
+            components |= set(m['SCHEDULES'].components)
+
+        return components
+
+    def should_remove_task(self, task, params, conditions):
+        if params.get('pushlog_id') == -1:
+            return False
+
+        scheduled = self.scheduled_by_push(params['head_repository'], params['head_rev'])
+        conditions = set(conditions)
+        # if *any* of the condition components are scheduled, do not optimize
+        if conditions & scheduled:
+            return False
+
+        return True
+
+
+class TestVerify(OptimizationStrategy):
+    def should_remove_task(self, task, params, _):
+        # we would like to return 'False, None' while it's high_value_task
+        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
+        env = params.get('try_task_config', {}) or {}
+        env = env.get('templates', {}).get('env', {})
+        if perfile_number_of_chunks(params.is_try(),
+                                    env.get('MOZHARNESS_TEST_PATHS', ''),
+                                    params.get('head_repository', ''),
+                                    params.get('head_rev', ''),
+                                    task):
+            return False
+        return True
