@@ -312,11 +312,6 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
   // the pan, which is 100 ms).
   SCOPED_GFX_PREF_FLOAT("apz.fling_friction", 0);
 
-  // To ensure the velocity after the first sample is 0, set the spring
-  // stiffness to the incoming velocity (4.9) divided by the overscroll
-  // (400 pixels) times the step duration (1 ms).
-  SCOPED_GFX_PREF_FLOAT("apz.overscroll.spring_stiffness", 0.01225f);
-
   TestOverscroll();
 }
 

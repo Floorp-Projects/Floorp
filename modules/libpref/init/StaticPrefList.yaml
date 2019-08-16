@@ -442,11 +442,6 @@
   value: 1.0f
   mirror: always
 
-- name: apz.overscroll.spring_stiffness
-  type: AtomicFloat
-  value: 0.001f
-  mirror: always
-
 - name: apz.overscroll.stop_distance_threshold
   type: AtomicFloat
   value: 5.0f

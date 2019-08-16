@@ -381,18 +381,6 @@ typedef PlatformSpecificStateBase
  * (So if kStretchFactor is 0, you can't stretch at all; if kStretchFactor
  * is 1, you can stretch at most by a factor of 2).
  *
- * \li\b apz.overscroll.spring_stiffness
- * The stiffness of the spring used in the physics model for the overscroll
- * animation.
- *
- * \li\b apz.overscroll.spring_friction
- * The friction of the spring used in the physics model for the overscroll
- * animation.
- * Even though a realistic physics model would dictate that this be the same
- * as \b apz.fling_friction, we allow it to be set to be something different,
- * because in practice we want flings to skate smoothly (low friction), while
- * we want the overscroll bounce-back to oscillate few times (high friction).
- *
  * \li\b apz.overscroll.stop_distance_threshold
  * \li\b apz.overscroll.stop_velocity_threshold
  * Thresholds for stopping the overscroll animation. When both the distance
