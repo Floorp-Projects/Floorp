@@ -27,9 +27,17 @@ public class TelemetryActivationPingDelegate extends BrowserAppDelegate {
     private TelemetryDispatcher telemetryDispatcher; // lazy
 
 
+    // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
+    // and it's possible the system will never free the Activity from memory.
+    //
+    // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
+    // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
+    //
+    // We're left with onStart/onStop and we upload in onStart because onStop is not guaranteed to be called
+    // and we want to upload the first run ASAP (e.g. to get install data before the app may crash).
     @Override
-    public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        super.onCreate(browserApp, savedInstanceState);
+    public void onStart(BrowserApp browserApp) {
+        super.onStart(browserApp);
         uploadActivationPing(browserApp);
     }
 
