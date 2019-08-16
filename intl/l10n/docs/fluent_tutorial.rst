@@ -115,7 +115,7 @@ and localization features offered by the system.
 
 At first glance the format resembles `.properties` file. It may look like this:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   home-page-header = Home Page
 
@@ -127,7 +127,7 @@ quickly add up. In order to familiarize yourself with the basic features,
 consider reading through the `Fluent Syntax Guide`_ to understand
 a more complex example like:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   ### These messages correspond to security and privacy user interface.
   ###
@@ -243,7 +243,7 @@ The other change is that the developer can localize a whole fragment of DOM:
     </span>
   </p>
 
-.. code-block:: properties
+.. code-block:: fluent
 
   -brand-short-name = Firefox
   update-application-info =
@@ -402,7 +402,7 @@ an external argument number:
 Localizers can use the argument to build a multi variant message if their
 language requires that:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   unread-warning =
       { $unreadCount ->
@@ -416,7 +416,7 @@ its `plural category`__ should be retrieved.
 If the given translation doesn't need pluralization for the string (for example
 Japanese often will not), the localizer can replace it with:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   unread-warning = You have { $unreadCount } unread messages
 
@@ -425,7 +425,7 @@ and the message will preserve the social contract.
 One additional feature is that the localizer can further improve the message by
 specifying variants for particular values:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   unread-warning =
       { $unreadCount ->
@@ -471,7 +471,7 @@ representation of the date in string:
     })
   });
 
-.. code-block:: properties
+.. code-block:: fluent
 
   welcome-message = Your session will start date: { $startDate }
 
@@ -481,7 +481,7 @@ Firefox as `February 28, 2018`.
 But if in some other locale the string would get too long, the localizer can fine
 tune the options as well:
 
-.. code-block:: properties
+.. code-block:: fluent
 
   welcome-message = Początek Twojej sesji: { DATETIME($startDate, month: "short") }
 
