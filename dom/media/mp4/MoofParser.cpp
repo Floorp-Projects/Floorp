@@ -520,7 +520,7 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
           aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart);
       auto offsetOffset = aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
       int64_t endDecodeTime =
-          decodeOffset.isOk() & offsetOffset.isOk()
+          (decodeOffset.isOk() && offsetOffset.isOk())
               ? decodeOffset.unwrap() + offsetOffset.unwrap()
               : 0;
       int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
