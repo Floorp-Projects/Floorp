@@ -20,13 +20,13 @@ function run_test() {
 let putRecord = async function(perm, record) {
   let uri = Services.io.newURI(record.scope);
 
-  Services.perms.add(
+  PermissionTestUtils.add(
     uri,
     "desktop-notification",
     Ci.nsIPermissionManager[perm]
   );
   registerCleanupFunction(() => {
-    Services.perms.remove(uri, "desktop-notification");
+    PermissionTestUtils.remove(uri, "desktop-notification");
   });
 
   await db.put(record);

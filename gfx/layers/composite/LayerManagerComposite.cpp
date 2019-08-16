@@ -592,6 +592,12 @@ void LayerManagerComposite::UpdateAndRender() {
     // Composition requested, but nothing has changed. Don't do any work.
     mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
+
+    // Discard the current payloads. These payloads did not require a composite
+    // (they caused no changes to anything visible), so we don't want to measure
+    // their latency.
+    mPayload.Clear();
+
     return;
   }
 
@@ -987,6 +993,12 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   if (actualBounds.IsEmpty()) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
+
+    // Discard the current payloads. These payloads did not require a composite
+    // (they caused no changes to anything visible), so we don't want to measure
+    // their latency.
+    mPayload.Clear();
+
     return true;
   }
 
@@ -1037,6 +1049,8 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mCompositor->GetWidget()->DrawWindowOverlay(
       &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
+  mCompositor->NormalDrawingDone();
+
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
 
   if (mCompositionRecorder) {
@@ -1055,8 +1069,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       }
     }
   }
-
-  mCompositor->NormalDrawingDone();
 
 #if defined(MOZ_WIDGET_ANDROID)
   // Depending on the content shift the toolbar may be rendered on top of

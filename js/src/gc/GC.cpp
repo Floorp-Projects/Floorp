@@ -3364,6 +3364,7 @@ static bool RecordReplayCheckCanGC(JS::GCReason reason) {
     case JS::GCReason::DELAYED_ATOMS_GC:
     case JS::GCReason::TOO_MUCH_WASM_MEMORY:
     case JS::GCReason::TOO_MUCH_JIT_CODE:
+    case JS::GCReason::INCREMENTAL_ALLOC_TRIGGER:
       return false;
 
     default:

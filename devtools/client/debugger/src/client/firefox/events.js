@@ -9,7 +9,7 @@ import type {
   PausedPacket,
   ThreadFront,
   Actions,
-  TabTarget,
+  Target,
 } from "./types";
 
 import { createPause, prepareSourcePayload } from "./create";
@@ -19,7 +19,7 @@ const CALL_STACK_PAGE_SIZE = 1000;
 
 type Dependencies = {
   threadFront: ThreadFront,
-  tabTarget: TabTarget,
+  tabTarget: Target,
   actions: Actions,
 };
 

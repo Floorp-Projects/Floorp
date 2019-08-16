@@ -6,6 +6,7 @@
 
 #include "IPCStreamSource.h"
 #include "BackgroundParent.h"  // for AssertIsOnBackgroundThread
+#include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICancelableRunnable.h"
@@ -113,11 +114,12 @@ bool IPCStreamSource::Initialize() {
   }
 
   // A source can be used on any thread, but we only support IPCStream on
-  // main thread, Workers and PBackground thread right now.  This is due
-  // to the requirement  that the thread be guaranteed to live long enough to
-  // receive messages. We can enforce this guarantee with a StrongWorkerRef on
-  // worker threads, but not other threads. Main-thread and PBackground thread
-  // do not need anything special in order to be kept alive.
+  // main thread, Workers, Worker Launcher, and PBackground thread right now.
+  // This is due to the requirement  that the thread be guaranteed to live long
+  // enough to receive messages. We can enforce this guarantee with a
+  // StrongWorkerRef on worker threads, but not other threads. Main-thread,
+  // PBackground, and Worker Launcher threads do not need anything special in
+  // order to be kept alive.
   if (!NS_IsMainThread()) {
     if (const auto workerPrivate = dom::GetCurrentThreadWorkerPrivate()) {
       RefPtr<dom::StrongWorkerRef> workerRef =
@@ -129,7 +131,9 @@ bool IPCStreamSource::Initialize() {
 
       mWorkerRef = std::move(workerRef);
     } else {
-      AssertIsOnBackgroundThread();
+      MOZ_DIAGNOSTIC_ASSERT(
+          IsOnBackgroundThread() ||
+          dom::RemoteWorkerService::Thread()->IsOnCurrentThread());
     }
   }
 
@@ -239,6 +243,13 @@ void IPCStreamSource::OnStreamReady(Callback* aCallback) {
   MOZ_ASSERT(aCallback == mCallback);
   mCallback->ClearSource();
   mCallback = nullptr;
+
+  // Possibly closed if this callback is (indirectly) called by
+  // IPCStreamSourceParent::RecvRequestClose().
+  if (mState == eClosed) {
+    return;
+  }
+
   DoRead();
 }
 

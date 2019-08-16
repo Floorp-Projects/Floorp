@@ -9,8 +9,11 @@ function test() {
   Harness.finalContentEvent = "InstallComplete";
   Harness.setup();
 
-  var pm = Services.perms;
-  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+  PermissionTestUtils.add(
+    "http://example.com/",
+    "install",
+    Services.perms.ALLOW_ACTION
+  );
 
   var inner_url = encodeURIComponent(
     TESTROOT +
@@ -46,7 +49,7 @@ function install_ended(install, addon) {
 const finish_test = async function(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  PermissionTestUtils.remove("http://example.com", "install");
 
   const results = await ContentTask.spawn(
     gBrowser.selectedBrowser,

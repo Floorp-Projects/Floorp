@@ -400,11 +400,9 @@ static void SkipInterpreterFrameEntries(
 
 static bool RecompileBaselineScriptForDebugMode(
     JSContext* cx, JSScript* script, DebugAPI::IsObserving observing) {
-  BaselineScript* oldBaselineScript = script->baselineScript();
-
   // If a script is on the stack multiple times, it may have already
   // been recompiled.
-  if (oldBaselineScript->hasDebugInstrumentation() == observing) {
+  if (script->baselineScript()->hasDebugInstrumentation() == observing) {
     return true;
   }
 
@@ -413,7 +411,8 @@ static bool RecompileBaselineScriptForDebugMode(
           observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
   AutoKeepJitScripts keepJitScripts(cx);
-  script->setBaselineScript(cx->runtime(), nullptr);
+  BaselineScript* oldBaselineScript =
+      script->jitScript()->clearBaselineScript(cx->defaultFreeOp(), script);
 
   MethodStatus status =
       BaselineCompile(cx, script, /* forceDebugMode = */ observing);
@@ -422,7 +421,7 @@ static bool RecompileBaselineScriptForDebugMode(
     // the old baseline script in case something doesn't properly
     // propagate OOM.
     MOZ_ASSERT(status == Method_Error);
-    script->setBaselineScript(cx->runtime(), oldBaselineScript);
+    script->jitScript()->setBaselineScript(script, oldBaselineScript);
     return false;
   }
 
@@ -473,7 +472,7 @@ static void UndoRecompileBaselineScriptsForDebugMode(
     JSScript* script = entry.script;
     BaselineScript* baselineScript = script->baselineScript();
     if (entry.recompiled()) {
-      script->setBaselineScript(cx->runtime(), entry.oldBaselineScript);
+      script->jitScript()->setBaselineScript(script, entry.oldBaselineScript);
       BaselineScript::Destroy(cx->runtime()->defaultFreeOp(), baselineScript);
     }
   }

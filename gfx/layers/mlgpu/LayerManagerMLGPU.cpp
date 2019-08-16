@@ -313,6 +313,12 @@ void LayerManagerMLGPU::Composite() {
   if (!mSwapChain->ApplyNewInvalidRegion(std::move(mInvalidRegion),
                                          diagnosticRect)) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
+
+    // Discard the current payloads. These payloads did not require a composite
+    // (they caused no changes to anything visible), so we don't want to measure
+    // their latency.
+    mPayload.Clear();
+
     return;
   }
 

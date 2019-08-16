@@ -35,6 +35,7 @@
 
 #include "jit/JitScript-inl.h"
 #include "vm/JSContext-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/ObjectGroup-inl.h"
 
 namespace js {

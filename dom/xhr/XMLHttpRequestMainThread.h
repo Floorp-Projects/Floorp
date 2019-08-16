@@ -300,10 +300,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   void UnsuppressEventHandlingAndResume();
 
-  // Check pref "dom.mapped_arraybuffer.enabled" to make sure ArrayBuffer is
-  // supported.
-  static bool IsMappedArrayBufferEnabled();
-
   void MaybeLowerChannelPriority();
 
  public:

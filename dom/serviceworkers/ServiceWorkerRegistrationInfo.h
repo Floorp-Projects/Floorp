@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_serviceworkerregistrationinfo_h
 #define mozilla_dom_serviceworkerregistrationinfo_h
 
+#include <functional>
+
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -68,6 +70,8 @@ class ServiceWorkerRegistrationInfo final
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
+  typedef std::function<void()> TryToActivateCallback;
+
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                 nsIPrincipal* aPrincipal,
                                 ServiceWorkerUpdateViaCache aUpdateViaCache);
@@ -120,9 +124,9 @@ class ServiceWorkerRegistrationInfo final
 
   bool IsCorrupt() const;
 
-  void TryToActivateAsync();
+  void TryToActivateAsync(TryToActivateCallback&& aCallback = nullptr);
 
-  void TryToActivate();
+  void TryToActivate(TryToActivateCallback&& aCallback);
 
   void Activate();
 
@@ -197,7 +201,7 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t Version() const;
 
-  uint32_t GetUpdateDelay();
+  uint32_t GetUpdateDelay(const bool aWithMultiplier = true);
 
   void FireUpdateFound();
 

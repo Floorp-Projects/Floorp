@@ -26,6 +26,7 @@ jobs-from:
     - mozlint-android.yml
     - node.yml
     - python.yml
+    - shadow-scheduler.yml
     - webidl.yml
     - wpt-metadata.yml
     - wpt-manifest.yml

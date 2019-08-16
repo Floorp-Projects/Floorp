@@ -31,14 +31,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1560741
       iframe.onload = resolve;
     });
 
-    const Notif = SpecialPowers.wrap(iframe.contentWindow).Notification;
-    let response = await Notif.requestPermission();
-    is(response, "denied", "Denied permission in cross-origin iframe");
+    let checkRequest = async (expectedResponse, msg) => {
+      /* import-globals-from ../../../../testing/modules/Assert.jsm */
+      let response = await this.content.Notification.requestPermission();
+      Assert.equal(response, expectedResponse, msg);
+    };
+
+    await SpecialPowers.spawn(iframe,
+                              ["denied", "Denied permission in cross-origin iframe"],
+                              checkRequest);
 
     await SpecialPowers.pushPrefEnv({"set": [["dom.webnotifications.allowcrossoriginiframe", true]]});
 
-    response = await Notif.requestPermission();
-    is(response, "granted", "Granted permission in cross-origin iframe with pref set");
+    await SpecialPowers.spawn(iframe,
+                              ["granted", "Granted permission in cross-origin iframe with pref set"],
+                              checkRequest);
 
     await SpecialPowers.clearUserPref("notification.prompt.testing");
     await SpecialPowers.clearUserPref("notification.prompt.testing.allow");

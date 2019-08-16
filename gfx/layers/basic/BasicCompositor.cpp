@@ -324,10 +324,6 @@ BasicCompositor::CreateRenderTargetForWindow(
     if (!aClearRect.IsEmpty()) {
       IntRect clearRect = aClearRect.ToUnknownRect();
       mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
-
-      if (mFullWindowRenderTarget) {
-        mFullWindowRenderTarget->mDrawTarget->ClearRect(Rect(clearRect));
-      }
     }
   }
 
@@ -967,25 +963,6 @@ void BasicCompositor::BeginFrame(
   RefPtr<CompositingRenderTarget> target =
       CreateRenderTargetForWindow(mInvalidRect, clearRect, bufferMode);
 
-  if (ShouldRecordFrames()) {
-    IntSize windowSize = rect.ToUnknownRect().Size();
-
-    // On some platforms (notably Linux with X11) we do not always have a
-    // full-size draw target. While capturing profiles with screenshots, we need
-    // access to a full-size target so we can record the contents.
-    if (!mFullWindowRenderTarget ||
-        mFullWindowRenderTarget->mDrawTarget->GetSize() != windowSize) {
-      // We have either (1) just started recording and not yet allocated a
-      // buffer or (2) are already recording and have resized the window. In
-      // either case, we need a new render target.
-      RefPtr<gfx::DrawTarget> drawTarget = mDrawTarget->CreateSimilarDrawTarget(
-          windowSize, mDrawTarget->GetFormat());
-
-      mFullWindowRenderTarget =
-          new BasicCompositingRenderTarget(drawTarget, rect);
-    }
-  }
-
   mDrawTarget->PopClip();
 
   if (!target) {
@@ -1000,6 +977,26 @@ void BasicCompositor::BeginFrame(
   // translate future coordinates.
   mRenderTarget->mDrawTarget->SetTransform(
       Matrix::Translation(-mRenderTarget->GetOrigin()));
+
+  if (ShouldRecordFrames()) {
+    IntSize windowSize = rect.ToUnknownRect().Size();
+
+    // On some platforms (notably Linux with X11) we do not always have a
+    // full-size draw target. While capturing profiles with screenshots, we need
+    // access to a full-size target so we can record the contents.
+    if (!mFullWindowRenderTarget ||
+        mFullWindowRenderTarget->mDrawTarget->GetSize() != windowSize) {
+      // We have either (1) just started recording and not yet allocated a
+      // buffer or (2) are already recording and have resized the window. In
+      // either case, we need a new render target.
+      RefPtr<gfx::DrawTarget> drawTarget =
+          mRenderTarget->mDrawTarget->CreateSimilarDrawTarget(
+              windowSize, mRenderTarget->mDrawTarget->GetFormat());
+
+      mFullWindowRenderTarget =
+          new BasicCompositingRenderTarget(drawTarget, rect);
+    }
+  }
 
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
                          mInvalidRegion.ToUnknownRegion());
@@ -1064,38 +1061,21 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
     return;
   }
 
-  if (mRenderTarget->mDrawTarget != mDrawTarget || mFullWindowRenderTarget) {
-    RefPtr<SourceSurface> source;
-
-    // Note: Most platforms require us to buffer drawing to the widget
-    // surface. That's why we don't draw to mDrawTarget directly.
+  if (mRenderTarget->mDrawTarget != mDrawTarget) {
+    // This is the case where we have a back buffer for BufferMode::BUFFERED
+    // drawing.
+    RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
     IntPoint srcOffset = mRenderTarget->GetOrigin();
     IntPoint dstOffset = mTarget ? mTargetBounds.TopLeft() : IntPoint();
 
-    if (mRenderTarget->mDrawTarget != mDrawTarget) {
-      source = mWidget->EndBackBufferDrawing();
-
-      // The source DrawTarget is clipped to the invalidation region, so we have
-      // to copy the individual rectangles in the region or else we'll draw
-      // blank pixels.
-      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const LayoutDeviceIntRect& r = iter.Get();
-        mDrawTarget->CopySurface(source, r.ToUnknownRect() - srcOffset,
-                                 r.TopLeft().ToUnknownPoint() - dstOffset);
-      }
-    } else {
-      source = mRenderTarget->mDrawTarget->Snapshot();
-    }
-
-    if (mFullWindowRenderTarget) {
-      for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const LayoutDeviceIntRect& r = iter.Get();
-        mFullWindowRenderTarget->mDrawTarget->CopySurface(
-            source, r.ToUnknownRect() - srcOffset,
-            r.TopLeft().ToUnknownPoint() - dstOffset);
-      }
-
-      mFullWindowRenderTarget->mDrawTarget->Flush();
+    // The source DrawTarget is clipped to the invalidation region, so we have
+    // to copy the individual rectangles in the region or else we'll draw
+    // blank pixels.
+    // CopySurface ignores both the transform and the clip.
+    for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const LayoutDeviceIntRect& r = iter.Get();
+      mDrawTarget->CopySurface(source, r.ToUnknownRect() - srcOffset,
+                               r.TopLeft().ToUnknownPoint() - dstOffset);
     }
   }
 
@@ -1106,6 +1086,22 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
   mIsPendingEndRemoteDrawing = false;
+}
+
+void BasicCompositor::NormalDrawingDone() {
+  if (!mFullWindowRenderTarget) {
+    return;
+  }
+
+  // Now is a good time to update mFullWindowRenderTarget.
+  RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
+  IntPoint srcOffset = mRenderTarget->GetOrigin();
+  for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    IntRect r = iter.Get().ToUnknownRect();
+    mFullWindowRenderTarget->mDrawTarget->CopySurface(source, r - srcOffset,
+                                                      r.TopLeft());
+  }
+  mFullWindowRenderTarget->mDrawTarget->Flush();
 }
 
 bool BasicCompositor::NeedsToDeferEndRemoteDrawing() {

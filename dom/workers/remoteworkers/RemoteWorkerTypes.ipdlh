@@ -3,15 +3,36 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include ClientIPCTypes;
+include IPCServiceWorkerDescriptor;
+include IPCServiceWorkerRegistrationDescriptor;
 include PBackgroundSharedTypes;
 include URIParams;
 include DOMTypes;
 
+using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
+
+struct KeyAndPermissions {
+  nsCString key;
+  Permission[] permissions;
+};
+
+struct ServiceWorkerData {
+  KeyAndPermissions[] permissionsByKey;
+  IPCServiceWorkerDescriptor descriptor;
+  IPCServiceWorkerRegistrationDescriptor registrationDescriptor;
+  nsString cacheName;
+  uint32_t loadFlags;
+};
+
+union OptionalServiceWorkerData {
+  void_t;
+  ServiceWorkerData;
+};
 
 struct RemoteWorkerData
 {
@@ -45,7 +66,7 @@ struct RemoteWorkerData
 
   StorageAccess storageAccess;
 
-  bool isSharedWorker;
+  OptionalServiceWorkerData serviceWorkerData;
 };
 
 // ErrorData/ErrorDataNote correspond to WorkerErrorReport/WorkerErrorNote

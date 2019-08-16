@@ -160,40 +160,6 @@ inline js::Shape* JSScript::initialEnvironmentShape() const {
 
 inline JSPrincipals* JSScript::principals() { return realm()->principals(); }
 
-inline void JSScript::setBaselineScript(
-    JSRuntime* rt, js::jit::BaselineScript* baselineScript) {
-  setBaselineScript(rt->defaultFreeOp(), baselineScript);
-}
-
-inline void JSScript::setBaselineScript(
-    JSFreeOp* fop, js::jit::BaselineScript* baselineScript) {
-  if (hasBaselineScript()) {
-    js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
-    clearBaselineScript(fop);
-  }
-  MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
-
-  baseline = baselineScript;
-  if (hasBaselineScript()) {
-    AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
-  }
-  resetWarmUpResetCounter();
-  updateJitCodeRaw(fop->runtime());
-}
-
-inline void JSScript::clearBaselineScript(JSFreeOp* fop) {
-  MOZ_ASSERT(hasBaselineScript());
-  fop->removeCellMemory(this, baseline->allocBytes(),
-                        js::MemoryUse::BaselineScript);
-  baseline = nullptr;
-}
-
-inline void JSScript::clearIonScript(JSFreeOp* fop) {
-  MOZ_ASSERT(hasIonScript());
-  fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
-  ion = nullptr;
-}
-
 inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
   if (analyzedArgsUsage()) {
     return true;
@@ -203,6 +169,65 @@ inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
 
 inline bool JSScript::isDebuggee() const {
   return realm_->debuggerObservesAllExecution() || hasDebugScript();
+}
+
+inline bool JSScript::hasBaselineScript() const {
+  return jitScript_ && jitScript_->hasBaselineScript();
+}
+
+inline bool JSScript::hasIonScript() const {
+  return jitScript_ && jitScript_->hasIonScript();
+}
+
+inline bool JSScript::isIonCompilingOffThread() const {
+  return jitScript_ && jitScript_->isIonCompilingOffThread();
+}
+
+inline bool JSScript::canBaselineCompile() const {
+  bool disabled = hasFlag(MutableFlags::BaselineDisabled);
+#ifdef DEBUG
+  if (jitScript_) {
+    bool jitScriptDisabled =
+        jitScript_->baselineScript_ == js::jit::BaselineDisabledScriptPtr;
+    MOZ_ASSERT(disabled == jitScriptDisabled);
+  }
+#endif
+  return !disabled;
+}
+
+inline bool JSScript::canIonCompile() const {
+  bool disabled = hasFlag(MutableFlags::IonDisabled);
+#ifdef DEBUG
+  if (jitScript_) {
+    bool jitScriptDisabled =
+        jitScript_->ionScript_ == js::jit::IonDisabledScriptPtr;
+    MOZ_ASSERT(disabled == jitScriptDisabled);
+  }
+#endif
+  return !disabled;
+}
+
+inline void JSScript::disableBaselineCompile() {
+  MOZ_ASSERT(!hasBaselineScript());
+  setFlag(MutableFlags::BaselineDisabled);
+  if (jitScript_) {
+    jitScript_->setBaselineScriptImpl(this, js::jit::BaselineDisabledScriptPtr);
+  }
+}
+
+inline void JSScript::disableIon() {
+  setFlag(MutableFlags::IonDisabled);
+  if (jitScript_) {
+    jitScript_->setIonScriptImpl(this, js::jit::IonDisabledScriptPtr);
+  }
+}
+
+inline js::jit::BaselineScript* JSScript::baselineScript() const {
+  return jitScript_->baselineScript();
+}
+
+inline js::jit::IonScript* JSScript::ionScript() const {
+  return jitScript_->ionScript();
 }
 
 #endif /* vm_JSScript_inl_h */

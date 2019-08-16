@@ -55,7 +55,6 @@ static constexpr nsUConvProp nonParticipatingDomains[] = {
 NS_IMPL_ISUPPORTS(FallbackEncoding, nsIObserver)
 
 StaticRefPtr<FallbackEncoding> FallbackEncoding::sInstance;
-bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
 
 FallbackEncoding::FallbackEncoding() : mFallback(nullptr) {
   MOZ_ASSERT(!FallbackEncoding::sInstance, "Singleton already exists.");
@@ -139,8 +138,6 @@ void FallbackEncoding::Initialize() {
   FallbackEncoding::sInstance = new FallbackEncoding;
   Preferences::RegisterCallback(FallbackEncoding::PrefChanged,
                                 "intl.charset.fallback.override");
-  Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
-                               "intl.charset.fallback.tld");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {

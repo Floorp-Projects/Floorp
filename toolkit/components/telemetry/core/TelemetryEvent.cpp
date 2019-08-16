@@ -443,7 +443,9 @@ RecordEventResult RecordEvent(const StaticMutexAutoLock& lock,
 
   // Fixup the process id only for non-builtin (e.g. supporting build faster)
   // dynamic events.
-  if (eventKey->dynamic && !(*gDynamicEventInfo)[eventKey->id].builtin) {
+  auto dynamicNonBuiltin =
+      eventKey->dynamic && !(*gDynamicEventInfo)[eventKey->id].builtin;
+  if (dynamicNonBuiltin) {
     processType = ProcessID::Dynamic;
   }
 
@@ -462,7 +464,7 @@ RecordEventResult RecordEvent(const StaticMutexAutoLock& lock,
   // Count the number of times this event has been recorded, even if its
   // category does not have recording enabled.
   TelemetryScalar::SummarizeEvent(UniqueEventName(category, method, object),
-                                  processType, eventKey->dynamic);
+                                  processType, dynamicNonBuiltin);
 
   // Check whether this event's category has recording enabled
   if (!gEnabledCategories.GetEntry(GetCategory(lock, *eventKey))) {

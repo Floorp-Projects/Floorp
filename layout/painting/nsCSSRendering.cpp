@@ -758,10 +758,9 @@ ImgDrawResult nsCSSRendering::CreateWebRenderCommandsForBorderWithStyleBorder(
 }
 
 static nsCSSBorderRenderer ConstructBorderRenderer(
-    nsPresContext* aPresContext, ComputedStyle* aStyle,
-    DrawTarget* aDrawTarget, nsIFrame* aForFrame, const nsRect& aDirtyRect,
-    const nsRect& aBorderArea, const nsStyleBorder& aStyleBorder,
-    Sides aSkipSides, bool* aNeedsClip) {
+    nsPresContext* aPresContext, ComputedStyle* aStyle, DrawTarget* aDrawTarget,
+    nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
+    const nsStyleBorder& aStyleBorder, Sides aSkipSides, bool* aNeedsClip) {
   nsMargin border = aStyleBorder.GetComputedBorder();
 
   // Compute the outermost boundary of the area that might be painted.
@@ -897,8 +896,8 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(
-      aPresContext, aStyle, &aDrawTarget, aForFrame, aDirtyRect,
-      aBorderArea, aStyleBorder, aSkipSides, &needsClip);
+      aPresContext, aStyle, &aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
+      aStyleBorder, aSkipSides, &needsClip);
   if (needsClip) {
     aDrawTarget.PushClipRect(NSRectToSnappedRect(
         aBorderArea, aForFrame->PresContext()->AppUnitsPerDevPixel(),
@@ -956,8 +955,8 @@ nsCSSRendering::CreateNullBorderRendererWithStyleBorder(
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(
-      aPresContext, aStyle, aDrawTarget, aForFrame, aDirtyRect,
-      aBorderArea, aStyleBorder, aSkipSides, &needsClip);
+      aPresContext, aStyle, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
+      aStyleBorder, aSkipSides, &needsClip);
   return Some(br);
 }
 
@@ -2366,8 +2365,7 @@ static nscolor GetBackgroundColor(nsIFrame* aFrame, ComputedStyle* aStyle) {
     default:
       break;
   }
-  return aStyle->GetVisitedDependentColor(
-      &nsStyleBackground::mBackgroundColor);
+  return aStyle->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 }
 
 nscolor nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,

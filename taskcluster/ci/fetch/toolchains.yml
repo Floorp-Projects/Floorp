@@ -333,8 +333,8 @@ sccache:
     fetch:
         type: git
         repo: https://github.com/mozilla/sccache
-        # 0.2.9 + some change
-        revision: 93475f3458f7776c37b08201ae0d83ecac4b8fa2
+        # 0.2.10 release
+        revision: bf4158875d5690294f4d4b2b190097b18c8d0a21
 
 openssl-1.1.0g:
     description: openssl 1.1.0g source code

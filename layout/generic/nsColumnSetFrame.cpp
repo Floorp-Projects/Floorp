@@ -624,7 +624,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   }
 
   int columnCount = 0;
-  int contentBEnd = 0;
+  nscoord contentBEnd = 0;
   bool reflowNext = false;
 
   while (child) {
@@ -938,15 +938,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       // edge of the multicol container.
       contentSize.BSize(wm) =
           std::max(contentSize.BSize(wm), aReflowInput.AvailableBSize());
-
-      // But don't consume more block-size than what is left in the
-      // ColumnSetWrapper.
-      //
-      // Bug 1569701: If we use the effective computed block-size of
-      // ColumnSetWrapper when creating BlockReflowInput for ColumnSet, the
-      // available block-size should always less than or equal to the effective
-      // computed block-size. This std::min() won't be needed.
-      contentSize.BSize(wm) = std::min(contentSize.BSize(wm), computedBSize);
     }
   } else {
     // Apply computed and min/max values

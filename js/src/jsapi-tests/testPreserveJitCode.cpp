@@ -10,6 +10,7 @@
 #include "jsapi-tests/tests.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
 
 using namespace JS;
 

@@ -17,8 +17,7 @@ async function test() {
   win = await BrowserTestUtils.openNewBrowserWindow();
   Harness.setup(win);
 
-  const pm = Services.perms;
-  pm.add(exampleURI, "install", pm.ALLOW_ACTION);
+  PermissionTestUtils.add(exampleURI, "install", Services.perms.ALLOW_ACTION);
 
   const triggers = encodeURIComponent(
     JSON.stringify({
@@ -45,7 +44,7 @@ function confirm_install(panel) {
 async function finish_test(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  Services.perms.remove(exampleURI, "install");
+  PermissionTestUtils.remove(exampleURI, "install");
 
   const results = await ContentTask.spawn(
     win.gBrowser.selectedBrowser,

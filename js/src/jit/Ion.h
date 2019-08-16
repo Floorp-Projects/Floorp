@@ -254,8 +254,6 @@ bool OffThreadCompilationAvailable(JSContext* cx);
 void ForbidCompilation(JSContext* cx, JSScript* script);
 
 size_t SizeOfIonData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf);
-void DestroyJitScripts(JSFreeOp* fop, JSScript* script);
-void TraceJitScripts(JSTracer* trc, JSScript* script);
 
 bool JitSupportsSimd();
 bool JitSupportsAtomics();

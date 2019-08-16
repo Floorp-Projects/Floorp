@@ -9,6 +9,7 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_intl.h"
 #include "nsCommandManager.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
@@ -342,7 +343,7 @@ void nsHTMLDocument::TryTLD(int32_t& aCharsetSource,
   if (aCharsetSource >= kCharsetFromTopLevelDomain) {
     return;
   }
-  if (!FallbackEncoding::sGuessFallbackFromTopLevelDomain) {
+  if (!StaticPrefs::intl_charset_fallback_tld()) {
     return;
   }
   if (!mDocumentURI) {

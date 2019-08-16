@@ -180,8 +180,6 @@ struct BaselineScript final {
 #endif
 
  private:
-  void trace(JSTracer* trc);
-
   uint32_t retAddrEntriesOffset_ = 0;
   uint32_t retAddrEntries_ = 0;
 
@@ -288,8 +286,9 @@ struct BaselineScript final {
                              size_t debugTrapEntries, size_t resumeEntries,
                              size_t traceLoggerToggleOffsetEntries);
 
-  static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(JSFreeOp* fop, BaselineScript* script);
+
+  void trace(JSTracer* trc);
 
   static inline size_t offsetOfMethod() {
     return offsetof(BaselineScript, method_);
@@ -378,24 +377,8 @@ struct BaselineScript final {
     return pendingBuilder_;
   }
   void setPendingIonBuilder(JSRuntime* rt, JSScript* script,
-                            js::jit::IonBuilder* builder) {
-    MOZ_ASSERT(script->baselineScript() == this);
-    MOZ_ASSERT(!builder || !hasPendingIonBuilder());
-
-    if (script->isIonCompilingOffThread()) {
-      script->setIonScript(rt, ION_PENDING_SCRIPT);
-    }
-
-    pendingBuilder_ = builder;
-
-    script->updateJitCodeRaw(rt);
-  }
-  void removePendingIonBuilder(JSRuntime* rt, JSScript* script) {
-    setPendingIonBuilder(rt, script, nullptr);
-    if (script->maybeIonScript() == ION_PENDING_SCRIPT) {
-      script->setIonScript(rt, nullptr);
-    }
-  }
+                            js::jit::IonBuilder* builder);
+  void removePendingIonBuilder(JSRuntime* rt, JSScript* script);
 
   size_t allocBytes() const { return allocBytes_; }
 };

@@ -14,6 +14,22 @@ Array<StaticAutoPtr<ShutdownList>,
     sShutdownObservers;
 ShutdownPhase sCurrentShutdownPhase = ShutdownPhase::NotInShutdown;
 
+void InsertIntoShutdownList(ShutdownObserver* aObserver, ShutdownPhase aPhase) {
+  // Adding a ClearOnShutdown for a "past" phase is an error.
+  if (!(static_cast<size_t>(sCurrentShutdownPhase) <
+        static_cast<size_t>(aPhase))) {
+    MOZ_ASSERT(false, "ClearOnShutdown for phase that already was cleared");
+    aObserver->Shutdown();
+    delete aObserver;
+    return;
+  }
+
+  if (!(sShutdownObservers[static_cast<size_t>(aPhase)])) {
+    sShutdownObservers[static_cast<size_t>(aPhase)] = new ShutdownList();
+  }
+  sShutdownObservers[static_cast<size_t>(aPhase)]->insertBack(aObserver);
+}
+
 }  // namespace ClearOnShutdown_Internal
 
 // Called when XPCOM is shutting down, after all shutdown notifications have

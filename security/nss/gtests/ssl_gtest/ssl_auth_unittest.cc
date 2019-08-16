@@ -247,7 +247,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuth) {
                       capture_certificate->buffer().data(),
                       capture_cert_req->buffer().len()));
   ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
   ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
 
@@ -289,7 +291,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthMultiple) {
   server_->ReadBytes(50);
   EXPECT_EQ(1U, called);
   ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
   ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
   // Send 2nd CertificateRequest.
   EXPECT_EQ(SECSuccess, SSL_GetClientAuthDataHook(
@@ -302,7 +306,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthMultiple) {
   server_->ReadBytes(50);
   EXPECT_EQ(2U, called);
   ScopedCERTCertificate cert3(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert3.get());
   ScopedCERTCertificate cert4(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert4.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert3->derCert, &cert4->derCert));
   EXPECT_FALSE(SECITEM_ItemsAreEqual(&cert3->derCert, &cert1->derCert));
 }
@@ -383,7 +389,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthAfterClientAuth) {
   Connect();
   EXPECT_EQ(1U, called);
   ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
   ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
   // Send CertificateRequest.
   EXPECT_EQ(SECSuccess, SSL_GetClientAuthDataHook(
@@ -396,7 +404,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthAfterClientAuth) {
   server_->ReadBytes(50);
   EXPECT_EQ(2U, called);
   ScopedCERTCertificate cert3(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert3.get());
   ScopedCERTCertificate cert4(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert4.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert3->derCert, &cert4->derCert));
   EXPECT_FALSE(SECITEM_ItemsAreEqual(&cert3->derCert, &cert1->derCert));
 }
@@ -567,7 +577,9 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthWithSessionTicketsEnabled) {
   server_->ReadBytes(50);
   EXPECT_EQ(1U, called);
   ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ASSERT_NE(nullptr, cert1.get());
   ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  ASSERT_NE(nullptr, cert2.get());
   EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
 }
 
@@ -614,7 +626,9 @@ static void CheckSigScheme(std::shared_ptr<TlsHandshakeRecorder>& capture,
   EXPECT_EQ(expected_scheme, static_cast<uint16_t>(scheme));
 
   ScopedCERTCertificate remote_cert(SSL_PeerCertificate(peer->ssl_fd()));
+  ASSERT_NE(nullptr, remote_cert.get());
   ScopedSECKEYPublicKey remote_key(CERT_ExtractPublicKey(remote_cert.get()));
+  ASSERT_NE(nullptr, remote_key.get());
   EXPECT_EQ(expected_size, SECKEY_PublicKeyStrengthInBits(remote_key.get()));
 }
 

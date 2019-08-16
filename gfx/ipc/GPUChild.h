@@ -8,14 +8,12 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/gfx/PGPUChild.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 
 namespace mozilla {
 
-namespace ipc {
-class CrashReporterHost;
-}  // namespace ipc
 namespace dom {
 class MemoryReportRequestHost;
 }  // namespace dom
@@ -23,7 +21,9 @@ namespace gfx {
 
 class GPUProcessHost;
 
-class GPUChild final : public PGPUChild, public gfxVarReceiver {
+class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
+                       public PGPUChild,
+                       public gfxVarReceiver {
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
 
  public:
@@ -42,8 +42,6 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
   mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData);
   mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity,
                                                  const nsCString& aLog);
-  mozilla::ipc::IPCResult RecvInitCrashReporter(
-      Shmem&& shmem, const NativeThreadId& aThreadId);
   mozilla::ipc::IPCResult RecvCreateVRProcess();
   mozilla::ipc::IPCResult RecvShutdownVRProcess();
 
@@ -81,7 +79,6 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
 
  private:
   GPUProcessHost* mHost;
-  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
   bool mGPUReady;
 };

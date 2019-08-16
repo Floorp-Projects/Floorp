@@ -306,7 +306,7 @@ MethodStatus BaselineCompiler::compile() {
     code->setHasBytecodeMap();
   }
 
-  script->setBaselineScript(cx->runtime(), baselineScript.release());
+  script->jitScript()->setBaselineScript(script, baselineScript.release());
 
 #ifdef JS_ION_PERF
   writePerfSpewerBaselineProfile(script, code);
@@ -1310,9 +1310,14 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold),
                 &skipCall);
 
-  masm.branchPtr(Assembler::Equal,
-                 Address(scriptReg, JSScript::offsetOfIonScript()),
-                 ImmPtr(ION_COMPILING_SCRIPT), &skipCall);
+  // Do nothing if Ion is already compiling this script off-thread or if Ion has
+  // been disabled for this script.
+  masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+  masm.loadPtr(Address(scriptReg, JitScript::offsetOfIonScript()), scriptReg);
+  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonCompilingScriptPtr),
+                 &skipCall);
+  masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonDisabledScriptPtr),
+                 &skipCall);
 
   // Try to compile and/or finish a compilation.
   if (JSOp(*pc) == JSOP_LOOPENTRY) {
@@ -1359,9 +1364,10 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   Label done;
   masm.branch32(Assembler::BelowOrEqual, countReg,
                 Imm32(JitOptions.baselineJitWarmUpThreshold), &done);
+  masm.loadPtr(Address(scriptReg, JSScript::offsetOfJitScript()), scriptReg);
   masm.branchPtr(Assembler::Equal,
-                 Address(scriptReg, JSScript::offsetOfBaselineScript()),
-                 ImmPtr(BASELINE_DISABLED_SCRIPT), &done);
+                 Address(scriptReg, JitScript::offsetOfBaselineScript()),
+                 ImmPtr(BaselineDisabledScriptPtr), &done);
   {
     prepareVMCall();
 
@@ -1521,8 +1527,8 @@ bool BaselineCompilerCodeGen::emitTraceLoggerEnter() {
   masm.loadTraceLogger(loggerReg);
 
   // Script start.
-  masm.movePtr(ImmGCPtr(handler.script()), scriptReg);
-  masm.loadPtr(Address(scriptReg, JSScript::offsetOfBaselineScript()),
+  masm.movePtr(ImmPtr(handler.script()->jitScript()), scriptReg);
+  masm.loadPtr(Address(scriptReg, JitScript::offsetOfBaselineScript()),
                scriptReg);
   Address scriptEvent(scriptReg,
                       BaselineScript::offsetOfTraceLoggerScriptEvent());
@@ -4749,8 +4755,8 @@ static void LoadBaselineScriptResumeEntries(MacroAssembler& masm,
                                             Register scratch) {
   MOZ_ASSERT(dest != scratch);
 
-  masm.movePtr(ImmGCPtr(script), dest);
-  masm.loadPtr(Address(dest, JSScript::offsetOfBaselineScript()), dest);
+  masm.movePtr(ImmPtr(script->jitScript()), dest);
+  masm.loadPtr(Address(dest, JitScript::offsetOfBaselineScript()), dest);
   masm.load32(Address(dest, BaselineScript::offsetOfResumeEntriesOffset()),
               scratch);
   masm.addPtr(scratch, dest);
@@ -5980,15 +5986,18 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
                                                       Register resumeIndex,
                                                       Register scratch) {
-  Address baselineAddr(script, JSScript::offsetOfBaselineScript());
-
   // Resume in either the BaselineScript (if present) or Baseline Interpreter.
+
+  static_assert(BaselineDisabledScript == 0x1,
+                "Comparison below requires specific sentinel encoding");
+
   Label noBaselineScript;
-  masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
-                 ImmPtr(BASELINE_DISABLED_SCRIPT), &noBaselineScript);
-  masm.loadPtr(baselineAddr, script);
-  masm.load32(Address(script, BaselineScript::offsetOfResumeEntriesOffset()),
-              scratch);
+  masm.loadPtr(Address(script, JSScript::offsetOfJitScript()), scratch);
+  masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
+  masm.branchPtr(Assembler::BelowOrEqual, scratch,
+                 ImmPtr(BaselineDisabledScriptPtr), &noBaselineScript);
+  masm.load32(Address(scratch, BaselineScript::offsetOfResumeEntriesOffset()),
+              script);
   masm.addPtr(scratch, script);
   masm.loadPtr(
       BaseIndex(script, resumeIndex, ScaleFromElemWidth(sizeof(uintptr_t))),
@@ -6049,7 +6058,8 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   if (JS::TraceLoggerSupported()) {
     // TODO (bug 1565788): add Baseline Interpreter support.
     MOZ_CRASH("Unimplemented Baseline Interpreter TraceLogger support");
-    Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
+    masm.loadPtr(Address(scratch1, JSScript::offsetOfJitScript()), scratch1);
+    Address baselineAddr(scratch1, JitScript::offsetOfBaselineScript());
     masm.loadPtr(baselineAddr, scratch1);
     if (!emitTraceLoggerResume(scratch1, regs)) {
       return false;
