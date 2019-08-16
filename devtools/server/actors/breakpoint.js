@@ -247,7 +247,7 @@ BreakpointActor.prototype = {
       } else if ("return" in completion) {
         value = completion.return;
       } else {
-        value = [this.getThrownMessage(completion)];
+        value = ["[Logpoint threw]: " + this.getThrownMessage(completion)];
         level = "logPointError";
       }
 
