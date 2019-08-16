@@ -4120,12 +4120,12 @@ size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
 void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                                   size_t* sizeOfJitScript,
                                   size_t* sizeOfBaselineFallbackStubs) const {
-  if (!jitScript_) {
+  if (!hasJitScript()) {
     return;
   }
 
-  jitScript_->addSizeOfIncludingThis(mallocSizeOf, sizeOfJitScript,
-                                     sizeOfBaselineFallbackStubs);
+  jitScript()->addSizeOfIncludingThis(mallocSizeOf, sizeOfJitScript,
+                                      sizeOfBaselineFallbackStubs);
 }
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
@@ -5323,8 +5323,8 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(jitCodeRaw_);
   MOZ_ASSERT(jitCodeSkipArgCheck);
 
-  if (jitScript_) {
-    jitScript_->jitCodeSkipArgCheck_ = jitCodeSkipArgCheck;
+  if (hasJitScript()) {
+    jitScript()->jitCodeSkipArgCheck_ = jitCodeSkipArgCheck;
   }
 }
 

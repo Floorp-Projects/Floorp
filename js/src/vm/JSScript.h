@@ -2603,7 +2603,7 @@ class JSScript : public js::BaseScript {
            !doNotRelazify() && !hasCallSiteObj();
   }
   bool isRelazifiable() const {
-    return isRelazifiableIgnoringJitCode() && !jitScript_;
+    return isRelazifiableIgnoringJitCode() && !hasJitScript();
   }
   void setLazyScript(js::LazyScript* lazy) { lazyScript = lazy; }
   js::LazyScript* maybeLazyScript() { return lazyScript; }
@@ -2699,11 +2699,11 @@ class JSScript : public js::BaseScript {
 
   bool hasJitScript() const { return jitScript_ != nullptr; }
 
-  js::jit::JitScript* jitScript() {
+  js::jit::JitScript* jitScript() const {
     MOZ_ASSERT(hasJitScript());
     return jitScript_;
   }
-  js::jit::JitScript* maybeJitScript() {
+  js::jit::JitScript* maybeJitScript() const {
     return hasJitScript() ? jitScript() : nullptr;
   }
 
