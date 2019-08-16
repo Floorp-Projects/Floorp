@@ -149,7 +149,7 @@ random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-true.html munderover-align-accent-true-ref.html # Bug 1392106
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
-== mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
@@ -341,23 +341,23 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == mfrac-A-2.html mfrac-A-2-ref.html
 == mfrac-A-3.html mfrac-A-3-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
+pref(mathml.mfrac_linethickness_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
 == mfrac-A-6.html mfrac-A-6-ref.html
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
 == mfrac-B-1.html mfrac-B-1-ref.html
-== mfrac-B-2.html mfrac-B-2-3-ref.html
-== mfrac-B-3.html mfrac-B-2-3-ref.html
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-2.html mfrac-B-2-3-ref.html
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-3.html mfrac-B-2-3-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-781) == mfrac-B-4.html mfrac-B-4-5-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-781) == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
-== mfrac-C-2.html mfrac-C-2-ref.html
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-C-2.html mfrac-C-2-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-C-3.html mfrac-C-3-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
-== mfrac-D-2.html mfrac-D-2-ref.html
+pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-D-2.html mfrac-D-2-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-776) == mfrac-D-3.html mfrac-D-3-ref.html
 fuzzy-if(geckoview&&webrender,0-198,0-270) == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html

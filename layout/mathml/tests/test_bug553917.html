@@ -52,10 +52,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mspace width="2"/></math>
         <math><mo lspace="BADlspace">+</mo></math>
         <math><mspace height="BADheight"/></math>
-        <math><mspace depth="BADdepth"/></math>*/
+        <math><mspace depth="BADdepth"/></math>
+        <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
+      */
         LengthParsingError : {
-          status: [false, false, false, false, false, false],
-          args: [["2..0"], ["1.5notaunit"], ["2"],["BADlspace"],["BADheight"],["BADdepth"]]
+          status: [false, false, false, false, false, false, false, false, false],
+          args: [["2..0"], ["1.5notaunit"], ["2"],["BADlspace"],["BADheight"],["BADdepth"], ["thin"],["medium"],["thick"]]
         },
       /*<math><mmultiscripts></mmultiscripts></math>
         <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
@@ -157,6 +161,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mo lspace="BADlspace">+</mo></math>
     <math><mspace height="BADheight"/></math>
     <math><mspace depth="BADdepth"/></math>
+    <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
     
     <!-- MMultiscriptsErrors -->
     <math><mmultiscripts></mmultiscripts></math>
