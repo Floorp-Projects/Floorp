@@ -18,7 +18,6 @@ from six import text_type
 from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.util import taskcluster, yaml, hash
-from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.parameters import Parameters
 from mozbuild.util import memoize
 
@@ -323,7 +322,10 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
 def _load(graph_config):
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
-    import_sibling_modules(exceptions=('util.py',))
+    actions_dir = os.path.dirname(__file__)
+    for f in os.listdir(actions_dir):
+        if f.endswith('.py') and f not in ('__init__.py', 'registry.py', 'util.py'):
+            __import__('taskgraph.actions.' + f[:-3])
     return callbacks, actions
 
 
