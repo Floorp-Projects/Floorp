@@ -9390,7 +9390,7 @@ static Maybe<LayoutDeviceToScreenScale> ParseScaleString(
   }
 
   nsresult scaleErrorCode;
-  float scale = aScaleString.ToFloat(&scaleErrorCode);
+  float scale = aScaleString.ToFloatAllowTrailingChars(&scaleErrorCode);
   if (NS_FAILED(scaleErrorCode)) {
     return Some(LayoutDeviceToScreenScale(kViewportMinScale));
   }
