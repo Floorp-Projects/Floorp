@@ -58,10 +58,6 @@ bool nsIFrame::IsAbsolutelyPositioned(
   return disp->IsAbsolutelyPositioned(this);
 }
 
-bool nsIFrame::IsBlockInside() const {
-  return StyleDisplay()->IsBlockInside(this);
-}
-
 bool nsIFrame::IsBlockOutside() const {
   return StyleDisplay()->IsBlockOutside(this);
 }
