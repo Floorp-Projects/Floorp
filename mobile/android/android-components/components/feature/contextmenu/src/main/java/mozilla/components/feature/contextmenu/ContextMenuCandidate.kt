@@ -263,7 +263,7 @@ internal fun HitResult.getLink(): String = when (this) {
     is HitResult.UNKNOWN -> src
     is HitResult.IMAGE_SRC -> uri
     is HitResult.IMAGE ->
-        if (title.isNullOrBlank() || title?.startsWith("http", true) == true) src else title.toString()
+        if (title.isNullOrBlank()) src else title.toString()
     else -> "about:blank"
 }
 
