@@ -448,6 +448,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return true;
   }
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) {}
+  virtual void DoCompositorCleanup() {}
   virtual void DrawWindowUnderlay(
       mozilla::widget::WidgetRenderingContext* aContext,
       LayoutDeviceIntRect aRect) {}

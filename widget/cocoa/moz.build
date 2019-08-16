@@ -168,3 +168,7 @@ RESOURCE_FILES.__setattr__('MainMenu.nib', [
 ])
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
+
+OS_LIBS += [
+    '-framework IOSurface',
+]

@@ -8,6 +8,7 @@ $status-dark-green: #7C6;
   position: relative;
 
   .story-sponsored-label,
+  .story-view-count,
   .status-message {
     @include dark-theme-only {
       color: $grey-40;

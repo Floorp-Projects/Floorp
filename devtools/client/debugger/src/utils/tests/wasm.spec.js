@@ -37,8 +37,8 @@ describe("wasm", () => {
       expect(isWasm(sourceId)).toEqual(false);
     });
     it("should give us the true when wasm text was registered", () => {
-      const { source, content } = makeMockWasmSourceWithContent(SIMPLE_WASM);
-      renderWasmText(source.id, content.value);
+      const source = makeMockWasmSourceWithContent(SIMPLE_WASM);
+      renderWasmText(source.id, source.content.value);
       expect(isWasm(source.id)).toEqual(true);
       // clear shall remove
       clearWasmStates();
@@ -48,8 +48,8 @@ describe("wasm", () => {
 
   describe("renderWasmText", () => {
     it("render simple wasm", () => {
-      const { source, content } = makeMockWasmSourceWithContent(SIMPLE_WASM);
-      const lines = renderWasmText(source.id, content.value);
+      const source = makeMockWasmSourceWithContent(SIMPLE_WASM);
+      const lines = renderWasmText(source.id, source.content.value);
       expect(lines.join("\n")).toEqual(SIMPLE_WASM_TEXT);
       clearWasmStates();
     });
@@ -60,8 +60,8 @@ describe("wasm", () => {
     expect(SIMPLE_WASM.binary[SIMPLE_WASM_NOP_OFFSET]).toEqual("\x01");
 
     it("get simple wasm nop offset", () => {
-      const { source, content } = makeMockWasmSourceWithContent(SIMPLE_WASM);
-      renderWasmText(source.id, content.value);
+      const source = makeMockWasmSourceWithContent(SIMPLE_WASM);
+      renderWasmText(source.id, source.content.value);
       const offset = lineToWasmOffset(source.id, SIMPLE_WASM_NOP_TEXT_LINE);
       expect(offset).toEqual(SIMPLE_WASM_NOP_OFFSET);
       clearWasmStates();
@@ -70,8 +70,8 @@ describe("wasm", () => {
 
   describe("wasmOffsetToLine", () => {
     it("get simple wasm nop line", () => {
-      const { source, content } = makeMockWasmSourceWithContent(SIMPLE_WASM);
-      renderWasmText(source.id, content.value);
+      const source = makeMockWasmSourceWithContent(SIMPLE_WASM);
+      renderWasmText(source.id, source.content.value);
       const line = wasmOffsetToLine(source.id, SIMPLE_WASM_NOP_OFFSET);
       expect(line).toEqual(SIMPLE_WASM_NOP_TEXT_LINE);
       clearWasmStates();

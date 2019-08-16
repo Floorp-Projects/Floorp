@@ -163,9 +163,8 @@ Tools.inspector = {
   // preventRaisingOnKey is used to keep the focus on the content window for shortcuts
   // that trigger the element picker.
   preventRaisingOnKey: true,
-  onkey: async function(panel, toolbox) {
-    const inspectorFront = await toolbox.target.getFront("inspector");
-    inspectorFront.nodePicker.togglePicker();
+  onkey: function(panel, toolbox) {
+    toolbox.nodePicker.togglePicker();
   },
 
   isTargetSupported: function(target) {

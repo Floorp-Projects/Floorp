@@ -196,6 +196,87 @@ TEST(TArray, CopyOverlappingBackwards)
   }
 }
 
+namespace {
+
+class E {
+public:
+  E() : mA(-1), mB(-2) { constructCount++; }
+  E(int a, int b) : mA(a), mB(b) { constructCount++; }
+  E(E&& aRhs)
+    : mA(aRhs.mA), mB(aRhs.mB) {
+    aRhs.mA = 0;
+    aRhs.mB = 0;
+    moveCount++;
+  }
+
+  E& operator=(E&& aRhs) {
+    mA = aRhs.mA;
+    aRhs.mA = 0;
+    mB = aRhs.mB;
+    aRhs.mB = 0;
+    moveCount++;
+    return *this;
+  }
+
+
+  int a() const { return mA; }
+  int b() const { return mB; }
+
+  E(const E&) = delete;
+  E& operator=(const E&) = delete;
+
+  static size_t constructCount;
+  static size_t moveCount;
+
+private:
+  int mA;
+  int mB;
+};
+
+size_t E::constructCount = 0;
+size_t E::moveCount = 0;
+
+}
+
+TEST(TArray, Emplace)
+{
+  nsTArray<E> array;
+  array.SetCapacity(20);
+
+  ASSERT_EQ(array.Length(), 0u);
+
+  for (int i = 0; i < 10; i++) {
+    E s(i, i * i);
+    array.AppendElement(std::move(s));
+  }
+
+  ASSERT_EQ(array.Length(), 10u);
+  ASSERT_EQ(E::constructCount, 10u);
+  ASSERT_EQ(E::moveCount, 10u);
+
+  for (int i = 10; i < 20; i++) {
+    array.EmplaceBack(i, i * i);
+  }
+
+  ASSERT_EQ(array.Length(), 20u);
+  ASSERT_EQ(E::constructCount, 20u);
+  ASSERT_EQ(E::moveCount, 10u);
+
+  for (int i = 0; i < 20; i++) {
+    ASSERT_EQ(array[i].a(), i);
+    ASSERT_EQ(array[i].b(), i * i);
+  }
+
+  array.EmplaceBack();
+
+  ASSERT_EQ(array.Length(), 21u);
+  ASSERT_EQ(E::constructCount, 21u);
+  ASSERT_EQ(E::moveCount, 10u);
+
+  ASSERT_EQ(array[20].a(), -1);
+  ASSERT_EQ(array[20].b(), -2);
+}
+
 TEST(TArray, UnorderedRemoveElements)
 {
   // When removing an element from the end of the array, it can be removed in

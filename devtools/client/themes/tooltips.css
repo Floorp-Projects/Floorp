@@ -440,7 +440,7 @@ strong {
   background-position: center left 7px;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > .command[aria-checked="true"]:-moz-locale-dir(rtl) {
+.tooltip-container[type="doorhanger"] .menuitem > .command[aria-checked="true"]:dir(rtl) {
   background-position: center right 7px;
 }
 

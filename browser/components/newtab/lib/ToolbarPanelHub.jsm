@@ -378,6 +378,8 @@ class _ToolbarPanelHub {
    */
   async insertProtectionPanelMessage(event) {
     const win = event.target.ownerGlobal;
+    this.maybeInsertFTL(win);
+
     const doc = event.target.ownerDocument;
     const container = doc.getElementById("messaging-system-message-container");
     const infoButton = doc.getElementById("protections-popup-info-button");

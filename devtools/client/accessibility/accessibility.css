@@ -663,7 +663,7 @@ body {
 }
 
 .accessible .tree .objectBox-accessible .open-accessibility-inspector,
-.accessible .tree .objectBox-node .open-inspector{
+.accessible .tree .objectBox-node .open-inspector {
   width: 17px;
   cursor: pointer;
   flex-shrink: 0;
@@ -804,9 +804,4 @@ body {
 .accessibility-color-contrast .accessibility-color-contrast-label,
 .accessibility-color-contrast .accessibility-color-contrast-separator:before {
   margin-inline-end: 3px;
-}
-
-.accessibility-color-contrast .accessibility-color-contrast-separator:before {
-  content: "-";
-  margin-inline-start: 4px;
 }

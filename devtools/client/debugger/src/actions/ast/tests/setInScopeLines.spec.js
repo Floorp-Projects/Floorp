@@ -21,20 +21,20 @@ const sourceTexts = {
   "scopes.js": readFixture("scopes.js"),
 };
 
-const threadFront = {
+const mockCommandClient = {
   sourceContents: async ({ source }) => ({
     source: sourceTexts[source],
     contentType: "text/javascript",
   }),
   evaluateExpressions: async () => {},
   getFrameScopes: async () => {},
-  getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => [],
+  getSourceActorBreakpointPositions: async () => ({}),
+  getSourceActorBreakableLines: async () => [],
 };
 
 describe("getInScopeLine", () => {
   it("with selected line", async () => {
-    const store = createStore(threadFront);
+    const store = createStore(mockCommandClient);
     const { dispatch, getState } = store;
     const source = makeMockSource("scopes.js", "scopes.js");
 
