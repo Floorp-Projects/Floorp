@@ -250,10 +250,9 @@ static inline void FlipCocoaScreenCoordinate(NSPoint& inPoint) {
 
 namespace {
 
-// Used for OpenGL drawing from the compositor thread for OMTC BasicLayers.
-// We need to use OpenGL for this because there seems to be no other robust
-// way of drawing from a secondary thread without locking, which would cause
-// deadlocks in our setup. See bug 882523.
+// Used for OpenGL drawing from the compositor thread for BasicCompositor OMTC.
+// This was created at a time when we didn't know how to use CoreAnimation for
+// robust off-main-thread drawing.
 class GLPresenter : public GLManager {
  public:
   static mozilla::UniquePtr<GLPresenter> CreateForWindow(nsIWidget* aWindow) {
