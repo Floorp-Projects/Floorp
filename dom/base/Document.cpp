@@ -6485,9 +6485,12 @@ nsresult Document::LoadAdditionalStyleSheet(additionalSheetType aType,
       MOZ_CRASH("impossible value for aType");
   }
 
-  RefPtr<StyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto result = loader->LoadSheetSync(aSheetURI, parsingMode, true);
+  if (result.isErr()) {
+    return result.unwrapErr();
+  }
+
+  RefPtr<StyleSheet> sheet = result.unwrap();
 
   sheet->SetAssociatedDocumentOrShadowRoot(
       this, StyleSheet::OwnedByDocumentOrShadowRoot);
@@ -11442,15 +11445,15 @@ void Document::PreloadStyle(
       ReferrerInfo::CreateFromDocumentAndPolicyOverride(this, aReferrerPolicy);
 
   // Charset names are always ASCII.
-  CSSLoader()->LoadSheet(uri, true, NodePrincipal(), aEncoding, referrerInfo,
-                         obs, Element::StringToCORSMode(aCrossOriginAttr),
-                         aIntegrity);
+  Unused << CSSLoader()->LoadSheet(
+      uri, true, NodePrincipal(), aEncoding, referrerInfo, obs,
+      Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
 }
 
 RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
-  RefPtr<StyleSheet> sheet;
-  CSSLoader()->LoadSheetSync(uri, css::eAuthorSheetFeatures, false, &sheet);
-  return sheet;
+  return CSSLoader()
+      ->LoadSheetSync(uri, css::eAuthorSheetFeatures, false)
+      .unwrapOr(nullptr);
 }
 
 void Document::ResetDocumentDirection() {

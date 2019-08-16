@@ -114,15 +114,14 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   void InitSharedSheetsInParent();
   void InitSharedSheetsInChild(already_AddRefed<Shm> aSharedMemory);
   void InitMemoryReporter();
-  void LoadSheetURL(const char* aURL, RefPtr<mozilla::StyleSheet>* aSheet,
-                    mozilla::css::SheetParsingMode aParsingMode,
-                    mozilla::css::FailureAction aFailureAction);
-  void LoadSheetFile(nsIFile* aFile, RefPtr<mozilla::StyleSheet>* aSheet,
-                     mozilla::css::SheetParsingMode aParsingMode,
-                     mozilla::css::FailureAction aFailureAction);
-  void LoadSheet(nsIURI* aURI, RefPtr<mozilla::StyleSheet>* aSheet,
-                 mozilla::css::SheetParsingMode aParsingMode,
-                 mozilla::css::FailureAction aFailureAction);
+  RefPtr<mozilla::StyleSheet> LoadSheetURL(
+      const char* aURL, mozilla::css::SheetParsingMode aParsingMode,
+      mozilla::css::FailureAction aFailureAction);
+  RefPtr<mozilla::StyleSheet> LoadSheetFile(
+      nsIFile* aFile, mozilla::css::SheetParsingMode aParsingMode);
+  RefPtr<mozilla::StyleSheet> LoadSheet(
+      nsIURI* aURI, mozilla::css::SheetParsingMode aParsingMode,
+      mozilla::css::FailureAction aFailureAction);
   void LoadSheetFromSharedMemory(const char* aURL,
                                  RefPtr<mozilla::StyleSheet>* aSheet,
                                  mozilla::css::SheetParsingMode aParsingMode,
