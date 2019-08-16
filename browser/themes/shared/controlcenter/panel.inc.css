@@ -808,6 +808,17 @@ description#identity-popup-content-verifier,
   margin-inline-start: 0;
 }
 
+#identity-popup-permissions-granted-indicator {
+  display: none;
+  list-style-image: url(chrome://browser/skin/badge-blue.svg);
+  width: 16px;
+  height: 16px;
+}
+
+#identity-popup-permissions-granted-indicator[show] {
+  display: block;
+}
+
 :root[lwt-popup-brighttext] #identity-popup-permissions-headline {
   color: #f9f9fa;
 }
