@@ -1837,13 +1837,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
       ReferrerInfo::CreateForInternalCSSResources(aInfo.mContent->OwnerDoc());
   sheet->SetReferrerInfo(referrerInfo);
 
-  LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
-
-  auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
-                              isAlternate, aInfo.mIsExplicitlyEnabled);
-
-  InsertSheetInTree(*sheet, aInfo.mContent);
-
   nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
   if (aInfo.mTriggeringPrincipal) {
     // The triggering principal may be an expanded principal, which is safe to
@@ -1854,12 +1847,19 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
         BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
   }
 
+  // We never actually load this, so just set its principal directly
+  sheet->SetPrincipal(principal);
+
+  LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
+
+  auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
+                              isAlternate, aInfo.mIsExplicitlyEnabled);
+
+  InsertSheetInTree(*sheet, aInfo.mContent);
+
   auto data = MakeRefPtr<SheetLoadData>(
       this, aInfo.mTitle, nullptr, sheet, false, owningElement, isAlternate,
       matched, aObserver, nullptr, aInfo.mReferrerInfo, aInfo.mContent);
-
-  // We never actually load this, so just set its principal directly
-  sheet->SetPrincipal(principal);
   data->mLineNumber = aLineNumber;
   // Parse completion releases the load data.
   //
