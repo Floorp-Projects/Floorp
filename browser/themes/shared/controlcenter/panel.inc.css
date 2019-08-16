@@ -637,7 +637,8 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-blocking-section-header,
-#protections-popup-not-blocking-section-header {
+#protections-popup-not-blocking-section-header,
+#protections-popup-not-found-section-header {
   margin: 0;
   padding: var(--vertical-section-padding) var(--horizontal-padding);
   color: #737373;
@@ -668,32 +669,43 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
+#protections-popup-no-trackers-found-description:not([hidden]) ~ #protections-popup-content {
+  display: none;
+}
+
+#protections-popup-blocking-section-header,
+#protections-popup-not-blocking-section-header,
+#protections-popup-not-found-section-header {
+  display: none;
+}
+
 #protections-popup-blocking-section-header {
   grid-row: 1;
 }
 
 #protections-popup:not([hasException]) .protections-popup-category.blocked:not([hidden]) ~ #protections-popup-blocking-section-header,
-.protections-popup-category:not(.blocked):not([hidden]) ~ #protections-popup-not-blocking-section-header {
+.protections-popup-category.notFound ~ #protections-popup-not-found-section-header,
+.protections-popup-category:not(.blocked):not(.notFound) ~ #protections-popup-not-blocking-section-header {
   display: flex;
 }
 
-#protections-popup:not([hasException]) #protections-popup-category-tracking-protection.blocked {
+#protections-popup:not([hasException]) #protections-popup-category-socialblock.blocked {
   grid-row: 2;
 }
 
-#protections-popup:not([hasException]) #protections-popup-category-socialblock.blocked {
+#protections-popup:not([hasException]) #protections-popup-category-cookies.blocked {
   grid-row: 3;
 }
 
-#protections-popup:not([hasException]) #protections-popup-category-cookies.blocked {
+#protections-popup:not([hasException]) #protections-popup-category-tracking-protection.blocked {
   grid-row: 4;
 }
 
-#protections-popup:not([hasException]) #protections-popup-category-cryptominers.blocked {
+#protections-popup:not([hasException]) #protections-popup-category-fingerprinters.blocked {
   grid-row: 5;
 }
 
-#protections-popup:not([hasException]) #protections-popup-category-fingerprinters.blocked {
+#protections-popup:not([hasException]) #protections-popup-category-cryptominers.blocked {
   grid-row: 6;
 }
 
@@ -716,29 +728,62 @@ description#identity-popup-content-verifier,
   text-decoration: none;
 }
 
-#protections-popup:not([hasException]) #protections-popup-blocking-section-header:not([hidden]) + #protections-popup-not-blocking-section-header {
-  border-top: 1px solid var(--panel-separator-color);
-  margin-top: 10px;
-}
-
-#protections-popup-category-tracking-protection {
+#protections-popup-category-socialblock {
   grid-row: 8;
 }
 
-#protections-popup-category-socialblock {
+#protections-popup-category-cookies {
   grid-row: 9;
 }
 
-#protections-popup-category-cookies {
+#protections-popup-category-tracking-protection {
   grid-row: 10;
 }
 
-#protections-popup-category-cryptominers {
+#protections-popup-category-fingerprinters {
   grid-row: 11;
 }
 
-#protections-popup-category-fingerprinters {
+#protections-popup-category-cryptominers {
   grid-row: 12;
+}
+
+#protections-popup-not-found-section-header {
+  grid-row: 13;
+}
+
+.protections-popup-category.notFound {
+  color: var(--panel-disabled-color);
+  fill: var(--panel-disabled-color);
+}
+
+.protections-popup-category.notFound:hover {
+  background: none;
+}
+
+/* Hide the arrow for not found items */
+.protections-popup-category.notFound::after {
+  display: none;
+}
+
+#protections-popup-category-socialblock.notFound {
+  grid-row: 14 !important;
+}
+
+#protections-popup-category-cookies.notFound {
+  grid-row: 15 !important;
+}
+
+#protections-popup-category-tracking-protection.notFound {
+  grid-row: 16 !important;
+}
+
+#protections-popup-category-fingerprinters.notFound {
+  grid-row: 17 !important;
+}
+
+#protections-popup-category-cryptominers.notFound {
+  grid-row: 18 !important;
 }
 
 .tracking-protection-icon {
