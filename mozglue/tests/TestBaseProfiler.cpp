@@ -806,8 +806,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     MOZ_RELEASE_ASSERT(rb.PutObject(ran) == BlocksRingBuffer::BlockIndex{});
     // `Read()` functions run the callback with `Nothing`.
     ran = 0;
-    rb.Read([&](Maybe<BlocksRingBuffer::Reader>&& aMaybeReader) {
-      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    rb.Read([&](BlocksRingBuffer::Reader* aReader) {
+      MOZ_RELEASE_ASSERT(!aReader);
       ++ran;
     });
     MOZ_RELEASE_ASSERT(ran == 1);
@@ -879,8 +879,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
                        BlocksRingBuffer::BlockIndex{});
     MOZ_RELEASE_ASSERT(rb.PutObject(ran) != BlocksRingBuffer::BlockIndex{});
     ran = 0;
-    rb.Read([&](Maybe<BlocksRingBuffer::Reader>&& aMaybeReader) {
-      MOZ_RELEASE_ASSERT(aMaybeReader.isSome());
+    rb.Read([&](BlocksRingBuffer::Reader* aReader) {
+      MOZ_RELEASE_ASSERT(!!aReader);
       ++ran;
     });
     MOZ_RELEASE_ASSERT(ran == 1);

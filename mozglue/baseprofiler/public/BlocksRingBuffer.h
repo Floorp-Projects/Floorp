@@ -467,29 +467,32 @@ class BlocksRingBuffer {
 
   // Class that can create `BlockIterator`s (e.g., for range-for), or just
   // iterate through entries; lives within a lock guard lifetime.
-  class Reader {
+  class MOZ_RAII Reader {
    public:
+    Reader(const Reader&) = delete;
+    Reader& operator=(const Reader&) = delete;
+    Reader(Reader&&) = delete;
+    Reader& operator=(Reader&&) = delete;
+
 #ifdef DEBUG
     ~Reader() {
       // No Reader should live outside of a mutexed call.
-      mRing->mMutex.AssertCurrentThreadOwns();
+      mRing.mMutex.AssertCurrentThreadOwns();
     }
 #endif  // DEBUG
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing->mFirstReadIndex; }
+    BlockIndex BufferRangeStart() const { return mRing.mFirstReadIndex; }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing->mNextWriteIndex; }
+    BlockIndex BufferRangeEnd() const { return mRing.mNextWriteIndex; }
 
     // Iterators to the first and past-the-last blocks.
     // Compatible with range-for (see `ForEach` below as example).
     BlockIterator begin() const {
-      return BlockIterator(*mRing, BufferRangeStart());
+      return BlockIterator(mRing, BufferRangeStart());
     }
-    BlockIterator end() const {
-      return BlockIterator(*mRing, BufferRangeEnd());
-    }
+    BlockIterator end() const { return BlockIterator(mRing, BufferRangeEnd()); }
 
     // Run `aCallback(EntryReader&)` on each entry from first to last.
     // Callback should not store `EntryReader`, as it may become invalid after
@@ -504,30 +507,29 @@ class BlocksRingBuffer {
    private:
     friend class BlocksRingBuffer;
 
-    explicit Reader(const BlocksRingBuffer& aRing)
-        : mRing(WrapNotNull(&aRing)) {
+    explicit Reader(const BlocksRingBuffer& aRing) : mRing(aRing) {
       // No Reader should live outside of a mutexed call.
-      mRing->mMutex.AssertCurrentThreadOwns();
+      mRing.mMutex.AssertCurrentThreadOwns();
     }
 
-    // Using a non-null pointer instead of a reference, to allow copying.
     // This Reader should only live inside one of the thread-safe
     // BlocksRingBuffer functions, for this reference to stay valid.
-    NotNull<const BlocksRingBuffer*> mRing;
+    const BlocksRingBuffer& mRing;
   };
 
-  // Call `aCallback(Maybe<BlocksRingBuffer::Reader>&&)`, and return whatever
-  // `aCallback` returns. `Maybe` may be `Nothing` when out-of-session.
-  // Callback should not store `Reader`, because it may become invalid after
-  // this call.
+  // Call `aCallback(BlocksRingBuffer::Reader*)` (nullptr when out-of-session),
+  // and return whatever `aCallback` returns. Callback should not store
+  // `Reader`, because it may become invalid after this call.
   template <typename Callback>
   auto Read(Callback&& aCallback) const {
-    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
-    Maybe<Reader> maybeReader;
-    if (MOZ_LIKELY(mMaybeUnderlyingBuffer)) {
-      maybeReader.emplace(Reader(*this));
+    {
+      baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+      if (MOZ_LIKELY(mMaybeUnderlyingBuffer)) {
+        Reader reader(*this);
+        return std::forward<Callback>(aCallback)(&reader);
+      }
     }
-    return std::forward<Callback>(aCallback)(std::move(maybeReader));
+    return std::forward<Callback>(aCallback)(nullptr);
   }
 
   // Call `aCallback(BlocksRingBuffer::EntryReader&)` on each item.
@@ -535,9 +537,9 @@ class BlocksRingBuffer {
   // after this call.
   template <typename Callback>
   void ReadEach(Callback&& aCallback) const {
-    Read([&](Maybe<Reader>&& aMaybeReader) {
-      if (MOZ_LIKELY(aMaybeReader)) {
-        std::move(aMaybeReader)->ForEach(aCallback);
+    Read([&](Reader* aReader) {
+      if (MOZ_LIKELY(aReader)) {
+        aReader->ForEach(aCallback);
       }
     });
   }
@@ -883,7 +885,8 @@ class BlocksRingBuffer {
     }
     if (mMaybeUnderlyingBuffer->mEntryDestructor) {
       // We have an entry destructor, destroy all the things!
-      Reader(*this).ForEach([this](EntryReader& aReader) {
+      Reader reader(*this);
+      reader.ForEach([this](EntryReader& aReader) {
         mMaybeUnderlyingBuffer->mEntryDestructor(aReader);
       });
     }
