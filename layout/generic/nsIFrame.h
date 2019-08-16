@@ -3956,7 +3956,6 @@ class nsIFrame : public nsQueryFrame {
    */
   inline bool IsTableCaption() const;
 
-  inline bool IsBlockInside() const;
   inline bool IsBlockOutside() const;
   inline bool IsInlineOutside() const;
   inline mozilla::StyleDisplay GetDisplay() const;
