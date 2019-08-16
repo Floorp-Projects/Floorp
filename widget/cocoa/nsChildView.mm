@@ -2480,16 +2480,21 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
                             sourceListSelectionRegion, activeSourceListSelectionRegion);
 
   auto& vm = EnsureVibrancyManager();
-  vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
-  vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
-  vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
-  vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
-  vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM, highlightedMenuItemRegion);
-  vm.UpdateVibrantRegion(VibrancyType::SHEET, sheetRegion);
-  vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST, sourceListRegion);
-  vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST_SELECTION, sourceListSelectionRegion);
-  vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION,
-                         activeSourceListSelectionRegion);
+  bool changed = false;
+  changed |= vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM, highlightedMenuItemRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::SHEET, sheetRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST, sourceListRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST_SELECTION, sourceListSelectionRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION,
+                                    activeSourceListSelectionRegion);
+
+  if (changed) {
+    SuspendAsyncCATransactions();
+  }
 }
 
 NSColor* nsChildView::VibrancyFillColorForThemeGeometryType(
