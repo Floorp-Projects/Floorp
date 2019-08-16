@@ -32,6 +32,7 @@ from mozbuild.frontend.data import (
     GeneratedSources,
     GnProjectData,
     HostLibrary,
+    HostRustLibrary,
     HostGeneratedSources,
     IPDLCollection,
     LocalizedPreprocessedFiles,
@@ -276,7 +277,7 @@ class CommonBackend(BuildBackend):
 
         system_libs = not isinstance(input_bin, (HostLibrary, StaticLibrary))
         for lib in input_bin.linked_libraries:
-            if isinstance(lib, RustLibrary):
+            if isinstance(lib, (HostRustLibrary, RustLibrary)):
                 continue
             elif isinstance(lib, (HostLibrary, StaticLibrary)):
                 expand(lib, True, system_libs)
