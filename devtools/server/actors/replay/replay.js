@@ -1471,6 +1471,8 @@ function getPauseData() {
     const names = getEnvironmentNames(env);
     rv.environments[id] = { data, names };
 
+    names.forEach(({ value }) => addValue(value, true));
+
     addObject(data.callee);
     addEnvironment(data.parent);
   }
