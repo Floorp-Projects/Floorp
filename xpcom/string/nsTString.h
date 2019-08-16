@@ -324,6 +324,13 @@ class nsTString : public nsTSubstring<T> {
   float ToFloat(nsresult* aErrorCode) const;
 
   /**
+   * Similar to above ToDouble and ToFloat but allows trailing characters that
+   * are not converted.
+   */
+  double ToDoubleAllowTrailingChars(nsresult* aErrorCode) const;
+  float ToFloatAllowTrailingChars(nsresult* aErrorCode) const;
+
+  /**
    * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
    * any _other_ way than they are now.  Consider these alternatives
    *
@@ -472,6 +479,14 @@ class nsTString : public nsTSubstring<T> {
       : substring_type(char_traits::sEmptyBuffer, 0,
                        aDataFlags | DataFlags::TERMINATED,
                        ClassFlags::NULL_TERMINATED) {}
+
+  enum class TrailingCharsPolicy {
+    Disallow,
+    Allow,
+  };
+  // Utility function for ToDouble and ToDoubleAllowTrailingChars.
+  double ToDouble(TrailingCharsPolicy aTrailingCharsPolicy,
+                  nsresult* aErrorCode) const;
 
   struct Segment {
     uint32_t mBegin, mLength;
