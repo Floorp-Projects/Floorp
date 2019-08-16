@@ -3109,7 +3109,7 @@ nsresult HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL) {
   // synchronously, of course..
   // Editor override style sheets may want to style Gecko anonymous boxes
   auto result = presShell->GetDocument()->CSSLoader()->LoadSheetSync(
-      uaURI, css::eAgentSheetFeatures, true);
+      uaURI, css::eAgentSheetFeatures, css::Loader::UseSystemPrincipal::Yes);
   // Synchronous loads should ALWAYS return completed
   if (NS_WARN_IF(result.isErr())) {
     return result.unwrapErr();
