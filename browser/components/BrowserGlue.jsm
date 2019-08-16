@@ -2704,7 +2704,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 86;
+    const UI_VERSION = 87;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -3085,16 +3085,11 @@ BrowserGlue.prototype = {
       flashPermissions.forEach(p => Services.perms.removePermission(p));
     }
 
-    if (currentUIVersion < 85) {
-      const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
-      const CUSTOM_BLOCKING_PREF =
-        "browser.contentblocking.customBlockList.preferences.ui.enabled";
-      // Check if user has set custom tables pref, and show custom block list UI
-      // in the about:preferences#privacy custom panel.
-      if (Services.prefs.prefHasUserValue(TRACKING_TABLE_PREF)) {
-        Services.prefs.setBoolPref(CUSTOM_BLOCKING_PREF, true);
-      }
-    }
+    // currentUIVersion < 85 is missing due to the following:
+    // Origianlly, Bug #1568900 added currentUIVersion 85 but was targeting FF70 release.
+    // In between it landing in FF70, Bug #1562601 (currentUIVersion 86) landed and
+    // was uplifted to Beta. To make sure the migration doesn't get skipped, the
+    // code block that was at 85 has been moved/bumped to currentUIVersion 87.
 
     if (currentUIVersion < 86) {
       // If the user has set "media.autoplay.allow-muted" to false
@@ -3112,6 +3107,17 @@ BrowserGlue.prototype = {
         );
       }
       Services.prefs.clearUserPref("media.autoplay.allow-muted");
+    }
+
+    if (currentUIVersion < 87) {
+      const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
+      const CUSTOM_BLOCKING_PREF =
+        "browser.contentblocking.customBlockList.preferences.ui.enabled";
+      // Check if user has set custom tables pref, and show custom block list UI
+      // in the about:preferences#privacy custom panel.
+      if (Services.prefs.prefHasUserValue(TRACKING_TABLE_PREF)) {
+        Services.prefs.setBoolPref(CUSTOM_BLOCKING_PREF, true);
+      }
     }
 
     // Update the migration version.
