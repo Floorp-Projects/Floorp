@@ -1264,8 +1264,8 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
 
   if (aLoadData.mSyncLoad) {
     LOG(("  Synchronous load"));
-    NS_ASSERTION(!aLoadData.mObserver, "Observer for a sync load?");
-    NS_ASSERTION(aSheetState == SheetState::NeedsParser,
+    MOZ_ASSERT(!aLoadData.mObserver, "Observer for a sync load?");
+    MOZ_ASSERT(aSheetState == SheetState::NeedsParser,
                  "Sync loads can't reuse existing async loads");
 
     // Create a StreamLoader instance to which we will feed
@@ -1650,14 +1650,13 @@ void Loader::SheetComplete(SheetLoadData& aLoadData, nsresult aStatus) {
   // Now it's safe to go ahead and notify observers
   uint32_t count = datasToNotify.Length();
   mDatasToNotifyOn += count;
-  for (uint32_t i = 0; i < count; ++i) {
+  for (RefPtr<SheetLoadData>& data : datasToNotify) {
     --mDatasToNotifyOn;
 
-    SheetLoadData* data = datasToNotify[i];
-    NS_ASSERTION(data && data->mMustNotify, "How did this data get here?");
+    MOZ_ASSERT(data, "How did this data get here?");
     if (data->mObserver) {
-      LOG(("  Notifying observer %p for data %p.  wasAlternate: %d",
-           data->mObserver.get(), data, data->mWasAlternate));
+      LOG(("  Notifying observer %p for data %p.  deferred: %d",
+           data->mObserver.get(), data.get(), data->ShouldDefer()));
       data->mObserver->StyleSheetLoaded(data->mSheet, data->ShouldDefer(),
                                         aStatus);
     }
@@ -1667,9 +1666,9 @@ void Loader::SheetComplete(SheetLoadData& aLoadData, nsresult aStatus) {
     nsCOMPtr<nsICSSLoaderObserver> obs;
     while (iter.HasMore()) {
       obs = iter.GetNext();
-      LOG(("  Notifying global observer %p for data %p.  wasAlternate: %d",
-           obs.get(), data, data->mWasAlternate));
-      obs->StyleSheetLoaded(data->mSheet, data->mWasAlternate, aStatus);
+      LOG(("  Notifying global observer %p for data %p.  deferred: %d",
+           obs.get(), data.get(), data->ShouldDefer()));
+      obs->StyleSheetLoaded(data->mSheet, data->ShouldDefer(), aStatus);
     }
   }
 

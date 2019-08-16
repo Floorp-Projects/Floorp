@@ -81,7 +81,7 @@ class nsXMLContentSink : public nsContentSink,
                              mozilla::dom::Document* aResultDocument) override;
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) override;
   static bool ParsePIData(const nsString& aData, nsString& aHref,
                           nsString& aTitle, nsString& aMedia,
