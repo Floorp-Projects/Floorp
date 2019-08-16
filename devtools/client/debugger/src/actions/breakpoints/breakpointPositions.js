@@ -14,8 +14,6 @@ import { uniqBy, zip } from "lodash";
 import {
   getSource,
   getSourceFromId,
-  hasBreakpointPositions,
-  hasBreakpointPositionsForLine,
   getBreakpointPositionsForSource,
   getSourceActorsForSource,
 } from "../../selectors";
@@ -33,7 +31,9 @@ import {
   memoizeableAction,
   type MemoizedAction,
 } from "../../utils/memoizableAction";
+import { fulfilled } from "../../utils/async-value";
 import type { ThunkArgs } from "../../actions/types";
+import { loadSourceActorBreakpointColumns } from "../source-actors";
 
 async function mapLocations(
   generatedLocations: SourceLocation[],
@@ -114,7 +114,7 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
     return;
   }
 
-  let results = {};
+  const results = {};
   if (isOriginalId(sourceId)) {
     // Explicitly typing ranges is required to work around the following issue
     // https://github.com/facebook/flow/issues/5294
@@ -140,12 +140,22 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
         };
       }
 
-      const bps = await client.getBreakpointPositions(
-        getSourceActorsForSource(getState(), generatedSource.id),
-        range
+      const actorBps = await Promise.all(
+        getSourceActorsForSource(getState(), generatedSource.id).map(actor =>
+          client.getSourceActorBreakpointPositions(actor, range)
+        )
       );
-      for (const bpLine in bps) {
-        results[bpLine] = (results[bpLine] || []).concat(bps[bpLine]);
+
+      for (const actorPositions of actorBps) {
+        for (const rangeLine of Object.keys(actorPositions)) {
+          let columns = actorPositions[parseInt(rangeLine, 10)];
+          const existing = results[rangeLine];
+          if (existing) {
+            columns = [...new Set([...existing, ...columns])];
+          }
+
+          results[rangeLine] = columns;
+        }
       }
     }
   } else {
@@ -153,10 +163,15 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
       throw new Error("Line is required for generated sources");
     }
 
-    results = await client.getBreakpointPositions(
-      getSourceActorsForSource(getState(), generatedSource.id),
-      { start: { line, column: 0 }, end: { line: line + 1, column: 0 } }
+    const actorColumns = await Promise.all(
+      getSourceActorsForSource(getState(), generatedSource.id).map(actor =>
+        dispatch(loadSourceActorBreakpointColumns({ id: actor.id, line }))
+      )
     );
+
+    for (const columns of actorColumns) {
+      results[line] = (results[line] || []).concat(columns);
+    }
   }
 
   let positions = convertToList(results, generatedSource);
@@ -178,8 +193,6 @@ async function _setBreakpointPositions(cx, sourceId, line, thunkArgs) {
     source: source,
     positions,
   });
-
-  return positions;
 }
 
 function generatedSourceActorKey(state, sourceId) {
@@ -199,12 +212,20 @@ export const setBreakpointPositions: MemoizedAction<
   { cx: Context, sourceId: string, line?: number },
   ?BreakpointPositions
 > = memoizeableAction("setBreakpointPositions", {
-  hasValue: ({ sourceId, line }, { getState }) =>
-    isGeneratedId(sourceId) && line
-      ? hasBreakpointPositionsForLine(getState(), sourceId, line)
-      : hasBreakpointPositions(getState(), sourceId),
-  getValue: ({ sourceId, line }, { getState }) =>
-    getBreakpointPositionsForSource(getState(), sourceId),
+  getValue: ({ sourceId, line }, { getState }) => {
+    const positions = getBreakpointPositionsForSource(getState(), sourceId);
+    if (!positions) {
+      return null;
+    }
+
+    if (isGeneratedId(sourceId) && line && !positions[line]) {
+      // We always return the full position dataset, but if a given line is
+      // not available, we treat the whole set as loading.
+      return null;
+    }
+
+    return fulfilled(positions);
+  },
   createKey({ sourceId, line }, { getState }) {
     const key = generatedSourceActorKey(getState(), sourceId);
     return isGeneratedId(sourceId) && line ? `${key}-${line}` : key;

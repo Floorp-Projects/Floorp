@@ -16,7 +16,7 @@ const FAKE_TRIPLETS = [
       text: { string_id: "onboarding-private-browsing-text" },
       icon: "icon",
       primary_button: {
-        label: { string_id: "onboarding-button-label-try-now" },
+        label: { string_id: "onboarding-button-label-get-started" },
         action: {
           type: "OPEN_URL",
           data: { args: "https://example.com/" },

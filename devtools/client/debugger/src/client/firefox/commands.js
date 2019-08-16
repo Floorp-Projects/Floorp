@@ -438,55 +438,38 @@ function getMainThread() {
   return currentThreadFront.actor;
 }
 
-async function getBreakpointPositions(
-  actors: Array<SourceActor>,
-  range: ?Range
-): Promise<{ [string]: number[] }> {
-  const sourcePositions = {};
-
-  for (const { thread, actor } of actors) {
-    const sourceThreadFront = lookupThreadFront(thread);
-    const sourceFront = sourceThreadFront.source({ actor });
-    const positions = await sourceFront.getBreakpointPositionsCompressed(range);
-
-    for (const line of Object.keys(positions)) {
-      let columns = positions[line];
-      const existing = sourcePositions[line];
-      if (existing) {
-        columns = [...new Set([...existing, ...columns])];
-      }
-
-      sourcePositions[line] = columns;
-    }
-  }
-  return sourcePositions;
+async function getSourceActorBreakpointPositions(
+  { thread, actor }: SourceActor,
+  range: Range
+): Promise<{ [number]: number[] }> {
+  const sourceThreadFront = lookupThreadFront(thread);
+  const sourceFront = sourceThreadFront.source({ actor });
+  return sourceFront.getBreakpointPositionsCompressed(range);
 }
 
-async function getBreakableLines(actors: Array<SourceActor>) {
-  let lines = [];
-  for (const { thread, actor } of actors) {
-    const sourceThreadFront = lookupThreadFront(thread);
-    const sourceFront = sourceThreadFront.source({ actor });
-    let actorLines = [];
-    try {
-      actorLines = await sourceFront.getBreakableLines();
-    } catch (e) {
-      // Handle backward compatibility
-      if (
-        e.message &&
-        e.message.match(/does not recognize the packet type getBreakableLines/)
-      ) {
-        const pos = await sourceFront.getBreakpointPositionsCompressed();
-        actorLines = Object.keys(pos).map(line => Number(line));
-      } else if (!e.message || !e.message.match(/Connection closed/)) {
-        throw e;
-      }
+async function getSourceActorBreakableLines({
+  thread,
+  actor,
+}: SourceActor): Promise<Array<number>> {
+  const sourceThreadFront = lookupThreadFront(thread);
+  const sourceFront = sourceThreadFront.source({ actor });
+  let actorLines = [];
+  try {
+    actorLines = await sourceFront.getBreakableLines();
+  } catch (e) {
+    // Handle backward compatibility
+    if (
+      e.message &&
+      e.message.match(/does not recognize the packet type getBreakableLines/)
+    ) {
+      const pos = await sourceFront.getBreakpointPositionsCompressed();
+      actorLines = Object.keys(pos).map(line => Number(line));
+    } else if (!e.message || !e.message.match(/Connection closed/)) {
+      throw e;
     }
-
-    lines = [...new Set([...lines, ...actorLines])];
   }
 
-  return lines;
+  return actorLines;
 }
 
 const clientCommands = {
@@ -506,8 +489,8 @@ const clientCommands = {
   breakOnNext,
   sourceContents,
   getSourceForActor,
-  getBreakpointPositions,
-  getBreakableLines,
+  getSourceActorBreakpointPositions,
+  getSourceActorBreakableLines,
   hasBreakpoint,
   setBreakpoint,
   setXHRBreakpoint,

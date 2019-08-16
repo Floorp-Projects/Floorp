@@ -253,7 +253,10 @@ BoxModel.prototype = {
     this.highlighters.hideGeometryEditor();
     this.store.dispatch(updateGeometryEditorEnabled(false));
 
-    inspector.nodePicker.off("picker-started", this.onHideGeometryEditor);
+    inspector.toolbox.nodePicker.off(
+      "picker-started",
+      this.onHideGeometryEditor
+    );
     selection.off("new-node-front", this.onHideGeometryEditor);
     markup.off("leave", this.onMarkupViewLeave);
     markup.off("node-hover", this.onMarkupViewNodeHover);
@@ -442,13 +445,19 @@ BoxModel.prototype = {
 
     if (enabled) {
       // Hide completely the geometry editor if the picker is clicked or a new node front
-      inspector.nodePicker.on("picker-started", this.onHideGeometryEditor);
+      inspector.toolbox.nodePicker.on(
+        "picker-started",
+        this.onHideGeometryEditor
+      );
       selection.on("new-node-front", this.onHideGeometryEditor);
       // Temporary hide the geometry editor
       markup.on("leave", this.onMarkupViewLeave);
       markup.on("node-hover", this.onMarkupViewNodeHover);
     } else {
-      inspector.nodePicker.off("picker-started", this.onHideGeometryEditor);
+      inspector.toolbox.nodePicker.off(
+        "picker-started",
+        this.onHideGeometryEditor
+      );
       selection.off("new-node-front", this.onHideGeometryEditor);
       markup.off("leave", this.onMarkupViewLeave);
       markup.off("node-hover", this.onMarkupViewNodeHover);

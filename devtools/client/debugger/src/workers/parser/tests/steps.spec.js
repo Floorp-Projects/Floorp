@@ -10,7 +10,7 @@ import { populateSource } from "./helpers";
 describe("getNextStep", () => {
   describe("await", () => {
     it("first await call", () => {
-      const { source } = populateSource("async");
+      const source = populateSource("async");
       const pausePosition = { line: 8, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
@@ -19,7 +19,7 @@ describe("getNextStep", () => {
     });
 
     it("first await call expression", () => {
-      const { source } = populateSource("async");
+      const source = populateSource("async");
       const pausePosition = { line: 8, column: 9, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
@@ -29,13 +29,13 @@ describe("getNextStep", () => {
     });
 
     it("second await call", () => {
-      const { source } = populateSource("async");
+      const source = populateSource("async");
       const pausePosition = { line: 9, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });
 
     it("second call expression", () => {
-      const { source } = populateSource("async");
+      const source = populateSource("async");
       const pausePosition = { line: 9, column: 9, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });
@@ -43,7 +43,7 @@ describe("getNextStep", () => {
 
   describe("yield", () => {
     it("first yield call", () => {
-      const { source } = populateSource("generators");
+      const source = populateSource("generators");
       const pausePosition = { line: 2, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
@@ -52,7 +52,7 @@ describe("getNextStep", () => {
     });
 
     it("second yield call", () => {
-      const { source } = populateSource("generators");
+      const source = populateSource("generators");
       const pausePosition = { line: 3, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });

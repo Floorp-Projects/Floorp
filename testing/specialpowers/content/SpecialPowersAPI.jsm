@@ -1416,6 +1416,17 @@ class SpecialPowersAPI extends JSWindowActorChild {
     return obj;
   }
 
+  _browsingContextForTarget(target) {
+    if (BrowsingContext.isInstance(target)) {
+      return target;
+    }
+    if (Element.isInstance(target)) {
+      return target.browsingContext;
+    }
+
+    return BrowsingContext.getFromWindow(target);
+  }
+
   /**
    * Runs a task in the context of the given frame, and returns a
    * promise which resolves to the return value of that task.
@@ -1454,20 +1465,25 @@ class SpecialPowersAPI extends JSWindowActorChild {
    *        change in the future.
    */
   spawn(target, args, task) {
-    let browsingContext;
-    if (BrowsingContext.isInstance(target)) {
-      browsingContext = target;
-    } else if (Element.isInstance(target)) {
-      browsingContext = target.browsingContext;
-    } else {
-      browsingContext = BrowsingContext.getFromWindow(target);
-    }
+    let browsingContext = this._browsingContextForTarget(target);
 
     return this.sendQuery("Spawn", {
       browsingContext,
       args,
       task: String(task),
       caller: SpecialPowersSandbox.getCallerInfo(Components.stack.caller),
+    });
+  }
+
+  snapshotContext(target, rect, background) {
+    let browsingContext = this._browsingContextForTarget(target);
+
+    return this.sendQuery("Snapshot", {
+      browsingContext,
+      rect,
+      background,
+    }).then(imageData => {
+      return this.contentWindow.createImageBitmap(imageData);
     });
   }
 

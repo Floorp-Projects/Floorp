@@ -1994,7 +1994,8 @@ main {
       margin: 0 0 12px; }
   .ds-hero .ds-card.placeholder {
     margin-bottom: 20px;
-    padding-bottom: 20px; }
+    padding-bottom: 20px;
+    min-height: 180px; }
   .ds-hero .img-wrapper {
     margin: 0 0 12px; }
   .ds-hero .ds-hero-item {
@@ -2638,11 +2639,8 @@ main {
   .ds-card.placeholder {
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
-    border-radius: 4px; }
-    .ds-card.placeholder .ds-card-link {
-      cursor: default; }
-    .ds-card.placeholder .img-wrapper {
-      opacity: 0; }
+    border-radius: 4px;
+    min-height: 300px; }
   .ds-card .img-wrapper {
     width: 100%; }
   .ds-card .img {
@@ -2786,12 +2784,14 @@ main {
   margin-top: 12px;
   position: relative; }
   .story-footer .story-sponsored-label,
+  .story-footer .story-view-count,
   .story-footer .status-message {
     -webkit-line-clamp: 1;
     font-size: 13px;
     line-height: 24px;
     color: #737373; }
     [lwt-newtab-brighttext] .story-footer .story-sponsored-label, [lwt-newtab-brighttext]
+    .story-footer .story-view-count, [lwt-newtab-brighttext]
     .story-footer .status-message {
       color: #B1B1B3; }
   .story-footer .status-message {
@@ -3006,6 +3006,8 @@ main {
       background-color: rgba(12, 12, 13, 0.2); }
     .ASRouterButton.secondary:active {
       background-color: rgba(12, 12, 13, 0.3); }
+    .ASRouterButton.secondary:focus {
+      box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3); }
 
 [lwt-newtab-brighttext] .secondary {
   background-color: rgba(249, 249, 250, 0.1); }
@@ -3316,7 +3318,8 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       .below-search-snippet.withButton .snippet-hover-wrapper:hover {
         background-color: var(--newtab-element-hover-color); }
         .below-search-snippet.withButton .snippet-hover-wrapper:hover .blockButton {
-          display: block; }
+          display: block;
+          opacity: 1; }
           .ds-outer-wrapper-breakpoint-override .below-search-snippet.withButton .snippet-hover-wrapper:hover .blockButton {
             inset-inline-end: -8%; }
             @media (max-width: 865px) {
@@ -3374,6 +3377,9 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     inset-inline-end: 20px;
     opacity: 1;
     top: 50%; }
+    .SimpleBelowSearchSnippet .blockButton:focus {
+      box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3);
+      border-radius: 2px; }
   .SimpleBelowSearchSnippet .title {
     font-size: inherit;
     margin: 0; }
@@ -3400,11 +3406,14 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     min-height: 60px;
     background-color: transparent; }
     .SimpleBelowSearchSnippet.withButton .blockButton {
-      display: none;
+      display: block;
       inset-inline-end: -15%;
-      opacity: 1;
+      opacity: 0;
       margin: auto;
       top: unset; }
+      .SimpleBelowSearchSnippet.withButton .blockButton:focus {
+        opacity: 1;
+        box-shadow: none; }
       @media (max-width: 1120px) {
         .SimpleBelowSearchSnippet.withButton .blockButton {
           inset-inline-end: 2%; } }

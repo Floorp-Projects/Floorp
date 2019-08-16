@@ -12,11 +12,11 @@ import {
 } from "../../utils/test-head";
 const { getSelectedSource, getSourceTabs } = selectors;
 
-import { sourceThreadFront as threadFront } from "./helpers/threadFront.js";
+import { mockCommandClient } from "./helpers/mockCommandClient";
 
 describe("closing tabs", () => {
   it("closing a tab", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -29,7 +29,7 @@ describe("closing tabs", () => {
   });
 
   it("closing the inactive tab", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -45,7 +45,7 @@ describe("closing tabs", () => {
   });
 
   it("closing the only tab", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -58,7 +58,7 @@ describe("closing tabs", () => {
   });
 
   it("closing the active tab", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     const barSource = await dispatch(
@@ -74,7 +74,7 @@ describe("closing tabs", () => {
   });
 
   it("closing many inactive tabs", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
@@ -97,7 +97,7 @@ describe("closing tabs", () => {
   });
 
   it("closing many tabs including the active tab", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
@@ -119,7 +119,7 @@ describe("closing tabs", () => {
   });
 
   it("closing all the tabs", async () => {
-    const { dispatch, getState, cx } = createStore(threadFront);
+    const { dispatch, getState, cx } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));

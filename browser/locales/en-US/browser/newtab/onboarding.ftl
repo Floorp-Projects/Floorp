@@ -11,7 +11,6 @@
 ## avoid breaking quoted text).
 
 onboarding-button-label-learn-more = Learn More
-onboarding-button-label-try-now = Try It Now
 onboarding-button-label-get-started = Get Started
 
 ## Welcome modal dialog strings
@@ -76,21 +75,6 @@ onboarding-benefit-privacy-text = Everything we do honors our Personal Data Prom
 ## Each message has a title and a description of what the browser feature is.
 ## Each message also has an associated button for the user to try the feature.
 ## The string for the button is found above, in the UI strings section
-onboarding-private-browsing-title = Private Browsing
-onboarding-private-browsing-text = Browse by yourself. Private Browsing with Content Blocking blocks online trackers that follow you around the web.
-
-onboarding-screenshots-title = Screenshots
-onboarding-screenshots-text = Take, save and share screenshots - without leaving { -brand-short-name }. Capture a region or an entire page as you browse. Then save to the web for easy access and sharing.
-
-onboarding-addons-title = Add-ons
-onboarding-addons-text = Add even more features that make { -brand-short-name } work harder for you. Compare prices, check the weather or express your personality with a custom theme.
-
-onboarding-ghostery-title = Ghostery
-onboarding-ghostery-text = Browse faster, smarter, or safer with extensions like Ghostery, which lets you block annoying ads.
-
-# Note: "Sync" in this case is a generic verb, as in "to synchronize"
-onboarding-fxa-title = Sync
-onboarding-fxa-text = Sign up for a { -fxaccount-brand-name } and sync your bookmarks, passwords, and open tabs everywhere you use { -brand-short-name }.
 
 onboarding-tracking-protection-title2 = Protection From Tracking
 onboarding-tracking-protection-text2 = { -brand-short-name } helps stop websites from tracking you online, making it harder for ads to follow you around the web.

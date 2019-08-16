@@ -12,13 +12,13 @@ import {
   getTelemetryEvents,
 } from "../../../utils/test-head";
 
-import { simpleMockThreadFront } from "../../tests/helpers/threadFront.js";
+import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
 function mockClient(positionsResponse = {}) {
   return {
-    ...simpleMockThreadFront,
-    getBreakpointPositions: async () => positionsResponse,
-    getBreakableLines: async () => [],
+    ...mockCommandClient,
+    getSourceActorBreakpointPositions: async () => positionsResponse,
+    getSourceActorBreakableLines: async () => [],
   };
 }
 

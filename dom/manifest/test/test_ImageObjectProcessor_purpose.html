@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+    /**
+     * Image object's purpose member
+     * https://w3c.github.io/manifest/#purpose-member
+     **/
+
+    "use strict";
+    const testManifest = {
+      icons: [{
+        src: "test",
+      }],
+    };
+
+    const invalidPurposeTypes = [
+      [],
+      123,
+      {},
+      null,
+    ]
+
+    invalidPurposeTypes.forEach(invalidType => {
+      const expected = `Invalid types get treated as 'any'.`;
+      testManifest.icons[0].purpose = invalidType;
+      data.jsonText = JSON.stringify(testManifest);
+      const result = processor.process(data);
+      is(result.icons.length, 1, expected);
+      is(result.icons[0].purpose.length, 1, expected);
+      is(result.icons[0].purpose[0], "any", expected);
+    });
+
+    const invalidPurposes = [
+      "not-known-test-purpose",
+      "invalid-purpose invalid-purpose",
+      "no-purpose invalid-purpose some-other-non-valid-purpose",
+    ];
+
+    invalidPurposes.forEach(invalidPurpose => {
+      const expected = `Expect invalid purposes to invalidate the icon.`;
+      testManifest.icons[0].purpose = invalidPurpose;
+      data.jsonText = JSON.stringify(testManifest);
+      const result = processor.process(data);
+      is(result.icons.length, 0, expected);
+    });
+
+    const mixedValidAndInvalidPurposes = [
+      "not-known-test-purpose maskable",
+      "maskable invalid-purpose invalid-purpose",
+      "no-purpose invalid-purpose maskable some-other-non-valid-purpose",
+    ];
+
+    mixedValidAndInvalidPurposes.forEach(mixedPurpose => {
+      const expected = `Expect on 'maskable' to remain.`;
+      testManifest.icons[0].purpose = mixedPurpose;
+      data.jsonText = JSON.stringify(testManifest);
+      const result = processor.process(data);
+      is(result.icons.length, 1, expected);
+      is(result.icons[0].purpose.join(), "maskable", expected);
+    });
+
+    const validPurposes = [
+      "maskable",
+      "any",
+      "any maskable",
+      "maskable any",
+    ];
+
+    validPurposes.forEach(purpose => {
+      testManifest.icons[0].purpose = purpose;
+      data.jsonText = JSON.stringify(testManifest);
+      var manifest = processor.process(data);
+      is(manifest.icons[0].purpose.join(" "), purpose, `Expected "${purpose}" as purpose.`);
+    });
+
+    const validWhiteSpace = [
+      "",
+      whiteSpace, // defined in common.js
+      `${whiteSpace}any`,
+      `any${whiteSpace}`,
+      `${whiteSpace}any${whiteSpace}`,
+    ];
+
+    validWhiteSpace.forEach(purpose => {
+      testManifest.icons[0].purpose = purpose;
+      data.jsonText = JSON.stringify(testManifest);
+      var manifest = processor.process(data);
+      is(manifest.icons[0].purpose.join(), "any");
+    });
+  </script>
+</head>

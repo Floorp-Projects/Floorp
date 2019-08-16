@@ -28,19 +28,19 @@ math {
   -moz-float-edge: margin-box;
   -moz-math-display: inline;
 }
-math[display="block"] {
+math[display="block" i] {
   display: block;
   text-align: -moz-center;
   -moz-math-display: block;
 }
-math[display="inline"] {
+math[display="inline" i] {
   display: inline;
   -moz-math-display: inline;
 }
-math[displaystyle="false"] {
+math[displaystyle="false" i] {
   -moz-math-display: inline;
 }
-math[displaystyle="true"] {
+math[displaystyle="true" i] {
   -moz-math-display: block;
 }
 
@@ -233,10 +233,10 @@ mtable[framespacing] > mtr > mtd {
 /*
   Map mstyle@displaystyle to -moz-math-display.
 */
-mstyle[displaystyle="false"] {
+mstyle[displaystyle="false" i] {
   -moz-math-display: inline;
 }
-mstyle[displaystyle="true"] {
+mstyle[displaystyle="true" i] {
   -moz-math-display: block;
 }
 
@@ -316,7 +316,7 @@ munderover > :not(:first-child) {
    mtable element sets displaystyle to "false" within the table elements.
 */
 mtable { -moz-math-display: inline; }
-mtable[displaystyle="true"] { -moz-math-display: block; }
+mtable[displaystyle="true" i] { -moz-math-display: block; }
 
 /*
    The mscarries element sets displaystyle to "false", and increments
