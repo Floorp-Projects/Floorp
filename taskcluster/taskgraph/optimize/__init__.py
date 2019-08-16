@@ -36,7 +36,7 @@ def register_strategy(name, args=()):
 
 
 def optimize_task_graph(target_task_graph, params, do_not_optimize,
-                        existing_tasks=None, strategies=None):
+                        existing_tasks=None, strategy_override=None):
     """
     Perform task optimization, returning a taskgraph and a map from label to
     assigned taskId, including replacement tasks.
@@ -46,7 +46,9 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize,
         existing_tasks = {}
 
     # instantiate the strategies for this optimization process
-    strategies = strategies or registry.copy()
+    strategies = registry.copy()
+    if strategy_override:
+        strategies.update(strategy_override)
 
     optimizations = _get_optimizations(target_task_graph, strategies)
 
