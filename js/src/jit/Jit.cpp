@@ -133,20 +133,19 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
 }
 
 EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
+  if (!IsBaselineInterpreterEnabled()) {
+    // All JITs are disabled.
+    return EnterJitStatus::NotEntered;
+  }
+
   JSScript* script = state.script();
 
   uint8_t* code = script->jitCodeRaw();
   do {
-    // Make sure we can enter Baseline Interpreter or JIT code. Note that
-    // the prologue has warm-up checks to tier up if needed.
-    if (IsBaselineInterpreterEnabled()) {
-      if (script->jitScript()) {
-        break;
-      }
-    } else {
-      if (script->hasBaselineScript()) {
-        break;
-      }
+    // Make sure we can enter Baseline Interpreter code. Note that the prologue
+    // has warm-up checks to tier up if needed.
+    if (script->hasJitScript()) {
+      break;
     }
 
     script->incWarmUpCounter();

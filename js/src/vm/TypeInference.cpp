@@ -1510,12 +1510,6 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
   for (size_t i = 0; i < constraints->numFrozenScripts(); i++) {
     const CompilerConstraintList::FrozenScript& entry =
         constraints->frozenScript(i);
-    JitScript* jitScript = entry.script->jitScript();
-    if (!jitScript) {
-      succeeded = false;
-      break;
-    }
-
     // It could happen that one of the compiled scripts was made a
     // debuggee mid-compilation (e.g., via setting a breakpoint). If so,
     // throw away the compilation.
@@ -1524,6 +1518,7 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
       break;
     }
 
+    JitScript* jitScript = entry.script->jitScript();
     AutoSweepJitScript sweep(entry.script);
     if (!CheckFrozenTypeSet(sweep, cx, entry.thisTypes,
                             jitScript->thisTypes(sweep, entry.script))) {
@@ -1616,7 +1611,6 @@ void js::FinishDefinitePropertiesAnalysis(JSContext* cx,
         constraints->frozenScript(i);
     JSScript* script = entry.script;
     JitScript* jitScript = script->jitScript();
-    MOZ_ASSERT(jitScript);
 
     AutoSweepJitScript sweep(script);
     MOZ_ASSERT(jitScript->thisTypes(sweep, script)->isSubset(entry.thisTypes));
@@ -1630,8 +1624,8 @@ void js::FinishDefinitePropertiesAnalysis(JSContext* cx,
     }
 
     for (size_t j = 0; j < script->numBytecodeTypeSets(); j++) {
-      MOZ_ASSERT(script->jitScript()->typeArray(sweep)[j].isSubset(
-          &entry.bytecodeTypes[j]));
+      MOZ_ASSERT(
+          jitScript->typeArray(sweep)[j].isSubset(&entry.bytecodeTypes[j]));
     }
   }
 #endif
@@ -1641,9 +1635,6 @@ void js::FinishDefinitePropertiesAnalysis(JSContext* cx,
         constraints->frozenScript(i);
     JSScript* script = entry.script;
     JitScript* jitScript = script->jitScript();
-    if (!jitScript) {
-      MOZ_CRASH();
-    }
 
     AutoSweepJitScript sweep(script);
     CheckDefinitePropertiesTypeSet(sweep, cx, entry.thisTypes,
@@ -2690,7 +2681,7 @@ void TypeZone::addPendingRecompile(JSContext* cx, JSScript* script) {
   // Let the script warm up again before attempting another compile.
   script->resetWarmUpCounterToDelayIonCompilation();
 
-  if (JitScript* jitScript = script->jitScript()) {
+  if (JitScript* jitScript = script->maybeJitScript()) {
     // Trigger recompilation of the IonScript.
     if (jitScript->hasIonScript()) {
       addPendingRecompile(
@@ -2738,7 +2729,7 @@ void js::PrintTypes(JSContext* cx, Compartment* comp, bool force) {
   RootedScript script(cx);
   for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
     script = iter;
-    if (JitScript* jitScript = script->jitScript()) {
+    if (JitScript* jitScript = script->maybeJitScript()) {
       jitScript->printTypes(cx, script);
     }
   }
@@ -3449,7 +3440,7 @@ void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, const js::Value& rval) {
   MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
 
-  if (!script->jitScript()) {
+  if (!script->hasJitScript()) {
     return;
   }
 

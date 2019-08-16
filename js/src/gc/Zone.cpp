@@ -348,8 +348,9 @@ void Zone::discardJitCode(JSFreeOp* fop,
   if (discardBaselineCode || discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
-    for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
-      if (jit::JitScript* jitScript = script.unbarrieredGet()->jitScript()) {
+    for (auto iter = cellIter<JSScript>(); !iter.done(); iter.next()) {
+      JSScript* script = iter.unbarrieredGet();
+      if (jit::JitScript* jitScript = script->maybeJitScript()) {
         MOZ_ASSERT(!jitScript->active());
       }
     }
@@ -364,7 +365,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
 
   for (auto script = cellIterUnsafe<JSScript>(); !script.done();
        script.next()) {
-    jit::JitScript* jitScript = script->jitScript();
+    jit::JitScript* jitScript = script->maybeJitScript();
     if (!jitScript) {
       continue;
     }
@@ -388,7 +389,7 @@ void Zone::discardJitCode(JSFreeOp* fop,
     // JIT code.
     if (discardJitScripts) {
       script->maybeReleaseJitScript(fop);
-      jitScript = script->jitScript();
+      jitScript = script->maybeJitScript();
       if (!jitScript) {
         continue;
       }
