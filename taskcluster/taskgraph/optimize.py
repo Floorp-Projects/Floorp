@@ -21,7 +21,6 @@ from .graph import Graph
 from . import files_changed
 from .taskgraph import TaskGraph
 from .util.seta import is_low_value_task
-from .util.perfile import perfile_number_of_chunks
 from .util.taskcluster import find_task_id
 from .util.parameterization import resolve_task_references
 from mozbuild.util import memoize
@@ -29,8 +28,6 @@ from slugid import nice as slugid
 from mozbuild.base import MozbuildObject
 
 logger = logging.getLogger(__name__)
-
-TOPSRCDIR = os.path.abspath(os.path.join(__file__, '../../../'))
 
 
 def optimize_task_graph(target_task_graph, params, do_not_optimize,
@@ -375,19 +372,4 @@ class SkipUnlessSchedules(OptimizationStrategy):
         if conditions & scheduled:
             return False
 
-        return True
-
-
-class TestVerify(OptimizationStrategy):
-    def should_remove_task(self, task, params, _):
-        # we would like to return 'False, None' while it's high_value_task
-        # and we wouldn't optimize it. Otherwise, it will return 'True, None'
-        env = params.get('try_task_config', {}) or {}
-        env = env.get('templates', {}).get('env', {})
-        if perfile_number_of_chunks(params.is_try(),
-                                    env.get('MOZHARNESS_TEST_PATHS', ''),
-                                    params.get('head_repository', ''),
-                                    params.get('head_rev', ''),
-                                    task):
-            return False
         return True
