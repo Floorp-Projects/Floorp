@@ -134,7 +134,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   URLExtraData* URLData() const { return Inner().mURLData; }
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) final;
 
   // Internal GetCssRules methods which do not have security check and

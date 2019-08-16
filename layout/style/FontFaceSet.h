@@ -153,7 +153,7 @@ class FontFaceSet final : public DOMEventTargetHelper,
   static bool PrefEnabled();
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) override;
 
   FontFace* GetFontFaceAt(uint32_t aIndex);
