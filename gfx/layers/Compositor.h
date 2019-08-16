@@ -190,6 +190,7 @@ class Compositor : public TextureSourceProvider {
   void Destroy() override;
   bool IsDestroyed() const { return mIsDestroyed; }
 
+  virtual void DoWidgetCleanup();
   virtual void DetachWidget() { mWidget = nullptr; }
 
   /**

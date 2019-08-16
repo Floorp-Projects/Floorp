@@ -499,6 +499,7 @@ void CompositorBridgeParent::StopAndClearResources() {
   }
 
   if (mCompositor) {
+    mCompositor->DoWidgetCleanup();
     mCompositor->DetachWidget();
     mCompositor->Destroy();
     mCompositor = nullptr;
