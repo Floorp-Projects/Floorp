@@ -133,7 +133,7 @@ fn test_auto_array_impl<T: Clone + Debug + PartialEq + Zero>(buf: &[T]) {
 
 #[cfg(test)]
 fn test_auto_array_wrapper<T: Clone + Debug + PartialEq + Zero>(buf: &[T]) {
-    let mut auto_array: Option<Box<AutoArrayWrapper>> = None;
+    let mut auto_array: Option<Box<dyn AutoArrayWrapper>> = None;
     auto_array = Some(Box::new(AutoArrayImpl::<T>::new(5)));
 
     assert_eq!(auto_array.as_ref().unwrap().elements(), 0);
