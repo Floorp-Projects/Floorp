@@ -640,6 +640,7 @@ CompositorOGL::CreateRenderTargetFromSource(
     const IntPoint& aSourcePoint) {
   MOZ_ASSERT(!aRect.IsZeroArea(),
              "Trying to create a render target of invalid size");
+  MOZ_RELEASE_ASSERT(aSource, "Source needs to be non-null");
 
   if (aRect.IsZeroArea()) {
     return nullptr;
@@ -654,11 +655,7 @@ CompositorOGL::CreateRenderTargetFromSource(
   const CompositingRenderTargetOGL* sourceSurface =
       static_cast<const CompositingRenderTargetOGL*>(aSource);
   IntRect sourceRect(aSourcePoint, aRect.Size());
-  if (aSource) {
-    CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
-  } else {
-    CreateFBOWithTexture(sourceRect, true, 0, &fbo, &tex);
-  }
+  CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
 
   RefPtr<CompositingRenderTargetOGL> surface =
       new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
