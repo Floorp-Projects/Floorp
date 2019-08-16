@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import logging
 import json
+import os
 
 import mozpack.path as mozpath
 
@@ -22,7 +23,6 @@ from taskgraph.util.schema import (
     validate_schema,
     Schema,
 )
-from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.task import task_description_schema
@@ -257,8 +257,7 @@ def use_fetches(config, jobs):
 def make_task_description(config, jobs):
     """Given a build description, create a task description"""
     # import plugin modules first, before iterating over jobs
-    import_sibling_modules(exceptions=('common.py',))
-
+    import_all()
     for job in jobs:
         if 'label' not in job:
             if 'name' not in job:
@@ -344,3 +343,11 @@ def configure_taskdesc_for_run(config, job, taskdesc, worker_implementation):
                 "In job.run using {!r}/{!r} for job {!r}:".format(
                     job['run']['using'], worker_implementation, job['label']))
     func(config, job, taskdesc)
+
+
+def import_all():
+    """Import all modules that are siblings of this one, triggering the decorator
+    above in the process."""
+    for f in os.listdir(os.path.dirname(__file__)):
+        if f.endswith('.py') and f not in ('commmon.py', '__init__.py'):
+            __import__('taskgraph.transforms.job.' + f[:-3])
