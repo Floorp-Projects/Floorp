@@ -8,7 +8,9 @@ import base64
 import hashlib
 import imghdr
 import struct
+import sys
 import tempfile
+import unittest
 import urllib
 
 from marionette_driver import By
@@ -303,6 +305,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                          self.get_image_dimensions(screenshot))
         self.assertGreater(self.page_y_offset, 0)
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Bug 1330560")
     def test_capture_flags(self):
         self.marionette.navigate(input)
 
