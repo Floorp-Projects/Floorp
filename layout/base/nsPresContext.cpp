@@ -1019,9 +1019,21 @@ gfxSize nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged) {
   return deviceSizeInches;
 }
 
-static bool CheckOverflow(ComputedStyle* aComputedStyle,
+static bool CheckOverflow(const ComputedStyle* aComputedStyle,
                           ScrollStyles* aStyles) {
+  // If they're not styled yet, we'll get around to it when constructing frames
+  // for the element.
+  if (!aComputedStyle) {
+    return false;
+  }
   const nsStyleDisplay* display = aComputedStyle->StyleDisplay();
+
+  // If they will generate no box, just don't.
+  if (display->mDisplay == StyleDisplay::None ||
+      display->mDisplay == StyleDisplay::Contents) {
+    return false;
+  }
+
   if (display->mOverflowX == StyleOverflow::Visible &&
       display->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
       display->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
@@ -1040,19 +1052,23 @@ static bool CheckOverflow(ComputedStyle* aComputedStyle,
 }
 
 // https://drafts.csswg.org/css-overflow/#overflow-propagation
+//
+// NOTE(emilio): We may need to use out-of-date styles for this, since this is
+// called from nsCSSFrameConstructor::ContentRemoved. We could refactor this a
+// bit to avoid doing that, and also fix correctness issues (we don't invalidate
+// properly when we insert a body element and there is a previous one, for
+// example).
 static Element* GetPropagatedScrollStylesForViewport(
     nsPresContext* aPresContext, ScrollStyles* aStyles) {
   Document* document = aPresContext->Document();
   Element* docElement = document->GetRootElement();
-
   // docElement might be null if we're doing this after removing it.
   if (!docElement) {
     return nullptr;
   }
 
   // Check the style on the document root element
-  ServoStyleSet* styleSet = aPresContext->StyleSet();
-  RefPtr<ComputedStyle> rootStyle = styleSet->ResolveStyleLazily(*docElement);
+  const auto* rootStyle = Servo_Element_GetMaybeOutOfDateStyle(docElement);
   if (CheckOverflow(rootStyle, aStyles)) {
     // tell caller we stole the overflow style from the root element
     return docElement;
@@ -1069,20 +1085,13 @@ static Element* GetPropagatedScrollStylesForViewport(
 
   Element* bodyElement = document->AsHTMLDocument()->GetBodyElement();
   if (!bodyElement) {
-    // No body, nothing to do here.
     return nullptr;
   }
 
   MOZ_ASSERT(bodyElement->IsHTMLElement(nsGkAtoms::body),
              "GetBodyElement returned something bogus");
 
-  // FIXME(emilio): We could make these just a ResolveServoStyle call if we
-  // looked at `display` on the root, and updated styles properly before doing
-  // this on first construction:
-  //
-  // https://github.com/w3c/csswg-drafts/issues/3779
-  RefPtr<ComputedStyle> bodyStyle = styleSet->ResolveStyleLazily(*bodyElement);
-
+  const auto* bodyStyle = Servo_Element_GetMaybeOutOfDateStyle(bodyElement);
   if (CheckOverflow(bodyStyle, aStyles)) {
     // tell caller we stole the overflow style from the body element
     return bodyElement;
