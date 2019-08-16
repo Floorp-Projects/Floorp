@@ -483,7 +483,7 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
   // for about: pages. This pref name did not age well: we will have multiple
   // types of privileged content processes, each with different privileges.
   // types of privleged content processes, each with different privleges.
-  pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
+  pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
   // Pref to control whether we use a separate privileged content process
   // for certain mozilla webpages (which are listed in the pref
   // browser.tabs.remote.separatedMozillaDomains).
