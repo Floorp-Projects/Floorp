@@ -6,6 +6,30 @@
 
 loader.lazyRequireGetter(this, "Ci", "chrome", true);
 loader.lazyRequireGetter(this, "Services");
+loader.lazyRequireGetter(
+  this,
+  "loadSheet",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "removeSheet",
+  "devtools/shared/layout/utils",
+  true
+);
+
+// Highlighter style used for preventing transitions and applying transparency
+// when calculating colour contrast.
+const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
+* {
+  transition: none !important;
+}
+
+:-moz-devtools-highlighted {
+  color: transparent !important;
+  text-shadow: none !important;
+}`;
 
 /**
  * Helper function that determines if nsIAccessible object is in defunct state.
@@ -37,4 +61,28 @@ function isDefunct(accessible) {
   return defunct;
 }
 
+/**
+ * Load highlighter style sheet used for preventing transitions and
+ * applying transparency when calculating colour contrast.
+ *
+ * @param  {Window} win
+ *         Window where highlighting happens.
+ */
+function loadSheetForBackgroundCalculation(win) {
+  loadSheet(win, HIGHLIGHTER_STYLES_SHEET);
+}
+
+/**
+ * Unload highlighter style sheet used for preventing transitions
+ * and applying transparency when calculating colour contrast.
+ *
+ * @param  {Window} win
+ *         Window where highlighting was happenning.
+ */
+function removeSheetForBackgroundCalculation(win) {
+  removeSheet(win, HIGHLIGHTER_STYLES_SHEET);
+}
+
 exports.isDefunct = isDefunct;
+exports.loadSheetForBackgroundCalculation = loadSheetForBackgroundCalculation;
+exports.removeSheetForBackgroundCalculation = removeSheetForBackgroundCalculation;

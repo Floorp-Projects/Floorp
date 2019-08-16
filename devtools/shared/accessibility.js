@@ -112,6 +112,78 @@ function getTextProperties(computedStyle) {
   };
 }
 
+/**
+ * Calculates contrast ratio or range of contrast ratios of the referenced DOM node
+ * against the given background color data. If background is multi-colored, return a
+ * range, otherwise a single contrast ratio.
+ *
+ * @param  {Object} backgroundColorData
+ *         Object with one or more of the following properties:
+ *         - value              {Array}
+ *                              rgba array for single color background
+ *         - min                {Array}
+ *                              min luminance rgba array for multi color background
+ *         - max                {Array}
+ *                              max luminance rgba array for multi color background
+ * @param  {Object}  textData
+ *         - color              {Array}
+ *                              rgba array for text of referenced DOM node
+ *         - isLargeText        {Boolean}
+ *                              True if text of referenced DOM node is large
+ * @return {Object}
+ *         An object that may contain one or more of the following fields: error,
+ *         isLargeText, value, min, max values for contrast.
+ */
+function getContrastRatioAgainstBackground(
+  backgroundColorData,
+  { color, isLargeText }
+) {
+  if (backgroundColorData.value) {
+    const value = colorUtils.calculateContrastRatio(
+      backgroundColorData.value,
+      color
+    );
+    return {
+      value,
+      color,
+      backgroundColor: backgroundColorData.value,
+      isLargeText,
+      score: getContrastRatioScore(value, isLargeText),
+    };
+  }
+
+  let {
+    min: backgroundColorMin,
+    max: backgroundColorMax,
+  } = backgroundColorData;
+  let min = colorUtils.calculateContrastRatio(backgroundColorMin, color);
+  let max = colorUtils.calculateContrastRatio(backgroundColorMax, color);
+
+  // Flip minimum and maximum contrast ratios if necessary.
+  if (min > max) {
+    [min, max] = [max, min];
+    [backgroundColorMin, backgroundColorMax] = [
+      backgroundColorMax,
+      backgroundColorMin,
+    ];
+  }
+
+  const score = getContrastRatioScore(min, isLargeText);
+
+  return {
+    min,
+    max,
+    color,
+    backgroundColorMin,
+    backgroundColorMax,
+    isLargeText,
+    score,
+    scoreMin: score,
+    scoreMax: getContrastRatioScore(max, isLargeText),
+  };
+}
+
 exports.getContrastRatioScore = getContrastRatioScore;
 exports.getTextProperties = getTextProperties;
+exports.getContrastRatioAgainstBackground = getContrastRatioAgainstBackground;
 exports.LARGE_TEXT = LARGE_TEXT;
