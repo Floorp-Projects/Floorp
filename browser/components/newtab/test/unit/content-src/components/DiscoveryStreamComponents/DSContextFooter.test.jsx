@@ -12,6 +12,7 @@ describe("<DSContextFooter>", () => {
   const bookmarkBadge = "bookmark";
   const removeBookmarkBadge = "removedBookmark";
   const context = "Sponsored by Babel";
+  const engagement = "Popular";
 
   beforeEach(() => {
     wrapper = mount(<DSContextFooter />);
@@ -26,19 +27,32 @@ describe("<DSContextFooter>", () => {
     assert.isTrue(wrapper.exists());
     assert.isOk(wrapper.find(".story-footer"));
   });
+  it("should render an engagement status if no badge and spoc passed", () => {
+    wrapper = mount(<DSContextFooter engagement={engagement} />);
+
+    const engagementLabel = wrapper.find(".story-view-count");
+    assert.equal(engagementLabel.text(), engagement);
+  });
   it("should render a badge if a proper badge prop is passed", () => {
-    wrapper = mount(<DSContextFooter context_type={bookmarkBadge} />);
+    wrapper = mount(
+      <DSContextFooter context_type={bookmarkBadge} engagement={engagement} />
+    );
     const { fluentID } = cardContextTypes[bookmarkBadge];
 
+    assert.lengthOf(wrapper.find(".story-view-count"), 0);
     const statusLabel = wrapper.find(".story-context-label");
-    assert.isOk(statusLabel);
     assert.equal(statusLabel.prop("data-l10n-id"), fluentID);
   });
   it("should only render a sponsored context if pass a sponsored context", async () => {
     wrapper = mount(
-      <DSContextFooter context_type={bookmarkBadge} context={context} />
+      <DSContextFooter
+        context_type={bookmarkBadge}
+        context={context}
+        engagement={engagement}
+      />
     );
 
+    assert.lengthOf(wrapper.find(".story-view-count"), 0);
     assert.lengthOf(wrapper.find(StatusMessage), 0);
     assert.equal(wrapper.find(".story-sponsored-label").text(), context);
   });
