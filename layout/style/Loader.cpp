@@ -211,6 +211,10 @@ class SheetLoadDataHashKey : public nsURIHashKey {
 
   nsIURI* GetURI() const { return nsURIHashKey::GetKey(); }
 
+  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
+
+  css::SheetParsingMode ParsingMode() const { return mParsingMode; }
+
   enum { ALLOW_MEMMOVE = true };
 
  protected:
@@ -451,7 +455,101 @@ struct Loader::Sheets {
   // The SheetLoadData pointers below are weak references.
   nsDataHashtable<SheetLoadDataHashKey, SheetLoadData*> mLoadingDatas;
   nsDataHashtable<SheetLoadDataHashKey, SheetLoadData*> mPendingDatas;
+
+  // A cache hit or miss. It is a miss if the `StyleSheet` is null.
+  using CacheResult = Tuple<RefPtr<StyleSheet>, StyleSheetState>;
+  CacheResult Lookup(SheetLoadDataHashKey&, bool aSyncLoad);
 };
+
+static void AssertComplete(const StyleSheet& aSheet) {
+  // This sheet came from the XUL cache or our per-document hashtable; it
+  // better be a complete sheet.
+  MOZ_ASSERT(aSheet.IsComplete(),
+             "Sheet thinks it's not complete while we think it is");
+}
+
+static void AssertIncompleteSheetMatches(const SheetLoadData& aData,
+                                         const SheetLoadDataHashKey& aKey) {
+#ifdef DEBUG
+  bool debugEqual;
+  MOZ_ASSERT((!aKey.GetPrincipal() && !aData.mLoaderPrincipal) ||
+                 (aKey.GetPrincipal() && aData.mLoaderPrincipal &&
+                  NS_SUCCEEDED(aKey.GetPrincipal()->Equals(
+                      aData.mLoaderPrincipal, &debugEqual)) &&
+                  debugEqual),
+             "Principals should be the same");
+#endif
+  MOZ_ASSERT(!aData.mSheet->HasForcedUniqueInner(),
+             "CSSOM shouldn't allow access to incomplete sheets");
+}
+
+auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
+    -> CacheResult {
+  auto CloneSheet = [](StyleSheet& aSheet) -> RefPtr<StyleSheet> {
+    return aSheet.Clone(nullptr, nullptr, nullptr, nullptr);
+  };
+
+  nsIURI* uri = aKey.GetURI();
+  // Try to find first in the XUL prototype cache.
+#ifdef MOZ_XUL
+  if (IsChromeURI(uri)) {
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    if (cache && cache->IsEnabled()) {
+      if (StyleSheet* sheet = cache->GetStyleSheet(uri)) {
+        LOG(("  From XUL cache: %p", sheet));
+        AssertComplete(*sheet);
+        // We need to check the parsing mode manually because the XUL cache only
+        // keys off the URI. See below for the unique inner check.
+        if (!sheet->HasForcedUniqueInner() &&
+            sheet->ParsingMode() == aKey.ParsingMode()) {
+          return MakeTuple(CloneSheet(*sheet), eSheetComplete);
+        }
+        LOG(("    Not cloning due to forced unique inner or mismatched "
+             "parsing mode"));
+      }
+    }
+  }
+#endif
+
+  // Now complete sheets.
+  if (auto lookup = mCompleteSheets.Lookup(&aKey)) {
+    LOG(("  From completed: %p", lookup.Data().get()));
+    AssertComplete(*lookup.Data());
+    MOZ_ASSERT(lookup.Data()->ParsingMode() == aKey.ParsingMode());
+    // Make sure it hasn't been forced to have a unique inner; that is an
+    // indication that its rules have been exposed to CSSOM and so we can't use
+    // it.
+    if (!lookup.Data()->HasForcedUniqueInner()) {
+      RefPtr<StyleSheet> clone = CloneSheet(*lookup.Data());
+      if (!lookup.Data()->GetOwnerNode() && !lookup.Data()->GetParentSheet()) {
+        // The sheet we're cloning isn't actually referenced by anyone.  Replace
+        // it in the cache, so that if our CSSOM is later modified we don't end
+        // up with two copies of our inner hanging around.
+        lookup.Data() = clone;
+      }
+      return MakeTuple(std::move(clone), eSheetComplete);
+    }
+    LOG(("    Not cloning due to forced unique inner"));
+  }
+
+  if (aSyncLoad) {
+    return {};
+  }
+
+  if (SheetLoadData* data = mLoadingDatas.Get(&aKey)) {
+    LOG(("  From loading: %p", data->mSheet.get()));
+    AssertIncompleteSheetMatches(*data, aKey);
+    return MakeTuple(CloneSheet(*data->mSheet), eSheetLoading);
+  }
+
+  if (SheetLoadData* data = mPendingDatas.Get(&aKey)) {
+    LOG(("  From pending: %p", data->mSheet.get()));
+    AssertIncompleteSheetMatches(*data, aKey);
+    return MakeTuple(CloneSheet(*data->mSheet), eSheetPending);
+  }
+
+  return {};
+}
 
 /*************************
  * Loader Implementation *
@@ -950,123 +1048,9 @@ nsresult Loader::CreateSheet(
 
   if (aURI) {
     aSheetState = eSheetComplete;
-    RefPtr<StyleSheet> sheet;
-
-    // First, the XUL cache
-#ifdef MOZ_XUL
-    if (IsChromeURI(aURI)) {
-      nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-      if (cache && cache->IsEnabled()) {
-        sheet = cache->GetStyleSheet(aURI);
-        LOG(("  From XUL cache: %p", sheet.get()));
-      }
-    }
-#endif
-
-    bool fromCompleteSheets = false;
-    if (!sheet) {
-      // Then our per-document complete sheets.
-      SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                               aCORSMode, aParsingMode);
-
-      StyleSheet* completeSheet = nullptr;
-      mSheets->mCompleteSheets.Get(&key, &completeSheet);
-      sheet = completeSheet;
-      LOG(("  From completed: %p", sheet.get()));
-
-      fromCompleteSheets = !!sheet;
-    }
-
-    if (sheet) {
-      // This sheet came from the XUL cache or our per-document hashtable; it
-      // better be a complete sheet.
-      MOZ_ASSERT(sheet->IsComplete(),
-                 "Sheet thinks it's not complete while we think it is");
-      MOZ_ASSERT(sheet->ParsingMode() == aParsingMode);
-
-      // Make sure it hasn't been forced to have a unique inner;
-      // that is an indication that its rules have been exposed to
-      // CSSOM and so we can't use it.
-      //
-      // Similarly, if the sheet doesn't have the right parsing mode just bail.
-      if (sheet->HasForcedUniqueInner()) {
-        LOG(
-            ("  Not cloning completed sheet %p because it has a "
-             "forced unique inner",
-             sheet.get()));
-        sheet = nullptr;
-        fromCompleteSheets = false;
-      }
-    }
-
-    // Then loading sheets
-    if (!sheet && !aSyncLoad) {
-      aSheetState = eSheetLoading;
-      SheetLoadData* loadData = nullptr;
-      SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                               aCORSMode, aParsingMode);
-      mSheets->mLoadingDatas.Get(&key, &loadData);
-      if (loadData) {
-        sheet = loadData->mSheet;
-        LOG(("  From loading: %p", sheet.get()));
-
-#ifdef DEBUG
-        bool debugEqual;
-        NS_ASSERTION((!aLoaderPrincipal && !loadData->mLoaderPrincipal) ||
-                         (aLoaderPrincipal && loadData->mLoaderPrincipal &&
-                          NS_SUCCEEDED(aLoaderPrincipal->Equals(
-                              loadData->mLoaderPrincipal, &debugEqual)) &&
-                          debugEqual),
-                     "Principals should be the same");
-#endif
-      }
-
-      // Then alternate sheets
-      if (!sheet) {
-        aSheetState = eSheetPending;
-        loadData = nullptr;
-        mSheets->mPendingDatas.Get(&key, &loadData);
-        if (loadData) {
-          sheet = loadData->mSheet;
-          LOG(("  From pending: %p", sheet.get()));
-
-#ifdef DEBUG
-          bool debugEqual;
-          NS_ASSERTION((!aLoaderPrincipal && !loadData->mLoaderPrincipal) ||
-                           (aLoaderPrincipal && loadData->mLoaderPrincipal &&
-                            NS_SUCCEEDED(aLoaderPrincipal->Equals(
-                                loadData->mLoaderPrincipal, &debugEqual)) &&
-                            debugEqual),
-                       "Principals should be the same");
-#endif
-        }
-      }
-    }
-
-    if (sheet) {
-      // The sheet we have now should be either incomplete or without
-      // a forced unique inner.
-      NS_ASSERTION(!sheet->HasForcedUniqueInner() || !sheet->IsComplete(),
-                   "Unexpected complete sheet with forced unique inner");
-      NS_ASSERTION(sheet->IsComplete() || aSheetState != eSheetComplete,
-                   "Sheet thinks it's not complete while we think it is");
-
-      RefPtr<StyleSheet> clonedSheet =
-          sheet->Clone(nullptr, nullptr, nullptr, nullptr);
-      *aSheet = std::move(clonedSheet);
-      if (*aSheet && fromCompleteSheets && !sheet->GetOwnerNode() &&
-          !sheet->GetParentSheet()) {
-        // The sheet we're cloning isn't actually referenced by
-        // anyone.  Replace it in the cache, so that if our CSSOM is
-        // later modified we don't end up with two copies of our inner
-        // hanging around.
-        SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                                 aCORSMode, aParsingMode);
-        NS_ASSERTION((*aSheet)->IsComplete(),
-                     "Should only be caching complete sheets");
-        mSheets->mCompleteSheets.Put(&key, *aSheet);
-      }
-    }
+    SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
+                             aCORSMode, aParsingMode);
+    Tie(*aSheet, aSheetState) = mSheets->Lookup(key, aSyncLoad);
   }
 
   if (!*aSheet) {
@@ -1114,10 +1098,9 @@ nsresult Loader::CreateSheet(
     (*aSheet)->SetReferrerInfo(referrerInfo);
   }
 
-  NS_ASSERTION(*aSheet, "We should have a sheet by now!");
-  NS_ASSERTION(aSheetState != eSheetStateUnknown, "Have to set a state!");
+  MOZ_ASSERT(*aSheet, "We should have a sheet by now!");
+  MOZ_ASSERT(aSheetState != eSheetStateUnknown, "Have to set a state!");
   LOG(("  State: %s", gStateStrings[aSheetState]));
-
   return NS_OK;
 }
 
