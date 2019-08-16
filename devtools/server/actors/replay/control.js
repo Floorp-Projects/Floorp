@@ -1097,13 +1097,12 @@ function waitUntilPauseFinishes() {
     return;
   }
 
-  while (true) {
+  while (gPauseMode != PauseModes.PAUSED) {
     gActiveChild.waitUntilPaused();
-    if (pointEquals(gActiveChild.pausePoint(), gPausePoint)) {
-      return;
-    }
     pokeChild(gActiveChild);
   }
+
+  gActiveChild.waitUntilPaused();
 }
 
 // Synchronously send a child to the specific point and pause.
