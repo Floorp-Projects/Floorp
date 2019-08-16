@@ -7,7 +7,7 @@
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const Telemetry = require("devtools/client/shared/telemetry");
-const { NodePicker } = require("devtools/shared/fronts/inspector/node-picker");
+const { NodePicker } = require("devtools/client/inspector/node-picker");
 const {
   FrontClassWithSpec,
   types,
