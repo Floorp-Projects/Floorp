@@ -911,6 +911,11 @@ class Document : public nsINode,
   void SetBaseURI(nsIURI* aURI);
 
   /**
+   * Resolves a URI based on the document's base URI.
+   */
+  Result<nsCOMPtr<nsIURI>, nsresult> ResolveWithBaseURI(const nsAString& aURI);
+
+  /**
    * Return the URL data which style system needs for resolving url value.
    * This method attempts to use the cached object in mCachedURLData, but
    * if the base URI, document URI, or principal has changed since last
