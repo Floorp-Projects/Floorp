@@ -38,6 +38,11 @@ var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
+loader.lazyRequireGetter(
+  this,
+  "NodePicker",
+  "devtools/client/inspector/node-picker"
+);
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
@@ -1767,7 +1772,7 @@ Toolbox.prototype = {
       if (!this.inspectorFront) {
         await this.initInspector();
       }
-      this.inspectorFront.nodePicker.togglePicker(focus);
+      this.nodePicker.togglePicker(focus);
     }
   },
 
@@ -1781,7 +1786,7 @@ Toolbox.prototype = {
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
-        this.inspectorFront.nodePicker.cancel();
+        this.nodePicker.cancel();
       }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
@@ -1792,7 +1797,7 @@ Toolbox.prototype = {
     this.tellRDMAboutPickerState(true);
     this.pickerButton.isChecked = true;
     await this.selectTool("inspector", "inspect_dom");
-    this.on("select", this.inspectorFront.nodePicker.stop);
+    this.on("select", this.nodePicker.stop);
   },
 
   _onPickerStarted: async function() {
@@ -1802,7 +1807,7 @@ Toolbox.prototype = {
 
   _onPickerStopped: function() {
     this.tellRDMAboutPickerState(false);
-    this.off("select", this.inspectorFront.nodePicker.stop);
+    this.off("select", this.nodePicker.stop);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
     this.pickerButton.isChecked = false;
   },
@@ -3323,31 +3328,14 @@ Toolbox.prototype = {
         this._inspector = await this.target.getFront("inspector");
         this._walker = this.inspectorFront.walker;
         this._highlighter = this.inspectorFront.highlighter;
+        this.nodePicker = new NodePicker(this.target, this.selection);
 
-        this.inspectorFront.nodePicker.on(
-          "picker-starting",
-          this._onPickerStarting
-        );
-        this.inspectorFront.nodePicker.on(
-          "picker-started",
-          this._onPickerStarted
-        );
-        this.inspectorFront.nodePicker.on(
-          "picker-stopped",
-          this._onPickerStopped
-        );
-        this.inspectorFront.nodePicker.on(
-          "picker-node-canceled",
-          this._onPickerCanceled
-        );
-        this.inspectorFront.nodePicker.on(
-          "picker-node-picked",
-          this._onPickerPicked
-        );
-        this.inspectorFront.nodePicker.on(
-          "picker-node-previewed",
-          this._onPickerPreviewed
-        );
+        this.nodePicker.on("picker-starting", this._onPickerStarting);
+        this.nodePicker.on("picker-started", this._onPickerStarted);
+        this.nodePicker.on("picker-stopped", this._onPickerStopped);
+        this.nodePicker.on("picker-node-canceled", this._onPickerCanceled);
+        this.nodePicker.on("picker-node-picked", this._onPickerPicked);
+        this.nodePicker.on("picker-node-previewed", this._onPickerPreviewed);
         registerWalkerListeners(this);
       }.bind(this)();
     }

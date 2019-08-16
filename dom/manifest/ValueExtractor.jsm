@@ -28,7 +28,16 @@ ValueExtractor.prototype = {
   //  objectName: string used to construct the developer warning.
   //  property: the name of the property being extracted.
   //  trim: boolean, if the value should be trimmed (used by string type).
-  extractValue({ expectedType, object, objectName, property, trim }) {
+  //  throwTypeError: boolean, throw a TypeError if the type is incorrect.
+  extractValue(options) {
+    const {
+      expectedType,
+      object,
+      objectName,
+      property,
+      throwTypeError,
+      trim,
+    } = options;
     const value = object[property];
     const isArray = Array.isArray(value);
     // We need to special-case "array", as it's not a JS primitive.
@@ -40,6 +49,9 @@ ValueExtractor.prototype = {
           [objectName, property, expectedType]
         );
         this.errors.push({ warn });
+        if (throwTypeError) {
+          throw new TypeError(warn);
+        }
       }
       return undefined;
     }

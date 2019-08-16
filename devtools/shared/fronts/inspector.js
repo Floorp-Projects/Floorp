@@ -7,7 +7,6 @@
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const Telemetry = require("devtools/client/shared/telemetry");
-const { NodePicker } = require("devtools/shared/fronts/inspector/node-picker");
 const {
   FrontClassWithSpec,
   types,
@@ -490,7 +489,6 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   // async initialization
   async initialize() {
     await Promise.all([this._getWalker(), this._getHighlighter()]);
-    this.nodePicker = new NodePicker(this.highlighter, this.walker);
   }
 
   async _getWalker() {

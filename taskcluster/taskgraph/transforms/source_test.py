@@ -54,8 +54,6 @@ source_test_description_schema = Schema({
         {'by-platform': {basestring: job_description_schema['worker']}},
     ),
     Optional('python-version'): [int],
-    # If true, the DECISION_TASK_ID env will be populated.
-    Optional('require-decision-task-id'): bool,
 })
 
 transforms = TransformSequence()
@@ -214,20 +212,4 @@ def handle_shell(config, jobs):
             resolve_keyed_by(job, field, item_name=job['name'])
 
         del job['shell']
-        yield job
-
-
-@transforms.add
-def add_decision_task_id_to_env(config, jobs):
-    """
-    Creates the `DECISION_TASK_ID` environment variable in tasks that set the
-    `require-decision-task-id` config.
-    """
-    for job in jobs:
-        if not job.pop('require-decision-task-id', False):
-            yield job
-            continue
-
-        env = job['worker'].setdefault('env', {})
-        env['DECISION_TASK_ID'] = os.environ.get('TASK_ID', '')
         yield job

@@ -22,6 +22,7 @@ DevToolsModules(
     'breadcrumbs.js',
     'inspector-search.js',
     'inspector.js',
+    'node-picker.js',
     'panel.js',
     'reducers.js',
     'store.js',

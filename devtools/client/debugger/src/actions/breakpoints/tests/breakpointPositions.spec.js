@@ -11,15 +11,15 @@ import {
   makeSource,
   waitForState,
 } from "../../../utils/test-head";
-import { createSource } from "../../tests/helpers/threadFront";
+import { createSource } from "../../tests/helpers/mockCommandClient";
 
 describe("breakpointPositions", () => {
   it("fetches positions", async () => {
     const fooContent = createSource("foo", "");
 
     const store = createStore({
-      getBreakpointPositions: async () => ({ "9": [1] }),
-      getBreakableLines: async () => [],
+      getSourceActorBreakpointPositions: async () => ({ "9": [1] }),
+      getSourceActorBreakableLines: async () => [],
       sourceContents: async () => fooContent,
     });
 
@@ -63,12 +63,12 @@ describe("breakpointPositions", () => {
     let resolve = _ => {};
     let count = 0;
     const store = createStore({
-      getBreakpointPositions: () =>
+      getSourceActorBreakpointPositions: () =>
         new Promise(r => {
           count++;
           resolve = r;
         }),
-      getBreakableLines: async () => [],
+      getSourceActorBreakableLines: async () => [],
       sourceContents: async () => fooContent,
     });
 

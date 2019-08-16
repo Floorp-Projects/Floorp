@@ -12,7 +12,7 @@ import cases from "jest-in-case";
 cases(
   "Parser.getSymbols",
   ({ name, file, original, type }) => {
-    const { source } = original
+    const source = original
       ? populateOriginalSource(file, type)
       : populateSource(file, type);
 

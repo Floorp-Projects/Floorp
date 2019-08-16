@@ -31,9 +31,7 @@ registerCleanupFunction(() => {
 async function selectAndHighlightNode(selectorOrNodeFront, inspector) {
   info("Highlighting and selecting the node " + selectorOrNodeFront);
   const nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
-  const onHovered = inspector.inspectorFront.nodePicker.once(
-    "picker-node-hovered"
-  );
+  const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
   inspector.selection.setNodeFront(nodeFront, { reason: "test-highlight" });
   await onHovered;
 }

@@ -61,18 +61,68 @@ const options = {...data, checkConformance: true } ;
   {
     func: () => options.jsonText = JSON.stringify({
       icons: [
-        { "src": "http://exmaple.com", "sizes": "48x48"},
+        { "src": "http://example.com", "sizes": "48x48"},
         { "src": "http://:Invalid", "sizes": "48x48"},
       ],
     }),
     warn: "icons item at index 1 is invalid. The src member is an invalid URL http://:Invalid",
   },
+  // testing dom.properties: ManifestImageUnusable
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          { src: "http://example.com", purpose: "banana" }, // generates error
+        ],
+      }));
+    },
+    get warn() {
+      // Returns 2 warnings... array here is just to keep them organized
+      return [
+        "icons item at index 1 includes unsupported purpose(s): banana.",
+        "icons item at index 1 lacks a usable purpose. It will be ignored.",
+      ].join(" ");
+    },
+  },
+  // testing dom.properties: ManifestImageUnsupportedPurposes
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          { src: "http://example.com", purpose: "any foo bar baz bar bar baz" }, // generates error
+        ],
+      }));
+    },
+    warn: "icons item at index 1 includes unsupported purpose(s): foo bar baz.",
+  },
+  // testing dom.properties: ManifestImageRepeatedPurposes
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        icons: [
+          { src: "http://example.com", purpose: "any" }, // valid
+          {
+            src: "http://example.com",
+            purpose: "any maskable any maskable maskable", // generates error
+          },
+        ],
+      }));
+    },
+    warn: "icons item at index 1 includes repeated purpose(s): any maskable.",
+  },
 ].forEach((test, index) => {
   test.func();
   const result = processor.process(options);
-  const [message] = result.moz_validation;
-  is(message.warn, test.warn, "Check warning.");
-  options.manifestURL = manifestURL;
+  let messages = [];
+  // Poking directly at "warn" triggers xray security wrapper.
+  for (const validationError of result.moz_validation) {
+    const { warn } = validationError;
+    messages.push(warn);
+  }
+  is(messages.join(" "), test.warn, "Check warning.");
+    options.manifestURL = manifestURL;
   options.docURL = docURL;
 });
 
