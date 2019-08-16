@@ -15,6 +15,10 @@ class StubContext extends BaseContext {
     this.sandbox = Cu.Sandbox(global);
   }
 
+  logActivity(type, name, data) {
+    // no-op required by subclass
+  }
+
   get cloneScope() {
     return this.sandbox;
   }
@@ -119,6 +123,10 @@ class Context extends BaseContext {
       configurable: true,
     });
     this.sandbox = Cu.Sandbox(principal, { wantXrays: false });
+  }
+
+  logActivity(type, name, data) {
+    // no-op required by subclass
   }
 
   get cloneScope() {
