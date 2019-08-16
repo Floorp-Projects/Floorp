@@ -7,7 +7,7 @@
 import React from "react";
 import { shallow } from "enzyme";
 import Editor from "../index";
-import type { Source, SourceWithContent } from "../../../types";
+import type { Source, SourceWithContent, SourceBase } from "../../../types";
 import { getDocument } from "../../../utils/editor/source-documents";
 import * as asyncValue from "../../../utils/async-value";
 
@@ -74,7 +74,7 @@ function createMockSourceWithContent(
     ...otherOverrides
   } = overrides;
 
-  const source: Source = ({
+  const source: SourceBase = ({
     id: "foo",
     url: "foo",
     ...otherOverrides,
@@ -95,7 +95,7 @@ function createMockSourceWithContent(
   }
 
   return {
-    source,
+    ...source,
     content,
   };
 }
@@ -128,7 +128,7 @@ describe("Editor", () => {
       const { component, mockEditor } = render();
       await component.setState({ editor: mockEditor });
       component.setProps({
-        selectedSourceWithContent: {
+        selectedSource: {
           source: { loadedState: "loading" },
           content: null,
         },
@@ -148,7 +148,7 @@ describe("Editor", () => {
       await component.setState({ editor: mockEditor });
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loaded",
         }),
         selectedLocation: { sourceId: "foo", line: 3, column: 1 },
@@ -166,7 +166,7 @@ describe("Editor", () => {
       await component.setState({ editor: mockEditor });
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loaded",
           text: undefined,
           error: "error text",
@@ -185,7 +185,7 @@ describe("Editor", () => {
       await component.setState({ editor: mockEditor });
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loaded",
           isWasm: true,
           text: undefined,
@@ -207,7 +207,7 @@ describe("Editor", () => {
       await component.setState({ editor: mockEditor });
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loaded",
         }),
         selectedLocation: { sourceId: "foo", line: 3, column: 1 },
@@ -216,7 +216,7 @@ describe("Editor", () => {
       // navigate to a new source that is still loading
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           id: "bar",
           loadedState: "loading",
         }),
@@ -237,17 +237,17 @@ describe("Editor", () => {
 
       await component.setState({ editor: mockEditor });
 
-      const selectedSourceWithContent = createMockSourceWithContent({
+      const selectedSource = createMockSourceWithContent({
         loadedState: "loaded",
         contentType: "javascript",
       });
 
-      await component.setProps({ ...props, selectedSourceWithContent });
+      await component.setProps({ ...props, selectedSource });
 
       const symbols = { hasJsx: true };
       await component.setProps({
         ...props,
-        selectedSourceWithContent,
+        selectedSource,
         symbols,
       });
 
@@ -262,31 +262,29 @@ describe("Editor", () => {
 
       await component.setState({ editor: mockEditor });
 
-      const selectedSourceWithContent = createMockSourceWithContent({
+      const selectedSource = createMockSourceWithContent({
         loadedState: "loaded",
         contentType: "javascript",
       });
 
-      await component.setProps({ ...props, selectedSourceWithContent });
+      await component.setProps({ ...props, selectedSource });
 
       // symbols are parsed
       const symbols = { hasJsx: true };
       await component.setProps({
         ...props,
-        selectedSourceWithContent,
+        selectedSource,
         symbols,
       });
 
       // selectedLocation changes e.g. pausing/stepping
-      mockEditor.codeMirror.doc = getDocument(
-        selectedSourceWithContent.source.id
-      );
+      mockEditor.codeMirror.doc = getDocument(selectedSource.id);
       mockEditor.codeMirror.getOption = () => ({ name: "jsx" });
       const selectedLocation = { sourceId: "foo", line: 4, column: 1 };
 
       await component.setProps({
         ...props,
-        selectedSourceWithContent,
+        selectedSource,
         symbols,
         selectedLocation,
       });
@@ -305,7 +303,7 @@ describe("Editor", () => {
       await component.setState({ editor: mockEditor });
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loading",
         }),
         selectedLocation: { sourceId: "foo", line: 1, column: 1 },
@@ -314,7 +312,7 @@ describe("Editor", () => {
       // navigate to a new source that is still loading
       await component.setProps({
         ...props,
-        selectedSourceWithContent: createMockSourceWithContent({
+        selectedSource: createMockSourceWithContent({
           loadedState: "loaded",
         }),
         selectedLocation: { sourceId: "foo", line: 1, column: 1 },

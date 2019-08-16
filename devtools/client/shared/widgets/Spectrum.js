@@ -14,7 +14,6 @@ const L10N = new MultiLocalizationHelper(
 const ARROW_KEYS = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
 const [ArrowUp, ArrowRight, ArrowDown, ArrowLeft] = ARROW_KEYS;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const COLOR_HEX_WHITE = "#ffffff";
 const SLIDER = {
   hue: {
     MIN: "0",
@@ -31,25 +30,19 @@ const SLIDER = {
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(
   this,
-  "cssColors",
-  "devtools/shared/css/color-db",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "labColors",
   "devtools/shared/css/color-db",
   true
 );
 loader.lazyRequireGetter(
   this,
-  "getContrastRatioScore",
+  "getTextProperties",
   "devtools/shared/accessibility",
   true
 );
 loader.lazyRequireGetter(
   this,
-  "getTextProperties",
+  "getContrastRatioAgainstBackground",
   "devtools/shared/accessibility",
   true
 );
@@ -110,16 +103,21 @@ function Spectrum(parentEl, rgb) {
       </div>
     </section>
     <section class="spectrum-color-contrast accessibility-color-contrast">
-      <span class="contrast-ratio-label" role="presentation">
-        ${L10N.getStr("accessibility.contrast.ratio.label")}
-      </span>
-      <span class="accessibility-contrast-value"></span>
-      <span
-        class="accessibility-color-contrast-large-text"
-        title="${L10N.getStr("accessibility.contrast.large.title")}"
-      >
-        ${L10N.getStr("accessibility.contrast.large.text")}
-      </span>
+      <div class="contrast-ratio-header-and-single-ratio">
+        <span class="contrast-ratio-label" role="presentation"></span>
+        <span class="contrast-value-and-swatch contrast-ratio-single" role="presentation">
+          <span class="accessibility-contrast-value"></span>
+        </span>
+      </div>
+      <div class="contrast-ratio-range">
+        <span class="contrast-value-and-swatch contrast-ratio-min" role="presentation">
+          <span class="accessibility-contrast-value"></span>
+        </span>
+        <span class="accessibility-color-contrast-separator"></span>
+        <span class="contrast-value-and-swatch contrast-ratio-max" role="presentation">
+          <span class="accessibility-contrast-value"></span>
+        </span>
+      </div>
     </section>
   `;
 
@@ -164,16 +162,21 @@ function Spectrum(parentEl, rgb) {
   this.spectrumContrast = this.element.querySelector(
     ".spectrum-color-contrast"
   );
-  this.contrastValue = this.element.querySelector(
-    ".accessibility-contrast-value"
-  );
+  this.contrastLabel = this.element.querySelector(".contrast-ratio-label");
+  [
+    this.contrastValue,
+    this.contrastValueMin,
+    this.contrastValueMax,
+  ] = this.element.querySelectorAll(".accessibility-contrast-value");
 
   // Create the learn more info button
   const learnMore = this.document.createElementNS(XHTML_NS, "button");
   learnMore.id = "learn-more-button";
   learnMore.className = "learn-more";
   learnMore.title = L10N.getStr("accessibility.learnMore");
-  this.spectrumContrast.appendChild(learnMore);
+  this.element
+    .querySelector(".contrast-ratio-header-and-single-ratio")
+    .appendChild(learnMore);
 
   if (rgb) {
     this.rgb = rgb;
@@ -361,31 +364,22 @@ Spectrum.draggable = function(element, dragHelper, onmove) {
  *
  * @param  {Object} computedStyle
  *         The computed style for which we want to calculate the contrast ratio.
- * @param  {Array} background
- *         The rgba value array for background color (i.e. [255, 255, 255, 1]).
+ * @param  {Object} backgroundColor
+ *         Object with one or more of the following properties: value, min, max
  * @return {Object}
  *         An object that may contain one or more of the following fields: error,
  *         isLargeText, value, score for contrast.
  */
-function getContrastRatioAgainstSolidBg(
-  computedStyle,
-  background = cssColors.white
-) {
+function getContrastRatio(computedStyle, backgroundColor) {
   const props = getTextProperties(computedStyle);
+
   if (!props) {
     return {
       error: true,
     };
   }
 
-  const { color, isLargeText } = props;
-  const value = colorUtils.calculateContrastRatio(background, color);
-  return {
-    value,
-    color,
-    isLargeText,
-    score: getContrastRatioScore(value, isLargeText),
-  };
+  return getContrastRatioAgainstBackground(backgroundColor, props);
 }
 
 Spectrum.prototype = {
@@ -394,12 +388,21 @@ Spectrum.prototype = {
       ? {
           fontSize: style["font-size"].value,
           fontWeight: style["font-weight"].value,
+          opacity: style.opacity.value,
         }
       : null;
   },
 
   set rgb(color) {
     this.hsv = Spectrum.rgbToHsv(color[0], color[1], color[2], color[3]);
+  },
+
+  set backgroundColorData(colorData) {
+    this._backgroundColorData = colorData;
+  },
+
+  get backgroundColorData() {
+    return this._backgroundColorData;
   },
 
   get textProps() {
@@ -517,6 +520,82 @@ Spectrum.prototype = {
     return slider;
   },
 
+  /**
+   * Updates the contrast label with appropriate content (i.e. large text indicator
+   * if the contrast is calculated for large text, or a base label otherwise)
+   *
+   * @param  {Boolean} isLargeText
+   *         True if contrast is calculated for large text.
+   */
+  updateContrastLabel: function(isLargeText) {
+    if (!isLargeText) {
+      this.contrastLabel.textContent = L10N.getStr(
+        "accessibility.contrast.ratio.label"
+      );
+      return;
+    }
+
+    // Clear previously appended children before appending any new children
+    while (this.contrastLabel.firstChild) {
+      this.contrastLabel.firstChild.remove();
+    }
+
+    const largeTextStr = L10N.getStr("accessibility.contrast.large.text");
+    const contrastLabelStr = L10N.getFormatStr(
+      "colorPickerTooltip.contrast.large.title",
+      largeTextStr
+    );
+
+    // Build an array of children nodes for the contrast label element
+    const contents = contrastLabelStr
+      .split(new RegExp(largeTextStr), 2)
+      .map(content => this.document.createTextNode(content));
+    const largeTextIndicator = this.document.createElementNS(XHTML_NS, "span");
+    largeTextIndicator.className = "accessibility-color-contrast-large-text";
+    largeTextIndicator.textContent = largeTextStr;
+    largeTextIndicator.title = L10N.getStr(
+      "accessibility.contrast.large.title"
+    );
+    contents.splice(1, 0, largeTextIndicator);
+
+    // Append children to contrast label
+    for (const content of contents) {
+      this.contrastLabel.appendChild(content);
+    }
+  },
+
+  /**
+   * Updates a contrast value element with the given score, value and swatches.
+   *
+   * @param  {DOMNode} el
+   *         Contrast value element to update.
+   * @param  {String} score
+   *         Contrast ratio score.
+   * @param  {Number} value
+   *         Contrast ratio value.
+   * @param  {Array} backgroundColor
+   *         RGBA color array for the background color to show in the swatch.
+   */
+  updateContrastValueEl: function(el, score, value, backgroundColor) {
+    el.classList.toggle(score, true);
+    el.textContent = value.toFixed(2);
+    el.title = L10N.getFormatStr(
+      `accessibility.contrast.annotation.${score}`,
+      L10N.getFormatStr(
+        "colorPickerTooltip.contrastAgainstBgTitle",
+        `rgba(${backgroundColor})`
+      )
+    );
+    el.parentElement.style.setProperty(
+      "--accessibility-contrast-color",
+      this.rgbCssString
+    );
+    el.parentElement.style.setProperty(
+      "--accessibility-contrast-bg",
+      `rgba(${backgroundColor})`
+    );
+  },
+
   updateAlphaSlider: function() {
     // Set alpha slider background
     const rgb = this.rgb;
@@ -593,55 +672,96 @@ Spectrum.prototype = {
   },
 
   /* Calculates the contrast ratio for the currently selected
-   * color against white background and displays/hides contrast ratio span
+   * color against a single or range of background colors and displays contrast ratio section
    * components depending on the contrast ratio calculated.
    *
    * Contrast ratio components include:
    *    - contrastLargeTextIndicator: Hidden by default, shown when text has large font
    *                                  size if there is no error in calculation.
-   *    - contrastValue:              Set to calculated value and score. Set to error text
+   *    - contrastValue(s):           Set to calculated value(s), score(s) and text color on
+   *                                  background swatches. Set to error text
    *                                  if there is an error in calculation.
    */
   updateContrast: function() {
     // Remove additional classes on spectrum contrast, leaving behind only base classes
-    this.spectrumContrast.classList.toggle("large-text", false);
     this.spectrumContrast.classList.toggle("visible", false);
-    // Assign only base class to contrastValue, removing any score class
-    this.contrastValue.className = "accessibility-contrast-value";
+    this.spectrumContrast.classList.toggle("range", false);
+    this.spectrumContrast.classList.toggle("error", false);
+    // Assign only base class to all contrastValues, removing any score class
+    this.contrastValue.className = this.contrastValueMin.className = this.contrastValueMax.className =
+      "accessibility-contrast-value";
 
     if (!this.contrastEnabled) {
       return;
     }
 
+    const isRange = this.backgroundColorData.min !== undefined;
     this.spectrumContrast.classList.toggle("visible", true);
+    this.spectrumContrast.classList.toggle("range", isRange);
 
-    const contrastRatio = getContrastRatioAgainstSolidBg({
-      ...this.textProps,
-      color: this.rgbCssString,
-    });
-    const { value, score, isLargeText, error } = contrastRatio;
+    const colorContrast = getContrastRatio(
+      {
+        ...this.textProps,
+        color: this.rgbCssString,
+      },
+      this.backgroundColorData
+    );
+
+    const {
+      value,
+      min,
+      max,
+      score,
+      scoreMin,
+      scoreMax,
+      backgroundColor,
+      backgroundColorMin,
+      backgroundColorMax,
+      isLargeText,
+      error,
+    } = colorContrast;
 
     if (error) {
-      this.contrastValue.textContent = L10N.getStr(
-        "accessibility.contrast.error"
-      );
-      this.contrastValue.title = L10N.getStr(
+      this.updateContrastLabel(false);
+      this.spectrumContrast.classList.toggle("error", true);
+
+      // If current background color is a range, show the error text in the contrast range
+      // span. Otherwise, show it in the single contrast span.
+      const contrastValEl = isRange
+        ? this.contrastValueMin
+        : this.contrastValue;
+      contrastValEl.textContent = L10N.getStr("accessibility.contrast.error");
+      contrastValEl.title = L10N.getStr(
         "accessibility.contrast.annotation.transparent.error"
       );
-      this.spectrumContrast.classList.remove("large-text");
+
       return;
     }
 
-    this.contrastValue.classList.toggle(score, true);
-    this.contrastValue.textContent = value.toFixed(2);
-    this.contrastValue.title = L10N.getFormatStr(
-      `accessibility.contrast.annotation.${score}`,
-      L10N.getFormatStr(
-        "colorPickerTooltip.contrastAgainstBgTitle",
-        COLOR_HEX_WHITE
-      )
+    this.updateContrastLabel(isLargeText);
+    if (!isRange) {
+      this.updateContrastValueEl(
+        this.contrastValue,
+        score,
+        value,
+        backgroundColor
+      );
+
+      return;
+    }
+
+    this.updateContrastValueEl(
+      this.contrastValueMin,
+      scoreMin,
+      min,
+      backgroundColorMin
     );
-    this.spectrumContrast.classList.toggle("large-text", isLargeText);
+    this.updateContrastValueEl(
+      this.contrastValueMax,
+      scoreMax,
+      max,
+      backgroundColorMax
+    );
   },
 
   updateUI: function() {
@@ -668,6 +788,7 @@ Spectrum.prototype = {
     this.element = null;
     this.parentEl = null;
     this.spectrumContrast = null;
-    this.contrastValue = null;
+    this.contrastValue = this.contrastValueMin = this.contrastValueMax = null;
+    this.contrastLabel = null;
   },
 };

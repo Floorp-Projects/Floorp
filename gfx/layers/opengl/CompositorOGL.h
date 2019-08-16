@@ -434,8 +434,8 @@ class CompositorOGL final : public Compositor {
                     GLenum aTexUnit);
 
   /**
-   * Copies the content of our backbuffer to the set transaction target.
-   * Does not restore the target FBO, so only call from EndFrame.
+   * Copies the content of the current render target to the set transaction
+   * target.
    */
   void CopyToTarget(gfx::DrawTarget* aTarget, const nsIntPoint& aTopLeft,
                     const gfx::Matrix& aWorldMatrix);

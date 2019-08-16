@@ -74,11 +74,9 @@ var navigateTo = async function(inspector, url) {
  * @param {Boolean} skipFocus - Allow tests to bypass the focus event.
  */
 var startPicker = async function(toolbox, skipFocus) {
-  const inspectorFront = await toolbox.target.getFront("inspector");
-
   info("Start the element picker");
   toolbox.win.focus();
-  await inspectorFront.nodePicker.start();
+  await toolbox.nodePicker.start();
   if (!skipFocus) {
     // By default make sure the content window is focused since the picker may not focus
     // the content window by default.
@@ -131,9 +129,7 @@ function pickElement(inspector, testActor, selector, x, y) {
  */
 function hoverElement(inspector, testActor, selector, x, y) {
   info("Waiting for element " + selector + " to be hovered");
-  const onHovered = inspector.inspectorFront.nodePicker.once(
-    "picker-node-hovered"
-  );
+  const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
   testActor.synthesizeMouse({ selector, x, y, options: { type: "mousemove" } });
   return onHovered;
 }

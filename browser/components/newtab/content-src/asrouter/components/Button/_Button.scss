@@ -38,6 +38,10 @@
     &:active {
       background-color: $grey-90-30;
     }
+
+    &:focus {
+      box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 4px $blue-50-30;
+    }
   }
 }
 

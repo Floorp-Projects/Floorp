@@ -638,6 +638,11 @@ class nsTArrayElementTraits<nsTAutoString<T>> {
       Instead_Use_nsTArray_of<nsTString<T>>* aE, const A& aArg) {
     return 0;
   }
+  template <class... Args>
+  static Dont_Instantiate_nsTArray_of<nsTAutoString<T>>* Construct(
+      Instead_Use_nsTArray_of<nsTString<T>>* aE, Args&&... aArgs) {
+    return 0;
+  }
   static Dont_Instantiate_nsTArray_of<nsTAutoString<T>>* Destruct(
       Instead_Use_nsTArray_of<nsTString<T>>* aE) {
     return 0;

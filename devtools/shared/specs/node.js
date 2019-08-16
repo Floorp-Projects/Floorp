@@ -130,6 +130,10 @@ const nodeSpec = generateActorSpec({
         value: RetVal("string"),
       },
     },
+    getBackgroundColor: {
+      request: {},
+      response: RetVal("json"),
+    },
     getOwnerGlobalDimensions: {
       request: {},
       response: RetVal("windowDimensions"),

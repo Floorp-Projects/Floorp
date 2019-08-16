@@ -1245,12 +1245,18 @@ function parseOldStyleRgb(lexer, hasAlpha) {
  * Convert a string representing a color to an object holding the
  * color's components.  Any valid CSS color form can be passed in.
  *
- * @param {String} name the color
- * @param {Boolean} useCssColor4ColorFunction use css-color-4 color function or not.
- * @return {Object} an object of the form {r, g, b, a}; or null if the
+ * @param {String} name
+ *        The color
+ * @param {Boolean} useCssColor4ColorFunction
+ *        Use css-color-4 color function or not.
+ * @param {Boolean} toArray
+ *        Return rgba array if true, otherwise object
+ * @return {Object|Array}
+ *         An object of the form {r, g, b, a} if toArray is false,
+ *         otherwise an array of the form [r, g, b, a]; or null if the
  *         name was not a valid color
  */
-function colorToRGBA(name, useCssColor4ColorFunction = false) {
+function colorToRGBA(name, useCssColor4ColorFunction = false, toArray = false) {
   name = name.trim().toLowerCase();
 
   if (name in cssColors) {
@@ -1304,7 +1310,7 @@ function colorToRGBA(name, useCssColor4ColorFunction = false) {
     return null;
   }
 
-  return { r: vals[0], g: vals[1], b: vals[2], a: vals[3] };
+  return toArray ? vals : { r: vals[0], g: vals[1], b: vals[2], a: vals[3] };
 }
 
 /**

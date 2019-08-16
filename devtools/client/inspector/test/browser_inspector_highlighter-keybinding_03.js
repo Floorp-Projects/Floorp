@@ -57,21 +57,19 @@ add_task(async function() {
     return promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
-      inspector.inspectorFront.nodePicker.once("picker-stopped"),
+      toolbox.nodePicker.once("picker-stopped"),
     ]);
   }
 
   function doKeyStop(args) {
     info("Key pressed. Waiting for picker to be canceled");
     testActor.synthesizeKey(args);
-    return inspector.inspectorFront.nodePicker.once("picker-stopped");
+    return toolbox.nodePicker.once("picker-stopped");
   }
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
-    const onPickerNodeHovered = inspector.inspectorFront.nodePicker.once(
-      "picker-node-hovered"
-    );
+    const onPickerNodeHovered = toolbox.nodePicker.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: { type: "mousemove" },
       center: true,

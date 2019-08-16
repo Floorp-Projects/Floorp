@@ -212,7 +212,6 @@ CompositorOGL::~CompositorOGL() {
   TextureSync::UnregisterTextureSourceProvider(this);
 #endif
   MOZ_COUNT_DTOR(CompositorOGL);
-  Destroy();
 }
 
 already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
@@ -641,6 +640,7 @@ CompositorOGL::CreateRenderTargetFromSource(
     const IntPoint& aSourcePoint) {
   MOZ_ASSERT(!aRect.IsZeroArea(),
              "Trying to create a render target of invalid size");
+  MOZ_RELEASE_ASSERT(aSource, "Source needs to be non-null");
 
   if (aRect.IsZeroArea()) {
     return nullptr;
@@ -655,11 +655,7 @@ CompositorOGL::CreateRenderTargetFromSource(
   const CompositingRenderTargetOGL* sourceSurface =
       static_cast<const CompositingRenderTargetOGL*>(aSource);
   IntRect sourceRect(aSourcePoint, aRect.Size());
-  if (aSource) {
-    CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
-  } else {
-    CreateFBOWithTexture(sourceRect, true, 0, &fbo, &tex);
-  }
+  CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(), &fbo, &tex);
 
   RefPtr<CompositingRenderTargetOGL> surface =
       new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
@@ -1825,14 +1821,6 @@ void CompositorOGL::CopyToTarget(DrawTarget* aTarget,
   if ((int64_t(width) * int64_t(height) * int64_t(4)) > INT32_MAX) {
     NS_ERROR("Widget size too big - integer overflow!");
     return;
-  }
-
-  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-
-  if (!mGLContext->IsGLES()) {
-    // GLES2 promises that binding to any custom FBO will attach
-    // to GL_COLOR_ATTACHMENT0 attachment point.
-    mGLContext->fReadBuffer(LOCAL_GL_BACK);
   }
 
   RefPtr<DataSourceSurface> source = Factory::CreateDataSourceSurface(
