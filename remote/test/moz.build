@@ -4,3 +4,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
 BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+
+with Files("puppeteer/test/**/*.spec.js"):
+    IMPACTED_TESTS.flavors += ["puppeteer"]
