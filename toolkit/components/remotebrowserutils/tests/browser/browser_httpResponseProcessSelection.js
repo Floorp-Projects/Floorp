@@ -119,7 +119,7 @@ add_task(async function test_disabled() {
 
   // With the pref disabled, file URIs should successfully POST, but remain in
   // the 'file' process.
-  info("DISBALED -- FILE -- raw URI load");
+  info("DISABLED -- FILE -- raw URI load");
   let resp = await postFrom(FILE_DUMMY, PRINT_POSTDATA);
   is(resp.remoteType, E10SUtils.FILE_REMOTE_TYPE, "no process switch");
   is(resp.location, PRINT_POSTDATA, "correct location");

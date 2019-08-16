@@ -29,7 +29,7 @@ interface nsICommandManager : nsISupports
 {
   /*
    * Register an observer on the specified command. The observer's Observe
-   * method will get called when the state (enabled/disbaled, or toggled etc)
+   * method will get called when the state (enabled/disabled, or toggled etc)
    * of the command changes.
    *
    * You can register the same observer on multiple commmands by calling this
