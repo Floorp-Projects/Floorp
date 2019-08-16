@@ -205,7 +205,8 @@ nsresult nsStyleSheetService::LoadAndRegisterSheetInternal(
   }
 
   RefPtr<css::Loader> loader = new css::Loader;
-  auto result = loader->LoadSheetSync(aSheetURI, parsingMode, true);
+  auto result = loader->LoadSheetSync(aSheetURI, parsingMode,
+                                      css::Loader::UseSystemPrincipal::Yes);
   if (result.isErr()) {
     return result.unwrapErr();
   }
