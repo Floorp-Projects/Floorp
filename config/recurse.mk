@@ -182,8 +182,8 @@ xpcom/xpidl/export: xpcom/idl-parser/xpidl/export
 dom/bindings/export: layout/style/export
 
 ifdef ENABLE_CLANG_PLUGIN
-$(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/host build/clang-plugin/tests/target
-build/clang-plugin/tests/target: build/clang-plugin/host
+$(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/host build/clang-plugin/tests/target-objects
+build/clang-plugin/tests/target-objects: build/clang-plugin/host
 endif
 
 # Interdependencies that moz.build world don't know about yet for compilation.

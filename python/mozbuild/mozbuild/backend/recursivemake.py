@@ -478,6 +478,8 @@ class RecursiveMakeBackend(CommonBackend):
                 f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
+            self._compile_graph[mozpath.join(
+                backend_file.relobjdir, 'target-objects')]
         elif isinstance(obj, (HostSources, HostGeneratedSources)):
             suffix_map = {
                 '.c': 'HOST_CSRCS',
@@ -494,6 +496,8 @@ class RecursiveMakeBackend(CommonBackend):
                 f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
+            self._compile_graph[mozpath.join(
+                backend_file.relobjdir, 'host-objects')]
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
@@ -839,7 +843,8 @@ class RecursiveMakeBackend(CommonBackend):
             # rest of the compile graph.
             target_name = mozpath.basename(root)
 
-            if target_name not in ('target', 'host'):
+            if target_name not in ('target', 'target-objects',
+                                   'host', 'host-objects'):
                 non_default_roots[target_name].append(root)
                 non_default_graphs[target_name][root] = self._compile_graph[root]
                 del self._compile_graph[root]
@@ -1066,6 +1071,9 @@ class RecursiveMakeBackend(CommonBackend):
 
             backend_file.write('%s += %s\n' % (
                     non_unified_var, ' '.join(source_files)))
+
+        self._compile_graph[mozpath.join(
+            backend_file.relobjdir, 'target-objects')]
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -1378,10 +1386,6 @@ class RecursiveMakeBackend(CommonBackend):
             return os.path.normpath(mozpath.join(mozpath.relpath(lib.objdir, obj.objdir),
                                                  name))
 
-        # This will create the node even if there aren't any linked libraries.
-        build_target = self._build_target_for_obj(obj)
-        self._compile_graph[build_target]
-
         objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
 
         obj_target = obj.name
@@ -1472,10 +1476,26 @@ class RecursiveMakeBackend(CommonBackend):
             else:
                 backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
-        for lib in obj.linked_libraries:
-            if not isinstance(lib, ExternalLibrary):
-                self._compile_graph[build_target].add(
-                    self._build_target_for_obj(lib))
+        if not isinstance(obj, (StaticLibrary, HostLibrary)) or obj.no_expand_lib:
+            # This will create the node even if there aren't any linked libraries.
+            build_target = self._build_target_for_obj(obj)
+            self._compile_graph[build_target]
+
+            # Make the build target depend on all the target/host-objects that
+            # recursively are linked into it.
+            def recurse_libraries(obj):
+                for lib in obj.linked_libraries:
+                    if isinstance(lib, (StaticLibrary, HostLibrary)) and not lib.no_expand_lib:
+                        recurse_libraries(lib)
+                    elif not isinstance(lib, ExternalLibrary):
+                        self._compile_graph[build_target].add(
+                            self._build_target_for_obj(lib))
+                relobjdir = mozpath.relpath(obj.objdir, self.environment.topobjdir)
+                objects_target = mozpath.join(relobjdir, '%s-objects' % obj.KIND)
+                if objects_target in self._compile_graph:
+                    self._compile_graph[build_target].add(objects_target)
+
+            recurse_libraries(obj)
 
         # Process library-based defines
         self._process_defines(obj.lib_defines, backend_file)
