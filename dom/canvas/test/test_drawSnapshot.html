@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for drawSnapshot</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="file_drawWindow_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", runTests);
+
+  async function runTests(event) {
+    let snapshot = async function(context, x, y, width, height, bg) {
+      let elem = document.getElementById("source");
+
+      var rect = new window.DOMRect(x, y, width, height);
+
+      let image = await SpecialPowers.snapshotContext(elem, rect, bg);
+      context.drawImage(image, 0, 0);
+    }
+
+    // Run the tests with the source document in an <iframe> within this
+    // page, which we expect to have transparency.
+    await runDrawWindowTests(snapshot, true);
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<iframe id="source" src="file_drawWindow_source.html" width="200" height="100"></iframe>
+</body>
+</html>
