@@ -88,8 +88,6 @@ class RequestListContent extends Component {
       selectedRequest: PropTypes.object,
       unblockSelectedRequestURL: PropTypes.func.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
-      panelOpen: PropTypes.bool,
-      toggleSearchPanel: PropTypes.func.isRequired,
     };
   }
 
@@ -312,8 +310,6 @@ class RequestListContent extends Component {
         sendCustomRequest,
         openStatistics,
         unblockSelectedRequestURL,
-        toggleSearchPanel,
-        panelOpen,
       } = this.props;
       this.contextMenu = new RequestListContextMenu({
         blockSelectedRequestURL,
@@ -324,8 +320,6 @@ class RequestListContent extends Component {
         openStatistics,
         openRequestInTab: this.openRequestInTab,
         unblockSelectedRequestURL,
-        toggleSearchPanel,
-        panelOpen,
       });
     }
 
@@ -416,7 +410,6 @@ module.exports = connect(
     selectedRequest: getSelectedRequest(state),
     scale: getWaterfallScale(state),
     requestFilterTypes: state.filters.requestFilterTypes,
-    panelOpen: state.search.panelOpen,
   }),
   (dispatch, props) => ({
     blockSelectedRequestURL: clickedRequest => {
@@ -463,6 +456,5 @@ module.exports = connect(
     onWaterfallMouseDown: () => {
       dispatch(Actions.selectDetailsPanelTab("timings"));
     },
-    toggleSearchPanel: () => dispatch(Actions.toggleSearchPanel()),
   })
 )(RequestListContent);
