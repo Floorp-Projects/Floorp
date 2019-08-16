@@ -27,6 +27,7 @@ jobs-from:
     - node.yml
     - python.yml
     - remote.yml
+    - shadow-scheduler.yml
     - webidl.yml
     - wpt-manifest.yml
     - wpt-metadata.yml

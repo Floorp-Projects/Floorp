@@ -116,6 +116,7 @@ treeherder:
         'Gd': 'Geckodriver'
         'clang': 'Clang Tidy & Format'
         'coverity': 'Coverity Static Analysis'
+        'SS': 'Shadow scheduler'
 
 index:
     products:
