@@ -49,4 +49,10 @@ add_task(async function() {
   info("Removing tabs");
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(tab2);
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      resolve()
+    );
+  });
 });
