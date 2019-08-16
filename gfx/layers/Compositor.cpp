@@ -76,10 +76,10 @@ Compositor::Compositor(widget::CompositorWidget* aWidget,
 
 Compositor::~Compositor() { ReadUnlockTextures(); }
 
-// Called just before DetachWidget.
-void Compositor::DoWidgetCleanup() { mWidget->DoCompositorCleanup(); }
-
 void Compositor::Destroy() {
+  mWidget->DoCompositorCleanup();
+  mWidget = nullptr;
+
   TextureSourceProvider::Destroy();
   mIsDestroyed = true;
 }

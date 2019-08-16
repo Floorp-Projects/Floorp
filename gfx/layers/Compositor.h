@@ -190,9 +190,6 @@ class Compositor : public TextureSourceProvider {
   void Destroy() override;
   bool IsDestroyed() const { return mIsDestroyed; }
 
-  virtual void DoWidgetCleanup();
-  virtual void DetachWidget() { mWidget = nullptr; }
-
   /**
    * Request a texture host identifier that may be used for creating textures
    * across process or thread boundaries that are compatible with this
