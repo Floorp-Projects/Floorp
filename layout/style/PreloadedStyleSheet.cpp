@@ -36,7 +36,8 @@ nsresult PreloadedStyleSheet::GetSheet(StyleSheet** aResult) {
 
   if (!mSheet) {
     RefPtr<css::Loader> loader = new css::Loader;
-    auto result = loader->LoadSheetSync(mURI, mParsingMode, true);
+    auto result = loader->LoadSheetSync(mURI, mParsingMode,
+                                        css::Loader::UseSystemPrincipal::Yes);
     if (result.isErr()) {
       return result.unwrapErr();
     }
@@ -80,7 +81,8 @@ nsresult PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise) {
   RefPtr<css::Loader> loader = new css::Loader;
   RefPtr<StylesheetPreloadObserver> obs =
       new StylesheetPreloadObserver(aPromise, this);
-  auto result = loader->LoadSheet(mURI, mParsingMode, false, obs);
+  auto result = loader->LoadSheet(mURI, mParsingMode,
+                                  css::Loader::UseSystemPrincipal::No, obs);
   if (result.isErr()) {
     return result.unwrapErr();
   }

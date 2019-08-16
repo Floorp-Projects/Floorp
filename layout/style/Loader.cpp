@@ -615,7 +615,7 @@ void Loader::DocumentStyleSheetSetChanged() {
   mDatasToNotifyOn += arr.Length();
   for (uint32_t i = 0; i < arr.Length(); ++i) {
     --mDatasToNotifyOn;
-    LoadSheet(arr[i], SheetState::NeedsParser, false);
+    LoadSheet(arr[i], SheetState::NeedsParser, IsPreload::No);
   }
 }
 
@@ -986,7 +986,8 @@ Loader::IsAlternate Loader::IsAlternateSheet(const nsAString& aTitle,
 nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                                     nsIPrincipal* aTriggeringPrincipal,
                                     nsIURI* aTargetURI,
-                                    nsINode* aRequestingNode, bool aIsPreload) {
+                                    nsINode* aRequestingNode,
+                                    IsPreload aIsPreload) {
   // When performing a system load (e.g. aUseSystemPrincipal = true)
   // then aLoadingPrincipal == null; don't consult content policies.
   if (!aLoadingPrincipal) {
@@ -994,8 +995,9 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
   }
 
   nsContentPolicyType contentPolicyType =
-      aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-                 : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+      aIsPreload == IsPreload::Yes
+          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new net::LoadInfo(
       aLoadingPrincipal, aTriggeringPrincipal, aRequestingNode,
@@ -1232,7 +1234,7 @@ void Loader::InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet) {
  * a new load is kicked off asynchronously.
  */
 nsresult Loader::LoadSheet(SheetLoadData* aLoadData, SheetState aSheetState,
-                           bool aIsPreload) {
+                           IsPreload aIsPreload) {
   LOG(("css::Loader::LoadSheet"));
   MOZ_ASSERT(aLoadData, "Need a load data");
   MOZ_ASSERT(aLoadData->mURI, "Need a URI to load");
@@ -1278,8 +1280,9 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData, SheetState aSheetState,
         nsILoadInfo::SEC_ALLOW_CHROME;
 
     nsContentPolicyType contentPolicyType =
-        aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-                   : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+        aIsPreload == IsPreload::Yes
+            ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+            : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
     // Just load it
     nsCOMPtr<nsIChannel> channel;
@@ -1424,8 +1427,9 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData, SheetState aSheetState,
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsContentPolicyType contentPolicyType =
-      aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
-                 : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+      aIsPreload == IsPreload::Yes
+          ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+          : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
   nsCOMPtr<nsIChannel> channel;
   // Note we are calling NS_NewChannelWithTriggeringPrincipal here with a node
@@ -1924,7 +1928,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   MOZ_ASSERT_IF(syncLoad, !aObserver);
 
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aInfo.mURI,
-                                   context, false);
+                                   context, IsPreload::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Don't fire the error event if our document is loaded as data.  We're
     // supposed to not even try to do loads in that case... Unfortunately, we
@@ -1997,7 +2001,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   }
 
   // Load completion will free the data
-  rv = LoadSheet(data, state, false);
+  rv = LoadSheet(data, state, IsPreload::No);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -2073,8 +2077,8 @@ nsresult Loader::LoadChildSheet(StyleSheet* aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet->Principal();
-  nsresult rv =
-      CheckContentPolicy(loadingPrincipal, principal, aURL, context, false);
+  nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context,
+                                   IsPreload::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aParentData) {
       MarkLoadTreeFailed(aParentData);
@@ -2139,7 +2143,7 @@ nsresult Loader::LoadChildSheet(StyleSheet* aParentSheet,
   bool syncLoad = data->mSyncLoad;
 
   // Load completion will release the data
-  rv = LoadSheet(data, state, false);
+  rv = LoadSheet(data, state, IsPreload::No);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If syncLoad is true, |data| will be deleted by now.
@@ -2150,42 +2154,44 @@ nsresult Loader::LoadChildSheet(StyleSheet* aParentSheet,
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
-    nsIURI* aURL, SheetParsingMode aParsingMode, bool aUseSystemPrincipal) {
+    nsIURI* aURL, SheetParsingMode aParsingMode,
+    UseSystemPrincipal aUseSystemPrincipal) {
   LOG(("css::Loader::LoadSheetSync"));
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
-      aURL, false, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      aURL, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
       referrerInfo, nullptr, CORS_NONE, EmptyString());
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
-    nsIURI* aURI, SheetParsingMode aParsingMode, bool aUseSystemPrincipal,
-    nsICSSLoaderObserver* aObserver) {
+    nsIURI* aURI, SheetParsingMode aParsingMode,
+    UseSystemPrincipal aUseSystemPrincipal, nsICSSLoaderObserver* aObserver) {
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
-      aURI, false, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      aURI, IsPreload::No, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
       referrerInfo, aObserver, CORS_NONE, EmptyString());
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
-    nsIURI* aURL, bool aIsPreload, nsIPrincipal* aOriginPrincipal,
+    nsIURI* aURL, IsPreload aIsPreload, nsIPrincipal* aOriginPrincipal,
     const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
     nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
     const nsAString& aIntegrity) {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(
-      aURL, aIsPreload, eAuthorSheetFeatures, false, aOriginPrincipal,
-      aPreloadEncoding, aReferrerInfo, aObserver, aCORSMode, aIntegrity);
+  return InternalLoadNonDocumentSheet(aURL, aIsPreload, eAuthorSheetFeatures,
+                                      UseSystemPrincipal::No, aOriginPrincipal,
+                                      aPreloadEncoding, aReferrerInfo,
+                                      aObserver, aCORSMode, aIntegrity);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
-    nsIURI* aURL, bool aIsPreload, SheetParsingMode aParsingMode,
-    bool aUseSystemPrincipal, nsIPrincipal* aOriginPrincipal,
+    nsIURI* aURL, IsPreload aIsPreload, SheetParsingMode aParsingMode,
+    UseSystemPrincipal aUseSystemPrincipal, nsIPrincipal* aOriginPrincipal,
     const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
     nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
     const nsAString& aIntegrity) {
   MOZ_ASSERT(aURL, "Must have a URI to load");
-  MOZ_ASSERT(!aUseSystemPrincipal || !aObserver,
+  MOZ_ASSERT(aUseSystemPrincipal == UseSystemPrincipal::No || !aObserver,
              "Shouldn't load system-principal sheets async");
   MOZ_ASSERT(aReferrerInfo, "Must have referrerInfo");
 
@@ -2228,7 +2234,8 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   }
 
   SheetLoadData* data = new SheetLoadData(
-      this, aURL, sheet, syncLoad, aUseSystemPrincipal, aPreloadEncoding,
+      this, aURL, sheet, syncLoad,
+      aUseSystemPrincipal == UseSystemPrincipal::Yes, aPreloadEncoding,
       aObserver, aOriginPrincipal, aReferrerInfo, mDocument);
 
   NS_ADDREF(data);
@@ -2385,7 +2392,7 @@ void Loader::StartDeferredLoads() {
   mDatasToNotifyOn += arr.Length();
   for (uint32_t i = 0; i < arr.Length(); ++i) {
     --mDatasToNotifyOn;
-    LoadSheet(arr[i], SheetState::NeedsParser, false);
+    LoadSheet(arr[i], SheetState::NeedsParser, IsPreload::No);
   }
 }
 

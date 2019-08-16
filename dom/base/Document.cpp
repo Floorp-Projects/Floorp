@@ -6485,7 +6485,8 @@ nsresult Document::LoadAdditionalStyleSheet(additionalSheetType aType,
       MOZ_CRASH("impossible value for aType");
   }
 
-  auto result = loader->LoadSheetSync(aSheetURI, parsingMode, true);
+  auto result = loader->LoadSheetSync(aSheetURI, parsingMode,
+                                      css::Loader::UseSystemPrincipal::Yes);
   if (result.isErr()) {
     return result.unwrapErr();
   }
@@ -11446,13 +11447,14 @@ void Document::PreloadStyle(
 
   // Charset names are always ASCII.
   Unused << CSSLoader()->LoadSheet(
-      uri, true, NodePrincipal(), aEncoding, referrerInfo, obs,
-      Element::StringToCORSMode(aCrossOriginAttr), aIntegrity);
+      uri, css::Loader::IsPreload::Yes, NodePrincipal(), aEncoding,
+      referrerInfo, obs, Element::StringToCORSMode(aCrossOriginAttr),
+      aIntegrity);
 }
 
 RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
   return CSSLoader()
-      ->LoadSheetSync(uri, css::eAuthorSheetFeatures, false)
+      ->LoadSheetSync(uri, css::eAuthorSheetFeatures)
       .unwrapOr(nullptr);
 }
 
