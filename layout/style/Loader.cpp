@@ -535,6 +535,9 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
       return MakeTuple(std::move(clone), SheetState::Complete);
     }
     LOG(("    Not cloning due to forced unique inner"));
+    // Remove it now that we know that we're never going to use this stylesheet
+    // again.
+    lookup.Remove();
   }
 
   if (aSyncLoad) {
