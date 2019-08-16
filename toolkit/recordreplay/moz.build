@@ -31,9 +31,7 @@ if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
         'ProcessRewind.cpp',
         'Thread.cpp',
         'ThreadSnapshot.cpp',
-        'Trigger.cpp',
         'ValueIndex.cpp',
-        'WeakPointer.cpp',
     ]
     SOURCES += [
         # ProcessRedirect includes udis86 directly and will not compile if the

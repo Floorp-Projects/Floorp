@@ -7,6 +7,7 @@
 #include "ProcessRecordReplay.h"
 
 #include "ipc/ChildInternal.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Compression.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
@@ -16,9 +17,7 @@
 #include "MemorySnapshot.h"
 #include "ProcessRedirect.h"
 #include "ProcessRewind.h"
-#include "Trigger.h"
 #include "ValueIndex.h"
-#include "WeakPointer.h"
 #include "pratom.h"
 
 #include <fcntl.h>
@@ -149,8 +148,6 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
   thread->BindToCurrent();
   thread->SetPassThrough(true);
 
-  InitializeTriggers();
-  InitializeWeakPointers();
   InitializeMemorySnapshots();
   Thread::SpawnAllThreads();
   InitializeCountdownThread();
@@ -390,6 +387,14 @@ MOZ_EXPORT const char* RecordReplayInterface_InternalVirtualThingName(
   void* vtable = *(void**)aThing;
   const char* name = SymbolNameRaw(vtable);
   return name ? name : "(unknown)";
+}
+
+MOZ_EXPORT void RecordReplayInterface_InternalHoldJSObject(JSObject* aJSObj) {
+  if (aJSObj) {
+    JSContext* cx = dom::danger::GetJSContext();
+    JS::PersistentRootedObject* root = new JS::PersistentRootedObject(cx);
+    *root = aJSObj;
+  }
 }
 
 }  // extern "C"

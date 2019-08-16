@@ -62,16 +62,8 @@ namespace recordreplay {
                                           (const PLDHashTableOps* aFirstOps,   \
                                            const PLDHashTableOps* aSecondOps), \
                                           (aFirstOps, aSecondOps))             \
-              Macro(SetWeakPointerJSRoot,                                      \
-                    (const void* aPtr, JSObject* aJSObj), (aPtr, aJSObj))      \
-                  Macro(RegisterTrigger,                                       \
-                        (void* aObj, const std::function<void()>& aCallback),  \
-                        (aObj,                                                 \
-                         aCallback)) Macro(UnregisterTrigger, (void* aObj),    \
-                                           (aObj)) Macro(ActivateTrigger,      \
-                                                         (void* aObj), (aObj)) \
-                      Macro(ExecuteTriggers, (), ()) Macro(                    \
-                          InternalRecordReplayAssert,                          \
+              Macro(InternalHoldJSObject, (JSObject* aJSObj), (aJSObj))        \
+                  Macro(InternalRecordReplayAssert,                            \
                           (const char* aFormat, va_list aArgs),                \
                           (aFormat,                                            \
                            aArgs)) Macro(InternalRecordReplayAssertBytes,      \
