@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>initial-scale with trailing characters in meta viewport</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="initial-scale=1.0/">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <p>initial-scale=1.0/</p>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function initial_scale_with_trailing_characters() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      is(info.width, 800, "width should be scaled by 1 / initial-scale");
+      is(info.height, 480, "height should be scaled by 1 / initial-scale");
+      is(info.defaultZoom, 1, "initial-scale should be 1");
+    });
+  </script>
+</body>
+</html>
