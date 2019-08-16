@@ -5,7 +5,6 @@
 /*---
 description: Rest element (identifier) does not support initializer (static class expression generator method)
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
-es6id: 14.5.15
 features: [generators, destructuring-binding]
 flags: [generated]
 negative:
