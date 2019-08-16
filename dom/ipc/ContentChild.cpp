@@ -2920,21 +2920,6 @@ mozilla::ipc::IPCResult ContentChild::RecvUnregisterSheet(
   return IPC_OK();
 }
 
-POfflineCacheUpdateChild* ContentChild::AllocPOfflineCacheUpdateChild(
-    const URIParams& manifestURI, const URIParams& documentURI,
-    const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument) {
-  MOZ_CRASH("unused");
-  return nullptr;
-}
-
-bool ContentChild::DeallocPOfflineCacheUpdateChild(
-    POfflineCacheUpdateChild* actor) {
-  OfflineCacheUpdateChild* offlineCacheUpdate =
-      static_cast<OfflineCacheUpdateChild*>(actor);
-  NS_RELEASE(offlineCacheUpdate);
-  return true;
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvDomainSetChanged(
     const uint32_t& aSetType, const uint32_t& aChangeType,
     const Maybe<URIParams>& aDomain) {
