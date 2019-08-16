@@ -6,14 +6,15 @@
 
 features = []
 
-if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
-    features += ['cranelift_x86']
-elif CONFIG['JS_CODEGEN_ARM']:
-    features += ['cranelift_arm32']
-elif CONFIG['JS_CODEGEN_ARM64']:
-    features += ['cranelift_arm64']
-else:
-    features += ['cranelift_none']
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
+        features += ['cranelift_x86']
+    elif CONFIG['JS_CODEGEN_ARM']:
+        features += ['cranelift_arm32']
+    elif CONFIG['JS_CODEGEN_ARM64']:
+        features += ['cranelift_arm64']
+    else:
+        features += ['cranelift_none']
 
 RustLibrary('jsrust', features)
 

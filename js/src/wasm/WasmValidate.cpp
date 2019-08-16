@@ -1673,7 +1673,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
   return tables->emplaceBack(tableKind, limits);
 }
 
-static bool GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable) {
+static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
   switch (type.code()) {
     case ValType::I32:
     case ValType::F32:
@@ -1829,7 +1829,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
                             env->gcTypesEnabled(), &type, &isMutable)) {
         return false;
       }
-      if (!GlobalIsJSCompatible(d, type, isMutable)) {
+      if (!GlobalIsJSCompatible(d, type)) {
         return false;
       }
       if (!env->globals.append(
@@ -2205,7 +2205,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
 
       GlobalDesc* global = &env->globals[globalIndex];
       global->setIsExport();
-      if (!GlobalIsJSCompatible(d, global->type(), global->isMutable())) {
+      if (!GlobalIsJSCompatible(d, global->type())) {
         return false;
       }
 

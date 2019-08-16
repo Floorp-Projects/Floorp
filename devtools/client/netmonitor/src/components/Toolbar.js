@@ -52,6 +52,7 @@ const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
 const TOOLBAR_TOGGLE_RECORDING = L10N.getStr(
   "netmonitor.toolbar.toggleRecording"
 );
+const TOOLBAR_SEARCH = L10N.getStr("netmonitor.toolbar.search");
 const TOOLBAR_HAR_BUTTON = L10N.getStr("netmonitor.label.har");
 const LEARN_MORE_TITLE = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.learnMore"
@@ -134,6 +135,8 @@ class Toolbar extends Component {
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       // Executed when throttling changes (through toolbar button).
       onChangeNetworkThrottling: PropTypes.func.isRequired,
+      toggleSearchPanel: PropTypes.func.isRequired,
+      searchPanelOpen: PropTypes.bool.isRequired,
     };
   }
 
@@ -167,6 +170,7 @@ class Toolbar extends Component {
       this.props.persistentLogsEnabled !== nextProps.persistentLogsEnabled ||
       this.props.browserCacheDisabled !== nextProps.browserCacheDisabled ||
       this.props.recording !== nextProps.recording ||
+      this.props.searchPanelOpen !== nextProps.searchPanelOpen ||
       this.props.singleRow !== nextProps.singleRow ||
       !Object.is(this.props.requestFilterTypes, nextProps.requestFilterTypes) ||
       this.props.networkThrottling !== nextProps.networkThrottling ||
@@ -261,6 +265,35 @@ class Toolbar extends Component {
       className: toggleRecordingButtonClass,
       title: TOOLBAR_TOGGLE_RECORDING,
       onClick: toggleRecording,
+    });
+  }
+
+  /**
+   * Render a search button.
+   */
+  renderSearchButton(toggleSearchPanel) {
+    const { searchPanelOpen } = this.props;
+
+    // The search feature is available behind a pref.
+    if (!Services.prefs.getBoolPref("devtools.netmonitor.features.search")) {
+      return null;
+    }
+
+    const className = [
+      "devtools-button",
+      "devtools-search-icon",
+      "requests-list-search-button",
+    ];
+
+    if (searchPanelOpen) {
+      className.push("checked");
+    }
+
+    return button({
+      className: className.join(" "),
+      title: TOOLBAR_SEARCH,
+      "aria-pressed": searchPanelOpen,
+      onClick: toggleSearchPanel,
     });
   }
 
@@ -422,6 +455,7 @@ class Toolbar extends Component {
       browserCacheDisabled,
       recording,
       singleRow,
+      toggleSearchPanel,
     } = this.props;
 
     // Render the entire toolbar.
@@ -436,6 +470,7 @@ class Toolbar extends Component {
             this.renderFilterBox(setRequestFilterText),
             this.renderSeparator(),
             this.renderToggleRecordingButton(recording, toggleRecording),
+            this.renderSearchButton(toggleSearchPanel),
             this.renderSeparator(),
             this.renderFilterButtons(requestFilterTypes),
             this.renderSeparator(),
@@ -458,6 +493,7 @@ class Toolbar extends Component {
             this.renderFilterBox(setRequestFilterText),
             this.renderSeparator(),
             this.renderToggleRecordingButton(recording, toggleRecording),
+            this.renderSearchButton(toggleSearchPanel),
             this.renderSeparator(),
             this.renderPersistlogCheckbox(
               persistentLogsEnabled,
@@ -485,6 +521,7 @@ module.exports = connect(
     recording: getRecordingState(state),
     requestFilterTypes: state.filters.requestFilterTypes,
     networkThrottling: state.networkThrottling,
+    searchPanelOpen: state.search.panelOpen,
   }),
   dispatch => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
@@ -500,5 +537,6 @@ module.exports = connect(
       dispatch(Actions.toggleRequestFilterType(type)),
     onChangeNetworkThrottling: (enabled, profile) =>
       dispatch(changeNetworkThrottling(enabled, profile)),
+    toggleSearchPanel: () => dispatch(Actions.toggleSearchPanel()),
   })
 )(Toolbar);

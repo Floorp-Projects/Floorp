@@ -62,6 +62,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -474,7 +475,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool isFissionWindow = Preferences::GetBool("fission.autostart");
+  bool isFissionWindow = StaticPrefs::fission_autostart();
   bool isPrivateBrowsingWindow =
       Preferences::GetBool("browser.privatebrowsing.autostart");
 
@@ -1803,7 +1804,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForParent(
   }
 
   // Determine whether the window should have remote subframes
-  bool fission = Preferences::GetBool("fission.autostart");
+  bool fission = StaticPrefs::fission_autostart();
 
   if (fission) {
     fission = !WinHasOption(aFeatures, "non-fission", 0, &presenceFlag);

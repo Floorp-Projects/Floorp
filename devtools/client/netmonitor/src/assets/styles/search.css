@@ -2,67 +2,55 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.network-monitor .monitor-panel .request-list-container .requests-list-scroll {
-    width: 100% !important;
-}
-
 .search-panel {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.search-panel-content {
-    width: 100%;
-    overflow: auto;
+.search-panel .search-panel-content {
+  width: 100%;
+  overflow: auto;
+}
+
+.search-panel .treeTable {
+  width: 100%;
+  color: var(--table-text-color);
 }
 
 /* Custom tree styles for the Search results panel*/
 .search-panel .treeTable .treeLabelCell::after {
-    content: "";
+  content: "";
 }
 
 /* Color for resource label */
 .search-panel .resourceCell {
-    color: var(--theme-text-color-inactive);
+  color: var(--theme-text-color-inactive);
 }
 
-/* Color for search result label */
-.search-panel .resultCell {
-    color: var(--table-text-color);
-    text-overflow: ellipsis;
-}
-
-/* Color for search result label */
-.search-panel .treeLabel.resultLabel {
-    color: var(--theme-text-color-inactive);
-}
-
-/* Break the column layout and make the search result output more compact */
-.search-panel .treeTable tr {
-    display: block;
-}
-
-.search-panel .treeTable {
-    width: 100%;
+.search-panel .treeTable .treeLabelCell {
+  text-overflow: ellipsis;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 #devtools-network-search-close::before {
-    background-image: url("chrome://devtools/skin/images/close.svg");
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 #devtools-network-search-close > button {
-    margin: 0 !important;
-    border-radius: 0 !important;
-    position: relative;
-    min-width: 26px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  position: relative;
+  min-width: 26px;
 }
 
 /* Color for query matches */
 .search-panel .resultCell .query-match {
-    background-color: var(--theme-selection-background);
-    color: white;
-    padding: 1px 4px;
-    margin: 0 2px 0 2px;
-    border-radius: 2px;
+  background-color: var(--theme-selection-background);
+  color: white;
+  padding: 1px 4px;
+  margin: 0 2px 0 2px;
+  border-radius: 2px;
 }

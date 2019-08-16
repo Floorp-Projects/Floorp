@@ -1816,7 +1816,7 @@ void JS::ProfilingFrameIterator::settleFrames() {
       jsJitIter().frameType() == jit::FrameType::WasmToJSJit) {
     wasm::Frame* fp = (wasm::Frame*)jsJitIter().fp();
     iteratorDestroy();
-    new (storage()) wasm::ProfilingFrameIterator(*activation_->asJit(), fp);
+    new (storage()) wasm::ProfilingFrameIterator(fp);
     kind_ = Kind::Wasm;
     MOZ_ASSERT(!wasmIter().done());
     return;

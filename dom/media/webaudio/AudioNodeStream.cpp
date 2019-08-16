@@ -205,24 +205,6 @@ void AudioNodeStream::SendTimelineEvent(uint32_t aIndex,
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aEvent));
 }
 
-void AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex,
-                                              const ThreeDPoint& aValue) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeStream* aStream, uint32_t aIndex,
-            const ThreeDPoint& aValue)
-        : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
-    void Run() override {
-      static_cast<AudioNodeStream*>(mStream)->Engine()->SetThreeDPointParameter(
-          mIndex, mValue);
-    }
-    ThreeDPoint mValue;
-    uint32_t mIndex;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
-}
-
 void AudioNodeStream::SetBuffer(AudioChunk&& aBuffer) {
   class Message final : public ControlMessage {
    public:

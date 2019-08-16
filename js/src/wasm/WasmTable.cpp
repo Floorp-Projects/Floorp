@@ -287,7 +287,7 @@ void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
   }
 }
 
-uint32_t Table::grow(uint32_t delta, JSContext* cx) {
+uint32_t Table::grow(uint32_t delta) {
   // This isn't just an optimization: movingGrowable() assumes that
   // onMovingGrowTable does not fire when length == maximum.
   if (!delta) {

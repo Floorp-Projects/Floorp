@@ -24,6 +24,7 @@ const MESSAGE_DATA_LIMIT = Services.prefs.getIntPref(
   "devtools.netmonitor.ws.messageDataLimit"
 );
 const MESSAGE_DATA_TRUNCATED = L10N.getStr("messageDataTruncated");
+const SocketIODecoder = require("devtools/client/netmonitor/src/components/websockets/parsers/socket-io/index.js");
 
 // Components
 const Accordion = createFactory(
@@ -55,6 +56,7 @@ class FramePayload extends Component {
       payload: "",
       isFormattedData: false,
       formattedData: {},
+      formattedDataTitle: "",
     };
   }
 
@@ -73,14 +75,62 @@ class FramePayload extends Component {
 
     getFramePayload(selectedFrame.payload, connector.getLongString).then(
       payload => {
-        const { json } = isJSON(payload);
+        const { formattedData, formattedDataTitle } = this.parsePayload(
+          payload
+        );
         this.setState({
           payload,
-          isFormattedData: !!json,
-          formattedData: json,
+          isFormattedData: !!formattedData,
+          formattedData,
+          formattedDataTitle,
         });
       }
     );
+  }
+
+  parsePayload(payload) {
+    // socket.io payload
+    const socketIOPayload = this.parseSocketIOPayload(payload);
+    if (socketIOPayload) {
+      return {
+        formattedData: socketIOPayload,
+        formattedDataTitle: "Socket.IO",
+      };
+    }
+    // json payload
+    const { json } = isJSON(payload);
+    if (json) {
+      return {
+        formattedData: json,
+        formattedDataTitle: "JSON",
+      };
+    }
+    return {
+      formattedData: null,
+      formattedDataTitle: "",
+    };
+  }
+
+  parseSocketIOPayload(payload) {
+    let result;
+    // Try decoding socket.io frames
+    try {
+      const decoder = new SocketIODecoder();
+      decoder.on("decoded", decodedPacket => {
+        if (
+          decodedPacket &&
+          !decodedPacket.data.includes("parser error") &&
+          decodedPacket.type
+        ) {
+          result = decodedPacket;
+        }
+      });
+      decoder.add(payload);
+      return result;
+    } catch (err) {
+      // Ignore errors
+    }
+    return null;
   }
 
   render() {
@@ -117,7 +167,9 @@ class FramePayload extends Component {
             },
           ],
         }),
-        header: `JSON (${getFormattedSize(this.state.payload.length)})`,
+        header: `${this.state.formattedDataTitle} (${getFormattedSize(
+          this.state.payload.length
+        )})`,
         labelledby: "ws-frame-formattedData-header",
         opened: true,
       });

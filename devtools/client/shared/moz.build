@@ -34,7 +34,6 @@ DevToolsModules(
     'DOMHelpers.jsm',
     'enum.js',
     'events.js',
-    'file-saver.js',
     'focus.js',
     'getjson.js',
     'inplace-editor.js',

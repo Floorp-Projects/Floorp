@@ -67,8 +67,8 @@
               aria-labelledby="identity-popup-permissions-headline">
           <hbox>
             <label id="identity-popup-permissions-headline"
-                   flex="1"
                    value="&identity.permissions2;"/>
+            <image id="identity-popup-permissions-granted-indicator"/>
           </hbox>
           <vbox id="identity-popup-permission-list"/>
           <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>

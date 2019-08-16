@@ -808,6 +808,17 @@ description#identity-popup-content-verifier,
   margin-inline-start: 0;
 }
 
+#identity-popup-permissions-granted-indicator {
+  display: none;
+  list-style-image: url(chrome://browser/skin/badge-blue.svg);
+  width: 16px;
+  height: 16px;
+}
+
+#identity-popup-permissions-granted-indicator[show] {
+  display: block;
+}
+
 :root[lwt-popup-brighttext] #identity-popup-permissions-headline {
   color: #f9f9fa;
 }
@@ -1037,6 +1048,8 @@ description#identity-popup-content-verifier,
 /* Protection popup footer categories */
 
 .protections-popup-footer-button {
+  /* Overwrite toolbarbutton styles */
+  -moz-appearance: none;
   min-height: 24px;
   padding-inline-start: var(--horizontal-padding);
   margin: 0;

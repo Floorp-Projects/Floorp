@@ -271,10 +271,6 @@ class AudioNodeEngine {
                                  dom::AudioTimelineEvent& aValue) {
     NS_ERROR("Invalid RecvTimelineEvent index");
   }
-  virtual void SetThreeDPointParameter(uint32_t aIndex,
-                                       const dom::ThreeDPoint& aValue) {
-    NS_ERROR("Invalid SetThreeDPointParameter index");
-  }
   virtual void SetBuffer(AudioChunk&& aBuffer) {
     NS_ERROR("SetBuffer called on engine that doesn't support it");
   }

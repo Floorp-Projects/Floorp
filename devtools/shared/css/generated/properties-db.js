@@ -5892,6 +5892,7 @@ exports.CSS_PROPERTIES = {
       "contents",
       "flex",
       "flow-root",
+      "flow-root list-item",
       "grid",
       "inherit",
       "initial",

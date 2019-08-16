@@ -627,6 +627,7 @@ impl SpecifiedValueInfo for Display {
             "contents",
             "flex",
             "flow-root",
+            "flow-root list-item",
             "grid",
             "inline",
             "inline-block",
