@@ -1827,8 +1827,6 @@ void CompositorOGL::CopyToTarget(DrawTarget* aTarget,
     return;
   }
 
-  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-
   if (!mGLContext->IsGLES()) {
     // GLES2 promises that binding to any custom FBO will attach
     // to GL_COLOR_ATTACHMENT0 attachment point.
