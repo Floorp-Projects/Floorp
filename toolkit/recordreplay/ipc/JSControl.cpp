@@ -6,6 +6,7 @@
 
 #include "JSControl.h"
 
+#include "mozilla/Base64.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "js/CharacterEncoding.h"
@@ -13,6 +14,7 @@
 #include "js/JSON.h"
 #include "js/PropertySpec.h"
 #include "ChildInternal.h"
+#include "MemorySnapshot.h"
 #include "ParentInternal.h"
 #include "nsImportModule.h"
 #include "rrIControl.h"

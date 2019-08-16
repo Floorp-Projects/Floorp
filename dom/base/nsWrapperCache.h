@@ -82,10 +82,6 @@ static_assert(sizeof(void*) == 4, "Only support 32-bit and 64-bit");
  * A number of the methods are implemented in nsWrapperCacheInlines.h because we
  * have to include some JS headers that don't play nicely with the rest of the
  * codebase. Include nsWrapperCacheInlines.h if you need to call those methods.
- *
- * When recording or replaying an execution, wrapper caches are instrumented so
- * that they behave consistently even if the GC executes at different points
- * and collects different objects.
  */
 
 class nsWrapperCache {
@@ -102,10 +98,6 @@ class nsWrapperCache {
   {
   }
   ~nsWrapperCache() {
-    // Clear any JS root associated with this cache while replaying.
-    if (mozilla::recordreplay::IsReplaying()) {
-      mozilla::recordreplay::SetWeakPointerJSRoot(this, nullptr);
-    }
     // Preserved wrappers should never end up getting cleared, but this can
     // happen during shutdown when a leaked wrapper object is finalized, causing
     // its wrapper to be cleared.
@@ -145,23 +137,6 @@ class nsWrapperCache {
    * escape.
    */
   JSObject* GetWrapperMaybeDead() const {
-    // Keep track of accesses on the cache when recording or replaying an
-    // execution. Accesses during a GC (when thread events are disallowed)
-    // fetch the underlying object without making sure the returned value
-    // is consistent between recording and replay.
-    if (mozilla::recordreplay::IsRecordingOrReplaying() &&
-        !mozilla::recordreplay::AreThreadEventsDisallowed() &&
-        !mozilla::recordreplay::HasDivergedFromRecording()) {
-      bool success = mozilla::recordreplay::RecordReplayValue(!!mWrapper);
-      if (mozilla::recordreplay::IsReplaying()) {
-        if (success) {
-          MOZ_RELEASE_ASSERT(mWrapper);
-        } else {
-          const_cast<nsWrapperCache*>(this)->ClearWrapper();
-        }
-      }
-    }
-
     return mWrapper;
   }
 

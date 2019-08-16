@@ -486,8 +486,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
   MOZ_ASSERT(NS_IsMainThread());
 
   mIdentity = aIdentity;
-  RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, mIdentity);
-
   mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
   MOZ_ASSERT(mMaybeProto, "bad ctor param");
@@ -503,8 +501,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
   MOZ_ASSERT(NS_IsMainThread());
 
   mIdentity = aIdentity;
-  RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, mIdentity);
-
   mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
   MOZ_ASSERT(aScope, "bad ctor param");
@@ -526,13 +522,8 @@ void XPCWrappedNative::Destroy() {
 #endif
 
   if (mIdentity) {
-    // Either release mIdentity immediately or defer the release. When
-    // recording or replaying the release must always be deferred, so that
-    // DeferredFinalize matches the earlier call to
-    // RecordReplayRegisterDeferredFinalizeThing.
     XPCJSRuntime* rt = GetRuntime();
-    if ((rt && rt->GetDoingFinalization()) ||
-        recordreplay::IsRecordingOrReplaying()) {
+    if (rt && rt->GetDoingFinalization()) {
       DeferredFinalize(mIdentity.forget().take());
     } else {
       mIdentity = nullptr;
@@ -555,6 +546,10 @@ inline void XPCWrappedNative::SetFlatJSObject(JSObject* object) {
 
   mFlatJSObject = object;
   mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
+
+  // Never collect the wrapper object while recording or replaying, to avoid
+  // non-deterministically releasing references during finalization.
+  recordreplay::HoldJSObject(object);
 }
 
 inline void XPCWrappedNative::UnsetFlatJSObject() {
@@ -762,10 +757,8 @@ void XPCWrappedNative::FlatJSObjectFinalized() {
     }
 
     // We also need to release any native pointers held...
-    // As for XPCWrappedNative::Destroy, when recording or replaying the
-    // release must always be deferred.
     RefPtr<nsISupports> native = to->TakeNative();
-    if (native && (GetRuntime() || recordreplay::IsRecordingOrReplaying())) {
+    if (native && GetRuntime()) {
       DeferredFinalize(native.forget().take());
     }
 
@@ -1033,7 +1026,6 @@ nsresult XPCWrappedNative::InitTearOff(JSContext* cx,
 
   aTearOff->SetInterface(aInterface);
   aTearOff->SetNative(qiResult);
-  RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, qiResult);
 
   if (needJSObject && !InitTearOffJSObject(cx, aTearOff)) {
     return NS_ERROR_OUT_OF_MEMORY;
