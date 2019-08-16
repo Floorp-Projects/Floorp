@@ -3730,6 +3730,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 }
 
+- (void)ensureNextCompositeIsAtomicWithMainThreadPaint {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (mGeckoChild) {
+    mGeckoChild->SuspendAsyncCATransactions();
+  }
+}
+
 - (void)updateRootCALayer {
   if (NS_IsMainThread() && mGeckoChild) {
     mGeckoChild->HandleMainThreadCATransaction();
