@@ -21,6 +21,32 @@ const gTokenPasswordDialogs = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsITokenPasswordDialogs]),
 };
 
+let gMockPrompter = {
+  promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
+    // Returning false simulates the user canceling the password prompt.
+    return false;
+  },
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPrompt]),
+};
+
+// Mock nsIWindowWatcher. PSM calls getNewPrompter on this to get an nsIPrompt
+// to call promptPassword. We return the mock one, above.
+let gWindowWatcher = {
+  getNewPrompter: () => gMockPrompter,
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowWatcher]),
+};
+
+add_task(function setup() {
+  let windowWatcherCID = MockRegistrar.register(
+    "@mozilla.org/embedcomp/window-watcher;1",
+    gWindowWatcher
+  );
+  registerCleanupFunction(() => {
+    MockRegistrar.unregister(windowWatcherCID);
+  });
+});
+
 add_task(function testEncryptString() {
   let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
     Ci.nsISecretDecoderRing
