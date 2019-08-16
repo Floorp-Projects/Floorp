@@ -65,8 +65,6 @@ class NeckoChild : public PNeckoChild {
       const nsCString& aHost, const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags);
   bool DeallocPDNSRequestChild(PDNSRequestChild*);
-  PDataChannelChild* AllocPDataChannelChild(const uint32_t& channelId);
-  bool DeallocPDataChannelChild(PDataChannelChild* child);
   PFileChannelChild* AllocPFileChannelChild(const uint32_t& channelId);
   bool DeallocPFileChannelChild(PFileChannelChild* child);
   PSimpleChannelChild* AllocPSimpleChannelChild(const uint32_t& channelId);

@@ -468,16 +468,10 @@ bool NeckoParent::DeallocPWebSocketEventListenerParent(
   return true;
 }
 
-PDataChannelParent* NeckoParent::AllocPDataChannelParent(
+already_AddRefed<PDataChannelParent> NeckoParent::AllocPDataChannelParent(
     const uint32_t& channelId) {
   RefPtr<DataChannelParent> p = new DataChannelParent();
-  return p.forget().take();
-}
-
-bool NeckoParent::DeallocPDataChannelParent(PDataChannelParent* actor) {
-  RefPtr<DataChannelParent> p =
-      dont_AddRef(static_cast<DataChannelParent*>(actor));
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDataChannelConstructor(
