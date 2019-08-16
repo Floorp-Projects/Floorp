@@ -9,7 +9,7 @@
 const { Spectrum } = require("devtools/client/shared/widgets/Spectrum");
 const {
   accessibility: {
-    SCORES: { FAIL, AAA },
+    SCORES: { FAIL, AAA, AA },
   },
 } = require("devtools/shared/constants");
 
@@ -24,6 +24,10 @@ const TEST_URI = CHROME_URL_ROOT + "doc_spectrum.html";
 const REGULAR_TEXT_PROPS = {
   "font-size": { value: "11px" },
   "font-weight": { value: "bold" },
+  opacity: { value: "1" },
+};
+const SINGLE_BG_COLOR = {
+  value: cssColors.white,
 };
 const ZERO_ALPHA_COLOR = [0, 255, 255, 0];
 
@@ -43,6 +47,7 @@ add_task(async function() {
   await testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
     container
   );
+  await testSettingMultiColoredBackgroundShouldShowContrastRange(container);
 
   host.destroy();
 });
@@ -348,6 +353,7 @@ function testNotSettingTextPropsShouldNotShowContrastSection(container) {
 
 function testSpectrumContrast(
   spectrum,
+  contrastValueEl,
   rgb,
   expectedValue,
   expectedBadgeClass = "",
@@ -356,19 +362,19 @@ function testSpectrumContrast(
   setSpectrumProps(spectrum, { rgb });
 
   is(
-    spectrum.contrastValue.textContent,
+    contrastValueEl.textContent,
     expectedValue,
     "Contrast value has the correct text."
   );
   is(
-    spectrum.contrastValue.className,
+    contrastValueEl.className,
     `accessibility-contrast-value${
       expectedBadgeClass ? " " + expectedBadgeClass : ""
     }`,
     `Contrast value contains ${expectedBadgeClass || "base"} class.`
   );
   is(
-    spectrum.spectrumContrast.classList.contains("large-text"),
+    spectrum.contrastLabel.childNodes.length === 3,
     expectLargeTextIndicator,
     `Large text indicator is ${expectLargeTextIndicator ? "" : "not"} shown.`
   );
@@ -386,14 +392,23 @@ function testSettingTextPropsAndColorShouldUpdateContrastValue(container) {
   info(
     "Test that contrast ratio is calculated on setting 'textProps' and 'rgb'."
   );
-  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
-  testSpectrumContrast(s, [50, 240, 234, 0.8], "1.35", FAIL);
+  setSpectrumProps(
+    s,
+    { textProps: REGULAR_TEXT_PROPS, backgroundColorData: SINGLE_BG_COLOR },
+    false
+  );
+  testSpectrumContrast(s, s.contrastValue, [50, 240, 234, 0.8], "1.35", FAIL);
 
   info("Test that contrast ratio is updated when color is changed.");
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
+  testSpectrumContrast(s, s.contrastValue, cssColors.black, "21.00", AAA);
 
   info("Test that contrast ratio cannot be calculated with zero alpha.");
-  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
+  testSpectrumContrast(
+    s,
+    s.contrastValue,
+    ZERO_ALPHA_COLOR,
+    "Unable to calculate"
+  );
 
   s.destroy();
 }
@@ -405,7 +420,7 @@ function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
   s.show();
 
   ok(
-    !s.spectrumContrast.classList.contains("large-text"),
+    s.contrastLabel.childNodes.length !== 3,
     "Large text indicator is initially hidden."
   );
 
@@ -418,16 +433,23 @@ function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
       textProps: {
         "font-size": { value: "24px" },
         "font-weight": { value: "normal" },
+        opacity: { value: "1" },
       },
+      backgroundColorData: SINGLE_BG_COLOR,
     },
     false
   );
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA, true);
+  testSpectrumContrast(s, s.contrastValue, cssColors.black, "21.00", AAA, true);
 
   info(
     "Test that selecting large text with zero alpha hides large text indicator."
   );
-  testSpectrumContrast(s, ZERO_ALPHA_COLOR, "Unable to calculate");
+  testSpectrumContrast(
+    s,
+    s.contrastValue,
+    ZERO_ALPHA_COLOR,
+    "Unable to calculate"
+  );
 
   // Spectrum should be closed and opened again to reflect changes in text size
   s.destroy();
@@ -435,8 +457,49 @@ function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
   s.show();
 
   info("Test that selecting regular text does not show large text indicator.");
-  setSpectrumProps(s, { textProps: REGULAR_TEXT_PROPS }, false);
-  testSpectrumContrast(s, cssColors.black, "21.00", AAA);
+  setSpectrumProps(
+    s,
+    { textProps: REGULAR_TEXT_PROPS, backgroundColorData: SINGLE_BG_COLOR },
+    false
+  );
+  testSpectrumContrast(s, s.contrastValue, cssColors.black, "21.00", AAA);
+
+  s.destroy();
+}
+
+function testSettingMultiColoredBackgroundShouldShowContrastRange(container) {
+  const s = new Spectrum(container, cssColors.white);
+  s.show();
+
+  info(
+    "Test setting text with non-zero alpha and multi-colored bg shows contrast range and empty single contrast."
+  );
+  setSpectrumProps(
+    s,
+    {
+      textProps: REGULAR_TEXT_PROPS,
+      backgroundColorData: {
+        min: cssColors.yellow,
+        max: cssColors.green,
+      },
+    },
+    false
+  );
+  testSpectrumContrast(s, s.contrastValueMin, cssColors.white, "1.07", FAIL);
+  testSpectrumContrast(s, s.contrastValueMax, cssColors.white, "5.14", AA);
+  testSpectrumContrast(s, s.contrastValue, cssColors.white, "");
+  ok(
+    s.spectrumContrast.classList.contains("range"),
+    "Contrast section contains range class."
+  );
+
+  info("Test setting text with zero alpha shows error in contrast min span.");
+  testSpectrumContrast(
+    s,
+    s.contrastValueMin,
+    ZERO_ALPHA_COLOR,
+    "Unable to calculate"
+  );
 
   s.destroy();
 }
