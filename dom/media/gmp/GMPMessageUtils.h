@@ -6,6 +6,7 @@
 #ifndef GMPMessageUtils_h_
 #define GMPMessageUtils_h_
 
+#include "content_decryption_module.h"
 #include "gmp-video-codec.h"
 #include "gmp-video-frame-encoded.h"
 #include "IPCMessageUtils.h"
@@ -52,6 +53,12 @@ struct ParamTraits<GMPEncryptionScheme>
     : public ContiguousEnumSerializer<
           GMPEncryptionScheme, GMPEncryptionScheme::kGMPEncryptionNone,
           GMPEncryptionScheme::kGMPEncryptionInvalid> {};
+
+template <>
+struct ParamTraits<cdm::HdcpVersion>
+    : public ContiguousEnumSerializerInclusive<
+          cdm::HdcpVersion, cdm::HdcpVersion::kHdcpVersionNone,
+          cdm::HdcpVersion::kHdcpVersion2_2> {};
 
 template <>
 struct ParamTraits<GMPSimulcastStream> {
