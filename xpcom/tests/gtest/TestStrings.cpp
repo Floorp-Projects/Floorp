@@ -1551,6 +1551,33 @@ TEST_F(Strings, tofloat) {
   test_tofloat_helper(NS_LITERAL_STRING(""), 0.f, false);
   test_tofloat_helper(NS_LITERAL_STRING("42foo"), 42.f, false);
   test_tofloat_helper(NS_LITERAL_STRING("foo"), 0.f, false);
+  test_tofloat_helper(NS_LITERAL_STRING("1.5e-"), 1.5f, false);
+}
+
+static void test_tofloat_allow_trailing_chars_helper(const nsString& aStr,
+                                                     float aExpected,
+                                                     bool aSuccess) {
+  nsresult result;
+  EXPECT_EQ(aStr.ToFloatAllowTrailingChars(&result), aExpected);
+  if (aSuccess) {
+    EXPECT_EQ(result, NS_OK);
+  } else {
+    EXPECT_NE(result, NS_OK);
+  }
+}
+
+TEST_F(Strings, ToFloatAllowTrailingChars) {
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING(""), 0.f, false);
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("foo"), 0.f,
+                                           false);
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("42foo"), 42.f,
+                                           true);
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("42-5"), 42.f,
+                                           true);
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("13.37.8"), 13.37f,
+                                           true);
+  test_tofloat_allow_trailing_chars_helper(NS_LITERAL_STRING("1.5e-"), 1.5f,
+                                           true);
 }
 
 static void test_todouble_helper(const nsString& aStr, double aExpected,
@@ -1580,6 +1607,32 @@ TEST_F(Strings, todouble) {
   test_todouble_helper(NS_LITERAL_STRING(""), 0, false);
   test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, false);
   test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
+  test_todouble_helper(NS_LITERAL_STRING("1.5e-"), 1.5, false);
+}
+
+static void test_todouble_allow_trailing_chars_helper(const nsString& aStr,
+                                                      double aExpected,
+                                                      bool aSuccess) {
+  nsresult result;
+  EXPECT_EQ(aStr.ToDoubleAllowTrailingChars(&result), aExpected);
+  if (aSuccess) {
+    EXPECT_EQ(result, NS_OK);
+  } else {
+    EXPECT_NE(result, NS_OK);
+  }
+}
+
+TEST_F(Strings, ToDoubleAllowTrailingChars) {
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING(""), 0, false);
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("foo"), 0, false);
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("42foo"), 42,
+                                            true);
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("42-5"), 42,
+                                            true);
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("13.37.8"), 13.37,
+                                            true);
+  test_todouble_allow_trailing_chars_helper(NS_LITERAL_STRING("1.5e-"), 1.5,
+                                            true);
 }
 
 TEST_F(Strings, Split) {
