@@ -31,6 +31,7 @@ from .common import CommonBackend
 from ..frontend.data import (
     BaseLibrary,
     BaseProgram,
+    BaseRustLibrary,
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
@@ -46,7 +47,6 @@ from ..frontend.data import (
     HostGeneratedSources,
     HostLibrary,
     HostProgram,
-    HostRustLibrary,
     HostRustProgram,
     HostSimpleProgram,
     HostSources,
@@ -60,9 +60,7 @@ from ..frontend.data import (
     ObjdirPreprocessedFiles,
     PerSourceFlag,
     Program,
-    RustLibrary,
     HostSharedLibrary,
-    HostRustLibrary,
     RustProgram,
     RustTests,
     SharedLibrary,
@@ -679,7 +677,7 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
 
-        elif isinstance(obj, (RustLibrary, HostRustLibrary)):
+        elif isinstance(obj, BaseRustLibrary):
             self.backend_input_files.add(obj.cargo_file)
             self._process_rust_library(obj, backend_file)
             # No need to call _process_linked_libraries, because Rust
@@ -1476,18 +1474,20 @@ class RecursiveMakeBackend(CommonBackend):
             write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
 
         for lib in shared_libs:
+            assert obj.KIND != 'host'
             backend_file.write_once('SHARED_LIBS += %s\n' %
                                     pretty_relpath(lib, lib.import_name))
 
         # We have to link any Rust libraries after all intermediate static
         # libraries have been listed to ensure that the Rust libraries are
         # searched after the C/C++ objects that might reference Rust symbols.
+        var = 'HOST_LIBS' if obj.KIND == 'host' else 'STATIC_LIBS'
         for lib in chain(
-                (l for l in static_libs if not isinstance(l, RustLibrary)),
-                (l for l in static_libs if isinstance(l, RustLibrary)),
+                (l for l in static_libs if not isinstance(l, BaseRustLibrary)),
+                (l for l in static_libs if isinstance(l, BaseRustLibrary)),
         ):
-            backend_file.write_once('STATIC_LIBS += %s\n' %
-                                    pretty_relpath(lib, lib.import_name))
+            backend_file.write_once('%s += %s\n' %
+                                    (var, pretty_relpath(lib, lib.import_name)))
 
         for lib in os_libs:
             if obj.KIND == 'target':
@@ -1499,9 +1499,6 @@ class RecursiveMakeBackend(CommonBackend):
             if not isinstance(lib, ExternalLibrary):
                 self._compile_graph[build_target].add(
                     self._build_target_for_obj(lib))
-            if isinstance(lib, HostRustLibrary):
-                backend_file.write_once('HOST_LIBS += %s\n' %
-                                        pretty_relpath(lib, lib.import_name))
 
         # Process library-based defines
         self._process_defines(obj.lib_defines, backend_file)
