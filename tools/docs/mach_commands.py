@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import yaml
 import os
 import sys
 import multiprocessing
@@ -179,7 +180,7 @@ class Documentation(MachCommandBase):
 
     def _s3_upload(self, root, project, version=None):
         from moztreedocs.package import distribution_files
-        from moztreedocs.upload import s3_upload
+        from moztreedocs.upload import s3_upload, s3_set_redirects
 
         # Files are uploaded to multiple locations:
         #
@@ -190,15 +191,32 @@ class Documentation(MachCommandBase):
         # S3 bucket.
 
         files = list(distribution_files(root))
-
-        s3_upload(files, key_prefix='%s/latest' % project)
+        key_prefixes = ['%s/latest' % project]
         if version:
-            s3_upload(files, key_prefix='%s/%s' % (project, version))
+            key_prefixes.append('%s/%s' % (project, version))
 
         # Until we redirect / to main/latest, upload the main docs
         # to the root.
         if project == 'main':
-            s3_upload(files)
+            key_prefixes.append('')
+
+        with open(os.path.join(here, 'redirects.yml'), 'r') as fh:
+            redirects = yaml.safe_load(fh)['redirects']
+
+        redirects = {k.strip("/"): v.strip("/") for k, v in redirects.items()}
+
+        all_redirects = {}
+
+        for prefix in key_prefixes:
+            s3_upload(files, prefix)
+            if prefix:
+                prefix += '/'
+            all_redirects.update({prefix + k: prefix + v for k, v in redirects.items()})
+
+        print("Redirects currently staged")
+        pprint(all_redirects, indent=1)
+
+        s3_set_redirects(all_redirects)
 
 
 def die(msg, exit_code=1):
