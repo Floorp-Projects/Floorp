@@ -52,7 +52,7 @@ class BasicCompositor : public Compositor {
 
   bool Initialize(nsCString* const out_failureReason) override;
 
-  void DetachWidget() override;
+  void Destroy() override;
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
