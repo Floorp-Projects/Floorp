@@ -9,6 +9,7 @@ import os
 import sys
 import multiprocessing
 from functools import partial
+from pprint import pprint
 
 from mozbuild.base import MachCommandBase
 from mach.decorators import (
