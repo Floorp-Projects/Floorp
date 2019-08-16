@@ -23,7 +23,7 @@ interface BrowserToolbarViewInteractor {
 class BrowserToolbarView(
     private val container: ViewGroup,
     private val interactor: BrowserToolbarViewInteractor,
-    private val currentSession: Session
+    private val customTabSession: Session?
 ) : LayoutContainer {
 
     override val containerView: View?
@@ -41,7 +41,7 @@ class BrowserToolbarView(
     init {
         with(container.context) {
             val sessionManager = components.core.sessionManager
-            val isCustomTabSession = currentSession.isCustomTabSession()
+            val isCustomTabSession = customTabSession != null
 
             view.apply {
                 elevation = TOOLBAR_ELEVATION.dpToFloat(resources.displayMetrics)
@@ -80,7 +80,7 @@ class BrowserToolbarView(
                 CustomTabToolbarMenu(
                     this,
                     sessionManager,
-                    currentSession.id,
+                    customTabSession?.id,
                     onItemTapped = {
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     }
@@ -89,7 +89,9 @@ class BrowserToolbarView(
                 DefaultToolbarMenu(
                     this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
-                    requestDesktopStateProvider = { currentSession.desktopMode },
+                    requestDesktopStateProvider = {
+                        sessionManager.selectedSession?.private ?: false
+                    },
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) }
                 )
             }
@@ -102,8 +104,8 @@ class BrowserToolbarView(
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
                 components.core.sessionManager,
-                currentSession.id,
-                currentSession.private
+                customTabSession?.id,
+                customTabSession?.private ?: sessionManager.selectedSession?.private ?: false
             )
         }
     }

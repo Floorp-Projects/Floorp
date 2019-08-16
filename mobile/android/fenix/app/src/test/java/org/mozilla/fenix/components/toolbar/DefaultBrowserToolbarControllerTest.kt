@@ -69,7 +69,7 @@ class DefaultBrowserToolbarControllerTest {
             findInPageLauncher = findInPageLauncher,
             nestedScrollQuickActionView = nestedScrollQuickActionView,
             engineView = engineView,
-            currentSession = currentSession,
+            customTabSession = null,
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
@@ -80,6 +80,7 @@ class DefaultBrowserToolbarControllerTest {
         every { context.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
         every { context.components.useCases.sessionUseCases } returns sessionUseCases
+        every { context.components.core.sessionManager.selectedSession } returns currentSession
     }
 
     @Test
@@ -89,10 +90,12 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarClick()
 
         verify { metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)) }
-        verify { navController.nav(
-            R.id.browserFragment,
-            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(currentSession.id)
-        ) }
+        verify {
+            navController.nav(
+                R.id.browserFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment("1")
+            )
+        }
     }
 
     @Test
@@ -144,11 +147,14 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SETTINGS)) }
-        verify { navController.nav(
-            R.id.settingsFragment,
-            BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
-        ) }
+        verify {
+            navController.nav(
+                R.id.settingsFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+            )
+        }
     }
+
     @Test
     fun handleToolbarLibraryPress() {
         val item = ToolbarMenu.Item.Library
@@ -156,10 +162,12 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarItemInteraction(item)
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.LIBRARY)) }
-        verify { navController.nav(
-            R.id.libraryFragment,
-            BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
-        ) }
+        verify {
+            navController.nav(
+                R.id.libraryFragment,
+                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+            )
+        }
     }
 
     @Test
@@ -248,6 +256,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val item = ToolbarMenu.Item.ReportIssue
 
+        every { currentSession.id } returns "1"
         every { currentSession.url } returns "https://mozilla.org"
         every { context.components.useCases.tabsUseCases } returns tabsUseCases
         every { tabsUseCases.addTab } returns addTabUseCase
@@ -322,6 +331,21 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarOpenInFenixPress() {
+        controller = DefaultBrowserToolbarController(
+            context = context,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+            findInPageLauncher = findInPageLauncher,
+            nestedScrollQuickActionView = nestedScrollQuickActionView,
+            engineView = engineView,
+            customTabSession = currentSession,
+            viewModel = viewModel,
+            getSupportUrl = getSupportUrl,
+            openInFenixIntent = openInFenixIntent,
+            currentSessionAsTab = currentSessionAsTab,
+            bottomSheetBehavior = bottomSheetBehavior
+        )
+
         val sessionManager: SessionManager = mockk(relaxed = true)
         val item = ToolbarMenu.Item.OpenInFenix
 

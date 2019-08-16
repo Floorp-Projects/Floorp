@@ -160,7 +160,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 nestedScrollQuickActionView = nestedScrollQuickAction,
                 engineView = engineView,
-                currentSession = session,
+                customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
                 viewModel = viewModel,
                 getSupportUrl = {
                     SupportUtils.getSumoURLForTopic(
@@ -177,12 +177,14 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             )
 
             browserInteractor =
-                createBrowserToolbarViewInteractor(browserToolbarController, session)
+                createBrowserToolbarViewInteractor(
+                    browserToolbarController,
+                    customTabSessionId?.let { sessionManager.findSessionById(it) })
 
             browserToolbarView = BrowserToolbarView(
                 container = view.browserLayout,
                 interactor = browserInteractor,
-                currentSession = session
+                customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) }
             )
 
             toolbarIntegration.set(
@@ -476,7 +478,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
     protected abstract fun createBrowserToolbarViewInteractor(
         browserToolbarController: BrowserToolbarController,
-        session: Session
+        session: Session?
     ): BrowserInteractor
 
     /**

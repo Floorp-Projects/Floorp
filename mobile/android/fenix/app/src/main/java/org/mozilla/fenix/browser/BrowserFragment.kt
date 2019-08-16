@@ -192,7 +192,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
     override fun createBrowserToolbarViewInteractor(
         browserToolbarController: BrowserToolbarController,
-        session: Session
+        session: Session?
     ) = BrowserInteractor(
         context = context!!,
         store = browserStore,
@@ -208,7 +208,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             }
         ),
         readerModeController = DefaultReaderModeController(readerViewFeature),
-        currentSession = session
+        customTabSession = customTabSessionId?.let { requireComponents.core.sessionManager.findSessionById(it) }
     )
 
     override fun getEngineMargins(): Pair<Int, Int> {

@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetController
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetViewInteractor
@@ -18,7 +19,7 @@ class BrowserInteractor(
     private val browserToolbarController: BrowserToolbarController,
     private val quickActionSheetController: QuickActionSheetController,
     private val readerModeController: ReaderModeController,
-    private val currentSession: Session
+    private val customTabSession: Session?
 ) : BrowserToolbarViewInteractor, QuickActionSheetViewInteractor {
 
     override fun onBrowserToolbarClicked() {
@@ -50,7 +51,8 @@ class BrowserInteractor(
     }
 
     override fun onQuickActionSheetReadPressed() {
-        val enabled = currentSession.readerMode
+        val enabled =
+            customTabSession?.readerMode ?: context.components.core.sessionManager.selectedSession?.readerMode ?: false
 
         if (enabled) {
             context.metrics.track(Event.QuickActionSheetClosed)
