@@ -1478,9 +1478,17 @@ class RecursiveMakeBackend(CommonBackend):
         for lib in shared_libs:
             backend_file.write_once('SHARED_LIBS += %s\n' %
                                     pretty_relpath(lib, lib.import_name))
-        for lib in static_libs:
+
+        # We have to link any Rust libraries after all intermediate static
+        # libraries have been listed to ensure that the Rust libraries are
+        # searched after the C/C++ objects that might reference Rust symbols.
+        for lib in chain(
+                (l for l in static_libs if not isinstance(l, RustLibrary)),
+                (l for l in static_libs if isinstance(l, RustLibrary)),
+        ):
             backend_file.write_once('STATIC_LIBS += %s\n' %
                                     pretty_relpath(lib, lib.import_name))
+
         for lib in os_libs:
             if obj.KIND == 'target':
                 backend_file.write_once('OS_LIBS += %s\n' % lib)
@@ -1495,34 +1503,8 @@ class RecursiveMakeBackend(CommonBackend):
                 backend_file.write_once('HOST_LIBS += %s\n' %
                                         pretty_relpath(lib, lib.import_name))
 
-        # We have to link any Rust libraries after all intermediate static
-        # libraries have been listed to ensure that the Rust libraries are
-        # searched after the C/C++ objects that might reference Rust symbols.
-        if isinstance(obj, (SharedLibrary, Program)):
-            self._process_rust_libraries(obj, backend_file, pretty_relpath)
-
         # Process library-based defines
         self._process_defines(obj.lib_defines, backend_file)
-
-    def _process_rust_libraries(self, obj, backend_file, pretty_relpath):
-        assert isinstance(obj, (SharedLibrary, Program))
-
-        # If this library does not depend on any Rust libraries, then we are done.
-        direct_linked = [l for l in obj.linked_libraries if isinstance(l, RustLibrary)]
-        if not direct_linked:
-            return
-
-        # We should have already checked this in Linkable.link_library.
-        assert len(direct_linked) == 1
-
-        # TODO: see bug 1310063 for checking dependencies are set up correctly.
-
-        direct_linked = direct_linked[0]
-        backend_file.write('RUST_STATIC_LIB := %s\n' %
-                           pretty_relpath(direct_linked, direct_linked.import_name))
-
-        for lib in direct_linked.linked_system_libs:
-            backend_file.write_once('OS_LIBS += %s\n' % lib)
 
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target

@@ -720,7 +720,10 @@ class RustLibrary(StaticLibrary, BaseRustLibrary):
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
                  features, target_dir, link_into=None):
-        StaticLibrary.__init__(self, context, basename, link_into=link_into)
+        StaticLibrary.__init__(self, context, basename, link_into=link_into,
+                               # A rust library is a real static library ; make
+                               # it known to the build system.
+                               no_expand_lib=True)
         BaseRustLibrary.init(self, context, basename, cargo_file,
                              crate_type, dependencies, features, target_dir)
 
