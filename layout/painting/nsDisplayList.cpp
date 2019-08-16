@@ -3543,15 +3543,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 
 /* static */
 bool nsDisplayItem::ForceActiveLayers() {
-  static bool sForce = false;
-  static bool sForceCached = false;
-
-  if (!sForceCached) {
-    Preferences::AddBoolVarCache(&sForce, "layers.force-active", false);
-    sForceCached = true;
-  }
-
-  return sForce;
+  return StaticPrefs::layers_force_active();
 }
 
 int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex(); }

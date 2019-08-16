@@ -1598,17 +1598,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mAppearance != mozilla::StyleAppearance::None;
   }
 
-  static mozilla::StyleDisplayOutside DisplayOutside(mozilla::StyleDisplay aDisplay) {
-    return mozilla::StyleDisplayOutside((uint16_t(aDisplay) >> mozilla::STYLE_DISPLAY_INSIDE_BITS) &
-                                        uint16_t(((1 << mozilla::STYLE_DISPLAY_OUTSIDE_BITS) - 1)));
+  static mozilla::StyleDisplayOutside DisplayOutside(
+      mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplayOutside(
+        (uint16_t(aDisplay) >> mozilla::STYLE_DISPLAY_INSIDE_BITS) &
+        uint16_t(((1 << mozilla::STYLE_DISPLAY_OUTSIDE_BITS) - 1)));
   }
   mozilla::StyleDisplayOutside DisplayOutside() const {
     return DisplayOutside(mDisplay);
   }
 
-  static mozilla::StyleDisplayInside DisplayInside(mozilla::StyleDisplay aDisplay) {
-    return mozilla::StyleDisplayInside(uint16_t(aDisplay) &
-                                       uint16_t(((1 << mozilla::STYLE_DISPLAY_INSIDE_BITS) - 1)));
+  static mozilla::StyleDisplayInside DisplayInside(
+      mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplayInside(
+        uint16_t(aDisplay) &
+        uint16_t(((1 << mozilla::STYLE_DISPLAY_INSIDE_BITS) - 1)));
   }
   mozilla::StyleDisplayInside DisplayInside() const {
     return DisplayInside(mDisplay);

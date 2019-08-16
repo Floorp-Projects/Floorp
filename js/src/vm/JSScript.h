@@ -61,12 +61,6 @@ struct IonScriptCounts;
 class JitScript;
 }  // namespace jit
 
-#define ION_DISABLED_SCRIPT ((js::jit::IonScript*)0x1)
-#define ION_COMPILING_SCRIPT ((js::jit::IonScript*)0x2)
-#define ION_PENDING_SCRIPT ((js::jit::IonScript*)0x3)
-
-#define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
-
 class AutoSweepJitScript;
 class GCParallelTask;
 class LazyScript;
@@ -1544,24 +1538,31 @@ class BaseScript : public gc::TenuredCell {
     HadFrequentBailouts = 1 << 17,
     HadOverflowBailout = 1 << 18,
 
+    // Whether Baseline or Ion compilation has been disabled for this script.
+    // IonDisabled is equivalent to |jitScript->canIonCompile() == false| but
+    // JitScript can be discarded on GC and we don't want this to affect
+    // observable behavior (see ArgumentsGetterImpl comment).
+    BaselineDisabled = 1 << 19,
+    IonDisabled = 1 << 20,
+
     // Explicitly marked as uninlineable.
-    Uninlineable = 1 << 19,
+    Uninlineable = 1 << 21,
 
     // Idempotent cache has triggered invalidation.
-    InvalidatedIdempotentCache = 1 << 20,
+    InvalidatedIdempotentCache = 1 << 22,
 
     // Lexical check did fail and bail out.
-    FailedLexicalCheck = 1 << 21,
+    FailedLexicalCheck = 1 << 23,
 
     // See comments below.
-    NeedsArgsAnalysis = 1 << 22,
-    NeedsArgsObj = 1 << 23,
+    NeedsArgsAnalysis = 1 << 24,
+    NeedsArgsObj = 1 << 25,
 
     // Set if the debugger's onNewScript hook has not yet been called.
-    HideScriptFromDebugger = 1 << 24,
+    HideScriptFromDebugger = 1 << 26,
 
     // Set if the script has opted into spew
-    SpewEnabled = 1 << 25,
+    SpewEnabled = 1 << 27,
   };
 
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
@@ -2283,17 +2284,6 @@ class JSScript : public js::BaseScript {
   // JIT and type inference data for this script. May be purged on GC.
   js::jit::JitScript* jitScript_ = nullptr;
 
-  /*
-   * Information attached by Ion. Nexto a valid IonScript this could be
-   * ION_DISABLED_SCRIPT, ION_COMPILING_SCRIPT or ION_PENDING_SCRIPT.
-   * The later is a ion compilation that is ready, but hasn't been linked
-   * yet.
-   */
-  js::jit::IonScript* ion = nullptr;
-
-  /* Information attached by Baseline. */
-  js::jit::BaselineScript* baseline = nullptr;
-
   /* Information used to re-lazify a lazily-parsed interpreted function. */
   js::LazyScript* lazyScript = nullptr;
 
@@ -2602,51 +2592,7 @@ class JSScript : public js::BaseScript {
     return offsetof(JSScript, jitScript_);
   }
 
-  bool hasAnyIonScript() const { return hasIonScript(); }
-
-  bool hasIonScript() const {
-    bool res = ion && ion != ION_DISABLED_SCRIPT &&
-               ion != ION_COMPILING_SCRIPT && ion != ION_PENDING_SCRIPT;
-    MOZ_ASSERT_IF(res, baseline);
-    return res;
-  }
-  bool canIonCompile() const { return ion != ION_DISABLED_SCRIPT; }
-  bool isIonCompilingOffThread() const { return ion == ION_COMPILING_SCRIPT; }
-
-  js::jit::IonScript* ionScript() const {
-    MOZ_ASSERT(hasIonScript());
-    return ion;
-  }
-  js::jit::IonScript* maybeIonScript() const { return ion; }
-  js::jit::IonScript* const* addressOfIonScript() const { return &ion; }
-  void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
-  void setIonScript(JSFreeOp* fop, js::jit::IonScript* ionScript);
-  inline void clearIonScript(JSFreeOp* fop);
-
-  bool hasBaselineScript() const {
-    bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
-    MOZ_ASSERT_IF(!res, !ion || ion == ION_DISABLED_SCRIPT);
-    return res;
-  }
-  bool canBaselineCompile() const {
-    return baseline != BASELINE_DISABLED_SCRIPT;
-  }
-  js::jit::BaselineScript* baselineScript() const {
-    MOZ_ASSERT(hasBaselineScript());
-    return baseline;
-  }
-  inline void setBaselineScript(JSRuntime* rt,
-                                js::jit::BaselineScript* baselineScript);
-  inline void setBaselineScript(JSFreeOp* fop,
-                                js::jit::BaselineScript* baselineScript);
-  inline void clearBaselineScript(JSFreeOp* fop);
-
   void updateJitCodeRaw(JSRuntime* rt);
-
-  static size_t offsetOfBaselineScript() {
-    return offsetof(JSScript, baseline);
-  }
-  static size_t offsetOfIonScript() { return offsetof(JSScript, ion); }
 
   // We don't relazify functions with a JitScript or JIT code, but some
   // callers (XDR, testing functions) want to know whether this script is
@@ -2657,7 +2603,6 @@ class JSScript : public js::BaseScript {
            !doNotRelazify() && !hasCallSiteObj();
   }
   bool isRelazifiable() const {
-    MOZ_ASSERT_IF(hasBaselineScript() || hasIonScript(), jitScript_);
     return isRelazifiableIgnoringJitCode() && !jitScript_;
   }
   void setLazyScript(js::LazyScript* lazy) { lazyScript = lazy; }
@@ -2757,6 +2702,20 @@ class JSScript : public js::BaseScript {
 
   void maybeReleaseJitScript(JSFreeOp* fop);
   void releaseJitScript(JSFreeOp* fop);
+  void releaseJitScriptOnFinalize(JSFreeOp* fop);
+
+  inline bool hasBaselineScript() const;
+  inline bool hasIonScript() const;
+
+  inline js::jit::BaselineScript* baselineScript() const;
+  inline js::jit::IonScript* ionScript() const;
+
+  inline bool isIonCompilingOffThread() const;
+  inline bool canIonCompile() const;
+  inline void disableIon();
+
+  inline bool canBaselineCompile() const;
+  inline void disableBaselineCompile();
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;

@@ -14,6 +14,7 @@ add_task(async function setup() {
       ["browser.contentblocking.report.proxy.enabled", true],
       // Change the endpoints to prevent non-local network connections when landing on the page.
       ["browser.contentblocking.report.monitor.url", ""],
+      ["browser.contentblocking.report.monitor.sign_in_url", ""],
       ["browser.contentblocking.report.lockwise.url", ""],
     ],
   });

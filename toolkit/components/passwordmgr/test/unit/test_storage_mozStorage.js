@@ -5,6 +5,10 @@
 
 /* eslint-disable no-var */
 
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;
 const PERMISSION_SAVE_LOGINS = "login-saving";
@@ -83,12 +87,14 @@ function getAllDisabledHostsFromPermissionManager() {
 }
 
 function setLoginSavingEnabled(origin, enabled) {
-  let uri = Services.io.newURI(origin);
-
   if (enabled) {
-    Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);
+    PermissionTestUtils.remove(origin, PERMISSION_SAVE_LOGINS);
   } else {
-    Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
+    PermissionTestUtils.add(
+      origin,
+      PERMISSION_SAVE_LOGINS,
+      Services.perms.DENY_ACTION
+    );
   }
 }
 

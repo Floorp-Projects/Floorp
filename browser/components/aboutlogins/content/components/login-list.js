@@ -90,16 +90,15 @@ export default class LoginList extends HTMLElement {
     // Show, hide, and update state of the list items per the applied search filter.
     for (let guid of this._loginGuidsSortedOrder) {
       let { listItem } = this._logins[guid];
+
       if (guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
-      if (
+      listItem.classList.toggle(
+        "breached",
         this._breachesByLoginGUID &&
-        this._breachesByLoginGUID.has(listItem.dataset.guid)
-      ) {
-        listItem.classList.add("breached");
-      }
-
+          this._breachesByLoginGUID.has(listItem.dataset.guid)
+      );
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
 
@@ -274,6 +273,7 @@ export default class LoginList extends HTMLElement {
   updateBreaches(breachesByLoginGUID) {
     this._breachesByLoginGUID = breachesByLoginGUID;
     if (this._breachesByLoginGUID.size === 0) {
+      this.render();
       return;
     }
     const breachedSortOptionElement = this._sortSelect.namedItem("breached");
@@ -283,6 +283,7 @@ export default class LoginList extends HTMLElement {
     this._sortSelect.dispatchEvent(
       new CustomEvent("change", { bubbles: true })
     );
+    this.render();
   }
 
   /**
@@ -472,7 +473,7 @@ export default class LoginList extends HTMLElement {
     this._list.setAttribute("aria-activedescendant", newlyFocusedItem.id);
     activeDescendant.classList.remove("keyboard-selected");
     newlyFocusedItem.classList.add("keyboard-selected");
-    newlyFocusedItem.scrollIntoView(false);
+    newlyFocusedItem.scrollIntoView({ block: "nearest" });
   }
 
   _setListItemAsSelected(listItem) {
@@ -485,9 +486,11 @@ export default class LoginList extends HTMLElement {
     this._createLoginButton.disabled = !listItem.dataset.guid;
     listItem.classList.add("selected");
     listItem.setAttribute("aria-selected", "true");
-    listItem.scrollIntoView();
     this._list.setAttribute("aria-activedescendant", listItem.id);
     this._selectedGuid = listItem.dataset.guid;
+
+    // Scroll item into view if it isn't visible
+    listItem.scrollIntoView({ block: "nearest" });
   }
 }
 customElements.define("login-list", LoginList);

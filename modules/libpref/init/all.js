@@ -1247,7 +1247,6 @@ pref("dom.storage.enabled", true);
 // See bug 1534736 for changing it to EARLY_BETA_OR_EARLIER.
 // See bug 1539835 for enabling this unconditionally.
 pref("dom.storage.next_gen", true);
-pref("dom.storage.default_quota",      5120);
 pref("dom.storage.shadow_writes", true);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_gradual_prefill", 4096);
@@ -2289,7 +2288,6 @@ pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.proper
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
 pref("intl.charset.fallback.override",      "");
-pref("intl.charset.fallback.tld",           true);
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 // this pref allows user to request that all internationalization formatters
 // like date/time formatting, unit formatting, calendars etc. should use
@@ -4489,10 +4487,6 @@ pref("image.mem.allow_locking_in_content_processes", true);
 // Whether we attempt to decode WebP images or not.
 pref("image.webp.enabled", true);
 
-// Limit for the canvas image cache. 0 means we don't limit the size of the
-// cache.
-pref("canvas.image.cache.limit", 0);
-
 // WebGL prefs
 pref("gl.require-hardware", false);
 #ifdef XP_MACOSX
@@ -4675,9 +4669,6 @@ pref("widget.window-transforms.disabled", false);
 
 // Copy-on-write canvas
 pref("layers.shared-buffer-provider.enabled", true);
-
-// Force all possible layers to be always active layers
-pref("layers.force-active", false);
 
 // Timeout for outbound network geolocation provider XHR
 pref("geo.wifi.xhr.timeout", 60000);
@@ -5038,9 +5029,6 @@ pref("captivedetect.canonicalContent", "success\n");
 pref("captivedetect.maxWaitingTime", 5000);
 pref("captivedetect.pollingTime", 3000);
 pref("captivedetect.maxRetryCount", 5);
-
-// Enable mapped array buffer by default.
-pref("dom.mapped_arraybuffer.enabled", true);
 
 // The tables used for Safebrowsing phishing and malware checks
 pref("urlclassifier.malwareTable", "goog-malware-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");

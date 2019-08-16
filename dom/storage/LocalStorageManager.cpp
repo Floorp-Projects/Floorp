@@ -20,37 +20,19 @@
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/LocalStorageCommon.h"
-
-// Only allow relatively small amounts of data since performance of
-// the synchronous IO is very bad.
-// We are enforcing simple per-origin quota only.
-#define DEFAULT_QUOTA_LIMIT (5 * 1024)
 
 namespace mozilla {
 namespace dom {
 
 using namespace StorageUtils;
 
-namespace {
-
-int32_t gQuotaLimit = DEFAULT_QUOTA_LIMIT;
-
-}  // namespace
-
 LocalStorageManager* LocalStorageManager::sSelf = nullptr;
 
 // static
 uint32_t LocalStorageManager::GetQuota() {
-  static bool preferencesInitialized = false;
-  if (!preferencesInitialized) {
-    mozilla::Preferences::AddIntVarCache(
-        &gQuotaLimit, "dom.storage.default_quota", DEFAULT_QUOTA_LIMIT);
-    preferencesInitialized = true;
-  }
-
-  return gQuotaLimit * 1024;  // pref is in kBs
+  return StaticPrefs::dom_storage_default_quota() * 1024;  // pref is in kBs
 }
 
 NS_IMPL_ISUPPORTS(LocalStorageManager, nsIDOMStorageManager,

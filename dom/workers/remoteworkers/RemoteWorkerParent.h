@@ -22,12 +22,19 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   RemoteWorkerParent();
 
-  void Initialize();
+  void Initialize(bool aAlreadyRegistered = false);
 
   void SetController(RemoteWorkerController* aController);
 
+  void MaybeSendDelete();
+
  private:
   ~RemoteWorkerParent();
+
+  PFetchEventOpProxyParent* AllocPFetchEventOpProxyParent(
+      const ServiceWorkerFetchEventOpArgs& aArgs);
+
+  bool DeallocPFetchEventOpProxyParent(PFetchEventOpProxyParent* aActor);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
@@ -37,6 +44,10 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   mozilla::ipc::IPCResult RecvCreated(const bool& aStatus);
 
+  mozilla::ipc::IPCResult RecvSetServiceWorkerSkipWaitingFlag(
+      SetServiceWorkerSkipWaitingFlagResolver&& aResolve);
+
+  bool mDeleteSent = false;
   RefPtr<RemoteWorkerController> mController;
 };
 

@@ -11,7 +11,7 @@ s3_bucket_paths:
 default_locales:  # if given an empty locale, use these locales
     - en-US
 tasktype_map:  # Map task reference to task type.
-    checksums-signing: signing
+    beetmover-repackage: beetmover
 platform_names:
     filename_platform:
         by-platform:
@@ -29,7 +29,7 @@ platform_names:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
     from:
-        - checksums-signing
+        - beetmover-repackage
     all_locales: true
     description: "TO_BE_OVERRIDDEN"
     locale_prefix: ''
@@ -51,8 +51,3 @@ mapping:
         description: "Checksums file containing size, hash, sha algorithm and filename"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums
         checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums
-    target.checksums.asc:
-        <<: *default
-        description: "Detached signature for the checksums file"
-        pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums.asc
-        checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums.asc

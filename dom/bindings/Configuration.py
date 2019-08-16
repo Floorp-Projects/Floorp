@@ -82,7 +82,7 @@ class Configuration(DescriptorProvider):
             # don't have any of those.  See similar block above for "implements"
             # statements!
             if not iface.isExternal():
-                for partialIface in iface.getPartialInterfaces():
+                for partialIface in iface.getPartials():
                     if (partialIface.filename() != iface.filename() and
                         # Unfortunately, NavigatorProperty does exactly the
                         # thing we're trying to prevent here.  I'm not sure how

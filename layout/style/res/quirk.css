@@ -143,32 +143,6 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
   margin-block-start: 0;
 }
 
-
-/* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
-
-:not(dl) > dd {
-  display: inline;
-  margin: 0;
-}
-
-:not(dl) > dd:before {
-  display: inline;
-  white-space: pre;
-  font-size: 1px;
-  line-height: 0;
-  content: "\A  ";
-  margin-inline-end: 40px;
-}
-
-
-/* quirk to indent nested DL elements (b=8749) */
-
-dl > dl {
-  display: block;
-  margin-inline-start: 40px;
-}
-
-
 /* Quirk: Make floated images have a margin  (b=58899) */
 img[align=left]:dir(ltr), img[align=right]:dir(rtl) {
   margin-inline-end: 3px;

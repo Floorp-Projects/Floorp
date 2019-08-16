@@ -2126,8 +2126,8 @@ bool OpenVRSession::SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
     return false;
   }
 
-  const void* ioSurface = surf->GetIOSurfacePtr();
-  tex.handle = (void*)ioSurface;
+  CFTypeRefPtr<IOSurfaceRef> ioSurface = surf->GetIOSurfaceRef();
+  tex.handle = (void*)ioSurface.get();
 #else
   tex.handle = aTextureHandle;
 #endif

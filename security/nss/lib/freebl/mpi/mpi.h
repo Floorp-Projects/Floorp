@@ -288,7 +288,14 @@ void freebl_cpuid(unsigned long op, unsigned long *eax,
 #define DIGITS(MP) MP_DIGITS(MP)
 #define DIGIT(MP, N) MP_DIGIT(MP, N)
 
+/* Functions which return an mp_err value will NULL-check their arguments via
+ * ARGCHK(condition, return), where the caller is responsible for checking the
+ * mp_err return code. For functions that return an integer type, the caller 
+ * has no way to tell if the value is an error code or a legitimate value. 
+ * Therefore, ARGMPCHK(condition) will trigger an assertion failure on debug
+ * builds, but no-op in optimized builds. */
 #if MP_ARGCHK == 1
+#define ARGMPCHK(X) /* */
 #define ARGCHK(X, Y)    \
     {                   \
         if (!(X)) {     \
@@ -297,9 +304,11 @@ void freebl_cpuid(unsigned long op, unsigned long *eax,
     }
 #elif MP_ARGCHK == 2
 #include <assert.h>
+#define ARGMPCHK(X) assert(X)
 #define ARGCHK(X, Y) assert(X)
 #else
-#define ARGCHK(X, Y) /*  */
+#define ARGMPCHK(X)  /* */
+#define ARGCHK(X, Y) /* */
 #endif
 
 #ifdef CT_VERIF

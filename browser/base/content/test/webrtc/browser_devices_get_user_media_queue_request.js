@@ -44,7 +44,11 @@ var gTests = [
       });
 
       await expectObserverCalled("getUserMedia:response:deny");
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
 
       // close all streams
       await closeStream();
@@ -88,7 +92,11 @@ var gTests = [
       await indicator;
       await checkSharingUI({ audio: false, video: true });
 
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
 
       // close all streams
       await closeStream();
@@ -163,7 +171,11 @@ var gTests = [
       await expectObserverCalled("getUserMedia:response:deny", 2);
       await expectObserverCalled("recording-window-ended");
 
-      SitePermissions.remove(null, "microphone", gBrowser.selectedBrowser);
+      SitePermissions.removeFromPrincipal(
+        null,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
     },
   },
 ];

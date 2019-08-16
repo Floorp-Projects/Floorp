@@ -142,21 +142,30 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   //     just want one of aNodeIsBeforeRange or aNodeIsAfterRange, we can
   //     skip the other comparison.
 
+  // In the ComparePoints calls below we use a container & offset instead of
+  // a range boundary because the range boundary constructor warns if you pass
+  // in a -1 offset and the ComputeIndexOf call above can return -1 if aNode
+  // is native anonymous content. ComparePoints has comments about offsets
+  // being -1 and it seems to deal with it, or at least we aren't aware of any
+  // problems arising because of it. We don't have a better idea how to get
+  // rid of the warning without much larger changes so we do this just to
+  // silence the warning. (Bug 1438996)
+
   // is RANGE(start) <= NODE(start) ?
   bool disconnected = false;
   *aNodeIsBeforeRange =
-      nsContentUtils::ComparePoints(aAbstractRange->StartRef(),
-                                    RawRangeBoundary(parent, nodeStart),
-                                    &disconnected) > 0;
+      nsContentUtils::ComparePoints(aAbstractRange->StartRef().Container(),
+                                    aAbstractRange->StartRef().Offset(), parent,
+                                    nodeStart, &disconnected) > 0;
   if (NS_WARN_IF(disconnected)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
 
   // is RANGE(end) >= NODE(end) ?
   *aNodeIsAfterRange =
-      nsContentUtils::ComparePoints(aAbstractRange->EndRef(),
-                                    RawRangeBoundary(parent, nodeEnd),
-                                    &disconnected) < 0;
+      nsContentUtils::ComparePoints(aAbstractRange->EndRef().Container(),
+                                    aAbstractRange->EndRef().Offset(), parent,
+                                    nodeEnd, &disconnected) < 0;
   if (NS_WARN_IF(disconnected)) {
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }

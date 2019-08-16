@@ -146,8 +146,7 @@ class SheetLoadDataHashKey : public nsURIHashKey {
   }
 
   SheetLoadDataHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                       nsIReferrerInfo* aReferrerInfo,
-                       CORSMode aCORSMode,
+                       nsIReferrerInfo* aReferrerInfo, CORSMode aCORSMode,
                        css::SheetParsingMode aParsingMode)
       : nsURIHashKey(aURI),
         mPrincipal(aPrincipal),
@@ -220,7 +219,6 @@ class SheetLoadDataHashKey : public nsURIHashKey {
   CORSMode mCORSMode;
   css::SheetParsingMode mParsingMode;
 };
-
 
 SheetLoadDataHashKey::SheetLoadDataHashKey(css::SheetLoadData* aLoadData)
     : nsURIHashKey(aLoadData->mURI),
@@ -464,9 +462,7 @@ Loader::Loader()
       mDatasToNotifyOn(0),
       mCompatMode(eCompatibility_FullStandards),
       mEnabled(true),
-      mReporter(new ConsoleReportCollector())
-{
-}
+      mReporter(new ConsoleReportCollector()) {}
 
 Loader::Loader(DocGroup* aDocGroup) : Loader() { mDocGroup = aDocGroup; }
 
@@ -994,7 +990,8 @@ nsresult Loader::CreateSheet(
       //
       // Similarly, if the sheet doesn't have the right parsing mode just bail.
       if (sheet->HasForcedUniqueInner()) {
-        LOG(("  Not cloning completed sheet %p because it has a "
+        LOG(
+            ("  Not cloning completed sheet %p because it has a "
              "forced unique inner",
              sheet.get()));
         sheet = nullptr;

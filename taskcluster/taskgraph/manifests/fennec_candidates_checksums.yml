@@ -7,7 +7,8 @@ s3_bucket_paths:
 default_locales:  # if given an empty locale, use these locales
     - en-US
 tasktype_map:  # Map task reference to task type.
-    checksums-signing: signing
+    beetmover: beetmover
+
 platform_names:
     path_platform:
         by-platform:
@@ -27,7 +28,7 @@ platform_names:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
     from:
-        - checksums-signing
+        - beetmover
     all_locales: true
     description: "TO_BE_OVERRIDDEN"
     locale_prefix:
@@ -37,7 +38,6 @@ default: &default
     source_path_modifier: ''
     destinations:
         - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
-        - ${version}-candidates/build${build_number}/${path_platform}
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
@@ -46,8 +46,3 @@ mapping:
         description: "Checksums file containing size, hash, sha algorithm and filename"
         pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.beet
         checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums
-    target.checksums.asc:
-        <<: *default
-        description: "Detached signature for the checksums file"
-        pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.asc
-        checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums.asc

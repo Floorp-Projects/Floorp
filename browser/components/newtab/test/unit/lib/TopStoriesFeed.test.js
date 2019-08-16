@@ -171,9 +171,11 @@ describe("Top Stories Feed", () => {
         Prefs: {
           values: {
             "discoverystream.config": JSON.stringify({ enabled: true }),
+            "discoverystream.enabled": true,
           },
         },
       });
+
       instance.onAction({ type: at.INIT, data: {} });
 
       assert.calledOnce(instance.handleDisabled);
@@ -213,6 +215,14 @@ describe("Top Stories Feed", () => {
       instance.onAction({
         type: at.PREF_CHANGED,
         data: { name: "discoverystream.config", value: {} },
+      });
+      assert.calledOnce(instance.onInit);
+    });
+    it("should fire init on DISCOVERY_STREAM_PREF_ENABLED", () => {
+      sinon.stub(instance, "onInit");
+      instance.onAction({
+        type: at.PREF_CHANGED,
+        data: { name: "discoverystream.enabled", value: true },
       });
       assert.calledOnce(instance.onInit);
     });
