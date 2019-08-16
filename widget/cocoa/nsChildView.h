@@ -25,6 +25,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/gfx/MacIOSurface.h"
 
 #include "nsString.h"
 #include "nsIDragService.h"
@@ -676,6 +677,11 @@ class nsChildView final : public nsBaseWidget {
   // sublayer of mNativeLayerRoot's underlying wrapper layer.
   // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
   RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
+
+  // Used in BasicCompositor OMTC mode.
+  // Non-null between calls to PreRender(Impl) and PostRender,
+  // if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
+  RefPtr<MacIOSurface> mBasicCompositorIOSurface;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
