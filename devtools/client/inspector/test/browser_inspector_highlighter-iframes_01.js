@@ -26,7 +26,7 @@ const TEST_URI =
   '" />';
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { toolbox, inspector, testActor } = await openInspectorForURL(TEST_URI);
   const outerFrameDiv = ["iframe", "div"];
   const innerFrameDiv = ["iframe", "iframe", "div"];
 
@@ -70,7 +70,7 @@ add_task(async function() {
   );
 
   info("Waiting for element picker to deactivate.");
-  await inspector.inspectorFront.nodePicker.stop();
+  await toolbox.nodePicker.stop();
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
@@ -80,8 +80,6 @@ add_task(async function() {
         options: { type: "mousemove" },
         center: true,
       })
-      .then(() =>
-        inspector.inspectorFront.nodePicker.once("picker-node-hovered")
-      );
+      .then(() => toolbox.nodePicker.once("picker-node-hovered"));
   }
 });

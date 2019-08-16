@@ -138,4 +138,4 @@ class NodePicker extends EventEmitter {
   }
 }
 
-exports.NodePicker = NodePicker;
+module.exports = NodePicker;
