@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <math.h>
 
+#include <IOSurface/IOSurface.h>
+
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
@@ -78,6 +80,7 @@
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/NativeLayerCA.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -355,6 +358,10 @@ nsChildView::~nsChildView() {
 
   NS_WARNING_ASSERTION(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    mNativeLayerRoot->RemoveLayer(mContentLayer);  // safe if already removed
+  }
+
   DestroyCompositor();
 
   // An nsChildView object that was in use can be destroyed without Destroy()
@@ -412,6 +419,14 @@ nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mParentView);
   NSRect r = nsCocoaUtils::DevPixelsToCocoaPoints(mBounds, scaleFactor);
   mView = [[ChildView alloc] initWithFrame:r geckoChild:this];
+
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    mNativeLayerRoot = NativeLayerRootCA::CreateForCALayer([mView rootCALayer]);
+    mNativeLayerRoot->SetBackingScale(scaleFactor);
+    RefPtr<NativeLayer> contentLayer = mNativeLayerRoot->CreateLayer();
+    mNativeLayerRoot->AppendLayer(contentLayer);
+    mContentLayer = contentLayer->AsNativeLayerCA();
+  }
 
   // If this view was created in a Gecko view hierarchy, the initial state
   // is hidden.  If the view is attached only to a native NSView but has
@@ -808,6 +823,10 @@ void nsChildView::BackingScaleFactorChanged() {
   mBackingScaleFactor = newScale;
   NSRect frame = [mView frame];
   mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
+
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    mNativeLayerRoot->SetBackingScale(mBackingScaleFactor);
+  }
 
   if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
@@ -1209,7 +1228,12 @@ void nsChildView::Invalidate(const LayoutDeviceIntRect& aRect) {
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
 
-  [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    mContentLayer->InvalidateRegionThroughoutSwapchain(aRect.ToUnknownRect());
+    [mView markLayerForDisplay];
+  } else {
+    [[mView pixelHostingView] setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1398,7 +1422,43 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
   return painted;
 }
 
-void nsChildView::HandleMainThreadCATransaction() {}
+bool nsChildView::PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
+                                         const LayoutDeviceIntRegion& aInvalidRegion) {
+  RefPtr<MacIOSurface> surf = new MacIOSurface(std::move(aSurface));
+  surf->Lock(false);
+  RefPtr<gfx::DrawTarget> dt = surf->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
+  bool result = PaintWindowInDrawTarget(dt, aInvalidRegion, dt->GetSize());
+  surf->Unlock(false);
+  return result;
+}
+
+void nsChildView::PaintWindowInContentLayer() {
+  mContentLayer->SetRect(GetBounds().ToUnknownRect());
+  mContentLayer->SetSurfaceIsFlipped(false);
+  CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
+  if (!surf) {
+    return;
+  }
+
+  PaintWindowInIOSurface(
+      surf, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()));
+  mContentLayer->NotifySurfaceReady();
+}
+
+void nsChildView::HandleMainThreadCATransaction() {
+  WillPaintWindow();
+
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    // We're in BasicLayers mode, i.e. main thread software compositing.
+    // Composite the window into our layer's surface.
+    PaintWindowInContentLayer();
+  }
+
+  // Apply the changes from mContentLayer to its underlying CALayer. Now is a
+  // good time to call this because we know we're currently inside a main thread
+  // CATransaction.
+  mNativeLayerRoot->ApplyChanges();
+}
 
 #pragma mark -
 
