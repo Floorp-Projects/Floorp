@@ -3309,6 +3309,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (void)windowMainStateChanged {
   [self setTitlebarNeedsDisplay];
+  [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
 }
 
 - (void)setTitlebarNeedsDisplay {

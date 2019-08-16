@@ -261,6 +261,14 @@ class WidgetRenderingContext;
 - (bool)preRender:(NSOpenGLContext*)aGLContext;
 - (void)postRender:(NSOpenGLContext*)aGLContext;
 
+// Call this during operations that will likely trigger a main thread
+// CoreAnimation paint of the window, during which Gecko should do its own
+// painting and present the results atomically with that main thread transaction.
+// This method will suspend off-thread window updates so that the upcoming paint
+// can be atomic, and mark the layer as needing display so that
+// HandleMainThreadCATransaction gets called and Gecko gets a chance to paint.
+- (void)ensureNextCompositeIsAtomicWithMainThreadPaint;
+
 - (NSView*)vibrancyViewsContainer;
 - (NSView*)nonDraggableViewsContainer;
 - (NSView*)pixelHostingView;
