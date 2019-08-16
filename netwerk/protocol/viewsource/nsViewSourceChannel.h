@@ -46,7 +46,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   nsViewSourceChannel()
       : mIsDocument(false), mOpened(false), mIsSrcdocChannel(false) {}
 
-  MOZ_MUST_USE nsresult Init(nsIURI* uri);
+  MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
 
   MOZ_MUST_USE nsresult InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
                                    const nsAString& aSrcdoc,
