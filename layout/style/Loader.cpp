@@ -1022,49 +1022,36 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
 }
 
 /**
- * CreateSheet() creates a CSSStyleSheet object for the given URI,
- * if any.  If there is no URI given, we just create a new style sheet
- * object.  Otherwise, we check for an existing style sheet object for
- * that uri in various caches and clone it if we find it.  Cloned
- * sheets will have the title/media/enabled state of the sheet they
- * are clones off; make sure to call PrepareSheet() on the result of
- * CreateSheet().
+ * CreateSheet() creates a StyleSheet object for the given URI.
+ *
+ * We check for an existing style sheet object for that uri in various caches
+ * and clone it if we find it.  Cloned sheets will have the title/media/enabled
+ * state of the sheet they are clones off; make sure to call PrepareSheet() on
+ * the result of CreateSheet().
  */
 Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
     nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
     css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
     nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
     bool aSyncLoad) {
-  LOG(("css::Loader::CreateSheet(%s)", aURI ? aURI->GetSpecOrDefault().get() : "inline"));
+  MOZ_ASSERT(aURI, "This path is not taken for inline stylesheets");
+  LOG(("css::Loader::CreateSheet(%s)", aURI->GetSpecOrDefault().get()));
+
   if (!mSheets) {
     mSheets = MakeUnique<Sheets>();
   }
 
-  if (aURI) {
-    SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
-                             aCORSMode, aParsingMode);
-    auto cacheResult = mSheets->Lookup(key, aSyncLoad);
-    if (Get<0>(cacheResult)) {
-      LOG(("  Hit cache with state: %s", gStateStrings[size_t(Get<1>(cacheResult))]));
-      return cacheResult;
-    }
+  SheetLoadDataHashKey key(aURI, aLoaderPrincipal, aLoadingReferrerInfo,
+                           aCORSMode, aParsingMode);
+  auto cacheResult = mSheets->Lookup(key, aSyncLoad);
+  if (Get<0>(cacheResult)) {
+    LOG(("  Hit cache with state: %s", gStateStrings[size_t(Get<1>(cacheResult))]));
+    return cacheResult;
   }
 
-  nsIURI* sheetURI;
-  nsIURI* baseURI;
-  nsIURI* originalURI;
-  if (!aURI) {
-    // Inline style.  Use the document's base URL so that @import in
-    // the inline sheet picks up the right base.
-    NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
-    baseURI = aLinkingContent->GetBaseURI();
-    sheetURI = aLinkingContent->OwnerDoc()->GetDocumentURI();
-    originalURI = nullptr;
-  } else {
-    baseURI = aURI;
-    sheetURI = aURI;
-    originalURI = aURI;
-  }
+  nsIURI* sheetURI = aURI;
+  nsIURI* baseURI = aURI;
+  nsIURI* originalURI = aURI;
 
   SRIMetadata sriMetadata;
   if (!aIntegrity.IsEmpty()) {
@@ -1080,14 +1067,8 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
 
   auto sheet = MakeRefPtr<StyleSheet>(aParsingMode, aCORSMode, sriMetadata);
   sheet->SetURIs(sheetURI, originalURI, baseURI);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  if (sheet->IsInline()) {
-    referrerInfo = ReferrerInfo::CreateForInternalCSSResources(
-        aLinkingContent->OwnerDoc());
-  } else {
-    referrerInfo = ReferrerInfo::CreateForExternalCSSResources(sheet);
-  }
-
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForExternalCSSResources(sheet);
   sheet->SetReferrerInfo(referrerInfo);
   LOG(("  Needs parser"));
   return MakeTuple(std::move(sheet), SheetState::NeedsParser);
@@ -1697,7 +1678,8 @@ void Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus) {
     }
   }
 
-  if (mSheets->mLoadingDatas.Count() == 0 &&
+  if (mSheets &&
+      mSheets->mLoadingDatas.Count() == 0 &&
       mSheets->mPendingDatas.Count() > 0) {
     LOG(("  No more loading sheets; starting deferred loads"));
     StartDeferredLoads();
@@ -1709,7 +1691,8 @@ void Loader::DoSheetComplete(SheetLoadData* aLoadData,
   LOG(("css::Loader::DoSheetComplete"));
   MOZ_ASSERT(aLoadData, "Must have a load data!");
   MOZ_ASSERT(aLoadData->mSheet, "Must have a sheet");
-  NS_ASSERTION(mSheets, "mLoadingDatas should be initialized by now.");
+  NS_ASSERTION(mSheets || !aLoadData->mURI,
+               "mLoadingDatas should be initialized by now.");
 
   // Twiddle the hashtables
   if (aLoadData->mURI) {
@@ -1849,11 +1832,19 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   // Check IsAlternateSheet now, since it can mutate our document.
   auto isAlternate = IsAlternateSheet(aInfo.mTitle, aInfo.mHasAlternateRel);
 
-  RefPtr<StyleSheet> sheet;
-  SheetState state;
-  Tie(sheet, state) = CreateSheet(aInfo, nullptr, eAuthorSheetFeatures, false);
-  NS_ASSERTION(state == SheetState::NeedsParser,
-               "Inline sheets should not be cached");
+  // Use the document's base URL so that @import in the inline sheet picks up
+  // the right base.
+  nsIURI* baseURI = aInfo.mContent->GetBaseURI();
+  nsIURI* sheetURI = aInfo.mContent->OwnerDoc()->GetDocumentURI();
+  nsIURI* originalURI = nullptr;
+
+  MOZ_ASSERT(aInfo.mIntegrity.IsEmpty());
+  auto sheet = MakeRefPtr<StyleSheet>(eAuthorSheetFeatures, aInfo.mCORSMode,
+                                      SRIMetadata{});
+  sheet->SetURIs(sheetURI, originalURI, baseURI);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      ReferrerInfo::CreateForInternalCSSResources(aInfo.mContent->OwnerDoc());
+  sheet->SetReferrerInfo(referrerInfo);
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
