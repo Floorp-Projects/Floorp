@@ -1048,6 +1048,8 @@ description#identity-popup-content-verifier,
 /* Protection popup footer categories */
 
 .protections-popup-footer-button {
+  /* Overwrite toolbarbutton styles */
+  -moz-appearance: none;
   min-height: 24px;
   padding-inline-start: var(--horizontal-padding);
   margin: 0;
