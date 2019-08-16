@@ -4,6 +4,7 @@ const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
+const ST_PREF = "privacy.socialtracking.block_cookies.enabled";
 
 ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm",
@@ -17,29 +18,12 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(CAT_PREF);
   Services.prefs.clearUserPref(CM_PREF);
   Services.prefs.clearUserPref(FP_PREF);
+  Services.prefs.clearUserPref(ST_PREF);
 });
 
-add_task(async function testSubcategoryLabels() {
+add_task(async function testCookieCategoryLabels() {
   await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
     let categoryItem = document.getElementById(
-      "protections-popup-category-tracking-protection"
-    );
-
-    Services.prefs.setBoolPref(TP_PREF, true);
-    await TestUtils.waitForCondition(
-      () => categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(categoryItem.classList.contains("blocked"));
-
-    Services.prefs.setBoolPref(TP_PREF, false);
-    await TestUtils.waitForCondition(
-      () => !categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(!categoryItem.classList.contains("blocked"));
-
-    categoryItem = document.getElementById(
       "protections-popup-category-cookies"
     );
     let categoryLabelDisabled = document.getElementById(
@@ -167,41 +151,79 @@ add_task(async function testSubcategoryLabels() {
         !categoryLabelDisabled.hidden &&
         categoryLabelEnabled.hidden
     );
+  });
+});
 
-    categoryItem = document.getElementById(
-      "protections-popup-category-fingerprinters"
-    );
+let categoryItems = [
+  "protections-popup-category-tracking-protection",
+  "protections-popup-category-socialblock",
+  "protections-popup-category-cookies",
+  "protections-popup-category-cryptominers",
+  "protections-popup-category-fingerprinters",
+].map(id => document.getElementById(id));
 
-    Services.prefs.setBoolPref(FP_PREF, true);
-    await TestUtils.waitForCondition(
-      () => categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(categoryItem.classList.contains("blocked"));
+let categoryEnabledPrefs = [TP_PREF, ST_PREF, TPC_PREF, CM_PREF, FP_PREF];
 
-    Services.prefs.setBoolPref(FP_PREF, false);
-    await TestUtils.waitForCondition(
-      () => !categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(!categoryItem.classList.contains("blocked"));
+let detectedStateFlags = [
+  Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
+  Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT,
+  Ci.nsIWebProgressListener.STATE_COOKIES_LOADED,
+  Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT,
+  Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT,
+];
 
-    categoryItem = document.getElementById(
-      "protections-popup-category-cryptominers"
-    );
+async function waitForClass(item, className, shouldBePresent = true) {
+  await TestUtils.waitForCondition(() => {
+    return item.classList.contains(className) == shouldBePresent;
+  }, `Target class ${className} should be ${shouldBePresent ? "present" : "not present"} on item ${item.id}`);
 
-    Services.prefs.setBoolPref(CM_PREF, true);
-    await TestUtils.waitForCondition(
-      () => categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(categoryItem.classList.contains("blocked"));
+  ok(
+    item.classList.contains(className) == shouldBePresent,
+    `item.classList.contains(${className}) is ${shouldBePresent} for ${item.id}`
+  );
+}
 
-    Services.prefs.setBoolPref(CM_PREF, false);
-    await TestUtils.waitForCondition(
-      () => !categoryItem.classList.contains("blocked"),
-      "The category item has updated correctly"
-    );
-    ok(!categoryItem.classList.contains("blocked"));
+add_task(async function testCategorySections() {
+  for (let pref of categoryEnabledPrefs) {
+    if (pref == TPC_PREF) {
+      Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
+    } else {
+      Services.prefs.setBoolPref(pref, false);
+    }
+  }
+
+  await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
+    for (let item of categoryItems) {
+      await waitForClass(item, "notFound");
+      await waitForClass(item, "blocked", false);
+    }
+
+    // For every item, we enable the category and spoof a content blocking event,
+    // and check that .notFound goes away and .blocked is set. Then we disable the
+    // category and checks that .blocked goes away, and .notFound is still unset.
+    let contentBlockingState = 0;
+    for (let i = 0; i < categoryItems.length; i++) {
+      let itemToTest = categoryItems[i];
+      let enabledPref = categoryEnabledPrefs[i];
+      contentBlockingState |= detectedStateFlags[i];
+      if (enabledPref == TPC_PREF) {
+        Services.prefs.setIntPref(
+          TPC_PREF,
+          Ci.nsICookieService.BEHAVIOR_REJECT
+        );
+      } else {
+        Services.prefs.setBoolPref(enabledPref, true);
+      }
+      gProtectionsHandler.onContentBlockingEvent(contentBlockingState);
+      await waitForClass(itemToTest, "notFound", false);
+      await waitForClass(itemToTest, "blocked", true);
+      if (enabledPref == TPC_PREF) {
+        Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ALLOW);
+      } else {
+        Services.prefs.setBoolPref(enabledPref, false);
+      }
+      await waitForClass(itemToTest, "notFound", false);
+      await waitForClass(itemToTest, "blocked", false);
+    }
   });
 });
