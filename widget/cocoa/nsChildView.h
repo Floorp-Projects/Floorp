@@ -643,7 +643,7 @@ class nsChildView final : public nsBaseWidget {
 
   bool mPluginFocused;
 
-  // Used in OMTC BasicLayers mode. Presents the BasicCompositor result
+  // Used in BasicCompositor OMTC mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
   mozilla::UniquePtr<GLPresenter> mGLPresenter;
 
