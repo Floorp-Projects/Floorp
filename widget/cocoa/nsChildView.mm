@@ -1850,6 +1850,8 @@ void nsChildView::ConfigureAPZCTreeManager() { nsBaseWidget::ConfigureAPZCTreeMa
 void nsChildView::ConfigureAPZControllerThread() { nsBaseWidget::ConfigureAPZControllerThread(); }
 
 LayoutDeviceIntRect nsChildView::RectContainingTitlebarControls() {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   NSRect rect = NSZeroRect;
 
   // If we draw the titlebar title string, set the rect to the full window
@@ -1889,7 +1891,7 @@ void nsChildView::PrepareWindowEffects() {
     if (canBeOpaque && VibrancyManager::SystemSupportsVibrancy()) {
       canBeOpaque = !EnsureVibrancyManager().HasVibrantRegions();
     }
-    if (mIsCoveringTitlebar) {
+    if (mIsCoveringTitlebar && !StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
       mTitlebarRect = RectContainingTitlebarControls();
       UpdateTitlebarCGContext();
     }
@@ -1912,6 +1914,10 @@ void nsChildView::CleanupWindowEffects() {
 void nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWrBridge,
                                                     wr::DisplayListBuilder& aBuilder,
                                                     wr::IpcResourceUpdateQueue& aResources) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    return;
+  }
+
   PrepareWindowEffects();
 
   if (!mIsCoveringTitlebar || mIsFullscreen || mTitlebarRect.IsEmpty()) {
@@ -2070,6 +2076,10 @@ void nsChildView::DrawWindowOverlay(WidgetRenderingContext* aContext, LayoutDevi
 }
 
 void nsChildView::DrawWindowOverlay(GLManager* aManager, LayoutDeviceIntRect aRect) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    return;
+  }
+
   GLContext* gl = aManager->gl();
   ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST, false);
 
@@ -2103,6 +2113,8 @@ static LayoutDeviceIntSize TextureSizeForSize(const LayoutDeviceIntSize& aSize) 
 
 // When this method is entered, mEffectsLock is already being held.
 void nsChildView::UpdateTitlebarCGContext() {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   if (mTitlebarRect.IsEmpty()) {
     ReleaseTitlebarCGContext();
     return;
@@ -2235,6 +2247,8 @@ void nsChildView::UpdateTitlebarCGContext() {
 // GLContext surface. In order to make the titlebar controls visible, we have
 // to redraw them inside the OpenGL context surface.
 void nsChildView::MaybeDrawTitlebar(GLManager* aManager) {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   MutexAutoLock lock(mEffectsLock);
   if (!mIsCoveringTitlebar || mIsFullscreen || mTitlebarRect.IsEmpty()) {
     return;
@@ -2261,6 +2275,8 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
 }
 
 void nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const LayoutDeviceIntRect& aRect) {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   MutexAutoLock lock(mEffectsLock);
 
   if (!mCornerMaskImage) {
@@ -3565,6 +3581,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // We don't bother clearing parts of the window that are covered by opaque
 // pixels from the OpenGL context.
 - (void)clearCorners {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   CGFloat radius = [self cornerRadius];
   CGFloat w = [self bounds].size.width, h = [self bounds].size.height;
   [[NSColor clearColor] set];
@@ -3584,6 +3602,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // We only need to mask the top corners here because Cocoa does the masking
 // for the window's bottom corners automatically.
 - (void)maskTopCornersInContext:(CGContextRef)aContext {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   CGFloat radius = [self cornerRadius];
   int32_t devPixelCornerRadius = mGeckoChild->CocoaPointsToDevPixels(radius);
 
@@ -3621,6 +3641,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 - (void)drawTitleString {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   BaseWindow* window = (BaseWindow*)[self window];
   if (![window wantsTitleDrawn]) {
     return;
