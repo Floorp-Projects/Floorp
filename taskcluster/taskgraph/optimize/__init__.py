@@ -310,3 +310,11 @@ import_sibling_modules()
 register_strategy('test', args=('skip-unless-schedules', 'seta'))(Either)
 register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
 register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
+
+
+# Experimental strategy that replaces the default SETA with a version that runs
+# all tasks every 10th push or 2 hours.
+seta_10_120 = {
+    'seta': Alias('seta_10_120'),
+    'test': Either('skip-unless-schedules', 'seta_10_120'),
+}
