@@ -1198,6 +1198,7 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
   EntryGetter e(*this);
 
   aWriter.StartObjectProperty("profilerOverhead_UNSTABLE");
+  aWriter.StartObjectProperty("samples");
   // Stream all sampling overhead data. We skip other entries, because we
   // process them in StreamSamplesToJSON()/etc.
   {
@@ -1274,6 +1275,7 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
     e.Next();
   }
   aWriter.EndArray();  // data
+  aWriter.EndObject();  // samples
 
   // Only output statistics if there is at least one full interval (and
   // therefore at least two samplings.)
