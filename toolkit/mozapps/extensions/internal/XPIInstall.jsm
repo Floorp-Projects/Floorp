@@ -1479,6 +1479,7 @@ class AddonInstall {
         `removeTemporaryFile: ${this.sourceURI.spec} removing temp file ` +
           this.file.path
       );
+      flushJarCache(this.file);
       this.file.remove(true);
       this.ownsTempFile = false;
     } catch (e) {
