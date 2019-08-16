@@ -27,7 +27,7 @@ class RemoteDragStartData {
   RemoteDragStartData(BrowserParent* aBrowserParent,
                       nsTArray<IPCDataTransfer>&& aDataTransfer,
                       const LayoutDeviceIntRect& aRect,
-                      nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp);
+                      nsIPrincipal* aPrincipal);
 
   void SetVisualization(
       already_AddRefed<gfx::DataSourceSurface> aVisualization) {
@@ -43,8 +43,7 @@ class RemoteDragStartData {
   }
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
-                           nsIPrincipal** aPrincipal,
-                           nsIContentSecurityPolicy** aCsp);
+                           nsIPrincipal** aPrincipal);
 
  private:
   virtual ~RemoteDragStartData();
@@ -53,7 +52,6 @@ class RemoteDragStartData {
   nsTArray<IPCDataTransfer> mDataTransfer;
   const LayoutDeviceIntRect mRect;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
   RefPtr<mozilla::gfx::SourceSurface> mVisualization;
 };
 

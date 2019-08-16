@@ -219,10 +219,6 @@ ContentAreaDropListener.prototype = {
 
   getCSP: function(aEvent) {
     let sourceNode = aEvent.dataTransfer.mozSourceNode;
-    if (aEvent.dataTransfer.mozCSP !== null) {
-      return aEvent.dataTransfer.mozCSP;
-    }
-
     if (
       sourceNode &&
       (sourceNode.localName !== "browser" ||
