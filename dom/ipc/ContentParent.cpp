@@ -4696,10 +4696,11 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 
 {
   // The content process should never be in charge of computing whether or
-  // not a window should be private - the parent will do that.
+  // not a window should be private or remote - the parent will do that.
   const uint32_t badFlags = nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
                             nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
-                            nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
+                            nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME |
+                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
   if (!!(aChromeFlags & badFlags)) {
     return IPC_FAIL(this, "Forbidden aChromeFlags passed");
   }
@@ -4708,20 +4709,6 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   BrowserHost* thisBrowserHost =
       thisBrowserParent ? thisBrowserParent->GetBrowserHost() : nullptr;
   MOZ_ASSERT(!thisBrowserParent == !thisBrowserHost);
-
-  // The content process should not have set its remote or fission flags if the
-  // parent doesn't also have these set.
-  if (thisBrowserHost) {
-    nsCOMPtr<nsILoadContext> context = thisBrowserHost->GetLoadContext();
-
-    if (context->UseRemoteTabs() !=
-            !!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW) ||
-        context->UseRemoteSubframes() !=
-            !!(aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW)) {
-      return IPC_FAIL(this, "Unexpected aChromeFlags passed");
-    }
-  }
-
   nsCOMPtr<nsIContent> frame;
   if (thisBrowserParent) {
     frame = thisBrowserParent->GetOwnerElement();
