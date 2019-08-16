@@ -164,8 +164,8 @@ class NeckoParent : public PNeckoParent {
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*);
 
-  PDataChannelParent* AllocPDataChannelParent(const uint32_t& channelId);
-  bool DeallocPDataChannelParent(PDataChannelParent* parent);
+  already_AddRefed<PDataChannelParent> AllocPDataChannelParent(
+      const uint32_t& channelId);
 
   virtual mozilla::ipc::IPCResult RecvPDataChannelConstructor(
       PDataChannelParent* aActor, const uint32_t& channelId) override;
