@@ -75,7 +75,10 @@ def _get_optimizations(target_task_graph, strategies):
         task = target_task_graph.tasks[label]
         if task.optimization:
             opt_by, arg = task.optimization.items()[0]
-            return (opt_by, strategies[opt_by], arg)
+            strategy = strategies[opt_by]
+            if hasattr(strategy, 'description'):
+                opt_by += " ({})".format(strategy.description)
+            return (opt_by, strategy, arg)
         else:
             return ('never', strategies['never'], None)
     return optimizations
@@ -261,6 +264,7 @@ class Either(OptimizationStrategy):
             raise TypeError("substrategies aren't registered: {}".format(
                 ",  ".join(sorted(missing))))
 
+        self.description = "-or-".join(substrategies)
         self.substrategies = [registry[sub] for sub in substrategies]
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
@@ -286,9 +290,21 @@ class Either(OptimizationStrategy):
             lambda sub, arg: sub.should_replace_task(task, params, arg))
 
 
+class Alias(Either):
+    """Provides an alias to an existing strategy.
+
+    This can be useful to swap strategies in and out without needing to modify
+    the task transforms.
+    """
+    def __init__(self, strategy):
+        super(Alias, self).__init__(strategy)
+
+
 # Trigger registration in sibling modules.
 import_sibling_modules()
 
 
 # Register composite strategies.
-register_strategy('skip-unless-schedules-or-seta', args=('skip-unless-schedules', 'seta'))(Either)
+register_strategy('test', args=('skip-unless-schedules', 'seta'))(Either)
+register_strategy('test-inclusive', args=('skip-unless-schedules',))(Alias)
+register_strategy('test-try', args=('skip-unless-schedules',))(Alias)
