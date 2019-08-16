@@ -3,7 +3,6 @@
 
 /*---
 esid: sec-date.parse
-es6id: 20.3.3.2
 description: >
   Date.parse of toString/toUTCString/toISOString of zero value is zero
 info: |
