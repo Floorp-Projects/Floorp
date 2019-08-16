@@ -2149,70 +2149,60 @@ nsresult Loader::LoadChildSheet(StyleSheet* aParentSheet,
   return rv;
 }
 
-nsresult Loader::LoadSheetSync(nsIURI* aURL, SheetParsingMode aParsingMode,
-                               bool aUseSystemPrincipal,
-                               RefPtr<StyleSheet>* aSheet) {
+Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
+    nsIURI* aURL, SheetParsingMode aParsingMode, bool aUseSystemPrincipal) {
   LOG(("css::Loader::LoadSheetSync"));
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
-  return InternalLoadNonDocumentSheet(aURL, false, aParsingMode,
-                                      aUseSystemPrincipal, nullptr, nullptr,
-                                      aSheet, referrerInfo, nullptr);
+  return InternalLoadNonDocumentSheet(
+      aURL, false, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      referrerInfo, nullptr, CORS_NONE, EmptyString());
 }
 
-nsresult Loader::LoadSheet(nsIURI* aURL, SheetParsingMode aParsingMode,
-                           bool aUseSystemPrincipal,
-                           nsICSSLoaderObserver* aObserver,
-                           RefPtr<StyleSheet>* aSheet) {
-  LOG(
-      ("css::Loader::LoadSheet(aURL, aParsingMode, aUseSystemPrincipal, "
-       "aObserver, aSheet)"));
+Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
+    nsIURI* aURI, SheetParsingMode aParsingMode, bool aUseSystemPrincipal,
+    nsICSSLoaderObserver* aObserver) {
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
-  return InternalLoadNonDocumentSheet(aURL, false, aParsingMode,
-                                      aUseSystemPrincipal, nullptr, nullptr,
-                                      aSheet, referrerInfo, aObserver);
+  return InternalLoadNonDocumentSheet(
+      aURI, false, aParsingMode, aUseSystemPrincipal, nullptr, nullptr,
+      referrerInfo, aObserver, CORS_NONE, EmptyString());
 }
 
-nsresult Loader::LoadSheet(nsIURI* aURL, bool aIsPreload,
-                           nsIPrincipal* aOriginPrincipal,
-                           const Encoding* aPreloadEncoding,
-                           nsIReferrerInfo* aReferrerInfo,
-                           nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
-                           const nsAString& aIntegrity) {
+Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
+    nsIURI* aURL, bool aIsPreload, nsIPrincipal* aOriginPrincipal,
+    const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
+    nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
+    const nsAString& aIntegrity) {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, aIsPreload, eAuthorSheetFeatures,
-                                      false, aOriginPrincipal, aPreloadEncoding,
-                                      nullptr, aReferrerInfo, aObserver,
-                                      aCORSMode, aIntegrity);
+  return InternalLoadNonDocumentSheet(
+      aURL, aIsPreload, eAuthorSheetFeatures, false, aOriginPrincipal,
+      aPreloadEncoding, aReferrerInfo, aObserver, aCORSMode, aIntegrity);
 }
 
-nsresult Loader::InternalLoadNonDocumentSheet(
+Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
     nsIURI* aURL, bool aIsPreload, SheetParsingMode aParsingMode,
     bool aUseSystemPrincipal, nsIPrincipal* aOriginPrincipal,
-    const Encoding* aPreloadEncoding, RefPtr<StyleSheet>* aSheet,
-    nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
-    CORSMode aCORSMode, const nsAString& aIntegrity) {
+    const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
+    nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
+    const nsAString& aIntegrity) {
   MOZ_ASSERT(aURL, "Must have a URI to load");
-  MOZ_ASSERT(aSheet || aObserver, "Sheet and observer can't both be null");
   MOZ_ASSERT(!aUseSystemPrincipal || !aObserver,
              "Shouldn't load system-principal sheets async");
   MOZ_ASSERT(aReferrerInfo, "Must have referrerInfo");
 
   LOG_URI("  Non-document sheet uri: '%s'", aURL);
 
-  if (aSheet) {
-    *aSheet = nullptr;
-  }
-
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
-    return NS_ERROR_NOT_AVAILABLE;
+    return Err(NS_ERROR_NOT_AVAILABLE);
   }
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal =
       (aOriginPrincipal && mDocument ? mDocument->NodePrincipal() : nullptr);
   nsresult rv = CheckContentPolicy(loadingPrincipal, aOriginPrincipal, aURL,
                                    mDocument, aIsPreload);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
 
   bool syncLoad = !aObserver;
 
@@ -2230,11 +2220,11 @@ nsresult Loader::InternalLoadNonDocumentSheet(
     if (aObserver || !mObservers.IsEmpty()) {
       rv = PostLoadEvent(aURL, sheet, aObserver, IsAlternate::No,
                          MediaMatched::Yes, aReferrerInfo, nullptr);
+      if (NS_FAILED(rv)) {
+        return Err(rv);
+      }
     }
-    if (aSheet) {
-      sheet.swap(*aSheet);
-    }
-    return rv;
+    return sheet;
   }
 
   SheetLoadData* data = new SheetLoadData(
@@ -2243,16 +2233,13 @@ nsresult Loader::InternalLoadNonDocumentSheet(
 
   NS_ADDREF(data);
   rv = LoadSheet(data, state, aIsPreload);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aSheet) {
-    sheet.swap(*aSheet);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
   }
   if (aObserver) {
     data->mMustNotify = true;
   }
-
-  return rv;
+  return sheet;
 }
 
 nsresult Loader::PostLoadEvent(nsIURI* aURI, StyleSheet* aSheet,

@@ -125,7 +125,7 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
 #define STYLE_SHEET(identifier_, url_, shared_)                                \
   NotNull<StyleSheet*> nsLayoutStylesheetCache::identifier_##Sheet() {         \
     if (!m##identifier_##Sheet) {                                              \
-      LoadSheetURL(url_, &m##identifier_##Sheet, eAgentSheetFeatures, eCrash); \
+      m##identifier_##Sheet = LoadSheetURL(url_, eAgentSheetFeatures, eCrash); \
     }                                                                          \
     return WrapNotNull(m##identifier_##Sheet);                                 \
   }
@@ -241,8 +241,8 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
 
   if (gUserContentSheetURL) {
     MOZ_ASSERT(XRE_IsContentProcess(), "Only used in content processes.");
-    LoadSheet(gUserContentSheetURL, &mUserContentSheet, eUserSheetFeatures,
-              eLogToConsole);
+    mUserContentSheet =
+        LoadSheet(gUserContentSheetURL, eUserSheetFeatures, eLogToConsole);
     gUserContentSheetURL = nullptr;
   }
 
@@ -446,37 +446,29 @@ void nsLayoutStylesheetCache::InitFromProfile() {
   contentFile->Append(NS_LITERAL_STRING("userContent.css"));
   chromeFile->Append(NS_LITERAL_STRING("userChrome.css"));
 
-  LoadSheetFile(contentFile, &mUserContentSheet, eUserSheetFeatures,
-                eLogToConsole);
-  LoadSheetFile(chromeFile, &mUserChromeSheet, eUserSheetFeatures,
-                eLogToConsole);
+  mUserContentSheet = LoadSheetFile(contentFile, eUserSheetFeatures);
+  mUserChromeSheet = LoadSheetFile(chromeFile, eUserSheetFeatures);
 }
 
-void nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
-                                           RefPtr<StyleSheet>* aSheet,
-                                           SheetParsingMode aParsingMode,
-                                           FailureAction aFailureAction) {
+RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheetURL(
+    const char* aURL, SheetParsingMode aParsingMode,
+    FailureAction aFailureAction) {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aURL);
-  LoadSheet(uri, aSheet, aParsingMode, aFailureAction);
-  if (!aSheet) {
-    NS_ERROR(nsPrintfCString("Could not load %s", aURL).get());
-  }
+  return LoadSheet(uri, aParsingMode, aFailureAction);
 }
 
-void nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile,
-                                            RefPtr<StyleSheet>* aSheet,
-                                            SheetParsingMode aParsingMode,
-                                            FailureAction aFailureAction) {
+RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheetFile(
+    nsIFile* aFile, SheetParsingMode aParsingMode) {
   bool exists = false;
   aFile->Exists(&exists);
-
-  if (!exists) return;
+  if (!exists) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), aFile);
-
-  LoadSheet(uri, aSheet, aParsingMode, aFailureAction);
+  return LoadSheet(uri, aParsingMode, eLogToConsole);
 }
 
 static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
@@ -495,20 +487,18 @@ static void ErrorLoadingSheet(nsIURI* aURI, const char* aMsg,
   MOZ_CRASH_UNSAFE(errorMessage.get());
 }
 
-void nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                        RefPtr<StyleSheet>* aSheet,
-                                        SheetParsingMode aParsingMode,
-                                        FailureAction aFailureAction) {
+RefPtr<StyleSheet> nsLayoutStylesheetCache::LoadSheet(
+    nsIURI* aURI, SheetParsingMode aParsingMode, FailureAction aFailureAction) {
   if (!aURI) {
     ErrorLoadingSheet(aURI, "null URI", eCrash);
-    return;
+    return nullptr;
   }
 
   if (!gCSSLoader) {
     gCSSLoader = new Loader;
     if (!gCSSLoader) {
       ErrorLoadingSheet(aURI, "no Loader", eCrash);
-      return;
+      return nullptr;
     }
   }
 
@@ -517,15 +507,16 @@ void nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
   // parallel parsing on them. If that ever changes, we'll either need to find a
   // different way to prohibit parallel parsing for UA sheets, or handle
   // -moz-bool-pref and various other things in the parallel parsing code.
-  nsresult rv = gCSSLoader->LoadSheetSync(aURI, aParsingMode, true, aSheet);
-  if (NS_FAILED(rv)) {
+  auto result = gCSSLoader->LoadSheetSync(aURI, aParsingMode, true);
+  if (MOZ_UNLIKELY(result.isErr())) {
     ErrorLoadingSheet(
         aURI,
         nsPrintfCString("LoadSheetSync failed with error %" PRIx32,
-                        static_cast<uint32_t>(rv))
+                        static_cast<uint32_t>(result.unwrapErr()))
             .get(),
         aFailureAction);
   }
+  return result.unwrapOr(nullptr);
 }
 
 /* static */
