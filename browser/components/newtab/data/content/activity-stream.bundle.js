@@ -7895,7 +7895,8 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
   render() {
     const {
       context,
-      context_type
+      context_type,
+      engagement
     } = this.props;
     const {
       icon,
@@ -7907,11 +7908,13 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
       className: "story-sponsored-label clamp"
     }, context), external_React_default.a.createElement(external_ReactTransitionGroup_["TransitionGroup"], {
       component: null
-    }, !context && context_type && external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+    }, !context && (context_type || engagement) && external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
       key: fluentID,
       timeout: ANIMATION_DURATION,
       classNames: "story-animate"
-    }, external_React_default.a.createElement(StatusMessage, {
+    }, engagement && !context_type ? external_React_default.a.createElement("div", {
+      className: "story-view-count"
+    }, engagement) : external_React_default.a.createElement(StatusMessage, {
       icon: icon,
       fluentID: fluentID
     }))));
@@ -7935,7 +7938,8 @@ const DefaultMeta = ({
   excerpt,
   context,
   context_type,
-  cta
+  cta,
+  engagement
 }) => external_React_default.a.createElement("div", {
   className: "meta"
 }, external_React_default.a.createElement("div", {
@@ -7952,7 +7956,8 @@ const DefaultMeta = ({
   tabIndex: "0"
 }, cta)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
   context_type: context_type,
-  context: context
+  context: context,
+  engagement: engagement
 }));
 const VariantMeta = ({
   source,
@@ -7961,6 +7966,7 @@ const VariantMeta = ({
   context,
   context_type,
   cta,
+  engagement,
   sponsor
 }) => external_React_default.a.createElement("div", {
   className: "meta"
@@ -7972,16 +7978,25 @@ const VariantMeta = ({
   className: "title clamp"
 }, title), excerpt && external_React_default.a.createElement("p", {
   className: "excerpt clamp"
-}, excerpt)), cta && external_React_default.a.createElement("button", {
+}, excerpt)), context && cta && external_React_default.a.createElement("button", {
   className: "button cta-button"
 }, cta), !context && external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
   context_type: context_type,
-  context: context
+  context: context,
+  engagement: engagement
 }));
 class DSCard_DSCard extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onLinkClick = this.onLinkClick.bind(this);
+
+    this.setPlaceholderRef = element => {
+      this.placholderElement = element;
+    };
+
+    this.state = {
+      isSeen: false
+    };
   }
 
   onLinkClick(event) {
@@ -8005,9 +8020,47 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     }
   }
 
+  onSeen(entries) {
+    if (this.state) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
+        if (this.placholderElement) {
+          this.observer.unobserve(this.placholderElement);
+        } // Stop observing since element has been seen
+
+
+        this.setState({
+          isSeen: true
+        });
+      }
+    }
+  }
+
+  componentDidMount() {
+    if (this.placholderElement) {
+      this.observer = new IntersectionObserver(this.onSeen.bind(this));
+      this.observer.observe(this.placholderElement);
+    }
+  }
+
+  componentWillUnmount() {
+    // Remove observer on unmount
+    if (this.observer && this.placholderElement) {
+      this.observer.unobserve(this.placholderElement);
+    }
+  }
+
   render() {
+    if (this.props.placeholder || !this.state.isSeen) {
+      return external_React_default.a.createElement("div", {
+        className: "ds-card placeholder",
+        ref: this.setPlaceholderRef
+      });
+    }
+
     return external_React_default.a.createElement("div", {
-      className: `ds-card${this.props.placeholder ? " placeholder" : ""}`
+      className: "ds-card"
     }, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
       className: "ds-card-link",
       dispatch: this.props.dispatch,
@@ -8025,6 +8078,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       excerpt: this.props.excerpt,
       context: this.props.context,
       context_type: this.props.context_type,
+      engagement: this.props.engagement,
       cta: this.props.cta,
       sponsor: this.props.sponsor
     }), !this.props.cta_variant && external_React_default.a.createElement(DefaultMeta, {
@@ -8032,6 +8086,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       title: this.props.title,
       excerpt: this.props.excerpt,
       context: this.props.context,
+      engagement: this.props.engagement,
       context_type: this.props.context_type,
       cta: this.props.cta
     }), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
@@ -8045,7 +8100,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
-    })), !this.props.placeholder && external_React_default.a.createElement(DSLinkMenu_DSLinkMenu, {
+    })), external_React_default.a.createElement(DSLinkMenu_DSLinkMenu, {
       id: this.props.id,
       index: this.props.pos,
       dispatch: this.props.dispatch,
@@ -8192,6 +8247,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         pocket_id: rec.pocket_id,
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
+        engagement: rec.engagement,
         cta: rec.cta,
         cta_variant: this.props.cta_variant
       }));
@@ -8336,7 +8392,8 @@ class List_ListItem extends external_React_default.a.PureComponent {
       className: "ds-list-item-excerpt clamp"
     }, this.props.excerpt)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
       context: this.props.context,
-      context_type: this.props.context_type
+      context_type: this.props.context_type,
+      engagement: this.props.engagement
     })), external_React_default.a.createElement(DSImage_DSImage, {
       extraClassNames: "ds-list-image",
       source: this.props.image_src,
@@ -8400,7 +8457,8 @@ function _List(props) {
         type: props.type,
         url: rec.url,
         pocket_id: rec.pocket_id,
-        bookmarkGuid: rec.bookmarkGuid
+        bookmarkGuid: rec.bookmarkGuid,
+        engagement: rec.engagement
       }));
     }
 
@@ -8513,7 +8571,8 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         context_type: rec.context_type,
         source: rec.domain,
         pocket_id: rec.pocket_id,
-        bookmarkGuid: rec.bookmarkGuid
+        bookmarkGuid: rec.bookmarkGuid,
+        engagement: rec.engagement
       }));
     }
 
@@ -8548,7 +8607,8 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         className: "excerpt clamp"
       }, heroRec.excerpt)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
         context: heroRec.context,
-        context_type: heroRec.context_type
+        context_type: heroRec.context_type,
+        engagement: heroRec.engagement
       })), external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
         campaignId: heroRec.campaign_id,
         rows: [{
