@@ -74,6 +74,30 @@ def get_s3_keys(s3, bucket):
     return all_keys
 
 
+def s3_set_redirects(redirects):
+
+    s3, bucket = create_aws_session()
+    configuration = {
+        'IndexDocument': {"Suffix": "index.html"},
+        'RoutingRules': []
+    }
+
+    for path, redirect in redirects.items():
+        configuration['RoutingRules'].append({
+            'Condition': {
+                "KeyPrefixEquals": path
+            },
+            'Redirect': {
+                "ReplaceKeyPrefixWith": redirect
+            }
+        })
+
+    s3.put_bucket_website(
+        Bucket=bucket,
+        WebsiteConfiguration=configuration,
+    )
+
+
 def s3_delete_missing(files, key_prefix=None):
 
     s3, bucket = create_aws_session()
