@@ -17,17 +17,27 @@ import logging
 import os
 from collections import defaultdict
 
-from .graph import Graph
-from . import files_changed
-from .taskgraph import TaskGraph
-from .util.seta import is_low_value_task
-from .util.taskcluster import find_task_id
-from .util.parameterization import resolve_task_references
+from mozbuild.base import MozbuildObject
 from mozbuild.util import memoize
 from slugid import nice as slugid
-from mozbuild.base import MozbuildObject
+
+from . import files_changed
+from .graph import Graph
+from .taskgraph import TaskGraph
+from .util.parameterization import resolve_task_references
+from .util.seta import is_low_value_task
+from .util.taskcluster import find_task_id
 
 logger = logging.getLogger(__name__)
+registry = {}
+
+
+def register_strategy(name, args=()):
+    def wrap(cls):
+        if name not in registry:
+            registry[name] = cls(*args)
+        return cls
+    return wrap
 
 
 def optimize_task_graph(target_task_graph, params, do_not_optimize,
@@ -41,8 +51,7 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize,
         existing_tasks = {}
 
     # instantiate the strategies for this optimization process
-    if not strategies:
-        strategies = _make_default_strategies()
+    strategies = strategies or registry.copy()
 
     optimizations = _get_optimizations(target_task_graph, strategies)
 
@@ -64,17 +73,6 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize,
     return get_subgraph(
             target_task_graph, removed_tasks, replaced_tasks,
             label_to_taskid), label_to_taskid
-
-
-def _make_default_strategies():
-    return {
-        'never': OptimizationStrategy(),  # "never" is the default behavior
-        'index-search': IndexSearch(),
-        'seta': SETA(),
-        'skip-unless-changed': SkipUnlessChanged(),
-        'skip-unless-schedules': SkipUnlessSchedules(),
-        'skip-unless-schedules-or-seta': Either(SkipUnlessSchedules(), SETA()),
-    }
 
 
 def _get_optimizations(target_task_graph, strategies):
@@ -243,6 +241,7 @@ def get_subgraph(target_task_graph, removed_tasks, replaced_tasks, label_to_task
         Graph(set(tasks_by_taskid), edges_by_taskid))
 
 
+@register_strategy('never')
 class OptimizationStrategy(object):
     def should_remove_task(self, task, params, arg):
         """Determine whether to optimize this task by removing it.  Returns
@@ -262,7 +261,12 @@ class Either(OptimizationStrategy):
     earliest).  By default, each substrategy gets the same arg, but split_args
     can return a list of args for each strategy, if desired."""
     def __init__(self, *substrategies, **kwargs):
-        self.substrategies = substrategies
+        missing = set(substrategies) - set(registry.keys())
+        if missing:
+            raise TypeError("substrategies aren't registered: {}".format(
+                ",  ".join(sorted(missing))))
+
+        self.substrategies = [registry[sub] for sub in substrategies]
         self.split_args = kwargs.pop('split_args', None)
         if not self.split_args:
             self.split_args = lambda arg: [arg] * len(substrategies)
@@ -287,6 +291,7 @@ class Either(OptimizationStrategy):
             lambda sub, arg: sub.should_replace_task(task, params, arg))
 
 
+@register_strategy("index-search")
 class IndexSearch(OptimizationStrategy):
 
     # A task with no dependencies remaining after optimization will be replaced
@@ -314,6 +319,7 @@ class IndexSearch(OptimizationStrategy):
         return False
 
 
+@register_strategy('seta')
 class SETA(OptimizationStrategy):
     def should_remove_task(self, task, params, _):
         label = task.label
@@ -330,6 +336,7 @@ class SETA(OptimizationStrategy):
             return False
 
 
+@register_strategy("skip-unless-changed")
 class SkipUnlessChanged(OptimizationStrategy):
     def should_remove_task(self, task, params, file_patterns):
         # pushlog_id == -1 - this is the case when run from a cron.yml job
@@ -344,6 +351,7 @@ class SkipUnlessChanged(OptimizationStrategy):
         return False
 
 
+@register_strategy("skip-unless-schedules")
 class SkipUnlessSchedules(OptimizationStrategy):
 
     @memoize
@@ -373,3 +381,7 @@ class SkipUnlessSchedules(OptimizationStrategy):
             return False
 
         return True
+
+
+# Register composite strategies.
+register_strategy('skip-unless-schedules-or-seta', args=('skip-unless-schedules', 'seta'))(Either)
