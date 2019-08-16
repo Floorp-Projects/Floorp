@@ -3068,6 +3068,8 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (NSArray*)titlebarControls {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   // Return all subviews of the frameView which are not the content view.
   NSView* frameView = [[self contentView] superview];
   NSMutableArray* array = [[[frameView subviews] mutableCopy] autorelease];
