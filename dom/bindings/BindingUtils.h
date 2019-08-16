@@ -1368,18 +1368,9 @@ inline mozilla::dom::ReflectionScope GetReflectionScope(
 
 template <class T>
 inline void ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj) {
-  // Skip clearing the wrapper when replaying. This method is called during
-  // finalization of |obj|, and when replaying a strong reference is kept on
-  // the contents of the cache: since |obj| is being finalized, the cache
-  // cannot point to |obj|, and clearing here won't do anything.
-  // Additionally, the reference held on the cache may have already been
-  // released, if we are finalizing later than we did while recording, and the
-  // cache may have already been deleted.
-  if (!recordreplay::IsReplaying()) {
-    MOZ_ASSERT(cache->GetWrapperMaybeDead() == obj ||
-               (js::RuntimeIsBeingDestroyed() && !cache->GetWrapperMaybeDead()));
-    cache->ClearWrapper(obj);
-  }
+  MOZ_ASSERT(cache->GetWrapperMaybeDead() == obj ||
+             (js::RuntimeIsBeingDestroyed() && !cache->GetWrapperMaybeDead()));
+  cache->ClearWrapper(obj);
 }
 
 template <class T>
@@ -1387,13 +1378,9 @@ inline void ClearWrapper(T* p, void*, JSObject* obj) {
   // QueryInterface to nsWrapperCache can't GC, we hope.
   JS::AutoSuppressGCAnalysis nogc;
 
-  // Skip clearing the wrapper when replaying, for the same reason as in the
-  // overload above: |p| may have been deleted and we cannot QI it.
-  if (!recordreplay::IsReplaying()) {
-    nsWrapperCache* cache;
-    CallQueryInterface(p, &cache);
-    ClearWrapper(p, cache, obj);
-  }
+  nsWrapperCache* cache;
+  CallQueryInterface(p, &cache);
+  ClearWrapper(p, cache, obj);
 }
 
 template <class T>
@@ -2562,11 +2549,6 @@ bool ToSupportsIsOnPrimaryInheritanceChain(T* aObject, nsWrapperCache* aCache) {
 // object types.
 inline size_t BindingJSObjectMallocBytes(void* aNativePtr) { return 0; }
 
-// Register a thing which DeferredFinalize might be called on during GC
-// finalization. See DeferredFinalize.h
-template <class T>
-static void RecordReplayRegisterDeferredFinalize(T* aObject);
-
 // The BindingJSObjectCreator class is supposed to be used by a caller that
 // wants to create and initialise a binding JSObject. After initialisation has
 // been successfully completed it should call ForgetObject().
@@ -2632,7 +2614,10 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
   void InitializationSucceeded() {
     T* pointer;
     mNative.forget(&pointer);
-    RecordReplayRegisterDeferredFinalize<T>(pointer);
+
+    // Never collect binding objects while recording or replaying, to avoid
+    // non-deterministically releasing references during finalization.
+    recordreplay::HoldJSObject(mReflector);
 
     mReflector = nullptr;
   }
@@ -2727,12 +2712,6 @@ struct DeferredFinalizer {
     DeferredFinalize(Impl::AppendDeferredFinalizePointer,
                      Impl::DeferredFinalize, aObject);
   }
-
-  static void RecordReplayRegisterDeferredFinalize(T* aObject) {
-    typedef DeferredFinalizerImpl<T> Impl;
-    RecordReplayRegisterDeferredFinalizeThing(
-        Impl::AppendDeferredFinalizePointer, Impl::DeferredFinalize, aObject);
-  }
 };
 
 template <class T>
@@ -2740,20 +2719,11 @@ struct DeferredFinalizer<T, true> {
   static void AddForDeferredFinalization(T* aObject) {
     DeferredFinalize(reinterpret_cast<nsISupports*>(aObject));
   }
-
-  static void RecordReplayRegisterDeferredFinalize(T* aObject) {
-    RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, aObject);
-  }
 };
 
 template <class T>
 static void AddForDeferredFinalization(T* aObject) {
   DeferredFinalizer<T>::AddForDeferredFinalization(aObject);
-}
-
-template <class T>
-static void RecordReplayRegisterDeferredFinalize(T* aObject) {
-  DeferredFinalizer<T>::RecordReplayRegisterDeferredFinalize(aObject);
 }
 
 // This returns T's CC participant if it participates in CC and does not inherit
@@ -2865,7 +2835,6 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     NS_ADDREF(aNative);
 
     aCache->SetWrapper(aGlobal);
-    RecordReplayRegisterDeferredFinalize<T>(aNative);
 
     dom::AllocateProtoAndIfaceCache(
         aGlobal, CreateGlobalOptions<T>::ProtoAndIfaceCacheKind);
