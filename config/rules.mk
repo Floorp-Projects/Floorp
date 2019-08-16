@@ -420,6 +420,9 @@ target:: $(OBJS)
 endif
 endif
 
+target-objects: $(OBJS) $(PROGOBJS)
+host-objects: $(HOST_OBJS) $(HOST_PROGOBJS)
+
 syms::
 
 include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
