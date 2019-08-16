@@ -28,7 +28,6 @@ from mozbuild.frontend.data import (
     HostSources,
     IPDLCollection,
     JARManifest,
-    LinkageMultipleRustLibrariesError,
     LocalInclude,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
@@ -1519,8 +1518,9 @@ class TestEmitterBasic(unittest.TestCase):
         '''Test that linking multiple Rust libraries throws an error'''
         reader = self.reader('multiple-rust-libraries',
                              extra_substs=dict(RUST_TARGET='i686-pc-windows-msvc'))
-        with self.assertRaisesRegexp(LinkageMultipleRustLibrariesError,
-                                     'Cannot link multiple Rust libraries'):
+        with self.assertRaisesRegexp(
+                SandboxValidationError,
+                'Cannot link the following Rust libraries'):
             self.read_topsrcdir(reader)
 
     def test_rust_library_features(self):

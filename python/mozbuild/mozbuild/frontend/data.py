@@ -395,10 +395,6 @@ class LinkageWrongKindError(Exception):
     """Error thrown when trying to link objects of the wrong kind"""
 
 
-class LinkageMultipleRustLibrariesError(Exception):
-    """Error thrown when trying to link multiple Rust libraries to an object"""
-
-
 class Linkable(ContextDerived):
     """Generic context derived container object for programs and libraries"""
     __slots__ = (
@@ -425,13 +421,6 @@ class Linkable(ContextDerived):
         assert isinstance(obj, BaseLibrary)
         if obj.KIND != self.KIND:
             raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
-        # Linking multiple Rust libraries into an object would result in
-        # multiple copies of the Rust standard library, as well as linking
-        # errors from duplicate symbols.
-        if isinstance(obj, RustLibrary) and any(isinstance(l, RustLibrary)
-                                                for l in self.linked_libraries):
-            raise LinkageMultipleRustLibrariesError("Cannot link multiple Rust libraries into %s"
-                                                    % self)
         self.linked_libraries.append(obj)
         if obj.cxx_link and not isinstance(obj, SharedLibrary):
             self.cxx_link = True
