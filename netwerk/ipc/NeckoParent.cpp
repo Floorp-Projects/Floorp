@@ -270,7 +270,7 @@ void NeckoParent::ActorDestroy(ActorDestroyReason aWhy) {
   // non-refcounted class.
 }
 
-PHttpChannelParent* NeckoParent::AllocPHttpChannelParent(
+already_AddRefed<PHttpChannelParent> NeckoParent::AllocPHttpChannelParent(
     const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
     const HttpChannelCreationArgs& aOpenArgs) {
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
@@ -288,16 +288,9 @@ PHttpChannelParent* NeckoParent::AllocPHttpChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  HttpChannelParent* p =
+  RefPtr<HttpChannelParent> p =
       new HttpChannelParent(aBrowser, loadContext, overrideStatus);
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPHttpChannelParent(PHttpChannelParent* channel) {
-  HttpChannelParent* p = static_cast<HttpChannelParent*>(channel);
-  p->Release();
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPHttpChannelConstructor(

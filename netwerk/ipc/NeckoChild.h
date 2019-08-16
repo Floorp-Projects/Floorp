@@ -25,11 +25,6 @@ class NeckoChild : public PNeckoChild {
   static void InitNeckoChild();
 
  protected:
-  PHttpChannelChild* AllocPHttpChannelChild(
-      const PBrowserOrId&, const SerializedLoadContext&,
-      const HttpChannelCreationArgs& aOpenArgs);
-  bool DeallocPHttpChannelChild(PHttpChannelChild*);
-
   PStunAddrsRequestChild* AllocPStunAddrsRequestChild();
   bool DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor);
 

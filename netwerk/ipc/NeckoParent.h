@@ -91,14 +91,13 @@ class NeckoParent : public PNeckoParent {
  protected:
   bool mSocketProcessBridgeInited;
 
-  PHttpChannelParent* AllocPHttpChannelParent(
+  already_AddRefed<PHttpChannelParent> AllocPHttpChannelParent(
       const PBrowserOrId&, const SerializedLoadContext&,
       const HttpChannelCreationArgs& aOpenArgs);
   virtual mozilla::ipc::IPCResult RecvPHttpChannelConstructor(
       PHttpChannelParent* aActor, const PBrowserOrId& aBrowser,
       const SerializedLoadContext& aSerialized,
       const HttpChannelCreationArgs& aOpenArgs) override;
-  bool DeallocPHttpChannelParent(PHttpChannelParent*);
 
   PStunAddrsRequestParent* AllocPStunAddrsRequestParent();
   bool DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor);
