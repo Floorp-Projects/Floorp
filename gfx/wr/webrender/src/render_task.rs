@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ImageDescriptor, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
+use api::{CompositeOperator, ImageDescriptor, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
 use api::{LineStyle, LineOrientation, ClipMode, DirtyRect, MixBlendMode, ColorF, ColorSpace};
 use api::units::*;
 use crate::border::BorderSegmentCacheKey;
@@ -642,6 +642,7 @@ pub enum SvgFilterInfo {
     DropShadow(ColorF),
     Offset(DeviceVector2D),
     ComponentTransfer(SFilterData),
+    Composite(CompositeOperator),
     // TODO: This is used as a hack to ensure that a blur task's input is always in the blur's previous pass.
     Identity,
 }
@@ -1496,6 +1497,34 @@ impl RenderTask {
                     );
                     render_tasks.add(offset_task)
                 }
+                FilterPrimitiveKind::Composite(info) => {
+                    let input_1_task_id = get_task_input(
+                        &info.input1,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+                    let input_2_task_id = get_task_input(
+                        &info.input2,
+                        filter_primitives,
+                        render_tasks,
+                        cur_index,
+                        &outputs,
+                        original_task_id,
+                        primitive.color_space
+                    );
+
+                    let task = RenderTask::new_svg_filter_primitive(
+                        vec![input_1_task_id, input_2_task_id],
+                        content_size,
+                        uv_rect_kind,
+                        SvgFilterInfo::Composite(info.operator),
+                    );
+                    render_tasks.add(task)
+                }
             };
             outputs.push(render_task_id);
         }
@@ -1840,6 +1869,14 @@ impl RenderTask {
                     let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
                     if let Some(request) = gpu_cache.request(handle) {
                         data.update(request);
+                    }
+                }
+                SvgFilterInfo::Composite(ref operator) => {
+                    if let CompositeOperator::Arithmetic(k_vals) = operator {
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push(*k_vals);
+                        }
                     }
                 }
                 _ => {},

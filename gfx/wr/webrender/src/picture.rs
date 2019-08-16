@@ -1956,6 +1956,10 @@ impl PictureCompositeMode {
                             primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect)
                                 .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect))
                         }
+                        FilterPrimitiveKind::Composite(ref primitive) => {
+                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect)
+                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect))
+                        }
                         FilterPrimitiveKind::Identity(ref primitive) =>
                             primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect),
                         FilterPrimitiveKind::Opacity(ref primitive) =>
