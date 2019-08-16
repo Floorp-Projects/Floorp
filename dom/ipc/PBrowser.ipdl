@@ -664,7 +664,7 @@ parent:
                             Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
-                            nsIPrincipal principal, nsIContentSecurityPolicy csp);
+                            nsIPrincipal principal);
 
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
@@ -823,8 +823,7 @@ child:
      * don't need support RealDragEvent with input priority.
      */
     async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
-                        uint32_t aDropEffect, nsIPrincipal aPrincipal,
-                        nsIContentSecurityPolicy csp);
+                        uint32_t aDropEffect, nsIPrincipal aPrincipal);
 
     async PluginEvent(WidgetPluginEvent aEvent);
 
