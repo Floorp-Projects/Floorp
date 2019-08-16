@@ -48,6 +48,9 @@ class IndexSearch(OptimizationStrategy):
 
 @register_strategy('seta')
 class SETA(OptimizationStrategy):
+    push_interval = 5
+    time_interval = 60
+
     def should_remove_task(self, task, params, _):
         label = task.label
 
@@ -56,7 +59,9 @@ class SETA(OptimizationStrategy):
         if is_low_value_task(label,
                              params.get('project'),
                              params.get('pushlog_id'),
-                             params.get('pushdate')):
+                             params.get('pushdate'),
+                             self.time_interval,
+                             self.push_interval):
             # Always optimize away low-value tasks
             return True
         else:
