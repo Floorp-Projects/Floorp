@@ -117,6 +117,13 @@ class CompositorWidget {
   virtual void PostRender(WidgetRenderingContext* aContext) {}
 
   /**
+   * Called on the same thread as PreRender/PostRender during destruction.
+   * This method gives the widget a chance to do any cleanup for state that it
+   * created during PreRender / PostRender.
+   */
+  virtual void DoCompositorCleanup() {}
+
+  /**
    * Called before the LayerManager draws the layer tree.
    *
    * Always called from the compositing thread.
