@@ -3711,6 +3711,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         }
       }
 
+      // We have a toplevel window with transparency. Mark it as transparent
+      // now as nsWindow::SetTransparencyMode() can't be called after
+      // nsWindow is created (Bug 1344839).
+      if (mWindowType == eWindowType_toplevel &&
+          (mHasAlphaVisual || mTransparencyBitmapForTitlebar)) {
+        mIsTransparent = true;
+      }
+
       // We only move a general managed toplevel window if someone has
       // actually placed the window somewhere.  If no placement has taken
       // place, we just let the window manager Do The Right Thing.
@@ -4444,12 +4452,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
 
   if (mIsTransparent == isTransparent) {
     return;
-  }
-  if (mWindowType != eWindowType_popup && !mHasAlphaVisual &&
-      !mTransparencyBitmapForTitlebar) {
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1344839 reported
-    // problems cleaning the layer manager for toplevel windows, so ignore
-    // the request to workaround that.
+  } else if (mWindowType != eWindowType_popup) {
     NS_WARNING("Cannot set transparency mode on non-popup windows.");
     return;
   }
@@ -4461,12 +4464,9 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
 
   mIsTransparent = isTransparent;
 
-  if (!mHasAlphaVisual && !mTransparencyBitmapForTitlebar) {
-    // The choice of layer manager depends on
-    // GtkCompositorWidgetInitData::Shaped(), which will need to change, so
-    // clean out the old layer manager.
-    CleanLayerManagerRecursive();
-  }
+  // Need to clean our LayerManager up while still alive because
+  // we don't want to use layers acceleration on shaped windows
+  CleanLayerManagerRecursive();
 }
 
 nsTransparencyMode nsWindow::GetTransparencyMode() {
