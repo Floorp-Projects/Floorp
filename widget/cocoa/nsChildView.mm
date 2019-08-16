@@ -249,7 +249,8 @@ static inline void FlipCocoaScreenCoordinate(NSPoint& inPoint) {
 
 namespace {
 
-// Used for OpenGL drawing from the compositor thread for BasicCompositor OMTC.
+// Used for OpenGL drawing from the compositor thread for BasicCompositor OMTC
+// when StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
 // This was created at a time when we didn't know how to use CoreAnimation for
 // robust off-main-thread drawing.
 class GLPresenter : public GLManager {
@@ -1350,6 +1351,8 @@ bool nsChildView::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
 
 bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                                        gfx::IntSize aSurfaceSize) {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   if (!mBackingSurface || mBackingSurface->GetSize() != aSurfaceSize) {
     mBackingSurface = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
         aSurfaceSize, gfx::SurfaceFormat::B8G8R8A8);
@@ -1821,6 +1824,11 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
 bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
   UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   gl::GLContext* gl = manager ? manager->gl() : aContext->mGL;
+
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    return false;  // This will be fleshed out in upcoming patches.
+  }
+
   if (gl) {
     return [mView preRender:GLContextCGL::Cast(gl)->GetNSOpenGLContext()];
   }
@@ -2362,7 +2370,8 @@ void nsChildView::CleanupRemoteDrawing() {
 }
 
 bool nsChildView::InitCompositor(Compositor* aCompositor) {
-  if (aCompositor->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+  if (!StaticPrefs::gfx_core_animation_enabled_AtStartup() &&
+      aCompositor->GetBackendType() == LayersBackend::LAYERS_BASIC) {
     if (!mGLPresenter) {
       mGLPresenter = GLPresenter::CreateForWindow(this);
     }
@@ -2373,6 +2382,8 @@ bool nsChildView::InitCompositor(Compositor* aCompositor) {
 }
 
 void nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect) {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   mGLPresenter->BeginFrame(aRenderRect.Size());
 
   // Draw the result from the basic compositor.
@@ -2928,10 +2939,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
                     name:@"AppleAquaScrollBarVariantChanged"
                   object:nil
       suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(_surfaceNeedsUpdate:)
-                                               name:NSViewGlobalFrameDidChangeNotification
-                                             object:mPixelHostingView];
+
+  if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(_surfaceNeedsUpdate:)
+                                                 name:NSViewGlobalFrameDidChangeNotification
+                                               object:mPixelHostingView];
+  }
 
   [[NSDistributedNotificationCenter defaultCenter]
              addObserver:self
@@ -2982,6 +2996,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (bool)preRender:(NSOpenGLContext*)aGLContext {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
 
   if (![self window] || ([[self window] isKindOfClass:[BaseWindow class]] &&
                          ![(BaseWindow*)[self window] isVisibleOrBeingShown] &&
@@ -3128,12 +3144,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return YES;
 }
 
+// Only called if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
 - (void)updateGLContext {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   [mGLContext setView:mPixelHostingView];
   [mGLContext update];
 }
 
 - (void)_surfaceNeedsUpdate:(NSNotification*)notification {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   if (mGLContext) {
     CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
     mNeedsGLUpdate = YES;
@@ -3185,6 +3206,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   LayoutDeviceIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
   const NSRect* rects;
   NSInteger count;
@@ -3205,7 +3228,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 // This method is called from mPixelHostingView's drawRect handler.
+// Only called when StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
 - (void)doDrawRect:(NSRect)aRect {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   if (!NS_IsMainThread()) {
     // In the presence of CoreAnimation, this method can sometimes be called on
     // a non-main thread. Ignore those calls because Gecko can only react to
@@ -3273,17 +3299,21 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 - (void)setGLOpaque:(BOOL)aOpaque {
-  CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
-  // Make the context opaque for fullscreen (since it performs better), and transparent
-  // for windowed (since we need it for rounded corners), but allow overriding
-  // it to opaque for testing purposes, even if that breaks the rounded corners.
-  GLint opaque = aOpaque || StaticPrefs::gfx_compositor_glcontext_opaque();
-  [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
-  CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
+  if (mGLContext) {
+    MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+    CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
+    // Make the context opaque for fullscreen (since it performs better), and transparent
+    // for windowed (since we need it for rounded corners), but allow overriding
+    // it to opaque for testing purposes, even if that breaks the rounded corners.
+    GLint opaque = aOpaque || StaticPrefs::gfx_compositor_glcontext_opaque();
+    [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
+    CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
+  }
 }
 
-// Our "accelerated" windows are NSWindows which are not CoreAnimation-backed
-// but contain an NSView with an attached NSOpenGLContext.
+// If StaticPrefs::gfx_core_animation_enabled_AtStartup() is false, our "accelerated" windows are
+// NSWindows which are not CoreAnimation-backed but contain an NSView with
+// an attached NSOpenGLContext.
 // This means such windows have two WindowServer-level "surfaces" (NSSurface):
 //  (1) The window's "drawRect" contents (a main-memory backed buffer) in the
 //      back and
@@ -3385,6 +3415,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // In the presence of CoreAnimation, this method can sometimes be called on
     // a non-main thread. Ignore those calls because Gecko can only react to
     // them on the main thread.
+    return;
+  }
+
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     return;
   }
 
@@ -5899,6 +5933,9 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 }
 
 - (void)drawRect:(NSRect)aRect {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    return;
+  }
   [(ChildView*)[self superview] doDrawRect:aRect];
 }
 

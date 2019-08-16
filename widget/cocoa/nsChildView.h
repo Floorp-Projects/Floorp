@@ -159,6 +159,7 @@ class WidgetRenderingContext;
   // updateGLContext on the compositor thread before we composite.
   // Accesses from different threads are synchronized via mGLContext's
   // CGLContextObj lock.
+  // Always NO if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   BOOL mNeedsGLUpdate;
 
   // Holds our drag service across multiple drag calls. The reference to the
@@ -169,6 +170,7 @@ class WidgetRenderingContext;
   nsIDragService* mDragService;
 
   // The NSOpenGLContext that is attached to our mPixelHostingView.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   NSOpenGLContext* mGLContext;
 
   // Gestures support
@@ -204,6 +206,7 @@ class WidgetRenderingContext;
 
   // The mask image that's used when painting into the titlebar using basic
   // CGContext painting (i.e. non-accelerated).
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   CGImageRef mTopLeftCornerMask;
 
   // Subviews of self, which act as container views for vibrancy views and
@@ -212,9 +215,9 @@ class WidgetRenderingContext;
   NSView* mNonDraggableViewsContainer;  // [STRONG]
 
   // The view that does our drawing. Always non-null.
-  // This is a subview of self so that it can be ordered on top of
-  // mVibrancyViewsContainer. Drawing in this view can be performed in different
-  // ways:
+  // This is a subview of self so that it can be ordered on top of mVibrancyViewsContainer.
+  // Drawing in this view can be performed in different ways:
+  // If StaticPrefs::gfx_core_animation_enabled_AtStartup() is false, there are two cases:
   // If mUsingOMTCompositor is false, drawing is performed on the main thread
   // inside the view's drawRect handler. If mUsingOMTCompositor is true,
   // mGLContext will be non-null and will be associated with mPixelHostingView,
@@ -652,6 +655,7 @@ class nsChildView final : public nsBaseWidget {
 
   // Used in BasicCompositor OMTC mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   mozilla::UniquePtr<GLPresenter> mGLPresenter;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
@@ -659,6 +663,7 @@ class nsChildView final : public nsBaseWidget {
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
   // Only used for drawRect-based painting in popups.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   RefPtr<mozilla::gfx::DrawTarget> mBackingSurface;
 
   // This flag is only used when APZ is off. It indicates that the current pan
