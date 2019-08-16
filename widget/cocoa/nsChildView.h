@@ -156,7 +156,9 @@ class WidgetRenderingContext;
   BOOL mExpectingWheelStop;
 
   // Set to YES when our GL surface has been updated and we need to call
-  // updateGLContext before we composite.
+  // updateGLContext on the compositor thread before we composite.
+  // Accesses from different threads are synchronized via mGLContext's
+  // CGLContextObj lock.
   BOOL mNeedsGLUpdate;
 
   // Holds our drag service across multiple drag calls. The reference to the
@@ -166,6 +168,7 @@ class WidgetRenderingContext;
   // when handling |draggingUpdated:| messages.
   nsIDragService* mDragService;
 
+  // The NSOpenGLContext that is attached to our mPixelHostingView.
   NSOpenGLContext* mGLContext;
 
   // Gestures support
