@@ -1151,7 +1151,6 @@ float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
       }
 
       ObjectGroup* group = entry.group;
-      AutoMaybeLeaveAtomsZone leaveAtomsZone(cx);
       AutoRealm ar(cx, group);
       AutoSweepObjectGroup sweep(group);
       if (group->canPreTenure(sweep)) {
