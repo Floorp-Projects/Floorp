@@ -1569,10 +1569,16 @@ HttpBaseChannel::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
 }
 
 nsresult HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo,
-                                          bool aClone, bool aCompute) {
+                                          bool aClone, bool aCompute,
+                                          bool aSetOriginal) {
+  LOG(("HttpBaseChannel::SetReferrerInfo [this=%p aClone(%d) aCompute(%d)]\n",
+       this, aClone, aCompute));
   ENSURE_CALLED_BEFORE_CONNECT();
 
   mReferrerInfo = aReferrerInfo;
+  if (aSetOriginal) {
+    mOriginalReferrerInfo = aReferrerInfo;
+  }
 
   // clear existing referrer, if any
   nsresult rv = ClearReferrerHeader();
@@ -1586,6 +1592,9 @@ nsresult HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo,
 
   if (aClone) {
     mReferrerInfo = static_cast<dom::ReferrerInfo*>(aReferrerInfo)->Clone();
+    if (aSetOriginal) {
+      mOriginalReferrerInfo = mReferrerInfo;
+    }
   }
 
   dom::ReferrerInfo* referrerInfo =
@@ -3143,7 +3152,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     config.privateBrowsing = Some(mPrivateBrowsing);
   }
 
-  if (mReferrerInfo) {
+  if (mOriginalReferrerInfo) {
     dom::ReferrerPolicy referrerPolicy = dom::ReferrerPolicy::_empty;
     nsAutoCString tRPHeaderCValue;
     Unused << GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
@@ -3160,11 +3169,11 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
       // changes, we must not use the old computed value, and have to compute
       // again.
       nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          dom::ReferrerInfo::CreateFromOtherAndPolicyOverride(mReferrerInfo,
-                                                              referrerPolicy);
+          dom::ReferrerInfo::CreateFromOtherAndPolicyOverride(
+              mOriginalReferrerInfo, referrerPolicy);
       config.referrerInfo = referrerInfo;
     } else {
-      config.referrerInfo = mReferrerInfo;
+      config.referrerInfo = mOriginalReferrerInfo;
     }
   }
 

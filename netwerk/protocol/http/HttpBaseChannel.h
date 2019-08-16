@@ -472,8 +472,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
   }
 
   // Set referrerInfo and compute the referrer header if neccessary.
+  // Pass true for aSetOriginal if this is a new referrer and should
+  // overwrite the 'original' value, false if this is a mutation (like
+  // stripping the path).
   nsresult SetReferrerInfo(nsIReferrerInfo* aReferrerInfo, bool aClone,
-                           bool aCompute);
+                           bool aCompute, bool aSetOriginal = true);
 
   struct ReplacementChannelConfig {
     ReplacementChannelConfig() = default;
@@ -599,6 +602,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+  // We cache the original value of mReferrerInfo, since
+  // we trim the referrer to not expose the full path to remote
+  // usage.
+  nsCOMPtr<nsIReferrerInfo> mOriginalReferrerInfo;
   nsCOMPtr<nsIApplicationCache> mApplicationCache;
   nsCOMPtr<nsIURI> mAPIRedirectToURI;
   nsCOMPtr<nsIURI> mProxyURI;
