@@ -141,6 +141,7 @@ document.addEventListener("DOMContentLoaded", e => {
             cellSpan.setAttribute("role", "cell");
             let div = document.createElement("div");
             div.className = `${type}-bar inner-bar`;
+            div.setAttribute("role", "img");
             div.setAttribute("data-type", type);
             div.style.height = `${dataHeight}%`;
             div.setAttribute(
