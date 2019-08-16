@@ -21,20 +21,24 @@ export const StatusMessage = ({ icon, fluentID }) => (
 
 export class DSContextFooter extends React.PureComponent {
   render() {
-    const { context, context_type } = this.props;
+    const { context, context_type, engagement } = this.props;
     const { icon, fluentID } = cardContextTypes[context_type] || {};
 
     return (
       <div className="story-footer">
         {context && <p className="story-sponsored-label clamp">{context}</p>}
         <TransitionGroup component={null}>
-          {!context && context_type && (
+          {!context && (context_type || engagement) && (
             <CSSTransition
               key={fluentID}
               timeout={ANIMATION_DURATION}
               classNames="story-animate"
             >
-              <StatusMessage icon={icon} fluentID={fluentID} />
+              {engagement && !context_type ? (
+                <div className="story-view-count">{engagement}</div>
+              ) : (
+                <StatusMessage icon={icon} fluentID={fluentID} />
+              )}
             </CSSTransition>
           )}
         </TransitionGroup>

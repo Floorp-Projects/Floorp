@@ -107,10 +107,14 @@ ol {
   font-weight: 600;
 }
 
+.labels {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
 .title,
 .username {
   display: block;
-  max-width: 50ch;
   text-overflow: ellipsis;
   overflow: hidden;
 }

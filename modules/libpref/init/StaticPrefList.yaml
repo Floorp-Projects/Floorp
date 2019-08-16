@@ -3721,6 +3721,11 @@
   value: false
   mirror: once
 
+- name: layers.d3d11.enable-blacklist
+  type: bool
+  value: true
+  mirror: once
+
 - name: layers.deaa.enabled
   type: RelaxedAtomicBool
   value: false

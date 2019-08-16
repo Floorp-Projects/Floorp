@@ -451,10 +451,18 @@ bool DeviceManagerDx::CreateCompositorDeviceHelper(
     return false;
   }
 
-  // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-  // to prevent bug 1092260. IE 11 also uses this flag.
-  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT |
-               D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
+  UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+  DXGI_ADAPTER_DESC desc;
+  aAdapter->GetDesc(&desc);
+  if (desc.VendorId != 0x1414) {
+    // 0x1414 is Microsoft (e.g. WARP)
+    // When not using WARP, use
+    // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS to prevent
+    // bug 1092260. IE 11 also uses this flag.
+    flags |= D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
+  }
+
   if (aAttemptVideoSupport) {
     flags |= D3D11_CREATE_DEVICE_VIDEO_SUPPORT;
   }

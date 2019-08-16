@@ -485,6 +485,12 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
 
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // Make the window use CoreAnimation from the start, so that we don't
+    // switch from a non-CA window to a CA-window in the middle.
+    [[mWindow contentView] setWantsLayer:YES];
+  }
+
   // Make sure the window starts out not draggable by the background.
   // We will turn it on as necessary.
   [mWindow setMovableByWindowBackground:NO];
@@ -2824,6 +2830,9 @@ static NSImage* GetMenuMaskImage() {
   } else if (mUseMenuStyle && !aValue) {
     // Turn off rounded corner masking.
     NSView* wrapper = [[NSView alloc] initWithFrame:NSZeroRect];
+    if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+      [wrapper setWantsLayer:YES];
+    }
     [self swapOutChildViewWrapper:wrapper];
     [wrapper release];
   }
@@ -3059,6 +3068,8 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (NSArray*)titlebarControls {
+  MOZ_RELEASE_ASSERT(!StaticPrefs::gfx_core_animation_enabled_AtStartup());
+
   // Return all subviews of the frameView which are not the content view.
   NSView* frameView = [[self contentView] superview];
   NSMutableArray* array = [[[frameView subviews] mutableCopy] autorelease];
@@ -3151,34 +3162,36 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   nsNativeThemeCocoa::DrawNativeTitlebar(ctx, NSRectToCGRect([self bounds]),
                                          [window unifiedToolbarHeight], [window isMainWindow], NO);
 
-  // The following is only necessary because we're not using
-  // NSFullSizeContentViewWindowMask yet: We need to mask our drawing to the
-  // rounded top corners of the window, and we need to draw the title string
-  // on top. That's because the title string is drawn as part of the frame view
-  // and this view covers that drawing up.
-  // Once we use NSFullSizeContentViewWindowMask and remove our override of
-  // _wantsFloatingTitlebar, Cocoa will draw the title string as part of a
-  // separate view which sits on top of the window's content view, and we'll be
-  // able to remove the code below.
+  if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // The following is only necessary when we're not using CoreAnimation for
+    // the window: We need to mask our drawing to the rounded top corners of the
+    // window, and we need to draw the title string on top. That's because, if
+    // CoreAnimation isn't used, the title string is drawn as part of the frame
+    // view and this view covers that drawing up.
+    // In a CoreAnimation-driven window, Cocoa will draw the title string in a
+    // separate NSView which sits on top of the window's content view, and we
+    // don't need the code below. It will also clip this view's drawing as part
+    // of the rounded corner clipping on the root CALayer of the window.
 
-  NSView* frameView = [[[self window] contentView] superview];
-  if (!frameView || ![frameView respondsToSelector:@selector(_maskCorners:clipRect:)] ||
-      ![frameView respondsToSelector:@selector(_drawTitleStringInClip:)]) {
-    return;
+    NSView* frameView = [[[self window] contentView] superview];
+    if (!frameView || ![frameView respondsToSelector:@selector(_maskCorners:clipRect:)] ||
+        ![frameView respondsToSelector:@selector(_drawTitleStringInClip:)]) {
+      return;
+    }
+
+    NSPoint offsetToFrameView = [self convertPoint:NSZeroPoint toView:frameView];
+    NSRect clipRect = {offsetToFrameView, [self bounds].size};
+
+    // Both this view and frameView return NO from isFlipped. Switch into
+    // frameView's coordinate system using a translation by the offset.
+    CGContextSaveGState(ctx);
+    CGContextTranslateCTM(ctx, -offsetToFrameView.x, -offsetToFrameView.y);
+
+    [frameView _maskCorners:2 clipRect:clipRect];
+    [frameView _drawTitleStringInClip:clipRect];
+
+    CGContextRestoreGState(ctx);
   }
-
-  NSPoint offsetToFrameView = [self convertPoint:NSZeroPoint toView:frameView];
-  NSRect clipRect = {offsetToFrameView, [self bounds].size};
-
-  // Both this view and frameView return NO from isFlipped. Switch into
-  // frameView's coordinate system using a translation by the offset.
-  CGContextSaveGState(ctx);
-  CGContextTranslateCTM(ctx, -offsetToFrameView.x, -offsetToFrameView.y);
-
-  [frameView _maskCorners:2 clipRect:clipRect];
-  [frameView _drawTitleStringInClip:clipRect];
-
-  CGContextRestoreGState(ctx);
 }
 
 - (BOOL)isOpaque {
@@ -3296,6 +3309,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (void)windowMainStateChanged {
   [self setTitlebarNeedsDisplay];
+  [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
 }
 
 - (void)setTitlebarNeedsDisplay {

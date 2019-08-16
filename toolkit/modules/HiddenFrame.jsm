@@ -13,7 +13,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const XUL_PAGE = "chrome://global/content/win.xul";
 
-const gAllHiddenFrames = new WeakSet();
+const gAllHiddenFrames = new Set();
 
 let cleanupRegistered = false;
 function ensureCleanupRegistered() {

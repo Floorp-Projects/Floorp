@@ -23,6 +23,7 @@ describe("ToolbarBadgeHub", () => {
   let getStringPrefStub;
   let clearUserPrefStub;
   let setStringPrefStub;
+  let requestIdleCallbackStub;
   beforeEach(async () => {
     globals = new GlobalOverrider();
     sandbox = sinon.createSandbox();
@@ -67,7 +68,9 @@ describe("ToolbarBadgeHub", () => {
     getStringPrefStub = sandbox.stub();
     clearUserPrefStub = sandbox.stub();
     setStringPrefStub = sandbox.stub();
+    requestIdleCallbackStub = sandbox.stub().callsFake(fn => fn());
     globals.set({
+      requestIdleCallback: requestIdleCallbackStub,
       EveryWindow: everyWindowStub,
       PrivateBrowsingUtils: { isBrowserPrivate: isBrowserPrivateStub },
       setTimeout: setTimeoutStub,
@@ -562,6 +565,8 @@ describe("ToolbarBadgeHub", () => {
         instance.registerBadgeToAllWindows,
         msg_with_delay
       );
+      // Delayed actions should be executed inside requestIdleCallback
+      assert.calledOnce(requestIdleCallbackStub);
     });
   });
   describe("#sendUserEventTelemetry", () => {

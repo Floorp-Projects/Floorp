@@ -6,21 +6,21 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from taskgraph import graph, optimize
-from taskgraph.optimize import OptimizationStrategy
+from taskgraph import optimize
 from taskgraph.taskgraph import TaskGraph
+from taskgraph import graph
 from taskgraph.task import Task
 from mozunit import main
 from slugid import nice as slugid
 
 
-class Remove(OptimizationStrategy):
+class Remove(optimize.OptimizationStrategy):
 
     def should_remove_task(self, task, params, arg):
         return True
 
 
-class Replace(OptimizationStrategy):
+class Replace(optimize.OptimizationStrategy):
 
     def should_replace_task(self, task, params, taskid):
         return taskid
@@ -29,7 +29,7 @@ class Replace(OptimizationStrategy):
 class TestOptimize(unittest.TestCase):
 
     strategies = {
-        'never': OptimizationStrategy(),
+        'never': optimize.OptimizationStrategy(),
         'remove': Remove(),
         'replace': Replace(),
     }
@@ -70,7 +70,6 @@ class TestOptimize(unittest.TestCase):
             ('t2', 't1', 'dep'))
 
     def assert_remove_tasks(self, graph, exp_removed, do_not_optimize=set()):
-        optimize.registry = self.strategies
         got_removed = optimize.remove_tasks(
             target_task_graph=graph,
             optimizations=optimize._get_optimizations(graph, self.strategies),

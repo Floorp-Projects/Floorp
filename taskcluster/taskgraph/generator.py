@@ -334,7 +334,7 @@ class TaskGraphGenerator(object):
             parameters,
             do_not_optimize,
             existing_tasks=existing_tasks,
-            strategy_override=strategies,
+            strategies=strategies,
         )
 
         yield verifications('optimized_task_graph', optimized_task_graph, graph_config)
