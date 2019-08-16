@@ -7681,8 +7681,10 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
              "Unexpected request");
 
   MOZ_ASSERT(mRaceCacheWithNetwork || !(mTransactionPump && mCachePump) ||
-                 mCachedContentIsPartial,
-             "If we have both pumps, the cache content must be partial");
+                 mCachedContentIsPartial || mTransactionReplaced,
+             "If we have both pumps, we're racing cache with network, the cache"
+             " content is partial, or the cache entry was revalidated and "
+             "OnStopRequest was not called yet for the transaction pump.");
 
   mAfterOnStartRequestBegun = true;
   if (mOnStartRequestTimestamp.IsNull()) {
