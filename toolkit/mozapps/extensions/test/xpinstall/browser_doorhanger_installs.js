@@ -422,7 +422,7 @@ var TESTS = [
     let installs = await AddonManager.getAllInstalls();
     is(installs.length, 0, "Should be no pending installs");
 
-    let installPerm = Services.perms.testPermission(
+    let installPerm = PermissionTestUtils.testPermission(
       gBrowser.currentURI,
       "install"
     );
@@ -434,7 +434,7 @@ var TESTS = [
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-    SitePermissions.remove(NetUtil.newURI(target), "install");
+    PermissionTestUtils.remove(target, "install");
   },
 
   async function test_permaBlockedInstallNoPrompt() {
@@ -445,11 +445,7 @@ var TESTS = [
     );
     let target = TESTROOT + "installtrigger.html?" + triggers;
 
-    SitePermissions.set(
-      NetUtil.newURI(target),
-      "install",
-      SitePermissions.BLOCK
-    );
+    PermissionTestUtils.add(target, "install", Services.perms.DENY_ACTION);
     await BrowserTestUtils.openNewForegroundTab(gBrowser, target);
 
     let panelOpened;
@@ -469,7 +465,7 @@ var TESTS = [
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-    SitePermissions.remove(NetUtil.newURI(target), "install");
+    PermissionTestUtils.remove(target, "install");
   },
 
   async function test_whitelistedInstall() {
@@ -480,8 +476,11 @@ var TESTS = [
     let originalTab = gBrowser.selectedTab;
     let tab;
     gBrowser.selectedTab = originalTab;
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    PermissionTestUtils.add(
+      "http://example.com/",
+      "install",
+      Services.perms.ALLOW_ACTION
+    );
 
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
@@ -532,15 +531,18 @@ var TESTS = [
 
     addon.uninstall();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+    PermissionTestUtils.remove("http://example.com/", "install");
 
     Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
     await removeTabAndWaitForNotificationClose();
   },
 
   async function test_failedDownload() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    PermissionTestUtils.add(
+      "http://example.com/",
+      "install",
+      Services.perms.ALLOW_ACTION
+    );
 
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
@@ -563,13 +565,16 @@ var TESTS = [
       "Should have seen the right message"
     );
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+    PermissionTestUtils.remove("http://example.com/", "install");
     await removeTabAndWaitForNotificationClose();
   },
 
   async function test_corruptFile() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    PermissionTestUtils.add(
+      "http://example.com/",
+      "install",
+      Services.perms.ALLOW_ACTION
+    );
 
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
@@ -593,13 +598,16 @@ var TESTS = [
       "Should have seen the right message"
     );
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+    PermissionTestUtils.remove("http://example.com/", "install");
     await removeTabAndWaitForNotificationClose();
   },
 
   async function test_incompatible() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    PermissionTestUtils.add(
+      "http://example.com/",
+      "install",
+      Services.perms.ALLOW_ACTION
+    );
 
     let progressPromise = waitForProgressNotification();
     let failPromise = waitForNotification("addon-install-failed");
@@ -629,7 +637,7 @@ var TESTS = [
       "Should have seen the right message"
     );
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+    PermissionTestUtils.remove("http://example.com/", "install");
     await removeTabAndWaitForNotificationClose();
   },
 
@@ -807,8 +815,11 @@ var TESTS = [
   },
 
   async function test_cancel() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+    PermissionTestUtils.add(
+      "http://example.com/",
+      "install",
+      Services.perms.ALLOW_ACTION
+    );
 
     let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
     let triggers = encodeURIComponent(
@@ -862,7 +873,7 @@ var TESTS = [
     let installs = await AddonManager.getAllInstalls();
     is(installs.length, 0, "Should be no pending install");
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+    PermissionTestUtils.remove("http://example.com/", "install");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   },
 

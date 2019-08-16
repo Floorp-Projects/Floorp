@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    platform: gecko-decision/opt
+    worker-type: t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 3600
+        artifacts:
+            - type: file
+              name: public/shadow-scheduler/optimized_tasks.list
+              path: /builds/worker/optimized_tasks.list
+    treeherder:
+        kind: other
+        tier: 3
+    require-decision-task-id: true
+    run-on-projects: ['autoland']
+    run:
+        using: mach
+        mach: taskgraph optimized -p task-id=$DECISION_TASK_ID --output-file /builds/worker/optimized_tasks.list
+        sparse-profile: taskgraph
+
+seta_10_120:
+    description: Runs the seta_10_120 experimental optimization strategy
+    treeherder:
+        symbol: SS(seta_10_120)
+    worker:
+        env:
+            TASKGRAPH_OPTIMIZE_STRATEGIES: taskgraph.optimize:seta_10_120

@@ -43,10 +43,10 @@ class SignedCertificateTimestampsExtractor {
   }
 
   void assertTimestamps(const DataBuffer& timestamps) {
-    EXPECT_TRUE(auth_timestamps_);
+    ASSERT_NE(nullptr, auth_timestamps_);
     EXPECT_EQ(timestamps, *auth_timestamps_);
 
-    EXPECT_TRUE(handshake_timestamps_);
+    ASSERT_NE(nullptr, handshake_timestamps_);
     EXPECT_EQ(timestamps, *handshake_timestamps_);
 
     const SECItem* current =

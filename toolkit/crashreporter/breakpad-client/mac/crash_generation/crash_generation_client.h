@@ -45,7 +45,7 @@ class CrashGenerationClient {
   // Return true if the dump was successful; false otherwise.
   bool RequestDumpForException(int exception_type,
 			       int exception_code,
-			       int exception_subcode,
+			       int64_t exception_subcode,
 			       mach_port_t crashing_thread);
 
   bool RequestDump() {

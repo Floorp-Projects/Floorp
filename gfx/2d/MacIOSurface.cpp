@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurface.h"
-#include <IOSurface/IOSurface.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/CGLIOSurface.h>
 #include <QuartzCore/QuartzCore.h>
@@ -16,20 +15,19 @@
 
 using namespace mozilla;
 
-MacIOSurface::MacIOSurface(IOSurfacePtr aIOSurfacePtr,
+MacIOSurface::MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
                            double aContentsScaleFactor, bool aHasAlpha,
                            gfx::YUVColorSpace aColorSpace)
-    : mIOSurfacePtr(aIOSurfacePtr),
+    : mIOSurfaceRef(std::move(aIOSurfaceRef)),
       mContentsScaleFactor(aContentsScaleFactor),
       mHasAlpha(aHasAlpha),
       mColorSpace(aColorSpace) {
-  CFRetain(mIOSurfacePtr);
   IncrementUseCount();
 }
 
 MacIOSurface::~MacIOSurface() {
+  MOZ_RELEASE_ASSERT(!IsLocked(), "Destroying locked surface");
   DecrementUseCount();
-  CFRelease(mIOSurfacePtr);
 }
 
 /* static */
@@ -62,16 +60,16 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   ::CFRelease(cfBytesPerElem);
   ::CFDictionaryAddValue(props, kIOSurfaceIsGlobal, kCFBooleanTrue);
 
-  IOSurfacePtr surfaceRef = ::IOSurfaceCreate(props);
+  CFTypeRefPtr<IOSurfaceRef> surfaceRef =
+      CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(::IOSurfaceCreate(props));
   ::CFRelease(props);
 
-  if (!surfaceRef) return nullptr;
+  if (!surfaceRef) {
+    return nullptr;
+  }
 
   RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
-
-  // Release the IOSurface because MacIOSurface retained it
-  CFRelease(surfaceRef);
+      new MacIOSurface(std::move(surfaceRef), aContentsScaleFactor, aHasAlpha);
 
   return ioSurface.forget();
 }
@@ -82,29 +80,27 @@ already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
     gfx::YUVColorSpace aColorSpace) {
   if (aContentsScaleFactor <= 0) return nullptr;
 
-  IOSurfacePtr surfaceRef = (IOSurfacePtr)::IOSurfaceLookup(aIOSurfaceID);
+  CFTypeRefPtr<IOSurfaceRef> surfaceRef =
+      CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
+          ::IOSurfaceLookup(aIOSurfaceID));
   if (!surfaceRef) return nullptr;
 
   RefPtr<MacIOSurface> ioSurface = new MacIOSurface(
-      surfaceRef, aContentsScaleFactor, aHasAlpha, aColorSpace);
-
-  // Release the IOSurface because MacIOSurface retained it
-  CFRelease(surfaceRef);
+      std::move(surfaceRef), aContentsScaleFactor, aHasAlpha, aColorSpace);
 
   return ioSurface.forget();
 }
 
 IOSurfaceID MacIOSurface::GetIOSurfaceID() const {
-  return ::IOSurfaceGetID((IOSurfaceRef)mIOSurfacePtr);
+  return ::IOSurfaceGetID(mIOSurfaceRef.get());
 }
 
 void* MacIOSurface::GetBaseAddress() const {
-  return ::IOSurfaceGetBaseAddress((IOSurfaceRef)mIOSurfacePtr);
+  return ::IOSurfaceGetBaseAddress(mIOSurfaceRef.get());
 }
 
 void* MacIOSurface::GetBaseAddressOfPlane(size_t aPlaneIndex) const {
-  return ::IOSurfaceGetBaseAddressOfPlane((IOSurfaceRef)mIOSurfacePtr,
-                                          aPlaneIndex);
+  return ::IOSurfaceGetBaseAddressOfPlane(mIOSurfaceRef.get(), aPlaneIndex);
 }
 
 size_t MacIOSurface::GetWidth(size_t plane) const {
@@ -118,7 +114,7 @@ size_t MacIOSurface::GetHeight(size_t plane) const {
 }
 
 size_t MacIOSurface::GetPlaneCount() const {
-  return ::IOSurfaceGetPlaneCount((IOSurfaceRef)mIOSurfacePtr);
+  return ::IOSurfaceGetPlaneCount(mIOSurfaceRef.get());
 }
 
 /*static*/
@@ -132,37 +128,41 @@ size_t MacIOSurface::GetMaxHeight() {
 }
 
 size_t MacIOSurface::GetDevicePixelWidth(size_t plane) const {
-  return ::IOSurfaceGetWidthOfPlane((IOSurfaceRef)mIOSurfacePtr, plane);
+  return ::IOSurfaceGetWidthOfPlane(mIOSurfaceRef.get(), plane);
 }
 
 size_t MacIOSurface::GetDevicePixelHeight(size_t plane) const {
-  return ::IOSurfaceGetHeightOfPlane((IOSurfaceRef)mIOSurfacePtr, plane);
+  return ::IOSurfaceGetHeightOfPlane(mIOSurfaceRef.get(), plane);
 }
 
 size_t MacIOSurface::GetBytesPerRow(size_t plane) const {
-  return ::IOSurfaceGetBytesPerRowOfPlane((IOSurfaceRef)mIOSurfacePtr, plane);
+  return ::IOSurfaceGetBytesPerRowOfPlane(mIOSurfaceRef.get(), plane);
 }
 
 OSType MacIOSurface::GetPixelFormat() const {
-  return ::IOSurfaceGetPixelFormat((IOSurfaceRef)mIOSurfacePtr);
+  return ::IOSurfaceGetPixelFormat(mIOSurfaceRef.get());
 }
 
 void MacIOSurface::IncrementUseCount() {
-  ::IOSurfaceIncrementUseCount((IOSurfaceRef)mIOSurfacePtr);
+  ::IOSurfaceIncrementUseCount(mIOSurfaceRef.get());
 }
 
 void MacIOSurface::DecrementUseCount() {
-  ::IOSurfaceDecrementUseCount((IOSurfaceRef)mIOSurfacePtr);
+  ::IOSurfaceDecrementUseCount(mIOSurfaceRef.get());
 }
 
 void MacIOSurface::Lock(bool aReadOnly) {
-  ::IOSurfaceLock((IOSurfaceRef)mIOSurfacePtr,
-                  aReadOnly ? kIOSurfaceLockReadOnly : 0, nullptr);
+  MOZ_RELEASE_ASSERT(!mIsLocked, "double MacIOSurface lock");
+  ::IOSurfaceLock(mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0,
+                  nullptr);
+  mIsLocked = true;
 }
 
 void MacIOSurface::Unlock(bool aReadOnly) {
-  ::IOSurfaceUnlock((IOSurfaceRef)mIOSurfacePtr,
-                    aReadOnly ? kIOSurfaceLockReadOnly : 0, nullptr);
+  MOZ_RELEASE_ASSERT(mIsLocked, "MacIOSurface unlock without being locked");
+  ::IOSurfaceUnlock(mIOSurfaceRef.get(), aReadOnly ? kIOSurfaceLockReadOnly : 0,
+                    nullptr);
+  mIsLocked = false;
 }
 
 using mozilla::gfx::IntSize;
@@ -201,28 +201,41 @@ already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
   return surf.forget();
 }
 
+already_AddRefed<mozilla::gfx::DrawTarget> MacIOSurface::GetAsDrawTargetLocked(
+    mozilla::gfx::BackendType aBackendType) {
+  MOZ_RELEASE_ASSERT(
+      IsLocked(),
+      "Only call GetAsDrawTargetLocked while the surface is locked.");
+
+  size_t bytesPerRow = GetBytesPerRow();
+  size_t ioWidth = GetDevicePixelWidth();
+  size_t ioHeight = GetDevicePixelHeight();
+  unsigned char* ioData = (unsigned char*)GetBaseAddress();
+  SurfaceFormat format = GetFormat();
+  return mozilla::gfx::Factory::CreateDrawTargetForData(
+      aBackendType, ioData, IntSize(ioWidth, ioHeight), bytesPerRow, format);
+}
+
 SurfaceFormat MacIOSurface::GetFormat() const {
-  OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-    return SurfaceFormat::NV12;
-  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
-    return SurfaceFormat::YUV422;
-  } else {
-    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
+  switch (GetPixelFormat()) {
+    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+    case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+      return SurfaceFormat::NV12;
+    case kCVPixelFormatType_422YpCbCr8:
+      return SurfaceFormat::YUV422;
+    case kCVPixelFormatType_32BGRA:
+      return HasAlpha() ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
+    default:
+      return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
   }
 }
 
 SurfaceFormat MacIOSurface::GetReadFormat() const {
-  OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
-      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-    return SurfaceFormat::NV12;
-  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
+  SurfaceFormat format = GetFormat();
+  if (format == SurfaceFormat::YUV422) {
     return SurfaceFormat::R8G8B8X8;
-  } else {
-    return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
   }
+  return format;
 }
 
 CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
@@ -231,8 +244,7 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctx, GLenum target,
                                               GLenum format, GLenum type,
                                               GLuint plane) const {
   return ::CGLTexImageIOSurface2D(ctx, target, internalFormat, width, height,
-                                  format, type, (IOSurfaceRef)mIOSurfacePtr,
-                                  plane);
+                                  format, type, mIOSurfaceRef.get(), plane);
 }
 
 CGLError MacIOSurface::CGLTexImageIOSurface2D(

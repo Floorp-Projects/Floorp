@@ -84,6 +84,33 @@ this.PrefsFeed = class PrefsFeed {
       value: handoffToAwesomebarPrefValue,
     });
 
+    let discoveryStreamEnabled = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.discoverystream.enabled",
+      false
+    );
+    let discoveryStreamHardcodedBasicLayout = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout",
+      false
+    );
+    let discoveryStreamSpocsEndpoint = Services.prefs.getStringPref(
+      "browser.newtabpage.activity-stream.discoverystream.spocs-endpoint",
+      ""
+    );
+    values["discoverystream.enabled"] = discoveryStreamEnabled;
+    this._prefMap.set("discoverystream.enabled", {
+      value: discoveryStreamEnabled,
+    });
+    values[
+      "discoverystream.hardcoded-basic-layout"
+    ] = discoveryStreamHardcodedBasicLayout;
+    this._prefMap.set("discoverystream.hardcoded-basic-layout", {
+      value: discoveryStreamHardcodedBasicLayout,
+    });
+    values["discoverystream.spocs-endpoint"] = discoveryStreamSpocsEndpoint;
+    this._prefMap.set("discoverystream.spocs-endpoint", {
+      value: discoveryStreamSpocsEndpoint,
+    });
+
     // Set the initial state of all prefs in redux
     this.store.dispatch(
       ac.BroadcastToContent({ type: at.PREFS_INITIAL_VALUES, data: values })

@@ -163,3 +163,41 @@ add_task(
     );
   }
 );
+
+add_task(
+  async function test_getBreachesForLogins_breachAlertHiddenAfterDismissal() {
+    BREACHED_LOGIN.guid = "{d2de5ac1-4de6-e544-a7af-1f75abcba92b}";
+
+    await Services.logins.initializationPromise;
+    const storageJSON =
+      Services.logins.wrappedJSObject._storage.wrappedJSObject;
+
+    storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
+
+    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+      [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+      TEST_BREACHES
+    );
+    Assert.strictEqual(
+      breachesByLoginGUID.size,
+      0,
+      "Should be 0 breached logins after dismissal: " + BREACHED_LOGIN.origin
+    );
+  }
+);
+
+add_task(async function test_getBreachesForLogins_newBreachAfterDismissal() {
+  TEST_BREACHES[0].AddedDate = new Date().toISOString();
+
+  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+    TEST_BREACHES
+  );
+
+  Assert.strictEqual(
+    breachesByLoginGUID.size,
+    1,
+    "Should be 1 breached login after new breach following the dismissal of a previous breach: " +
+      BREACHED_LOGIN.origin
+  );
+});

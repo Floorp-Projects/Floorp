@@ -167,6 +167,7 @@ To set an mp_int to a given value, the following functions are given:
 
         mp_set(mp_int *mp, mp_digit d);
         mp_set_int(mp_int *mp, long z);
+        mp_set_ulong(mp_int *mp, unsigned long z);
 
 The mp_set() function sets the mp_int to a single digit value, while
 mp_set_int() sets the mp_int to a signed long integer value.

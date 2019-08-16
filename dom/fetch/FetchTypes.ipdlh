@@ -7,14 +7,56 @@ include ChannelInfo;
 include PBackgroundSharedTypes;
 
 using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
+using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
+using RequestCache from "mozilla/dom/FetchIPCTypes.h";
+using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
+using RequestMode from "mozilla/dom/FetchIPCTypes.h";
+using RequestRedirect from "mozilla/dom/FetchIPCTypes.h";
+using ResponseType from "mozilla/dom/FetchIPCTypes.h";
 
 namespace mozilla {
 namespace dom {
 
-struct HeadersEntry
-{
+struct HeadersEntry {
   nsCString name;
   nsCString value;
+};
+
+struct IPCInternalRequest {
+  nsCString method;
+  nsCString[] urlList;
+  HeadersGuardEnum headersGuard;
+  HeadersEntry[] headers;
+  IPCStream? body;
+  int64_t bodySize;
+  nsCString preferredAlternativeDataType;
+  uint32_t contentPolicyType;
+  nsString referrer;
+  ReferrerPolicy referrerPolicy;
+  RequestMode requestMode;
+  RequestCredentials requestCredentials;
+  RequestCache cacheMode;
+  RequestRedirect requestRedirect;
+  nsString integrity;
+  nsCString fragment;
+  bool createdByFetchEvent;
+  PrincipalInfo? principalInfo;
+};
+
+struct IPCInternalResponse {
+  ResponseType type;
+  nsCString[] urlList;
+  uint16_t status;
+  nsCString statusText;
+  HeadersGuardEnum headersGuard;
+  HeadersEntry[] headers;
+  IPCStream? body;
+  int64_t bodySize;
+  nsresult errorCode;
+  nsCString alternativeDataType;
+  IPCStream? alternativeBody;
+  IPCChannelInfo channelInfo;
+  PrincipalInfo? principalInfo;
 };
 
 } // namespace ipc

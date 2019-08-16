@@ -27,6 +27,10 @@ ChromeUtils.import(
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
+
 /**
  * Wait for the given PopupNotification to display
  *
@@ -309,8 +313,8 @@ async function testInstallMethod(installFn, telemetryBase) {
   }
 
   let testURI = makeURI("https://example.com/");
-  Services.perms.add(testURI, "install", Services.perms.ALLOW_ACTION);
-  registerCleanupFunction(() => Services.perms.remove(testURI, "install"));
+  PermissionTestUtils.add(testURI, "install", Services.perms.ALLOW_ACTION);
+  registerCleanupFunction(() => PermissionTestUtils.remove(testURI, "install"));
 
   async function runOnce(filename, cancel) {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

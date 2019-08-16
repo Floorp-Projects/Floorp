@@ -35,6 +35,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
 #include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
@@ -324,7 +325,7 @@ bool BackgroundChildImpl::DeallocPPendingIPCBlobChild(
 
 dom::PRemoteWorkerChild* BackgroundChildImpl::AllocPRemoteWorkerChild(
     const RemoteWorkerData& aData) {
-  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild();
+  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild(aData);
   return agent.forget().take();
 }
 
@@ -339,6 +340,23 @@ bool BackgroundChildImpl::DeallocPRemoteWorkerChild(
     dom::PRemoteWorkerChild* aActor) {
   RefPtr<dom::RemoteWorkerChild> actor =
       dont_AddRef(static_cast<dom::RemoteWorkerChild*>(aActor));
+  return true;
+}
+
+dom::PRemoteWorkerControllerChild*
+BackgroundChildImpl::AllocPRemoteWorkerControllerChild(
+    const dom::RemoteWorkerData& aRemoteWorkerData) {
+  MOZ_CRASH(
+      "PRemoteWorkerControllerChild actors must be manually constructed!");
+  return nullptr;
+}
+
+bool BackgroundChildImpl::DeallocPRemoteWorkerControllerChild(
+    dom::PRemoteWorkerControllerChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  RefPtr<dom::RemoteWorkerControllerChild> actor =
+      dont_AddRef(static_cast<dom::RemoteWorkerControllerChild*>(aActor));
   return true;
 }
 

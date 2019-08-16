@@ -28,7 +28,9 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
     ],
   });
 
-  let uri = NetUtil.newURI(ORIGIN);
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    ORIGIN
+  );
   let ids = ["geo", "camera"];
 
   for (let id of ids) {
@@ -39,18 +41,21 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
         `.blocked-permission-icon[data-permission-id='${id}']`
       );
 
-      SitePermissions.set(
-        uri,
+      SitePermissions.setForPrincipal(
+        principal,
         id,
         SitePermissions.BLOCK,
         SitePermissions.SCOPE_TEMPORARY,
         browser
       );
 
-      Assert.deepEqual(SitePermissions.get(uri, id, browser), {
-        state: SitePermissions.BLOCK,
-        scope: SitePermissions.SCOPE_TEMPORARY,
-      });
+      Assert.deepEqual(
+        SitePermissions.getForPrincipal(principal, id, browser),
+        {
+          state: SitePermissions.BLOCK,
+          scope: SitePermissions.SCOPE_TEMPORARY,
+        }
+      );
 
       ok(
         blockedIcon.hasAttribute("showing"),
@@ -59,10 +64,13 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
 
       await new Promise(c => setTimeout(c, TIMEOUT_MS));
 
-      Assert.deepEqual(SitePermissions.get(uri, id, browser), {
-        state: SitePermissions.UNKNOWN,
-        scope: SitePermissions.SCOPE_PERSISTENT,
-      });
+      Assert.deepEqual(
+        SitePermissions.getForPrincipal(principal, id, browser),
+        {
+          state: SitePermissions.UNKNOWN,
+          scope: SitePermissions.SCOPE_PERSISTENT,
+        }
+      );
 
       let popupshown = BrowserTestUtils.waitForEvent(
         PopupNotifications.panel,
@@ -89,7 +97,7 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
 
       await popuphidden;
 
-      SitePermissions.remove(uri, id, browser);
+      SitePermissions.removeFromPrincipal(principal, id, browser);
     });
   }
 });

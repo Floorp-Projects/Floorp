@@ -7,8 +7,11 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
-  var pm = Services.perms;
-  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+  PermissionTestUtils.add(
+    "http://example.com/",
+    "install",
+    Services.perms.ALLOW_ACTION
+  );
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   var url = "https://example.com/browser/" + RELATIVE_DIR + "hashRedirect.sjs";
@@ -38,7 +41,7 @@ function download_failed(install) {
 function finish_test(count) {
   is(count, 0, "0 Add-ons should have been successfully installed");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  PermissionTestUtils.remove("http://example.com", "install");
   Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
 
   gBrowser.removeCurrentTab();

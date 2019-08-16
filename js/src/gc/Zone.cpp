@@ -364,12 +364,18 @@ void Zone::discardJitCode(JSFreeOp* fop,
 
   for (auto script = cellIterUnsafe<JSScript>(); !script.done();
        script.next()) {
+    jit::JitScript* jitScript = script->jitScript();
+    if (!jitScript) {
+      continue;
+    }
+
     jit::FinishInvalidation(fop, script);
 
     // Discard baseline script if it's not marked as active.
-    if (discardBaselineCode && script->hasBaselineScript() &&
-        !script->jitScript()->active()) {
-      jit::FinishDiscardBaselineScript(fop, script);
+    if (discardBaselineCode) {
+      if (jitScript->hasBaselineScript() && !jitScript->active()) {
+        jit::FinishDiscardBaselineScript(fop, script);
+      }
     }
 
     // Warm-up counter for scripts are reset on GC. After discarding code we
@@ -382,26 +388,28 @@ void Zone::discardJitCode(JSFreeOp* fop,
     // JIT code.
     if (discardJitScripts) {
       script->maybeReleaseJitScript(fop);
-    }
-
-    if (jit::JitScript* jitScript = script->jitScript()) {
-      // If we did not release the JitScript, we need to purge optimized IC
-      // stubs because the optimizedStubSpace will be purged below.
-      if (discardBaselineCode) {
-        jitScript->purgeOptimizedStubs(script);
-
-        // ICs were purged so the script will need to warm back up before it can
-        // be inlined during Ion compilation.
-        jitScript->clearIonCompiledOrInlined();
+      jitScript = script->jitScript();
+      if (!jitScript) {
+        continue;
       }
-
-      // Clear the JitScript's control flow graph. The LifoAlloc is purged
-      // below.
-      jitScript->clearControlFlowGraph();
-
-      // Finally, reset the active flag.
-      jitScript->resetActive();
     }
+
+    // If we did not release the JitScript, we need to purge optimized IC
+    // stubs because the optimizedStubSpace will be purged below.
+    if (discardBaselineCode) {
+      jitScript->purgeOptimizedStubs(script);
+
+      // ICs were purged so the script will need to warm back up before it can
+      // be inlined during Ion compilation.
+      jitScript->clearIonCompiledOrInlined();
+    }
+
+    // Clear the JitScript's control flow graph. The LifoAlloc is purged
+    // below.
+    jitScript->clearControlFlowGraph();
+
+    // Finally, reset the active flag.
+    jitScript->resetActive();
   }
 
   /*

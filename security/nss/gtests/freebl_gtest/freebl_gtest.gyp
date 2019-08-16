@@ -23,6 +23,7 @@
         '<(DEPTH)/lib/dev/dev.gyp:nssdev',
         '<(DEPTH)/lib/pki/pki.gyp:nsspki',
         '<(DEPTH)/lib/ssl/ssl.gyp:ssl',
+        '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
       ],
     },
     {

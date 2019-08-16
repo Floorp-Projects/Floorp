@@ -23,13 +23,13 @@ function visitURI(uri, timestamp) {
 var putRecord = async function({ scope, perm, quota, lastPush, lastVisit }) {
   let uri = Services.io.newURI(scope);
 
-  Services.perms.add(
+  PermissionTestUtils.add(
     uri,
     "desktop-notification",
     Ci.nsIPermissionManager[perm]
   );
   registerCleanupFunction(() => {
-    Services.perms.remove(uri, "desktop-notification");
+    PermissionTestUtils.remove(uri, "desktop-notification");
   });
 
   await visitURI(uri, lastVisit);
@@ -156,7 +156,7 @@ add_task(async function test_perm_restored() {
     (subject, data) => data == "https://example.info/expired-perm-revoked"
   );
 
-  Services.perms.add(
+  PermissionTestUtils.add(
     permURI,
     "desktop-notification",
     Ci.nsIPermissionManager.ALLOW_ACTION

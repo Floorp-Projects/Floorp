@@ -6,6 +6,7 @@
 
 #include "jit/Ion.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
@@ -67,6 +68,8 @@
 #if defined(ANDROID)
 #  include <sys/system_properties.h>
 #endif
+
+using mozilla::DebugOnly;
 
 using namespace js;
 using namespace js::jit;
@@ -427,11 +430,12 @@ void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
                                  const AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(runtime);
 
+  JSScript* script = builder->script();
+
   // Clean the references to the pending IonBuilder, if we just finished it.
-  if (builder->script()->baselineScript()->hasPendingIonBuilder() &&
-      builder->script()->baselineScript()->pendingIonBuilder() == builder) {
-    builder->script()->baselineScript()->removePendingIonBuilder(
-        runtime, builder->script());
+  if (script->baselineScript()->hasPendingIonBuilder() &&
+      script->baselineScript()->pendingIonBuilder() == builder) {
+    script->baselineScript()->removePendingIonBuilder(runtime, script);
   }
 
   // If the builder is still in one of the helper thread list, then remove it.
@@ -441,18 +445,18 @@ void jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
 
   // Clear the recompiling flag of the old ionScript, since we continue to
   // use the old ionScript if recompiling fails.
-  if (builder->script()->hasIonScript()) {
-    builder->script()->ionScript()->clearRecompiling();
+  if (script->hasIonScript()) {
+    script->ionScript()->clearRecompiling();
   }
 
   // Clean up if compilation did not succeed.
-  if (builder->script()->isIonCompilingOffThread()) {
-    IonScript* ion = nullptr;
+  if (script->isIonCompilingOffThread()) {
+    script->jitScript()->clearIsIonCompilingOffThread(script);
+
     AbortReasonOr<Ok> status = builder->getOffThreadStatus();
     if (status.isErr() && status.unwrapErr() == AbortReason::Disable) {
-      ion = ION_DISABLED_SCRIPT;
+      script->disableIon();
     }
-    builder->script()->setIonScript(runtime, ion);
   }
 
   // Free Ion LifoAlloc off-thread. Free on the main thread if this OOMs.
@@ -1031,14 +1035,8 @@ const OsiIndex* IonScript::getOsiIndex(uint8_t* retAddr) const {
   return getOsiIndex(disp);
 }
 
-void IonScript::Trace(JSTracer* trc, IonScript* script) {
-  if (script != ION_DISABLED_SCRIPT) {
-    script->trace(trc);
-  }
-}
-
 void IonScript::Destroy(JSFreeOp* fop, IonScript* script) {
-  // This allocation is tracked by JSScript::setIonScript / clearIonScript.
+  // This allocation is tracked by JSScript::setIonScriptImpl.
   fop->deleteUntracked(script);
 }
 
@@ -1945,7 +1943,7 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
     }
 
     if (!recompile) {
-      builderScript->setIonScript(cx->runtime(), ION_COMPILING_SCRIPT);
+      builderScript->jitScript()->setIsIonCompilingOffThread(builderScript);
     }
 
     // The allocator and associated data will be destroyed after being
@@ -2387,24 +2385,15 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
 bool jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
                                       jsbytecode* pc) {
-  // A TI OOM will disable TI and Ion.
-  if (!jit::IsIonEnabled()) {
-    return true;
-  }
+  MOZ_ASSERT(IsIonEnabled());
 
   RootedScript script(cx, frame->script());
   bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
 
   MOZ_ASSERT(!isLoopEntry || LoopEntryCanIonOsr(pc));
 
-  if (!script->canIonCompile()) {
-    // TODO: ASSERT that ion-compilation-disabled checker stub doesn't exist.
-    // TODO: Clear all optimized stubs.
-    // TODO: Add a ion-compilation-disabled checker IC stub
-    script->resetWarmUpCounterToDelayIonCompilation();
-    return true;
-  }
-
+  // The Baseline JIT code checks for Ion disabled or compiling off-thread.
+  MOZ_ASSERT(script->canIonCompile());
   MOZ_ASSERT(!script->isIonCompilingOffThread());
 
   // If Ion script exists, but PC is not at a loop entry, then Ion will be
@@ -2680,8 +2669,13 @@ void jit::InvalidateAll(JSFreeOp* fop, Zone* zone) {
 }
 
 static void ClearIonScriptAfterInvalidation(JSContext* cx, JSScript* script,
+                                            IonScript* ionScript,
                                             bool resetUses) {
-  script->setIonScript(cx->runtime(), nullptr);
+  // Null out the JitScript's IonScript pointer. The caller is responsible for
+  // destroying the IonScript using the invalidation count mechanism.
+  DebugOnly<IonScript*> clearedIonScript =
+      script->jitScript()->clearIonScript(cx->defaultFreeOp(), script);
+  MOZ_ASSERT(clearedIonScript == ionScript);
 
   // Wait for the scripts to get warm again before doing another
   // compile, unless we are recompiling *because* a script got hot
@@ -2741,10 +2735,10 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
 
     if (ionScript->invalidationCount() == 1) {
       // decrementInvalidationCount will destroy the IonScript so null out
-      // script->ion now. We don't want to do this unconditionally because
-      // maybeIonScriptToInvalidate depends on script->ion (we would leak
-      // the IonScript if |invalid| contains duplicates).
-      ClearIonScriptAfterInvalidation(cx, info.script(), resetUses);
+      // jitScript->ionScript_ now. We don't want to do this unconditionally
+      // because maybeIonScriptToInvalidate depends on script->ionScript() (we
+      // would leak the IonScript if |invalid| contains duplicates).
+      ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
 
     ionScript->decrementInvalidationCount(fop);
@@ -2755,10 +2749,11 @@ void jit::Invalidate(TypeZone& types, JSFreeOp* fop,
   // multiple times in the above loop.
   MOZ_ASSERT(!numInvalidations);
 
-  // Finally, null out script->ion for IonScripts that are still on the stack.
+  // Finally, null out jitScript->ionScript_ for IonScripts that are still on
+  // the stack.
   for (const RecompileInfo& info : invalid) {
-    if (info.maybeIonScriptToInvalidate(types)) {
-      ClearIonScriptAfterInvalidation(cx, info.script(), resetUses);
+    if (IonScript* ionScript = info.maybeIonScriptToInvalidate(types)) {
+      ClearIonScriptAfterInvalidation(cx, info.script(), ionScript, resetUses);
     }
   }
 }
@@ -2825,9 +2820,8 @@ void jit::FinishInvalidation(JSFreeOp* fop, JSScript* script) {
     return;
   }
 
-  // In all cases, null out script->ion to avoid re-entry.
-  IonScript* ion = script->ionScript();
-  script->setIonScript(fop, nullptr);
+  // In all cases, null out jitScript->ionScript_ to avoid re-entry.
+  IonScript* ion = script->jitScript()->clearIonScript(fop, script);
 
   // If this script has Ion code on the stack, invalidated() will return
   // true. In this case we have to wait until destroying it.
@@ -2846,7 +2840,7 @@ void jit::ForbidCompilation(JSContext* cx, JSScript* script) {
     Invalidate(cx, script, false);
   }
 
-  script->setIonScript(cx->runtime(), ION_DISABLED_SCRIPT);
+  script->disableIon();
 }
 
 AutoFlushICache* JSContext::autoFlushICache() const { return autoFlushICache_; }
@@ -3012,38 +3006,6 @@ size_t jit::SizeOfIonData(JSScript* script,
   }
 
   return result;
-}
-
-void jit::DestroyJitScripts(JSFreeOp* fop, JSScript* script) {
-  if (script->hasIonScript()) {
-    IonScript* ion = script->ionScript();
-    script->clearIonScript(fop);
-    jit::IonScript::Destroy(fop, ion);
-  }
-
-  if (script->hasBaselineScript()) {
-    BaselineScript* baseline = script->baselineScript();
-    script->clearBaselineScript(fop);
-    jit::BaselineScript::Destroy(fop, baseline);
-  }
-
-  if (script->hasJitScript()) {
-    script->releaseJitScript(fop);
-  }
-}
-
-void jit::TraceJitScripts(JSTracer* trc, JSScript* script) {
-  if (script->hasIonScript()) {
-    jit::IonScript::Trace(trc, script->ionScript());
-  }
-
-  if (script->hasBaselineScript()) {
-    jit::BaselineScript::Trace(trc, script->baselineScript());
-  }
-
-  if (script->hasJitScript()) {
-    script->jitScript()->trace(trc);
-  }
 }
 
 bool jit::JitSupportsSimd() { return js::jit::MacroAssembler::SupportsSimd(); }

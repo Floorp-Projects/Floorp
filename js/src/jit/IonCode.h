@@ -277,9 +277,6 @@ struct IonScript {
   uint32_t* icIndex() { return (uint32_t*)&bottomBuffer()[icIndex_]; }
   uint8_t* runtimeData() { return &bottomBuffer()[runtimeData_]; }
 
- private:
-  void trace(JSTracer* trc);
-
  public:
   // Do not call directly, use IonScript::New. This is public for cx->new_.
   explicit IonScript(IonCompilationId compilationId);
@@ -293,8 +290,10 @@ struct IonScript {
                         size_t icEntries, size_t runtimeSize,
                         size_t safepointsSize,
                         OptimizationLevel optimizationLevel);
-  static void Trace(JSTracer* trc, IonScript* script);
+
   static void Destroy(JSFreeOp* fop, IonScript* script);
+
+  void trace(JSTracer* trc);
 
   static inline size_t offsetOfMethod() { return offsetof(IonScript, method_); }
   static inline size_t offsetOfOsrEntryOffset() {

@@ -32,8 +32,11 @@ async function test() {
   gPrivateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   Harness.setup(gPrivateWin);
 
-  var pm = Services.perms;
-  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+  PermissionTestUtils.add(
+    "http://example.com/",
+    "install",
+    Services.perms.ALLOW_ACTION
+  );
 
   var triggers = encodeURIComponent(
     JSON.stringify({
@@ -83,7 +86,7 @@ const finish_test = async function(count) {
 
   Services.obs.removeObserver(check_channel, "http-on-before-connect");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  PermissionTestUtils.remove("http://example.com", "install");
 
   const results = await ContentTask.spawn(
     gPrivateWin.gBrowser.selectedBrowser,

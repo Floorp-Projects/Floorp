@@ -290,4 +290,4 @@ TEST_F(DISABLED_MPITest, MpiCmpConstTest) {
   mp_clear(&c);
 }
 
-}  // nss_test
+}  // namespace nss_test

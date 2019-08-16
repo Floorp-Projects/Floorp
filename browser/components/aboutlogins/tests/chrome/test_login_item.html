@@ -101,7 +101,7 @@ add_task(async function test_update_breaches() {
 
   let correspondingBreach = TEST_BREACHES_MAP.get(gLoginItem._login.guid);
   let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
-  ok(!breachAlert.hidden, "Breach alert should be visible");
+  ok(!isHidden(breachAlert), "Breach alert should be visible");
   is(breachAlert.querySelector(".breach-alert-link").href, correspondingBreach.breachAlertURL, "Breach alert link should be equal to the correspondingBreach.breachAlertURL.");
 });
 
@@ -111,7 +111,7 @@ add_task(async function test_breach_alert_is_correctly_hidden() {
   await asyncElementRendered();
 
   let breachAlert = gLoginItem.shadowRoot.querySelector(".breach-alert");
-  ok(breachAlert.hidden, "Breach alert should not be visible on login without an associated breach.");
+  ok(isHidden(breachAlert), "Breach alert should not be visible on login without an associated breach.");
 });
 
 add_task(async function test_edit_login() {

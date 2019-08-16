@@ -35,6 +35,22 @@ struct IonBytecodeInfo {
   bool modifiesArguments = false;
 };
 
+// Magic BaselineScript value indicating Baseline compilation has been disabled.
+static constexpr uintptr_t BaselineDisabledScript = 0x1;
+
+static BaselineScript* const BaselineDisabledScriptPtr =
+    reinterpret_cast<BaselineScript*>(BaselineDisabledScript);
+
+// Magic IonScript values indicating Ion compilation has been disabled or the
+// script is being Ion-compiled off-thread.
+static constexpr uintptr_t IonDisabledScript = 0x1;
+static constexpr uintptr_t IonCompilingScript = 0x2;
+
+static IonScript* const IonDisabledScriptPtr =
+    reinterpret_cast<IonScript*>(IonDisabledScript);
+static IonScript* const IonCompilingScriptPtr =
+    reinterpret_cast<IonScript*>(IonCompilingScript);
+
 // [SMDOC] JitScript
 //
 // JitScript stores type inference data, Baseline ICs and other JIT-related data
@@ -154,6 +170,14 @@ class alignas(uintptr_t) JitScript final {
   };
   js::UniquePtr<CachedIonData> cachedIonData_;
 
+  // Baseline code for the script. Either nullptr, BaselineDisabledScriptPtr or
+  // a valid BaselineScript*.
+  BaselineScript* baselineScript_ = nullptr;
+
+  // Ion code for this script. Either nullptr, IonDisabledScriptPtr,
+  // IonCompilingScriptPtr or a valid IonScript*.
+  IonScript* ionScript_ = nullptr;
+
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
 
@@ -223,6 +247,10 @@ class alignas(uintptr_t) JitScript final {
     // The contents of the fallback stub space are removed and freed
     // separately after the next minor GC. See prepareForDestruction.
     MOZ_ASSERT(fallbackStubSpace_.isEmpty());
+
+    // BaselineScript and IonScript must have been destroyed at this point.
+    MOZ_ASSERT(!hasBaselineScript());
+    MOZ_ASSERT(!hasIonScript());
   }
 #endif
 
@@ -364,6 +392,10 @@ class alignas(uintptr_t) JitScript final {
   static constexpr size_t offsetOfJitCodeSkipArgCheck() {
     return offsetof(JitScript, jitCodeSkipArgCheck_);
   }
+  static size_t offsetOfBaselineScript() {
+    return offsetof(JitScript, baselineScript_);
+  }
+  static size_t offsetOfIonScript() { return offsetof(JitScript, ionScript_); }
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);
@@ -460,6 +492,78 @@ class alignas(uintptr_t) JitScript final {
       len = UINT16_MAX;
     }
     cachedIonData().inlinedBytecodeLength = len;
+  }
+
+ private:
+  // Methods to set baselineScript_ to a BaselineScript*, nullptr, or
+  // BaselineDisabledScriptPtr.
+  void setBaselineScriptImpl(JSScript* script, BaselineScript* baselineScript);
+  void setBaselineScriptImpl(JSFreeOp* fop, JSScript* script,
+                             BaselineScript* baselineScript);
+
+ public:
+  // Methods for getting/setting/clearing a BaselineScript*.
+  bool hasBaselineScript() const {
+    bool res = baselineScript_ && baselineScript_ != BaselineDisabledScriptPtr;
+    MOZ_ASSERT_IF(!res, !hasIonScript());
+    return res;
+  }
+  BaselineScript* baselineScript() const {
+    MOZ_ASSERT(hasBaselineScript());
+    return baselineScript_;
+  }
+  void setBaselineScript(JSScript* script, BaselineScript* baselineScript) {
+    MOZ_ASSERT(!hasBaselineScript());
+    setBaselineScriptImpl(script, baselineScript);
+    MOZ_ASSERT(hasBaselineScript());
+  }
+  MOZ_MUST_USE BaselineScript* clearBaselineScript(JSFreeOp* fop,
+                                                   JSScript* script) {
+    BaselineScript* baseline = baselineScript();
+    setBaselineScriptImpl(fop, script, nullptr);
+    return baseline;
+  }
+
+ private:
+  // Methods to set ionScript_ to an IonScript*, nullptr, or one of the special
+  // Ion{Disabled,Compiling}ScriptPtr values.
+  void setIonScriptImpl(JSFreeOp* fop, JSScript* script, IonScript* ionScript);
+  void setIonScriptImpl(JSScript* script, IonScript* ionScript);
+
+ public:
+  // Methods for getting/setting/clearing an IonScript*.
+  bool hasIonScript() const {
+    bool res = ionScript_ && ionScript_ != IonDisabledScriptPtr &&
+               ionScript_ != IonCompilingScriptPtr;
+    MOZ_ASSERT_IF(res, baselineScript_);
+    return res;
+  }
+  IonScript* ionScript() const {
+    MOZ_ASSERT(hasIonScript());
+    return ionScript_;
+  }
+  void setIonScript(JSScript* script, IonScript* ionScript) {
+    MOZ_ASSERT(!hasIonScript());
+    setIonScriptImpl(script, ionScript);
+    MOZ_ASSERT(hasIonScript());
+  }
+  MOZ_MUST_USE IonScript* clearIonScript(JSFreeOp* fop, JSScript* script) {
+    IonScript* ion = ionScript();
+    setIonScriptImpl(fop, script, nullptr);
+    return ion;
+  }
+
+  // Methods for off-thread compilation.
+  bool isIonCompilingOffThread() const {
+    return ionScript_ == IonCompilingScriptPtr;
+  }
+  void setIsIonCompilingOffThread(JSScript* script) {
+    MOZ_ASSERT(ionScript_ == nullptr);
+    setIonScriptImpl(script, IonCompilingScriptPtr);
+  }
+  void clearIsIonCompilingOffThread(JSScript* script) {
+    MOZ_ASSERT(isIonCompilingOffThread());
+    setIonScriptImpl(script, nullptr);
   }
 };
 

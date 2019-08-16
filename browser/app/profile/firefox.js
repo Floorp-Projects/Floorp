@@ -1,24 +1,18 @@
-# -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// XXX Toolkit-specific preferences should be moved into toolkit.js
+// Please indent all prefs defined within #ifdef/#ifndef conditions. This
+// improves readability, particular for conditional blocks that exceed a single
+// screen.
 
 #filter substitution
 
-#
-# SYNTAX HINTS:
-#
-#  - Dashes are delimiters; use underscores instead.
-#  - The first character after a period must be alphabetic.
-#  - Computed values (e.g. 50 * 1024) don't work.
-#
-
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
-#define UNIX_BUT_NOT_MAC
-#endif
+  #ifndef XP_MACOSX
+    #define UNIX_BUT_NOT_MAC
+  #endif
 #endif
 
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.xhtml");
@@ -141,7 +135,7 @@ pref("app.update.elevation.promptMaxAttempts", 2);
 // should no longer be used directly. Instead, getAppUpdateAutoEnabled and
 // getAppUpdateAutoEnabled from UpdateUtils.jsm should be used.
 #ifndef XP_WIN
-pref("app.update.auto", true);
+  pref("app.update.auto", true);
 #endif
 
 // If set to true, the Update Service will apply updates in the background
@@ -159,13 +153,13 @@ pref("app.update.url", "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%B
 
 // Whether or not to attempt using the service for updates.
 #ifdef MOZ_MAINTENANCE_SERVICE
-pref("app.update.service.enabled", true);
+  pref("app.update.service.enabled", true);
 #endif
 
 #ifdef XP_WIN
-// If set to true, the Update Service will attempt to use Windows BITS to
-// download updates and will fallback to downloading internally if that fails.
-pref("app.update.BITS.enabled", true);
+  // If set to true, the Update Service will attempt to use Windows BITS to
+  // download updates and will fallback to downloading internally if that fails.
+  pref("app.update.BITS.enabled", true);
 #endif
 
 // Symmetric (can be overridden by individual extensions) update preferences.
@@ -183,9 +177,9 @@ pref("extensions.update.interval", 86400);  // Check for updates to Extensions a
 pref("lightweightThemes.getMoreURL", "https://addons.mozilla.org/%LOCALE%/firefox/themes");
 
 #if defined(MOZ_WIDEVINE_EME)
-pref("browser.eme.ui.enabled", true);
+  pref("browser.eme.ui.enabled", true);
 #else
-pref("browser.eme.ui.enabled", false);
+  pref("browser.eme.ui.enabled", false);
 #endif
 
 // UI tour experience.
@@ -202,9 +196,9 @@ pref("browser.fixup.domainwhitelist.localhost", true);
 
 pref("general.smoothScroll", true);
 #ifdef UNIX_BUT_NOT_MAC
-pref("general.autoScroll", false);
+  pref("general.autoScroll", false);
 #else
-pref("general.autoScroll", true);
+  pref("general.autoScroll", true);
 #endif
 
 pref("browser.stopReloadAnimation.enabled", true);
@@ -236,9 +230,9 @@ pref("browser.startup.firstrunSkipsHomepage", true);
 // Held to nightly on Linux due to bug 1450626.
 // Disabled on Mac because the bouncing dock icon already provides feedback.
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)
-pref("browser.startup.blankWindow", true);
+  pref("browser.startup.blankWindow", true);
 #else
-pref("browser.startup.blankWindow", false);
+  pref("browser.startup.blankWindow", false);
 #endif
 
 // Don't create the hidden window during startup on
@@ -257,14 +251,14 @@ pref("browser.fullscreen.autohide", true);
 pref("browser.overlink-delay", 80);
 
 #ifdef UNIX_BUT_NOT_MAC
-pref("browser.urlbar.clickSelectsAll", false);
+  pref("browser.urlbar.clickSelectsAll", false);
 #else
-pref("browser.urlbar.clickSelectsAll", true);
+  pref("browser.urlbar.clickSelectsAll", true);
 #endif
 #ifdef UNIX_BUT_NOT_MAC
-pref("browser.urlbar.doubleClickSelectsAll", true);
+  pref("browser.urlbar.doubleClickSelectsAll", true);
 #else
-pref("browser.urlbar.doubleClickSelectsAll", false);
+  pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
 
 // Whether using `ctrl` when hitting return/enter in the URL bar
@@ -362,7 +356,7 @@ pref("browser.download.panel.shown", false);
 pref("browser.download.autohideButton", true);
 
 #ifndef XP_MACOSX
-pref("browser.helperApps.deleteTempFileOnExit", true);
+  pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif
 
 // search engines URL
@@ -398,9 +392,9 @@ pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
 #ifdef EARLY_BETA_OR_EARLIER
-pref("permissions.desktop-notification.postPrompt.enabled", true);
+  pref("permissions.desktop-notification.postPrompt.enabled", true);
 #else
-pref("permissions.desktop-notification.postPrompt.enabled", false);
+  pref("permissions.desktop-notification.postPrompt.enabled", false);
 #endif
 
 pref("permissions.fullscreen.allowed", false);
@@ -409,9 +403,9 @@ pref("permissions.postPrompt.animate", true);
 
 // This is primarily meant to be enabled for studies.
 #ifdef NIGHTLY_BUILD
-pref("permissions.eventTelemetry.enabled", true);
+  pref("permissions.eventTelemetry.enabled", true);
 #else
-pref("permissions.eventTelemetry.enabled", false);
+  pref("permissions.eventTelemetry.enabled", false);
 #endif
 
 // handle links targeting new windows
@@ -434,9 +428,9 @@ pref("browser.link.open_newwindow.restriction", 2);
 // We set this differently on Mac because the fullscreen implementation there is
 // different.
 #ifdef XP_MACOSX
-pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
+  pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
 #else
-pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
+  pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 #endif
 
 // Tabbed browser
@@ -466,7 +460,7 @@ pref("browser.tabs.tabMinWidth", 76);
 // Initial titlebar state is managed by -moz-gtk-csd-hide-titlebar-by-default
 // on Linux.
 #ifndef UNIX_BUT_NOT_MAC
-pref("browser.tabs.drawInTitlebar", true);
+  pref("browser.tabs.drawInTitlebar", true);
 #endif
 
 // Offer additional drag space to the user. The drag space
@@ -485,29 +479,29 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
-// Pref to control whether we use a separate privileged content process
-// for about: pages. This pref name did not age well: we will have multiple
-// types of privileged content processes, each with different privileges.
-// types of privleged content processes, each with different privleges.
-pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
-// Pref to control whether we use a separate privileged content process
-// for certain mozilla webpages (which are listed in the pref
-// browser.tabs.remote.separatedMozillaDomains).
-pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
-// This pref will cause assertions when a remoteType triggers a process switch
-// to a new remoteType it should not be able to trigger.
-pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
+  // Pref to control whether we use a separate privileged content process
+  // for about: pages. This pref name did not age well: we will have multiple
+  // types of privileged content processes, each with different privileges.
+  // types of privleged content processes, each with different privleges.
+  pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
+  // Pref to control whether we use a separate privileged content process
+  // for certain mozilla webpages (which are listed in the pref
+  // browser.tabs.remote.separatedMozillaDomains).
+  pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+  // This pref will cause assertions when a remoteType triggers a process switch
+  // to a new remoteType it should not be able to trigger.
+  pref("browser.tabs.remote.enforceRemoteTypeRestrictions", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
-// allow_eval_* is enabled on Firefox Desktop only at this
-// point in time
-pref("security.allow_eval_with_system_principal", false);
-pref("security.allow_eval_in_parent_process", false);
-pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
+  // allow_eval_* is enabled on Firefox Desktop only at this
+  // point in time
+  pref("security.allow_eval_with_system_principal", false);
+  pref("security.allow_eval_in_parent_process", false);
+  pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 #else
-// Disabled outside of nightly due to bug 1554217
-pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
+  // Disabled outside of nightly due to bug 1554217
+  pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
 #endif
 
 
@@ -607,24 +601,24 @@ pref("browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate");
 pref("browser.gesture.swipe.up", "cmd_scrollTop");
 pref("browser.gesture.swipe.down", "cmd_scrollBottom");
 #ifdef XP_MACOSX
-pref("browser.gesture.pinch.latched", true);
-pref("browser.gesture.pinch.threshold", 150);
+  pref("browser.gesture.pinch.latched", true);
+  pref("browser.gesture.pinch.threshold", 150);
 #else
-pref("browser.gesture.pinch.latched", false);
-pref("browser.gesture.pinch.threshold", 25);
+  pref("browser.gesture.pinch.latched", false);
+  pref("browser.gesture.pinch.threshold", 25);
 #endif
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-// Enabled for touch input display zoom.
-pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
-pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
-pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
-pref("browser.gesture.pinch.in.shift", "cmd_fullZoomReset");
+  // Enabled for touch input display zoom.
+  pref("browser.gesture.pinch.out", "cmd_fullZoomEnlarge");
+  pref("browser.gesture.pinch.in", "cmd_fullZoomReduce");
+  pref("browser.gesture.pinch.out.shift", "cmd_fullZoomReset");
+  pref("browser.gesture.pinch.in.shift", "cmd_fullZoomReset");
 #else
-// Disabled by default due to issues with track pad input.
-pref("browser.gesture.pinch.out", "");
-pref("browser.gesture.pinch.in", "");
-pref("browser.gesture.pinch.out.shift", "");
-pref("browser.gesture.pinch.in.shift", "");
+  // Disabled by default due to issues with track pad input.
+  pref("browser.gesture.pinch.out", "");
+  pref("browser.gesture.pinch.in", "");
+  pref("browser.gesture.pinch.out.shift", "");
+  pref("browser.gesture.pinch.in.shift", "");
 #endif
 pref("browser.gesture.twist.latched", false);
 pref("browser.gesture.twist.threshold", 0);
@@ -642,31 +636,31 @@ pref("browser.history_swipe_animation.disabled", false);
 // 4: Treat vertical wheel as horizontal scroll
 // 5: Zoom in or out (pinch zoom).
 #ifdef XP_MACOSX
-// On macOS, if the wheel has one axis only, shift+wheel comes through as a
-// horizontal scroll event. Thus, we can't assign anything other than normal
-// scrolling to shift+wheel.
-pref("mousewheel.with_shift.action", 1);
-pref("mousewheel.with_alt.action", 2);
-// On MacOS X, control+wheel is typically handled by system and we don't
-// receive the event.  So, command key which is the main modifier key for
-// acceleration is the best modifier for zoom-in/out.  However, we should keep
-// the control key setting for backward compatibility.
-pref("mousewheel.with_meta.action", 3); // command key on Mac
-// Disable control-/meta-modified horizontal wheel events, since those are
-// used on Mac as part of modified swipe gestures (e.g. Left swipe+Cmd is
-// "go back" in a new tab).
-pref("mousewheel.with_control.action.override_x", 0);
-pref("mousewheel.with_meta.action.override_x", 0);
+  // On macOS, if the wheel has one axis only, shift+wheel comes through as a
+  // horizontal scroll event. Thus, we can't assign anything other than normal
+  // scrolling to shift+wheel.
+  pref("mousewheel.with_shift.action", 1);
+  pref("mousewheel.with_alt.action", 2);
+  // On MacOS X, control+wheel is typically handled by system and we don't
+  // receive the event.  So, command key which is the main modifier key for
+  // acceleration is the best modifier for zoom-in/out.  However, we should keep
+  // the control key setting for backward compatibility.
+  pref("mousewheel.with_meta.action", 3); // command key on Mac
+  // Disable control-/meta-modified horizontal wheel events, since those are
+  // used on Mac as part of modified swipe gestures (e.g. Left swipe+Cmd is
+  // "go back" in a new tab).
+  pref("mousewheel.with_control.action.override_x", 0);
+  pref("mousewheel.with_meta.action.override_x", 0);
 #else
-// On the other platforms (non-macOS), user may use legacy mouse which supports
-// only vertical wheel but want to scroll horizontally.  For such users, we
-// should provide horizontal scroll with shift+wheel (same as Chrome).
-// However, shift+wheel was used for navigating history.  For users who want
-// to keep using this feature, let's enable it with alt+wheel.  This is better
-// for consistency with macOS users.
-pref("mousewheel.with_shift.action", 4);
-pref("mousewheel.with_alt.action", 2);
-pref("mousewheel.with_meta.action", 1); // win key on Win, Super/Hyper on Linux
+  // On the other platforms (non-macOS), user may use legacy mouse which
+  // supports only vertical wheel but want to scroll horizontally.  For such
+  // users, we should provide horizontal scroll with shift+wheel (same as
+  // Chrome). However, shift+wheel was used for navigating history.  For users
+  // who want to keep using this feature, let's enable it with alt+wheel.  This
+  // is better for consistency with macOS users.
+  pref("mousewheel.with_shift.action", 4);
+  pref("mousewheel.with_alt.action", 2);
+  pref("mousewheel.with_meta.action", 1); // win key on Win, Super/Hyper on Linux
 #endif
 pref("mousewheel.with_control.action",3);
 pref("mousewheel.with_win.action", 1);
@@ -686,7 +680,7 @@ pref("network.protocol-handler.external.news", true);   // for news
 pref("network.protocol-handler.external.snews", true);  // for secure news
 pref("network.protocol-handler.external.nntp", true);   // also news
 #ifdef XP_WIN
-pref("network.protocol-handler.external.ms-windows-store", true);
+  pref("network.protocol-handler.external.ms-windows-store", true);
 #endif
 
 // ...without warning dialogs
@@ -695,7 +689,7 @@ pref("network.protocol-handler.warn-external.news", false);
 pref("network.protocol-handler.warn-external.snews", false);
 pref("network.protocol-handler.warn-external.nntp", false);
 #ifdef XP_WIN
-pref("network.protocol-handler.warn-external.ms-windows-store", false);
+  pref("network.protocol-handler.warn-external.ms-windows-store", false);
 #endif
 
 // By default, all protocol handlers are exposed.  This means that
@@ -723,9 +717,9 @@ pref("plugins.testmode", false);
 pref("plugins.show_infobar", false);
 
 #if defined(_ARM64_) && defined(XP_WIN)
-pref("plugin.default.state", 0);
+  pref("plugin.default.state", 0);
 #else
-pref("plugin.default.state", 1);
+  pref("plugin.default.state", 1);
 #endif
 
 // Plugins bundled in XPIs are enabled by default.
@@ -733,9 +727,9 @@ pref("plugin.defaultXpi.state", 2);
 
 // Flash is Click-to-Activate by default on all channels. Disabled for ARM builds.
 #if defined(_ARM64_) && defined(XP_WIN)
-pref("plugin.state.flash", 0);
+  pref("plugin.state.flash", 0);
 #else
-pref("plugin.state.flash", 1);
+  pref("plugin.state.flash", 1);
 #endif
 
 // Enables the download and use of the flash blocklists.
@@ -749,11 +743,10 @@ pref("plugins.flashBlock.enabled", true);
 pref("plugins.favorfallback.mode", "follow-ctp");
 pref("plugins.favorfallback.rules", "nosrc,video");
 
-
 #ifdef XP_WIN
-pref("browser.preferences.instantApply", false);
+  pref("browser.preferences.instantApply", false);
 #else
-pref("browser.preferences.instantApply", true);
+  pref("browser.preferences.instantApply", true);
 #endif
 
 // Toggling Search bar on and off in about:preferences
@@ -769,9 +762,9 @@ pref("browser.download.hide_plugins_without_extensions", true);
 // 1 act like PgUp/PgDown
 // 2 and other values, nothing
 #ifdef UNIX_BUT_NOT_MAC
-pref("browser.backspace_action", 2);
+  pref("browser.backspace_action", 2);
 #else
-pref("browser.backspace_action", 0);
+  pref("browser.backspace_action", 0);
 #endif
 
 // this will automatically enable inline spellchecking (if it is available) for
@@ -977,9 +970,9 @@ pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS
 
 // base url for web-based feedback pages
 #ifdef MOZ_DEV_EDITION
-pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/firefoxdev/%VERSION%/");
+  pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/firefoxdev/%VERSION%/");
 #else
-pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/%APP%/%VERSION%/");
+  pref("app.feedback.baseURL", "https://input.mozilla.org/%LOCALE%/feedback/%APP%/%VERSION%/");
 #endif
 
 // base URL for web-based marketing pages
@@ -1019,136 +1012,136 @@ pref("browser.in-content.dark-mode", true);
 pref("dom.ipc.shims.enabledWarnings", false);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-// Controls whether and how the Windows NPAPI plugin process is sandboxed.
-// To get a different setting for a particular plugin replace "default", with
-// the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
-// On windows these levels are:
-// 0 - no sandbox
-// 1 - sandbox with USER_NON_ADMIN access token level
-// 2 - a more strict sandbox, which might cause functionality issues. This now
-//     includes running at low integrity.
-// 3 - the strongest settings we seem to be able to use without breaking
-//     everything, but will probably cause some functionality restrictions
-pref("dom.ipc.plugins.sandbox-level.default", 0);
-#if defined(_AMD64_)
-// The base sandbox level in nsPluginTag::InitSandboxLevel must be
-// updated to keep in sync with this value.
-pref("dom.ipc.plugins.sandbox-level.flash", 3);
-#else
-pref("dom.ipc.plugins.sandbox-level.flash", 0);
-#endif
+  // Controls whether and how the Windows NPAPI plugin process is sandboxed.
+  // To get a different setting for a particular plugin replace "default", with
+  // the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
+  // On windows these levels are:
+  // 0 - no sandbox
+  // 1 - sandbox with USER_NON_ADMIN access token level
+  // 2 - a more strict sandbox, which might cause functionality issues. This now
+  //     includes running at low integrity.
+  // 3 - the strongest settings we seem to be able to use without breaking
+  //     everything, but will probably cause some functionality restrictions
+  pref("dom.ipc.plugins.sandbox-level.default", 0);
+  #if defined(_AMD64_)
+    // The base sandbox level in nsPluginTag::InitSandboxLevel must be
+    // updated to keep in sync with this value.
+    pref("dom.ipc.plugins.sandbox-level.flash", 3);
+  #else
+    pref("dom.ipc.plugins.sandbox-level.flash", 0);
+  #endif
 
-// This controls the strength of the Windows content process sandbox for testing
-// purposes. This will require a restart.
-// On windows these levels are:
-// See - security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
-// SetSecurityLevelForContentProcess() for what the different settings mean.
-pref("security.sandbox.content.level", 5);
+  // This controls the strength of the Windows content process sandbox for
+  // testing purposes. This will require a restart.
+  // On windows these levels are:
+  // See - security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
+  // SetSecurityLevelForContentProcess() for what the different settings mean.
+  pref("security.sandbox.content.level", 5);
 
-// This controls the depth of stack trace that is logged when Windows sandbox
-// logging is turned on.  This is only currently available for the content
-// process because the only other sandbox (for GMP) has too strict a policy to
-// allow stack tracing.  This does not require a restart to take effect.
-pref("security.sandbox.windows.log.stackTraceDepth", 0);
+  // This controls the depth of stack trace that is logged when Windows sandbox
+  // logging is turned on.  This is only currently available for the content
+  // process because the only other sandbox (for GMP) has too strict a policy to
+  // allow stack tracing.  This does not require a restart to take effect.
+  pref("security.sandbox.windows.log.stackTraceDepth", 0);
 
-// This controls the strength of the Windows GPU process sandbox.  Changes
-// will require restart.
-// For information on what the level number means, see
-// SetSecurityLevelForGPUProcess() in
-// security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
-pref("security.sandbox.gpu.level", 0);
+  // This controls the strength of the Windows GPU process sandbox.  Changes
+  // will require restart.
+  // For information on what the level number means, see
+  // SetSecurityLevelForGPUProcess() in
+  // security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
+  pref("security.sandbox.gpu.level", 0);
 
-// Controls whether we disable win32k for the processes.
-// true means that win32k system calls are not permitted.
-pref("security.sandbox.rdd.win32k-disable", true);
-// Note: win32k is currently _not_ disabled for GMP due to intermittent test
-// failures, where the GMP process fails very early. See bug 1449348.
-pref("security.sandbox.gmp.win32k-disable", false);
+  // Controls whether we disable win32k for the processes.
+  // true means that win32k system calls are not permitted.
+  pref("security.sandbox.rdd.win32k-disable", true);
+  // Note: win32k is currently _not_ disabled for GMP due to intermittent test
+  // failures, where the GMP process fails very early. See bug 1449348.
+  pref("security.sandbox.gmp.win32k-disable", false);
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-// Start the Mac sandbox early during child process startup instead
-// of when messaged by the parent after the message loop is running.
-pref("security.sandbox.content.mac.earlyinit", true);
-// Remove this pref once RDD early init is stable on Release.
-pref("security.sandbox.rdd.mac.earlyinit", true);
-// Remove this pref once GMP early init is stable on Release.
-pref("security.sandbox.gmp.mac.earlyinit", true);
+  // Start the Mac sandbox early during child process startup instead
+  // of when messaged by the parent after the message loop is running.
+  pref("security.sandbox.content.mac.earlyinit", true);
+  // Remove this pref once RDD early init is stable on Release.
+  pref("security.sandbox.rdd.mac.earlyinit", true);
+  // Remove this pref once GMP early init is stable on Release.
+  pref("security.sandbox.gmp.mac.earlyinit", true);
 
-// This pref is discussed in bug 1083344, the naming is inspired from its
-// Windows counterpart, but on Mac it's an integer which means:
-// 0 -> "no sandbox" (nightly only)
-// 1 -> "preliminary content sandboxing enabled: write access to
-//       home directory is prevented"
-// 2 -> "preliminary content sandboxing enabled with profile protection:
-//       write access to home directory is prevented, read and write access
-//       to ~/Library and profile directories are prevented (excluding
-//       $PROFILE/{extensions,chrome})"
-// 3 -> "no global read/write access, read access permitted to
-//       $PROFILE/{extensions,chrome}"
-// This setting is read when the content process is started. On Mac the content
-// process is killed when all windows are closed, so a change will take effect
-// when the 1st window is opened.
-pref("security.sandbox.content.level", 3);
+  // This pref is discussed in bug 1083344, the naming is inspired from its
+  // Windows counterpart, but on Mac it's an integer which means:
+  // 0 -> "no sandbox" (nightly only)
+  // 1 -> "preliminary content sandboxing enabled: write access to
+  //       home directory is prevented"
+  // 2 -> "preliminary content sandboxing enabled with profile protection:
+  //       write access to home directory is prevented, read and write access
+  //       to ~/Library and profile directories are prevented (excluding
+  //       $PROFILE/{extensions,chrome})"
+  // 3 -> "no global read/write access, read access permitted to
+  //       $PROFILE/{extensions,chrome}"
+  // This setting is read when the content process is started. On Mac the
+  // content process is killed when all windows are closed, so a change will
+  // take effect when the 1st window is opened.
+  pref("security.sandbox.content.level", 3);
 
-// Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
-// sandboxed. On Mac these levels are:
-// 0 - "no sandbox"
-// 1 - "global read access, limited write access for Flash functionality"
-// 2 - "read access triggered by file dialog activity, limited read/write"
-//     "access for Flash functionality"
-// 3 - "limited read/write access for Flash functionality"
-pref("dom.ipc.plugins.sandbox-level.flash", 1);
-// Controls the level used on older OS X versions. Is overriden when the
-// "dom.ipc.plugins.sandbox-level.flash" is set to 0.
-pref("dom.ipc.plugins.sandbox-level.flash.legacy", 1);
-// The max OS minor version where we use the above legacy sandbox level.
-pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
-// Controls the sandbox level used by plugins other than Flash. On Mac,
-// no other plugins are supported and this pref is only used for test
-// plugins used in automated tests.
-pref("dom.ipc.plugins.sandbox-level.default", 1);
+  // Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
+  // sandboxed. On Mac these levels are:
+  // 0 - "no sandbox"
+  // 1 - "global read access, limited write access for Flash functionality"
+  // 2 - "read access triggered by file dialog activity, limited read/write"
+  //     "access for Flash functionality"
+  // 3 - "limited read/write access for Flash functionality"
+  pref("dom.ipc.plugins.sandbox-level.flash", 1);
+  // Controls the level used on older OS X versions. Is overriden when the
+  // "dom.ipc.plugins.sandbox-level.flash" is set to 0.
+  pref("dom.ipc.plugins.sandbox-level.flash.legacy", 1);
+  // The max OS minor version where we use the above legacy sandbox level.
+  pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
+  // Controls the sandbox level used by plugins other than Flash. On Mac,
+  // no other plugins are supported and this pref is only used for test
+  // plugins used in automated tests.
+  pref("dom.ipc.plugins.sandbox-level.default", 1);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-// This pref is introduced as part of bug 742434, the naming is inspired from
-// its Windows/Mac counterpart, but on Linux it's an integer which means:
-// 0 -> "no sandbox"
-// 1 -> "content sandbox using seccomp-bpf when available" + ipc restrictions
-// 2 -> "seccomp-bpf + write file broker"
-// 3 -> "seccomp-bpf + read/write file brokering"
-// 4 -> all of the above + network/socket restrictions + chroot
-//
-// The purpose of this setting is to allow Linux users or distros to disable
-// the sandbox while we fix their problems, or to allow running Firefox with
-// exotic configurations we can't reasonably support out of the box.
-//
-pref("security.sandbox.content.level", 4);
-pref("security.sandbox.content.write_path_whitelist", "");
-pref("security.sandbox.content.read_path_whitelist", "");
-pref("security.sandbox.content.syscall_whitelist", "");
+  // This pref is introduced as part of bug 742434, the naming is inspired from
+  // its Windows/Mac counterpart, but on Linux it's an integer which means:
+  // 0 -> "no sandbox"
+  // 1 -> "content sandbox using seccomp-bpf when available" + ipc restrictions
+  // 2 -> "seccomp-bpf + write file broker"
+  // 3 -> "seccomp-bpf + read/write file brokering"
+  // 4 -> all of the above + network/socket restrictions + chroot
+  //
+  // The purpose of this setting is to allow Linux users or distros to disable
+  // the sandbox while we fix their problems, or to allow running Firefox with
+  // exotic configurations we can't reasonably support out of the box.
+  //
+  pref("security.sandbox.content.level", 4);
+  pref("security.sandbox.content.write_path_whitelist", "");
+  pref("security.sandbox.content.read_path_whitelist", "");
+  pref("security.sandbox.content.syscall_whitelist", "");
 #endif
 
 #if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
-// default pledge strings for the main & content processes, cf bug 1457092
-// broad list for now, has to be refined over time
-pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
-pref("security.sandbox.content.level", 1);
-pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
+  // default pledge strings for the main & content processes, cf bug 1457092
+  // broad list for now, has to be refined over time
+  pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
+  pref("security.sandbox.content.level", 1);
+  pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
 #endif
 
 #if defined(MOZ_SANDBOX)
-// ID (a UUID when set by gecko) that is used to form the name of a
-// sandbox-writable temporary directory to be used by content processes
-// when a temporary writable file is required in a level 1 sandbox.
-pref("security.sandbox.content.tempDirSuffix", "");
-pref("security.sandbox.plugin.tempDirSuffix", "");
+  // ID (a UUID when set by gecko) that is used to form the name of a
+  // sandbox-writable temporary directory to be used by content processes
+  // when a temporary writable file is required in a level 1 sandbox.
+  pref("security.sandbox.content.tempDirSuffix", "");
+  pref("security.sandbox.plugin.tempDirSuffix", "");
 
-// This pref determines if messages relevant to sandbox violations are
-// logged.
-#if defined(XP_WIN) || defined(XP_MACOSX)
-pref("security.sandbox.logging.enabled", false);
-#endif
+  // This pref determines if messages relevant to sandbox violations are
+  // logged.
+  #if defined(XP_WIN) || defined(XP_MACOSX)
+    pref("security.sandbox.logging.enabled", false);
+  #endif
 #endif
 
 // This pref governs whether we attempt to work around problems caused by
@@ -1159,19 +1152,19 @@ pref("security.sandbox.logging.enabled", false);
 // NPAPI to manipulate the cursor, and these workarounds will be removed.
 // See bug 621117.
 #ifdef XP_MACOSX
-pref("dom.ipc.plugins.nativeCursorSupport", true);
+  pref("dom.ipc.plugins.nativeCursorSupport", true);
 #endif
 
 #ifdef XP_WIN
-pref("browser.taskbar.previews.enable", false);
-pref("browser.taskbar.previews.max", 20);
-pref("browser.taskbar.previews.cachetime", 5);
-pref("browser.taskbar.lists.enabled", true);
-pref("browser.taskbar.lists.frequent.enabled", true);
-pref("browser.taskbar.lists.recent.enabled", false);
-pref("browser.taskbar.lists.maxListItemCount", 7);
-pref("browser.taskbar.lists.tasks.enabled", true);
-pref("browser.taskbar.lists.refreshInSeconds", 120);
+  pref("browser.taskbar.previews.enable", false);
+  pref("browser.taskbar.previews.max", 20);
+  pref("browser.taskbar.previews.cachetime", 5);
+  pref("browser.taskbar.lists.enabled", true);
+  pref("browser.taskbar.lists.frequent.enabled", true);
+  pref("browser.taskbar.lists.recent.enabled", false);
+  pref("browser.taskbar.lists.maxListItemCount", 7);
+  pref("browser.taskbar.lists.tasks.enabled", true);
+  pref("browser.taskbar.lists.refreshInSeconds", 120);
 #endif
 
 // Preferences to be synced by default
@@ -1292,7 +1285,7 @@ pref("browser.newtabpage.enabled", true);
 
 // Activity Stream prefs that control to which page to redirect
 #ifndef RELEASE_OR_BETA
-pref("browser.newtabpage.activity-stream.debug", false);
+  pref("browser.newtabpage.activity-stream.debug", false);
 #endif
 
 pref("browser.library.activity-stream.enabled", true);
@@ -1310,11 +1303,20 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "{\"id\":\"cfr
 // repackager of this code using an alternate snippet url, please keep your users safe
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 
+// These prefs control if Discovery Stream is enabled.
+#ifdef NIGHTLY_BUILD
+pref("browser.newtabpage.activity-stream.discoverystream.enabled", true);
+#else
+pref("browser.newtabpage.activity-stream.discoverystream.enabled", false);
+#endif
+pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout", false);
+pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
+
 // The pref controls if search hand-off is enabled for Activity Stream.
 #ifdef NIGHTLY_BUILD
-pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
+  pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
 #else
-pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+  pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
 pref("trailhead.firstrun.branches", "join-supercharge");
@@ -1335,7 +1337,7 @@ pref("toolkit.startup.max_resumed_crashes", 3);
 // Whether to use RegisterApplicationRestart to restart the browser and resume
 // the session on next Windows startup
 #if defined(XP_WIN)
-pref("toolkit.winRegisterApplicationRestart", true);
+  pref("toolkit.winRegisterApplicationRestart", true);
 #endif
 
 // Completely disable pdf.js as an option to preview pdfs within firefox.
@@ -1390,23 +1392,23 @@ pref("dom.debug.propagate_gesture_events_through_content", false);
 // All the Geolocation preferences are here.
 //
 #ifndef EARLY_BETA_OR_EARLIER
-pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_LOCATION_SERVICE_API_KEY%");
+  pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_LOCATION_SERVICE_API_KEY%");
 #else
-// Use MLS on Nightly and early Beta.
-pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
+  // Use MLS on Nightly and early Beta.
+  pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 #endif
 
 #ifdef XP_MACOSX
-pref("geo.provider.use_corelocation", true);
+  pref("geo.provider.use_corelocation", true);
 #endif
 
 // Set to false if things are really broken.
 #ifdef XP_WIN
-pref("geo.provider.ms-windows-location", true);
+  pref("geo.provider.ms-windows-location", true);
 #endif
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_GPSD)
-pref("geo.provider.use_gpsd", true);
+  pref("geo.provider.use_gpsd", true);
 #endif
 
 // CustomizableUI debug logging.
@@ -1454,9 +1456,9 @@ pref("identity.mobilepromo.ios", "https://www.mozilla.org/firefox/ios/?utm_sourc
 // Migrate any existing Firefox Account data from the default profile to the
 // Developer Edition profile.
 #ifdef MOZ_DEV_EDITION
-pref("identity.fxaccounts.migrateToDevEdition", true);
+  pref("identity.fxaccounts.migrateToDevEdition", true);
 #else
-pref("identity.fxaccounts.migrateToDevEdition", false);
+  pref("identity.fxaccounts.migrateToDevEdition", false);
 #endif
 
 // If activated, send tab will use the new FxA commands backend.
@@ -1467,7 +1469,7 @@ pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK
-pref("ui.key.menuAccessKeyFocuses", true);
+  pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
@@ -1483,8 +1485,8 @@ pref("media.gmp.trial-create.enabled", true);
 // unsupported.
 
 #ifdef MOZ_WIDEVINE_EME
-pref("media.gmp-widevinecdm.visible", true);
-pref("media.gmp-widevinecdm.enabled", true);
+  pref("media.gmp-widevinecdm.visible", true);
+  pref("media.gmp-widevinecdm.enabled", true);
 #endif
 
 pref("media.gmp-gmpopenh264.visible", true);
@@ -1496,17 +1498,17 @@ pref("media.autoplay.enabled.user-gestures-needed", true);
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 
 #ifdef NIGHTLY_BUILD
-// Block WebAudio from playing automatically.
-pref("media.autoplay.block-webaudio", true);
+  // Block WebAudio from playing automatically.
+  pref("media.autoplay.block-webaudio", true);
 #else
-pref("media.autoplay.block-webaudio", false);
+  pref("media.autoplay.block-webaudio", false);
 #endif
 
 #if defined(XP_WIN)
-#if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
-pref("media.videocontrols.picture-in-picture.enabled", true);
-pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
-#endif
+  #if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
+    pref("media.videocontrols.picture-in-picture.enabled", true);
+    pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
+  #endif
 #endif
 
 // Play with different values of the decay time and get telemetry,
@@ -1540,9 +1542,9 @@ pref("toolkit.telemetry.bhrPing.enabled", true);
 pref("toolkit.telemetry.hybridContent.enabled", true);
 // Whether to enable Ecosystem Telemetry, requires a restart.
 #ifdef NIGHTLY_BUILD
-pref("toolkit.telemetry.ecosystemtelemetry.enabled", true);
+  pref("toolkit.telemetry.ecosystemtelemetry.enabled", true);
 #else
-pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
+  pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
 #endif
 
 // Ping Centre Telemetry settings.
@@ -1557,8 +1559,8 @@ pref("media.gmp-provider.enabled", true);
 // Enable blocking access to storage from tracking resources by default.
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
 #ifdef EARLY_BETA_OR_EARLIER
-// Enable fingerprinting blocking by default only in nightly and early beta.
-pref("privacy.trackingprotection.fingerprinting.enabled", true);
+  // Enable fingerprinting blocking by default only in nightly and early beta.
+  pref("privacy.trackingprotection.fingerprinting.enabled", true);
 #endif
 
 // Enable cryptomining blocking by default for all channels, only on desktop.
@@ -1614,7 +1616,8 @@ pref("browser.contentblocking.report.lockwise.enabled", true);
 // Enable Protections report's Monitor card by default.
 pref("browser.contentblocking.report.monitor.enabled", true);
 
-pref("browser.contentblocking.report.monitor.url", "https://monitor.firefox.com");
+pref("browser.contentblocking.report.monitor.url", "https://monitor.firefox.com/?entrypoint=protection_report_monitor&utm_source=about-protections");
+pref("browser.contentblocking.report.monitor.sign_in_url", "https://monitor.firefox.com/oauth/init?entrypoint=protection_report_monitor&utm_source=about-protections&email=");
 pref("browser.contentblocking.report.lockwise.url", "https://lockwise.firefox.com/");
 pref("browser.contentblocking.report.manage_devices.url", "https://accounts.firefox.com/settings/clients");
 
@@ -1629,25 +1632,27 @@ pref("browser.contentblocking.report.cryptominer.url", "https://support.mozilla.
 
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
-pref("browser.protections_panel.enabled", true);
-pref("browser.protections_panel.infoMessage.seen", false);
+  pref("browser.protections_panel.enabled", true);
+  pref("browser.protections_panel.infoMessage.seen", false);
 #endif
 
 // Always enable newtab segregation using containers
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);
 // Enable Contextual Identity Containers
 #ifdef NIGHTLY_BUILD
-pref("privacy.userContext.enabled", true);
-pref("privacy.userContext.ui.enabled", true);
+  pref("privacy.userContext.enabled", true);
+  pref("privacy.userContext.ui.enabled", true);
 
-// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
-pref("privacy.userContext.longPressBehavior", 2);
+  // 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is
+  // shown after X milliseconds.
+  pref("privacy.userContext.longPressBehavior", 2);
 #else
-pref("privacy.userContext.enabled", false);
-pref("privacy.userContext.ui.enabled", false);
+  pref("privacy.userContext.enabled", false);
+  pref("privacy.userContext.ui.enabled", false);
 
-// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
-pref("privacy.userContext.longPressBehavior", 0);
+  // 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is
+  // shown after X milliseconds.
+  pref("privacy.userContext.longPressBehavior", 0);
 #endif
 pref("privacy.userContext.extension", "");
 
@@ -1657,9 +1662,9 @@ pref("browser.tabs.remote.desktopbehavior", true);
 
 // Run media transport in a separate process?
 #ifdef NIGHTLY_BUILD
-pref("media.peerconnection.mtransport_process", true);
+  pref("media.peerconnection.mtransport_process", true);
 #else
-pref("media.peerconnection.mtransport_process", false);
+  pref("media.peerconnection.mtransport_process", false);
 #endif
 
 // Start a separate socket process. Performing networking on the socket process
@@ -1667,9 +1672,9 @@ pref("media.peerconnection.mtransport_process", false);
 // ("network.http.network_access_on_socket_process.enabled").
 // Changing these prefs requires a restart.
 #ifdef NIGHTLY_BUILD
-pref("network.process.enabled", true);
+  pref("network.process.enabled", true);
 #else
-pref("network.process.enabled", false);
+  pref("network.process.enabled", false);
 #endif
 
 // For speculatively warming up tabs to improve perceived
@@ -1704,16 +1709,16 @@ pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
 pref("dom.ipc.processHangMonitor", true);
 
 #if defined(XP_WIN)
-// Allows us to deprioritize the processes of background tabs at an OS level
-pref("dom.ipc.processPriorityManager.enabled", true);
+  // Allows us to deprioritize the processes of background tabs at an OS level
+  pref("dom.ipc.processPriorityManager.enabled", true);
 #endif
 
 #ifdef DEBUG
-// Don't report hangs in DEBUG builds. They're too slow and often a
-// debugger is attached.
-pref("dom.ipc.reportProcessHangs", false);
+  // Don't report hangs in DEBUG builds. They're too slow and often a
+  // debugger is attached.
+  pref("dom.ipc.reportProcessHangs", false);
 #else
-pref("dom.ipc.reportProcessHangs", true);
+  pref("dom.ipc.reportProcessHangs", true);
 #endif
 
 // Don't limit how many nodes we care about on desktop:
@@ -1765,11 +1770,10 @@ pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", true);
 pref("signon.management.page.breach-alerts.enabled", true);
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
-pref("signon.management.page.breach-alerts.enabled", false);
 #ifdef NIGHTLY_BUILD
-// Bug 1563330 tracks shipping this by default.
-pref("signon.showAutoCompleteOrigins", true);
-pref("signon.includeOtherSubdomainsInLookup", true);
+  // Bug 1563330 tracks shipping this by default.
+  pref("signon.showAutoCompleteOrigins", true);
+  pref("signon.includeOtherSubdomainsInLookup", true);
 #endif
 pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
 pref("signon.management.page.feedbackURL",
@@ -1791,9 +1795,9 @@ pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net htt
 // crash reports, and then show a notification for submitting
 // those reports.
 #ifdef NIGHTLY_BUILD
-pref("browser.crashReports.unsubmittedCheck.enabled", true);
+  pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #else
-pref("browser.crashReports.unsubmittedCheck.enabled", false);
+  pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #endif
 
 // chancesUntilSuppress is how many times we'll show the unsubmitted
@@ -1808,9 +1812,9 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
 #ifdef NIGHTLY_BUILD
-pref("extensions.formautofill.available", "on");
+  pref("extensions.formautofill.available", "on");
 #else
-pref("extensions.formautofill.available", "detect");
+  pref("extensions.formautofill.available", "detect");
 #endif
 pref("extensions.formautofill.creditCards.available", false);
 pref("extensions.formautofill.addresses.enabled", true);
@@ -1831,12 +1835,12 @@ pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 
 #ifdef NIGHTLY_BUILD
-// Comma separated list of countries Form Autofill is available in.
-pref("extensions.formautofill.supportedCountries", "US,CA,DE");
-pref("extensions.formautofill.supportRTL", true);
+  // Comma separated list of countries Form Autofill is available in.
+  pref("extensions.formautofill.supportedCountries", "US,CA,DE");
+  pref("extensions.formautofill.supportRTL", true);
 #else
-pref("extensions.formautofill.supportedCountries", "US");
-pref("extensions.formautofill.supportRTL", false);
+  pref("extensions.formautofill.supportedCountries", "US");
+  pref("extensions.formautofill.supportRTL", false);
 #endif
 
 // Whether or not to restore a session with lazy-browser tabs.
@@ -1863,19 +1867,19 @@ pref("app.normandy.logging.level", 50); // Warn
 pref("app.normandy.run_interval_seconds", 21600); // 6 hours
 pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/shield");
 #ifdef MOZ_DATA_REPORTING
-pref("app.shield.optoutstudies.enabled", true);
+  pref("app.shield.optoutstudies.enabled", true);
 #else
-pref("app.shield.optoutstudies.enabled", false);
+  pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
-pref("intl.multilingual.enabled", true);
-pref("intl.multilingual.downloadEnabled", true);
+  pref("intl.multilingual.enabled", true);
+  pref("intl.multilingual.downloadEnabled", true);
 #else
-pref("intl.multilingual.enabled", false);
-// AMO only serves language packs for release and beta versions.
-pref("intl.multilingual.downloadEnabled", false);
+  pref("intl.multilingual.enabled", false);
+  // AMO only serves language packs for release and beta versions.
+  pref("intl.multilingual.downloadEnabled", false);
 #endif
 
 // Simulate conditions that will happen when the browser
@@ -1916,9 +1920,9 @@ pref("identity.fxaccounts.service.monitorLoginUrl", "https://monitor.firefox.com
 
 // Check bundled JAR and XPI files for corruption.
 #ifdef RELEASE_OR_BETA
-pref("corroborator.enabled", false);
+  pref("corroborator.enabled", false);
 #else
-pref("corroborator.enabled", true);
+  pref("corroborator.enabled", true);
 #endif
 
 // Show notification popup for social tracking protection.

@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_canvas.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
@@ -118,9 +119,6 @@ class AllCanvasImageCacheEntry : public PLDHashEntryHdr {
   RefPtr<SourceSurface> mSourceSurface;
 };
 
-static bool sPrefsInitialized = false;
-static int32_t sCanvasImageCacheLimit = 0;
-
 class ImageCacheObserver;
 
 class ImageCache final : public nsExpirationTracker<ImageCacheEntryData, 4> {
@@ -219,11 +217,6 @@ ImageCache::ImageCache()
           GENERATION_MS, "ImageCache",
           SystemGroup::EventTargetFor(TaskCategory::Other)),
       mTotal(0) {
-  if (!sPrefsInitialized) {
-    sPrefsInitialized = true;
-    Preferences::AddIntVarCache(&sCanvasImageCacheLimit,
-                                "canvas.image.cache.limit", 0);
-  }
   mImageCacheObserver = new ImageCacheObserver(this);
   MOZ_RELEASE_ASSERT(mImageCacheObserver,
                      "GFX: Can't alloc ImageCacheObserver");
@@ -297,11 +290,15 @@ void CanvasImageCache::NotifyDrawImage(Element* aImage,
     }
   }
 
-  if (!sCanvasImageCacheLimit) return;
+  if (!StaticPrefs::canvas_image_cache_limit()) {
+    return;
+  }
 
   // Expire the image cache early if its larger than we want it to be.
-  while (gImageCache->mTotal > size_t(sCanvasImageCacheLimit))
+  while (gImageCache->mTotal >
+         size_t(StaticPrefs::canvas_image_cache_limit())) {
     gImageCache->AgeOneGeneration();
+  }
 }
 
 SourceSurface* CanvasImageCache::LookupAllCanvas(Element* aImage) {

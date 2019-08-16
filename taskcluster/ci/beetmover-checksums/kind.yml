@@ -10,7 +10,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - checksums-signing
+    - beetmover
+    - beetmover-repackage
 
 only-for-attributes:
     - nightly

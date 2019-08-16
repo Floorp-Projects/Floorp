@@ -35,11 +35,11 @@ fails == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
 == content-inserted-009.xhtml content-inserted-002.ref.xhtml
 == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml
 == float-clear-000.html float-clear-000.ref.html
-fails == float-clear-001.html float-clear-000.ref.html
+asserts(4-4) fails == float-clear-001.html float-clear-000.ref.html # Bug 1574046
 == float-clear-002.html float-clear-000.ref.html
 fails == float-clear-003.html float-clear-000.ref.html
 == float-clear-000-print.html float-clear-000-print.ref.html
-== float-clear-001-print.html float-clear-000-print.ref.html
+asserts(1-1) == float-clear-001-print.html float-clear-000-print.ref.html # Bug 1574046
 == float-clear-002-print.html float-clear-000-print.ref.html
 == float-clear-003-print.html float-clear-000-print.ref.html
 fails == float-continuations-000.html float-continuations-000.ref.html

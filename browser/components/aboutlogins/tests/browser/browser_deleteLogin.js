@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function setup() {
+  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
+  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -9,8 +11,6 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
-  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
-  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
 });
 
 add_task(async function test_show_logins() {

@@ -43,6 +43,9 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
       mConsumedBSize(aConsumedBSize) {
+  NS_ASSERTION(mConsumedBSize != NS_UNCONSTRAINEDSIZE,
+               "The consumed block-size should be constrained!");
+
   WritingMode wm = aReflowInput.GetWritingMode();
   mFlags.mIsFirstInflow = !aFrame->GetPrevInFlow();
   mFlags.mIsOverflowContainer = IS_TRUE_OVERFLOW_CONTAINER(aFrame);
@@ -135,14 +138,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   mCurrentLine = aFrame->LinesEnd();
 
   mMinLineHeight = aReflowInput.CalcLineHeight();
-}
-
-nscoord BlockReflowInput::ConsumedBSize() {
-  if (mConsumedBSize == NS_UNCONSTRAINEDSIZE) {
-    mConsumedBSize = mBlock->ConsumedBSize(mReflowInput.GetWritingMode());
-  }
-
-  return mConsumedBSize;
 }
 
 void BlockReflowInput::ComputeReplacedBlockOffsetsForFloats(

@@ -84,7 +84,7 @@ function observeStylingInTargetWindow(aWindow, aFrameCount, aOnFrame) {
   const docShell = getDocShellForObservingRestylesForWindow(aWindow);
 
   return new Promise(resolve => {
-    return waitForAnimationFrames(aFrameCount, aOnFrame).then(() => {
+    return waitForAnimationFrames(aFrameCount, aOnFrame, aWindow).then(() => {
       const markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
       const stylingMarkers = markers.filter((marker, index) => {

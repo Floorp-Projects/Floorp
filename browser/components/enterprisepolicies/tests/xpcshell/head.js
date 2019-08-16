@@ -15,6 +15,9 @@ const { updateAppInfo, getAppInfo } = ChromeUtils.import(
 const { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"
 );
+const { PermissionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PermissionTestUtils.jsm"
+);
 
 updateAppInfo({
   name: "XPCShell",

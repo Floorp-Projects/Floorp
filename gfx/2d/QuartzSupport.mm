@@ -203,8 +203,7 @@ nsresult nsCARenderer::SetupRenderer(void* aCALayer, int aWidth, int aHeight,
     ::glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     ::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
                              aWidth * intScaleFactor, aHeight * intScaleFactor, GL_BGRA,
-                             GL_UNSIGNED_INT_8_8_8_8_REV, (IOSurfaceRef)mIOSurface->mIOSurfacePtr,
-                             0);
+                             GL_UNSIGNED_INT_8_8_8_8_REV, mIOSurface->GetIOSurfaceRef().get(), 0);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
   } else {
     ::glGenTextures(1, &mFBOTexture);
@@ -336,7 +335,7 @@ void nsCARenderer::AttachIOSurface(MacIOSurface* aSurface) {
     ::CGLTexImageIOSurface2D(mOpenGLContext, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
                              mIOSurface->GetDevicePixelWidth(), mIOSurface->GetDevicePixelHeight(),
                              GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-                             (IOSurfaceRef)mIOSurface->mIOSurfacePtr, 0);
+                             mIOSurface->GetIOSurfaceRef().get(), 0);
     ::glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
 
     // Rebind the FBO to make it live

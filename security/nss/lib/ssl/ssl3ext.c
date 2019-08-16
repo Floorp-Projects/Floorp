@@ -714,6 +714,9 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
 
     PORT_Assert(buf->len == 0);
 
+    /* Clear out any extensions previously advertised */
+    ss->xtnData.numAdvertised = 0;
+
     switch (message) {
         case ssl_hs_client_hello:
             if (ss->vrange.max > SSL_LIBRARY_VERSION_3_0) {

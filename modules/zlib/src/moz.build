@@ -15,7 +15,6 @@ if CONFIG['ZLIB_IN_MOZGLUE']:
 else:
     # The final library is in config/external/zlib
     FINAL_LIBRARY = 'zlib'
-    HostLibrary('hostzlib')
 
 # These files can't be unified because zlib's headers don't use include guards.
 SOURCES += [
@@ -35,6 +34,3 @@ SOURCES += [
     'uncompr.c',
     'zutil.c',
 ]
-
-HOST_SOURCES = SOURCES
-

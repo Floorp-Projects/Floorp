@@ -928,6 +928,12 @@
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
 
+# Limit for the canvas image cache. 0 means unlimited.
+- name: canvas.image.cache.limit
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Add support for canvas path objects
 - name: canvas.path.enabled
   type: bool
@@ -1628,6 +1634,12 @@
   value: false
   mirror: always
 
+# Enable mapped array buffer by default.
+- name: dom.mapped_arraybuffer.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # This pref is used to enable/disable the `document.autoplayPolicy` API which
 # returns a enum string which presents current autoplay policy and can change
 # overtime based on user session activity.
@@ -2052,6 +2064,18 @@
 #else
   value: false
 #endif
+  mirror: always
+
+# LocalStorage data limit as determined by summing up the lengths of all string
+# keys and values. This is consistent with the legacy implementation and other
+# browser engines. This value should really only ever change in unit testing
+# where being able to lower it makes it easier for us to test certain edge
+# cases. Measured in KiBs.
+- name: dom.storage.default_quota
+  type: RelaxedAtomicUint32
+  # Only allow relatively small amounts of data since performance of the
+  # synchronous IO is very bad. We are enforcing simple per-origin quota only.
+  value: 5 * 1024
   mirror: always
 
 # Is support for Storage test APIs enabled?
@@ -3529,6 +3553,11 @@
   value: true
   mirror: always
 
+- name: intl.charset.fallback.tld
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
@@ -3781,6 +3810,12 @@
 
 - name: layers.flash-borders
   type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Force all possible layers to be always active layers.
+- name: layers.force-active
+  type: bool
   value: false
   mirror: always
 
