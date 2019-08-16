@@ -10,7 +10,7 @@
         android:background="@drawable/rounded_white_corners"
         android:layout_gravity="center">
 
-    <ImageButton
+    <ImageView
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/ic_logo_widget"
