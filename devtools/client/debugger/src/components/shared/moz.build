@@ -34,7 +34,6 @@ DevToolsModules(
     'Modal.css',
     'Popover.css',
     'PreviewFunction.css',
-    'reps.css',
     'ResultList.css',
     'SearchInput.css',
     'SourceIcon.css',
