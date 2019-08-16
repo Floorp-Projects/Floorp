@@ -2280,6 +2280,23 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "start");
 }
 
+static inline ElemSegment::Kind NormalizeElemSegmentKind(
+    ElemSegmentKind decodedKind) {
+  switch (decodedKind) {
+    case ElemSegmentKind::Active:
+    case ElemSegmentKind::ActiveWithIndex: {
+      return ElemSegment::Kind::Active;
+    }
+    case ElemSegmentKind::Passive: {
+      return ElemSegment::Kind::Passive;
+    }
+    case ElemSegmentKind::Declared: {
+      return ElemSegment::Kind::Declared;
+    }
+  }
+  MOZ_CRASH("unexpected elem segment kind");
+}
+
 static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::Elem, env, &range, "elem")) {
@@ -2319,24 +2336,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     ElemSegmentKind kind = flags->kind();
-
-    switch (kind) {
-      case ElemSegmentKind::Active:
-      case ElemSegmentKind::ActiveWithIndex: {
-        seg->kind = ElemSegment::Kind::Active;
-        break;
-      }
-      case ElemSegmentKind::Passive: {
-        seg->kind = ElemSegment::Kind::Passive;
-        break;
-      }
-      case ElemSegmentKind::Declared: {
-        seg->kind = ElemSegment::Kind::Declared;
-        break;
-      }
-      default:
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE();
-    }
+    seg->kind = NormalizeElemSegmentKind(kind);
 
     if (kind == ElemSegmentKind::Active ||
         kind == ElemSegmentKind::ActiveWithIndex) {
