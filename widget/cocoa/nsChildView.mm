@@ -6240,7 +6240,7 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 }
 
 - (BOOL)wantsUpdateLayer {
-  return YES;
+  return StaticPrefs::gfx_core_animation_enabled_AtStartup();
 }
 
 - (void)updateLayer {
