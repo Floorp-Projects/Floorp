@@ -27,10 +27,6 @@ label:dir(rtl) {
   white-space: nowrap;
 }
 
-.download-link-chain {
-  margin: 0 5px;
-}
-
 :host(.value) *,
 :host(.method) *,
 :host(.padding) * {
