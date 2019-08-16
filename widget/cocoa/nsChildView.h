@@ -20,6 +20,7 @@
 #include "nsCocoaUtils.h"
 #include "gfxQuartzSurface.h"
 #include "GLContextTypes.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/Mutex.h"
 #include "nsRegion.h"
 #include "mozilla/MouseEvents.h"
@@ -563,6 +564,24 @@ class nsChildView final : public nsBaseWidget {
   nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
   nsresult ResetPrefersReducedMotionOverrideForTest() override;
 
+  // Called when the main thread enters a phase during which visual changes
+  // are imminent and any layer updates on the compositor thread would interfere
+  // with visual atomicity.
+  // Has no effect if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
+  // "Async" CATransactions are CATransactions which happen on a thread that's
+  // not the main thread.
+  void SuspendAsyncCATransactions();
+
+  // Called when we know that the current main thread paint will be completed once
+  // the main thread goes back to the event loop.
+  void MaybeScheduleUnsuspendAsyncCATransactions();
+
+  // Called from the runnable dispatched by MaybeScheduleUnsuspendAsyncCATransactions().
+  // At this point we know that the main thread is done handling the visual change
+  // (such as a window resize) and we can start modifying CALayers from the
+  // compositor thread again.
+  void UnsuspendAsyncCATransactions();
+
  protected:
   virtual ~nsChildView();
 
@@ -690,6 +709,24 @@ class nsChildView final : public nsBaseWidget {
   // Only used for drawRect-based painting in popups.
   // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   RefPtr<mozilla::gfx::DrawTarget> mBackingSurface;
+
+  // Coordinates the triggering of CoreAnimation transactions between the main
+  // thread and the compositor thread in order to avoid glitches during window
+  // resizing and window focus changes.
+  struct WidgetCompositingState {
+    // While mAsyncCATransactionsSuspended is true, no CoreAnimation transaction
+    // should be triggered on a non-main thread, because they might race with
+    // main-thread driven updates such as window shape changes, and cause glitches.
+    bool mAsyncCATransactionsSuspended = false;
+
+    // Set to true if mNativeLayerRoot->ApplyChanges() needs to be called at the
+    // next available opportunity. Set to false whenever ApplyChanges does get
+    // called.
+    bool mNativeLayerChangesPending = false;
+  };
+  mozilla::DataMutex<WidgetCompositingState> mCompositingState;
+
+  RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
 
   // This flag is only used when APZ is off. It indicates that the current pan
   // gesture was processed as a swipe. Sometimes the swipe animation can finish
