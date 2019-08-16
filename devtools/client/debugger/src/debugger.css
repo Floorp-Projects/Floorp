@@ -1,4 +1,5 @@
 @import url("./components/variables.css");
+@import url("resource://devtools/client/shared/components/reps/reps.css");
 
 @import url("./components/A11yIntention.css");
 @import url("./components/App.css");
@@ -16,7 +17,6 @@
 @import url("./components/shared/Modal.css");
 @import url("./components/shared/Popover.css");
 @import url("./components/shared/PreviewFunction.css");
-@import url("./components/shared/reps.css");
 @import url("./components/shared/ResultList.css");
 @import url("./components/shared/SearchInput.css");
 @import url("./components/shared/SourceIcon.css");

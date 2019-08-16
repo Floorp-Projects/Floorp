@@ -47,7 +47,6 @@ import "devtools-launchpad/src/components/Root.css";
 import type { ActiveSearchType } from "../selectors";
 
 import "./shared/menu.css";
-import "./shared/reps.css";
 
 import SplitBox from "devtools-splitter";
 import ProjectSearch from "./ProjectSearch";
