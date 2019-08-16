@@ -337,6 +337,7 @@ nsChildView::nsChildView()
       mDrawing(false),
       mIsDispatchPaint(false),
       mPluginFocused{false},
+      mCompositingState("nsChildView::mCompositingState"),
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -820,6 +821,7 @@ void nsChildView::BackingScaleFactorChanged() {
     return;
   }
 
+  SuspendAsyncCATransactions();
   mBackingScaleFactor = newScale;
   NSRect frame = [mView frame];
   mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
@@ -872,6 +874,7 @@ void nsChildView::Resize(double aWidth, double aHeight, bool aRepaint) {
 
   if (!mView || (mBounds.width == width && mBounds.height == height)) return;
 
+  SuspendAsyncCATransactions();
   mBounds.width = width;
   mBounds.height = height;
 
@@ -906,6 +909,7 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
     mBounds.y = y;
   }
   if (isResizing) {
+    SuspendAsyncCATransactions();
     mBounds.width = width;
     mBounds.height = height;
   }
@@ -926,6 +930,69 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
   if (isResizing) ReportSizeEvent();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// The following three methods are primarily an attempt to avoid glitches during
+// window resizing.
+// Here's some background on how these glitches come to be:
+// CoreAnimation transactions are per-thread. They don't nest across threads.
+// If you submit a transaction on the main thread and a transaction on a
+// different thread, the two will race to the window server and show up on the
+// screen in the order that they happen to arrive in at the window server.
+// When the window size changes, there's another event that needs to be
+// synchronized with: the window "shape" change. Cocoa has built-in synchronization
+// mechanics that make sure that *main thread* window paints during window resizes
+// are synchronized properly with the window shape change. But no such built-in
+// synchronization exists for CATransactions that are triggered on a non-main
+// thread.
+// To cope with this, we define a "danger zone" during which we simply avoid
+// triggering any CATransactions on a non-main thread (called "async" CATransactions
+// here). This danger zone starts at the earliest opportunity at which we know
+// about the size change, which is nsChildView::Resize, and ends at a point at
+// which we know for sure that the paint has been handled completely, which is
+// when we return to the event loop after layer display.
+void nsChildView::SuspendAsyncCATransactions() {
+  if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    return;
+  }
+
+  if (mUnsuspendAsyncCATransactionsRunnable) {
+    mUnsuspendAsyncCATransactionsRunnable->Cancel();
+    mUnsuspendAsyncCATransactionsRunnable = nullptr;
+  }
+
+  // Make sure that there actually will be a CATransaction on the main thread
+  // during which we get a chance to schedule unsuspension. Otherwise we might
+  // accidentally stay suspended indefinitely.
+  [mView markLayerForDisplay];
+
+  auto compositingState = mCompositingState.Lock();
+  compositingState->mAsyncCATransactionsSuspended = true;
+}
+
+void nsChildView::MaybeScheduleUnsuspendAsyncCATransactions() {
+  auto compositingState = mCompositingState.Lock();
+  if (compositingState->mAsyncCATransactionsSuspended && !mUnsuspendAsyncCATransactionsRunnable) {
+    mUnsuspendAsyncCATransactionsRunnable =
+        NewCancelableRunnableMethod("nsChildView::MaybeScheduleUnsuspendAsyncCATransactions", this,
+                                    &nsChildView::UnsuspendAsyncCATransactions);
+    NS_DispatchToMainThread(mUnsuspendAsyncCATransactionsRunnable);
+  }
+}
+
+void nsChildView::UnsuspendAsyncCATransactions() {
+  mUnsuspendAsyncCATransactionsRunnable = nullptr;
+
+  auto compositingState = mCompositingState.Lock();
+  compositingState->mAsyncCATransactionsSuspended = false;
+  if (compositingState->mNativeLayerChangesPending) {
+    // We need to call mNativeLayerRoot->ApplyChanges() at the next available
+    // opportunity, and it needs to happen during a CoreAnimation transaction.
+    // The easiest way to handle this request is to mark the layer as needing
+    // display, because this will schedule a main thread CATransaction, during
+    // which HandleMainThreadCATransaction will call ApplyChanges().
+    [mView markLayerForDisplay];
+  }
 }
 
 nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
@@ -1446,6 +1513,7 @@ void nsChildView::PaintWindowInContentLayer() {
 }
 
 void nsChildView::HandleMainThreadCATransaction() {
+  MaybeScheduleUnsuspendAsyncCATransactions();
   WillPaintWindow();
 
   if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
@@ -1463,7 +1531,9 @@ void nsChildView::HandleMainThreadCATransaction() {
   // Apply the changes from mContentLayer to its underlying CALayer. Now is a
   // good time to call this because we know we're currently inside a main thread
   // CATransaction.
+  auto compositingState = mCompositingState.Lock();
   mNativeLayerRoot->ApplyChanges();
+  compositingState->mNativeLayerChangesPending = false;
 }
 
 #pragma mark -
@@ -1964,10 +2034,18 @@ void nsChildView::PostRender(WidgetRenderingContext* aContext) {
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     mContentLayer->NotifySurfaceReady();
 
-    // Force a CoreAnimation layer tree update from this thread.
-    [CATransaction begin];
-    mNativeLayerRoot->ApplyChanges();
-    [CATransaction commit];
+    auto compositingState = mCompositingState.Lock();
+    if (compositingState->mAsyncCATransactionsSuspended) {
+      // We should not trigger a CATransactions on this thread. Instead, let the
+      // main thread take care of calling ApplyChanges at an appropriate time.
+      compositingState->mNativeLayerChangesPending = true;
+    } else {
+      // Force a CoreAnimation layer tree update from this thread.
+      [CATransaction begin];
+      mNativeLayerRoot->ApplyChanges();
+      compositingState->mNativeLayerChangesPending = false;
+      [CATransaction commit];
+    }
   } else {
     UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
     GLContext* gl = manager ? manager->gl() : aContext->mGL;
@@ -2463,7 +2541,13 @@ void nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipe
 
 void nsChildView::SwipeFinished() { mSwipeTracker = nullptr; }
 
-void nsChildView::UpdateBoundsFromView() { mBounds = CocoaPointsToDevPixels([mView frame]); }
+void nsChildView::UpdateBoundsFromView() {
+  auto oldSize = mBounds.Size();
+  mBounds = CocoaPointsToDevPixels([mView frame]);
+  if (mBounds.Size() != oldSize) {
+    SuspendAsyncCATransactions();
+  }
+}
 
 already_AddRefed<gfx::DrawTarget> nsChildView::StartRemoteDrawingInRegion(
     LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {
