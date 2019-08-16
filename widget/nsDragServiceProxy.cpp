@@ -41,11 +41,6 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
     principal = mSourceNode->NodePrincipal();
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (mSourceDocument) {
-    csp = mSourceDocument->GetCsp();
-  }
-
   LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {
     nsPresContext* pc;
@@ -73,7 +68,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
         mozilla::Unused << child->SendInvokeDragSession(
             dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
-            dataSurface->GetFormat(), dragRect, IPC::Principal(principal), csp);
+            dataSurface->GetFormat(), dragRect, IPC::Principal(principal));
         StartDragSession();
         return NS_OK;
       }
@@ -82,7 +77,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
   mozilla::Unused << child->SendInvokeDragSession(
       dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
-      dragRect, IPC::Principal(principal), csp);
+      dragRect, IPC::Principal(principal));
   StartDragSession();
   return NS_OK;
 }

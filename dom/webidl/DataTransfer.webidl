@@ -6,7 +6,6 @@
  * The origin of this IDL file is:
  * http://www.whatwg.org/specs/web-apps/current-work/#the-datatransfer-interface
  */
-interface ContentSecurityPolicy;
 
 [Constructor]
 interface DataTransfer {
@@ -164,9 +163,6 @@ partial interface DataTransfer {
    */
   [ChromeOnly]
   readonly attribute DOMString mozTriggeringPrincipalURISpec;
-
-  [ChromeOnly] 
-  readonly attribute ContentSecurityPolicy? mozCSP;
 
   /**
    * Copy the given DataTransfer for the given event. Used by testing code for

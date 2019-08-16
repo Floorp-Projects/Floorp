@@ -1290,13 +1290,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
       uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       nsCOMPtr<nsIPrincipal> principal;
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
-
       if (dragSession) {
         dragSession->DragEventDispatchedToChildProcess();
         dragSession->GetDragAction(&action);
         dragSession->GetTriggeringPrincipal(getter_AddRefs(principal));
-        dragSession->GetCsp(getter_AddRefs(csp));
         RefPtr<DataTransfer> initialDataTransfer =
             dragSession->GetDataTransfer();
         if (initialDataTransfer) {
@@ -1305,8 +1302,7 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       }
 
       browserParent->SendRealDragEvent(*aEvent->AsDragEvent(), action,
-                                       dropEffect, IPC::Principal(principal),
-                                       csp);
+                                       dropEffect, IPC::Principal(principal));
       return;
     }
     case ePluginEventClass: {
@@ -1798,7 +1794,6 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       RefPtr<RemoteDragStartData> remoteDragStartData;
       nsCOMPtr<nsIContent> eventContent, targetContent;
       nsCOMPtr<nsIPrincipal> principal;
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
       if (eventContent) {
         // If the content is a text node in a password field, we shouldn't
@@ -1822,7 +1817,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         DetermineDragTargetAndDefaultData(
             window, eventContent, dataTransfer, getter_AddRefs(selection),
             getter_AddRefs(remoteDragStartData), getter_AddRefs(targetContent),
-            getter_AddRefs(principal), getter_AddRefs(csp));
+            getter_AddRefs(principal));
       }
 
       // Stop tracking the drag gesture now. This should stop us from
@@ -1877,8 +1872,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       nsCOMPtr<nsIObserverService> observerService =
           mozilla::services::GetObserverService();
-      // Emit observer event to allow addons to modify the DataTransfer
-      // object.
+      // Emit observer event to allow addons to modify the DataTransfer object.
       if (observerService) {
         observerService->NotifyObservers(dataTransfer,
                                          "on-datatransfer-available", nullptr);
@@ -1887,7 +1881,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (status != nsEventStatus_eConsumeNoDefault) {
         bool dragStarted =
             DoDefaultDragStart(aPresContext, event, dataTransfer, targetContent,
-                               selection, remoteDragStartData, principal, csp);
+                               selection, remoteDragStartData, principal);
         if (dragStarted) {
           sActiveESM = nullptr;
           MaybeFirePointerCancel(aEvent);
@@ -1909,7 +1903,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     nsPIDOMWindowOuter* aWindow, nsIContent* aSelectionTarget,
     DataTransfer* aDataTransfer, Selection** aSelection,
     RemoteDragStartData** aRemoteDragStartData, nsIContent** aTargetNode,
-    nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp) {
+    nsIPrincipal** aPrincipal) {
   *aTargetNode = nullptr;
 
   nsCOMPtr<nsIContent> dragDataNode;
@@ -1924,8 +1918,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     if (mGestureDownDragStartData) {
       // A child process started a drag so use any data it assigned for the dnd
       // session.
-      mGestureDownDragStartData->AddInitialDnDDataTo(aDataTransfer, aPrincipal,
-                                                     aCsp);
+      mGestureDownDragStartData->AddInitialDnDDataTo(aDataTransfer, aPrincipal);
       mGestureDownDragStartData.forget(aRemoteDragStartData);
     }
   } else {
@@ -1941,7 +1934,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     bool wasAlt = (mGestureModifiers & MODIFIER_ALT) != 0;
     nsresult rv = nsContentAreaDragDrop::GetDragData(
         aWindow, mGestureDownContent, aSelectionTarget, wasAlt, aDataTransfer,
-        &canDrag, aSelection, getter_AddRefs(dragDataNode), aPrincipal, aCsp);
+        &canDrag, aSelection, getter_AddRefs(dragDataNode), aPrincipal);
     if (NS_FAILED(rv) || !canDrag) {
       return;
     }
@@ -2003,8 +1996,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
 bool EventStateManager::DoDefaultDragStart(
     nsPresContext* aPresContext, WidgetDragEvent* aDragEvent,
     DataTransfer* aDataTransfer, nsIContent* aDragTarget, Selection* aSelection,
-    RemoteDragStartData* aDragStartData, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp) {
+    RemoteDragStartData* aDragStartData, nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) return false;
@@ -2077,16 +2069,16 @@ bool EventStateManager::DoDefaultDragStart(
   // other than a selection is being dragged.
   if (!dragImage && aSelection) {
     dragService->InvokeDragSessionWithSelection(
-        aSelection, aPrincipal, aCsp, transArray, action, event, dataTransfer);
+        aSelection, aPrincipal, transArray, action, event, dataTransfer);
   } else if (aDragStartData) {
     MOZ_ASSERT(XRE_IsParentProcess());
     dragService->InvokeDragSessionWithRemoteImage(
-        dragTarget, aPrincipal, aCsp, transArray, action, aDragStartData, event,
+        dragTarget, aPrincipal, transArray, action, aDragStartData, event,
         dataTransfer);
   } else {
-    dragService->InvokeDragSessionWithImage(
-        dragTarget, aPrincipal, aCsp, transArray, action, dragImage, imageX,
-        imageY, event, dataTransfer);
+    dragService->InvokeDragSessionWithImage(dragTarget, aPrincipal, transArray,
+                                            action, dragImage, imageX, imageY,
+                                            event, dataTransfer);
   }
 
   return true;

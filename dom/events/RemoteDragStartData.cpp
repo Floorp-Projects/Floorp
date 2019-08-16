@@ -19,19 +19,15 @@ RemoteDragStartData::~RemoteDragStartData() {}
 
 RemoteDragStartData::RemoteDragStartData(
     BrowserParent* aBrowserParent, nsTArray<IPCDataTransfer>&& aDataTransfer,
-    const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal,
-    nsIContentSecurityPolicy* aCsp)
+    const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal)
     : mBrowserParent(aBrowserParent),
       mDataTransfer(aDataTransfer),
       mRect(aRect),
-      mPrincipal(aPrincipal),
-      mCsp(aCsp) {}
+      mPrincipal(aPrincipal) {}
 
 void RemoteDragStartData::AddInitialDnDDataTo(DataTransfer* aDataTransfer,
-                                              nsIPrincipal** aPrincipal,
-                                              nsIContentSecurityPolicy** aCsp) {
+                                              nsIPrincipal** aPrincipal) {
   NS_IF_ADDREF(*aPrincipal = mPrincipal);
-  NS_IF_ADDREF(*aCsp = mCsp);
 
   for (uint32_t i = 0; i < mDataTransfer.Length(); ++i) {
     nsTArray<IPCDataTransferItem>& itemArray = mDataTransfer[i].items();
