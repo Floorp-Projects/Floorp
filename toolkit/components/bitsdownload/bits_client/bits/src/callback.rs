@@ -32,10 +32,10 @@ use BitsJob;
 /// If the callback returns a non-success `HRESULT`, the notification may pass to other BITS
 /// mechanisms such as `IBackgroundCopyJob2::SetNotifyCmdLine`.
 pub type TransferredCallback =
-    (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
-pub type ErrorCallback = (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
+    dyn (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
+pub type ErrorCallback = dyn (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
 pub type ModificationCallback =
-    (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
+    dyn (Fn() -> Result<(), HRESULT>) + RefUnwindSafe + Send + Sync + 'static;
 
 #[repr(C)]
 pub struct BackgroundCopyCallback {
