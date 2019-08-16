@@ -566,22 +566,15 @@ class BlocksRingBuffer {
 
   // Class used to write an entry contents.
   // Created through `EntryReserver`, lives within a lock guard lifetime.
-  class EntryWriter : public BufferWriter {
+  class MOZ_RAII EntryWriter : public BufferWriter {
    public:
-    // Allow move-construction.
-#ifdef DEBUG
-    EntryWriter(EntryWriter&& aOther)
-        : BufferWriter(std::move(aOther)),
-          mRing(aOther.mRing),
-          mEntryBytes(aOther.mEntryBytes),
-          mEntryStart(aOther.mEntryStart) {
-      // No EntryWriter should live outside of a mutexed call.
-      mRing.mMutex.AssertCurrentThreadOwns();
-      // In DEBUG, we need to move the moved-from EntryWriter to the end of the
-      // entry, so as not to trip the MOZ_ASSERT() in the destructor below.
-      aOther += aOther.RemainingBytes();
-    }
+    // Disallow copying, moving, and assignments.
+    EntryWriter(const EntryWriter& aOther) = delete;
+    EntryWriter& operator=(const EntryWriter& aOther) = delete;
+    EntryWriter(EntryWriter&& aOther) = delete;
+    EntryWriter& operator=(EntryWriter&& aOther) = delete;
 
+#ifdef DEBUG
     ~EntryWriter() {
       // We expect the caller to completely fill the entry.
       // (Or at least pretend to, by moving this iterator to the end.)
@@ -589,13 +582,7 @@ class BlocksRingBuffer {
       // No EntryWriter should live outside of a mutexed call.
       mRing.mMutex.AssertCurrentThreadOwns();
     }
-#else   // DEBUG
-    EntryWriter(EntryWriter&& aOther) = default;
-#endif  // DEBUG else
-    // Disallow copying and assignments.
-    EntryWriter(const EntryWriter& aOther) = delete;
-    EntryWriter& operator=(const EntryWriter& aOther) = delete;
-    EntryWriter& operator=(EntryWriter&& aOther) = delete;
+#endif  // DEBUG
 
     // All BufferWriter (aka ModuloBuffer<uint32_t, Index>::Writer) APIs are
     // available to read/write data from/to this entry.
@@ -734,7 +721,7 @@ class BlocksRingBuffer {
 
     // Write a new entry copied from the given buffer, return block index.
     BlockIndex Write(const void* aSrc, Length aBytes) {
-      return Reserve(aBytes, [&](EntryWriter aEW) {
+      return Reserve(aBytes, [&](EntryWriter& aEW) {
         aEW.Write(aSrc, aBytes);
         return aEW.CurrentBlockIndex();
       });
@@ -809,22 +796,23 @@ class BlocksRingBuffer {
     return std::forward<Callback>(aCallback)(std::move(maybeEntryReserver));
   }
 
-  // Add a new entry of known size, call `aCallback` with a temporary
-  // EntryWriter, and return whatever `aCallback` returns. Callback should not
-  // store `EntryWriter`, as it may become invalid after this thread-safe call.
+  // Add a new entry of known size, call `aCallback` with a pointer to a
+  // temporary EntryWriter (can be null when out-of-session), and return
+  // whatever `aCallback` returns. Callback should not store the `EntryWriter`,
+  // as it may become invalid after this thread-safe call.
   template <typename Callback>
   auto Put(Length aLength, Callback&& aCallback) {
     return Put([&](Maybe<EntryReserver>&& aER) {
       if (MOZ_LIKELY(aER)) {
         // We are in-session, with an EntryReserver at the ready.
-        // Reserve the requested space, then invoke the callback with the given
-        // EntryWriter inserted into a Maybe.
-        return aER->Reserve(aLength, [&](EntryWriter aEW) {
-          return std::forward<Callback>(aCallback)(Some(std::move(aEW)));
+        // Reserve the requested space, then invoke the callback with a pointer
+        // to the reserved EntryWriter.
+        return aER->Reserve(aLength, [&](EntryWriter& aEW) {
+          return std::forward<Callback>(aCallback)(&aEW);
         });
       }
-      // Out-of-session, just invoke the callback with Nothing.
-      return std::forward<Callback>(aCallback)(Maybe<EntryWriter>{});
+      // Out-of-session, just invoke the callback with nullptr.
+      return std::forward<Callback>(aCallback)(nullptr);
     });
   }
 

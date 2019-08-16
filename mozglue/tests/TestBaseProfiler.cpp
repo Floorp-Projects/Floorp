@@ -605,7 +605,7 @@ void TestBlocksRingBufferAPI() {
     auto put3 = rb.Put([&](Maybe<BlocksRingBuffer::EntryReserver>&& aER) {
       MOZ_RELEASE_ASSERT(aER.isSome());
       return aER->Reserve(
-          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter aEW) {
+          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter& aEW) {
             aEW.WriteObject(uint32_t(3));
             return float(ExtractBlockIndex(aEW.CurrentBlockIndex()));
           });
@@ -673,7 +673,7 @@ void TestBlocksRingBufferAPI() {
     auto bi5_6 = rb.Put([&](Maybe<BlocksRingBuffer::EntryReserver>&& aER) {
       MOZ_RELEASE_ASSERT(aER.isSome());
       return aER->Reserve(
-          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter aEW) {
+          sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter& aEW) {
             aEW.WriteObject(uint32_t(5));
             MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi2).isNothing());
             MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4).isSome());
@@ -804,8 +804,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     });
     MOZ_RELEASE_ASSERT(ran == 1);
     ran = 0;
-    rb.Put(1, [&](Maybe<BlocksRingBuffer::EntryWriter>&& aMaybeEntryWriter) {
-      MOZ_RELEASE_ASSERT(aMaybeEntryWriter.isNothing());
+    rb.Put(1, [&](BlocksRingBuffer::EntryWriter* aMaybeEntryWriter) {
+      MOZ_RELEASE_ASSERT(!aMaybeEntryWriter);
       ++ran;
     });
     MOZ_RELEASE_ASSERT(ran == 1);
@@ -883,8 +883,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     ran = 0;
     // The following three `Put...` will write three int32_t of value 1.
     bi = rb.Put(sizeof(ran),
-                [&](Maybe<BlocksRingBuffer::EntryWriter>&& aMaybeEntryWriter) {
-                  MOZ_RELEASE_ASSERT(aMaybeEntryWriter.isSome());
+                [&](BlocksRingBuffer::EntryWriter* aMaybeEntryWriter) {
+                  MOZ_RELEASE_ASSERT(!!aMaybeEntryWriter);
                   ++ran;
                   aMaybeEntryWriter->WriteObject(ran);
                   return aMaybeEntryWriter->CurrentBlockIndex();
@@ -1041,8 +1041,8 @@ void TestBlocksRingBufferThreading() {
             // Reserve as many bytes as the thread number (but at least enough
             // to store an int), and write an increasing int.
             rb.Put(std::max(aThreadNo, int(sizeof(push))),
-                   [&](Maybe<BlocksRingBuffer::EntryWriter>&& aEW) {
-                     MOZ_RELEASE_ASSERT(aEW.isSome());
+                   [&](BlocksRingBuffer::EntryWriter* aEW) {
+                     MOZ_RELEASE_ASSERT(!!aEW);
                      aEW->WriteObject(aThreadNo * 1000000 + push);
                      *aEW += aEW->RemainingBytes();
                    });
