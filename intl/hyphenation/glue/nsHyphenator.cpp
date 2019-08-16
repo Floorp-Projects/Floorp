@@ -8,6 +8,7 @@
 #include "nsUTF8Utils.h"
 #include "nsUnicodeProperties.h"
 #include "nsIURI.h"
+#include "mozilla/Telemetry.h"
 
 #include "hyphen.h"
 
@@ -18,6 +19,7 @@ nsHyphenator::nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized)
   if (NS_FAILED(rv)) {
     return;
   }
+  Telemetry::AutoTimer<Telemetry::HYPHENATION_LOAD_TIME> telemetry;
   mDict = hnj_hyphen_load(uriSpec.get());
 #ifdef DEBUG
   if (mDict) {

@@ -31,17 +31,15 @@ class nsICSSLoaderObserver : public nsISupports {
    * load events associated with aSheet are fired.
    * @param aSheet the sheet that was loaded. Guaranteed to always be
    *        non-null, even if aStatus indicates failure.
-   * @param aWasAlternate whether the sheet was an alternate.  This will always
-   *        match the value LoadStyleLink or LoadInlineStyle returned in
-   *        aIsAlternate if one of those methods were used to load the sheet,
-   *        and will always be false otherwise.
+   * @param aWasDeferred whether the sheet load was deferred, due to it being an
+   *        alternate sheet, or having a non-matching media list.
    * @param aStatus is a success code if the sheet loaded successfully and a
    *        failure code otherwise.  Note that successful load of aSheet
    *        doesn't indicate anything about whether the data actually parsed
    *        as CSS, and doesn't indicate anything about the status of any child
    *        sheets of aSheet.
    */
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) = 0;
 };
 

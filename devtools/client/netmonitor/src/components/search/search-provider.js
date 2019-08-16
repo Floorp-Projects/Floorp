@@ -58,7 +58,7 @@ const SearchProvider = {
 
   getValue(object) {
     if (object.resource) {
-      return object.resource.url;
+      return "";
     } else if (object.type) {
       return object.value;
     }
@@ -84,17 +84,14 @@ const SearchProvider = {
   },
 
   getResourceLabel(object) {
-    const resourceLabel =
+    return (
       getFileName(object.resource.urlDetails.baseNameWithQuery) ||
-      object.resource.urlDetails.host;
-    if (resourceLabel.length > 30) {
-      return resourceLabel.substring(0, 30) + "…";
-    }
-    return resourceLabel;
+      object.resource.urlDetails.host
+    );
   },
 
   getUrlLabel(object) {
-    return object.label.substring(0, 100);
+    return object.label;
   },
 
   getResponseContent(object) {

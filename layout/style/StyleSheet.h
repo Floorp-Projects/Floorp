@@ -100,11 +100,11 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   bool HasRules() const;
 
-  // Parses a stylesheet. The aLoadData argument corresponds to the
-  // SheetLoadData for this stylesheet. It may be null in some cases.
-  RefPtr<StyleSheetParsePromise> ParseSheet(css::Loader* aLoader,
+  // Parses a stylesheet. The load data argument corresponds to the
+  // SheetLoadData for this stylesheet.
+  RefPtr<StyleSheetParsePromise> ParseSheet(css::Loader&,
                                             const nsACString& aBytes,
-                                            css::SheetLoadData* aLoadData);
+                                            css::SheetLoadData&);
 
   // Common code that needs to be called after servo finishes parsing. This is
   // shared between the parallel and sequential paths.
@@ -113,6 +113,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Similar to the above, but guarantees that parsing will be performed
   // synchronously.
+  //
+  // The load data may be null sometimes.
   void ParseSheetSync(
       css::Loader* aLoader, const nsACString& aBytes,
       css::SheetLoadData* aLoadData, uint32_t aLineNumber,
@@ -132,7 +134,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   URLExtraData* URLData() const { return Inner().mURLData; }
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) final;
 
   // Internal GetCssRules methods which do not have security check and

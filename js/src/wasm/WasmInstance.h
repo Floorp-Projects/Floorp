@@ -156,7 +156,7 @@ class Instance {
 
   // Called by Wasm(Memory|Table)Object when a moving resize occurs:
 
-  void onMovingGrowMemory(uint8_t* prevMemoryBase);
+  void onMovingGrowMemory();
   void onMovingGrowTable(const Table* theTable);
 
   // Called to apply a single ElemSegment at a given offset, assuming
@@ -174,7 +174,6 @@ class Instance {
   // about:memory reporting:
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, Metadata::SeenSet* seenMetadata,
-                     ShareableBytes::SeenSet* seenBytes,
                      Code::SeenSet* seenCode, Table::SeenSet* seenTables,
                      size_t* code, size_t* data) const;
 

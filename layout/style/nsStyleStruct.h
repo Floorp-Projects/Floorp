@@ -345,11 +345,11 @@ struct nsStyleImage {
    */
   bool IsComplete() const;
   /**
-   * @return true if this image is loaded without error;
+   * @return true if this image has an available size, and hasn't errored.
    * always returns true if |mType| is |eStyleImageType_Gradient| or
    * |eStyleImageType_Element|.
    */
-  bool IsLoaded() const;
+  bool IsSizeAvailable() const;
   /**
    * @return true if it is 100% confident that this image contains no pixel
    * to draw.
@@ -766,8 +766,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
         (HasVisibleStyle(aSide) ? mBorder.Side(aSide) : 0);
   }
 
-  inline bool IsBorderImageLoaded() const {
-    return mBorderImageSource.IsLoaded();
+  inline bool IsBorderImageSizeAvailable() const {
+    return mBorderImageSource.IsSizeAvailable();
   }
 
   nsMargin GetImageOutset() const;
@@ -1623,17 +1623,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
   bool IsListItem() const { return IsListItem(mDisplay); }
 
-  bool IsBlockInsideStyle() const {
-    return mozilla::StyleDisplay::Block == mDisplay ||
-           mozilla::StyleDisplay::ListItem == mDisplay ||
-           mozilla::StyleDisplay::InlineBlock == mDisplay ||
-           mozilla::StyleDisplay::TableCaption == mDisplay ||
-           mozilla::StyleDisplay::FlowRoot == mDisplay;
-    // Should TABLE_CELL be included here?  They have
-    // block frames nested inside of them.
-    // (But please audit all callers before changing.)
-  }
-
   bool IsInlineInsideStyle() const {
     auto inside = DisplayInside();
     return inside == mozilla::StyleDisplayInside::Inline ||
@@ -1809,7 +1798,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   // style struct is for.  If the frame is for SVG text, the return
   // value will be massaged to be something that makes sense for
   // SVG text.
-  inline bool IsBlockInside(const nsIFrame* aContextFrame) const;
   inline bool IsBlockOutside(const nsIFrame* aContextFrame) const;
   inline bool IsInlineOutside(const nsIFrame* aContextFrame) const;
   inline bool IsOriginalDisplayInlineOutside(

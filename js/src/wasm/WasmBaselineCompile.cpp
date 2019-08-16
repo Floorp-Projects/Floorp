@@ -4822,7 +4822,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     masm.jump(&returnLabel_);
   }
 
-  void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
+  void checkDivideByZeroI32(RegI32 rhs) {
     Label nonZero;
     masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
     trap(Trap::IntegerDivideByZero);
@@ -6507,8 +6507,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   MOZ_MUST_USE bool emitBarrieredStore(const Maybe<RegPtr>& object,
-                                       RegPtr valueAddr, RegPtr value,
-                                       ValType valueType) {
+                                       RegPtr valueAddr, RegPtr value) {
     // TODO/AnyRef-boxing: With boxed immediates and strings, the write
     // barrier is going to have to be more complicated.
     ASSERT_ANYREF_IS_JSOBJECT;
@@ -6855,8 +6854,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitWake();
   MOZ_MUST_USE bool emitFence();
   MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
-  void emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
-                        WantResult wantResult);
+  void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
   MOZ_MUST_USE bool bulkmemOpsEnabled();
   MOZ_MUST_USE bool emitMemOrTableCopy(bool isMem);
   MOZ_MUST_USE bool emitDataOrElemDrop(bool isData);
@@ -7022,10 +7020,11 @@ void BaseCompiler::emitQuotientI32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
+
+    Label done;
     if (!isConst || c == -1) {
       checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(false));
     }
@@ -7052,12 +7051,10 @@ void BaseCompiler::emitQuotientU32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
     masm.quotient32(rs, r, IsUnsigned(true));
-    masm.bind(&done);
 
     maybeFreeI32(reserved);
     freeI32(rs);
@@ -7089,10 +7086,11 @@ void BaseCompiler::emitRemainderI32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
+
+    Label done;
     if (!isConst || c == -1) {
       checkDivideSignedOverflowI32(rs, r, &done, ZeroOnOverflow(true));
     }
@@ -7117,12 +7115,10 @@ void BaseCompiler::emitRemainderU32() {
     RegI32 r, rs, reserved;
     pop2xI32ForMulDivI32(&r, &rs, &reserved);
 
-    Label done;
     if (!isConst || c == 0) {
-      checkDivideByZeroI32(rs, r, &done);
+      checkDivideByZeroI32(rs);
     }
     masm.remainder32(rs, r, IsUnsigned(true));
-    masm.bind(&done);
 
     maybeFreeI32(reserved);
     freeI32(rs);
@@ -9254,7 +9250,7 @@ bool BaseCompiler::emitSetGlobal() {
       }
       RegPtr rv = popRef();
       // emitBarrieredStore consumes valueAddr
-      if (!emitBarrieredStore(Nothing(), valueAddr, rv, global.type())) {
+      if (!emitBarrieredStore(Nothing(), valueAddr, rv)) {
         return false;
       }
       freeRef(rv);
@@ -10096,7 +10092,7 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
 #ifdef JS_64BIT
   MOZ_CRASH("Should not happen");
 #else
-  emitAtomicXchg64(&access, type, WantResult(false));
+  emitAtomicXchg64(&access, WantResult(false));
   return true;
 #endif
 }
@@ -10138,11 +10134,11 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
 
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
-  emitAtomicXchg64(&access, type, WantResult(true));
+  emitAtomicXchg64(&access, WantResult(true));
   return true;
 }
 
-void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
+void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
                                     WantResult wantResult) {
   PopAtomicXchg64Regs regs(this);
 
@@ -10757,8 +10753,7 @@ bool BaseCompiler::emitStructSet() {
     case ValType::AnyRef: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
       // emitBarrieredStore consumes valueAddr
-      if (!emitBarrieredStore(Some(rp), valueAddr, rr,
-                              structType.fields_[fieldIndex].type)) {
+      if (!emitBarrieredStore(Some(rp), valueAddr, rr)) {
         return false;
       }
       freeRef(rr);

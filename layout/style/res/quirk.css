@@ -144,12 +144,12 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
 }
 
 /* Quirk: Make floated images have a margin  (b=58899) */
-img[align=left]:dir(ltr), img[align=right]:dir(rtl) {
-  margin-inline-end: 3px;
+img[align=left] {
+  margin-right: 3px;
 }
 
-img[align=right]:dir(ltr), img[align=left]:dir(rtl) {
-  margin-inline-start: 3px;
+img[align=right] {
+  margin-left: 3px;
 }
 
 /*

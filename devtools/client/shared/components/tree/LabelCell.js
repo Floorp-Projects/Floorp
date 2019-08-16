@@ -21,6 +21,7 @@ define(function(require, exports, module) {
       return {
         id: PropTypes.string.isRequired,
         member: PropTypes.object.isRequired,
+        renderSuffix: PropTypes.func,
       };
     }
 
@@ -28,6 +29,7 @@ define(function(require, exports, module) {
       const id = this.props.id;
       const member = this.props.member;
       const level = member.level || 0;
+      const renderSuffix = this.props.renderSuffix;
 
       const iconClassList = ["treeIcon"];
       if (member.hasChildren && member.loading) {
@@ -61,7 +63,8 @@ define(function(require, exports, module) {
             "data-level": level,
           },
           member.name
-        )
+        ),
+        renderSuffix && renderSuffix(member)
       );
     }
   }

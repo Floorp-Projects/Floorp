@@ -129,7 +129,15 @@ See also the section on static prefs below.
 Static prefs
 ------------
 There is a special kind of pref called a static pref. Static prefs are defined
-in ``StaticPrefList.yaml``. Each static pref has a *mirror* kind.
+in ``StaticPrefList.yaml``.
+
+If a static pref is defined in both ``StaticPrefList.yaml`` and a pref data
+file, the latter definition will take precedence. A pref shouldn't appear in
+both ``StaticPrefList.yaml`` and ``all.js``, but it may make sense for a pref
+to appear in both ``StaticPrefList.yaml`` and an app-specific pref data file
+such as ``firefox.js``.
+
+Each static pref has a *mirror* kind.
 
 * ``always``: A C++ *mirror variable* is associated with the pref. The variable
   is always kept in sync with the pref value. This kind is common.
@@ -164,9 +172,16 @@ being deleted.
 
 Loading and Saving
 ------------------
-Default pref values are initialized from pref data files such as ``all.js``,
-``firefox.js`` (desktop), ``mobile.js`` (mobile), and a few others; in release
-builds these are in ``omni.ja``.
+Default pref values are initialized from various pref data files. Notable ones
+include:
+
+- ``modules/libpref/init/all.js``, used by all products;
+- ``browser/app/profile/firefox.js``, used by Firefox desktop;
+- ``mobile/android/app/mobile.js``, used by Firefox mobile;
+- ``mail/app/profile/all-thunderbird.js``, used by Thunderbird (in comm-central);
+- ``suite/browser/browser-prefs.js``, used by SeaMonkey (in comm-central).
+
+In release builds these are all put into ``omni.ja``.
 
 User pref values are initialized from ``prefs.js`` and (if present)
 ``user.js``, in the user's profile. This only happens once, in the parent

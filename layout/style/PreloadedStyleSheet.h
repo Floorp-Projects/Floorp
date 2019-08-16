@@ -52,7 +52,7 @@ class PreloadedStyleSheet : public nsIPreloadedStyleSheet {
                                        PreloadedStyleSheet* aSheet)
         : mPromise(aPromise), mPreloadedSheet(aSheet) {}
 
-    NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+    NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
                                 nsresult aStatus) override;
 
    protected:
