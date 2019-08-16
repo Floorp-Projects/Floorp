@@ -46,8 +46,13 @@ function recordEvent(e) {
   });
 }
 
+function preventDefaultListener(e) {
+  e.preventDefault();
+}
+
 // Note, not passing 'passive'.
 window.addEventListener("touchstart", recordEvent, { capture: true });
+window.ontouchstart = preventDefaultListener;
 if (getPlatform() == "windows") {
   SpecialPowers.addChromeEventListener("mouselongtap", recordEvent, true);
 } else {
@@ -62,12 +67,13 @@ waitUntilApzStable()
 <body>
   <a id="b" href="#">Link to nowhere</a>
   <script>
-    function preventDefaultListener(e) {
-      e.preventDefault();
-    }
     document.addEventListener("touchstart", preventDefaultListener, { capture: true });
+    document.ontouchstart = preventDefaultListener;
     document.documentElement.addEventListener("touchstart", preventDefaultListener, { capture: true });
+    document.documentElement.ontouchstart = preventDefaultListener;
     document.body.addEventListener("touchstart", preventDefaultListener, { capture: true });
+    document.body.ontouchstart = preventDefaultListener;
+    document.body.setAttribute("ontouchstart", "event.preventDefault()");
   </script>
 </body>
 </html>
