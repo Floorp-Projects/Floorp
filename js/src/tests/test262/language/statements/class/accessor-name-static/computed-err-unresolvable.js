@@ -4,7 +4,6 @@
 /*---
 description: Abrupt completion when resolving reference value (Class declaration, static method)
 esid: sec-runtime-semantics-classdefinitionevaluation
-es6id: 14.5.14
 flags: [generated]
 info: |
     [...]

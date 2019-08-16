@@ -3,7 +3,6 @@
 
 /*---
 esid: sec-date.parse
-es6id: 20.3.3.2
 description: >
   Date.parse return value is limited to specified time value maximum range
 info: |
