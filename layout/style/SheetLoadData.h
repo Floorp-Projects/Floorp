@@ -101,8 +101,8 @@ class SheetLoadData final : public nsIRunnable, public nsIThreadObserver {
   // The sheet we're loading data for
   RefPtr<StyleSheet> mSheet;
 
-  // Linked list of datas for the same URI as us
-  SheetLoadData* mNext;  // strong ref
+  // Linked list of datas for the same URI as us.
+  RefPtr<SheetLoadData> mNext;
 
   // Load data for the sheet that @import-ed us if we were @import-ed
   // during the parse

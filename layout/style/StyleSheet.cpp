@@ -918,7 +918,7 @@ already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
 // (3) The stylesheet is a chrome stylesheet, since those can use
 //     -moz-bool-pref, which needs to access the pref service, which is not
 //     threadsafe.
-static bool AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI) {
+static bool AllowParallelParse(css::Loader& aLoader, nsIURI* aSheetURI) {
   // Check the pref.
   if (!StaticPrefs::layout_css_parsing_parallel()) {
     return false;
@@ -926,7 +926,7 @@ static bool AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI) {
 
   // If the browser is recording CSS errors, we need to use the sequential path
   // because the parallel path doesn't support that.
-  Document* doc = aLoader->GetDocument();
+  Document* doc = aLoader.GetDocument();
   if (doc && css::ErrorReporter::ShouldReportErrors(*doc)) {
     return false;
   }
@@ -946,32 +946,29 @@ static bool AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI) {
 }
 
 RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
-    css::Loader* aLoader, const nsACString& aBytes,
-    css::SheetLoadData* aLoadData) {
-  MOZ_ASSERT(aLoader);
-  MOZ_ASSERT(aLoadData);
+    css::Loader& aLoader, const nsACString& aBytes,
+    css::SheetLoadData& aLoadData) {
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   SetURLExtraData();
 
   const StyleUseCounters* useCounters =
-      aLoader->GetDocument() ? aLoader->GetDocument()->GetStyleUseCounters()
-                             : nullptr;
+      aLoader.GetDocument() ? aLoader.GetDocument()->GetStyleUseCounters()
+                            : nullptr;
 
   if (!AllowParallelParse(aLoader, GetSheetURI())) {
     RefPtr<RawServoStyleSheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
-            aLoader, this, aLoadData, &aBytes, mParsingMode, Inner().mURLData,
-            aLoadData->mLineNumber, aLoader->GetCompatibilityMode(),
+            &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
+            aLoadData.mLineNumber, aLoader.GetCompatibilityMode(),
             /* reusable_sheets = */ nullptr, useCounters)
             .Consume();
     FinishAsyncParse(contents.forget());
   } else {
-    RefPtr<css::SheetLoadDataHolder> loadDataHolder =
-        new css::SheetLoadDataHolder(__func__, aLoadData);
+    auto holder = MakeRefPtr<css::SheetLoadDataHolder>(__func__, &aLoadData);
     Servo_StyleSheet_FromUTF8BytesAsync(
-        loadDataHolder, Inner().mURLData, &aBytes, mParsingMode,
-        aLoadData->mLineNumber, aLoader->GetCompatibilityMode(),
+        holder, Inner().mURLData, &aBytes, mParsingMode, aLoadData.mLineNumber,
+        aLoader.GetCompatibilityMode(),
         /* should_record_counters = */ !!useCounters);
   }
 
