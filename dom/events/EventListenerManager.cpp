@@ -649,6 +649,22 @@ static bool DefaultToPassiveTouchListeners() {
   return sDefaultToPassiveTouchListeners;
 }
 
+void EventListenerManager::MaybeMarkPassive(EventMessage aMessage,
+                                            EventListenerFlags& aFlags) {
+  if ((aMessage == eTouchStart || aMessage == eTouchMove) && mIsMainThreadELM &&
+      DefaultToPassiveTouchListeners()) {
+    nsCOMPtr<nsINode> node;
+    nsCOMPtr<nsPIDOMWindowInner> win;
+    if ((win = GetTargetAsInnerWindow()) ||
+        ((node = do_QueryInterface(mTarget)) &&
+         (node == node->OwnerDoc() ||
+          node == node->OwnerDoc()->GetRootElement() ||
+          node == node->OwnerDoc()->GetBody()))) {
+      aFlags.mPassive = true;
+    }
+  }
+}
+
 void EventListenerManager::AddEventListenerByType(
     EventListenerHolder aListenerHolder, const nsAString& aType,
     const EventListenerFlags& aFlags, const Optional<bool>& aPassive) {
@@ -659,17 +675,8 @@ void EventListenerManager::AddEventListenerByType(
   EventListenerFlags flags = aFlags;
   if (aPassive.WasPassed()) {
     flags.mPassive = aPassive.Value();
-  } else if ((message == eTouchStart || message == eTouchMove) &&
-             mIsMainThreadELM && DefaultToPassiveTouchListeners()) {
-    nsCOMPtr<nsINode> node;
-    nsCOMPtr<nsPIDOMWindowInner> win;
-    if ((win = GetTargetAsInnerWindow()) ||
-        ((node = do_QueryInterface(mTarget)) &&
-         (node == node->OwnerDoc() ||
-          node == node->OwnerDoc()->GetRootElement() ||
-          node == node->OwnerDoc()->GetBody()))) {
-      flags.mPassive = true;
-    }
+  } else {
+    MaybeMarkPassive(message, flags);
   }
 
   AddEventListenerInternal(std::move(aListenerHolder), message, atom, flags);
@@ -714,6 +721,7 @@ EventListenerManager::Listener* EventListenerManager::SetEventHandlerInternal(
     // create and add a new one.
     EventListenerFlags flags;
     flags.mListenerIsJSListener = true;
+    MaybeMarkPassive(eventMessage, flags);
 
     nsCOMPtr<JSEventHandler> jsEventHandler;
     NS_NewJSEventHandler(mTarget, aName, aTypedHandler,
