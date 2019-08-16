@@ -10374,7 +10374,9 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
                                                      isPrivate)) {
         nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
             referrerInfo->CloneWithNewPolicy(ReferrerPolicy::_empty);
-        SetReferrerInfo(newReferrerInfo, false, true);
+        // Pass false for the 3rd bool to not overwrite the original
+        // referrer for these referrer policy mutations.
+        SetReferrerInfo(newReferrerInfo, false, true, false);
       }
     }
   }
