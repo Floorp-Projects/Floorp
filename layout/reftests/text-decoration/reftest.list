@@ -114,3 +114,7 @@ fuzzy-if(skiaContent,0-4,0-2) == underline-select-1.html underline-select-1-ref.
 fuzzy-if(Android,0-238,0-36) == vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
 != 1415214.html 1415214-notref.html
 test-pref(layout.css.text-decoration-thickness.enabled,false) == text-decoration-shorthands-001.html text-decoration-shorthands-001-ref.html
+# fails because of bug 1572302
+test-pref(layout.css.text-decoration-skip-ink.enabled,true) test-pref(layout.css.text-underline-offset.enabled,true) fails HTTP(..) == skip-ink-multiline-position.html skip-ink-multiline-position-ref.html
+# fails due to bug 1573711
+test-pref(layout.css.text-decoration-skip-ink.enabled,true) fails == skip-ink-vertical-align.html skip-ink-vertical-align-ref.html

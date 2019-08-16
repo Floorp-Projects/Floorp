@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test case for text-decoration-skip-ink: text on the second line should not change the position of the first line's underline</title>
+    <style>
+     @font-face {
+         font-family: awami;
+         src: url("../fonts/AwamiNastaliq-Regular.woff");
+     }
+     div{
+         font: 36px/2 awami, sans-serif;
+         unicode-bidi:bidi-override;
+         width: 70px;
+         height: 70px;
+         overflow: hidden;
+         text-decoration: red underline;
+         text-underline-offset: -0.5em;
+     }
+    </style>
+  </head>
+  <body>
+      <p>Adding more characters on the second line should not affect the position of the underline on line one. <br>See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1572302"> Bug 1572303</a> </p>
+      <div dir="rtl">fی علي</div>
+  </body>
+</html>
