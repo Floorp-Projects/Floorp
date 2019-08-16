@@ -1416,16 +1416,15 @@ def make_job_description(config, tests):
             schedules = [category, platform_family(test['build-platform'])]
 
         if test.get('when'):
-            # This may still be used by comm-central.
             jobdesc['when'] = test['when']
         elif 'optimization' in test:
             jobdesc['optimization'] = test['optimization']
-        elif config.params.is_try():
-            jobdesc['optimization'] = {'test-try': schedules}
-        elif category in INCLUSIVE_COMPONENTS:
-            jobdesc['optimization'] = {'test-inclusive': schedules}
+        elif not config.params.is_try() and category not in INCLUSIVE_COMPONENTS:
+            # for non-try branches and non-inclusive suites, include SETA
+            jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
         else:
-            jobdesc['optimization'] = {'test': schedules}
+            # otherwise just use skip-unless-schedules
+            jobdesc['optimization'] = {'skip-unless-schedules': schedules}
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'

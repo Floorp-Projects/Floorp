@@ -59,8 +59,6 @@ class ShowTaskGraphSubCommand(SubCommand):
                                  "or their dependencies."),
             CommandArgument('-F', '--fast', dest='fast', default=False, action='store_true',
                             help="enable fast task generation for local debugging."),
-            CommandArgument('-o', '--output-file', default=None,
-                            help="file path to store generated output."),
 
         ]
         for arg in args:
@@ -380,23 +378,18 @@ class MachCommands(MachCommandBase):
 
             show_method = getattr(self, 'show_taskgraph_' + (options['format'] or 'labels'))
             tg = self.get_filtered_taskgraph(tg, options["tasks_regex"])
-
-            fh = options['output_file']
-            if fh:
-                fh = open(fh, 'w')
-            show_method(tg, file=fh)
+            show_method(tg)
         except Exception:
             traceback.print_exc()
             sys.exit(1)
 
-    def show_taskgraph_labels(self, taskgraph, file=None):
+    def show_taskgraph_labels(self, taskgraph):
         for index in taskgraph.graph.visit_postorder():
-            print(taskgraph.tasks[index].label, file=file)
+            print(taskgraph.tasks[index].label)
 
-    def show_taskgraph_json(self, taskgraph, file=None):
+    def show_taskgraph_json(self, taskgraph):
         print(json.dumps(taskgraph.to_json(),
-              sort_keys=True, indent=2, separators=(',', ': ')),
-              file=file)
+              sort_keys=True, indent=2, separators=(',', ': ')))
 
     def get_filtered_taskgraph(self, taskgraph, tasksregex):
         from taskgraph.graph import Graph
