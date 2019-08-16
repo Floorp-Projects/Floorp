@@ -282,9 +282,17 @@ add_task(async function test_new_remote_window_flags() {
       // as part of the BrowserChild, so we have to check those too.
       let contentChromeFlags = await getContentChromeFlags(win);
       assertContentFlags(contentChromeFlags);
-      Assert.ok(
-        !(contentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW),
-        "Should not be remote in the content process."
+
+      Assert.equal(
+        parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW,
+        contentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_REMOTE_WINDOW,
+        "Should have matching remote value in parent and content"
+      );
+
+      Assert.equal(
+        parentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_FISSION_WINDOW,
+        contentChromeFlags & Ci.nsIWebBrowserChrome.CHROME_FISSION_WINDOW,
+        "Should have matching fission value in parent and content"
       );
 
       await BrowserTestUtils.closeWindow(win);
