@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIDragService.h"
 #include "ViewRegion.h"
+#include "CFTypeRefPtr.h"
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -50,6 +51,8 @@ class VibrancyManager;
 namespace layers {
 class GLManager;
 class IAPZCTreeManager;
+class NativeLayerRootCA;
+class NativeLayerCA;
 }  // namespace layers
 namespace widget {
 class RectTextureImage;
@@ -460,6 +463,10 @@ class nsChildView final : public nsBaseWidget {
                                const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
+  bool PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
+                              const LayoutDeviceIntRegion& aInvalidRegion);
+
+  void PaintWindowInContentLayer();
   void HandleMainThreadCATransaction();
 
 #ifdef ACCESSIBILITY
@@ -661,6 +668,13 @@ class nsChildView final : public nsBaseWidget {
   // surface to the screen using an OpenGL context.
   // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   mozilla::UniquePtr<GLPresenter> mGLPresenter;
+
+  RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
+
+  // The CoreAnimation layer that contains the rendering from Gecko. This is a
+  // sublayer of mNativeLayerRoot's underlying wrapper layer.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
+  RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
