@@ -47,9 +47,6 @@ for stlfile in ['jsdate.*', 'jsnum.*']:
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
-if CONFIG['JS_BUNDLED_EDITLINE']:
-    DIRS += ['editline']
-
 if not CONFIG['JS_DISABLE_SHELL']:
     DIRS += ['shell']
 
