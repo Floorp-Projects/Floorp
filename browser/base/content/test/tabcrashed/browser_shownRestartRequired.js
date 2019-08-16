@@ -23,7 +23,7 @@ function crashTabTestHelper() {
       // Simulate buildID mismatch.
       TabCrashHandler.testBuildIDMismatch = true;
 
-      await BrowserTestUtils.crashBrowser(browser, false);
+      await BrowserTestUtils.crashFrame(browser, false);
       let doc = browser.contentDocument;
 
       // Since about:restartRequired will run in the parent process, we can safely

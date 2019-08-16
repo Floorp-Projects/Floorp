@@ -327,7 +327,7 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
                                                 JSScript* script) {
   MOZ_ASSERT(IsBaselineInterpreterEnabled());
 
-  if (script->jitScript()) {
+  if (script->hasJitScript()) {
     return Method_Compiled;
   }
 
@@ -961,7 +961,7 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
     for (auto script = zone->cellIter<JSScript>(); !script.done();
          script.next()) {
       if (enable) {
-        if (JitScript* jitScript = script->jitScript()) {
+        if (JitScript* jitScript = script->maybeJitScript()) {
           jitScript->ensureProfileString(cx, script);
         }
       }

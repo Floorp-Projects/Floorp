@@ -1258,9 +1258,13 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCrossProcessRedirectDone(
     const nsresult& aResult,
     const mozilla::Maybe<LoadInfoArgs>& aLoadInfoArgs) {
   RefPtr<nsHttpChannel> chan = do_QueryObject(mChannel);
-  nsresult rv = NS_OK;
+  nsresult rv = aResult;
   auto sendReply =
       MakeScopeExit([&]() { FinishCrossProcessRedirect(chan, rv); });
+
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
 
   nsCOMPtr<nsILoadInfo> newLoadInfo;
   rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(newLoadInfo));

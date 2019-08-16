@@ -55,7 +55,7 @@ add_task(async function() {
   await testOpenInDebugger(
     hud,
     toolbox,
-    "[Logpoint threw]: undefinedVariable is not defined",
+    "undefinedVariable is not defined",
     true,
     false,
     false,
@@ -90,7 +90,7 @@ add_task(async function() {
   await testOpenInDebugger(
     hud,
     toolbox,
-    "[Logpoint threw]: undefinedVariable is not defined",
+    "undefinedVariable is not defined",
     true,
     9,
     12

@@ -5346,7 +5346,7 @@ MDefinition* IonBuilder::createThisScriptedSingleton(JSFunction* target) {
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  JitScript* jitScript = targetScript->jitScript();
+  JitScript* jitScript = targetScript->maybeJitScript();
   if (!jitScript) {
     return nullptr;
   }
@@ -5416,7 +5416,7 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  JitScript* jitScript = targetScript->jitScript();
+  JitScript* jitScript = targetScript->maybeJitScript();
   if (!jitScript) {
     return nullptr;
   }
@@ -6117,7 +6117,7 @@ bool IonBuilder::testNeedsArgumentCheck(JSFunction* target,
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  JitScript* jitScript = targetScript->jitScript();
+  JitScript* jitScript = targetScript->maybeJitScript();
   if (!jitScript) {
     return true;
   }

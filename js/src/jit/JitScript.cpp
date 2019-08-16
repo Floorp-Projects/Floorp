@@ -66,7 +66,7 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
 }
 
 bool JSScript::createJitScript(JSContext* cx) {
-  MOZ_ASSERT(!jitScript_);
+  MOZ_ASSERT(!hasJitScript());
   cx->check(this);
 
   // Scripts with a JitScript can run in the Baseline Interpreter. Make sure
@@ -83,7 +83,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   }
 
   // If ensureHasAnalyzedArgsUsage allocated the JitScript we're done.
-  if (jitScript_) {
+  if (hasJitScript()) {
     return true;
   }
 
@@ -140,7 +140,7 @@ bool JSScript::createJitScript(JSContext* cx) {
     return false;
   }
 
-  MOZ_ASSERT(!jitScript_);
+  MOZ_ASSERT(!hasJitScript());
   prepareForDestruction.release();
   jitScript_ = jitScript.release();
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
@@ -151,19 +151,19 @@ bool JSScript::createJitScript(JSContext* cx) {
 
 #ifdef DEBUG
   AutoSweepJitScript sweep(this);
-  StackTypeSet* typeArray = jitScript_->typeArrayDontCheckGeneration();
+  StackTypeSet* typeArray = this->jitScript()->typeArrayDontCheckGeneration();
   for (unsigned i = 0; i < numBytecodeTypeSets(); i++) {
     InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u %p",
               InferSpewColor(&typeArray[i]), &typeArray[i],
               InferSpewColorReset(), i, this);
   }
-  StackTypeSet* thisTypes = jitScript_->thisTypes(sweep, this);
+  StackTypeSet* thisTypes = this->jitScript()->thisTypes(sweep, this);
   InferSpew(ISpewOps, "typeSet: %sT%p%s this %p", InferSpewColor(thisTypes),
             thisTypes, InferSpewColorReset(), this);
   unsigned nargs =
       functionNonDelazifying() ? functionNonDelazifying()->nargs() : 0;
   for (unsigned i = 0; i < nargs; i++) {
-    StackTypeSet* types = jitScript_->argTypes(sweep, this, i);
+    StackTypeSet* types = this->jitScript()->argTypes(sweep, this, i);
     InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u %p", InferSpewColor(types),
               types, InferSpewColorReset(), i, this);
   }
@@ -175,8 +175,8 @@ bool JSScript::createJitScript(JSContext* cx) {
 void JSScript::maybeReleaseJitScript(JSFreeOp* fop) {
   MOZ_ASSERT(hasJitScript());
 
-  if (zone()->types.keepJitScripts || jitScript_->hasBaselineScript() ||
-      jitScript_->active()) {
+  if (zone()->types.keepJitScripts || jitScript()->hasBaselineScript() ||
+      jitScript()->active()) {
     return;
   }
 
@@ -188,9 +188,9 @@ void JSScript::releaseJitScript(JSFreeOp* fop) {
   MOZ_ASSERT(!hasBaselineScript());
   MOZ_ASSERT(!hasIonScript());
 
-  fop->removeCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);
+  fop->removeCellMemory(this, jitScript()->allocBytes(), MemoryUse::JitScript);
 
-  JitScript::Destroy(zone(), jitScript_);
+  JitScript::Destroy(zone(), jitScript());
   jitScript_ = nullptr;
   updateJitCodeRaw(fop->runtime());
 }

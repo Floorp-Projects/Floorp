@@ -2229,6 +2229,16 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     GetRootFrame()->SetComputedStyleWithoutNotification(sc);
   }
 
+  ServoStyleSet* set = mPresShell->StyleSet();
+
+  // Ensure the document element is styled at this point.
+  if (!aDocElement->HasServoData()) {
+    // NOTE(emilio): If the root has a non-null binding, we'll stop at the
+    // document element and won't process any children, loading the bindings
+    // (or failing to do so) will take care of the rest.
+    set->StyleNewSubtree(aDocElement);
+  }
+
   // Make sure to call UpdateViewportScrollStylesOverride before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
@@ -2248,16 +2258,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   // XXXbz why, exactly?
   if (!mTempFrameTreeState)
     state.mPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
-
-  // --------- CREATE AREA OR BOX FRAME -------
-  ServoStyleSet* set = mPresShell->StyleSet();
-  // Ensure the document element is styled at this point.
-  if (!aDocElement->HasServoData()) {
-    // NOTE(emilio): If the root has a non-null binding, we'll stop at the
-    // document element and won't process any children, loading the bindings
-    // (or failing to do so) will take care of the rest.
-    set->StyleNewSubtree(aDocElement);
-  }
 
   RefPtr<ComputedStyle> computedStyle =
       ServoStyleSet::ResolveServoStyle(*aDocElement);
@@ -4723,12 +4723,15 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::ResolveComputedStyle(
   // can go. Note that this is not a correctness issue, since we'll restyle
   // later in any case.
   //
-  // Also, this probably doesn't need to be a strong ref...
-  //
   // Do NOT add new callers to this function in this file, ever, or I'll find
   // out.
-  RefPtr<ComputedStyle> parentStyle =
-      Servo_Element_GetPrimaryComputedValues(parent).Consume();
+  //
+  // FIXME(emilio): The const_cast is unfortunate, but it's not worse than what
+  // we did before.
+  auto* parentStyle =
+      const_cast<ComputedStyle*>(Servo_Element_GetMaybeOutOfDateStyle(parent));
+  MOZ_ASSERT(parentStyle,
+             "How are we inserting text frames in an unstyled element?");
   return mPresShell->StyleSet()->ResolveStyleForText(aContent, parentStyle);
 }
 

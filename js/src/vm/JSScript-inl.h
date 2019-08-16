@@ -172,23 +172,23 @@ inline bool JSScript::isDebuggee() const {
 }
 
 inline bool JSScript::hasBaselineScript() const {
-  return jitScript_ && jitScript_->hasBaselineScript();
+  return hasJitScript() && jitScript()->hasBaselineScript();
 }
 
 inline bool JSScript::hasIonScript() const {
-  return jitScript_ && jitScript_->hasIonScript();
+  return hasJitScript() && jitScript()->hasIonScript();
 }
 
 inline bool JSScript::isIonCompilingOffThread() const {
-  return jitScript_ && jitScript_->isIonCompilingOffThread();
+  return hasJitScript() && jitScript()->isIonCompilingOffThread();
 }
 
 inline bool JSScript::canBaselineCompile() const {
   bool disabled = hasFlag(MutableFlags::BaselineDisabled);
 #ifdef DEBUG
-  if (jitScript_) {
+  if (hasJitScript()) {
     bool jitScriptDisabled =
-        jitScript_->baselineScript_ == js::jit::BaselineDisabledScriptPtr;
+        jitScript()->baselineScript_ == js::jit::BaselineDisabledScriptPtr;
     MOZ_ASSERT(disabled == jitScriptDisabled);
   }
 #endif
@@ -198,9 +198,9 @@ inline bool JSScript::canBaselineCompile() const {
 inline bool JSScript::canIonCompile() const {
   bool disabled = hasFlag(MutableFlags::IonDisabled);
 #ifdef DEBUG
-  if (jitScript_) {
+  if (hasJitScript()) {
     bool jitScriptDisabled =
-        jitScript_->ionScript_ == js::jit::IonDisabledScriptPtr;
+        jitScript()->ionScript_ == js::jit::IonDisabledScriptPtr;
     MOZ_ASSERT(disabled == jitScriptDisabled);
   }
 #endif
@@ -210,24 +210,25 @@ inline bool JSScript::canIonCompile() const {
 inline void JSScript::disableBaselineCompile() {
   MOZ_ASSERT(!hasBaselineScript());
   setFlag(MutableFlags::BaselineDisabled);
-  if (jitScript_) {
-    jitScript_->setBaselineScriptImpl(this, js::jit::BaselineDisabledScriptPtr);
+  if (hasJitScript()) {
+    jitScript()->setBaselineScriptImpl(this,
+                                       js::jit::BaselineDisabledScriptPtr);
   }
 }
 
 inline void JSScript::disableIon() {
   setFlag(MutableFlags::IonDisabled);
-  if (jitScript_) {
-    jitScript_->setIonScriptImpl(this, js::jit::IonDisabledScriptPtr);
+  if (hasJitScript()) {
+    jitScript()->setIonScriptImpl(this, js::jit::IonDisabledScriptPtr);
   }
 }
 
 inline js::jit::BaselineScript* JSScript::baselineScript() const {
-  return jitScript_->baselineScript();
+  return jitScript()->baselineScript();
 }
 
 inline js::jit::IonScript* JSScript::ionScript() const {
-  return jitScript_->ionScript();
+  return jitScript()->ionScript();
 }
 
 #endif /* vm_JSScript_inl_h */

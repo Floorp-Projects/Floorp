@@ -483,7 +483,7 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
   // for about: pages. This pref name did not age well: we will have multiple
   // types of privileged content processes, each with different privileges.
   // types of privleged content processes, each with different privleges.
-  pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
+  pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
   // Pref to control whether we use a separate privileged content process
   // for certain mozilla webpages (which are listed in the pref
   // browser.tabs.remote.separatedMozillaDomains).
@@ -1773,10 +1773,15 @@ pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
 pref("signon.management.page.faqURL", "https://lockwise.firefox.com/faq.html");
 pref("signon.management.page.feedbackURL",
      "https://www.surveygizmo.com/s3/5036102/Lockwise-feedback?ver=%VERSION%");
-pref("signon.management.page.mobileAndroidURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dmozilla.lockbox&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=Elipsis_Menu");
-pref("signon.management.page.mobileAppleURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fitunes.apple.com%2Fapp%2Fid1314000270%3Fmt%3D8&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=Elipsis_Menu");
+// The utm_creative value is appended within the code (specific to the location on
+// where it is clicked). Be sure that if these two prefs are updated, that
+// the utm_creative param be last. 
+pref("signon.management.page.mobileAndroidURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dmozilla.lockbox&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=");
+pref("signon.management.page.mobileAppleURL", "https://app.adjust.com/6tteyjo?redirect=https%3A%2F%2Fitunes.apple.com%2Fapp%2Fid1314000270%3Fmt%3D8&utm_campaign=Desktop&utm_adgroup=InProduct&utm_creative=");
 pref("signon.management.page.breachAlertUrl",
      "https://monitor.firefox.com/breach-details/");
+
+pref("signon.management.page.hideMobileFooter", false);
 
 // Enable the "Simplify Page" feature in Print Preview. This feature
 // is disabled by default in toolkit.

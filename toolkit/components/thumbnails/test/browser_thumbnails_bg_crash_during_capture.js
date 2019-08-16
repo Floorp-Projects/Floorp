@@ -47,7 +47,7 @@ function* runTests() {
   });
 
   info("Crashing the thumbnail content process.");
-  let crash = yield BrowserTestUtils.crashBrowser(
+  let crash = yield BrowserTestUtils.crashFrame(
     BackgroundPageThumbs._thumbBrowser,
     false
   );

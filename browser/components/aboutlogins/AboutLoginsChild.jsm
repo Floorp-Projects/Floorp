@@ -34,6 +34,8 @@ const TELEMETRY_EVENT_CATEGORY = "pwmgr";
 
 let masterPasswordPromise;
 
+const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
+
 class AboutLoginsChild extends ActorChild {
   handleEvent(event) {
     switch (event.type) {
@@ -72,6 +74,10 @@ class AboutLoginsChild extends ActorChild {
             cloneFunctions: true,
           }
         );
+        this.sendToContent("InitialInfo", {
+          hideMobileFooter: Services.prefs.getBoolPref(HIDE_MOBILE_FOOTER_PREF),
+          appLocales: Services.locale.appLocalesAsBCP47,
+        });
         break;
       }
       case "AboutLoginsCopyLoginDetail": {
@@ -96,6 +102,10 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
+      case "AboutLoginsHideFooter": {
+        this.mm.sendAsyncMessage("AboutLogins:HideFooter");
+        break;
+      }
       case "AboutLoginsImport": {
         this.mm.sendAsyncMessage("AboutLogins:Import");
         break;
@@ -105,11 +115,15 @@ class AboutLoginsChild extends ActorChild {
         break;
       }
       case "AboutLoginsOpenMobileAndroid": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenMobileAndroid");
+        this.mm.sendAsyncMessage("AboutLogins:OpenMobileAndroid", {
+          source: event.detail,
+        });
         break;
       }
       case "AboutLoginsOpenMobileIos": {
-        this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos");
+        this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos", {
+          source: event.detail,
+        });
         break;
       }
       case "AboutLoginsOpenFeedback": {
@@ -162,6 +176,9 @@ class AboutLoginsChild extends ActorChild {
     switch (message.name) {
       case "AboutLogins:AllLogins":
         this.sendToContent("AllLogins", message.data);
+        break;
+      case "AboutLogins:LocalizeBadges":
+        this.sendToContent("LocalizeBadges", message.data);
         break;
       case "AboutLogins:LoginAdded":
         this.sendToContent("LoginAdded", message.data);

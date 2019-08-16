@@ -12,7 +12,7 @@ import tarfile
 from io import BytesIO
 
 from taskgraph.parameters import Parameters
-from taskgraph.optimize import IndexSearch
+from taskgraph.optimize.strategies import IndexSearch
 from taskgraph.util import docker
 from taskgraph.util.taskcluster import (
     get_artifact_url,
