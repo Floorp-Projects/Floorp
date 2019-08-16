@@ -1823,12 +1823,6 @@ void CompositorOGL::CopyToTarget(DrawTarget* aTarget,
     return;
   }
 
-  if (!mGLContext->IsGLES()) {
-    // GLES2 promises that binding to any custom FBO will attach
-    // to GL_COLOR_ATTACHMENT0 attachment point.
-    mGLContext->fReadBuffer(LOCAL_GL_BACK);
-  }
-
   RefPtr<DataSourceSurface> source = Factory::CreateDataSourceSurface(
       rect.Size(), gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!source)) {
