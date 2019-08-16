@@ -4,7 +4,6 @@
 
 /*---
 esid: sec-promise.all
-es6id: 25.4.4.1
 description: >
   Error when accessing an iterator result's `value` property (rejecting
   promise)

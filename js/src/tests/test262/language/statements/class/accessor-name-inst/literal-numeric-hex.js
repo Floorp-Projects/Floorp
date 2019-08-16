@@ -4,7 +4,6 @@
 /*---
 description: Computed values as accessor property names (numeric literal in hexadecimal notation) (Class declaration, instance method)
 esid: sec-runtime-semantics-classdefinitionevaluation
-es6id: 14.5.14
 flags: [generated]
 info: |
     [...]
