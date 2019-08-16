@@ -27,6 +27,15 @@ flat varying int vFuncs[4];
 #define FILTER_OFFSET               7
 #define FILTER_COMPONENT_TRANSFER   8
 #define FILTER_IDENTITY             9
+#define FILTER_COMPOSITE            10
+
+#define COMPOSITE_OVER       0
+#define COMPOSITE_IN         1
+#define COMPOSITE_OUT        2
+#define COMPOSITE_ATOP       3
+#define COMPOSITE_XOR        4
+#define COMPOSITE_LIGHTER    5
+#define COMPOSITE_ARITHMETIC 6
 
 #ifdef WR_VERTEX_SHADER
 
@@ -140,6 +149,12 @@ void main(void) {
             break;
         case FILTER_COMPONENT_TRANSFER:
             vData = ivec4(aFilterExtraDataAddress, 0, 0);
+            break;
+        case FILTER_COMPOSITE:
+            vData = ivec4(aFilterGenericInt, 0, 0, 0);
+            if (aFilterGenericInt == COMPOSITE_ARITHMETIC) {
+              vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            }
             break;
         default:
             break;
@@ -452,6 +467,46 @@ vec4 ComponentTransfer(vec4 colora) {
     return colora;
 }
 
+// Composite Filter
+
+vec4 composite(vec4 Cs, vec4 Cb, int mode) {
+    vec4 Cr = vec4(0.0, 1.0, 0.0, 1.0);
+    switch (mode) {
+        case COMPOSITE_OVER:
+            Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_IN:
+            Cr.rgb = Cs.a * Cs.rgb * Cb.a;
+            Cr.a = Cs.a * Cb.a;
+            break;
+        case COMPOSITE_OUT:
+            Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a);
+            Cr.a = Cs.a * (1.0 - Cb.a);
+            break;
+        case COMPOSITE_ATOP:
+            Cr.rgb = Cs.a * Cs.rgb * Cb.a + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a * Cb.a + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_XOR:
+            Cr.rgb = Cs.a * Cs.rgb * (1.0 - Cb.a) + Cb.a * Cb.rgb * (1.0 - Cs.a);
+            Cr.a = Cs.a * (1.0 - Cb.a) + Cb.a * (1.0 - Cs.a);
+            break;
+        case COMPOSITE_LIGHTER:
+            Cr.rgb = Cs.a * Cs.rgb + Cb.a * Cb.rgb;
+            Cr.a = Cs.a + Cb.a;
+            Cr = clamp(Cr, vec4(0.0), vec4(1.0));
+            break;
+        case COMPOSITE_ARITHMETIC:
+            Cr = vec4(vFilterData0.x) * Cs * Cb + vec4(vFilterData0.y) * Cs + vec4(vFilterData0.z) * Cb + vec4(vFilterData0.w);
+            Cr = clamp(Cr, vec4(0.0), vec4(1.0));
+            break;
+        default:
+            break;
+    }
+    return Cr;
+}
+
 vec4 sampleInUvRect(sampler2DArray sampler, vec3 uv, vec4 uvRect) {
     vec2 clamped = clamp(uv.xy, uvRect.xy, uvRect.zw);
     return texture(sampler, vec3(clamped, uv.z), 0.0);
@@ -521,6 +576,9 @@ void main(void) {
         case FILTER_IDENTITY:
             result = Ca;
             break;
+        case FILTER_COMPOSITE:
+            result = composite(Ca, Cb, vData.x);
+            needsPremul = false;
         default:
             break;
     }

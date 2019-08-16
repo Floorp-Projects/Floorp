@@ -60,3 +60,4 @@ platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-filter-drop-s
 == backdrop-filter-basic.yaml backdrop-filter-basic-ref.yaml
 platform(linux,mac) == backdrop-filter-perspective.yaml backdrop-filter-perspective.png
 platform(linux,max) == svg-filter-offset.yaml svg-filter-offset-ref.yaml
+skip_on(android) == fuzzy(1,100) svg-filter-composite.yaml svg-filter-composite-ref.yaml
