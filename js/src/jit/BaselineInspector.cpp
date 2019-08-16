@@ -127,10 +127,7 @@ static bool GetCacheIRReceiverForNativeSetSlot(ICCacheIR_Updated* stub,
   return true;
 }
 
-JitScript* BaselineInspector::jitScript() const {
-  MOZ_ASSERT(script->hasJitScript());
-  return script->jitScript();
-}
+JitScript* BaselineInspector::jitScript() const { return script->jitScript(); }
 
 ICEntry& BaselineInspector::icEntryFromPC(jsbytecode* pc) {
   ICEntry* entry = maybeICEntryFromPC(pc);
@@ -805,7 +802,7 @@ JSObject* BaselineInspector::getTemplateObjectForClassHook(
 }
 
 LexicalEnvironmentObject* BaselineInspector::templateNamedLambdaObject() {
-  JSObject* res = script->jitScript()->templateEnvironment();
+  JSObject* res = jitScript()->templateEnvironment();
   if (script->bodyScope()->hasEnvironment()) {
     res = res->enclosingEnvironment();
   }
@@ -815,7 +812,7 @@ LexicalEnvironmentObject* BaselineInspector::templateNamedLambdaObject() {
 }
 
 CallObject* BaselineInspector::templateCallObject() {
-  JSObject* res = script->jitScript()->templateEnvironment();
+  JSObject* res = jitScript()->templateEnvironment();
   MOZ_ASSERT(res);
 
   return &res->as<CallObject>();
