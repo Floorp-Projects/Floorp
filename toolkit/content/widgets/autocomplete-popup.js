@@ -96,9 +96,9 @@
             }
           },
         };
-        this.richlistbox.addEventListener("mouseup", this.listEvents);
-        this.richlistbox.addEventListener("mousemove", this.listEvents);
       }
+      this.richlistbox.addEventListener("mouseup", this.listEvents);
+      this.richlistbox.addEventListener("mousemove", this.listEvents);
     }
 
     get richlistbox() {
@@ -238,9 +238,8 @@
     }
 
     _openAutocompletePopup(aInput, aElement) {
-      if (!this._initialized) {
+      if (!this._richlistbox) {
         this.initialize();
-        this._initialized = true;
       }
 
       if (!this.mPopupOpen) {
