@@ -1,0 +1,71 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.bouncer_submission:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    description: release bouncer submission job
+    worker-type:
+        by-release-level:
+            production: scriptworker-prov-v1/bouncer-v1
+            staging: scriptworker-prov-v1/bouncer-dev
+    worker:
+        implementation: bouncer-submission
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:bouncer:action:submission
+                - project:releng:bouncer:server:production-nazgul
+            staging:
+                - project:releng:bouncer:action:submission
+                - project:releng:bouncer:server:staging-nazgul
+    run-on-projects: []
+    shipping-phase: promote
+    locales-file: browser/locales/shipped-locales
+    treeherder:
+        symbol: Rel(BncSubNazgul)
+        kind: test
+        tier: 3
+
+jobs:
+    devedition:
+        bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
+        bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
+        shipping-product: devedition
+        treeherder:
+            platform: devedition-release/opt
+
+    fennec:
+        bouncer-platforms: ['android', 'android-x86']
+        bouncer-products: ['apk']
+        shipping-product: fennec
+        locales-file: mobile/locales/l10n-changesets.json
+        treeherder:
+            platform: fennec-release/opt
+
+    firefox:
+        bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
+        bouncer-products:
+            by-release-type:
+                default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
+                esr68: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar', 'msi']
+                # No stub installer in esr60
+                esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+
+    firefox-rc:
+        bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
+        bouncer-products: ['complete-mar-candidates', 'partial-mar-candidates']
+        shipping-product: firefox
+        run-on-releases: ['release-rc']
+        treeherder:
+            symbol: Rel(BncSubNazgul-RC)
+            platform: firefox-release/opt
