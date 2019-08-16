@@ -172,17 +172,16 @@ testName(ExtendedExpr3, "base", false, false, false);
 
 // ---- anonymous ----
 
-// Anonymous class expressions don't get name properties unless specified in a
-// static manner.
+// Anonymous class expressions use the empty string as the default name property.
 // Use property assignment to avoid setting name property.
 let tmp = {};
 let Anon = tmp.value = class {
     constructor() {}
 };
-testName(Anon, "", false, false, false);
+testName(Anon, "", true, false, false);
 
 let AnonDefault = tmp.value = class { };
-testName(AnonDefault, "", false, false, false);
+testName(AnonDefault, "", true, false, false);
 
 let AnonWithGetter = tmp.value = class {
     constructor() {}
@@ -207,10 +206,10 @@ testName(AnonWithGetterSetter, "base", false, true, true);
 let ExtendedAnon1 = tmp.value = class extends Anon {
     constructor() {}
 };
-testName(ExtendedAnon1, "", false, false, false);
+testName(ExtendedAnon1, "", true, false, false);
 
 let ExtendedAnonDefault = tmp.value = class extends Anon { };
-testName(ExtendedAnonDefault, "", false, false, false);
+testName(ExtendedAnonDefault, "", true, false, false);
 
 let ExtendedAnon2 = tmp.value = class extends AnonWithGetterSetter {
     constructor() {}
