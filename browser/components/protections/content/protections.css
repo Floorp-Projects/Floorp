@@ -4,18 +4,22 @@
 :root {
   --card-padding: 24px;
   --social-color: #9059FF;
-  --social-color-darker: #7F40FF;
   --cookie-color: #0090F4;
-  --cookie-color-darker: #0073C3;
   --tracker-color: #2AC3A2;
-  --tracker-color-darker: #229C82;
-  --orange: #FFA436;
-  --dark-orange: #FF981D;
-  --grey: #8F8F9D;
-  --dark-grey: #818191;
+  --fingerprinter-color: #FFA436;
+  --cryptominer-color: #ADADBC;
+
+  /* Highlight colors for trackers */
+  --social-highlight-color: #7B4CDB;
+  --cookie-highlight-color: #0081DB;
+  --tracker-highlight-color: #23A488;
+  --fingerprinter-highlight-color: #D37F17;
+  --cryptominer-highlight-color: #9292A0;
+
   --tab-highlight: var(--social-color); /* start with social selected */
   --column-width: 16px;
   --graph-empty: #CECECF;
+
   /* Colors for the loading indicator */
   --protection-report-loader-color-stop: #AEAEAE3D;
   --protection-report-loader-gradient-opacity: .95;
@@ -38,11 +42,11 @@ body[focuseddatatype=tracker] {
 }
 
 body[focuseddatatype=fingerprinter] {
-  --tab-highlight: var(--orange);
+  --tab-highlight: var(--fingerprinter-color);
 }
 
 body[focuseddatatype=cryptominer] {
-  --tab-highlight: var(--grey);
+  --tab-highlight: var(--cryptominer-color);
 }
 
 h2 {
@@ -109,9 +113,19 @@ a.hidden,
   background: url("chrome://browser/content/logos/tracking-protection.svg") no-repeat center/contain;
 }
 
-@media (prefers-color-scheme: dark) {
-  .etp-card .icon {
-    background: url("chrome://browser/content/logos/tracking-protection-dark-theme.svg") no-repeat center/contain;
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --social-highlight-color: #9661FF;
+      --cookie-highlight-color: #2BA8FF;
+      --tracker-highlight-color: #39E1BC;
+      --fingerprinter-highlight-color: #FFB65E;
+      --cryptominer-highlight-color: #BEBECA;
+    }
+
+    .etp-card .icon {
+      background: url("chrome://browser/content/logos/tracking-protection-dark-theme.svg") no-repeat center/contain;
+    }
   }
 }
 
@@ -248,7 +262,7 @@ a.hidden,
 }
 
 .hover-social .social-bar {
-  background-color: var(--social-color-darker);
+  background-color: var(--social-highlight-color);
 }
 
 .cookie-bar {
@@ -256,7 +270,7 @@ a.hidden,
 }
 
 .hover-cookie .cookie-bar {
-  background-color: var(--cookie-color-darker);
+  background-color: var(--cookie-highlight-color);
 }
 
 .tracker-bar {
@@ -264,23 +278,23 @@ a.hidden,
 }
 
 .hover-tracker .tracker-bar {
-  background-color: var(--tracker-color-darker);
+  background-color: var(--tracker-highlight-color);
 }
 
 .fingerprinter-bar {
-  background-color: var(--orange);
+  background-color: var(--fingerprinter-color);
 }
 
 .hover-fingerprinter .fingerprinter-bar {
-  background-color: var(--dark-orange);
+  background-color: var(--fingerprinter-highlight-color);
 }
 
 .cryptominer-bar {
-  background-color: var(--grey);
+  background-color: var(--cryptominer-color);
 }
 
 .hover-cryptominer .cryptominer-bar {
-  background-color: var(--dark-grey);
+  background-color: var(--cryptominer-highlight-color);
 }
 
 .column-label {
@@ -314,6 +328,7 @@ input[type="radio"] {
 #legend input:focus + label {
   outline: solid 1px;
   outline-offset: -1px;
+  outline-color: var(--tab-highlight);
 }
 
 #legend {
@@ -350,7 +365,6 @@ input[type="radio"] {
   padding-inline-end: 5px;
   border: 3px solid transparent;
   -moz-context-properties: fill;
-  fill: currentColor;
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 16px;
@@ -366,27 +380,27 @@ input[type="radio"] {
 
 label[data-type="social"] {
   background-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
-  color: var(--social-color);
+  fill: var(--social-color);
 }
 
 label[data-type="cookie"] {
   background-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
-  color: var(--cookie-color);
+  fill: var(--cookie-color);
 }
 
 label[data-type="tracker"] {
   background-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
-  color: var(--tracker-color);
+  fill: var(--tracker-color);
 }
 
 label[data-type="fingerprinter"] {
   background-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
-  color: var(--orange);
+  fill: var(--fingerprinter-color);
 }
 
 label[data-type="cryptominer"] {
   background-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
-  color: var(--grey);
+  fill: var(--cryptominer-color);
 }
 
 .hover-social label[for="tab-social"],
@@ -449,14 +463,14 @@ label[for="tab-tracker"]:hover ~ #highlight-hover {
 input[data-type="fingerprinter"]:checked  ~ #highlight,
 .hover-fingerprinter label[for="tab-fingerprinter"] ~ #highlight-hover,
 label[for="tab-fingerprinter"]:hover ~ #highlight-hover {
-  background-color: var(--orange);
+  background-color: var(--fingerprinter-color);
   grid-area: fingerprinter;
 }
 
 input[data-type="cryptominer"]:checked ~ #highlight,
 .hover-cryptominer label[for="tab-cryptominer"] ~ #highlight-hover,
 label[for="tab-cryptominer"]:hover ~ #highlight-hover {
-  background-color: var(--grey);
+  background-color: var(--cryptominer-color);
   grid-area: cryptominer;
 }
 
@@ -477,14 +491,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #lockwise-body-content > .has-logins {
   grid: 1fr 1fr / minmax(70px, auto) 1fr;
   grid-gap: 10px;
-}
-
-.number-of-logins {
-  background-color: var(--dark-grey);
-}
-
-.number-of-synced-devices {
-  background-color: var(--orange);
 }
 
 .inline-text-icon {
@@ -525,9 +531,11 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .block {
+  background-color: var(--grey-60);
   border-radius: 4px;
   text-align: center;
   font-size: 1.125em;
+  font-weight: bold;
   color: #fff;
   padding: 7px;
   line-height: 18px;
@@ -644,7 +652,9 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .number-of-breaches.block {
-  background-color: var(--orange);
+  font-size: 1.45em;
+  color: var(--grey-90);
+  background-color: var(--orange-50);
   padding: 15px;
 }
 
