@@ -1511,11 +1511,6 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
   #endif
 #endif
 
-// Play with different values of the decay time and get telemetry,
-// 0 means to randomize (and persist) the experiment value in users' profiles,
-// -1 means no experiment is run and we use the preferred value for frecency (6h)
-pref("browser.cache.frecency_experiment", 0);
-
 pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
 // Show the translation UI bits, like the info bar, notification icon and preferences.

@@ -1970,7 +1970,7 @@ bool nsStyleImage::IsComplete() const {
   }
 }
 
-bool nsStyleImage::IsLoaded() const {
+bool nsStyleImage::IsSizeAvailable() const {
   switch (mType) {
     case eStyleImageType_Null:
       return false;
@@ -1985,7 +1985,7 @@ bool nsStyleImage::IsLoaded() const {
       uint32_t status = imgIRequest::STATUS_ERROR;
       return NS_SUCCEEDED(req->GetImageStatus(&status)) &&
              !(status & imgIRequest::STATUS_ERROR) &&
-             (status & imgIRequest::STATUS_LOAD_COMPLETE);
+             (status & imgIRequest::STATUS_SIZE_AVAILABLE);
     }
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected image type");

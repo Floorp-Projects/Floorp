@@ -144,23 +144,6 @@ class PannerNodeEngine final : public AudioNodeEngine {
         NS_ERROR("Bad PannerNodeEngine Int32Parameter");
     }
   }
-  void SetThreeDPointParameter(uint32_t aIndex,
-                               const ThreeDPoint& aParam) override {
-    switch (aIndex) {
-      case PannerNode::POSITION:
-        mPositionX.SetValue(aParam.x);
-        mPositionY.SetValue(aParam.y);
-        mPositionZ.SetValue(aParam.z);
-        break;
-      case PannerNode::ORIENTATION:
-        mOrientationX.SetValue(aParam.x);
-        mOrientationY.SetValue(aParam.y);
-        mOrientationZ.SetValue(aParam.z);
-        break;
-      default:
-        NS_ERROR("Bad PannerNodeEngine ThreeDPointParameter");
-    }
-  }
   void SetDoubleParameter(uint32_t aIndex, double aParam) override {
     switch (aIndex) {
       case PannerNode::REF_DISTANCE:

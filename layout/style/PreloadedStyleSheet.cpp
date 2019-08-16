@@ -36,9 +36,12 @@ nsresult PreloadedStyleSheet::GetSheet(StyleSheet** aResult) {
 
   if (!mSheet) {
     RefPtr<css::Loader> loader = new css::Loader;
-    nsresult rv = loader->LoadSheetSync(mURI, mParsingMode, true, &mSheet);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(mSheet);
+    auto result = loader->LoadSheetSync(mURI, mParsingMode,
+                                        css::Loader::UseSystemPrincipal::Yes);
+    if (result.isErr()) {
+      return result.unwrapErr();
+    }
+    mSheet = result.unwrap();
   }
 
   *aResult = mSheet;
@@ -47,21 +50,7 @@ nsresult PreloadedStyleSheet::GetSheet(StyleSheet** aResult) {
 
 nsresult PreloadedStyleSheet::Preload() {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
-
-  // The nsIStyleSheetService.preloadSheet API doesn't tell us which backend
-  // the sheet will be used with, and it seems wasteful to eagerly create
-  // both a CSSStyleSheet and a ServoStyleSheet.  So instead, we guess that
-  // the sheet type we will want matches the current value of the stylo pref,
-  // and preload a sheet of that type.
-  //
-  // If we guess wrong, we will re-load the sheet later with the requested type,
-  // and we won't really have front loaded the loading time as the name
-  // "preload" might suggest.  Also, in theory we could get different data from
-  // fetching the URL again, but for the usage patterns of this API this is
-  // unlikely, and it doesn't seem worth trying to store the contents of the URL
-  // and duplicating a bunch of css::Loader's logic.
   mLoaded = true;
-
   StyleSheet* sheet;
   return GetSheet(&sheet);
 }
@@ -90,11 +79,15 @@ nsresult PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise) {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
   RefPtr<css::Loader> loader = new css::Loader;
-
   RefPtr<StylesheetPreloadObserver> obs =
       new StylesheetPreloadObserver(aPromise, this);
-
-  return loader->LoadSheet(mURI, mParsingMode, false, obs, &mSheet);
+  auto result = loader->LoadSheet(mURI, mParsingMode,
+                                  css::Loader::UseSystemPrincipal::No, obs);
+  if (result.isErr()) {
+    return result.unwrapErr();
+  }
+  mSheet = result.unwrap();
+  return NS_OK;
 }
 
 }  // namespace mozilla

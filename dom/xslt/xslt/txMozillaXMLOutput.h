@@ -38,7 +38,7 @@ class txTransformNotifier final : public nsIScriptLoaderObserver,
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet, bool aWasDeferred,
                               nsresult aStatus) override;
 
   void Init(nsITransformObserver* aObserver);

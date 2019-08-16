@@ -40,6 +40,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/intl/LocaleService.h"
 
 #include "nsEmbedCID.h"
@@ -704,7 +705,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
   bool isPrivateBrowsingWindow =
       Preferences::GetBool("browser.privatebrowsing.autostart");
   bool isUsingRemoteTabs = mozilla::BrowserTabsRemoteAutostart();
-  bool isUsingRemoteSubframes = Preferences::GetBool("fission.autostart");
+  bool isUsingRemoteSubframes = StaticPrefs::fission_autostart();
 
   if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
     // Caller requested a private window

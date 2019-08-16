@@ -945,8 +945,7 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   RootedAnyRef ref(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
-  JSContext* cx = TlsContext.get();
-  uint32_t oldSize = table.grow(delta, cx);
+  uint32_t oldSize = table.grow(delta);
 
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
     switch (table.kind()) {
@@ -954,7 +953,7 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         table.fillAnyRef(oldSize, delta, ref);
         break;
       case TableKind::FuncRef:
-        table.fillFuncRef(oldSize, delta, ref, cx);
+        table.fillFuncRef(oldSize, delta, ref, TlsContext.get());
         break;
       case TableKind::AsmJS:
         MOZ_CRASH("not asm.js");
@@ -1889,7 +1888,7 @@ void Instance::ensureProfilingLabels(bool profilingEnabled) const {
   return code_->ensureProfilingLabels(profilingEnabled);
 }
 
-void Instance::onMovingGrowMemory(uint8_t* prevMemoryBase) {
+void Instance::onMovingGrowMemory() {
   MOZ_ASSERT(!isAsmJS());
   MOZ_ASSERT(!memory_->isShared());
 
@@ -2003,7 +2002,6 @@ void Instance::destroyBreakpointSite(JSFreeOp* fop, uint32_t offset) {
 
 void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                              Metadata::SeenSet* seenMetadata,
-                             ShareableBytes::SeenSet* seenBytes,
                              Code::SeenSet* seenCode,
                              Table::SeenSet* seenTables, size_t* code,
                              size_t* data) const {
@@ -2014,8 +2012,8 @@ void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
   }
 
   if (maybeDebug_) {
-    maybeDebug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode,
-                               code, data);
+    maybeDebug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenCode, code,
+                               data);
   }
 
   code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code,

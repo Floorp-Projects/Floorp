@@ -16,8 +16,8 @@ using namespace mozilla;
 namespace mozilla {
 namespace css {
 
-StreamLoader::StreamLoader(mozilla::css::SheetLoadData* aSheetLoadData)
-    : mSheetLoadData(aSheetLoadData), mStatus(NS_OK) {}
+StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
+    : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
 
 StreamLoader::~StreamLoader() {}
 
@@ -106,7 +106,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,
   // accessing fields of mSheetLoadData from here.
-  mSheetLoadData->mLoader->ParseSheet(utf8String, mSheetLoadData,
+  mSheetLoadData->mLoader->ParseSheet(utf8String, *mSheetLoadData,
                                       Loader::AllowAsyncParse::Yes);
   return NS_OK;
 }

@@ -359,7 +359,7 @@ max-width: ${width}px; max-height: ${height}px`;
         if (references.length) {
           for (let i = references.length - 1; i >= 0; i--) {
             let item = references[i];
-            stack.push([rhsUrl, item[0], item[1], item[2]]);
+            stack.push([rhsUrl, ...item]);
           }
         } else {
           // Reached a leaf node so all of one reference chain passed

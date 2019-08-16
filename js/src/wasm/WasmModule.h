@@ -214,7 +214,6 @@ class Module : public JS::WasmModule {
   // about:memory reporting:
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, Metadata::SeenSet* seenMetadata,
-                     ShareableBytes::SeenSet* seenBytes,
                      Code::SeenSet* seenCode, size_t* code, size_t* data) const;
 
   // GC malloc memory tracking:

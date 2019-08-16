@@ -113,6 +113,18 @@ describe("test String with URL", () => {
     testLinkClick(link, openLink, url);
   });
 
+  it("renders a simple http URL with one slash", () => {
+    const url = "https:/example.com";
+    const openLink = jest.fn();
+    const element = renderRep(url, { openLink, useQuotes: false });
+    expect(element.text()).toEqual(url);
+    const link = element.find("a");
+    expect(link.prop("href")).toBe(url);
+    expect(link.prop("title")).toBe(url);
+
+    testLinkClick(link, openLink, url);
+  });
+
   it("renders a URL with port", () => {
     const url = "https://example.com:443";
     const openLink = jest.fn();

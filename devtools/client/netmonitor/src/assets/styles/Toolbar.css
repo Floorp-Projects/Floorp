@@ -32,6 +32,13 @@
   background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
 }
 
+/* Search button */
+
+.devtools-button.devtools-search-icon::before {
+  background-image: url("chrome://devtools/skin/images/search.svg");
+  background-size: 13px;
+}
+
 /* HAR button */
 
 #devtools-har-button {

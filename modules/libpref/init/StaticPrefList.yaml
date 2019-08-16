@@ -442,11 +442,6 @@
   value: 1.0f
   mirror: always
 
-- name: apz.overscroll.spring_stiffness
-  type: AtomicFloat
-  value: 0.001f
-  mirror: always
-
 - name: apz.overscroll.stop_distance_threshold
   type: AtomicFloat
   value: 5.0f
@@ -2570,6 +2565,13 @@
 #---------------------------------------------------------------------------
 # Prefs starting with "fission."
 #---------------------------------------------------------------------------
+
+# Whether to enable Fission.
+# Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
+- name: fission.autostart
+  type: bool
+  value: false
+  mirror: always
 
 # This pref has no effect within fission windows, it only controls the
 # behaviour within non-fission windows.
