@@ -450,7 +450,7 @@ class WritingMode {
   /**
    * Construct writing mode based on a ComputedStyle.
    */
-  explicit WritingMode(ComputedStyle* aComputedStyle) {
+  explicit WritingMode(const ComputedStyle* aComputedStyle) {
     NS_ASSERTION(aComputedStyle, "we need an ComputedStyle here");
     InitFromStyleVisibility(aComputedStyle->StyleVisibility());
   }

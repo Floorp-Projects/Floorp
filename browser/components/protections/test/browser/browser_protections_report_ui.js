@@ -240,6 +240,11 @@ add_task(async function test_graph_display() {
       "Trackers have the correct role"
     );
     is(
+      allBars[6].querySelector(".tracker-bar").getAttribute("role"),
+      "img",
+      "Tracker bar has the correct image role"
+    );
+    is(
       allBars[6].querySelector(".tracker-bar").getAttribute("aria-label"),
       "1 tracking content (10%)",
       "Trackers have the correct accessible text"
@@ -255,6 +260,11 @@ add_task(async function test_graph_display() {
         .parentNode.getAttribute("role"),
       "cell",
       "Cryptominers have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".cryptominer-bar").getAttribute("role"),
+      "img",
+      "Cryptominer bar has the correct image role"
     );
     is(
       allBars[6].querySelector(".cryptominer-bar").getAttribute("aria-label"),
@@ -274,6 +284,11 @@ add_task(async function test_graph_display() {
       "Fingerprinters have the correct role"
     );
     is(
+      allBars[6].querySelector(".fingerprinter-bar").getAttribute("role"),
+      "img",
+      "Fingerprinter bar has the correct image role"
+    );
+    is(
       allBars[6].querySelector(".fingerprinter-bar").getAttribute("aria-label"),
       "2 fingerprinters (20%)",
       "Fingerprinters have the correct accessible label"
@@ -289,6 +304,11 @@ add_task(async function test_graph_display() {
       "cross site tracking cookies have the correct role"
     );
     is(
+      allBars[6].querySelector(".cookie-bar").getAttribute("role"),
+      "img",
+      "Cross site tracking cookies bar has the correct image role"
+    );
+    is(
       allBars[6].querySelector(".cookie-bar").getAttribute("aria-label"),
       "4 cross-site tracking cookies (40%)",
       "cross site tracking cookies have the correct accessible label"
@@ -302,6 +322,11 @@ add_task(async function test_graph_display() {
       allBars[6].querySelector(".social-bar").parentNode.getAttribute("role"),
       "cell",
       "social trackers have the correct role"
+    );
+    is(
+      allBars[6].querySelector(".social-bar").getAttribute("role"),
+      "img",
+      "social tracker bar has the correct image role"
     );
     is(
       allBars[6].querySelector(".social-bar").getAttribute("aria-label"),

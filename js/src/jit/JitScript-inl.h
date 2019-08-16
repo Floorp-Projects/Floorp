@@ -103,7 +103,10 @@ inline bool JitScript::typesNeedsSweep(Zone* zone) const {
 
 inline bool JSScript::ensureHasJitScript(JSContext* cx,
                                          js::jit::AutoKeepJitScripts&) {
-  return jitScript() || createJitScript(cx);
+  if (hasJitScript()) {
+    return true;
+  }
+  return createJitScript(cx);
 }
 
 #endif /* jit_JitScript_inl_h */

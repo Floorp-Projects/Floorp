@@ -41,7 +41,7 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
 NS_INTERFACE_MAP_END
 
-nsresult nsViewSourceChannel::Init(nsIURI* uri) {
+nsresult nsViewSourceChannel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
   mOriginalURI = uri;
 
   nsAutoCString path;
@@ -61,23 +61,12 @@ nsresult nsViewSourceChannel::Init(nsIURI* uri) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  // This function is called from within nsViewSourceHandler::NewChannel
-  // and sets the right loadInfo right after returning from this function.
-  // Until then we follow the principal of least privilege and use
-  // nullPrincipal as the loadingPrincipal and the least permissive
-  // securityflag.
-  nsCOMPtr<nsIPrincipal> nullPrincipal =
-      mozilla::NullPrincipal::CreateWithoutOriginAttributes();
+  nsCOMPtr<nsIURI> newChannelURI;
+  rv = pService->NewURI(path, nullptr, nullptr, getter_AddRefs(newChannelURI));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = pService->NewChannel(
-      path,
-      nullptr,  // aOriginCharset
-      nullptr,  // aCharSet
-      nullptr,  // aLoadingNode
-      nullPrincipal,
-      nullptr,  // aTriggeringPrincipal
-      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-      nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
+  rv = pService->NewChannelFromURIWithLoadInfo(newChannelURI, aLoadInfo,
+                                               getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIsSrcdocChannel = false;

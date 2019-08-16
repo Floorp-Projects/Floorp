@@ -93,7 +93,7 @@ async function crashBackgroundTabs(tabs) {
     return promiseTabRestoring(t);
   });
 
-  await BrowserTestUtils.crashBrowser(tabs[0].linkedBrowser, false);
+  await BrowserTestUtils.crashFrame(tabs[0].linkedBrowser, false);
   await Promise.all(remotenessChangePromises);
   await Promise.all(tabsRevived);
 
@@ -246,7 +246,7 @@ add_task(async function test_preload_crash() {
   // Create a fresh preloaded browser
   await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
-  await BrowserTestUtils.crashBrowser(gBrowser.preloadedBrowser, false);
+  await BrowserTestUtils.crashFrame(gBrowser.preloadedBrowser, false);
 
   Assert.ok(!gBrowser.preloadedBrowser);
 });

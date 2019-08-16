@@ -286,7 +286,8 @@ static bool AddWscInfo(mozilla::JSONWriter& aJson) {
 
   // We need COM for this. Using ProcessRuntime so that process-global COM
   // configuration is done correctly
-  mozilla::mscom::ProcessRuntime mscom(GeckoProcessType_Default);
+  mozilla::mscom::ProcessRuntime mscom(
+      mozilla::mscom::ProcessRuntime::ProcessCategory::Launcher);
   if (!mscom) {
     // We haven't written anything yet, so we can return true here and continue
     // capturing data.
