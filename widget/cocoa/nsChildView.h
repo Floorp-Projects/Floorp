@@ -217,6 +217,9 @@ class WidgetRenderingContext;
   // The view that does our drawing. Always non-null.
   // This is a subview of self so that it can be ordered on top of mVibrancyViewsContainer.
   // Drawing in this view can be performed in different ways:
+  // If StaticPrefs::gfx_core_animation_enabled_AtStartup() is true, mPixelHostingView
+  // will be layer-backed and all Gecko rendering will be performed into sublayers of
+  // that view's layer.
   // If StaticPrefs::gfx_core_animation_enabled_AtStartup() is false, there are two cases:
   // If mUsingOMTCompositor is false, drawing is performed on the main thread
   // inside the view's drawRect handler. If mUsingOMTCompositor is true,
@@ -457,6 +460,7 @@ class nsChildView final : public nsBaseWidget {
                                const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
+  void HandleMainThreadCATransaction();
 
 #ifdef ACCESSIBILITY
   already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();

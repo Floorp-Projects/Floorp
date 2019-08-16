@@ -168,6 +168,7 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 // The view that will do our drawing or host our NSOpenGLContext or Core Animation layer.
 @interface PixelHostingView : NSView {
 }
+
 @end
 
 @interface ChildView (Private)
@@ -192,6 +193,10 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 - (void)clearCorners;
 
 - (void)setGLOpaque:(BOOL)aOpaque;
+
+- (void)markLayerForDisplay;
+- (CALayer*)rootCALayer;
+- (void)updateRootCALayer;
 
 // Overlay drawing functions for traditional CGContext drawing
 - (void)drawTitleString;
@@ -1392,6 +1397,8 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
 
   return painted;
 }
+
+void nsChildView::HandleMainThreadCATransaction() {}
 
 #pragma mark -
 
@@ -3419,6 +3426,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // If we use CALayers for display, we will call WillPaintWindow during
+    // nsChildView::HandleMainThreadCATransaction, and not here.
     return;
   }
 
@@ -3458,6 +3467,26 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mGeckoChild->WillPaintWindow();
   }
   [super viewWillDraw];
+}
+
+- (void)markLayerForDisplay {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // This call will cause updateRootCALayer to be called during the upcoming
+    // main thread CoreAnimation transaction. It will also trigger a transaction
+    // if no transaction is currently pending.
+    [[mPixelHostingView layer] setNeedsDisplay];
+  }
+}
+
+- (void)updateRootCALayer {
+  if (NS_IsMainThread() && mGeckoChild) {
+    mGeckoChild->HandleMainThreadCATransaction();
+  }
+}
+
+- (CALayer*)rootCALayer {
+  return [mPixelHostingView layer];
 }
 
 // If we've just created a non-native context menu, we need to mark it as
@@ -5924,6 +5953,17 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
 @implementation PixelHostingView
 
+- (id)initWithFrame:(NSRect)aRect {
+  self = [super initWithFrame:aRect];
+
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    self.wantsLayer = YES;
+    self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawDuringViewResize;
+  }
+
+  return self;
+}
+
 - (BOOL)isFlipped {
   return YES;
 }
@@ -5934,9 +5974,19 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
 
 - (void)drawRect:(NSRect)aRect {
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    NS_WARNING("Unexpected call to drawRect: This view returns YES from wantsUpdateLayer, so "
+               "drawRect should not be called.");
     return;
   }
   [(ChildView*)[self superview] doDrawRect:aRect];
+}
+
+- (BOOL)wantsUpdateLayer {
+  return YES;
+}
+
+- (void)updateLayer {
+  [(ChildView*)[self superview] updateRootCALayer];
 }
 
 - (BOOL)wantsBestResolutionOpenGLSurface {
