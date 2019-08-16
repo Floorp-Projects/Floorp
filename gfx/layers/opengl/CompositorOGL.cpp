@@ -212,7 +212,6 @@ CompositorOGL::~CompositorOGL() {
   TextureSync::UnregisterTextureSourceProvider(this);
 #endif
   MOZ_COUNT_DTOR(CompositorOGL);
-  Destroy();
 }
 
 already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
