@@ -485,6 +485,12 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
 
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    // Make the window use CoreAnimation from the start, so that we don't
+    // switch from a non-CA window to a CA-window in the middle.
+    [[mWindow contentView] setWantsLayer:YES];
+  }
+
   // Make sure the window starts out not draggable by the background.
   // We will turn it on as necessary.
   [mWindow setMovableByWindowBackground:NO];
@@ -2824,6 +2830,9 @@ static NSImage* GetMenuMaskImage() {
   } else if (mUseMenuStyle && !aValue) {
     // Turn off rounded corner masking.
     NSView* wrapper = [[NSView alloc] initWithFrame:NSZeroRect];
+    if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+      [wrapper setWantsLayer:YES];
+    }
     [self swapOutChildViewWrapper:wrapper];
     [wrapper release];
   }
