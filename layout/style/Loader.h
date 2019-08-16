@@ -353,8 +353,8 @@ class Loader final {
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
   // pass both.
   //
-  // This method will set the sheet's enabled state based on aIsAlternate
-  MediaMatched PrepareSheet(StyleSheet* aSheet, const nsAString& aTitle,
+  // This method will set the sheet's enabled state based on IsAlternate and co.
+  MediaMatched PrepareSheet(StyleSheet&, const nsAString& aTitle,
                             const nsAString& aMediaString, dom::MediaList*,
                             IsAlternate, IsExplicitlyEnabled);
 
