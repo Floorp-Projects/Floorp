@@ -49,7 +49,7 @@ class DOMMutationBreakpointsContents extends Component<Props> {
       deleteBreakpoint,
     } = this.props;
     return (
-      <li>
+      <li key={breakpoint.id}>
         <input
           type="checkbox"
           checked={breakpoint.enabled}

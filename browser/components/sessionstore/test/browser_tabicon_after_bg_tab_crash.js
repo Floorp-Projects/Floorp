@@ -38,7 +38,7 @@ add_task(async function test_tabicon_after_bg_tab_crash() {
       );
       Assert.equal(browser.mIconURL, FAVICON, "Favicon is correctly set.");
       await BrowserTestUtils.switchTab(gBrowser, originalTab);
-      await BrowserTestUtils.crashBrowser(
+      await BrowserTestUtils.crashFrame(
         browser,
         false /* shouldShowTabCrashPage */
       );

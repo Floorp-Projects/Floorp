@@ -1,20 +1,24 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
-<!--
+  <!--
 Test the formatting of the file name, line and columns are correct in frame components,
 with optional columns, unknown and non-URL sources.
 -->
-<head>
-  <meta charset="utf-8">
-  <title>Frame component test</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
-</head>
-<body>
-<pre id="test">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frame component test</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css"
+    />
+  </head>
+  <body>
+    <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = async function () {
@@ -339,7 +343,6 @@ window.onload = async function () {
         options: { logPoint: true },
       }
     }, {
-      locationPrefix: "Logpoint @ ",
       file: "mahscripts.js",
       line: 55,
       column: 10,
@@ -364,5 +367,5 @@ window.onload = async function () {
 };
 </script>
 </pre>
-</body>
+  </body>
 </html>

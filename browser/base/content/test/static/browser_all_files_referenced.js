@@ -47,6 +47,11 @@ var gExceptionPaths = [
 
   // Exclude all search-extensions because they aren't referenced by filename
   "resource://search-extensions/",
+
+  // Bug 1550165 - Exclude localized App/Play store badges. These badges
+  // are displayed in a promo area on the first load of about:logins.
+  "chrome://browser/content/aboutlogins/third-party/app-store/",
+  "chrome://browser/content/aboutlogins/third-party/play-store/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

@@ -292,7 +292,7 @@ class PackageFrontend(MachCommandBase):
                          'Do not use --from-build in automation; all dependencies '
                          'should be determined in the decision task.')
                 return 1
-            from taskgraph.optimize import IndexSearch
+            from taskgraph.optimize.strategies import IndexSearch
             from taskgraph.parameters import Parameters
             from taskgraph.generator import load_tasks_for_kind
             params = Parameters(

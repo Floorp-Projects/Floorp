@@ -4122,19 +4122,16 @@ void Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
 
     // Now measure just the ComputedValues (and style structs) under
     // mServoData. This counts towards the relevant fields in |aSizes|.
-    RefPtr<ComputedStyle> sc;
-    if (Servo_Element_HasPrimaryComputedValues(this)) {
-      sc = Servo_Element_GetPrimaryComputedValues(this).Consume();
-      if (!aSizes.mState.HaveSeenPtr(sc.get())) {
-        sc->AddSizeOfIncludingThis(aSizes, &aSizes.mLayoutComputedValuesDom);
+    if (auto* style = Servo_Element_GetMaybeOutOfDateStyle(this)) {
+      if (!aSizes.mState.HaveSeenPtr(style)) {
+        style->AddSizeOfIncludingThis(aSizes, &aSizes.mLayoutComputedValuesDom);
       }
 
       for (size_t i = 0; i < PseudoStyle::kEagerPseudoCount; i++) {
-        if (Servo_Element_HasPseudoComputedValues(this, i)) {
-          sc = Servo_Element_GetPseudoComputedValues(this, i).Consume();
-          if (!aSizes.mState.HaveSeenPtr(sc.get())) {
-            sc->AddSizeOfIncludingThis(aSizes,
-                                       &aSizes.mLayoutComputedValuesDom);
+        if (auto* style = Servo_Element_GetMaybeOutOfDatePseudoStyle(this, i)) {
+          if (!aSizes.mState.HaveSeenPtr(style)) {
+            style->AddSizeOfIncludingThis(aSizes,
+                                          &aSizes.mLayoutComputedValuesDom);
           }
         }
       }

@@ -474,7 +474,7 @@ inline void TypeMonitorCall(JSContext* cx, const js::CallArgs& args,
                             bool constructing) {
   if (args.callee().is<JSFunction>()) {
     JSFunction* fun = &args.callee().as<JSFunction>();
-    if (fun->isInterpreted() && fun->nonLazyScript()->jitScript()) {
+    if (fun->isInterpreted() && fun->nonLazyScript()->hasJitScript()) {
       TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
   }
@@ -659,7 +659,7 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
                                                          TypeSet::Type type) {
   cx->check(script, type);
 
-  JitScript* jitScript = script->jitScript();
+  JitScript* jitScript = script->maybeJitScript();
   if (!jitScript) {
     return;
   }
@@ -687,7 +687,7 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
                                                         TypeSet::Type type) {
   cx->check(script->compartment(), type);
 
-  JitScript* jitScript = script->jitScript();
+  JitScript* jitScript = script->maybeJitScript();
   if (!jitScript) {
     return;
   }
@@ -1318,10 +1318,10 @@ inline AutoSweepObjectGroup::~AutoSweepObjectGroup() {
 inline AutoSweepJitScript::AutoSweepJitScript(JSScript* script)
 #ifdef DEBUG
     : zone_(script->zone()),
-      jitScript_(script->jitScript())
+      jitScript_(script->maybeJitScript())
 #endif
 {
-  if (jit::JitScript* jitScript = script->jitScript()) {
+  if (jit::JitScript* jitScript = script->maybeJitScript()) {
     Zone* zone = script->zone();
     if (jitScript->typesNeedsSweep(zone)) {
       jitScript->sweepTypes(*this, zone);

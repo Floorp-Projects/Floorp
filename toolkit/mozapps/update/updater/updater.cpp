@@ -280,8 +280,6 @@ static bool sReplaceRequest = false;
 static bool sUsingService = false;
 
 #ifdef XP_WIN
-// The current working directory specified in the command line.
-static NS_tchar* gDestPath;
 static NS_tchar gCallbackRelPath[MAXPATHLEN];
 static NS_tchar gCallbackBackupPath[MAXPATHLEN];
 static NS_tchar gDeleteDirPath[MAXPATHLEN];
@@ -3379,31 +3377,6 @@ int NS_main(int argc, NS_tchar** argv) {
   }
 
 #ifdef XP_WIN
-  // For replace requests, we don't need to do any real updates, so this is not
-  // necessary.
-  if (!sReplaceRequest) {
-    // Allocate enough space for the length of the path an optional additional
-    // trailing slash and null termination.
-    NS_tchar* destpath =
-        (NS_tchar*)malloc((NS_tstrlen(gWorkingDirPath) + 2) * sizeof(NS_tchar));
-    if (!destpath) {
-      return 1;
-    }
-
-    NS_tchar* c = destpath;
-    NS_tstrcpy(c, gWorkingDirPath);
-    c += NS_tstrlen(gWorkingDirPath);
-    if (gWorkingDirPath[NS_tstrlen(gWorkingDirPath) - 1] != NS_T('/') &&
-        gWorkingDirPath[NS_tstrlen(gWorkingDirPath) - 1] != NS_T('\\')) {
-      NS_tstrcat(c, NS_T("/"));
-      c += NS_tstrlen(NS_T("/"));
-    }
-    *c = NS_T('\0');
-    c++;
-
-    gDestPath = destpath;
-  }
-
   NS_tchar applyDirLongPath[MAXPATHLEN];
   if (!GetLongPathNameW(
           gWorkingDirPath, applyDirLongPath,

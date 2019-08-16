@@ -55,6 +55,8 @@ const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 const PASSWORD_SYNC_NOTIFICATION_ID = "enable-password-sync";
 
+const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
+
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
@@ -138,6 +140,10 @@ var AboutLoginsParent = {
         );
         break;
       }
+      case "AboutLogins:HideFooter": {
+        Services.prefs.setBoolPref(HIDE_MOBILE_FOOTER_PREF, true);
+        break;
+      }
       case "AboutLogins:SyncEnable": {
         message.target.ownerGlobal.gSync.openFxAEmailFirstPage(
           "password-manager"
@@ -179,9 +185,12 @@ var AboutLoginsParent = {
       case "AboutLogins:OpenMobileAndroid": {
         const MOBILE_ANDROID_URL_PREF =
           "signon.management.page.mobileAndroidURL";
-        const MOBILE_ANDROID_URL = Services.prefs.getStringPref(
+        const linkTrackingSource = message.data.source;
+        let MOBILE_ANDROID_URL = Services.prefs.getStringPref(
           MOBILE_ANDROID_URL_PREF
         );
+        // Append the `utm_creative` query parameter value:
+        MOBILE_ANDROID_URL += linkTrackingSource;
         message.target.ownerGlobal.openWebLinkIn(MOBILE_ANDROID_URL, "tab", {
           relatedToCurrent: true,
         });
@@ -189,9 +198,10 @@ var AboutLoginsParent = {
       }
       case "AboutLogins:OpenMobileIos": {
         const MOBILE_IOS_URL_PREF = "signon.management.page.mobileAppleURL";
-        const MOBILE_IOS_URL = Services.prefs.getStringPref(
-          MOBILE_IOS_URL_PREF
-        );
+        const linkTrackingSource = message.data.source;
+        let MOBILE_IOS_URL = Services.prefs.getStringPref(MOBILE_IOS_URL_PREF);
+        // Append the `utm_creative` query parameter value:
+        MOBILE_IOS_URL += linkTrackingSource;
         message.target.ownerGlobal.openWebLinkIn(MOBILE_IOS_URL, "tab", {
           relatedToCurrent: true,
         });
@@ -282,6 +292,147 @@ var AboutLoginsParent = {
           let syncState = this.getSyncState();
           messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
           this.updatePasswordSyncNotificationState();
+
+          // App store badges sourced from https://developer.apple.com/app-store/marketing/guidelines/#section-badges.
+          // This array mirrors the file names from the App store directory (./content/third-party/app-store)
+          const appStoreLocales = [
+            "az",
+            "ar",
+            "bg",
+            "cs",
+            "da",
+            "de",
+            "el",
+            "en",
+            "es-mx",
+            "es",
+            "et",
+            "fi",
+            "fr",
+            "he",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lt",
+            "lv",
+            "my",
+            "nb",
+            "nl",
+            "nn",
+            "pl",
+            "pt-br",
+            "pt-pt",
+            "ro",
+            "ru",
+            "si",
+            "sk",
+            "sv",
+            "th",
+            "tl",
+            "tr",
+            "vi",
+            "zh-hans",
+            "zh-hant",
+          ];
+
+          // Google play badges sourced from https://play.google.com/intl/en_us/badges/
+          // This array mirrors the file names from the play store directory (./content/third-party/play-store)
+          const playStoreLocales = [
+            "af",
+            "ar",
+            "az",
+            "be",
+            "bg",
+            "bn",
+            "bs",
+            "ca",
+            "cs",
+            "da",
+            "de",
+            "el",
+            "en",
+            "es",
+            "et",
+            "eu",
+            "fa",
+            "fr",
+            "gl",
+            "gu",
+            "he",
+            "hi",
+            "hr",
+            "hu",
+            "hy",
+            "id",
+            "is",
+            "it",
+            "ja",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "ko",
+            "lo",
+            "lt",
+            "lv",
+            "mk",
+            "mr",
+            "ms",
+            "my",
+            "nb",
+            "ne",
+            "nl",
+            "nn",
+            "pa",
+            "pl",
+            "pt-br",
+            "pt",
+            "ro",
+            "ru",
+            "si",
+            "sk",
+            "sl",
+            "sq",
+            "sr",
+            "sv",
+            "ta",
+            "te",
+            "th",
+            "tl",
+            "tr",
+            "uk",
+            "ur",
+            "uz",
+            "vi",
+            "zh-cn",
+            "zh-tw",
+          ];
+
+          const playStoreBadgeLanguage = Services.locale.negotiateLanguages(
+            Services.locale.appLocalesAsBCP47,
+            playStoreLocales,
+            "en-US",
+            Services.locale.langNegStrategyLookup
+          );
+
+          const appStoreBadgeLanguage = Services.locale.negotiateLanguages(
+            Services.locale.appLocalesAsBCP47,
+            appStoreLocales,
+            "en-US",
+            Services.locale.langNegStrategyLookup
+          );
+
+          const selectedBadgeLanguages = {
+            appStoreBadge: appStoreBadgeLanguage,
+            playStoreBadge: playStoreBadgeLanguage,
+          };
+
+          messageManager.sendAsyncMessage(
+            "AboutLogins:LocalizeBadges",
+            selectedBadgeLanguages
+          );
 
           if (BREACH_ALERTS_ENABLED) {
             const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(

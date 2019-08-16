@@ -400,6 +400,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @return This Builder instance.
          */
         public @NonNull Builder debugLogging(final boolean enable) {
+            getSettings().mDevToolsConsoleToLogcat.set(enable);
             getSettings().mConsoleServiceToLogcat.set(enable);
             getSettings().mGeckoViewLogLevel.set(enable ? "Debug" : "Fatal");
             return this;
@@ -446,6 +447,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "geckoview.logging", "Debug");
     /* package */ final Pref<Boolean> mConsoleServiceToLogcat = new Pref<>(
             "consoleservice.logcat", true);
+    /* package */ final Pref<Boolean> mDevToolsConsoleToLogcat = new Pref<>(
+            "devtools.console.stdout.chrome", true);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
