@@ -4394,6 +4394,10 @@ static void minorGC(JSContext* cx, JSGCStatus status, void* data) {
 static MajorGC majorGCInfo;
 static MinorGC minorGCInfo;
 
+static void enterNullRealm(JSContext* cx, JSGCStatus status, void* data) {
+  JSAutoNullableRealm enterRealm(cx, nullptr);
+}
+
 } /* namespace gcCallback */
 
 static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
@@ -4481,6 +4485,8 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
     gcCallback::majorGCInfo.phases = phases;
     gcCallback::majorGCInfo.depth = depth;
     JS_SetGCCallback(cx, gcCallback::majorGC, &gcCallback::majorGCInfo);
+  } else if (StringEqualsAscii(action, "enterNullRealm")) {
+    JS_SetGCCallback(cx, gcCallback::enterNullRealm, nullptr);
   } else {
     JS_ReportErrorASCII(cx, "Unknown GC callback action");
     return false;
