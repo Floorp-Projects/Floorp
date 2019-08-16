@@ -4058,6 +4058,10 @@ nsresult HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus) {
     return NS_BINDING_FAILED;
   }
 
+  if (!mCanceled && NS_SUCCEEDED(mStatus)) {
+    mStatus = aStatus;
+  }
+
   // The loadInfo is updated in nsDocShell::OpenInitializedChannel to have the
   // correct attributes (such as browsingContextID).
   // We need to send it to the parent channel so the two match, which is done
@@ -4066,7 +4070,7 @@ nsresult HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus) {
   Maybe<LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(
       mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-  Unused << SendCrossProcessRedirectDone(aStatus, loadInfoArgs);
+  Unused << SendCrossProcessRedirectDone(mStatus, loadInfoArgs);
   return NS_OK;
 }
 
