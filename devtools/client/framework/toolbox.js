@@ -3328,11 +3328,7 @@ Toolbox.prototype = {
         this._inspector = await this.target.getFront("inspector");
         this._walker = this.inspectorFront.walker;
         this._highlighter = this.inspectorFront.highlighter;
-        this.nodePicker = new NodePicker(
-          this._highlighter,
-          this._walker,
-          this.selection
-        );
+        this.nodePicker = new NodePicker(this.target, this.selection);
 
         this.nodePicker.on("picker-starting", this._onPickerStarting);
         this.nodePicker.on("picker-started", this._onPickerStarted);

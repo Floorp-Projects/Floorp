@@ -17,15 +17,23 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * walkerFront and selection api. The nodeFront is stateless, with the
  * HighlighterFront managing it's own state.
  *
- * @param {highlighter} highlighterFront
- * @param {walker} walkerFront
- * @return {Object} the NodePicker public API
+ * @param {Target} target
+ *        The target the toolbox will debug
+ * @param {Selection} selection
+ *        The global Selection object
  */
 class NodePicker extends EventEmitter {
-  constructor(highlighter, walker) {
+  constructor(target, selection) {
     super();
-    this.highlighter = highlighter;
-    this.walker = walker;
+
+    this.target = target;
+    this.selection = selection;
+
+    // Whether or not the node picker is active.
+    this.isPicking = false;
+
+    // The list of inspector fronts corresponding to the frames where picking happens.
+    this._currentInspectorFronts = [];
 
     this.cancel = this.cancel.bind(this);
     this.start = this.start.bind(this);
@@ -39,13 +47,29 @@ class NodePicker extends EventEmitter {
   }
 
   /**
+   * Get all of the InspectorFront instances corresponding to the frames where the node
+   * picking should occur.
+   *
+   * @return {Array<InspectorFront>}
+   *         The list of InspectorFront instances
+   */
+  async getAllInspectorFronts() {
+    // TODO: For Fission, we should list all remote frames here.
+    // TODO: For the Browser Toolbox, we should list all remote browsers here.
+    // TODO: For now we just return a single item in the array.
+    const inspectorFront = await this.target.getFront("inspector");
+    return [inspectorFront];
+  }
+
+  /**
    * Start/stop the element picker on the debuggee target.
-   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
-   *                            activated.
+   *
+   * @param {Boolean} doFocus
+   *        Optionally focus the content area once the picker is activated.
    * @return Promise that resolves when done
    */
   togglePicker(doFocus) {
-    if (this.highlighter.isPicking) {
+    if (this.isPicking) {
       return this.stop();
     }
     return this.start(doFocus);
@@ -57,41 +81,53 @@ class NodePicker extends EventEmitter {
    * on the target page to highlight the hovered/picked element.
    * Depending on the server-side capabilities, this may fire events when nodes
    * are hovered.
-   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
-   *                            activated.
-   * @return Promise that resolves when the picker has started or immediately
-   * if it is already started
+   *
+   * @param {Boolean} doFocus
+   *        Optionally focus the content area once the picker is activated.
    */
   async start(doFocus) {
-    if (this.highlighter.isPicking) {
-      return null;
+    if (this.isPicking) {
+      return;
     }
-    this.emit("picker-starting");
-    this.walker.on("picker-node-hovered", this._onHovered);
-    this.walker.on("picker-node-picked", this._onPicked);
-    this.walker.on("picker-node-previewed", this._onPreviewed);
-    this.walker.on("picker-node-canceled", this._onCanceled);
+    this.isPicking = true;
 
-    const picked = await this.highlighter.pick(doFocus);
+    this.emit("picker-starting");
+
+    this._currentInspectorFronts = await this.getAllInspectorFronts();
+
+    for (const { walker, highlighter } of this._currentInspectorFronts) {
+      walker.on("picker-node-hovered", this._onHovered);
+      walker.on("picker-node-picked", this._onPicked);
+      walker.on("picker-node-previewed", this._onPreviewed);
+      walker.on("picker-node-canceled", this._onCanceled);
+
+      await highlighter.pick(doFocus);
+    }
+
     this.emit("picker-started");
-    return picked;
   }
 
   /**
    * Stop the element picker. Note that the picker is automatically stopped when
-   * an element is picked
-   * @return Promise that resolves when the picker has stopped or immediately
-   * if it is already stopped
+   * an element is picked.
    */
   async stop() {
-    if (!this.highlighter.isPicking) {
+    if (!this.isPicking) {
       return;
     }
-    await this.highlighter.cancelPick();
-    this.walker.off("picker-node-hovered", this._onHovered);
-    this.walker.off("picker-node-picked", this._onPicked);
-    this.walker.off("picker-node-previewed", this._onPreviewed);
-    this.walker.off("picker-node-canceled", this._onCanceled);
+    this.isPicking = false;
+
+    for (const { walker, highlighter } of this._currentInspectorFronts) {
+      await highlighter.cancelPick();
+
+      walker.off("picker-node-hovered", this._onHovered);
+      walker.off("picker-node-picked", this._onPicked);
+      walker.off("picker-node-previewed", this._onPreviewed);
+      walker.off("picker-node-canceled", this._onCanceled);
+    }
+
+    this._currentInspectorFronts = [];
+
     this.emit("picker-stopped");
   }
 
@@ -105,7 +141,9 @@ class NodePicker extends EventEmitter {
 
   /**
    * When a node is hovered by the mouse when the highlighter is in picker mode
-   * @param {Object} data Information about the node being hovered
+   *
+   * @param {Object} data
+   *        Information about the node being hovered
    */
   _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
@@ -113,7 +151,9 @@ class NodePicker extends EventEmitter {
 
   /**
    * When a node has been picked while the highlighter is in picker mode
-   * @param {Object} data Information about the picked node
+   *
+   * @param {Object} data
+   *        Information about the picked node
    */
   _onPicked(data) {
     this.emit("picker-node-picked", data.node);
@@ -123,7 +163,9 @@ class NodePicker extends EventEmitter {
   /**
    * When a node has been shift-clicked (previewed) while the highlighter is in
    * picker mode
-   * @param {Object} data Information about the picked node
+   *
+   * @param {Object} data
+   *        Information about the picked node
    */
   _onPreviewed(data) {
     this.emit("picker-node-previewed", data.node);
