@@ -841,6 +841,7 @@ class ExternalSharedLibrary(SharedLibrary, ExternalLibrary):
 class HostLibrary(HostMixin, BaseLibrary):
     """Context derived container object for a host library"""
     KIND = 'host'
+    no_expand_lib = False
 
 
 class HostRustLibrary(HostLibrary, BaseRustLibrary):
@@ -850,6 +851,7 @@ class HostRustLibrary(HostLibrary, BaseRustLibrary):
     FEATURES_VAR = 'HOST_RUST_LIBRARY_FEATURES'
     LIB_FILE_VAR = 'HOST_RUST_LIBRARY_FILE'
     __slots__ = BaseRustLibrary.slots
+    no_expand_lib = True
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
                  features, target_dir):

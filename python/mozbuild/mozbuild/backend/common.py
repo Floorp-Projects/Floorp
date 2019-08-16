@@ -251,7 +251,7 @@ class CommonBackend(BuildBackend):
 
         def expand(lib, recurse_objs, system_libs):
             if isinstance(lib, (HostLibrary, StaticLibrary)):
-                if not isinstance(lib, HostLibrary) and lib.no_expand_lib:
+                if lib.no_expand_lib:
                     static_libs.append(lib)
                     recurse_objs = False
                 elif recurse_objs:
