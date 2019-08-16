@@ -26,7 +26,7 @@ using gfx::IntRegion;
 }
 
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
-    : mRootCALayer([aLayer retain]), mMutex("NativeLayerRootCA") {}
+    : mMutex("NativeLayerRootCA"), mRootCALayer([aLayer retain]) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(mSublayers.IsEmpty(),
