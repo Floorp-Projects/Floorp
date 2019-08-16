@@ -1100,11 +1100,9 @@ static Loader::MediaMatched MediaListMatches(const MediaList* aMediaList,
  * the sheet had "alternate" in its rel.
  */
 Loader::MediaMatched Loader::PrepareSheet(
-    StyleSheet* aSheet, const nsAString& aTitle, const nsAString& aMediaString,
+    StyleSheet& aSheet, const nsAString& aTitle, const nsAString& aMediaString,
     MediaList* aMediaList, IsAlternate aIsAlternate,
     IsExplicitlyEnabled aIsExplicitlyEnabled) {
-  MOZ_ASSERT(aSheet, "Must have a sheet!");
-
   RefPtr<MediaList> mediaList(aMediaList);
 
   if (!aMediaString.IsEmpty()) {
@@ -1113,10 +1111,10 @@ Loader::MediaMatched Loader::PrepareSheet(
     mediaList = MediaList::Create(aMediaString);
   }
 
-  aSheet->SetMedia(mediaList);
+  aSheet.SetMedia(mediaList);
 
-  aSheet->SetTitle(aTitle);
-  aSheet->SetEnabled(aIsAlternate == IsAlternate::No ||
+  aSheet.SetTitle(aTitle);
+  aSheet.SetEnabled(aIsAlternate == IsAlternate::No ||
                      aIsExplicitlyEnabled == IsExplicitlyEnabled::Yes);
   return MediaListMatches(mediaList, mDocument);
 }
@@ -1841,7 +1839,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
+  auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);
 
   InsertSheetInTree(*sheet, aInfo.mContent);
@@ -1943,7 +1941,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
+  auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);
 
   InsertSheetInTree(*sheet, aInfo.mContent);
@@ -2105,7 +2103,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
                     CORS_NONE, aParentSheet.GetReferrerInfo(),
                     EmptyString(),  // integrity is only checked on main sheet
                     aParentData ? aParentData->mSyncLoad : false);
-    PrepareSheet(sheet, EmptyString(), EmptyString(), aMedia, IsAlternate::No,
+    PrepareSheet(*sheet, EmptyString(), EmptyString(), aMedia, IsAlternate::No,
                  IsExplicitlyEnabled::No);
   }
 
@@ -2201,7 +2199,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
       CreateSheet(aURL, nullptr, aOriginPrincipal, aParsingMode, aCORSMode,
                   aReferrerInfo, aIntegrity, syncLoad);
 
-  PrepareSheet(sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
+  PrepareSheet(*sheet, EmptyString(), EmptyString(), nullptr, IsAlternate::No,
                IsExplicitlyEnabled::No);
 
   if (state == SheetState::Complete) {
