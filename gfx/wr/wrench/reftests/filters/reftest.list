@@ -35,6 +35,7 @@ platform(linux,mac) == filter-drop-shadow.yaml filter-drop-shadow.png
 platform(linux,mac) == filter-drop-shadow-on-viewport-edge.yaml filter-drop-shadow-on-viewport-edge.png
 platform(linux,mac) == blend-clipped.yaml blend-clipped.png
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
+platform(linux,mac) == filter-drop-shadow-clip-2.yaml filter-drop-shadow-clip-2.png
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
 skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  # Android debug: GL error 502 at blit_framebuffer (emulator) or draw_elements_instanced (Pixel2); Android opt: fails
