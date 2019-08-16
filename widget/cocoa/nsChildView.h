@@ -20,15 +20,18 @@
 #include "nsCocoaUtils.h"
 #include "gfxQuartzSurface.h"
 #include "GLContextTypes.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/Mutex.h"
 #include "nsRegion.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/gfx/MacIOSurface.h"
 
 #include "nsString.h"
 #include "nsIDragService.h"
 #include "ViewRegion.h"
+#include "CFTypeRefPtr.h"
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -50,6 +53,8 @@ class VibrancyManager;
 namespace layers {
 class GLManager;
 class IAPZCTreeManager;
+class NativeLayerRootCA;
+class NativeLayerCA;
 }  // namespace layers
 namespace widget {
 class RectTextureImage;
@@ -156,7 +161,10 @@ class WidgetRenderingContext;
   BOOL mExpectingWheelStop;
 
   // Set to YES when our GL surface has been updated and we need to call
-  // updateGLContext before we composite.
+  // updateGLContext on the compositor thread before we composite.
+  // Accesses from different threads are synchronized via mGLContext's
+  // CGLContextObj lock.
+  // Always NO if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   BOOL mNeedsGLUpdate;
 
   // Holds our drag service across multiple drag calls. The reference to the
@@ -166,6 +174,8 @@ class WidgetRenderingContext;
   // when handling |draggingUpdated:| messages.
   nsIDragService* mDragService;
 
+  // The NSOpenGLContext that is attached to our mPixelHostingView.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   NSOpenGLContext* mGLContext;
 
   // Gestures support
@@ -201,6 +211,7 @@ class WidgetRenderingContext;
 
   // The mask image that's used when painting into the titlebar using basic
   // CGContext painting (i.e. non-accelerated).
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   CGImageRef mTopLeftCornerMask;
 
   // Subviews of self, which act as container views for vibrancy views and
@@ -208,8 +219,18 @@ class WidgetRenderingContext;
   NSView* mVibrancyViewsContainer;      // [STRONG]
   NSView* mNonDraggableViewsContainer;  // [STRONG]
 
-  // The view that does our drawing. This is a subview of self so that it can
-  // be ordered on top of mVibrancyViewsContainer.
+  // The view that does our drawing. Always non-null.
+  // This is a subview of self so that it can be ordered on top of mVibrancyViewsContainer.
+  // Drawing in this view can be performed in different ways:
+  // If StaticPrefs::gfx_core_animation_enabled_AtStartup() is true, mPixelHostingView
+  // will be layer-backed and all Gecko rendering will be performed into sublayers of
+  // that view's layer.
+  // If StaticPrefs::gfx_core_animation_enabled_AtStartup() is false, there are two cases:
+  // If mUsingOMTCompositor is false, drawing is performed on the main thread
+  // inside the view's drawRect handler. If mUsingOMTCompositor is true,
+  // mGLContext will be non-null and will be associated with mPixelHostingView,
+  // and rendering will be performed on the compositor thread into mGLContext's
+  // primary framebuffer.
   PixelHostingView* mPixelHostingView;
 
   // Last pressure stage by trackpad's force click
@@ -239,6 +260,14 @@ class WidgetRenderingContext;
 
 - (bool)preRender:(NSOpenGLContext*)aGLContext;
 - (void)postRender:(NSOpenGLContext*)aGLContext;
+
+// Call this during operations that will likely trigger a main thread
+// CoreAnimation paint of the window, during which Gecko should do its own
+// painting and present the results atomically with that main thread transaction.
+// This method will suspend off-thread window updates so that the upcoming paint
+// can be atomic, and mark the layer as needing display so that
+// HandleMainThreadCATransaction gets called and Gecko gets a chance to paint.
+- (void)ensureNextCompositeIsAtomicWithMainThreadPaint;
 
 - (NSView*)vibrancyViewsContainer;
 - (NSView*)nonDraggableViewsContainer;
@@ -444,6 +473,11 @@ class nsChildView final : public nsBaseWidget {
                                const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
+  bool PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
+                              const LayoutDeviceIntRegion& aInvalidRegion);
+
+  void PaintWindowInContentLayer();
+  void HandleMainThreadCATransaction();
 
 #ifdef ACCESSIBILITY
   already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();
@@ -460,6 +494,7 @@ class nsChildView final : public nsBaseWidget {
   virtual bool PreRender(mozilla::widget::WidgetRenderingContext* aContext) override;
   bool PreRenderImpl(mozilla::widget::WidgetRenderingContext* aContext);
   virtual void PostRender(mozilla::widget::WidgetRenderingContext* aContext) override;
+  virtual void DoCompositorCleanup() override;
   virtual void DrawWindowOverlay(mozilla::widget::WidgetRenderingContext* aManager,
                                  LayoutDeviceIntRect aRect) override;
 
@@ -536,6 +571,24 @@ class nsChildView final : public nsBaseWidget {
 
   nsresult SetPrefersReducedMotionOverrideForTest(bool aValue) override;
   nsresult ResetPrefersReducedMotionOverrideForTest() override;
+
+  // Called when the main thread enters a phase during which visual changes
+  // are imminent and any layer updates on the compositor thread would interfere
+  // with visual atomicity.
+  // Has no effect if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
+  // "Async" CATransactions are CATransactions which happen on a thread that's
+  // not the main thread.
+  void SuspendAsyncCATransactions();
+
+  // Called when we know that the current main thread paint will be completed once
+  // the main thread goes back to the event loop.
+  void MaybeScheduleUnsuspendAsyncCATransactions();
+
+  // Called from the runnable dispatched by MaybeScheduleUnsuspendAsyncCATransactions().
+  // At this point we know that the main thread is done handling the visual change
+  // (such as a window resize) and we can start modifying CALayers from the
+  // compositor thread again.
+  void UnsuspendAsyncCATransactions();
 
  protected:
   virtual ~nsChildView();
@@ -640,16 +693,48 @@ class nsChildView final : public nsBaseWidget {
 
   bool mPluginFocused;
 
-  // Used in OMTC BasicLayers mode. Presents the BasicCompositor result
+  // Used in BasicCompositor OMTC mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   mozilla::UniquePtr<GLPresenter> mGLPresenter;
+
+  RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
+
+  // The CoreAnimation layer that contains the rendering from Gecko. This is a
+  // sublayer of mNativeLayerRoot's underlying wrapper layer.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is false.
+  RefPtr<mozilla::layers::NativeLayerCA> mContentLayer;
+
+  // Used in BasicCompositor OMTC mode.
+  // Non-null between calls to PreRender(Impl) and PostRender,
+  // if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
+  RefPtr<MacIOSurface> mBasicCompositorIOSurface;
 
   mozilla::UniquePtr<mozilla::VibrancyManager> mVibrancyManager;
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
   // Only used for drawRect-based painting in popups.
+  // Always null if StaticPrefs::gfx_core_animation_enabled_AtStartup() is true.
   RefPtr<mozilla::gfx::DrawTarget> mBackingSurface;
+
+  // Coordinates the triggering of CoreAnimation transactions between the main
+  // thread and the compositor thread in order to avoid glitches during window
+  // resizing and window focus changes.
+  struct WidgetCompositingState {
+    // While mAsyncCATransactionsSuspended is true, no CoreAnimation transaction
+    // should be triggered on a non-main thread, because they might race with
+    // main-thread driven updates such as window shape changes, and cause glitches.
+    bool mAsyncCATransactionsSuspended = false;
+
+    // Set to true if mNativeLayerRoot->ApplyChanges() needs to be called at the
+    // next available opportunity. Set to false whenever ApplyChanges does get
+    // called.
+    bool mNativeLayerChangesPending = false;
+  };
+  mozilla::DataMutex<WidgetCompositingState> mCompositingState;
+
+  RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
 
   // This flag is only used when APZ is off. It indicates that the current pan
   // gesture was processed as a swipe. Sometimes the swipe animation can finish

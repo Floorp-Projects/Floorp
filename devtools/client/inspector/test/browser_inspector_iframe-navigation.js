@@ -12,16 +12,13 @@ const TEST_URI =
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
-  const { inspectorFront } = inspector;
+  const { toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   await startPicker(toolbox);
 
   info("Waiting for body to be hovered.");
-  const onHovered = inspector.inspectorFront.nodePicker.once(
-    "picker-node-hovered"
-  );
+  const onHovered = toolbox.nodePicker.once("picker-node-hovered");
   testActor.synthesizeMouse({
     selector: "body",
     options: { type: "mousemove" },
@@ -43,5 +40,5 @@ add_task(async function() {
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");
-  await inspectorFront.nodePicker.stop();
+  await toolbox.nodePicker.stop();
 });

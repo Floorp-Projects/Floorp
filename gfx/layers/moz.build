@@ -228,6 +228,7 @@ EXPORTS.mozilla.layers += [
     'mlgpu/MLGPUScreenshotGrabber.h',
     'mlgpu/ShaderDefinitionsMLGPU.h',
     'mlgpu/UtilityMLGPU.h',
+    'NativeLayer.h',
     'opengl/CompositingRenderTargetOGL.h',
     'opengl/CompositorOGL.h',
     'opengl/MacIOSurfaceTextureClientOGL.h',
@@ -293,6 +294,7 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
+        'NativeLayerCA.h',
         'opengl/GLManager.h',
         'TextureSync.h',
     ]
@@ -301,6 +303,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacIOSurfaceImage.h',
     ]
     UNIFIED_SOURCES += [
+        'NativeLayerCA.mm',
         'opengl/GLManager.cpp',
         'TextureSync.cpp',
     ]
@@ -308,6 +311,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'ipc/ShadowLayerUtilsMac.cpp',
         'MacIOSurfaceHelpers.cpp',
         'MacIOSurfaceImage.cpp',
+    ]
+    OS_LIBS += [
+        '-framework IOSurface',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

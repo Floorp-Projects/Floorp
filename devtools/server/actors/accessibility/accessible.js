@@ -36,6 +36,12 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(
+  this,
+  "getBounds",
+  "devtools/server/actors/highlighters/utils/accessibility",
+  true
+);
 
 const RELATIONS_TO_IGNORE = new Set([
   Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
@@ -457,7 +463,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     const { walker } = this;
     walker.clearStyles(win);
     const contrastRatio = await getContrastRatioFor(rawNode.parentNode, {
-      bounds,
+      bounds: getBounds(win, bounds),
       win,
     });
 

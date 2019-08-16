@@ -49,7 +49,6 @@
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
 </m:math></p>
 
 <p><m:math>
@@ -61,6 +60,7 @@
   <m:mstyle><m:mi style="font-size:0;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:0;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:0;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:20px;">Id</m:mi></m:mstyle>
 </m:math></p>
 
 </body>

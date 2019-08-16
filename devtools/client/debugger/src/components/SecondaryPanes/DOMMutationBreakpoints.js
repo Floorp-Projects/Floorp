@@ -59,7 +59,7 @@ class DOMMutationBreakpointsContents extends Component<Props> {
           <div className="dom-mutation-label">
             {Rep({
               object: translateNodeFrontToGrip(breakpoint.nodeFront),
-              mode: MODE.LONG,
+              mode: MODE.TINY,
               onDOMNodeClick: grip => openElementInInspector(grip),
               onInspectIconClick: grip => openElementInInspector(grip),
               onDOMNodeMouseOver: grip => highlightDomElement(grip),

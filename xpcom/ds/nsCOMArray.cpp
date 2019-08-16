@@ -28,6 +28,11 @@ class nsTArrayElementTraits<nsISupports*> {
   static inline void Construct(E* aE, const A& aArg) {
     new (mozilla::KnownNotNull, static_cast<void*>(aE)) E(aArg);
   }
+  // Construct in place.
+  template <class... Args>
+  static inline void Emplace(E* aE, Args&&... aArgs) {
+    new (mozilla::KnownNotNull, static_cast<void*>(aE)) E(std::forward<Args>(aArgs)...);
+  }
   // Invoke the destructor in place.
   static inline void Destruct(E* aE) { aE->~E(); }
 };
