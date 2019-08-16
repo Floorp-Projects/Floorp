@@ -86,17 +86,6 @@ class MOZ_RAII LoaderReusableStyleSheets {
   nsTArray<RefPtr<StyleSheet>> mReusableSheets;
 };
 
-/***********************************************************************
- * Enum that describes the state of the sheet returned by CreateSheet. *
- ***********************************************************************/
-enum StyleSheetState {
-  eSheetStateUnknown = 0,
-  eSheetNeedsParser,
-  eSheetPending,
-  eSheetLoading,
-  eSheetComplete
-};
-
 class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
@@ -343,25 +332,29 @@ class Loader final {
                               nsIURI* aTargetURI, nsINode* aRequestingNode,
                               bool aIsPreload);
 
-  nsresult CreateSheet(const SheetInfo& aInfo, nsIPrincipal* aLoaderPrincipal,
-                       css::SheetParsingMode aParsingMode, bool aSyncLoad,
-                       StyleSheetState& aSheetState,
-                       RefPtr<StyleSheet>* aSheet) {
+  enum class SheetState : uint8_t {
+    Unknown = 0,
+    NeedsParser,
+    Pending,
+    Loading,
+    Complete
+  };
+
+  Tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
+      const SheetInfo& aInfo, nsIPrincipal* aLoaderPrincipal,
+      css::SheetParsingMode aParsingMode, bool aSyncLoad) {
     return CreateSheet(aInfo.mURI, aInfo.mContent, aLoaderPrincipal,
                        aParsingMode, aInfo.mCORSMode, aInfo.mReferrerInfo,
-                       aInfo.mIntegrity, aSyncLoad, aSheetState, aSheet);
+                       aInfo.mIntegrity, aSyncLoad);
   }
 
   // For inline style, the aURI param is null, but the aLinkingContent
   // must be non-null then.  The loader principal must never be null
   // if aURI is not null.
-  nsresult CreateSheet(nsIURI* aURI, nsIContent* aLinkingContent,
-                       nsIPrincipal* aLoaderPrincipal,
-                       css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
-                       nsIReferrerInfo* aLoadingReferrerInfo,
-                       const nsAString& aIntegrity, bool aSyncLoad,
-                       StyleSheetState& aSheetState,
-                       RefPtr<StyleSheet>* aSheet);
+  Tuple<RefPtr<StyleSheet>, SheetState> CreateSheet(
+      nsIURI* aURI, nsIContent* aLinkingContent, nsIPrincipal* aLoaderPrincipal,
+      css::SheetParsingMode, CORSMode, nsIReferrerInfo* aLoadingReferrerInfo,
+      const nsAString& aIntegrity, bool aSyncLoad);
 
   // Pass in either a media string or the MediaList from the CSSParser.  Don't
   // pass both.
@@ -403,10 +396,9 @@ class Loader final {
   // Handle an event posted by PostLoadEvent
   void HandleLoadEvent(SheetLoadData* aEvent);
 
-  // Note: LoadSheet is responsible for releasing aLoadData and setting the
+  // Note: LoadSheet is responsible for releasing the load data and setting the
   // sheet to complete on failure.
-  nsresult LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState,
-                     bool aIsPreLoad);
+  nsresult LoadSheet(SheetLoadData*, SheetState, bool aIsPreLoad);
 
   enum class AllowAsyncParse {
     Yes,
