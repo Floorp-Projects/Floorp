@@ -190,7 +190,6 @@ class Loader final {
    *        (see comments at enum SheetParsingMode, above).
    * @param aUseSystemPrincipal if true, give the resulting sheet the system
    * principal no matter where it's being loaded from.
-   * @param [out] aSheet the loaded, complete sheet.
    *
    * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
    * ideally it would allow arbitrary encodings.  Callers should NOT depend on
@@ -200,16 +199,9 @@ class Loader final {
    * whether the data could be parsed as CSS and doesn't indicate anything
    * about the status of child sheets of the returned sheet.
    */
-  nsresult LoadSheetSync(nsIURI* aURL, SheetParsingMode aParsingMode,
-                         bool aUseSystemPrincipal, RefPtr<StyleSheet>* aSheet);
-
-  /**
-   * As above, but defaults aParsingMode to eAuthorSheetFeatures and
-   * aUseSystemPrincipal to false.
-   */
-  nsresult LoadSheetSync(nsIURI* aURL, RefPtr<StyleSheet>* aSheet) {
-    return LoadSheetSync(aURL, eAuthorSheetFeatures, false, aSheet);
-  }
+  Result<RefPtr<StyleSheet>, nsresult> LoadSheetSync(
+      nsIURI*, SheetParsingMode = eAuthorSheetFeatures,
+      bool aUseSystemPrincipal = false);
 
   /**
    * Asynchronously load the stylesheet at aURL.  If a successful result is
@@ -225,28 +217,25 @@ class Loader final {
    * @param aReferrerInfo referrer information of the sheet.
    * @param aObserver the observer to notify when the load completes.
    *                  Must not be null.
-   * @param [out] aSheet the sheet to load. Note that the sheet may well
-   *              not be loaded by the time this method returns.
+   * @return the sheet to load. Note that the sheet may well not be loaded by
+   * the time this method returns.
    *
    * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
    * ideally it would allow arbitrary encodings.  Callers should NOT depend on
    * non-UTF8 sheets being treated as UTF-8 by this method.
    */
-  nsresult LoadSheet(nsIURI* aURL, SheetParsingMode aParsingMode,
-                     bool aUseSystemPrincipal, nsICSSLoaderObserver* aObserver,
-                     RefPtr<StyleSheet>* aSheet);
+  Result<RefPtr<StyleSheet>, nsresult> LoadSheet(
+      nsIURI* aURI, bool aIsPreLoad, nsIPrincipal* aOriginPrincipal,
+      const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
+      nsICSSLoaderObserver* aObserver, CORSMode aCORSMode = CORS_NONE,
+      const nsAString& aIntegrity = EmptyString());
 
   /**
-   * Same as above, to be used when the caller doesn't care about the
-   * not-yet-loaded sheet.
+   * As above, but without caring for a couple things.
    */
-  nsresult LoadSheet(nsIURI* aURL, bool aIsPreload,
-                     nsIPrincipal* aOriginPrincipal,
-                     const Encoding* aPreloadEncoding,
-                     nsIReferrerInfo* aReferrerInfo,
-                     nsICSSLoaderObserver* aObserver,
-                     CORSMode aCORSMode = CORS_NONE,
-                     const nsAString& aIntegrity = EmptyString());
+  Result<RefPtr<StyleSheet>, nsresult> LoadSheet(nsIURI*, SheetParsingMode,
+                                                 bool aUseSystemPrincipal,
+                                                 nsICSSLoaderObserver*);
 
   /**
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
@@ -369,13 +358,12 @@ class Loader final {
   // Inserts a style sheet into a parent style sheet.
   void InsertChildSheet(StyleSheet& aSheet, StyleSheet& aParentSheet);
 
-  nsresult InternalLoadNonDocumentSheet(
+  Result<RefPtr<StyleSheet>, nsresult> InternalLoadNonDocumentSheet(
       nsIURI* aURL, bool aIsPreload, SheetParsingMode aParsingMode,
       bool aUseSystemPrincipal, nsIPrincipal* aOriginPrincipal,
-      const Encoding* aPreloadEncoding, RefPtr<StyleSheet>* aSheet,
-      nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
-      CORSMode aCORSMode = CORS_NONE,
-      const nsAString& aIntegrity = EmptyString());
+      const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
+      nsICSSLoaderObserver* aObserver, CORSMode aCORSMode,
+      const nsAString& aIntegrity);
 
   // Post a load event for aObserver to be notified about aSheet.  The
   // notification will be sent with status NS_OK unless the load event is
