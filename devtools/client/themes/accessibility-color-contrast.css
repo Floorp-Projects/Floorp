@@ -48,6 +48,11 @@
   unicode-bidi: isolate;
 }
 
+.accessibility-color-contrast .accessibility-color-contrast-separator:before {
+  content: "–";
+  margin-inline-start: 4px;
+}
+
 .accessibility-color-contrast-large-text {
   background-color: var(--badge-background-color);
   color: var(--badge-color);
