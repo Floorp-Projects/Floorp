@@ -32,7 +32,9 @@ void RegisterCallbackData(void* aData) {
   if (!gCallbackData) {
     gCallbackData = new ValueIndex();
   }
-  gCallbackData->Insert(aData);
+  if (!gCallbackData->Contains(aData)) {
+    gCallbackData->Insert(aData);
+  }
 }
 
 void BeginCallback(size_t aCallbackId) {
@@ -94,8 +96,7 @@ void RemoveCallbackData(void* aData) {
 
 void PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn) {
   Thread* thread = Thread::Current();
-  RecordingEventSection res(thread);
-  MOZ_RELEASE_ASSERT(res.CanAccessEvents());
+  Maybe<RecordingEventSection> res;
 
   if (IsRecording()) {
     if (thread->IsMainThread()) {
@@ -107,15 +108,21 @@ void PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn) {
       js::EndIdleTime();
     }
     thread->SetPassThrough(false);
+
+    res.emplace(thread);
+    MOZ_RELEASE_ASSERT(res->CanAccessEvents());
     thread->Events().RecordOrReplayThreadEvent(ThreadEvent::CallbacksFinished);
   } else {
     while (true) {
-      ThreadEvent ev = (ThreadEvent)thread->Events().ReadScalar();
+      res.emplace(thread);
+      MOZ_RELEASE_ASSERT(res->CanAccessEvents());
+      ThreadEvent ev = thread->Events().ReplayThreadEvent();
       if (ev != ThreadEvent::ExecuteCallback) {
         MOZ_RELEASE_ASSERT(ev == ThreadEvent::CallbacksFinished);
         break;
       }
       size_t id = thread->Events().ReadScalar();
+      res.reset();
       ReplayInvokeCallback(id);
     }
   }
