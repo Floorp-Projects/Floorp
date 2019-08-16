@@ -1932,7 +1932,16 @@ bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
       glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
       return true;
     }
-    return false;  // This will be fleshed out in upcoming patches.
+    // We're using BasicCompositor.
+    MOZ_RELEASE_ASSERT(!mBasicCompositorIOSurface);
+    mContentLayer->SetRect(GetBounds().ToUnknownRect());
+    mContentLayer->SetSurfaceIsFlipped(false);
+    CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
+    if (!surf) {
+      return false;
+    }
+    mBasicCompositorIOSurface = new MacIOSurface(std::move(surf));
+    return true;
   }
 
   if (gl) {
@@ -2458,6 +2467,18 @@ void nsChildView::UpdateBoundsFromView() { mBounds = CocoaPointsToDevPixels([mVi
 
 already_AddRefed<gfx::DrawTarget> nsChildView::StartRemoteDrawingInRegion(
     LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    MOZ_RELEASE_ASSERT(mBasicCompositorIOSurface,
+                       "Should have been set up by nsChildView::PreRender");
+
+    mContentLayer->InvalidateRegionThroughoutSwapchain(aInvalidRegion.ToUnknownRegion());
+    aInvalidRegion =
+        LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion());
+    *aBufferMode = BufferMode::BUFFER_NONE;
+    mBasicCompositorIOSurface->Lock(false);
+    return mBasicCompositorIOSurface->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
+  }
+
   MOZ_RELEASE_ASSERT(mGLPresenter);
 
   LayoutDeviceIntRegion dirtyRegion(aInvalidRegion);
@@ -2479,8 +2500,18 @@ already_AddRefed<gfx::DrawTarget> nsChildView::StartRemoteDrawingInRegion(
 }
 
 void nsChildView::EndRemoteDrawing() {
-  mBasicCompositorImage->EndUpdate();
-  DoRemoteComposition(mBounds);
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    MOZ_RELEASE_ASSERT(mBasicCompositorIOSurface);
+
+    // The DrawTarget we returned from StartRemoteDrawingInRegion, which
+    // referred to pixels in mBasicCompositorIOSurface, is no longer in use.
+    // We can unlock the surface and release our reference to it.
+    mBasicCompositorIOSurface->Unlock(false);
+    mBasicCompositorIOSurface = nullptr;
+  } else {
+    mBasicCompositorImage->EndUpdate();
+    DoRemoteComposition(mBounds);
+  }
 }
 
 void nsChildView::CleanupRemoteDrawing() {
