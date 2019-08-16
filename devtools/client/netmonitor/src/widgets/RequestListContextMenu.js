@@ -15,12 +15,7 @@ const {
 } = require("../utils/request-utils");
 
 loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
-loader.lazyRequireGetter(
-  this,
-  "saveAs",
-  "devtools/client/shared/file-saver",
-  true
-);
+loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
 loader.lazyRequireGetter(
   this,
   "copyString",
@@ -610,9 +605,9 @@ class RequestListContextMenu {
         data[i] = decoded.charCodeAt(i);
       }
     } else {
-      data = text;
+      data = new TextEncoder().encode(text);
     }
-    saveAs(new Blob([data]), fileName, document);
+    saveAs(window, data, fileName);
   }
 
   /**
