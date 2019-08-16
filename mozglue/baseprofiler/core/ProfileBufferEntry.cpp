@@ -804,7 +804,7 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
 
   EntryGetter e(*this);
 
-  aWriter.StartObjectProperty("profilerOverhead_UNSTABLE");
+  aWriter.StartObjectProperty("profilerOverhead");
   aWriter.StartObjectProperty("samples");
   // Stream all sampling overhead data. We skip other entries, because we
   // process them in StreamSamplesToJSON()/etc.
