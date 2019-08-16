@@ -1206,8 +1206,9 @@ def enable_webrender(config, tests):
     """
     for test in tests:
         if test.get('webrender'):
-            test['mozharness'].setdefault('extra-options', [])\
-                              .append("--enable-webrender")
+            extra_options = test['mozharness'].setdefault('extra-options', [])
+            extra_options.append("--enable-webrender")
+            extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
 
         yield test
 
