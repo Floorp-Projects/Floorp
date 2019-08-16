@@ -158,29 +158,32 @@ class MonitorPanel extends Component {
     );
   }
 
-  renderSearchPanel(connector) {
-    const { isEmpty } = this.props;
+  renderSearchPanel() {
+    const { connector, isEmpty, panelOpen } = this.props;
+
     const initialWidth = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-search-width"
     );
     const initialHeight = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-search-height"
     );
+
     return SplitBox({
       className: "devtools-responsive-container",
       initialWidth,
       initialHeight,
       minSize: "50px",
       maxSize: "80%",
-      splitterSize: 1,
-      startPanel: SearchPanel({
-        ref: "searchPanel",
-        connector,
-      }),
+      splitterSize: panelOpen ? 1 : 0,
+      startPanel:
+        panelOpen &&
+        SearchPanel({
+          ref: "searchPanel",
+          connector,
+        }),
       endPanel: RequestList({ isEmpty, connector }),
       endPanelControl: false,
       vert: true,
-      onControlledPanelResized: () => {},
     });
   }
 
@@ -188,12 +191,10 @@ class MonitorPanel extends Component {
     const {
       actions,
       connector,
-      isEmpty,
       networkDetailsOpen,
       openLink,
       openSplitConsole,
       sourceMapService,
-      panelOpen,
     } = this.props;
 
     const initialWidth = Services.prefs.getIntPref(
@@ -203,10 +204,6 @@ class MonitorPanel extends Component {
     const initialHeight = Services.prefs.getIntPref(
       "devtools.netmonitor.panes-network-details-height"
     );
-
-    const startPanel = panelOpen
-      ? this.renderSearchPanel(connector)
-      : RequestList({ isEmpty, connector });
 
     return div(
       { className: "monitor-panel" },
@@ -218,12 +215,12 @@ class MonitorPanel extends Component {
       }),
       SplitBox({
         className: "devtools-responsive-container",
-        initialWidth: initialWidth,
-        initialHeight: initialHeight,
+        initialWidth,
+        initialHeight,
         minSize: "50px",
         maxSize: "80%",
         splitterSize: networkDetailsOpen ? 1 : 0,
-        startPanel,
+        startPanel: this.renderSearchPanel(),
         endPanel:
           networkDetailsOpen &&
           NetworkDetailsPanel({
