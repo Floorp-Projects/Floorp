@@ -81,6 +81,7 @@ export class ListItem extends React.PureComponent {
             <DSContextFooter
               context={this.props.context}
               context_type={this.props.context_type}
+              engagement={this.props.engagement}
             />
           </div>
           <DSImage
@@ -159,6 +160,7 @@ export function _List(props) {
             url={rec.url}
             pocket_id={rec.pocket_id}
             bookmarkGuid={rec.bookmarkGuid}
+            engagement={rec.engagement}
           />
         )
       );

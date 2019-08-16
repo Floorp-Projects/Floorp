@@ -78,6 +78,7 @@ export class Hero extends React.PureComponent {
             source={rec.domain}
             pocket_id={rec.pocket_id}
             bookmarkGuid={rec.bookmarkGuid}
+            engagement={rec.engagement}
           />
         )
       );
@@ -112,6 +113,7 @@ export class Hero extends React.PureComponent {
               <DSContextFooter
                 context={heroRec.context}
                 context_type={heroRec.context_type}
+                engagement={heroRec.engagement}
               />
             </div>
             <ImpressionStats
