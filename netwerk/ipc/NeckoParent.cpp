@@ -501,16 +501,10 @@ mozilla::ipc::IPCResult NeckoParent::RecvPSimpleChannelConstructor(
   return IPC_OK();
 }
 
-PFileChannelParent* NeckoParent::AllocPFileChannelParent(
+already_AddRefed<PFileChannelParent> NeckoParent::AllocPFileChannelParent(
     const uint32_t& channelId) {
   RefPtr<FileChannelParent> p = new FileChannelParent();
-  return p.forget().take();
-}
-
-bool NeckoParent::DeallocPFileChannelParent(PFileChannelParent* actor) {
-  RefPtr<FileChannelParent> p =
-      dont_AddRef(static_cast<FileChannelParent*>(actor));
-  return true;
+  return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPFileChannelConstructor(
