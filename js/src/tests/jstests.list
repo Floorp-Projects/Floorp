@@ -33,25 +33,11 @@ skip script test262/built-ins/Function/prototype/restricted-property-arguments.j
 skip script test262/built-ins/Function/prototype/restricted-property-caller.js
 skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 
-# https://github.com/tc39/ecma262/issues/1049
-# The "name" property is present on all functions. V8 and JSC agree, but the
-# spec and tests say anonymous functions simply have no own .name property. The
-# spec should change.
-skip script test262/built-ins/Proxy/revocable/revocation-function-name.js
-skip script test262/built-ins/Promise/reject-function-name.js
-skip script test262/built-ins/Promise/resolve-function-name.js
-skip script test262/built-ins/Promise/executor-function-name.js
-skip script test262/built-ins/Promise/all/resolve-element-function-name.js
-skip script test262/built-ins/Promise/allSettled/resolve-element-function-name.js
-skip script test262/built-ins/Promise/allSettled/reject-element-function-name.js
-
 
 #########################################################################
 # Test262 tests disabled when features are only conditionally available #
 #########################################################################
 
-skip-if(!Array.prototype.values) script test262/built-ins/Array/prototype/Symbol.iterator.js
-skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/values/jstests.list
 skip-if(!String.prototype.normalize) include test262/built-ins/String/prototype/normalize/jstests.list
 
 # Requires ICU to detect Final_Sigma case mapping context
@@ -147,15 +133,6 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 ##################################################
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
-
-# %ThrowTypeError% should be anonymous
-skip script test262/built-ins/ThrowTypeError/name.js
-
-# Anonymous functions have own name property in SpiderMonkey
-skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
-skip script test262/language/expressions/assignment/fn-name-lhs-member.js
-skip script test262/language/expressions/function/name.js
-skip script test262/language/expressions/generators/name.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
 skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
@@ -379,11 +356,6 @@ skip script test262/language/statements/while/cptn-no-iter.js
 skip script test262/language/statements/with/cptn-abrupt-empty.js
 skip script test262/language/statements/with/cptn-nrml.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1296234
-skip script test262/intl402/Collator/prototype/compare/compare-function-name.js
-skip script test262/intl402/DateTimeFormat/prototype/format/format-function-name.js
-skip script test262/intl402/NumberFormat/prototype/format/format-function-name.js
-
 # Dependent on evalInWorker, setSharedArrayBuffer, and
 # getSharedArrayBuffer, plus the test cases can't actually run in the
 # browser even if that were fixed, https://bugzil.la/1349863
@@ -410,7 +382,7 @@ skip script test262/annexB/language/function-code/block-decl-func-skip-arguments
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1495072
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1558971
 skip script test262/language/expressions/await/await-monkey-patched-promise.js
 skip script test262/language/expressions/await/async-await-interleaved.js
 skip script test262/language/expressions/await/for-await-of-interleaved.js
@@ -482,3 +454,7 @@ skip script test262/harness/detachArrayBuffer.js
 
 # See review notes for https://github.com/tc39/ecma402/pull/347
 skip script test262/intl402/DateTimeFormat/constructor-options-fractionalSecondDigits-valid.js
+
+# Draft proposal doesn't yet implement the changes proposed in
+# <https://github.com/tc39/proposal-unified-intl-numberformat/issues/63>.
+skip script test262/intl402/NumberFormat/constructor-unit.js
