@@ -15669,5 +15669,29 @@
       "high": 100,
       "n_buckets": 12,
       "description": "Percentages of times for phases in an expensive refresh tick relative to the time spent in the entire tick (REFRESH_DRIVER_TICK)."
+  },
+  "HYPHENATION_MEMORY": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jkew@mozilla.com"],
+    "bug_numbers": [1568514],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 8000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Total per-process memory used by loaded auto-hyphenation tables (KB)."
+  },
+  "HYPHENATION_LOAD_TIME": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jkew@mozilla.com"],
+    "bug_numbers": [1568514],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "How many milliseconds it took to load a hyphenation resource."
   }
 }
