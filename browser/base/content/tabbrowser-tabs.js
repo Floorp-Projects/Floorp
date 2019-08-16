@@ -67,11 +67,6 @@
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
 
-      this.newTabButton.setAttribute(
-        "tooltiptext",
-        GetDynamicShortcutTooltipText("tabs-newtab-button")
-      );
-
       window.addEventListener("resize", this);
 
       this.boundObserve = (...args) => this.observe(...args);
@@ -1063,7 +1058,7 @@
                 "menupopup"
               );
               if (parent.id) {
-                popup.id = "newtab-popup";
+                popup.id = parent.id + "-popup";
               } else {
                 popup.setAttribute("anonid", "newtab-popup");
               }
@@ -1088,6 +1083,15 @@
 
               parent.setAttribute("type", "menu");
             }
+
+            // Update tooltip text and evict from tooltip cache
+            if (containersEnabled) {
+              nodeToTooltipMap[parent.id] = "newTabContainer.tooltip";
+            } else {
+              nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
+            }
+
+            gDynamicTooltipCache.delete(parent.id);
           }
 
           break;
