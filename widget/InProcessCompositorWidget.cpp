@@ -44,6 +44,10 @@ void InProcessCompositorWidget::PostRender(WidgetRenderingContext* aContext) {
   mWidget->PostRender(aContext);
 }
 
+void InProcessCompositorWidget::DoCompositorCleanup() {
+  mWidget->DoCompositorCleanup();
+}
+
 void InProcessCompositorWidget::DrawWindowUnderlay(
     WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
   mWidget->DrawWindowUnderlay(aContext, aRect);
