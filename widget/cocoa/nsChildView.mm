@@ -1452,6 +1452,12 @@ void nsChildView::HandleMainThreadCATransaction() {
     // We're in BasicLayers mode, i.e. main thread software compositing.
     // Composite the window into our layer's surface.
     PaintWindowInContentLayer();
+  } else {
+    // Trigger a synchronous OMTC composite. This will call NextSurface and
+    // NotifySurfaceReady on the compositor thread to update mContentLayer's
+    // surface, and the main thread (this thread) will wait inside PaintWindow
+    // during that time.
+    PaintWindow(LayoutDeviceIntRegion(GetBounds()));
   }
 
   // Apply the changes from mContentLayer to its underlying CALayer. Now is a
@@ -1888,11 +1894,44 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
   return true;
 }
 
+class SurfaceRegistryWrapperAroundGLContextCGL : public layers::IOSurfaceRegistry {
+ public:
+  explicit SurfaceRegistryWrapperAroundGLContextCGL(gl::GLContextCGL* aContext)
+      : mContext(aContext) {}
+  void RegisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->RegisterIOSurface(aSurface.get());
+  }
+  void UnregisterSurface(CFTypeRefPtr<IOSurfaceRef> aSurface) override {
+    mContext->UnregisterIOSurface(aSurface.get());
+  }
+  RefPtr<gl::GLContextCGL> mContext;
+};
+
 bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
   UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
   gl::GLContext* gl = manager ? manager->gl() : aContext->mGL;
 
   if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    if (gl) {
+      auto glContextCGL = GLContextCGL::Cast(gl);
+      mContentLayer->SetRect(GetBounds().ToUnknownRect());
+      mContentLayer->SetSurfaceIsFlipped(true);
+      RefPtr<layers::IOSurfaceRegistry> currentRegistry = mContentLayer->GetSurfaceRegistry();
+      if (!currentRegistry) {
+        mContentLayer->SetSurfaceRegistry(
+            MakeAndAddRef<SurfaceRegistryWrapperAroundGLContextCGL>(glContextCGL));
+      } else {
+        MOZ_RELEASE_ASSERT(
+            static_cast<SurfaceRegistryWrapperAroundGLContextCGL*>(currentRegistry.get())
+                ->mContext == glContextCGL);
+      }
+      CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
+      if (!surf) {
+        return false;
+      }
+      glContextCGL->UseRegisteredIOSurfaceForDefaultFramebuffer(surf.get());
+      return true;
+    }
     return false;  // This will be fleshed out in upcoming patches.
   }
 
@@ -1913,12 +1952,27 @@ bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
 }
 
 void nsChildView::PostRender(WidgetRenderingContext* aContext) {
-  UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
-  gl::GLContext* gl = manager ? manager->gl() : aContext->mGL;
-  NSOpenGLContext* glContext =
-      gl ? GLContextCGL::Cast(gl)->GetNSOpenGLContext() : mGLPresenter->GetNSOpenGLContext();
-  [mView postRender:glContext];
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+    mContentLayer->NotifySurfaceReady();
+
+    // Force a CoreAnimation layer tree update from this thread.
+    [CATransaction begin];
+    mNativeLayerRoot->ApplyChanges();
+    [CATransaction commit];
+  } else {
+    UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));
+    GLContext* gl = manager ? manager->gl() : aContext->mGL;
+    NSOpenGLContext* glContext =
+        gl ? GLContextCGL::Cast(gl)->GetNSOpenGLContext() : mGLPresenter->GetNSOpenGLContext();
+    [mView postRender:glContext];
+  }
   mViewTearDownLock.Unlock();
+}
+
+void nsChildView::DoCompositorCleanup() {
+  if (mContentLayer) {
+    mContentLayer->SetSurfaceRegistry(nullptr);
+  }
 }
 
 void nsChildView::DrawWindowOverlay(WidgetRenderingContext* aContext, LayoutDeviceIntRect aRect) {
