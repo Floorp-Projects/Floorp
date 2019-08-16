@@ -186,7 +186,6 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
-- (BOOL)isUsingOpenGL;
 
 - (BOOL)hasRoundedBottomCorners;
 - (CGFloat)cornerRadius;
@@ -3217,7 +3216,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || !mGeckoChild->IsVisible()) return;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
-  if ([self isUsingOpenGL]) {
+  if (mUsingOMTCompositor) {
     // Make sure the window's "drawRect" buffer does not interfere with our
     // OpenGL drawing's rounded corners.
     [self clearCorners];
@@ -3260,12 +3259,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [self drawTitleString];
     [self maskTopCornersInContext:cgContext];
   }
-}
-
-- (BOOL)isUsingOpenGL {
-  if (!mGeckoChild || ![self window]) return NO;
-
-  return mGLContext || mUsingOMTCompositor;
 }
 
 - (BOOL)hasRoundedBottomCorners {
@@ -3419,7 +3412,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       NS_DispatchToMainThread(releaserRunnable);
     }
 
-    if ([self isUsingOpenGL]) {
+    if (mUsingOMTCompositor) {
       if (ShadowLayerForwarder* slf = mGeckoChild->GetLayerManager()->AsShadowForwarder()) {
         slf->WindowOverlayChanged();
       } else if (WebRenderLayerManager* wrlm =
