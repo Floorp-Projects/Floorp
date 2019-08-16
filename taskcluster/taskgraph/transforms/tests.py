@@ -1206,11 +1206,8 @@ def enable_webrender(config, tests):
     """
     for test in tests:
         if test.get('webrender'):
-            extra_options = test['mozharness'].setdefault('extra-options', [])
-            extra_options.append("--enable-webrender")
-            # We only want to 'setpref' on tests that have a profile
-            if not test['attributes']['unittest_category'] in ['cppunittest', 'gtest']:
-                extra_options.append("--setpref=layers.d3d11.enable-blacklist=false")
+            test['mozharness'].setdefault('extra-options', [])\
+                              .append("--enable-webrender")
 
         yield test
 
