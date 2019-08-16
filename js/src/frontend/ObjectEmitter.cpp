@@ -685,15 +685,6 @@ bool ClassEmitter::emitInitDefaultConstructor(const Maybe<uint32_t>& classStart,
     }
   }
 
-  // The empty string is used as a placeholder, so if the inferred name for this
-  // anonymous class expression is also the empty string, we need to set it
-  // explicitly here.
-  if (nameForAnonymousClass_ == bce_->cx->names().empty) {
-    if (!emitSetEmptyClassConstructorNameForDefaultCtor()) {
-      return false;
-    }
-  }
-
   if (!initProtoAndCtor()) {
     //              [stack] CTOR HOMEOBJ
     return false;
@@ -702,22 +693,6 @@ bool ClassEmitter::emitInitDefaultConstructor(const Maybe<uint32_t>& classStart,
 #ifdef DEBUG
   classState_ = ClassState::InitConstructor;
 #endif
-  return true;
-}
-
-bool ClassEmitter::emitSetEmptyClassConstructorNameForDefaultCtor() {
-  uint32_t nameIndex;
-  if (!bce_->makeAtomIndex(bce_->cx->names().empty, &nameIndex)) {
-    return false;
-  }
-  if (!bce_->emitIndexOp(JSOP_STRING, nameIndex)) {
-    //              [stack] CTOR NAME
-    return false;
-  }
-  if (!bce_->emit2(JSOP_SETFUNNAME, uint8_t(FunctionPrefixKind::None))) {
-    //              [stack] CTOR
-    return false;
-  }
   return true;
 }
 
