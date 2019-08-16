@@ -43,7 +43,7 @@ const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 const { ExtensionCommon } = ChromeUtils.import(
   "resource://gre/modules/ExtensionCommon.jsm"
 );
-const { ExtensionChild } = ChromeUtils.import(
+const { ExtensionChild, ExtensionActivityLogChild } = ChromeUtils.import(
   "resource://gre/modules/ExtensionChild.jsm"
 );
 const { ExtensionUtils } = ChromeUtils.import(
@@ -180,6 +180,7 @@ class ExtensionBaseContextChild extends BaseContext {
     this.uri = uri || extension.baseURI;
 
     this.setContentWindow(contentWindow);
+    this.browsingContextId = contentWindow.docShell.browsingContext.id;
 
     // This is the MessageSender property passed to extension.
     let sender = { id: extension.id };
@@ -211,6 +212,10 @@ class ExtensionBaseContextChild extends BaseContext {
       chromeApiWrapper.inject(chromeObj);
       return chromeObj;
     });
+  }
+
+  logActivity(type, name, data) {
+    ExtensionActivityLogChild.log(this, type, name, data);
   }
 
   get cloneScope() {

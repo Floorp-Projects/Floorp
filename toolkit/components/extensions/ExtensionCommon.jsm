@@ -531,6 +531,13 @@ class BaseContext {
     });
   }
 
+  // All child contexts must implement logActivity.  This is handled if the child
+  // context subclasses ExtensionBaseContextChild.  ProxyContextParent overrides
+  // this with a noop for parent contexts.
+  logActivity(type, name, data) {
+    throw new Error(`Not implemented for ${this.envType}`);
+  }
+
   get cloneScope() {
     throw new Error("Not implemented");
   }
@@ -2354,6 +2361,7 @@ class EventManager {
     if (this.unregister.has(callback)) {
       return;
     }
+    this.context.logActivity("api_call", `${this.name}.addListener`, { args });
 
     let shouldFire = () => {
       if (this.context.unloaded) {
@@ -2369,13 +2377,17 @@ class EventManager {
     let fire = {
       sync: (...args) => {
         if (shouldFire()) {
-          return this.context.applySafe(callback, args);
+          let result = this.context.applySafe(callback, args);
+          this.context.logActivity("api_event", this.name, { args, result });
+          return result;
         }
       },
       async: (...args) => {
         return Promise.resolve().then(() => {
           if (shouldFire()) {
-            return this.context.applySafe(callback, args);
+            let result = this.context.applySafe(callback, args);
+            this.context.logActivity("api_event", this.name, { args, result });
+            return result;
           }
         });
       },
@@ -2383,12 +2395,16 @@ class EventManager {
         if (!shouldFire()) {
           throw new Error("Called raw() on unloaded/inactive context");
         }
-        return Reflect.apply(callback, null, args);
+        let result = Reflect.apply(callback, null, args);
+        this.context.logActivity("api_event", this.name, { args, result });
+        return result;
       },
       asyncWithoutClone: (...args) => {
         return Promise.resolve().then(() => {
           if (shouldFire()) {
-            return this.context.applySafeWithoutClone(callback, args);
+            let result = this.context.applySafeWithoutClone(callback, args);
+            this.context.logActivity("api_event", this.name, { args, result });
+            return result;
           }
         });
       },
