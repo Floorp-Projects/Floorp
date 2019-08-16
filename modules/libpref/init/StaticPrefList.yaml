@@ -2566,6 +2566,13 @@
 # Prefs starting with "fission."
 #---------------------------------------------------------------------------
 
+# Whether to enable Fission.
+# Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
+- name: fission.autostart
+  type: bool
+  value: false
+  mirror: always
+
 # This pref has no effect within fission windows, it only controls the
 # behaviour within non-fission windows.
 - name: fission.preserve_browsing_contexts
