@@ -373,8 +373,8 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
   EventRegionsOverride GetEventRegionsOverride() const {
     MOZ_ASSERT(IsValid());
 
-    if (mLayer->AsRefLayer()) {
-      return mLayer->AsRefLayer()->GetEventRegionsOverride();
+    if (AsRefLayer()) {
+      return AsRefLayer()->GetEventRegionsOverride();
     }
     return EventRegionsOverride::NoOverride;
   }
