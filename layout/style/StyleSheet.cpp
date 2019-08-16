@@ -1115,7 +1115,7 @@ nsresult StyleSheet::ReparseSheet(const nsAString& aInput) {
 
 // nsICSSLoaderObserver implementation
 NS_IMETHODIMP
-StyleSheet::StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+StyleSheet::StyleSheetLoaded(StyleSheet* aSheet, bool aWasDeferred,
                              nsresult aStatus) {
   if (!aSheet->GetParentSheet()) {
     return NS_OK;  // ignore if sheet has been detached already
