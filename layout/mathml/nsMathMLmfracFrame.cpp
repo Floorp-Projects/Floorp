@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsDisplayList.h"
@@ -103,28 +104,38 @@ nscoord nsMathMLmfracFrame::CalcLineThickness(nsPresContext* aPresContext,
   // default: medium
   //
   if (!aThicknessAttribute.IsEmpty()) {
-    if (aThicknessAttribute.EqualsLiteral("thin")) {
-      lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
-      minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
-      // should visually decrease by at least one pixel, if default is not a
-      // pixel
-      if (defaultThickness > onePixel &&
-          lineThickness > defaultThickness - onePixel)
-        lineThickness = defaultThickness - onePixel;
-    } else if (aThicknessAttribute.EqualsLiteral("medium")) {
-      // medium is default
-    } else if (aThicknessAttribute.EqualsLiteral("thick")) {
-      lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
-      minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
-      // should visually increase by at least one pixel
-      if (lineThickness < defaultThickness + onePixel)
-        lineThickness = defaultThickness + onePixel;
-    } else {
+    if (StaticPrefs::mathml_mfrac_linethickness_names_disabled()) {
       // length value
       lineThickness = defaultThickness;
       ParseNumericValue(aThicknessAttribute, &lineThickness,
                         nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
                         aComputedStyle, aFontSizeInflation);
+    } else {
+      if (aThicknessAttribute.EqualsLiteral("thin")) {
+        lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
+        minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
+        // should visually decrease by at least one pixel, if default is not a
+        // pixel
+        if (defaultThickness > onePixel &&
+            lineThickness > defaultThickness - onePixel) {
+          lineThickness = defaultThickness - onePixel;
+        }
+      } else if (aThicknessAttribute.EqualsLiteral("medium")) {
+        // medium is default
+      } else if (aThicknessAttribute.EqualsLiteral("thick")) {
+        lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
+        minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
+        // should visually increase by at least one pixel
+        if (lineThickness < defaultThickness + onePixel) {
+          lineThickness = defaultThickness + onePixel;
+        }
+      } else {
+        // length value
+        lineThickness = defaultThickness;
+        ParseNumericValue(aThicknessAttribute, &lineThickness,
+                          nsMathMLElement::PARSE_ALLOW_UNITLESS, aPresContext,
+                          aComputedStyle, aFontSizeInflation);
+      }
     }
   }
 
