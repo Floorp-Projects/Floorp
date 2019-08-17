@@ -306,7 +306,7 @@ class Nursery {
   // Register a malloced buffer that is held by a nursery object, which
   // should be freed at the end of a minor GC. Buffers are unregistered when
   // their owning objects are tenured.
-  bool registerMallocedBuffer(void* buffer);
+  MOZ_MUST_USE bool registerMallocedBuffer(void* buffer);
 
   // Mark a malloced buffer as no longer needing to be freed.
   void removeMallocedBuffer(void* buffer) {
