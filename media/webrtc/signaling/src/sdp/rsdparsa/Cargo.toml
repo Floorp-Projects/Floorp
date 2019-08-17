@@ -22,7 +22,7 @@ serialize = ["serde", "serde_derive"]
 log = {version = "0.4.6"}
 serde = {version = "1.0" , optional = true}
 serde_derive = {version = "1.0" , optional = true}
-url = {version="1.7.2"}
+url = {version = "2.0"}
 
 [dev-dependencies]
 serde_json = {version = "1.0"}
