@@ -8,15 +8,14 @@
 
 //! Unit tests
 
-#[macro_use]
+extern crate percent_encoding;
 extern crate url;
 
-use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::path::{Path, PathBuf};
-use url::{Host, HostAndPort, Url, form_urlencoded};
+use url::{form_urlencoded, Host, Url};
 
 #[test]
 fn size() {
@@ -25,7 +24,9 @@ fn size() {
 }
 
 macro_rules! assert_from_file_path {
-    ($path: expr) => { assert_from_file_path!($path, $path) };
+    ($path: expr) => {
+        assert_from_file_path!($path, $path)
+    };
     ($path: expr, $url_path: expr) => {{
         let url = Url::from_file_path(Path::new($path)).unwrap();
         assert_eq!(url.host(), None);
@@ -33,8 +34,6 @@ macro_rules! assert_from_file_path {
         assert_eq!(url.to_file_path(), Ok(PathBuf::from($path)));
     }};
 }
-
-
 
 #[test]
 fn new_file_paths() {
@@ -74,7 +73,10 @@ fn new_path_windows_fun() {
         assert_from_file_path!("C:\\foo\\ba\0r", "/C:/foo/ba%00r");
 
         // Invalid UTF-8
-        assert!(Url::parse("file:///C:/foo/ba%80r").unwrap().to_file_path().is_err());
+        assert!(Url::parse("file:///C:/foo/ba%80r")
+            .unwrap()
+            .to_file_path()
+            .is_err());
 
         // test windows canonicalized path
         let path = PathBuf::from(r"\\?\C:\foo\bar");
@@ -85,7 +87,6 @@ fn new_path_windows_fun() {
         assert_eq!(url.to_file_path(), Ok(PathBuf::from(r"C:\foo\bar")));
     }
 }
-
 
 #[test]
 fn new_directory_paths() {
@@ -100,7 +101,10 @@ fn new_directory_paths() {
     if cfg!(windows) {
         assert_eq!(Url::from_directory_path(Path::new("relative")), Err(()));
         assert_eq!(Url::from_directory_path(Path::new(r"..\relative")), Err(()));
-        assert_eq!(Url::from_directory_path(Path::new(r"\drive-relative")), Err(()));
+        assert_eq!(
+            Url::from_directory_path(Path::new(r"\drive-relative")),
+            Err(())
+        );
         assert_eq!(Url::from_directory_path(Path::new(r"\\ucn\")), Err(()));
 
         let url = Url::from_directory_path(Path::new(r"C:\foo\bar")).unwrap();
@@ -127,10 +131,16 @@ fn from_str() {
 
 #[test]
 fn parse_with_params() {
-    let url = Url::parse_with_params("http://testing.com/this?dont=clobberme",
-                                     &[("lang", "rust")]).unwrap();
+    let url = Url::parse_with_params(
+        "http://testing.com/this?dont=clobberme",
+        &[("lang", "rust")],
+    )
+    .unwrap();
 
-    assert_eq!(url.as_str(), "http://testing.com/this?dont=clobberme&lang=rust");
+    assert_eq!(
+        url.as_str(),
+        "http://testing.com/this?dont=clobberme&lang=rust"
+    );
 }
 
 #[test]
@@ -145,8 +155,8 @@ fn issue_124() {
 
 #[test]
 fn test_equality() {
-    use std::hash::{Hash, Hasher};
     use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
 
     fn check_eq(a: &Url, b: &Url) {
         assert_eq!(a, b);
@@ -196,13 +206,29 @@ fn host() {
         assert_eq!(Url::parse(input).unwrap().host(), Some(host));
     }
     assert_host("http://www.mozilla.org", Host::Domain("www.mozilla.org"));
-    assert_host("http://1.35.33.49", Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)));
-    assert_host("http://[2001:0db8:85a3:08d3:1319:8a2e:0370:7344]", Host::Ipv6(Ipv6Addr::new(
-        0x2001, 0x0db8, 0x85a3, 0x08d3, 0x1319, 0x8a2e, 0x0370, 0x7344)));
+    assert_host(
+        "http://1.35.33.49",
+        Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)),
+    );
+    assert_host(
+        "http://[2001:0db8:85a3:08d3:1319:8a2e:0370:7344]",
+        Host::Ipv6(Ipv6Addr::new(
+            0x2001, 0x0db8, 0x85a3, 0x08d3, 0x1319, 0x8a2e, 0x0370, 0x7344,
+        )),
+    );
     assert_host("http://1.35.+33.49", Host::Domain("1.35.+33.49"));
-    assert_host("http://[::]", Host::Ipv6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)));
-    assert_host("http://[::1]", Host::Ipv6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)));
-    assert_host("http://0x1.0X23.0x21.061", Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)));
+    assert_host(
+        "http://[::]",
+        Host::Ipv6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
+    );
+    assert_host(
+        "http://[::1]",
+        Host::Ipv6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)),
+    );
+    assert_host(
+        "http://0x1.0X23.0x21.061",
+        Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)),
+    );
     assert_host("http://0x1232131", Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)));
     assert_host("http://111", Host::Ipv4(Ipv4Addr::new(0, 0, 0, 111)));
     assert_host("http://2..2.3", Host::Domain("2..2.3"));
@@ -217,15 +243,26 @@ fn host_serialization() {
     // but https://url.spec.whatwg.org/#concept-ipv6-serializer specifies not to.
 
     // Not [::0.0.0.2] / [::ffff:0.0.0.2]
-    assert_eq!(Url::parse("http://[0::2]").unwrap().host_str(), Some("[::2]"));
-    assert_eq!(Url::parse("http://[0::ffff:0:2]").unwrap().host_str(), Some("[::ffff:0:2]"));
+    assert_eq!(
+        Url::parse("http://[0::2]").unwrap().host_str(),
+        Some("[::2]")
+    );
+    assert_eq!(
+        Url::parse("http://[0::ffff:0:2]").unwrap().host_str(),
+        Some("[::ffff:0:2]")
+    );
 }
 
 #[test]
 fn test_idna() {
     assert!("http://goșu.ro".parse::<Url>().is_ok());
-    assert_eq!(Url::parse("http://☃.net/").unwrap().host(), Some(Host::Domain("xn--n3h.net")));
-    assert!("https://r2---sn-huoa-cvhl.googlevideo.com/crossdomain.xml".parse::<Url>().is_ok());
+    assert_eq!(
+        Url::parse("http://☃.net/").unwrap().host(),
+        Some(Host::Domain("xn--n3h.net"))
+    );
+    assert!("https://r2---sn-huoa-cvhl.googlevideo.com/crossdomain.xml"
+        .parse::<Url>()
+        .is_ok());
 }
 
 #[test]
@@ -236,9 +273,18 @@ fn test_serialization() {
         ("http://@emptyuser.com/", "http://emptyuser.com/"),
         ("http://:@emptypass.com/", "http://emptypass.com/"),
         ("http://user@user.com/", "http://user@user.com/"),
-        ("http://user:pass@userpass.com/", "http://user:pass@userpass.com/"),
-        ("http://slashquery.com/path/?q=something", "http://slashquery.com/path/?q=something"),
-        ("http://noslashquery.com/path?q=something", "http://noslashquery.com/path?q=something")
+        (
+            "http://user:pass@userpass.com/",
+            "http://user:pass@userpass.com/",
+        ),
+        (
+            "http://slashquery.com/path/?q=something",
+            "http://slashquery.com/path/?q=something",
+        ),
+        (
+            "http://noslashquery.com/path?q=something",
+            "http://noslashquery.com/path?q=something",
+        ),
     ];
     for &(input, result) in &data {
         let url = Url::parse(input).unwrap();
@@ -251,11 +297,16 @@ fn test_form_urlencoded() {
     let pairs: &[(Cow<str>, Cow<str>)] = &[
         ("foo".into(), "é&".into()),
         ("bar".into(), "".into()),
-        ("foo".into(), "#".into())
+        ("foo".into(), "#".into()),
     ];
-    let encoded = form_urlencoded::Serializer::new(String::new()).extend_pairs(pairs).finish();
+    let encoded = form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(pairs)
+        .finish();
     assert_eq!(encoded, "foo=%C3%A9%26&bar=&foo=%23");
-    assert_eq!(form_urlencoded::parse(encoded.as_bytes()).collect::<Vec<_>>(), pairs.to_vec());
+    assert_eq!(
+        form_urlencoded::parse(encoded.as_bytes()).collect::<Vec<_>>(),
+        pairs.to_vec()
+    );
 }
 
 #[test]
@@ -269,42 +320,12 @@ fn test_form_serialize() {
 }
 
 #[test]
-fn form_urlencoded_custom_encoding_override() {
+fn form_urlencoded_encoding_override() {
     let encoded = form_urlencoded::Serializer::new(String::new())
-        .custom_encoding_override(|s| s.as_bytes().to_ascii_uppercase().into())
+        .encoding_override(Some(&|s| s.as_bytes().to_ascii_uppercase().into()))
         .append_pair("foo", "bar")
         .finish();
     assert_eq!(encoded, "FOO=BAR");
-}
-
-#[test]
-fn host_and_port_display() {
-    assert_eq!(
-        format!(
-            "{}",
-            HostAndPort{ host: Host::Domain("www.mozilla.org"), port: 80}
-        ),
-        "www.mozilla.org:80"
-    );
-    assert_eq!(
-        format!(
-            "{}",
-            HostAndPort::<String>{ host: Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)), port: 65535 }
-        ),
-        "1.35.33.49:65535"
-    );
-    assert_eq!(
-        format!(
-            "{}",
-            HostAndPort::<String>{
-                host: Host::Ipv6(Ipv6Addr::new(
-                    0x2001, 0x0db8, 0x85a3, 0x08d3, 0x1319, 0x8a2e, 0x0370, 0x7344
-                )),
-                port: 1337
-            })
-        ,
-        "[2001:db8:85a3:8d3:1319:8a2e:370:7344]:1337"
-    )
 }
 
 #[test]
@@ -323,8 +344,13 @@ fn issue_61() {
 fn issue_197() {
     let mut url = Url::from_file_path("/").expect("Failed to parse path");
     url.check_invariants().unwrap();
-    assert_eq!(url, Url::parse("file:///").expect("Failed to parse path + protocol"));
-    url.path_segments_mut().expect("path_segments_mut").pop_if_empty();
+    assert_eq!(
+        url,
+        Url::parse("file:///").expect("Failed to parse path + protocol")
+    );
+    url.path_segments_mut()
+        .expect("path_segments_mut")
+        .pop_if_empty();
 }
 
 #[test]
@@ -346,12 +372,19 @@ fn append_trailing_slash() {
 /// https://github.com/servo/rust-url/issues/227
 fn extend_query_pairs_then_mutate() {
     let mut url: Url = "http://localhost:6767/foo/bar".parse().unwrap();
-    url.query_pairs_mut().extend_pairs(vec![ ("auth", "my-token") ].into_iter());
+    url.query_pairs_mut()
+        .extend_pairs(vec![("auth", "my-token")].into_iter());
     url.check_invariants().unwrap();
-    assert_eq!(url.to_string(), "http://localhost:6767/foo/bar?auth=my-token");
+    assert_eq!(
+        url.to_string(),
+        "http://localhost:6767/foo/bar?auth=my-token"
+    );
     url.path_segments_mut().unwrap().push("some_other_path");
     url.check_invariants().unwrap();
-    assert_eq!(url.to_string(), "http://localhost:6767/foo/bar/some_other_path?auth=my-token");
+    assert_eq!(
+        url.to_string(),
+        "http://localhost:6767/foo/bar/some_other_path?auth=my-token"
+    );
 }
 
 #[test]
@@ -388,44 +421,18 @@ fn test_set_host() {
 #[test]
 // https://github.com/servo/rust-url/issues/166
 fn test_leading_dots() {
-    assert_eq!(Host::parse(".org").unwrap(), Host::Domain(".org".to_owned()));
+    assert_eq!(
+        Host::parse(".org").unwrap(),
+        Host::Domain(".org".to_owned())
+    );
     assert_eq!(Url::parse("file://./foo").unwrap().domain(), Some("."));
-}
-
-// This is testing that the macro produces buildable code when invoked
-// inside both a module and a function
-#[test]
-fn define_encode_set_scopes() {
-    use url::percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
-
-    define_encode_set! {
-        /// This encode set is used in the URL parser for query strings.
-        pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
-    }
-
-    assert_eq!(utf8_percent_encode("foo bar", QUERY_ENCODE_SET).collect::<String>(), "foo%20bar");
-
-    mod m {
-        use url::percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
-
-        define_encode_set! {
-            /// This encode set is used in the URL parser for query strings.
-            pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
-        }
-
-        pub fn test() {
-            assert_eq!(utf8_percent_encode("foo bar", QUERY_ENCODE_SET).collect::<String>(), "foo%20bar");
-        }
-    }
-
-    m::test();
 }
 
 #[test]
 /// https://github.com/servo/rust-url/issues/302
 fn test_origin_hash() {
-    use std::hash::{Hash,Hasher};
     use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
 
     fn hash<T: Hash>(value: &T) -> u64 {
         let mut hasher = DefaultHasher::new();
@@ -444,7 +451,9 @@ fn test_origin_hash() {
         Url::parse("ftp://example.net").unwrap().origin(),
         Url::parse("file://example.net").unwrap().origin(),
         Url::parse("http://user@example.net/").unwrap().origin(),
-        Url::parse("http://user:pass@example.net/").unwrap().origin(),
+        Url::parse("http://user:pass@example.net/")
+            .unwrap()
+            .origin(),
     ];
 
     for origin_to_compare in &origins_to_compare {
@@ -466,7 +475,7 @@ fn test_origin_hash() {
 #[test]
 fn test_windows_unc_path() {
     if !cfg!(windows) {
-        return
+        return;
     }
 
     let url = Url::from_file_path(Path::new(r"\\host\share\path\file.txt")).unwrap();
@@ -490,33 +499,20 @@ fn test_windows_unc_path() {
     assert!(url.is_err());
 }
 
-// Test the now deprecated log_syntax_violation method for backward
-// compatibility
-#[test]
-#[allow(deprecated)]
-fn test_old_log_violation_option() {
-    let violation = Cell::new(None);
-    let url = Url::options()
-        .log_syntax_violation(Some(&|s| violation.set(Some(s.to_owned()))))
-        .parse("http:////mozilla.org:42").unwrap();
-    assert_eq!(url.port(), Some(42));
-
-    let violation = violation.take();
-    assert_eq!(violation, Some("expected //".to_string()));
-}
-
 #[test]
 fn test_syntax_violation_callback() {
     use url::SyntaxViolation::*;
     let violation = Cell::new(None);
     let url = Url::options()
         .syntax_violation_callback(Some(&|v| violation.set(Some(v))))
-        .parse("http:////mozilla.org:42").unwrap();
+        .parse("http:////mozilla.org:42")
+        .unwrap();
     assert_eq!(url.port(), Some(42));
 
     let v = violation.take().unwrap();
     assert_eq!(v, ExpectedDoubleSlash);
     assert_eq!(v.description(), "expected //");
+    assert_eq!(v.to_string(), "expected //");
 }
 
 #[test]
@@ -527,13 +523,15 @@ fn test_syntax_violation_callback_lifetimes() {
 
     let url = Url::options()
         .syntax_violation_callback(Some(&vfn))
-        .parse("http:////mozilla.org:42").unwrap();
+        .parse("http:////mozilla.org:42")
+        .unwrap();
     assert_eq!(url.port(), Some(42));
     assert_eq!(violation.take(), Some(ExpectedDoubleSlash));
 
     let url = Url::options()
         .syntax_violation_callback(Some(&vfn))
-        .parse("http://mozilla.org\\path").unwrap();
+        .parse("http://mozilla.org\\path")
+        .unwrap();
     assert_eq!(url.path(), "/path");
     assert_eq!(violation.take(), Some(Backslash));
 }
@@ -544,13 +542,11 @@ fn test_options_reuse() {
     let violations = RefCell::new(Vec::new());
     let vfn = |v| violations.borrow_mut().push(v);
 
-    let options = Url::options()
-        .syntax_violation_callback(Some(&vfn));
+    let options = Url::options().syntax_violation_callback(Some(&vfn));
     let url = options.parse("http:////mozilla.org").unwrap();
 
     let options = options.base_url(Some(&url));
     let url = options.parse("/sub\\path").unwrap();
     assert_eq!(url.as_str(), "http://mozilla.org/sub/path");
-    assert_eq!(*violations.borrow(),
-               vec!(ExpectedDoubleSlash, Backslash));
+    assert_eq!(*violations.borrow(), vec!(ExpectedDoubleSlash, Backslash));
 }

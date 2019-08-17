@@ -32,12 +32,15 @@
 //! > that minimizes the impact of this transition for client software,
 //! > allowing client software to access domains that are valid under either system.
 
-#[macro_use] extern crate matches;
+#[macro_use]
+extern crate matches;
 extern crate unicode_bidi;
 extern crate unicode_normalization;
 
 pub mod punycode;
-pub mod uts46;
+mod uts46;
+
+pub use uts46::{Config, Errors};
 
 /// The [domain to ASCII](https://url.spec.whatwg.org/#concept-domain-to-ascii) algorithm.
 ///
@@ -47,11 +50,16 @@ pub mod uts46;
 ///
 /// This process may fail.
 pub fn domain_to_ascii(domain: &str) -> Result<String, uts46::Errors> {
-    uts46::to_ascii(domain, uts46::Flags {
-        use_std3_ascii_rules: false,
-        transitional_processing: true, // XXX: switch when Firefox does
-        verify_dns_length: false,
-    })
+    Config::default().to_ascii(domain)
+}
+
+/// The [domain to ASCII](https://url.spec.whatwg.org/#concept-domain-to-ascii) algorithm,
+/// with the `beStrict` flag set.
+pub fn domain_to_ascii_strict(domain: &str) -> Result<String, uts46::Errors> {
+    Config::default()
+        .use_std3_ascii_rules(true)
+        .verify_dns_length(true)
+        .to_ascii(domain)
 }
 
 /// The [domain to Unicode](https://url.spec.whatwg.org/#concept-domain-to-unicode) algorithm.
@@ -63,11 +71,5 @@ pub fn domain_to_ascii(domain: &str) -> Result<String, uts46::Errors> {
 /// This may indicate [syntax violations](https://url.spec.whatwg.org/#syntax-violation)
 /// but always returns a string for the mapped domain.
 pub fn domain_to_unicode(domain: &str) -> (String, Result<(), uts46::Errors>) {
-    uts46::to_unicode(domain, uts46::Flags {
-        use_std3_ascii_rules: false,
-
-        // Unused:
-        transitional_processing: true,
-        verify_dns_length: false,
-    })
+    Config::default().to_unicode(domain)
 }
