@@ -187,54 +187,11 @@ static inline void DestroyPLDHashTableCallbacks(const PLDHashTableOps* aOps);
 static inline void MovePLDHashTableContents(const PLDHashTableOps* aFirstOps,
                                             const PLDHashTableOps* aSecondOps);
 
-// Associate an arbitrary pointer with a JS object root while replaying. This
-// is useful for replaying the behavior of weak pointers.
-MFBT_API void SetWeakPointerJSRoot(const void* aPtr, JSObject* aJSObj);
-
-// API for ensuring that a function executes at a consistent point when
-// recording or replaying. This is primarily needed for finalizers and other
-// activity during a GC that can perform recorded events (because GCs can
-// occur at different times and behave differently between recording and
-// replay, thread events are disallowed during a GC). Triggers can be
-// registered at a point where thread events are allowed, then activated at
-// a point where thread events are not allowed. When recording, the trigger's
-// callback will execute at the next point when ExecuteTriggers is called on
-// the thread which originally registered the trigger (typically at the top of
-// the thread's event loop), and when replaying the callback will execute at
-// the same point, even if it was never activated.
-//
-// Below is an example of how this API can be used.
-//
-// // This structure's lifetime is managed by the GC.
-// struct GarbageCollectedHolder {
-//   GarbageCollectedHolder() {
-//     RegisterTrigger(this, [=]() { this->DestroyContents(); });
-//   }
-//   ~GarbageCollectedHolder() {
-//     UnregisterTrigger(this);
-//   }
-//
-//   void Finalize() {
-//     // During finalization, thread events are disallowed.
-//     if (IsRecordingOrReplaying()) {
-//       ActivateTrigger(this);
-//     } else {
-//       DestroyContents();
-//     }
-//   }
-//
-//   // This is free to release resources held by the system, communicate with
-//   // other threads or processes, and so forth. When replaying, this may
-//   // be called before the GC has actually collected this object, but since
-//   // the GC will have already collected this object at this point in the
-//   // recording, this object will never be accessed again.
-//   void DestroyContents();
-// };
-MFBT_API void RegisterTrigger(void* aObj,
-                              const std::function<void()>& aCallback);
-MFBT_API void UnregisterTrigger(void* aObj);
-MFBT_API void ActivateTrigger(void* aObj);
-MFBT_API void ExecuteTriggers();
+// Prevent a JS object from ever being collected while recording or replaying.
+// GC behavior is non-deterministic when recording/replaying, and preventing
+// an object from being collected ensures that finalizers which might interact
+// with the recording will not execute.
+static inline void HoldJSObject(JSObject* aJSObj);
 
 // Some devtools operations which execute in a replaying process can cause code
 // to run which did not run while recording. For example, the JS debugger can
@@ -419,15 +376,8 @@ MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(MovePLDHashTableContents,
                                     (aFirstOps, aSecondOps))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(InvalidateRecording, (const char* aWhy),
                                     (aWhy))
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(
-    RegisterWeakPointer,
-    (const void* aPtr, const std::function<void(bool)>& aCallback),
-    (aPtr, aCallback))
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(UnregisterWeakPointer, (const void* aPtr),
-                                    (aPtr))
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(WeakPointerAccess,
-                                    (const void* aPtr, bool aSuccess),
-                                    (aPtr, aSuccess))
+MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(HoldJSObject, (JSObject* aObject),
+                                    (aObject))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(RecordReplayAssertBytes,
                                     (const void* aData, size_t aSize),
                                     (aData, aSize))

@@ -20,23 +20,5 @@ USE_LIBS += [
     'static:xul',
 ]
 
-if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
-    GENERATED_FILES += ['symverscript']
-    GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
-    GENERATED_FILES['symverscript'].inputs = ['../symverscript.in']
-    GENERATED_FILES['symverscript'].flags = [
-        'xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']
-    ]
-    SYMBOLS_FILE = '!symverscript'
-
-# Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
-# too old to support Python pretty-printers; if this changes, we could
-# make this 'ifdef GNU_CC'.
-if CONFIG['OS_ARCH'] == 'Linux':
-    # Create a GDB Python auto-load file alongside the libxul shared library
-    # in the build directory.
-    DEFINES['topsrcdir'] = TOPSRCDIR
-    OBJDIR_PP_FILES.toolkit.library.gtest += ['../libxul.so-gdb.py.in']
-
 Libxul('xul-gtest',
        output_category=None if CONFIG['LINK_GTEST_DURING_COMPILE'] else 'gtest')

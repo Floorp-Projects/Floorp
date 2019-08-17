@@ -1,0 +1,290 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension activityLog test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+
+add_task(async function test_api() {
+  let URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: { gecko: { id: "watched@tests.mozilla.org" } },
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+      content_scripts: [
+        {
+          matches: ["http://mochi.test/*/file_sample.html"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
+        },
+      ],
+    },
+    files: {
+      "content_script.js": () => {
+        browser.test.sendMessage("content_script");
+      },
+      "registered_script.js": () => {
+        browser.test.sendMessage("registered_script");
+      },
+    },
+    async background() {
+      async function runTest() {
+        // Test activity for a child function call.
+        browser.test.assertEq(
+          undefined,
+          browser.activityLog,
+          "activityLog requires permission"
+        );
+
+        // Test a child event manager.
+        browser.test.onMessage.addListener(async msg => {
+        });
+
+        // Test a parent event manager.
+        browser.webRequest.onBeforeRequest.addListener(
+          details => {
+            return { cancel: false };
+          },
+          { urls: ["http://mochi.test/*/file_sample.html"] },
+          ["blocking"]
+        );
+
+        // A manifest based content script is already
+        // registered, we do a dynamic registration here.
+        await browser.contentScripts.register({
+          js: [{ file: "registered_script.js" }],
+          matches: ["http://mochi.test/*/file_sample.html"],
+          runAt: "document_start",
+        });
+        browser.test.sendMessage("ready");
+      }
+      browser.test.onMessage.addListener(msg => {
+        // Logging has started here so this listener is logged, but the
+        // call adding it was not.  We do an additional onMessage.addListener
+        // call in the test function to validate child based event managers.
+        if (msg == "runtest") {
+          browser.test.assertTrue(true, msg);
+          runTest();
+        }
+      });
+      browser.test.sendMessage("url", browser.extension.getURL(""));
+    },
+  });
+
+  async function backgroundScript(expectedUrl, extensionUrl) {
+    let expecting = [
+      // Test child-only api_call.
+      {
+        type: "api_call",
+        name: "test.assertTrue",
+        data: { args: [true, "runtest"] },
+      },
+
+      // Test child-only api_call.
+      {
+        type: "api_call",
+        name: "test.assertEq",
+        data: {
+          args: [null, null, "activityLog requires permission"],
+        },
+      },
+      // Test child addListener calls.
+      {
+        type: "api_call",
+        name: "test.onMessage.addListener",
+        data: {
+          args: [],
+        },
+      },
+      // Test parent addListener calls.
+      {
+        type: "api_call",
+        name: "webRequest.onBeforeRequest.addListener",
+        data: {
+          args: [
+            {
+              incognito: null,
+              tabId: null,
+              types: null,
+              urls: ["http://mochi.test/*/file_sample.html"],
+              windowId: null,
+            },
+            ["blocking"],
+          ],
+        },
+      },
+      // Test an api that makes use of callParentAsyncFunction.
+      {
+        type: "api_call",
+        name: "contentScripts.register",
+        data: {
+          args: [
+            {
+              allFrames: null,
+              css: null,
+              excludeGlobs: null,
+              excludeMatches: null,
+              includeGlobs: null,
+              js: [
+                {
+                  file: `${extensionUrl}registered_script.js`,
+                },
+              ],
+              matchAboutBlank: null,
+              matches: ["http://mochi.test/*/file_sample.html"],
+              runAt: "document_start",
+            },
+          ],
+        },
+      },
+      // Test child api_event calls.
+      {
+        type: "api_event",
+        name: "test.onMessage",
+        data: { args: ["runtest"] },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["ready"] },
+      },
+      // Test parent api_event calls.
+      {
+        type: "api_event",
+        name: "webRequest.onBeforeRequest",
+        data: {
+          args: [
+            {
+              url: expectedUrl,
+              method: "GET",
+              type: "main_frame",
+              frameId: 0,
+              parentFrameId: -1,
+              ip: null,
+              frameAncestors: [],
+              incognito: false,
+            },
+          ],
+          result: {
+            cancel: false,
+          },
+        },
+      },
+      // Test manifest based content script.
+      {
+        type: "content_script",
+        name: "content_script.js",
+        data: { url: expectedUrl, tabId: 1 },
+      },
+      // registered script test
+      {
+        type: "content_script",
+        name: `${extensionUrl}registered_script.js`,
+        data: { url: expectedUrl, tabId: 1 },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["registered_script"], tabId: 1 },
+      },
+      {
+        type: "api_call",
+        name: "test.sendMessage",
+        data: { args: ["content_script"], tabId: 1 },
+      },
+    ];
+    browser.test.assertTrue(browser.activityLog, "activityLog is privileged");
+
+    let tab;
+    browser.activityLog.onExtensionActivity.addListener(async details => {
+      browser.test.log(`onExtensionActivity ${JSON.stringify(details)}`);
+      let test = expecting.shift();
+      if (!test) {
+        browser.test.notifyFail(`no test for ${details.name}`);
+      }
+      delete details.timeStamp;
+      // On multiple runs, tabId will be different.  Get the current tabId and
+      // use that.
+      if (test.data.tabId !== undefined) {
+        test.data.tabId = tab.id;
+      }
+
+      // hack for webRequest test
+      if (details.name === "webRequest.onBeforeRequest") {
+        // Remove items that may be variable, the important
+        // aspect is that we generally get the activity
+        // logging we expect.
+        delete details.data.args[0].requestId;
+        delete details.data.args[0].tabId;
+        delete details.data.args[0].originUrl;
+        delete details.data.args[0].timeStamp;
+        delete details.data.args[0].proxyInfo;
+      }
+
+      browser.test.assertEq(test.type, details.type, "type matches");
+      if (test.type == "content_script") {
+        browser.test.assertTrue(
+          details.name.includes(test.name),
+          "content script name matches"
+        );
+      } else {
+        browser.test.assertEq(test.name, details.name, "name matches");
+      }
+      browser.test.assertEq(
+        JSON.stringify(test.data),
+        JSON.stringify(details.data),
+        "message matches"
+      );
+      if (expecting.length == 0) {
+        await browser.tabs.remove(tab.id);
+        browser.test.notifyPass("activity");
+      }
+    }, "watched@tests.mozilla.org");
+
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "opentab") {
+        tab = await browser.tabs.create({url: expectedUrl});
+      }
+    });
+  }
+
+  await extension.startup();
+  let extensionUrl = await extension.awaitMessage("url");
+
+  let logger = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
+    manifest: {
+      applications: { gecko: { id: "watcher@tests.mozilla.org" } },
+      permissions: ["activityLog"],
+    },
+    background: `(${backgroundScript})("${URL}", "${extensionUrl}")`,
+  });
+  await logger.startup();
+  extension.sendMessage("runtest");
+  await extension.awaitMessage("ready");
+  logger.sendMessage("opentab");
+
+  await Promise.all([
+    extension.awaitMessage("content_script"),
+    extension.awaitMessage("registered_script"),
+    logger.awaitFinish("activity"),
+  ]);
+
+  await extension.unload();
+  await logger.unload();
+});
+
+
+</script>
+
+</body>
+</html>

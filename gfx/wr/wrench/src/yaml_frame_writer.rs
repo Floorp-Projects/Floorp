@@ -404,6 +404,26 @@ fn write_filter_primitives(
                 filter_input_node(&mut table, "in", info.input);
                 vector_node(&mut table, "offset", &info.offset);
             }
+            FilterPrimitiveKind::Composite(info) => {
+                yaml_node(&mut table, "type", Yaml::String("composite".into()));
+                filter_input_node(&mut table, "in1", info.input1);
+                filter_input_node(&mut table, "in2", info.input2);
+
+                let operator = match info.operator {
+                    CompositeOperator::Over => "over",
+                    CompositeOperator::In => "in",
+                    CompositeOperator::Out => "out",
+                    CompositeOperator::Atop => "atop",
+                    CompositeOperator::Xor => "xor",
+                    CompositeOperator::Lighter => "lighter",
+                    CompositeOperator::Arithmetic(..) => "arithmetic",
+                };
+                str_node(&mut table, "operator", operator);
+
+                if let CompositeOperator::Arithmetic(k_vals) = info.operator {
+                    f32_vec_node(&mut table, "k-values", &k_vals);
+                }
+            }
         }
         enum_node(&mut table, "color-space", filter_primitive.color_space);
         filter_primitives.push(Yaml::Hash(table));

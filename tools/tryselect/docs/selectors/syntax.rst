@@ -37,3 +37,5 @@ using :doc:`mach try fuzzy <fuzzy>` instead.
 While using ``mach try syntax -b do -p all -u all -t all`` will work, heavy use
 of ``all`` is discouraged as it consumes a lot of unnecessary resources (some of
 which are hardware constrained).
+
+..  _try_option_syntax.py: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/try_option_syntax.py
