@@ -23,7 +23,11 @@ import {
   sortSelectedBreakpoints,
 } from "../../../utils/breakpoint";
 
-import { getSelectedSource, getBreakpointSources } from "../../../selectors";
+import {
+  getSelectedSource,
+  getBreakpointSources,
+  getSkipPausing,
+} from "../../../selectors";
 
 import type { Source } from "../../../types";
 import type { BreakpointSources } from "../../../selectors/breakpointSources";
@@ -34,6 +38,7 @@ import "./Breakpoints.css";
 type Props = {
   breakpointSources: BreakpointSources,
   selectedSource: Source,
+  skipPausing: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   pauseOnExceptions: Function,
@@ -142,8 +147,9 @@ class Breakpoints extends Component<Props> {
   }
 
   render() {
+    const { skipPausing } = this.props;
     return (
-      <div className="pane">
+      <div className={classnames("pane", skipPausing && "skip-pausing")}>
         {this.renderExceptionsOptions()}
         {this.renderBreakpoints()}
       </div>
@@ -154,6 +160,7 @@ class Breakpoints extends Component<Props> {
 const mapStateToProps = state => ({
   breakpointSources: getBreakpointSources(state),
   selectedSource: getSelectedSource(state),
+  skipPausing: getSkipPausing(state),
 });
 
 export default connect(
