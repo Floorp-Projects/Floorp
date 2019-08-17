@@ -11,10 +11,6 @@
   --editor-searchbar-height: 25px;
   /* Remove once https://bugzilla.mozilla.org/show_bug.cgi?id=1520440 lands */
   --theme-code-line-height: calc(15 / 11);
-  /* Background and text colors and opacity for skipped breakpoint panes */
-  --skip-pausing-background-color: var(--theme-toolbar-hover);
-  --skip-pausing-opacity: 0.6;
-  --skip-pausing-color: var(--theme-body-color);
 }
 
 :root.theme-light,

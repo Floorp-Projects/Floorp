@@ -253,3 +253,21 @@ html .breakpoints-list .breakpoint.paused {
   padding-top: 1px;
 }
 
+/**
+ * Skip Pausing style
+ * Add a gray background and lower content opacity
+ */
+.breakpoints-pane .pane.skip-pausing {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.breakpoints-pane .pane.skip-pausing > * {
+  opacity: 0.6;
+}
+
+.breakpoints-pane .skip-pausing .breakpoint-label,
+.breakpoints-pane .skip-pausing .breakpoint-heading .filename,
+.breakpoints-pane .skip-pausing .breakpoint-exceptions-label,
+.breakpoints-pane .skip-pausing .breakpoint .breakpoint-line {
+  color: var(--theme-body-color);
+}
