@@ -4816,7 +4816,7 @@
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 - name: layout.css.shadow-parts.enabled
