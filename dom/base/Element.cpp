@@ -1688,8 +1688,15 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     }
   }
 
-  // Now recurse into our kids
+  // Call BindToTree on shadow root children.
   nsresult rv;
+  if (ShadowRoot* shadowRoot = GetShadowRoot()) {
+    rv = shadowRoot->Bind();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Now recurse into our kids. Ensure this happens after binding the shadow
+  // root so that directionality of slots is updated.
   {
     BindContext::NestingLevel level(aContext, *this);
     for (nsIContent* child = GetFirstChild(); child;
@@ -1721,12 +1728,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     // anything... need to fix that.
     // If MayHaveStyle() is true, we must be an nsStyledElement
     static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false, false);
-  }
-
-  // Call BindToTree on shadow root children.
-  if (ShadowRoot* shadowRoot = GetShadowRoot()) {
-    rv = shadowRoot->Bind();
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // FIXME(emilio): Why is this needed? The element shouldn't even be styled in
