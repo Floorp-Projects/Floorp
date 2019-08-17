@@ -5,20 +5,20 @@ use std::str;
 use url::form_urlencoded::Serializer as UrlEncodedSerializer;
 use url::form_urlencoded::Target as UrlEncodedTarget;
 
-pub struct ValueSink<'key, 'target, Target>
+pub struct ValueSink<'input, 'key, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {
-    urlencoder: &'target mut UrlEncodedSerializer<Target>,
+    urlencoder: &'target mut UrlEncodedSerializer<'input, Target>,
     key: &'key str,
 }
 
-impl<'key, 'target, Target> ValueSink<'key, 'target, Target>
+impl<'input, 'key, 'target, Target> ValueSink<'input, 'key, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {
     pub fn new(
-        urlencoder: &'target mut UrlEncodedSerializer<Target>,
+        urlencoder: &'target mut UrlEncodedSerializer<'input, Target>,
         key: &'key str,
     ) -> Self {
         ValueSink {
@@ -28,7 +28,7 @@ where
     }
 }
 
-impl<'key, 'target, Target> Sink for ValueSink<'key, 'target, Target>
+impl<'input, 'key, 'target, Target> Sink for ValueSink<'input, 'key, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {
