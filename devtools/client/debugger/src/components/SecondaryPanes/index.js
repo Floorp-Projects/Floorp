@@ -5,7 +5,6 @@
 // @flow
 
 import React, { Component } from "react";
-import classnames from "classnames";
 import { isGeneratedId } from "devtools-source-map";
 import { connect } from "../../utils/connect";
 import { List } from "immutable";
@@ -26,7 +25,6 @@ import {
   getCurrentThread,
   getThreadContext,
   getSourceFromId,
-  getSkipPausing,
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -98,7 +96,6 @@ type Props = {
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   workers: WorkerList,
-  skipPausing: boolean,
   source: ?Source,
   toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
@@ -492,16 +489,10 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   render() {
-    const { skipPausing } = this.props;
     return (
       <div className="secondary-panes-wrapper">
         <CommandBar horizontal={this.props.horizontal} />
-        <div
-          className={classnames(
-            "secondary-panes",
-            skipPausing && "skip-pausing"
-          )}
-        >
+        <div className="secondary-panes">
           {this.props.horizontal
             ? this.renderHorizontalLayout()
             : this.renderVerticalLayout()}
@@ -541,7 +532,6 @@ const mapStateToProps = state => {
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
     workers: getWorkers(state),
-    skipPausing: getSkipPausing(state),
     source:
       selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
   };
