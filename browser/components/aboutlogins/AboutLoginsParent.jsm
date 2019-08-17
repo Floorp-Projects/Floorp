@@ -544,6 +544,10 @@ var AboutLoginsParent = {
         this.messageSubscribers("AboutLogins:LoginRemoved", login);
         break;
       }
+      case "removeAllLogins": {
+        this.messageSubscribers("AboutLogins:AllLogins", []);
+        break;
+      }
     }
   },
 
