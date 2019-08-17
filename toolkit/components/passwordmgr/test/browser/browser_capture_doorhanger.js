@@ -140,7 +140,12 @@ add_task(async function test_clickRemember() {
     );
 
     await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
+    let promiseNewSavedPassword = TestUtils.topicObserved(
+      "LoginStats:NewSavedPassword",
+      (subject, data) => subject == gBrowser.selectedBrowser
+    );
     clickDoorhangerButton(notif, REMEMBER_BUTTON);
+    await promiseNewSavedPassword;
   });
 
   let logins = Services.logins.getAllLogins();
