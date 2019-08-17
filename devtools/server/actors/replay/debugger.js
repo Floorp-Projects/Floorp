@@ -408,7 +408,7 @@ ReplayDebugger.prototype = {
       if (!this._objects[data.id]) {
         this._addObject(data);
       }
-      this._getObject(data.id)._names = names;
+      this._getObject(data.id)._setNames(names);
     }
 
     for (const frame of pauseData.frames) {
@@ -1297,6 +1297,13 @@ ReplayDebuggerEnvironment.prototype = {
     return this._data.optimizedOut;
   },
 
+  _setNames(names) {
+    this._names = {};
+    names.forEach(({ name, value }) => {
+      this._names[name] = this._dbg._convertValue(value);
+    });
+  },
+
   _ensureNames() {
     if (!this._names) {
       const names = this._dbg._sendRequestAllowDiverge(
@@ -1306,10 +1313,7 @@ ReplayDebuggerEnvironment.prototype = {
         },
         []
       );
-      this._names = {};
-      names.forEach(({ name, value }) => {
-        this._names[name] = this._dbg._convertValue(value);
-      });
+      this._setNames(names);
     }
   },
 

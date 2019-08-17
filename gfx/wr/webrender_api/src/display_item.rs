@@ -723,7 +723,6 @@ pub enum MixBlendMode {
     Luminosity = 15,
 }
 
-/// An input to a SVG filter primitive.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
 pub enum ColorSpace {
@@ -731,6 +730,35 @@ pub enum ColorSpace {
     LinearRgb,
 }
 
+/// Available composite operoations for the composite filter primitive
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
+pub enum CompositeOperator {
+    Over,
+    In,
+    Atop,
+    Out,
+    Xor,
+    Lighter,
+    Arithmetic([f32; 4]),
+}
+
+impl CompositeOperator {
+    // This must stay in sync with the composite operator defines in cs_svg_filter.glsl
+    pub fn as_int(&self) -> u32 {
+        match self {
+            CompositeOperator::Over => 0,
+            CompositeOperator::In => 1,
+            CompositeOperator::Out => 2,
+            CompositeOperator::Atop => 3,
+            CompositeOperator::Xor => 4,
+            CompositeOperator::Lighter => 5,
+            CompositeOperator::Arithmetic(..) => 6,
+        }
+    }
+}
+
+/// An input to a SVG filter primitive.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
 pub enum FilterPrimitiveInput {
@@ -844,6 +872,14 @@ pub struct OffsetPrimitive {
     pub offset: LayoutVector2D,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
+pub struct CompositePrimitive {
+    pub input1: FilterPrimitiveInput,
+    pub input2: FilterPrimitiveInput,
+    pub operator: CompositeOperator,
+}
+
 /// See: https://github.com/eqrion/cbindgen/issues/9
 /// cbindgen:derive-eq=false
 #[repr(C)]
@@ -860,6 +896,7 @@ pub enum FilterPrimitiveKind {
     DropShadow(DropShadowPrimitive),
     ComponentTransfer(ComponentTransferPrimitive),
     Offset(OffsetPrimitive),
+    Composite(CompositePrimitive),
 }
 
 impl Default for FilterPrimitiveKind {
@@ -881,6 +918,7 @@ impl FilterPrimitiveKind {
             FilterPrimitiveKind::Blend(..) |
             FilterPrimitiveKind::ColorMatrix(..) |
             FilterPrimitiveKind::Offset(..) |
+            FilterPrimitiveKind::Composite(..) |
             // Component transfer's filter data is sanitized separately.
             FilterPrimitiveKind::ComponentTransfer(..) => {}
         }
@@ -1429,5 +1467,6 @@ impl_default_for_enums! {
     YuvData => NV12(ImageKey::default(), ImageKey::default()),
     YuvFormat => NV12,
     FilterPrimitiveInput => Original,
-    ColorSpace => Srgb
+    ColorSpace => Srgb,
+    CompositeOperator => Over
 }

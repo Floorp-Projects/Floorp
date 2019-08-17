@@ -863,8 +863,11 @@ nsresult nsXBLBinding::DoInitJSClass(JSContext* cx, JS::Handle<JSObject*> obj,
     nsXBLDocumentInfo* docInfo = aProtoBinding->XBLDocumentInfo();
     ::JS_SetPrivate(proto, docInfo);
     NS_ADDREF(docInfo);
-    RecordReplayRegisterDeferredFinalize(docInfo);
     JS_SetReservedSlot(proto, 0, JS::PrivateValue(aProtoBinding));
+
+    // Don't collect the proto while recording/replaying, to avoid
+    // non-deterministically releasing the docInfo reference.
+    recordreplay::HoldJSObject(proto);
 
     // Next, enter the realm of the property holder, wrap the proto, and
     // stick it on.

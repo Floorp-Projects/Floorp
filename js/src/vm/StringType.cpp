@@ -549,6 +549,27 @@ JSFlatString* JSRope::flattenInternal(JSContext* maybecx) {
       wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
       wholeCapacity = capacity;
 
+      // registerMallocedBuffer is fallible, so attempt it first before doing
+      // anything irreversible.
+      Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+      bool inTenured = !bufferIfNursery;
+      if (!inTenured && left.isTenured()) {
+        // tenured leftmost child is giving its chars buffer to the
+        // nursery-allocated root node.
+        if (!nursery.registerMallocedBuffer(wholeChars)) {
+          if (maybecx) {
+            ReportOutOfMemory(maybecx);
+          }
+          return nullptr;
+        }
+        // leftmost child -> root is a tenured -> nursery edge.
+        bufferIfNursery->putWholeCell(&left);
+      } else if (inTenured && !left.isTenured()) {
+        // leftmost child is giving its nursery-held chars buffer to a
+        // tenured string.
+        nursery.removeMallocedBuffer(wholeChars);
+      }
+
       /*
        * Simulate a left-most traversal from the root to leftMost->leftChild()
        * via first_visit_node
@@ -586,19 +607,6 @@ JSFlatString* JSRope::flattenInternal(JSContext* maybecx) {
         left.setLengthAndFlags(left_len, DEPENDENT_FLAGS | LATIN1_CHARS_BIT);
       }
       left.d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
-      Nursery& nursery = runtimeFromMainThread()->gc.nursery();
-      bool inTenured = !bufferIfNursery;
-      if (!inTenured && left.isTenured()) {
-        // tenured leftmost child is giving its chars buffer to the
-        // nursery-allocated root node.
-        nursery.registerMallocedBuffer(wholeChars);
-        // leftmost child -> root is a tenured -> nursery edge.
-        bufferIfNursery->putWholeCell(&left);
-      } else if (inTenured && !left.isTenured()) {
-        // leftmost child is giving its nursery-held chars buffer to a
-        // tenured string.
-        nursery.removeMallocedBuffer(wholeChars);
-      }
       goto visit_right_child;
     }
   }

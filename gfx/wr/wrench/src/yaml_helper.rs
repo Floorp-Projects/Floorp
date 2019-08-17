@@ -775,6 +775,28 @@ impl YamlHelper for Yaml {
                         offset: self["offset"].as_vector().unwrap(),
                     })
                 }
+                "composite" => {
+                    let operator = match self["operator"].as_str().unwrap() {
+                        "over" => CompositeOperator::Over,
+                        "in" => CompositeOperator::In,
+                        "out" => CompositeOperator::Out,
+                        "atop" => CompositeOperator::Atop,
+                        "xor" => CompositeOperator::Xor,
+                        "lighter" => CompositeOperator::Lighter,
+                        "arithmetic" => {
+                            let k_vals = self["k-values"].as_vec_f32().unwrap();
+                            assert!(k_vals.len() == 4, "Must be 4 k values for arithmetic composite operator");
+                            let k_vals = [k_vals[0], k_vals[1], k_vals[2], k_vals[3]];
+                            CompositeOperator::Arithmetic(k_vals)
+                        }
+                        _ => panic!("Invalid composite operator"),
+                    };
+                    FilterPrimitiveKind::Composite(CompositePrimitive {
+                        input1: self["in1"].as_filter_input().unwrap(),
+                        input2: self["in2"].as_filter_input().unwrap(),
+                        operator,
+                    })
+                }
                 _ => return None,
             };
 

@@ -4,6 +4,7 @@
 
 toolkit.jar:
 % content extensions %content/extensions/
+    content/extensions/schemas/activity_log.json
     content/extensions/schemas/alarms.json
     content/extensions/schemas/browser_settings.json
 #ifndef ANDROID

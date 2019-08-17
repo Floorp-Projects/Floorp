@@ -48,6 +48,7 @@
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Services.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "nsIReferrerInfo.h"
@@ -98,8 +99,13 @@ ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
 
   if (ServiceWorkerParentInterceptEnabled()) {
     RefPtr<ServiceWorkerPrivateImpl> inner = new ServiceWorkerPrivateImpl(this);
-    nsresult rv = inner->Initialize();
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    // Assert in all debug builds as well as non-debug Nightly and Dev Edition.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(inner->Initialize()));
+#else
+    MOZ_ALWAYS_SUCCEEDS(inner->Initialize());
+#endif
 
     mInner = inner.forget();
   }

@@ -12,48 +12,12 @@
 void mozilla::DeferredFinalize(nsISupports* aSupports) {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    // RecordReplayRegisterDeferredFinalizeThing should have been called when
-    // the reference on this object was added earlier. Cause the reference to
-    // be released soon, at a consistent point in the recording and replay.
-    mozilla::recordreplay::ActivateTrigger(aSupports);
-  } else {
-    rt->DeferredFinalize(aSupports);
-  }
+  rt->DeferredFinalize(aSupports);
 }
 
 void mozilla::DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                                DeferredFinalizeFunction aFunc, void* aThing) {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(rt, "Should have a CycleCollectedJSRuntime by now");
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    // As above, cause the finalization action to occur soon, at a consistent
-    // point in the recording and replay.
-    mozilla::recordreplay::ActivateTrigger(aThing);
-  } else {
-    rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
-  }
-}
-
-static void RecordReplayDeferredFinalize(
-    DeferredFinalizeAppendFunction aAppendFunc, DeferredFinalizeFunction aFunc,
-    void* aThing) {
-  mozilla::recordreplay::UnregisterTrigger(aThing);
-
-  CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
-  if (aAppendFunc) {
-    rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
-  } else {
-    rt->DeferredFinalize(reinterpret_cast<nsISupports*>(aThing));
-  }
-}
-
-void mozilla::RecordReplayRegisterDeferredFinalizeThing(
-    DeferredFinalizeAppendFunction aAppendFunc, DeferredFinalizeFunction aFunc,
-    void* aThing) {
-  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-    mozilla::recordreplay::RegisterTrigger(aThing, [=]() {
-      RecordReplayDeferredFinalize(aAppendFunc, aFunc, aThing);
-    });
-  }
+  rt->DeferredFinalize(aAppendFunc, aFunc, aThing);
 }

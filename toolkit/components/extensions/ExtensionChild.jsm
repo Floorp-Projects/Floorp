@@ -7,7 +7,7 @@
 
 /* exported ExtensionChild */
 
-var EXPORTED_SYMBOLS = ["ExtensionChild"];
+var EXPORTED_SYMBOLS = ["ExtensionChild", "ExtensionActivityLogChild"];
 
 /**
  * This file handles addon logic that is independent of the chrome process and
@@ -75,6 +75,57 @@ const { sharedData } = Services.cpmm;
 
 const isContentProcess =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+
+const MSG_SET_ENABLED = "Extension:ActivityLog:SetEnabled";
+const MSG_LOG = "Extension:ActivityLog:DoLog";
+
+const ExtensionActivityLogChild = {
+  _initialized: false,
+  enabledExtensions: new Set(),
+
+  init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
+    Services.cpmm.addMessageListener(MSG_SET_ENABLED, this);
+
+    this.enabledExtensions = new Set(
+      Services.cpmm.sharedData.get("extensions/logging")
+    );
+  },
+
+  receiveMessage({ name, data }) {
+    if (name === MSG_SET_ENABLED) {
+      if (data.value) {
+        this.enabledExtensions.add(data.id);
+      } else {
+        this.enabledExtensions.delete(data.id);
+      }
+    }
+  },
+
+  async log(context, type, name, data) {
+    this.init();
+    let { id } = context.extension;
+    if (this.enabledExtensions.has(id)) {
+      this._sendActivity({
+        timeStamp: Date.now(),
+        id,
+        viewType: context.viewType,
+        type,
+        name,
+        data,
+        browsingContextId: context.browsingContextId,
+      });
+    }
+  },
+
+  _sendActivity(data) {
+    Services.cpmm.sendAsyncMessage(MSG_LOG, data);
+  },
+};
 
 // Copy an API object from |source| into the scope |dest|.
 function injectAPI(source, dest) {
@@ -1055,40 +1106,50 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
 }
 
 class ChildLocalAPIImplementation extends LocalAPIImplementation {
-  constructor(pathObj, name, childApiManager) {
+  constructor(pathObj, namespace, name, childApiManager) {
     super(pathObj, name, childApiManager.context);
     this.childApiManagerId = childApiManager.id;
+    this.fullname = `${namespace}.${name}`;
   }
 
-  withTiming(callable) {
-    if (!gTimingEnabled) {
-      return callable();
-    }
+  /**
+   * Call the given function and also log the call as appropriate
+   * (i.e., with PerformanceCounters and/or activity logging)
+   *
+   * @param {function} callable The actual implementation to invoke.
+   * @param {array} args Arguments to the function call.
+   * @returns {any} The return result of callable.
+   */
+  callAndLog(callable, args) {
+    this.context.logActivity("api_call", this.fullname, { args });
     let start = Cu.now() * 1000;
     try {
       return callable();
     } finally {
-      let end = Cu.now() * 1000;
-      PerformanceCounters.storeExecutionTime(
-        this.context.extension.id,
-        this.name,
-        end - start,
-        this.childApiManagerId
-      );
+      if (gTimingEnabled) {
+        let end = Cu.now() * 1000;
+        PerformanceCounters.storeExecutionTime(
+          this.context.extension.id,
+          this.name,
+          end - start,
+          this.childApiManagerId
+        );
+      }
     }
   }
 
   callFunction(args) {
-    return this.withTiming(() => super.callFunction(args));
+    return this.callAndLog(() => super.callFunction(args), args);
   }
 
   callFunctionNoReturn(args) {
-    return this.withTiming(() => super.callFunctionNoReturn(args));
+    return this.callAndLog(() => super.callFunctionNoReturn(args), args);
   }
 
   callAsyncFunction(args, callback, requireUserInput) {
-    return this.withTiming(() =>
-      super.callAsyncFunction(args, callback, requireUserInput)
+    return this.callAndLog(
+      () => super.callAsyncFunction(args, callback, requireUserInput),
+      args
     );
   }
 }
@@ -1234,11 +1295,16 @@ class ChildAPIManager {
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
 
+    // Any child api that calls into a parent function will have already
+    // logged the api_call.  Flag it so the parent doesn't log again.
+    let { alreadyLogged = true } = options;
+
     this.messageManager.sendAsyncMessage("API:Call", {
       childId: this.id,
       callId,
       path,
       args,
+      options: { alreadyLogged },
     });
 
     return this.context.wrapPromise(deferred.promise, callback);
@@ -1330,7 +1396,7 @@ class ChildAPIManager {
     let obj = this.apiCan.findAPIPath(namespace);
 
     if (obj && name in obj) {
-      return new ChildLocalAPIImplementation(obj, name, this);
+      return new ChildLocalAPIImplementation(obj, namespace, name, this);
     }
 
     return this.getFallbackImplementation(namespace, name);

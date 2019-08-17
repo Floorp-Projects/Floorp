@@ -23,8 +23,6 @@ from distutils.dir_util import copy_tree
 
 from shutil import which
 
-URL_REPO = "https://github.com/llvm/llvm-project"
-
 
 def symlink(source, link_name):
     os_symlink = getattr(os, "symlink", None)
@@ -182,16 +180,16 @@ def install_libgcc(gcc_dir, clang_dir, is_final_stage):
                                  "x86_64-unknown-linux-gnu",
                                  os.path.basename(libgcc_dir))
     mkdir_p(clang_lib_dir)
-    copy_tree(libgcc_dir, clang_lib_dir)
+    copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     libgcc_dir = os.path.join(gcc_dir, "lib64")
     clang_lib_dir = os.path.join(clang_dir, "lib")
-    copy_tree(libgcc_dir, clang_lib_dir)
+    copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     libgcc_dir = os.path.join(gcc_dir, "lib32")
     clang_lib_dir = os.path.join(clang_dir, "lib32")
-    copy_tree(libgcc_dir, clang_lib_dir)
+    copy_tree(libgcc_dir, clang_lib_dir, preserve_symlinks=True)
     include_dir = os.path.join(gcc_dir, "include")
     clang_include_dir = os.path.join(clang_dir, "include")
-    copy_tree(include_dir, clang_include_dir)
+    copy_tree(include_dir, clang_include_dir, preserve_symlinks=True)
 
 
 def install_import_library(build_dir, clang_dir):

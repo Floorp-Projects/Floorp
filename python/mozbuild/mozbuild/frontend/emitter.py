@@ -289,6 +289,31 @@ class TreeMetadataEmitter(LoggingMixin):
                                               '\n    '.join(shared_libs), lib.basename),
                     contexts[lib.objdir])
 
+        @memoize
+        def rust_libraries(obj):
+            libs = []
+            for o in obj.linked_libraries:
+                if isinstance(o, (HostRustLibrary, RustLibrary)):
+                    libs.append(o)
+                elif isinstance(o, (HostLibrary, StaticLibrary)):
+                    libs.extend(rust_libraries(o))
+            return libs
+
+        def check_rust_libraries(obj):
+            rust_libs = set(rust_libraries(obj))
+            if len(rust_libs) <= 1:
+                return
+            if isinstance(obj, (Library, HostLibrary)):
+                what = '"%s" library' % obj.basename
+            else:
+                what = '"%s" program' % obj.name
+            raise SandboxValidationError(
+                'Cannot link the following Rust libraries into the %s:\n'
+                '%s\nOnly one is allowed.'
+                % (what, '\n'.join('  - %s' % r.basename
+                                   for r in sorted(rust_libs))),
+                contexts[obj.objdir])
+
         # Propagate LIBRARY_DEFINES to all child libraries recursively.
         def propagate_defines(outerlib, defines):
             outerlib.lib_defines.update(defines)
@@ -302,6 +327,7 @@ class TreeMetadataEmitter(LoggingMixin):
         for lib in (l for libs in self._libs.values() for l in libs):
             if isinstance(lib, Library):
                 propagate_defines(lib, lib.lib_defines)
+            check_rust_libraries(lib)
             yield lib
 
         for lib in (l for libs in self._libs.values() for l in libs):
@@ -321,6 +347,8 @@ class TreeMetadataEmitter(LoggingMixin):
             yield flags_obj
 
         for obj in self._binaries.values():
+            if isinstance(obj, Linkable):
+                check_rust_libraries(obj)
             yield obj
 
     LIBRARY_NAME_VAR = {

@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test case for text-decoration-skip-ink: skip-ink should detect and work with vertical-align</title>
+    <style>
+     div{
+         font: 48px/2 Times;
+         text-decoration: purple underline;
+     }
+     span{
+         vertical-align: super;
+     }
+    </style>
+  </head>
+  <body>
+    <p>Ink should not be skipped when vertical-align moves text away from the underline</p>
+    <div>test <span>pgqy</span> test</div>
+  </body>
+</html>
