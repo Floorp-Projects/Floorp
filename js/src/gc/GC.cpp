@@ -7086,7 +7086,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
   switch (incrementalState) {
     case State::NotActive:
       incMajorGcNumber();
-      invocationKind = gckind.value();
+      invocationKind = gckind.valueOr(GC_NORMAL);
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
       sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
