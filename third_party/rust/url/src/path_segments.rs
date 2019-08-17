@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use parser::{self, SchemeType, to_u32};
+use parser::{self, to_u32, SchemeType};
 use std::str;
 use Url;
 
@@ -48,15 +48,16 @@ pub fn new(url: &mut Url) -> PathSegmentsMut {
     debug_assert!(url.byte_at(url.path_start) == b'/');
     PathSegmentsMut {
         after_first_slash: url.path_start as usize + "/".len(),
-        url: url,
-        old_after_path_position: old_after_path_position,
-        after_path: after_path,
+        url,
+        old_after_path_position,
+        after_path,
     }
 }
 
 impl<'a> Drop for PathSegmentsMut<'a> {
     fn drop(&mut self) {
-        self.url.restore_after_path(self.old_after_path_position, &self.after_path)
+        self.url
+            .restore_after_path(self.old_after_path_position, &self.after_path)
     }
 }
 
@@ -126,8 +127,12 @@ impl<'a> PathSegmentsMut<'a> {
     ///
     /// Returns `&mut Self` so that method calls can be chained.
     pub fn pop(&mut self) -> &mut Self {
-        let last_slash = self.url.serialization[self.after_first_slash..].rfind('/').unwrap_or(0);
-        self.url.serialization.truncate(self.after_first_slash + last_slash);
+        let last_slash = self.url.serialization[self.after_first_slash..]
+            .rfind('/')
+            .unwrap_or(0);
+        self.url
+            .serialization
+            .truncate(self.after_first_slash + last_slash);
         self
     }
 
@@ -194,7 +199,10 @@ impl<'a> PathSegmentsMut<'a> {
     /// # run().unwrap();
     /// ```
     pub fn extend<I>(&mut self, segments: I) -> &mut Self
-    where I: IntoIterator, I::Item: AsRef<str> {
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
         let scheme_type = SchemeType::from(self.url.scheme());
         let path_start = self.url.path_start as usize;
         self.url.mutate(|parser| {
@@ -202,14 +210,18 @@ impl<'a> PathSegmentsMut<'a> {
             for segment in segments {
                 let segment = segment.as_ref();
                 if matches!(segment, "." | "..") {
-                    continue
+                    continue;
                 }
                 if parser.serialization.len() > path_start + 1 {
                     parser.serialization.push('/');
                 }
-                let mut has_host = true;  // FIXME account for this?
-                parser.parse_path(scheme_type, &mut has_host, path_start,
-                                  parser::Input::new(segment));
+                let mut has_host = true; // FIXME account for this?
+                parser.parse_path(
+                    scheme_type,
+                    &mut has_host,
+                    path_start,
+                    parser::Input::new(segment),
+                );
             }
         });
         self

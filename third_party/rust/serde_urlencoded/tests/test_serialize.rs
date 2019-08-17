@@ -73,3 +73,11 @@ fn serialize_unit_enum() {
         Ok("one=A&two=B&three=C".to_owned())
     );
 }
+
+#[derive(Serialize)]
+struct Unit;
+
+#[test]
+fn serialize_unit_struct() {
+    assert_eq!(serde_urlencoded::to_string(Unit), Ok("".to_owned()));
+}
