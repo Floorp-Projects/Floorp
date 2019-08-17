@@ -171,6 +171,14 @@ void Stream::RecordOrReplayThreadEvent(ThreadEvent aEvent) {
   }
 }
 
+ThreadEvent Stream::ReplayThreadEvent() {
+  ThreadEvent event = (ThreadEvent)ReadScalar();
+  if (mNameIndex == MainThreadId) {
+    CheckInput(*ExecutionProgressCounter());
+  }
+  return event;
+}
+
 void Stream::CheckInput(size_t aValue) {
   if (IsRecording()) {
     WriteScalar(aValue);

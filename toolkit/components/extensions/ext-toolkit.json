@@ -82,6 +82,14 @@
       ["extension"]
     ]
   },
+  "activityLog": {
+    "url": "chrome://extensions/content/parent/ext-activityLog.js",
+    "schema": "chrome://extensions/content/schemas/activity_log.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["activityLog"]
+    ]
+  },
   "i18n": {
     "url": "chrome://extensions/content/parent/ext-i18n.js",
     "schema": "chrome://extensions/content/schemas/i18n.json",

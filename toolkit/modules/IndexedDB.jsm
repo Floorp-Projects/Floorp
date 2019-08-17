@@ -248,7 +248,10 @@ class Transaction {
         reject(transaction.error);
       };
       transaction.onabort = () => {
-        reject(transaction.error);
+        const error =
+          transaction.error ||
+          new DOMException("The operation has been aborted", "AbortError");
+        reject(error);
       };
     });
   }

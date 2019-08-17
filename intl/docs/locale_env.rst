@@ -32,3 +32,6 @@ Rust
 
 For Rust Mozilla provides a crate `fluent-locale`_ which implements the concepts described
 above.
+
+.. _Intl.Locale: https://bugzilla.mozilla.org/show_bug.cgi?id=1433303
+.. _fluent-locale: https://docs.rs/fluent-locale/

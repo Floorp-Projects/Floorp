@@ -78,6 +78,10 @@ Preferences.addAll([
   { id: "privacy.trackingprotection.fingerprinting.enabled", type: "bool" },
   { id: "privacy.trackingprotection.cryptomining.enabled", type: "bool" },
 
+  // Social tracking
+  { id: "privacy.trackingprotection.socialtracking.enabled", type: "bool" },
+  { id: "privacy.socialtracking.block_cookies.enabled", type: "bool" },
+
   // Tracker list
   { id: "urlclassifier.trackingTable", type: "string" },
 
@@ -1057,6 +1061,12 @@ var gPrivacyPane = {
   trackingProtectionWritePrefs() {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
+    let stpPref = Preferences.get(
+      "privacy.trackingprotection.socialtracking.enabled"
+    );
+    let stpCookiePref = Preferences.get(
+      "privacy.socialtracking.block_cookies.enabled"
+    );
     let tpMenu = document.getElementById("trackingProtectionMenu");
     let tpCheckbox = document.getElementById(
       "contentBlockingTrackingProtectionCheckbox"
@@ -1077,14 +1087,23 @@ var gPrivacyPane = {
       case "always":
         enabledPref.value = true;
         pbmPref.value = true;
+        if (stpCookiePref.value) {
+          stpPref.value = true;
+        }
         break;
       case "private":
         enabledPref.value = false;
         pbmPref.value = true;
+        if (stpCookiePref.value) {
+          stpPref.value = false;
+        }
         break;
       case "never":
         enabledPref.value = false;
         pbmPref.value = false;
+        if (stpCookiePref.value) {
+          stpPref.value = false;
+        }
         break;
     }
   },

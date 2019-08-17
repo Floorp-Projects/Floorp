@@ -169,7 +169,9 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
             for t in s.get('dependencies', []) + s.get('dependencies_original', []):
                 ty = targets[t]['type']
                 if ty in ('static_library', 'shared_library'):
-                    use_libs.append(targets[t]['target_name'])
+                    l = targets[t]['target_name']
+                    if l not in use_libs:
+                        use_libs.append(l)
                 # Manually expand out transitive dependencies--
                 # gyp won't do this for static libs or none targets.
                 if ty in ('static_library', 'none'):
@@ -184,12 +186,17 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
         os_libs = []
         for l in libs:
             if l.startswith('-'):
-                os_libs.append(l)
+                if l not in os_libs:
+                    os_libs.append(l)
             elif l.endswith('.lib'):
-                os_libs.append(l[:-4])
+                l = l[:-4]
+                if l not in os_libs:
+                    os_libs.append(l)
             elif l:
                 # For library names passed in from moz.build.
-                use_libs.append(os.path.basename(l))
+                l = os.path.basename(l)
+                if l not in use_libs:
+                    use_libs.append(l)
 
         if spec['type'] == 'none':
             if not ('actions' in spec or 'copies' in spec):

@@ -168,6 +168,9 @@ class Stream {
   // while replaying as it was while recording.
   void RecordOrReplayThreadEvent(ThreadEvent aEvent);
 
+  // Replay a thread event without requiring it to be a specific event.
+  ThreadEvent ReplayThreadEvent();
+
   // Make sure that a value or buffer is the same while replaying as it was
   // while recording.
   void CheckInput(size_t aValue);

@@ -5,8 +5,6 @@ rst:
     exclude:
         - toolkit/components/telemetry/docs/
         - toolkit/components/extensions/
-        - tools/tryselect/docs/
-        - browser/docs/
     extensions:
         - rst
     support-files:

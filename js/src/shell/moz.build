@@ -7,6 +7,7 @@
 if CONFIG['JS_SHELL_NAME']:
     GeckoProgram(CONFIG['JS_SHELL_NAME'], linkage=None)
     if CONFIG['JS_BUNDLED_EDITLINE']:
+        DIRS += ['../editline']
         USE_LIBS += ['editline']
     USE_LIBS += ['static:js']
 

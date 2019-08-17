@@ -147,6 +147,7 @@ const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
 
 // Permissions that are only available to privileged extensions.
 const PRIVILEGED_PERMS = new Set([
+  "activityLog",
   "mozillaAddons",
   "geckoViewAddons",
   "telemetry",

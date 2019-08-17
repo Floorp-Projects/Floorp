@@ -33,8 +33,11 @@ class SandboxPrivate : public nsIGlobalObject,
     // The type used to cast to void needs to match the one in GetPrivate.
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(sbp.forget().take());
-    mozilla::RecordReplayRegisterDeferredFinalizeThing(nullptr, nullptr, sop);
     JS_SetPrivate(global, sop);
+
+    // Never collect the global while recording or replaying, so that the
+    // principal reference is not released at a non-deterministic point.
+    mozilla::recordreplay::HoldJSObject(global);
   }
 
   static SandboxPrivate* GetPrivate(JSObject* obj) {

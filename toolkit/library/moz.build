@@ -84,11 +84,35 @@ def Libxul(name, output_category=None):
     if CONFIG['RUSTC_NATVIS_LDFLAGS']:
         LDFLAGS += CONFIG['RUSTC_NATVIS_LDFLAGS']
 
-Libxul('xul')
+    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+        GENERATED_FILES += ['symverscript']
+        GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
+        GENERATED_FILES['symverscript'].inputs = ['../symverscript.in']
+        GENERATED_FILES['symverscript'].flags = [
+            'xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']
+        ]
+        SYMBOLS_FILE = '!symverscript'
 
-FORCE_STATIC_LIB = True
+    # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+    # too old to support Python pretty-printers; if this changes, we could
+    # make this 'ifdef GNU_CC'.
+    if CONFIG['OS_ARCH'] == 'Linux':
+        # Create a GDB Python auto-load file alongside the libxul shared library
+        # in the build directory.
+        DEFINES['topsrcdir'] = TOPSRCDIR
+        OBJDIR_PP_FILES.toolkit.library.gtest += ['../libxul.so-gdb.py.in']
+
+
+# The real libxul definition is in ./build/moz.build, but we define a
+# xul library here such that # FINAL_LIBRARY = 'xul' refers to here, which
+# is then linked to both build/libxul and gtest/libxul.
+Library('xul')
 
 STATIC_LIBRARY_NAME = 'xul_s'
+
+# Use a FINAL_LIBRARY for Libxul_defines to propagate from there. They wouldn't
+# propagate from here.
+FINAL_LIBRARY = 'xul-real'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
@@ -106,7 +130,10 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
         '/xpcom/base',
     ]
 
-DIRS += ['gtest']
+DIRS += [
+    'build',
+    'gtest',
+]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
   DIRS += ['dummydll']
@@ -334,45 +361,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'oleaut32',
     ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
-        full_libname = SHARED_LIBRARY_NAME
-    else:
-        full_libname = '%s%s%s' % (
-            CONFIG['DLL_PREFIX'],
-            LIBRARY_NAME,
-            CONFIG['DLL_SUFFIX']
-        )
-    GENERATED_FILES += [('dependentlibs.list', 'dependentlibs.list.gtest')]
-    dep_libs_list = GENERATED_FILES[('dependentlibs.list', 'dependentlibs.list.gtest')]
-    dep_libs_list.script = 'dependentlibs.py:gen_list'
-    dep_libs_list.inputs = [
-        '!%s' % full_libname,
-    ]
-    FINAL_TARGET_FILES += ['!dependentlibs.list', '!dependentlibs.list.gtest']
-
-    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
-        GENERATED_FILES += ['symverscript']
-        GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
-        GENERATED_FILES['symverscript'].inputs = ['symverscript.in']
-        GENERATED_FILES['symverscript'].flags = [
-            'xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']
-        ]
-        SYMBOLS_FILE = '!symverscript'
-
-    # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
-    # too old to support Python pretty-printers; if this changes, we could
-    # make this 'ifdef GNU_CC'.
-    if CONFIG['OS_ARCH'] == 'Linux':
-        # Create a GDB Python auto-load file alongside the libxul shared library
-        # in the build directory.
-        DEFINES['topsrcdir'] = TOPSRCDIR
-        OBJDIR_PP_FILES.toolkit.library += ['libxul.so-gdb.py.in']
-
-# This library is entirely composed of Rust code, and needs to come after
-# all the C++ code so any possible C++ -> Rust calls can be resolved.
-USE_LIBS += ['gkrust']
-
 # The buildid is refreshed on every (incremental) build. But we want to avoid
 # rebuilding libxul every time, so instead of having a source file that
 # #include's buildid.h, which would have a dependency on it, and that would
@@ -388,4 +376,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
 else:
     libxul_list = '%sxul_%s' % (
         CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.'))
-GENERATED_FILES['buildid.cpp'].inputs = ['!%s.list' % libxul_list]
+GENERATED_FILES['buildid.cpp'].inputs = ['!build/%s.list' % libxul_list]
