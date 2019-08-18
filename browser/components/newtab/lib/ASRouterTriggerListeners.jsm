@@ -392,6 +392,43 @@ this.ASRouterTriggerListeners = new Map([
       },
     },
   ],
+
+  /**
+   * Add an observer notification to notify the trigger handler whenever the user saves a new login
+   * via the login capture doorhanger.
+   */
+  [
+    "newSavedLogin",
+    {
+      _initialized: false,
+      _triggerHandler: null,
+
+      /**
+       * If the listener is already initialised, `init` will replace the trigger
+       * handler.
+       */
+      init(triggerHandler) {
+        if (!this._initialized) {
+          Services.obs.addObserver(this, "LoginStats:NewSavedPassword");
+          this._initialized = true;
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      uninit() {
+        if (this._initialized) {
+          Services.obs.removeObserver(this, "LoginStats:NewSavedPassword");
+
+          this._initialized = false;
+          this._triggerHandler = null;
+        }
+      },
+
+      observe(aSubject, aTopic, aData) {
+        this._triggerHandler(aSubject, { id: "newSavedLogin" });
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];

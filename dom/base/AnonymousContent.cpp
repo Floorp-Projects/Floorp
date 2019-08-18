@@ -207,5 +207,17 @@ void AnonymousContent::GetTargetIdForEvent(Event& aEvent, DOMString& aResult) {
   aResult.SetNull();
 }
 
+void AnonymousContent::SetStyle(const nsAString& aProperty,
+                                const nsAString& aValue, ErrorResult& aRv) {
+  if (!mContentNode->IsHTMLElement()) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(mContentNode);
+  nsCOMPtr<nsICSSDeclaration> declaration = element->Style();
+  declaration->SetProperty(aProperty, aValue, EmptyString());
+}
+
 }  // namespace dom
 }  // namespace mozilla
