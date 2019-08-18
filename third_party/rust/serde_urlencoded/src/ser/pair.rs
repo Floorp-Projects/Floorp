@@ -8,16 +8,16 @@ use std::mem;
 use url::form_urlencoded::Serializer as UrlEncodedSerializer;
 use url::form_urlencoded::Target as UrlEncodedTarget;
 
-pub struct PairSerializer<'target, Target: 'target + UrlEncodedTarget> {
-    urlencoder: &'target mut UrlEncodedSerializer<Target>,
+pub struct PairSerializer<'input, 'target, Target: 'target + UrlEncodedTarget> {
+    urlencoder: &'target mut UrlEncodedSerializer<'input, Target>,
     state: PairState,
 }
 
-impl<'target, Target> PairSerializer<'target, Target>
+impl<'input, 'target, Target> PairSerializer<'input, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {
-    pub fn new(urlencoder: &'target mut UrlEncodedSerializer<Target>) -> Self {
+    pub fn new(urlencoder: &'target mut UrlEncodedSerializer<'input, Target>) -> Self {
         PairSerializer {
             urlencoder: urlencoder,
             state: PairState::WaitingForKey,
@@ -25,7 +25,7 @@ where
     }
 }
 
-impl<'target, Target> ser::Serializer for PairSerializer<'target, Target>
+impl<'input, 'target, Target> ser::Serializer for PairSerializer<'input, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {
@@ -200,7 +200,7 @@ where
     }
 }
 
-impl<'target, Target> ser::SerializeTuple for PairSerializer<'target, Target>
+impl<'input, 'target, Target> ser::SerializeTuple for PairSerializer<'input, 'target, Target>
 where
     Target: 'target + UrlEncodedTarget,
 {

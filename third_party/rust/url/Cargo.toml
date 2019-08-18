@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "url"
-version = "1.7.2"
+version = "2.1.0"
 authors = ["The rust-url developers"]
 description = "URL library for Rust, based on the WHATWG URL Standard"
 documentation = "https://docs.rs/url"
@@ -21,8 +21,6 @@ keywords = ["url", "parser"]
 categories = ["parser-implementations", "web-programming", "encoding"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/servo/rust-url"
-[package.metadata.docs.rs]
-features = ["query_encoding"]
 
 [lib]
 test = false
@@ -37,45 +35,27 @@ harness = false
 [[bench]]
 name = "parse_url"
 harness = false
-[dependencies.encoding]
-version = "0.2"
-optional = true
-
-[dependencies.heapsize]
-version = ">=0.4.1, <0.5"
-optional = true
-
 [dependencies.idna]
-version = "0.1.0"
+version = "0.2.0"
 
 [dependencies.matches]
 version = "0.1"
 
 [dependencies.percent-encoding]
-version = "1.0.0"
-
-[dependencies.rustc-serialize]
-version = "0.3"
-optional = true
+version = "2.0.0"
 
 [dependencies.serde]
-version = ">=0.6.1, <0.9"
+version = "1.0"
+features = ["derive"]
 optional = true
 [dev-dependencies.bencher]
 version = "0.1"
-
-[dev-dependencies.rustc-serialize]
-version = "0.3"
 
 [dev-dependencies.rustc-test]
 version = "0.3"
 
 [dev-dependencies.serde_json]
-version = ">=0.6.1, <0.9"
-
-[features]
-heap_size = ["heapsize"]
-query_encoding = ["encoding"]
+version = "1.0"
 [badges.appveyor]
 repository = "Manishearth/rust-url"
 

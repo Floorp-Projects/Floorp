@@ -1,3 +1,21 @@
+### v0.1.19 (August 16, 2019)
+
+- **Features**:
+  - Make `warp::multipart` and `wrap::ws` support optional, though enabled by default.
+- **Fixes**:
+  - Fix `warp::fs::dir` filter to reject paths containing backslashes.
+
+### v0.1.18 (July 25, 2019)
+
+- **Features**:
+  - Add `warp::multipart` support.
+
+### v0.1.17 (July 8, 2019)
+
+- **Features**:
+  - Export all built-in Rejection causes in the `warp::reject` module.
+  - Add `Server::try_bind` as fallible bind methods.
+
 ### v0.1.16 (June 11, 2019)
 
 - **Features**:
