@@ -6,164 +6,169 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! URLs use special chacters to indicate the parts of the request.  For example, a forward slash
-//! indicates a path.  In order for that charcter to exist outside of a path separator, that
-//! charcter would need to be encoded.
+//! URLs use special chacters to indicate the parts of the request.
+//! For example, a `?` question mark marks the end of a path and the start of a query string.
+//! In order for that character to exist inside a path, it needs to be encoded differently.
 //!
-//! Percent encoding replaces reserved charcters with the `%` escape charcter followed by hexidecimal
-//! ASCII representaton.  For non-ASCII charcters that are percent encoded, a UTF-8 byte sequence
-//! becomes percent encoded.  A simple example can be seen when the space literal is replaced with
-//! `%20`.
+//! Percent encoding replaces reserved characters with the `%` escape character
+//! followed by a byte value as two hexadecimal digits.
+//! For example, an ASCII space is replaced with `%20`.
 //!
-//! Percent encoding is further complicated by the fact that different parts of an URL have
-//! different encoding requirements.  In order to support the variety of encoding requirements,
-//! `url::percent_encoding` includes different *encode sets*.
-//! See [URL Standard](https://url.spec.whatwg.org/#percent-encoded-bytes) for details.
+//! When encoding, the set of characters that can (and should, for readability) be left alone
+//! depends on the context.
+//! The `?` question mark mentioned above is not a separator when used literally
+//! inside of a query string, and therefore does not need to be encoded.
+//! The [`AsciiSet`] parameter of [`percent_encode`] and [`utf8_percent_encode`]
+//! lets callers configure this.
 //!
-//! This module provides some `*_ENCODE_SET` constants.
-//! If a different set is required, it can be created with
-//! the [`define_encode_set!`](../macro.define_encode_set!.html) macro.
+//! This crate delibarately does not provide many different sets.
+//! Users should consider in what context the encoded string will be used,
+//! real relevant specifications, and define their own set.
+//! This is done by using the `add` method of an existing set.
 //!
 //! # Examples
 //!
 //! ```
-//! use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+//! use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 //!
-//! assert_eq!(utf8_percent_encode("foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+//! /// https://url.spec.whatwg.org/#fragment-percent-encode-set
+//! const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+//!
+//! assert_eq!(utf8_percent_encode("foo <bar>", FRAGMENT).to_string(), "foo%20%3Cbar%3E");
 //! ```
 
-use std::ascii::AsciiExt;
 use std::borrow::Cow;
 use std::fmt;
 use std::slice;
 use std::str;
 
-/// Represents a set of characters / bytes that should be percent-encoded.
+/// Represents a set of characters or bytes in the ASCII range.
 ///
-/// See [encode sets specification](http://url.spec.whatwg.org/#simple-encode-set).
+/// This used in [`percent_encode`] and [`utf8_percent_encode`].
+/// This is simlar to [percent-encode sets](https://url.spec.whatwg.org/#percent-encoded-bytes).
 ///
-/// Different characters need to be encoded in different parts of an URL.
-/// For example, a literal `?` question mark in an URL’s path would indicate
-/// the start of the query string.
-/// A question mark meant to be part of the path therefore needs to be percent-encoded.
-/// In the query string however, a question mark does not have any special meaning
-/// and does not need to be percent-encoded.
+/// Use the `add` method of an existing set to define a new set. For example:
 ///
-/// A few sets are defined in this module.
-/// Use the [`define_encode_set!`](../macro.define_encode_set!.html) macro to define different ones.
-pub trait EncodeSet: Clone {
-    /// Called with UTF-8 bytes rather than code points.
-    /// Should return true for all non-ASCII bytes.
-    fn contains(&self, byte: u8) -> bool;
+/// ```
+/// use percent_encoding::{AsciiSet, CONTROLS};
+///
+/// /// https://url.spec.whatwg.org/#fragment-percent-encode-set
+/// const FRAGMENT: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
+/// ```
+pub struct AsciiSet {
+    mask: [Chunk; ASCII_RANGE_LEN / BITS_PER_CHUNK],
 }
 
-/// Define a new struct
-/// that implements the [`EncodeSet`](percent_encoding/trait.EncodeSet.html) trait,
-/// for use in [`percent_decode()`](percent_encoding/fn.percent_encode.html)
-/// and related functions.
-///
-/// Parameters are characters to include in the set in addition to those of the base set.
-/// See [encode sets specification](http://url.spec.whatwg.org/#simple-encode-set).
-///
-/// Example
-/// =======
-///
-/// ```rust
-/// #[macro_use] extern crate percent_encoding;
-/// use percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
-/// define_encode_set! {
-///     /// This encode set is used in the URL parser for query strings.
-///     pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
-/// }
-/// # fn main() {
-/// assert_eq!(utf8_percent_encode("foo bar", QUERY_ENCODE_SET).collect::<String>(), "foo%20bar");
-/// # }
-/// ```
-#[macro_export]
-macro_rules! define_encode_set {
-    ($(#[$attr: meta])* pub $name: ident = [$base_set: expr] | {$($ch: pat),*}) => {
-        $(#[$attr])*
-        #[derive(Copy, Clone, Debug)]
-        #[allow(non_camel_case_types)]
-        pub struct $name;
+type Chunk = u32;
 
-        impl $crate::EncodeSet for $name {
-            #[inline]
-            fn contains(&self, byte: u8) -> bool {
-                match byte as char {
-                    $(
-                        $ch => true,
-                    )*
-                    _ => $base_set.contains(byte)
-                }
-            }
+const ASCII_RANGE_LEN: usize = 0x80;
+
+const BITS_PER_CHUNK: usize = 8 * std::mem::size_of::<Chunk>();
+
+impl AsciiSet {
+    /// Called with UTF-8 bytes rather than code points.
+    /// Not used for non-ASCII bytes.
+    const fn contains(&self, byte: u8) -> bool {
+        let chunk = self.mask[byte as usize / BITS_PER_CHUNK];
+        let mask = 1 << (byte as usize % BITS_PER_CHUNK);
+        (chunk & mask) != 0
+    }
+
+    fn should_percent_encode(&self, byte: u8) -> bool {
+        !byte.is_ascii() || self.contains(byte)
+    }
+
+    pub const fn add(&self, byte: u8) -> Self {
+        let mut mask = self.mask;
+        mask[byte as usize / BITS_PER_CHUNK] |= 1 << (byte as usize % BITS_PER_CHUNK);
+        AsciiSet { mask }
+    }
+
+    pub const fn remove(&self, byte: u8) -> Self {
+        let mut mask = self.mask;
+        mask[byte as usize / BITS_PER_CHUNK] &= !(1 << (byte as usize % BITS_PER_CHUNK));
+        AsciiSet { mask }
+    }
+}
+
+/// The set of 0x00 to 0x1F (C0 controls), and 0x7F (DEL).
+///
+/// Note that this includes the newline and tab characters, but not the space 0x20.
+///
+/// <https://url.spec.whatwg.org/#c0-control-percent-encode-set>
+pub const CONTROLS: &AsciiSet = &AsciiSet {
+    mask: [
+        !0_u32, // C0: 0x00 to 0x1F (32 bits set)
+        0,
+        0,
+        1 << (0x7F_u32 % 32), // DEL: 0x7F (one bit set)
+    ],
+};
+
+macro_rules! static_assert {
+    ($( $bool: expr, )+) => {
+        fn _static_assert() {
+            $(
+                let _ = std::mem::transmute::<[u8; $bool as usize], u8>;
+            )+
         }
     }
 }
 
-/// This encode set is used for the path of cannot-be-a-base URLs.
+static_assert! {
+    CONTROLS.contains(0x00),
+    CONTROLS.contains(0x1F),
+    !CONTROLS.contains(0x20),
+    !CONTROLS.contains(0x7E),
+    CONTROLS.contains(0x7F),
+}
+
+/// Everything that is not an ASCII letter or digit.
 ///
-/// All ASCII charcters less than hexidecimal 20 and greater than 7E are encoded.  This includes
-/// special charcters such as line feed, carriage return, NULL, etc.
-#[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
-pub struct SIMPLE_ENCODE_SET;
+/// This is probably more eager than necessary in any context.
+pub const NON_ALPHANUMERIC: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'!')
+    .add(b'"')
+    .add(b'#')
+    .add(b'$')
+    .add(b'%')
+    .add(b'&')
+    .add(b'\'')
+    .add(b'(')
+    .add(b')')
+    .add(b'*')
+    .add(b'+')
+    .add(b',')
+    .add(b'-')
+    .add(b'.')
+    .add(b'/')
+    .add(b':')
+    .add(b';')
+    .add(b'<')
+    .add(b'=')
+    .add(b'>')
+    .add(b'?')
+    .add(b'@')
+    .add(b'[')
+    .add(b'\\')
+    .add(b']')
+    .add(b'^')
+    .add(b'_')
+    .add(b'`')
+    .add(b'{')
+    .add(b'|')
+    .add(b'}')
+    .add(b'~');
 
-impl EncodeSet for SIMPLE_ENCODE_SET {
-    #[inline]
-    fn contains(&self, byte: u8) -> bool {
-        byte < 0x20 || byte > 0x7E
-    }
-}
-
-define_encode_set! {
-    /// This encode set is used in the URL parser for query strings.
-    ///
-    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
-    /// space, double quote ("), hash (#), and inequality qualifiers (<), (>) are encoded.
-    pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
-}
-
-define_encode_set! {
-    /// This encode set is used for path components.
-    ///
-    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
-    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
-    /// question mark (?), and curly brackets ({), (}) are encoded.
-    pub DEFAULT_ENCODE_SET = [QUERY_ENCODE_SET] | {'`', '?', '{', '}'}
-}
-
-define_encode_set! {
-    /// This encode set is used for on '/'-separated path segment
-    ///
-    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
-    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
-    /// question mark (?), and curly brackets ({), (}), percent sign (%), forward slash (/) are
-    /// encoded.
-    pub PATH_SEGMENT_ENCODE_SET = [DEFAULT_ENCODE_SET] | {'%', '/'}
-}
-
-define_encode_set! {
-    /// This encode set is used for username and password.
-    ///
-    /// Aside from special chacters defined in the [`SIMPLE_ENCODE_SET`](struct.SIMPLE_ENCODE_SET.html),
-    /// space, double quote ("), hash (#), inequality qualifiers (<), (>), backtick (`),
-    /// question mark (?), and curly brackets ({), (}), forward slash (/), colon (:), semi-colon (;),
-    /// equality (=), at (@), backslash (\\), square brackets ([), (]), caret (\^), and pipe (|) are
-    /// encoded.
-    pub USERINFO_ENCODE_SET = [DEFAULT_ENCODE_SET] | {
-        '/', ':', ';', '=', '@', '[', '\\', ']', '^', '|'
-    }
-}
-
-/// Return the percent-encoding of the given bytes.
+/// Return the percent-encoding of the given byte.
 ///
-/// This is unconditional, unlike `percent_encode()` which uses an encode set.
+/// This is unconditional, unlike `percent_encode()` which has an `AsciiSet` parameter.
 ///
 /// # Examples
 ///
 /// ```
-/// use url::percent_encoding::percent_encode_byte;
+/// use percent_encoding::percent_encode_byte;
 ///
 /// assert_eq!("foo bar".bytes().map(percent_encode_byte).collect::<String>(),
 ///            "%66%6F%6F%20%62%61%72");
@@ -171,93 +176,88 @@ define_encode_set! {
 pub fn percent_encode_byte(byte: u8) -> &'static str {
     let index = usize::from(byte) * 3;
     &"\
-        %00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F\
-        %10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F\
-        %20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F\
-        %30%31%32%33%34%35%36%37%38%39%3A%3B%3C%3D%3E%3F\
-        %40%41%42%43%44%45%46%47%48%49%4A%4B%4C%4D%4E%4F\
-        %50%51%52%53%54%55%56%57%58%59%5A%5B%5C%5D%5E%5F\
-        %60%61%62%63%64%65%66%67%68%69%6A%6B%6C%6D%6E%6F\
-        %70%71%72%73%74%75%76%77%78%79%7A%7B%7C%7D%7E%7F\
-        %80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F\
-        %90%91%92%93%94%95%96%97%98%99%9A%9B%9C%9D%9E%9F\
-        %A0%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF\
-        %B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF\
-        %C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF\
-        %D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF\
-        %E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF\
-        %F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF\
-    "[index..index + 3]
+      %00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F\
+      %10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F\
+      %20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F\
+      %30%31%32%33%34%35%36%37%38%39%3A%3B%3C%3D%3E%3F\
+      %40%41%42%43%44%45%46%47%48%49%4A%4B%4C%4D%4E%4F\
+      %50%51%52%53%54%55%56%57%58%59%5A%5B%5C%5D%5E%5F\
+      %60%61%62%63%64%65%66%67%68%69%6A%6B%6C%6D%6E%6F\
+      %70%71%72%73%74%75%76%77%78%79%7A%7B%7C%7D%7E%7F\
+      %80%81%82%83%84%85%86%87%88%89%8A%8B%8C%8D%8E%8F\
+      %90%91%92%93%94%95%96%97%98%99%9A%9B%9C%9D%9E%9F\
+      %A0%A1%A2%A3%A4%A5%A6%A7%A8%A9%AA%AB%AC%AD%AE%AF\
+      %B0%B1%B2%B3%B4%B5%B6%B7%B8%B9%BA%BB%BC%BD%BE%BF\
+      %C0%C1%C2%C3%C4%C5%C6%C7%C8%C9%CA%CB%CC%CD%CE%CF\
+      %D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF\
+      %E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF\
+      %F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF\
+      "[index..index + 3]
 }
 
-/// Percent-encode the given bytes with the given encode set.
+/// Percent-encode the given bytes with the given set.
 ///
-/// The encode set define which bytes (in addition to non-ASCII and controls)
-/// need to be percent-encoded.
-/// The choice of this set depends on context.
-/// For example, `?` needs to be encoded in an URL path but not in a query string.
+/// Non-ASCII bytes and bytes in `ascii_set` are encoded.
 ///
-/// The return value is an iterator of `&str` slices (so it has a `.collect::<String>()` method)
-/// that also implements `Display` and `Into<Cow<str>>`.
-/// The latter returns `Cow::Borrowed` when none of the bytes in `input`
-/// are in the given encode set.
+/// The return type:
+///
+/// * Implements `Iterator<Item = &str>` and therefore has a `.collect::<String>()` method,
+/// * Implements `Display` and therefore has a `.to_string()` method,
+/// * Implements `Into<Cow<str>>` borrowing `input` when none of its bytes are encoded.
 ///
 /// # Examples
 ///
 /// ```
-/// use url::percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
+/// use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 ///
-/// assert_eq!(percent_encode(b"foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+/// assert_eq!(percent_encode(b"foo bar?", NON_ALPHANUMERIC).to_string(), "foo%20bar%3F");
 /// ```
 #[inline]
-pub fn percent_encode<E: EncodeSet>(input: &[u8], encode_set: E) -> PercentEncode<E> {
+pub fn percent_encode<'a>(input: &'a [u8], ascii_set: &'static AsciiSet) -> PercentEncode<'a> {
     PercentEncode {
         bytes: input,
-        encode_set: encode_set,
+        ascii_set,
     }
 }
 
 /// Percent-encode the UTF-8 encoding of the given string.
 ///
-/// See `percent_encode()` for how to use the return value.
+/// See [`percent_encode`] regarding the return type.
 ///
 /// # Examples
 ///
 /// ```
-/// use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+/// use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 ///
-/// assert_eq!(utf8_percent_encode("foo bar?", DEFAULT_ENCODE_SET).to_string(), "foo%20bar%3F");
+/// assert_eq!(utf8_percent_encode("foo bar?", NON_ALPHANUMERIC).to_string(), "foo%20bar%3F");
 /// ```
 #[inline]
-pub fn utf8_percent_encode<E: EncodeSet>(input: &str, encode_set: E) -> PercentEncode<E> {
-    percent_encode(input.as_bytes(), encode_set)
+pub fn utf8_percent_encode<'a>(input: &'a str, ascii_set: &'static AsciiSet) -> PercentEncode<'a> {
+    percent_encode(input.as_bytes(), ascii_set)
 }
 
-/// The return type of `percent_encode()` and `utf8_percent_encode()`.
-#[derive(Clone, Debug)]
-pub struct PercentEncode<'a, E: EncodeSet> {
+/// The return type of [`percent_encode`] and [`utf8_percent_encode`].
+#[derive(Clone)]
+pub struct PercentEncode<'a> {
     bytes: &'a [u8],
-    encode_set: E,
+    ascii_set: &'static AsciiSet,
 }
 
-impl<'a, E: EncodeSet> Iterator for PercentEncode<'a, E> {
+impl<'a> Iterator for PercentEncode<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<&'a str> {
         if let Some((&first_byte, remaining)) = self.bytes.split_first() {
-            if self.encode_set.contains(first_byte) {
+            if self.ascii_set.should_percent_encode(first_byte) {
                 self.bytes = remaining;
                 Some(percent_encode_byte(first_byte))
             } else {
-                assert!(first_byte.is_ascii());
                 for (i, &byte) in remaining.iter().enumerate() {
-                    if self.encode_set.contains(byte) {
+                    if self.ascii_set.should_percent_encode(byte) {
                         // 1 for first_byte + i for previous iterations of this loop
                         let (unchanged_slice, remaining) = self.bytes.split_at(1 + i);
                         self.bytes = remaining;
-                        return Some(unsafe { str::from_utf8_unchecked(unchanged_slice) })
-                    } else {
-                        assert!(byte.is_ascii());
+                        return Some(unsafe { str::from_utf8_unchecked(unchanged_slice) });
                     }
                 }
                 let unchanged_slice = self.bytes;
@@ -278,7 +278,7 @@ impl<'a, E: EncodeSet> Iterator for PercentEncode<'a, E> {
     }
 }
 
-impl<'a, E: EncodeSet> fmt::Display for PercentEncode<'a, E> {
+impl<'a> fmt::Display for PercentEncode<'a> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         for c in (*self).clone() {
             formatter.write_str(c)?
@@ -287,62 +287,70 @@ impl<'a, E: EncodeSet> fmt::Display for PercentEncode<'a, E> {
     }
 }
 
-impl<'a, E: EncodeSet> From<PercentEncode<'a, E>> for Cow<'a, str> {
-    fn from(mut iter: PercentEncode<'a, E>) -> Self {
+impl<'a> From<PercentEncode<'a>> for Cow<'a, str> {
+    fn from(mut iter: PercentEncode<'a>) -> Self {
         match iter.next() {
             None => "".into(),
-            Some(first) => {
-                match iter.next() {
-                    None => first.into(),
-                    Some(second) => {
-                        let mut string = first.to_owned();
-                        string.push_str(second);
-                        string.extend(iter);
-                        string.into()
-                    }
+            Some(first) => match iter.next() {
+                None => first.into(),
+                Some(second) => {
+                    let mut string = first.to_owned();
+                    string.push_str(second);
+                    string.extend(iter);
+                    string.into()
                 }
-            }
+            },
         }
     }
 }
 
+/// Percent-decode the given string.
+///
+/// <https://url.spec.whatwg.org/#string-percent-decode>
+///
+/// See [`percent_decode`] regarding the return type.
+#[inline]
+pub fn percent_decode_str(input: &str) -> PercentDecode {
+    percent_decode(input.as_bytes())
+}
+
 /// Percent-decode the given bytes.
 ///
-/// The return value is an iterator of decoded `u8` bytes
-/// that also implements `Into<Cow<u8>>`
-/// (which returns `Cow::Borrowed` when `input` contains no percent-encoded sequence)
-/// and has `decode_utf8()` and `decode_utf8_lossy()` methods.
+/// <https://url.spec.whatwg.org/#percent-decode>
+///
+/// Any sequence of `%` followed by two hexadecimal digits is decoded.
+/// The return type:
+///
+/// * Implements `Into<Cow<u8>>` borrowing `input` when it contains no percent-encoded sequence,
+/// * Implements `Iterator<Item = u8>` and therefore has a `.collect::<Vec<u8>>()` method,
+/// * Has `decode_utf8()` and `decode_utf8_lossy()` methods.
 ///
 /// # Examples
 ///
 /// ```
-/// use url::percent_encoding::percent_decode;
+/// use percent_encoding::percent_decode;
 ///
-/// assert_eq!(percent_decode(b"foo%20bar%3F").decode_utf8().unwrap(), "foo bar?");
+/// assert_eq!(percent_decode(b"foo%20bar%3f").decode_utf8().unwrap(), "foo bar?");
 /// ```
 #[inline]
 pub fn percent_decode(input: &[u8]) -> PercentDecode {
     PercentDecode {
-        bytes: input.iter()
+        bytes: input.iter(),
     }
 }
 
-/// The return type of `percent_decode()`.
+/// The return type of [`percent_decode`].
 #[derive(Clone, Debug)]
 pub struct PercentDecode<'a> {
     bytes: slice::Iter<'a, u8>,
 }
 
 fn after_percent_sign(iter: &mut slice::Iter<u8>) -> Option<u8> {
-    let initial_iter = iter.clone();
-    let h = iter.next().and_then(|&b| (b as char).to_digit(16));
-    let l = iter.next().and_then(|&b| (b as char).to_digit(16));
-    if let (Some(h), Some(l)) = (h, l) {
-        Some(h as u8 * 0x10 + l as u8)
-    } else {
-        *iter = initial_iter;
-        None
-    }
+    let mut cloned_iter = iter.clone();
+    let h = char::from(*cloned_iter.next()?).to_digit(16)?;
+    let l = char::from(*cloned_iter.next()?).to_digit(16)?;
+    *iter = cloned_iter;
+    Some(h as u8 * 0x10 + l as u8)
 }
 
 impl<'a> Iterator for PercentDecode<'a> {
@@ -375,7 +383,7 @@ impl<'a> From<PercentDecode<'a>> for Cow<'a, [u8]> {
 
 impl<'a> PercentDecode<'a> {
     /// If the percent-decoding is different from the input, return it as a new bytes vector.
-    pub fn if_any(&self) -> Option<Vec<u8>> {
+    fn if_any(&self) -> Option<Vec<u8>> {
         let mut bytes_iter = self.bytes.clone();
         while bytes_iter.any(|&b| b == b'%') {
             if let Some(decoded_byte) = after_percent_sign(&mut bytes_iter) {
@@ -383,10 +391,8 @@ impl<'a> PercentDecode<'a> {
                 let unchanged_bytes_len = initial_bytes.len() - bytes_iter.len() - 3;
                 let mut decoded = initial_bytes[..unchanged_bytes_len].to_owned();
                 decoded.push(decoded_byte);
-                decoded.extend(PercentDecode {
-                    bytes: bytes_iter
-                });
-                return Some(decoded)
+                decoded.extend(PercentDecode { bytes: bytes_iter });
+                return Some(decoded);
             }
         }
         // Nothing to decode
@@ -398,18 +404,14 @@ impl<'a> PercentDecode<'a> {
     /// This is return `Err` when the percent-decoded bytes are not well-formed in UTF-8.
     pub fn decode_utf8(self) -> Result<Cow<'a, str>, str::Utf8Error> {
         match self.clone().into() {
-            Cow::Borrowed(bytes) => {
-                match str::from_utf8(bytes) {
-                    Ok(s) => Ok(s.into()),
-                    Err(e) => Err(e),
-                }
-            }
-            Cow::Owned(bytes) => {
-                match String::from_utf8(bytes) {
-                    Ok(s) => Ok(s.into()),
-                    Err(e) => Err(e.utf8_error()),
-                }
-            }
+            Cow::Borrowed(bytes) => match str::from_utf8(bytes) {
+                Ok(s) => Ok(s.into()),
+                Err(e) => Err(e),
+            },
+            Cow::Owned(bytes) => match String::from_utf8(bytes) {
+                Ok(s) => Ok(s.into()),
+                Err(e) => Err(e.utf8_error()),
+            },
         }
     }
 
@@ -438,5 +440,3 @@ fn decode_utf8_lossy(input: Cow<[u8]>) -> Cow<str> {
         }
     }
 }
-
-

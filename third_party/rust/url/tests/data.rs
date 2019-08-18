@@ -8,29 +8,29 @@
 
 //! Data-driven tests
 
-extern crate rustc_serialize;
 extern crate rustc_test as test;
+extern crate serde_json;
 extern crate url;
 
-use rustc_serialize::json::{self, Json};
-use url::{Url, quirks};
+use serde_json::Value;
+use std::str::FromStr;
+use url::{quirks, Url};
 
 fn check_invariants(url: &Url) {
     url.check_invariants().unwrap();
-    #[cfg(feature="serde")] {
-        extern crate serde_json;
+    #[cfg(feature = "serde")]
+    {
         let bytes = serde_json::to_vec(url).unwrap();
         let new_url: Url = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(url, &new_url);
     }
 }
 
-
 fn run_parsing(input: &str, base: &str, expected: Result<ExpectedAttributes, ()>) {
     let base = match Url::parse(&base) {
         Ok(base) => base,
         Err(_) if expected.is_err() => return,
-        Err(message) => panic!("Error parsing base {:?}: {}", base, message)
+        Err(message) => panic!("Error parsing base {:?}: {}", base, message),
     };
     let (url, expected) = match (base.join(&input), expected) {
         (Ok(url), Ok(expected)) => (url, expected),
@@ -42,14 +42,18 @@ fn run_parsing(input: &str, base: &str, expected: Result<ExpectedAttributes, ()>
     check_invariants(&url);
 
     macro_rules! assert_eq {
-        ($expected: expr, $got: expr) => {
-            {
-                let expected = $expected;
-                let got = $got;
-                assert!(expected == got, "{:?} != {} {:?} for URL {:?}",
-                        got, stringify!($expected), expected, url);
-            }
-        }
+        ($expected: expr, $got: expr) => {{
+            let expected = $expected;
+            let got = $got;
+            assert!(
+                expected == got,
+                "\n{:?}\n!= {}\n{:?}\nfor URL {:?}\n",
+                got,
+                stringify!($expected),
+                expected,
+                url
+            );
+        }};
     }
 
     macro_rules! assert_attributes {
@@ -84,46 +88,45 @@ struct ExpectedAttributes {
 }
 
 trait JsonExt {
-    fn take(&mut self, key: &str) -> Option<Json>;
-    fn object(self) -> json::Object;
+    fn take_key(&mut self, key: &str) -> Option<Value>;
     fn string(self) -> String;
     fn take_string(&mut self, key: &str) -> String;
 }
 
-impl JsonExt for Json {
-    fn take(&mut self, key: &str) -> Option<Json> {
+impl JsonExt for Value {
+    fn take_key(&mut self, key: &str) -> Option<Value> {
         self.as_object_mut().unwrap().remove(key)
     }
 
-    fn object(self) -> json::Object {
-        if let Json::Object(o) = self { o } else { panic!("Not a Json::Object") }
-    }
-
     fn string(self) -> String {
-        if let Json::String(s) = self { s } else { panic!("Not a Json::String") }
+        if let Value::String(s) = self {
+            s
+        } else {
+            panic!("Not a Value::String")
+        }
     }
 
     fn take_string(&mut self, key: &str) -> String {
-        self.take(key).unwrap().string()
+        self.take_key(key).unwrap().string()
     }
 }
 
 fn collect_parsing<F: FnMut(String, test::TestFn)>(add_test: &mut F) {
     // Copied form https://github.com/w3c/web-platform-tests/blob/master/url/
-    let mut json = Json::from_str(include_str!("urltestdata.json"))
+    let mut json = Value::from_str(include_str!("urltestdata.json"))
         .expect("JSON parse error in urltestdata.json");
     for entry in json.as_array_mut().unwrap() {
         if entry.is_string() {
-            continue  // ignore comments
+            continue; // ignore comments
         }
         let base = entry.take_string("base");
         let input = entry.take_string("input");
-        let expected = if entry.find("failure").is_some() {
+        let expected = if entry.take_key("failure").is_some() {
             Err(())
         } else {
             Ok(ExpectedAttributes {
                 href: entry.take_string("href"),
-                origin: entry.take("origin").map(Json::string),
+                origin: entry.take_key("origin").map(|s| s.string()),
                 protocol: entry.take_string("protocol"),
                 username: entry.take_string("username"),
                 password: entry.take_string("password"),
@@ -135,24 +138,31 @@ fn collect_parsing<F: FnMut(String, test::TestFn)>(add_test: &mut F) {
                 hash: entry.take_string("hash"),
             })
         };
-        add_test(format!("{:?} @ base {:?}", input, base),
-                 test::TestFn::dyn_test_fn(move || run_parsing(&input, &base, expected)));
+        add_test(
+            format!("{:?} @ base {:?}", input, base),
+            test::TestFn::dyn_test_fn(move || run_parsing(&input, &base, expected)),
+        );
     }
 }
 
-fn collect_setters<F>(add_test: &mut F) where F: FnMut(String, test::TestFn) {
-    let mut json = Json::from_str(include_str!("setters_tests.json"))
+fn collect_setters<F>(add_test: &mut F)
+where
+    F: FnMut(String, test::TestFn),
+{
+    let mut json = Value::from_str(include_str!("setters_tests.json"))
         .expect("JSON parse error in setters_tests.json");
 
     macro_rules! setter {
         ($attr: expr, $setter: ident) => {{
-            let mut tests = json.take($attr).unwrap();
+            let mut tests = json.take_key($attr).unwrap();
             for mut test in tests.as_array_mut().unwrap().drain(..) {
-                let comment = test.take("comment").map(Json::string).unwrap_or(String::new());
+                let comment = test.take_key("comment")
+                    .map(|s| s.string())
+                    .unwrap_or(String::new());
                 let href = test.take_string("href");
                 let new_value = test.take_string("new_value");
                 let name = format!("{:?}.{} = {:?} {}", href, $attr, new_value, comment);
-                let mut expected = test.take("expected").unwrap();
+                let mut expected = test.take_key("expected").unwrap();
                 add_test(name, test::TestFn::dyn_test_fn(move || {
                     let mut url = Url::parse(&href).unwrap();
                     check_invariants(&url);
@@ -167,7 +177,7 @@ fn collect_setters<F>(add_test: &mut F) where F: FnMut(String, test::TestFn) {
     macro_rules! assert_attributes {
         ($url: expr, $expected: expr, $($attr: ident)+) => {
             $(
-                if let Some(value) = $expected.take(stringify!($attr)) {
+                if let Some(value) = $expected.take_key(stringify!($attr)) {
                     assert_eq!(quirks::$attr(&$url), value.string())
                 }
             )+

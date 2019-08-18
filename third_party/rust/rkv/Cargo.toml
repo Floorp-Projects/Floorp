@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "rkv"
-version = "0.9.6"
+version = "0.9.7"
 authors = ["Richard Newman <rnewman@twinql.com>", "Nan Jiang <najiang@mozilla.com>", "Myk Melez <myk@mykzilla.org>"]
 exclude = ["/tests/envs/*"]
 description = "a simple, humane, typed Rust interface to LMDB"
@@ -56,7 +56,7 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.url]
-version = "1.7.0"
+version = "2.0"
 
 [dependencies.uuid]
 version = "0.7"

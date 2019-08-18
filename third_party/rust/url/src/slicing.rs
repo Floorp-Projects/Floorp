@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ops::{Range, RangeFrom, RangeTo, RangeFull, Index};
+use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 use Url;
 
 impl Index<RangeFull> for Url {
@@ -94,7 +94,7 @@ pub enum Position {
     BeforeQuery,
     AfterQuery,
     BeforeFragment,
-    AfterFragment
+    AfterFragment,
 }
 
 impl Url {
@@ -105,43 +105,49 @@ impl Url {
 
             Position::AfterScheme => self.scheme_end as usize,
 
-            Position::BeforeUsername => if self.has_authority() {
-                self.scheme_end as usize + "://".len()
-            } else {
-                debug_assert!(self.byte_at(self.scheme_end) == b':');
-                debug_assert!(self.scheme_end + ":".len() as u32 == self.username_end);
-                self.scheme_end as usize + ":".len()
-            },
+            Position::BeforeUsername => {
+                if self.has_authority() {
+                    self.scheme_end as usize + "://".len()
+                } else {
+                    debug_assert!(self.byte_at(self.scheme_end) == b':');
+                    debug_assert!(self.scheme_end + ":".len() as u32 == self.username_end);
+                    self.scheme_end as usize + ":".len()
+                }
+            }
 
             Position::AfterUsername => self.username_end as usize,
 
-            Position::BeforePassword => if self.has_authority() &&
-                                           self.byte_at(self.username_end) == b':' {
-                self.username_end as usize + ":".len()
-            } else {
-                debug_assert!(self.username_end == self.host_start);
-                self.username_end as usize
-            },
+            Position::BeforePassword => {
+                if self.has_authority() && self.byte_at(self.username_end) == b':' {
+                    self.username_end as usize + ":".len()
+                } else {
+                    debug_assert!(self.username_end == self.host_start);
+                    self.username_end as usize
+                }
+            }
 
-            Position::AfterPassword => if self.has_authority() &&
-                                          self.byte_at(self.username_end) == b':' {
-                debug_assert!(self.byte_at(self.host_start - "@".len() as u32) == b'@');
-                self.host_start as usize - "@".len()
-            } else {
-                debug_assert!(self.username_end == self.host_start);
-                self.host_start as usize
-            },
+            Position::AfterPassword => {
+                if self.has_authority() && self.byte_at(self.username_end) == b':' {
+                    debug_assert!(self.byte_at(self.host_start - "@".len() as u32) == b'@');
+                    self.host_start as usize - "@".len()
+                } else {
+                    debug_assert!(self.username_end == self.host_start);
+                    self.host_start as usize
+                }
+            }
 
             Position::BeforeHost => self.host_start as usize,
 
             Position::AfterHost => self.host_end as usize,
 
-            Position::BeforePort => if self.port.is_some() {
-                debug_assert!(self.byte_at(self.host_end) == b':');
-                self.host_end as usize + ":".len()
-            } else {
-                self.host_end as usize
-            },
+            Position::BeforePort => {
+                if self.port.is_some() {
+                    debug_assert!(self.byte_at(self.host_end) == b':');
+                    self.host_end as usize + ":".len()
+                } else {
+                    self.host_end as usize
+                }
+            }
 
             Position::AfterPort => self.path_start as usize,
 
@@ -179,4 +185,3 @@ impl Url {
         }
     }
 }
-

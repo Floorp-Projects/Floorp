@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/warp/0.1.16")]
+#![doc(html_root_url = "https://docs.rs/warp/0.1.19")]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![cfg_attr(test, deny(warnings))]
@@ -13,6 +13,7 @@
 //! - Header requirements and extraction
 //! - Query string deserialization
 //! - JSON and Form bodies
+//! - Multipart form data
 //! - Static Files and Directories
 //! - Websockets
 //! - Access logging
@@ -93,6 +94,8 @@ extern crate hyper;
 extern crate log as logcrate;
 extern crate mime;
 extern crate mime_guess;
+#[cfg(feature = "multipart")]
+extern crate multipart as multipart_c;
 #[macro_use]
 extern crate scoped_tls;
 #[cfg(feature = "tls")]
@@ -104,6 +107,7 @@ extern crate tokio;
 #[cfg_attr(feature = "tls", macro_use)]
 extern crate tokio_io;
 extern crate tokio_threadpool;
+#[cfg(feature = "websocket")]
 extern crate tungstenite;
 extern crate urlencoding;
 
@@ -162,10 +166,18 @@ pub use self::filters::{
     sse,
     // sse() function
     sse::sse,
-    ws,
-    // ws() function
-    ws::{ws, ws2},
 };
+#[cfg(feature = "multipart")]
+#[doc(hidden)]
+pub use self::filters::multipart;
+#[cfg(feature = "websocket")]
+#[doc(hidden)]
+pub use self::filters::ws;
+// ws() function
+#[cfg(feature = "websocket")]
+#[doc(hidden)]
+#[allow(deprecated)]
+pub use self::filters::ws::{ws, ws2};
 #[doc(hidden)]
 pub use self::redirect::redirect;
 #[doc(hidden)]
