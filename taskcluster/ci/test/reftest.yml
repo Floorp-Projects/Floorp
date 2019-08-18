@@ -53,10 +53,6 @@ crashtest:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    virtualization:
-        by-test-platform:
-            windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
-            default: virtual
     chunks:
         by-test-platform:
             android-em-4.*\/debug: 10
