@@ -122,18 +122,6 @@
     "minbytes": 16384,
     "maxbytes": 32768
   },
-  "c:\\windows\\system32\\d3d10warp.dll": {
-    "mincount": 6,
-    "maxcount": 6,
-    "minbytes": 81920,
-    "maxbytes": 81920
-  },
-  "c:\\windows\\system32\\d3d11.dll": {
-    "mincount": 10,
-    "maxcount": 10,
-    "minbytes": 139264,
-    "maxbytes": 139264
-  },
   "c:\\windows\\system32\\dwrite.dll": {
     "mincount": 4,
     "maxcount": 4,
