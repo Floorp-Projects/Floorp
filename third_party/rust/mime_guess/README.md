@@ -1,34 +1,78 @@
 # mime_guess [![Build Status](https://travis-ci.org/abonander/mime_guess.svg?branch=master)](https://travis-ci.org/abonander/mime_guess) [![Crates.io](https://img.shields.io/crates/v/mime_guess.svg)](https://crates.io/crates/mime_guess)
 
-MIME/MediaType guessing by file extension. Uses a [compile-time](https://crates.io/crates/phf_codegen) [perfect hash map](https://crates.io/crates/phf) of known file extension -> MIME type mappings.
+MIME/MediaType guessing by file extension. 
+Uses a static map of known file extension -> MIME type mappings.
+
+**Returning Contributors: New Requirements for Submissions Below**
+
+##### Required Rust Version: 1.33
 
 #### [Documentation](https://docs.rs/mime_guess/)
 
-**NOTE**: this crate will remain in `2.0.0-alpha.x` until `mime` stabilizes (releases 1.0, [discussion here](https://github.com/hyperium/mime/issues/52)). Backwards-compatible changes will
-be backported to the `1.x-maint` branch but upgrades to `mime` will constitute an alpha version bump.
+### Versioning
+
+Due to a mistaken premature release, `mime_guess` currently publicly depends on a pre-1.0 `mime`,
+which means `mime` upgrades are breaking changes and necessitates a major version bump. 
+Refer to the following table to find a version of `mime_guess` which matches your version of `mime`:
+
+| `mime` version | `mime_guess` version |
+|----------------|----------------------|
+| `0.1.x, 0.2.x` | `1.x.y` |
+| `0.3.x`        | `2.x.y` |
 
 #### Note: MIME Types Returned Are Not Stable/Guaranteed
 The media types returned for a given extension are not considered to be part of the crate's
- stable API and are often updated in patch (#.#.x) releases to be as correct as possible.
+ stable API and are often updated in patch (`x.y.z + 1`) releases to be as correct as possible. MIME
+ changes are backported to previous major releases on a best-effort basis.
  
-Additionally, only the extensions of paths/filenames are inspected in order to guess the MIME type. The
+Note that only the extensions of paths/filenames are inspected in order to guess the MIME type. The
 file that may or may not reside at that path may or may not be a valid file of the returned MIME type.
 Be wary of unsafe or un-validated assumptions about file structure or length.
+
+An extension may also have multiple applicable MIME types. When more than one is returned, the first
+is considered to be the most "correct"--see below for elaboration.
 
 Contributing
 -----------
 
 #### Adding or correcting MIME types for extensions
 
-Is the MIME type for a file extension wrong or missing? Great! Well, not great for us, but great for you if you'd like to open a pull request! 
+Is the MIME type for a file extension wrong or missing? Great! 
+Well, not great for us, but great for you if you'd like to open a pull request! 
 
-The file extension -> MIME type mappings are listed in `src/mime_types.rs`. **The list is sorted alphabetically by file extension, and all extensions are lowercase (where applicable).** This is necessary only for the sanity of the crate maintainers; extension search is case-insensitive.
+The file extension -> MIME type mappings are listed in `src/mime_types.rs`. 
+**The list is sorted lexicographically by file extension, and all extensions are lowercase (where applicable).** 
+The former is necessary to support fallback to binary search when the 
+`phf-map` feature is turned off, and for the maintainers' sanity.
+The latter is only for consistency's sake; the search is case-insensitive.
 
-Simply add or update the appropriate string pair(s) to make the correction(s) needed. Run `cargo test` to make sure the library continues to work correctly.
+Simply add or update the appropriate string pair(s) to make the correction(s) needed. 
+Run `cargo test` to make sure the library continues to work correctly.
 
-#### (Important!) Citing the corrected MIME type 
+#### (Important! Updated as of 2.0.0) Citing the corrected MIME type 
 
-When opening a pull request, please include a link to an official document or RFC noting the correct MIME type for the file type in question. Though we're only guessing here, we like to be as correct as we can. It makes it much easier to vet your contribution if we don't have to search for corroborating material.
+When opening a pull request, please include a link to an official document or RFC noting 
+the correct MIME type for the file type in question **as a comment next to the addition**.
+The latter is a new requirement as of 2.0.0 which is intended to make auditing easier in the future.
+Bulk additions may request to omit this, although please provide a good reason.
+
+Though we're only guessing here, we like to be as correct as we can. 
+It makes it much easier to vet your contribution if we don't have to search for corroborating material.
+
+#### Providing citations for existing types
+Historically, citations were only required in pull requests for additions
+or corrections to media types; they are now required to be provided in-line
+next to the mapping for easier auditing.
+
+If anyone is looking for busy work, finding and adding citations for existing mappings would be an easy
+way to get a few pull requests in. See the issue tracker for more information.
+
+#### Multiple MIME types per extension
+As of `2.0.0`, multiple MIME types per extension are supported. The first MIME type in the list for a given
+extension should be the most "correct" so users who only care about getting a single MIME type can use the `first*()` methods.
+
+The defintion of "correct" is open to debate, however. In the author's opinion this should be whatever is defined by the latest IETF RFC
+for the given file format, or otherwise explicitly supercedes all others.
 
 #### Changes to the API or operation of the crate
 

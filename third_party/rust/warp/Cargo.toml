@@ -12,8 +12,10 @@
 
 [package]
 name = "warp"
-version = "0.1.16"
+version = "0.1.19"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
+autoexamples = true
+autotests = true
 description = "serve the web at warp speeds"
 documentation = "https://docs.rs/warp"
 readme = "README.md"
@@ -30,6 +32,22 @@ incremental = false
 [profile.release]
 codegen-units = 1
 incremental = false
+
+[[example]]
+name = "websockets"
+required-features = ["websocket"]
+
+[[example]]
+name = "websockets_chat"
+required-features = ["websocket"]
+
+[[test]]
+name = "multipart"
+required-features = ["multipart"]
+
+[[test]]
+name = "ws"
+required-features = ["websocket"]
 [dependencies.bytes]
 version = "0.4.8"
 
@@ -52,7 +70,13 @@ version = "0.4"
 version = "0.3"
 
 [dependencies.mime_guess]
-version = "2.0.0-alpha.6"
+version = "2.0.0"
+
+[dependencies.multipart]
+version = "0.16"
+features = ["server"]
+optional = true
+default-features = false
 
 [dependencies.rustls]
 version = "0.15"
@@ -68,7 +92,7 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.serde_urlencoded]
-version = "0.5.3"
+version = "0.6"
 
 [dependencies.tokio]
 version = "0.1.11"
@@ -80,7 +104,8 @@ version = "0.1"
 version = "0.1.7"
 
 [dependencies.tungstenite]
-version = "0.8"
+version = "0.9"
+optional = true
 default-features = false
 
 [dependencies.urlencoding]
@@ -95,4 +120,6 @@ version = "0.3"
 version = "1.0"
 
 [features]
+default = ["multipart", "websocket"]
 tls = ["rustls"]
+websocket = ["tungstenite"]
