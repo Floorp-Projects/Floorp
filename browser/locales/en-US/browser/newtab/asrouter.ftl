@@ -99,6 +99,13 @@ cfr-doorhanger-sync-bookmarks-body = Take your bookmarks, passwords, history and
 cfr-doorhanger-sync-bookmarks-ok-button = Turn on { -sync-brand-short-name }
   .accesskey = T
 
+## Login Sync
+
+cfr-doorhanger-sync-logins-header = Never Lose a Password Again
+cfr-doorhanger-sync-logins-body = Securely store and sync your passwords to all your devices.
+cfr-doorhanger-sync-logins-ok-button = Turn on { -sync-brand-short-name }
+  .accesskey = T
+
 ## Send Tab
 
 cfr-doorhanger-send-tab-header = Read this on the go

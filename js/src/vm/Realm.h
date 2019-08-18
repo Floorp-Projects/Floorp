@@ -892,8 +892,9 @@ class MOZ_RAII AutoAllocInAtomsZone {
   inline ~AutoAllocInAtomsZone();
 };
 
-// For the one place where we need to enter a realm when we may have been
-// allocating in the the atoms zone, this leaves the atoms zone temporarily.
+// During GC we sometimes need to enter a realm when we may have been allocating
+// in the the atoms zone. This leaves the atoms zone temporarily. This happens
+// in embedding callbacks and when we need to mark object groups as pretenured.
 class MOZ_RAII AutoMaybeLeaveAtomsZone {
   JSContext* const cx_;
   bool wasInAtomsZone_;
