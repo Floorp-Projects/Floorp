@@ -609,6 +609,8 @@ class EventListenerManager final : public EventListenerManagerBase {
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalAndDocument(
       mozilla::dom::Document** aDoc);
 
+  void MaybeMarkPassive(EventMessage aMessage, EventListenerFlags& aFlags);
+
   nsAutoTObserverArray<Listener, 2> mListeners;
   dom::EventTarget* MOZ_NON_OWNING_REF mTarget;
   RefPtr<nsAtom> mNoListenerForEventAtom;

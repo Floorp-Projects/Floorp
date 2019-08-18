@@ -71,6 +71,9 @@ class AnonymousContent final {
 
   void GetTargetIdForEvent(Event& aEvent, DOMString& aResult);
 
+  void SetStyle(const nsAString& aProperty, const nsAString& aValue,
+                ErrorResult& aRv);
+
  private:
   ~AnonymousContent();
   RefPtr<Element> mContentNode;
