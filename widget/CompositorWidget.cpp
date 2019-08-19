@@ -30,15 +30,14 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
           ? gfx::SurfaceFormat::B8G8R8X8
           : gfx::SurfaceFormat::B8G8R8A8;
   gfx::IntSize size = aRect.ToUnknownRect().Size();
-  gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
+  gfx::IntSize clientSize = Max(size, GetClientSize().ToUnknownSize());
 
   RefPtr<gfx::DrawTarget> target;
   // Re-use back buffer if possible
   if (mLastBackBuffer &&
       mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
       mLastBackBuffer->GetFormat() == format &&
-      size <= mLastBackBuffer->GetSize() &&
-      mLastBackBuffer->GetSize() <= clientSize) {
+      mLastBackBuffer->GetSize() == clientSize) {
     target = mLastBackBuffer;
     target->SetTransform(gfx::Matrix());
     if (!aClearRect.IsEmpty()) {
@@ -48,7 +47,7 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
                                   clearRect.Width(), clearRect.Height()));
     }
   } else {
-    target = aScreenTarget->CreateSimilarDrawTarget(size, format);
+    target = aScreenTarget->CreateSimilarDrawTarget(clientSize, format);
     mLastBackBuffer = target;
   }
   return target.forget();
