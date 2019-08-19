@@ -1,0 +1,23 @@
+{
+  "name": "The Sample Manifest",
+  "short_name": "Sample",
+  "icons": [
+    {
+      "src": "/images/icon/favicon.ico",
+      "type": "image/png",
+      "sizes": "48x48 96x96 128x128",
+      "purpose": ["badge"]
+    },
+    {
+      "src": "/images/icon/512-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": ["maskable", "foo", "any"]
+    }
+  ],
+  "start_url": "/start",
+  "scope": "/",
+  "display": "minimal-ui",
+  "dir": "rtl",
+  "orientation": "portrait"
+}
