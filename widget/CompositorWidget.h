@@ -236,7 +236,7 @@ class CompositorWidget {
    * Create a backbuffer for the software compositor.
    */
   virtual already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
-      gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
+      gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
       bool* aOutIsCleared);
 
   /**
