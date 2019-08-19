@@ -203,9 +203,17 @@ class nsPresContext : public nsISupports,
 
   /**
    * Returns the root widget for this.
-   * Note that the widget is a mediater with IME.
    */
-  nsIWidget* GetRootWidget();
+  nsIWidget* GetRootWidget() const;
+
+  /**
+   * Returns the widget which may have native focus and handles text input
+   * like keyboard input, IME, etc.
+   */
+  nsIWidget* GetTextInputHandlingWidget() const {
+    // Currently, root widget for each PresContext handles text input.
+    return GetRootWidget();
+  }
 
   /**
    * Return the presentation context for the root of the view manager

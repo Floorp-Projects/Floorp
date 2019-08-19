@@ -12,17 +12,11 @@ const {
   section,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const Localized = createFactory(FluentReact.Localized);
+const ManifestLoader = createFactory(require("../manifest/ManifestLoader"));
 
 class ManifestPage extends PureComponent {
   render() {
-    return Localized(
-      {
-        id: "manifest-empty-intro",
-      },
-      section({ className: `manifest-page` })
-    );
+    return section({ className: `manifest-page` }, ManifestLoader({}));
   }
 }
 

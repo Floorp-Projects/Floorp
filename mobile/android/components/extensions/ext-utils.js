@@ -8,6 +8,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "GeckoViewTabBridge",
+  "resource://gre/modules/GeckoViewTab.jsm"
+);
+
 /* globals EventDispatcher */
 var { EventDispatcher } = ChromeUtils.import(
   "resource://gre/modules/Messaging.jsm"
@@ -93,6 +99,23 @@ class BrowserProgressListener {
   }
 }
 
+const PROGRESS_LISTENER_FLAGS =
+  Ci.nsIWebProgress.NOTIFY_STATE_ALL | Ci.nsIWebProgress.NOTIFY_LOCATION;
+
+class GeckoViewProgressListenerWrapper {
+  constructor(window, listener) {
+    this.listener = new BrowserProgressListener(
+      window.BrowserApp.selectedBrowser,
+      listener,
+      PROGRESS_LISTENER_FLAGS
+    );
+  }
+
+  destroy() {
+    this.listener.destroy();
+  }
+}
+
 /**
  * Handles wrapping a tab progress listener in browser-specific
  * BrowserProgressListener instances, an attaching them to each tab in a given
@@ -103,14 +126,11 @@ class BrowserProgressListener {
  * @param {object} listener
  *        The tab progress listener to wrap.
  */
-class ProgressListenerWrapper {
+class FennecProgressListenerWrapper {
   constructor(window, listener) {
     this.window = window;
     this.listener = listener;
     this.listeners = new WeakMap();
-
-    this.flags =
-      Ci.nsIWebProgress.NOTIFY_STATE_ALL | Ci.nsIWebProgress.NOTIFY_LOCATION;
 
     for (let nativeTab of this.window.BrowserApp.tabs) {
       this.addBrowserProgressListener(nativeTab.browser);
@@ -178,6 +198,10 @@ class ProgressListenerWrapper {
   }
 }
 
+const ProgressListenerWrapper = Services.androidBridge.isFennec
+  ? FennecProgressListenerWrapper
+  : GeckoViewProgressListenerWrapper;
+
 class WindowTracker extends WindowTrackerBase {
   constructor(...args) {
     super(...args);
@@ -187,6 +211,10 @@ class WindowTracker extends WindowTrackerBase {
 
   get topWindow() {
     return Services.wm.getMostRecentWindow(WINDOW_TYPE);
+  }
+
+  get topNonPBWindow() {
+    return Services.wm.getMostRecentNonPBWindow(WINDOW_TYPE);
   }
 
   isBrowserWindow(window) {
@@ -255,7 +283,80 @@ global.makeGlobalEvent = function makeGlobalEvent(
   }).api();
 };
 
-class TabTracker extends TabTrackerBase {
+class GeckoViewTabTracker extends TabTrackerBase {
+  init() {
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    windowTracker.addOpenListener(window => {
+      const nativeTab = window.BrowserApp.selectedTab;
+      this.emit("tab-created", { nativeTab });
+    });
+
+    windowTracker.addCloseListener(window => {
+      const nativeTab = window.BrowserApp.selectedTab;
+      const { windowId, tabId } = this.getBrowserData(
+        window.BrowserApp.selectedBrowser
+      );
+      this.emit("tab-removed", {
+        nativeTab,
+        tabId,
+        windowId,
+        // In GeckoView, it is not meaningful to speak of "window closed", because a tab is a window.
+        // Until we have a meaningful way to group tabs (and close multiple tabs at once),
+        // let's use isWindowClosing: false
+        isWindowClosing: false,
+      });
+    });
+  }
+
+  getId(nativeTab) {
+    return nativeTab.id;
+  }
+
+  getTab(id, default_ = undefined) {
+    const windowId = GeckoViewTabBridge.tabIdToWindowId(id);
+    const win = windowTracker.getWindow(windowId, null, false);
+
+    if (win && win.BrowserApp) {
+      let nativeTab = win.BrowserApp.selectedTab;
+      if (nativeTab) {
+        return nativeTab;
+      }
+    }
+
+    if (default_ !== undefined) {
+      return default_;
+    }
+    throw new ExtensionError(`Invalid tab ID: ${id}`);
+  }
+
+  getBrowserData(browser) {
+    const window = browser.ownerGlobal;
+    if (!window.BrowserApp) {
+      return {
+        tabId: -1,
+        windowId: -1,
+      };
+    }
+    return {
+      tabId: this.getId(window.BrowserApp.selectedTab),
+      windowId: windowTracker.getId(window),
+    };
+  }
+
+  get activeTab() {
+    let win = windowTracker.topWindow;
+    if (win && win.BrowserApp) {
+      return win.BrowserApp.selectedTab;
+    }
+    return null;
+  }
+}
+
+class FennecTabTracker extends TabTrackerBase {
   constructor() {
     super();
 
@@ -486,7 +587,11 @@ class TabTracker extends TabTrackerBase {
 }
 
 windowTracker = new WindowTracker();
-tabTracker = new TabTracker();
+if (Services.androidBridge.isFennec) {
+  tabTracker = new FennecTabTracker();
+} else {
+  tabTracker = new GeckoViewTabTracker();
+}
 
 Object.assign(global, { tabTracker, windowTracker });
 

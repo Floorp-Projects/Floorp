@@ -7,5 +7,6 @@
 const workers = require("./workers");
 const page = require("./page");
 const ui = require("./ui");
+const manifest = require("./manifest");
 
-Object.assign(exports, workers, page, ui);
+Object.assign(exports, workers, page, ui, manifest);

@@ -105,6 +105,11 @@ add_task(async function test_login_item() {
           login.password,
           "Password change should be reverted"
         );
+        is(
+          passwordInput.style.width,
+          login.password.length + "ch",
+          "Password field width shouldn't have changed"
+        );
       }
 
       await test_discard_dialog(loginList._createLoginButton);
@@ -125,12 +130,6 @@ add_task(async function test_login_item() {
       );
       saveChangesButton.click();
 
-      usernameInput = loginItem.shadowRoot.querySelector(
-        "input[name='username']"
-      );
-      passwordInput = loginItem.shadowRoot.querySelector(
-        "input[name='password']"
-      );
       await ContentTaskUtils.waitForCondition(() => {
         let guid = loginList._loginGuidsSortedOrder[0];
         let updatedLogin = loginList._logins[guid].login;
@@ -144,6 +143,11 @@ add_task(async function test_login_item() {
       ok(
         !loginItem.dataset.editing,
         "LoginItem should not be in 'edit' mode after saving"
+      );
+      is(
+        passwordInput.style.width,
+        passwordInput.value.length + "ch",
+        "Password field width should be correctly updated"
       );
 
       editButton.click();

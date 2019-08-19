@@ -5,7 +5,6 @@
  * Helper functions extract values from manifest members
  * and reports conformance errors.
  */
-/* globals Components*/
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(

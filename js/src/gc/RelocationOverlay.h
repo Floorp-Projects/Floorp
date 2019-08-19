@@ -12,14 +12,10 @@
 #define gc_RelocationOverlay_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EndianUtils.h"
 
 #include <stdint.h>
 
 #include "gc/Cell.h"
-#include "js/HeapAPI.h"
-#include "vm/JSObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 namespace gc {
