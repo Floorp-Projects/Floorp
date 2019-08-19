@@ -102,7 +102,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.8"
+parking_lot = "0.9"
 ```
 
 and this to your crate root:
@@ -115,7 +115,7 @@ To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = {version = "0.8", features = ["nightly"]}
+parking_lot = {version = "0.9", features = ["nightly"]}
 ```
 
 The experimental deadlock detector can be enabled with the
@@ -127,7 +127,7 @@ changes to the core API do not cause breaking changes for users of `parking_lot`
 
 ## Minimum Rust version
 
-The current minimum required Rust version is 1.31. Any change to this is
+The current minimum required Rust version is 1.32. Any change to this is
 considered a breaking change and will require a major version bump.
 
 ## License
