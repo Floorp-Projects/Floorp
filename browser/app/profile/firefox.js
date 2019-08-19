@@ -986,7 +986,11 @@ pref("security.certerrors.permanentOverride", true);
 pref("security.certerrors.mitm.priming.enabled", true);
 pref("security.certerrors.mitm.priming.endpoint", "https://mitmdetection.services.mozilla.com/");
 pref("security.certerrors.mitm.auto_enable_enterprise_roots", true);
+#ifdef NIGHTLY_BUILD
+pref("security.aboutcertificate.enabled", true);
+#else
 pref("security.aboutcertificate.enabled", false);
+#endif
 
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
