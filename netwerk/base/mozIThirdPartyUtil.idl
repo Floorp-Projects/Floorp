@@ -178,6 +178,15 @@ interface mozIThirdPartyUtil : nsISupports
   nsIPrincipal getPrincipalFromWindow(in mozIDOMWindowProxy aWindow);
 
   /**
+   * getContentBlockingAllowListPrincipalFromWindow
+   *
+   * Returns the content blocking allow list principal for the window.
+   */
+  [noscript]
+  nsIPrincipal getContentBlockingAllowListPrincipalFromWindow(in mozIDOMWindowProxy aWindow,
+                                                              [optional] in nsIURI aURIBeingLoaded);
+
+  /**
    * getTopWindowForChannel
    *
    * Returns the top-level window associated with the given channel.
