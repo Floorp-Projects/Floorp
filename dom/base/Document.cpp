@@ -15459,7 +15459,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       DebugOnly<bool> isOnAllowList = false;
       MOZ_ASSERT_IF(
           NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-              parent->GetDocumentURI(), false, isOnAllowList)),
+              parent->GetContentBlockingAllowListPrincipal(), false,
+              isOnAllowList)),
           !isOnAllowList);
 
       RefPtr<Document> self(this);
