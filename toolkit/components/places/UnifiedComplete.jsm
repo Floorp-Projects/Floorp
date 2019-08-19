@@ -2827,20 +2827,14 @@ UnifiedComplete.prototype = {
       this._promiseDatabase = (async () => {
         let conn = await PlacesUtils.promiseLargeCacheDBConnection();
 
-        try {
-          Sqlite.shutdown.addBlocker(
-            "Places UnifiedComplete.js closing",
-            () => {
-              // Break a possible cycle through the
-              // previous result, the controller and
-              // ourselves.
-              this._currentSearch = null;
-            }
-          );
-        } catch (ex) {
-          // It's too late to block shutdown.
-          throw ex;
-        }
+        // We don't catch exceptions here as it is too late to block shutdown.
+        Sqlite.shutdown.addBlocker("Places UnifiedComplete.js closing", () => {
+          // Break a possible cycle through the
+          // previous result, the controller and
+          // ourselves.
+          this._currentSearch = null;
+        });
+
         await UrlbarProviderOpenTabs.promiseDb();
         return conn;
       })().catch(ex => {
