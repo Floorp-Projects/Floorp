@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global Pipe, ScriptableInputStream */
-
 const CC = Components.Constructor;
 
 const { EventEmitter } = ChromeUtils.import(

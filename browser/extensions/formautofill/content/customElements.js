@@ -258,7 +258,6 @@
     }
 
     _adjustAcItem() {
-      /* global Cu */
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
 

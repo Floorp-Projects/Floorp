@@ -18,7 +18,6 @@
  * TODO: The constructor should accept the UA's supported orientations.
  * TODO: The constructor should accept the UA's supported display modes.
  */
-/* globals Components, ValueExtractor, ImageObjectProcessor, ConsoleAPI*/
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(

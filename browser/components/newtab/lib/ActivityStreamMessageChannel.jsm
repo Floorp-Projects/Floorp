@@ -6,8 +6,8 @@
 
 const { AboutNewTab } = ChromeUtils.import(
   "resource:///modules/AboutNewTab.jsm"
-); // Remove when updating eslint-plugin-mozilla 0.14.0+
-/* globals RemotePages */ const { RemotePages } = ChromeUtils.import(
+);
+const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 
