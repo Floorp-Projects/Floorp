@@ -26,38 +26,110 @@
     }                                                         \
   } while (0)
 
+#define BLOCK_SIZE 64
+#define WIDTH 640
+#define HEIGHT 480
+#define NUM_FRAMES 150UL
+#define FRAME_RATE 30
+#define FRAME_DURATION (1000000 / FRAME_RATE)
+#define BIT_RATE (1000 * 1000)  // 1Mbps
+
 using namespace mozilla;
 
-static gfx::IntSize kImageSize(640, 480);
+static gfx::IntSize kImageSize(WIDTH, HEIGHT);
 
 class MediaDataEncoderTest : public testing::Test {
  protected:
-  void SetUp() override { InitData(kImageSize); }
+  void SetUp() override { mData.Init(kImageSize); }
 
-  void TearDown() override { DeinitData(); }
+  void TearDown() override { mData.Deinit(); }
 
-  layers::PlanarYCbCrData mData;
-  UniquePtr<uint8_t[]> mBackBuffer;
+ public:
+  struct FrameSource final {
+    layers::PlanarYCbCrData mYUV;
+    UniquePtr<uint8_t[]> mBuffer;
+    RefPtr<layers::BufferRecycleBin> mRecycleBin;
+    int16_t mColorStep = 4;
 
- private:
-  void InitData(const gfx::IntSize& aSize) {
-    mData.mPicSize = aSize;
-    mData.mYStride = aSize.width;
-    mData.mYSize = aSize;
-    mData.mCbCrStride = aSize.width / 2;
-    mData.mCbCrSize = gfx::IntSize(aSize.width / 2, aSize.height / 2);
-    size_t bufferSize = mData.mYStride * mData.mYSize.height +
-                        mData.mCbCrStride * mData.mCbCrSize.height +
-                        mData.mCbCrStride * mData.mCbCrSize.height;
-    mBackBuffer = MakeUnique<uint8_t[]>(bufferSize);
-    std::fill_n(mBackBuffer.get(), bufferSize, 42);
-    mData.mYChannel = mBackBuffer.get();
-    mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
-    mData.mCrChannel =
-        mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
-  }
+    void Init(const gfx::IntSize& aSize) {
+      mYUV.mPicSize = aSize;
+      mYUV.mYStride = aSize.width;
+      mYUV.mYSize = aSize;
+      mYUV.mCbCrStride = aSize.width / 2;
+      mYUV.mCbCrSize = gfx::IntSize(aSize.width / 2, aSize.height / 2);
+      size_t bufferSize = mYUV.mYStride * mYUV.mYSize.height +
+                          mYUV.mCbCrStride * mYUV.mCbCrSize.height +
+                          mYUV.mCbCrStride * mYUV.mCbCrSize.height;
+      mBuffer = MakeUnique<uint8_t[]>(bufferSize);
+      std::fill_n(mBuffer.get(), bufferSize, 0x7F);
+      mYUV.mYChannel = mBuffer.get();
+      mYUV.mCbChannel = mYUV.mYChannel + mYUV.mYStride * mYUV.mYSize.height;
+      mYUV.mCrChannel =
+          mYUV.mCbChannel + mYUV.mCbCrStride * mYUV.mCbCrSize.height;
+      mRecycleBin = new layers::BufferRecycleBin();
+    }
 
-  void DeinitData() { mBackBuffer.reset(); }
+    void Deinit() {
+      mBuffer.reset();
+      mRecycleBin = nullptr;
+    }
+
+    already_AddRefed<MediaData> GetFrame(const size_t aIndex) {
+      Draw(aIndex);
+      RefPtr<layers::PlanarYCbCrImage> img =
+          new layers::RecyclingPlanarYCbCrImage(mRecycleBin);
+      img->CopyData(mYUV);
+      RefPtr<MediaData> frame = VideoData::CreateFromImage(
+          kImageSize, 0, TimeUnit::FromMicroseconds(aIndex * FRAME_DURATION),
+          TimeUnit::FromMicroseconds(FRAME_DURATION), img, (aIndex & 0xF) == 0,
+          TimeUnit::FromMicroseconds(aIndex * FRAME_DURATION));
+      return frame.forget();
+    }
+
+    void DrawChessboard(uint8_t* aAddr, const size_t aWidth,
+                        const size_t aHeight, const size_t aOffset) {
+      uint8_t pixels[2][BLOCK_SIZE];
+      size_t x = aOffset % BLOCK_SIZE;
+      if ((aOffset / BLOCK_SIZE) & 1) {
+        x = BLOCK_SIZE - x;
+      }
+      for (size_t i = 0; i < x; i++) {
+        pixels[0][i] = 0x00;
+        pixels[1][i] = 0xFF;
+      }
+      for (size_t i = x; i < BLOCK_SIZE; i++) {
+        pixels[0][i] = 0xFF;
+        pixels[1][i] = 0x00;
+      }
+
+      uint8_t* p = aAddr;
+      for (size_t row = 0; row < aHeight; row++) {
+        for (size_t col = 0; col < aWidth; col += BLOCK_SIZE) {
+          memcpy(p, pixels[((row / BLOCK_SIZE) + (col / BLOCK_SIZE)) % 2],
+                 BLOCK_SIZE);
+          p += BLOCK_SIZE;
+        }
+      }
+    }
+
+    void Draw(const size_t aIndex) {
+      DrawChessboard(mYUV.mYChannel, mYUV.mYSize.width, mYUV.mYSize.height,
+                     aIndex << 1);
+      int16_t color = mYUV.mCbChannel[0] + mColorStep;
+      if (color > 255 || color < 0) {
+        mColorStep = -mColorStep;
+        color = mYUV.mCbChannel[0] + mColorStep;
+      }
+
+      size_t size = (mYUV.mCrChannel - mYUV.mCbChannel);
+
+      std::fill_n(mYUV.mCbChannel, size, static_cast<uint8_t>(color));
+      std::fill_n(mYUV.mCrChannel, size, 0xFF - static_cast<uint8_t>(color));
+    }
+  };
+
+ public:
+  FrameSource mData;
 };
 
 static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
@@ -69,13 +141,13 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
     return nullptr;
   }
 
-  VideoInfo videoInfo(1280, 720);
+  VideoInfo videoInfo(WIDTH, HEIGHT);
   videoInfo.mMimeType = NS_LITERAL_CSTRING(VIDEO_MP4);
   const RefPtr<TaskQueue> taskQueue(
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)));
   CreateEncoderParams c(videoInfo /* track info */, aUsage, taskQueue,
-                        aPixelFormat, 30 /* FPS */,
-                        10 * 1024 * 1024 /* bitrate */);
+                        aPixelFormat, FRAME_RATE /* FPS */,
+                        BIT_RATE /* bitrate */);
   return f->CreateEncoder(c);
 }
 
@@ -140,17 +212,11 @@ TEST_F(MediaDataEncoderTest, H264Init) {
 
 static MediaDataEncoder::EncodedData Encode(
     const RefPtr<MediaDataEncoder> aEncoder, const size_t aNumFrames,
-    const layers::PlanarYCbCrData& aYCbCrData) {
+    MediaDataEncoderTest::FrameSource& aSource) {
   MediaDataEncoder::EncodedData output;
   bool succeeded;
   for (size_t i = 0; i < aNumFrames; i++) {
-    RefPtr<layers::PlanarYCbCrImage> img =
-        new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
-    img->AdoptData(aYCbCrData);
-    RefPtr<MediaData> frame = VideoData::CreateFromImage(
-        kImageSize, 0, TimeUnit::FromMicroseconds(i * 30000),
-        TimeUnit::FromMicroseconds(30000), img, (i & 0xF) == 0,
-        TimeUnit::FromMicroseconds(i * 30000));
+    RefPtr<MediaData> frame = aSource.GetFrame(i);
     media::Await(
         GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Encode(frame),
         [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
@@ -215,8 +281,8 @@ TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAnnexB) {
                         MediaDataEncoder::PixelFormat::YUV420P);
   EnsureInit(e);
 
-  MediaDataEncoder::EncodedData output = Encode(e, 30UL, mData);
-  EXPECT_EQ(output.Length(), 30UL);
+  MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+  EXPECT_EQ(output.Length(), NUM_FRAMES);
   for (auto frame : output) {
     EXPECT_TRUE(AnnexB::IsAnnexB(frame));
   }
@@ -231,8 +297,8 @@ TEST_F(MediaDataEncoderTest, EncodeMultipleFramesAsAVCC) {
       MediaDataEncoder::Usage::Record, MediaDataEncoder::PixelFormat::YUV420P);
   EnsureInit(e);
 
-  MediaDataEncoder::EncodedData output = Encode(e, 30UL, mData);
-  EXPECT_EQ(output.Length(), 30UL);
+  MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+  EXPECT_EQ(output.Length(), NUM_FRAMES);
   AnnexB::IsAVCC(output[0]);  // Only 1st frame has extra data.
   for (auto frame : output) {
     EXPECT_FALSE(AnnexB::IsAnnexB(frame));
