@@ -7,7 +7,6 @@ package org.mozilla.fenix.home
 import android.animation.Animator
 import android.content.Context
 import android.content.DialogInterface
-import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -84,7 +83,6 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
-import kotlin.math.roundToInt
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment(), AccountObserver {
@@ -241,7 +239,7 @@ class HomeFragment : Fragment(), AccountObserver {
             )
         }
         view.toolbar.compoundDrawablePadding =
-            (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
+            view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
         view.toolbar_wrapper.setOnClickListener {
             invokePendingDeleteJobs()
             onboarding.finish()
@@ -874,7 +872,6 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val TELEMETRY_HOME_IDENITIFIER = "home"
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
-        private const val toolbarPaddingDp = 12f
     }
 }
 
