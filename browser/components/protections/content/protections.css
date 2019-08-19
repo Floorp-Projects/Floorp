@@ -550,7 +550,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-body-content .monitor-breached-passwords {
   grid: 1fr / minmax(70px, auto) 1fr;
   grid-row: 3;
-  grid-column: span 3;
   display: grid;
   align-items: center;
   font-size: 0.85em;
@@ -559,6 +558,12 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   line-height: 18px;
   grid-column-gap: 10px;
   margin-bottom: 20px;
+}
+
+.monitor-info-wrapper {
+  display: grid;
+  grid: 1fr / 1fr 1fr 1fr;
+  grid-gap: 10px;
 }
 
 .monitor-scanned-text {
@@ -574,7 +579,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 .monitor-card.has-logins #monitor-body-content {
   display: grid;
-  grid: 2fr 1fr auto / repeat(3, 160px);
+  grid: 1fr 50px auto / 1fr 100px;
   grid-column-gap: 12px;
   align-items: center;
 }
