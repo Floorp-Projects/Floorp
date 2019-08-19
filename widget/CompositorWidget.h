@@ -162,8 +162,9 @@ class CompositorWidget {
    * after each composition.
    */
   virtual void EndRemoteDrawing() {}
-  virtual void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                                        LayoutDeviceIntRegion& aInvalidRegion) {
+  virtual void EndRemoteDrawingInRegion(
+      gfx::DrawTarget* aDrawTarget,
+      const LayoutDeviceIntRegion& aInvalidRegion) {
     EndRemoteDrawing();
   }
 

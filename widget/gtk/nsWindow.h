@@ -221,7 +221,7 @@ class nsWindow final : public nsBaseWidget {
       mozilla::layers::BufferMode* aBufferMode) override;
   virtual void EndRemoteDrawingInRegion(
       mozilla::gfx::DrawTarget* aDrawTarget,
-      LayoutDeviceIntRegion& aInvalidRegion) override;
+      const LayoutDeviceIntRegion& aInvalidRegion) override;
 
   void SetProgress(unsigned long progressPercent);
 

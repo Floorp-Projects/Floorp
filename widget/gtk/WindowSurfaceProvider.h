@@ -56,7 +56,7 @@ class WindowSurfaceProvider final {
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawingInRegion(
       LayoutDeviceIntRegion& aInvalidRegion, layers::BufferMode* aBufferMode);
   void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                                LayoutDeviceIntRegion& aInvalidRegion);
+                                const LayoutDeviceIntRegion& aInvalidRegion);
 
  private:
   UniquePtr<WindowSurface> CreateWindowSurface();
