@@ -13,6 +13,7 @@
 
 namespace mozilla {
 
+class MediaData;
 class PEMFactory;
 class SharedThreadPool;
 class TaskQueue;
@@ -40,6 +41,10 @@ class WebrtcMediaDataEncoder : public WebrtcVideoEncoder {
  private:
   ~WebrtcMediaDataEncoder() = default;
 
+  bool SetupConfig(const webrtc::VideoCodec* aCodecSettings);
+  bool CreateEncoder(const webrtc::VideoCodec* aCodecSettings);
+  bool InitEncoder();
+
   AbstractThread* OwnerThread() const { return mTaskQueue; }
   bool OnTaskQueue() const { return OwnerThread()->IsCurrentThreadIn(); };
 
@@ -51,6 +56,7 @@ class WebrtcMediaDataEncoder : public WebrtcVideoEncoder {
 
   VideoInfo mInfo;
   MediaResult mError = NS_OK;
+  webrtc::H264PacketizationMode mMode;
 };
 
 }  // namespace mozilla
