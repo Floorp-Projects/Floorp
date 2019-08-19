@@ -77,8 +77,6 @@ class nsPermissionManager final : public nsIPermissionManager,
     static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
                                               nsresult& aResult);
     static PermissionKey* CreateFromURI(nsIURI* aURI, nsresult& aResult);
-    static PermissionKey* CreateFromOriginNoSuffix(
-        const nsACString& aOriginNoSuffix);
 
     explicit PermissionKey(const nsACString& aOrigin)
         : mOrigin(aOrigin), mHashCode(mozilla::HashString(aOrigin)) {}
@@ -327,9 +325,8 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
-  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI,
-                                          const nsACString& aOriginNoSuffix,
-                                          uint32_t aType, bool aExactHostMatch);
+  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
+                                          bool aExactHostMatch);
 
   // The int32_t is the type index, the nsresult is an early bail-out return
   // code.
@@ -436,8 +433,8 @@ class nsPermissionManager final : public nsIPermissionManager,
     }
 
     return CommonTestPermissionInternal(
-        aPrincipal, nullptr, EmptyCString(), preparationResult.as<int32_t>(),
-        aType, aPermission, aExactHostMatch, aIncludingSession);
+        aPrincipal, nullptr, preparationResult.as<int32_t>(), aType,
+        aPermission, aExactHostMatch, aIncludingSession);
   }
   // If aTypeIndex is passed -1, we try to inder the type index from aType.
   nsresult CommonTestPermission(nsIURI* aURI, int32_t aTypeIndex,
@@ -453,14 +450,16 @@ class nsPermissionManager final : public nsIPermissionManager,
     }
 
     return CommonTestPermissionInternal(
-        nullptr, aURI, EmptyCString(), preparationResult.as<int32_t>(), aType,
-        aPermission, aExactHostMatch, aIncludingSession);
+        nullptr, aURI, preparationResult.as<int32_t>(), aType, aPermission,
+        aExactHostMatch, aIncludingSession);
   }
   // Only one of aPrincipal or aURI is allowed to be passed in.
-  nsresult CommonTestPermissionInternal(
-      nsIPrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
-      int32_t aTypeIndex, const nsACString& aType, uint32_t* aPermission,
-      bool aExactHostMatch, bool aIncludingSession);
+  nsresult CommonTestPermissionInternal(nsIPrincipal* aPrincipal, nsIURI* aURI,
+                                        int32_t aTypeIndex,
+                                        const nsACString& aType,
+                                        uint32_t* aPermission,
+                                        bool aExactHostMatch,
+                                        bool aIncludingSession);
 
   nsresult OpenDatabase(nsIFile* permissionsFile);
   nsresult InitDB(bool aRemoveFile);
