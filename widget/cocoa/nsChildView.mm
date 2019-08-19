@@ -1504,6 +1504,10 @@ bool nsChildView::PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
 
 void nsChildView::PaintWindowInContentLayer() {
   mContentLayer->SetRect(GetBounds().ToUnknownRect());
+  {
+    auto opaqueRegion = mOpaqueRegion.Lock();
+    mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
+  }
   mContentLayer->SetSurfaceIsFlipped(false);
   CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
   if (!surf) {
@@ -1994,6 +1998,10 @@ bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
     if (gl) {
       auto glContextCGL = GLContextCGL::Cast(gl);
       mContentLayer->SetRect(GetBounds().ToUnknownRect());
+      {
+        auto opaqueRegion = mOpaqueRegion.Lock();
+        mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
+      }
       mContentLayer->SetSurfaceIsFlipped(true);
       RefPtr<layers::IOSurfaceRegistry> currentRegistry = mContentLayer->GetSurfaceRegistry();
       if (!currentRegistry) {
@@ -2014,6 +2022,10 @@ bool nsChildView::PreRenderImpl(WidgetRenderingContext* aContext) {
     // We're using BasicCompositor.
     MOZ_RELEASE_ASSERT(!mBasicCompositorIOSurface);
     mContentLayer->SetRect(GetBounds().ToUnknownRect());
+    {
+      auto opaqueRegion = mOpaqueRegion.Lock();
+      mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
+    }
     mContentLayer->SetSurfaceIsFlipped(false);
     CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
     if (!surf) {
