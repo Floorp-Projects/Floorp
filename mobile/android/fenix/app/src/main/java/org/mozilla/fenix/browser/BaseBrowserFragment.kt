@@ -365,7 +365,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
     @CallSuper
     override fun onSessionSelected(session: Session) {
-        super.onSessionSelected(session)
         if (!browserInitialized) {
             // Initializing a new coroutineScope to avoid ConcurrentModificationException in ObserverRegistry
             // This will be removed when ObserverRegistry is deprecated by browser-state.

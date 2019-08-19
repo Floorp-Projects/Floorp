@@ -22,7 +22,6 @@ import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,9 +48,8 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.quickactionsheet.DefaultQuickActionSheetController
+import org.mozilla.fenix.quickactionsheet.QuickActionSheetSessionObserver
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
-import java.net.MalformedURLException
-import java.net.URL
 
 /**
  * Fragment used for browsing the web within the main app and external apps.
@@ -61,11 +59,11 @@ import java.net.URL
 @Suppress("TooManyFunctions")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private lateinit var quickActionSheetView: QuickActionSheetView
+    private var quickActionSheetSessionObserver: QuickActionSheetSessionObserver? = null
 
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
-    private var findBookmarkJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +91,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     override fun initializeUI(view: View): Session? {
         val sessionManager = requireComponents.core.sessionManager
 
-        return super.initializeUI(view)?.also { session ->
+        return super.initializeUI(view)?.also {
 
             quickActionSheetView =
                 QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
@@ -154,8 +152,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 themeReaderViewControlsForPrivateMode(view.readerViewControlsBar)
             }
 
-            updateBookmarkState(session)
-
             consumeFrom(browserStore) {
                 quickActionSheetView.update(it)
                 browserToolbarView.update(it)
@@ -165,8 +161,14 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
     override fun onStart() {
         super.onStart()
-        subscribeToSession()
         subscribeToTabCollections()
+        quickActionSheetSessionObserver = QuickActionSheetSessionObserver(
+            lifecycleScope,
+            requireComponents,
+            dispatch = { action -> browserStore.dispatch(action) }
+        ).also { observer ->
+            getSessionById()?.register(observer, this, autoPause = true)
+        }
     }
 
     override fun onResume() {
@@ -306,56 +308,9 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         })
     }
 
-    private fun subscribeToSession() {
-        val observer = object : Session.Observer {
-            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-                if (!loading) {
-                    updateBookmarkState(session)
-                    browserStore.dispatch(QuickActionSheetAction.BounceNeededChange)
-                }
-            }
-
-            override fun onUrlChanged(session: Session, url: String) {
-                updateBookmarkState(session)
-                updateAppLinksState(session)
-            }
-        }
-        getSessionById()?.register(observer, this, autoPause = true)
-    }
-
     override fun onSessionSelected(session: Session) {
         super.onSessionSelected(session)
-        updateBookmarkState(session)
-    }
-
-    private suspend fun findBookmarkedURL(session: Session?): Boolean {
-        return withContext(IO) {
-            session?.let {
-                try {
-                    val url = URL(it.url).toString()
-                    val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(url)
-                    list.isNotEmpty() && list[0].url == url
-                } catch (e: MalformedURLException) {
-                    false
-                }
-            } ?: false
-        }
-    }
-
-    private fun updateBookmarkState(session: Session) {
-        findBookmarkJob?.cancel()
-        findBookmarkJob = lifecycleScope.launch(IO) {
-            val found = findBookmarkedURL(session)
-            withContext(Main) {
-                browserStore.dispatch(QuickActionSheetAction.BookmarkedStateChange(found))
-            }
-        }
-    }
-
-    private fun updateAppLinksState(session: Session) {
-        val url = session.url
-        val appLinks = requireComponents.useCases.appLinksUseCases.appLinkRedirect
-        browserStore.dispatch(QuickActionSheetAction.AppLinkStateChange(appLinks.invoke(url).hasExternalApp()))
+        quickActionSheetSessionObserver?.updateBookmarkState(session)
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
@@ -366,14 +321,14 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
             showTabSavedToCollectionSnackbar()
         }
-    }
 
-    private fun showTabSavedToCollectionSnackbar() {
-        view?.let { view ->
-            FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
-                .setText(view.context.getString(R.string.create_collection_tab_saved))
-                .setAnchorView(browserToolbarView.view)
-                .show()
+        private fun showTabSavedToCollectionSnackbar() {
+            view?.let { view ->
+                FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
+                    .setText(view.context.getString(R.string.create_collection_tab_saved))
+                    .setAnchorView(browserToolbarView.view)
+                    .show()
+            }
         }
     }
 
