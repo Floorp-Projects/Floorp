@@ -125,7 +125,7 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 }
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
-    gfx::DrawTarget* aDrawTarget, LayoutDeviceIntRegion& aInvalidRegion) {
+    gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
   if (mWindowSurface) mWindowSurface->Commit(aInvalidRegion);
 }
 
