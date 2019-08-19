@@ -6,14 +6,29 @@
 // The purpose of this test is to check that parsing of HPKP headers
 // is correct.
 
-do_get_profile();
-
-const gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+var profileDir = do_get_profile();
+const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+  Ci.nsIX509CertDB
+);
+var gSSService = Cc["@mozilla.org/ssservice;1"].getService(
   Ci.nsISiteSecurityService
 );
 
-function checkFailParseInvalidPin(secInfo, pinValue) {
-  let uri = Services.io.newURI("https://a.pinning.example.com");
+function certFromFile(cert_name) {
+  return constructCertFromFile("test_pinning_dynamic/" + cert_name + ".pem");
+}
+
+function loadCert(cert_name, trust_string) {
+  let cert_filename = "test_pinning_dynamic/" + cert_name + ".pem";
+  addCertFromFile(certdb, cert_filename, trust_string);
+  return constructCertFromFile(cert_filename);
+}
+
+function checkFailParseInvalidPin(pinValue) {
+  let secInfo = new FakeTransportSecurityInfo(
+    certFromFile("a.pinning2.example.com-pinningroot")
+  );
+  let uri = Services.io.newURI("https://a.pinning2.example.com");
   throws(
     () => {
       gSSService.processHeader(
@@ -30,8 +45,11 @@ function checkFailParseInvalidPin(secInfo, pinValue) {
   );
 }
 
-function checkPassValidPin(secInfo, pinValue, settingPin, expectedMaxAge) {
-  let uri = Services.io.newURI("https://a.pinning.example.com");
+function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
+  let secInfo = new FakeTransportSecurityInfo(
+    certFromFile("a.pinning2.example.com-pinningroot")
+  );
+  let uri = Services.io.newURI("https://a.pinning2.example.com");
   let maxAge = {};
 
   // setup preconditions for the test, if setting ensure there is no previous
@@ -88,12 +106,12 @@ function checkPassValidPin(secInfo, pinValue, settingPin, expectedMaxAge) {
   }
 }
 
-function checkPassSettingPin(secInfo, pinValue, expectedMaxAge) {
-  return checkPassValidPin(secInfo, pinValue, true, expectedMaxAge);
+function checkPassSettingPin(pinValue, expectedMaxAge) {
+  return checkPassValidPin(pinValue, true, expectedMaxAge);
 }
 
-function checkPassRemovingPin(secInfo, pinValue) {
-  return checkPassValidPin(secInfo, pinValue, false);
+function checkPassRemovingPin(pinValue) {
+  return checkPassValidPin(pinValue, false);
 }
 
 const MAX_MAX_AGE_SECONDS = 100000;
@@ -113,111 +131,77 @@ const INCLUDE_SUBDOMAINS = "includeSubdomains;";
 const REPORT_URI = 'report-uri="https://www.example.com/report/";';
 const UNRECOGNIZED_DIRECTIVE = "unreconized-dir=12343;";
 
-function add_tests() {
-  let secInfo = null;
-  add_connection_test(
-    "a.pinning.example.com",
-    PRErrorCodeSuccess,
-    undefined,
-    aSecInfo => {
-      secInfo = aSecInfo;
-    }
-  );
-
-  add_task(() => {
-    checkFailParseInvalidPin(secInfo, "max-age=INVALID");
-    // check that incomplete headers are failure
-    checkFailParseInvalidPin(secInfo, GOOD_MAX_AGE);
-    checkFailParseInvalidPin(secInfo, VALID_PIN1);
-    checkFailParseInvalidPin(secInfo, REPORT_URI);
-    checkFailParseInvalidPin(secInfo, UNRECOGNIZED_DIRECTIVE);
-    checkFailParseInvalidPin(secInfo, VALID_PIN1 + BACKUP_PIN1);
-    checkFailParseInvalidPin(secInfo, GOOD_MAX_AGE + VALID_PIN1);
-    checkFailParseInvalidPin(secInfo, GOOD_MAX_AGE + VALID_PIN1 + BROKEN_PIN1);
-    // next ensure a backup pin is present
-    checkFailParseInvalidPin(secInfo, GOOD_MAX_AGE + VALID_PIN1 + VALID_PIN1);
-    // next section ensure duplicate directives result in failure
-    checkFailParseInvalidPin(
-      secInfo,
-      GOOD_MAX_AGE + GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1
-    );
-    checkFailParseInvalidPin(
-      secInfo,
-      GOOD_MAX_AGE +
-        VALID_PIN1 +
-        BACKUP_PIN1 +
-        INCLUDE_SUBDOMAINS +
-        INCLUDE_SUBDOMAINS
-    );
-    checkFailParseInvalidPin(
-      secInfo,
-      GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1 + REPORT_URI + REPORT_URI
-    );
-    checkFailParseInvalidPin(secInfo, "thisisinvalidtest");
-    checkFailParseInvalidPin(
-      secInfo,
-      "invalid" + GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1
-    );
-
-    checkPassRemovingPin(secInfo, "max-age=0"); // test removal without terminating ';'
-    checkPassRemovingPin(secInfo, MAX_AGE_ZERO);
-    checkPassRemovingPin(secInfo, MAX_AGE_ZERO + VALID_PIN1);
-
-    checkPassSettingPin(
-      secInfo,
-      GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1,
-      GOOD_MAX_AGE_SECONDS
-    );
-    checkPassSettingPin(
-      secInfo,
-      LONG_MAX_AGE + VALID_PIN1 + BACKUP_PIN1,
-      MAX_MAX_AGE_SECONDS
-    );
-
-    checkPassRemovingPin(secInfo, VALID_PIN1 + MAX_AGE_ZERO + VALID_PIN1);
-    checkPassSettingPin(secInfo, GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1);
-    checkPassSettingPin(secInfo, GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN2);
-    checkPassSettingPin(
-      secInfo,
-      GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN2 + INCLUDE_SUBDOMAINS
-    );
-    checkPassSettingPin(
-      secInfo,
-      VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2 + INCLUDE_SUBDOMAINS
-    );
-    checkPassSettingPin(
-      secInfo,
-      VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2 + REPORT_URI + INCLUDE_SUBDOMAINS
-    );
-    checkPassSettingPin(
-      secInfo,
-      INCLUDE_SUBDOMAINS + VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2
-    );
-    checkPassSettingPin(
-      secInfo,
-      GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1 + UNRECOGNIZED_DIRECTIVE
-    );
-  });
-}
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
-  Services.prefs.clearUserPref("security.cert_pinning.max_max_age_seconds");
-});
-
 function run_test() {
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
   Services.prefs.setIntPref(
     "security.cert_pinning.max_max_age_seconds",
     MAX_MAX_AGE_SECONDS
   );
-
   Services.prefs.setBoolPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots",
     true
   );
 
-  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
-  add_tests();
-  run_next_test();
+  loadCert("pinningroot", "CTu,CTu,CTu");
+  loadCert("badca", "CTu,CTu,CTu");
+
+  checkFailParseInvalidPin("max-age=INVALID");
+  // check that incomplete headers are failure
+  checkFailParseInvalidPin(GOOD_MAX_AGE);
+  checkFailParseInvalidPin(VALID_PIN1);
+  checkFailParseInvalidPin(REPORT_URI);
+  checkFailParseInvalidPin(UNRECOGNIZED_DIRECTIVE);
+  checkFailParseInvalidPin(VALID_PIN1 + BACKUP_PIN1);
+  checkFailParseInvalidPin(GOOD_MAX_AGE + VALID_PIN1);
+  checkFailParseInvalidPin(GOOD_MAX_AGE + VALID_PIN1 + BROKEN_PIN1);
+  // next ensure a backup pin is present
+  checkFailParseInvalidPin(GOOD_MAX_AGE + VALID_PIN1 + VALID_PIN1);
+  // next section ensure duplicate directives result in failure
+  checkFailParseInvalidPin(
+    GOOD_MAX_AGE + GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1
+  );
+  checkFailParseInvalidPin(
+    GOOD_MAX_AGE +
+      VALID_PIN1 +
+      BACKUP_PIN1 +
+      INCLUDE_SUBDOMAINS +
+      INCLUDE_SUBDOMAINS
+  );
+  checkFailParseInvalidPin(
+    GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1 + REPORT_URI + REPORT_URI
+  );
+  checkFailParseInvalidPin("thisisinvalidtest");
+  checkFailParseInvalidPin("invalid" + GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1);
+
+  checkPassRemovingPin("max-age=0"); // test removal without terminating ';'
+  checkPassRemovingPin(MAX_AGE_ZERO);
+  checkPassRemovingPin(MAX_AGE_ZERO + VALID_PIN1);
+
+  checkPassSettingPin(
+    GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1,
+    GOOD_MAX_AGE_SECONDS
+  );
+  checkPassSettingPin(
+    LONG_MAX_AGE + VALID_PIN1 + BACKUP_PIN1,
+    MAX_MAX_AGE_SECONDS
+  );
+
+  checkPassRemovingPin(VALID_PIN1 + MAX_AGE_ZERO + VALID_PIN1);
+  checkPassSettingPin(GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1);
+  checkPassSettingPin(GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN2);
+  checkPassSettingPin(
+    GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN2 + INCLUDE_SUBDOMAINS
+  );
+  checkPassSettingPin(
+    VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2 + INCLUDE_SUBDOMAINS
+  );
+  checkPassSettingPin(
+    VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2 + REPORT_URI + INCLUDE_SUBDOMAINS
+  );
+  checkPassSettingPin(
+    INCLUDE_SUBDOMAINS + VALID_PIN1 + GOOD_MAX_AGE + BACKUP_PIN2
+  );
+  checkPassSettingPin(
+    GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1 + UNRECOGNIZED_DIRECTIVE
+  );
 }

@@ -17,11 +17,8 @@ Object.defineProperty(this, "NetworkHelper", {
 });
 
 const wpl = Ci.nsIWebProgressListener;
-
-// This *cannot* be used as an nsITransportSecurityInfo (since that interface is
-// builtinclass) but the methods being tested aren't defined by XPCOM and aren't
-// calling QueryInterface, so this usage is fine.
 const MockSecurityInfo = {
+  QueryInterface: ChromeUtils.generateQI([Ci.nsITransportSecurityInfo]),
   securityState: wpl.STATE_IS_BROKEN,
   errorCode: 0,
   // nsISSLStatus.TLS_VERSION_1_2

@@ -58,9 +58,7 @@ function do_state_read(aSubject, aTopic, aData) {
       0
     )
   );
-  let secInfo = Cc[
-    "@mozilla.org/security/transportsecurityinfo;1"
-  ].createInstance(Ci.nsITransportSecurityInfo);
+  let secInfo = new FakeTransportSecurityInfo();
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com");
     gSSService.processHeader(
