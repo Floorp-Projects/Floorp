@@ -136,6 +136,10 @@ pub struct PictureCacheState {
     pub tiles: FastHashMap<TileOffset, Tile>,
     /// The current fractional offset of the cache transform root.
     fract_offset: PictureVector2D,
+    /// State of the spatial nodes from previous frame
+    spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
+    /// State of opacity bindings from previous frame
+    opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
 }
 
 /// Stores a list of cached picture tiles that are retained
@@ -223,8 +227,17 @@ impl From<PropertyBinding<f32>> for OpacityBinding {
     }
 }
 
+/// Information about the state of a spatial node value
+#[derive(Debug)]
+pub struct SpatialNodeDependency {
+    /// The current value retrieved from the clip-scroll tree.
+    value: TransformKey,
+    /// True if it was changed (or is new) since the last frame build.
+    changed: bool,
+}
+
 // Immutable context passed to picture cache tiles during pre_update
-struct TilePreUpdateContext<'a> {
+struct TilePreUpdateContext {
     /// The local rect of the overall picture cache
     local_rect: PictureRect,
 
@@ -234,9 +247,6 @@ struct TilePreUpdateContext<'a> {
     /// If true, the fractional position of the picture cache changed,
     /// requiring invalidation of all tiles.
     fract_changed: bool,
-
-    /// Information about opacity bindings from the picture cache.
-    opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
 }
 
 // Immutable context passed to picture cache tiles during post_update
@@ -250,14 +260,14 @@ struct TilePostUpdateContext<'a> {
     /// The visible part of the screen in world coords.
     global_screen_world_rect: WorldRect,
 
-    /// Current state of transforms
-    clip_scroll_tree: &'a ClipScrollTree,
-
     /// The calculated backdrop information for this cache instance.
     backdrop: BackdropInfo,
 
-    /// The spatial node of the picture cache.
-    cache_spatial_node_index: SpatialNodeIndex,
+    /// Information about transform node differences from last frame.
+    spatial_nodes: &'a FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
+
+    /// Information about opacity bindings from the picture cache.
+    opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
 }
 
 // Mutable state passed to picture cache tiles during post_update
@@ -381,10 +391,6 @@ pub struct Tile {
     /// The tile id is stable between display lists and / or frames,
     /// if the tile is retained. Useful for debugging tile evictions.
     pub id: TileId,
-    /// The set of transforms that affect primitives on this tile we
-    /// care about. Stored as a set here, and then collected, sorted
-    /// and converted to transform key values during post_update.
-    transforms: FastHashSet<SpatialNodeIndex>,
     /// If true, the tile was determined to be opaque, which means blending
     /// can be disabled when drawing it.
     pub is_opaque: bool,
@@ -403,7 +409,6 @@ impl Tile {
             descriptor: TileDescriptor::new(),
             is_same_content: false,
             is_valid: false,
-            transforms: FastHashSet::default(),
             id,
             is_opaque: false,
         }
@@ -443,23 +448,8 @@ impl Tile {
         // unless the fractional offset of the transform root changed.
         self.is_same_content = !ctx.fract_changed;
 
-        // Content has changed if any opacity bindings changed.
-        for binding in self.descriptor.opacity_bindings.items() {
-            if let OpacityBinding::Binding(id) = binding {
-                let changed = match ctx.opacity_bindings.get(id) {
-                    Some(info) => info.changed,
-                    None => true,
-                };
-                if changed {
-                    self.is_same_content = false;
-                    break;
-                }
-            }
-        }
-
         // Clear any dependencies so that when we rebuild them we
         // can compare if the tile has the same content.
-        self.transforms.clear();
         self.descriptor.clear();
     }
 
@@ -468,15 +458,58 @@ impl Tile {
         &mut self,
         info: &PrimitiveDependencyInfo,
         cache_spatial_node_index: SpatialNodeIndex,
+        used_spatial_nodes: &mut FastHashSet<SpatialNodeIndex>,
     ) {
         // Mark if the tile is cacheable at all.
         self.is_same_content &= info.is_cacheable;
 
+        let initial_extra_dep_count = self.descriptor.extra_dependencies.len();
+
         // Include any image keys this tile depends on.
-        self.descriptor.image_keys.extend_from_slice(&info.image_keys);
+        if !info.image_keys.is_empty() {
+            self.descriptor.image_keys.extend_from_slice(&info.image_keys);
+            self.descriptor.extra_dependencies.push(PrimitiveDependency {
+                kind: PrimitiveDependencyKind::ImageKey,
+                count: info.image_keys.len() as u16,
+            });
+        }
 
         // Include any opacity bindings this primitive depends on.
-        self.descriptor.opacity_bindings.extend_from_slice(&info.opacity_bindings);
+        if !info.opacity_bindings.is_empty() {
+            self.descriptor.opacity_bindings.extend_from_slice(&info.opacity_bindings);
+            self.descriptor.extra_dependencies.push(PrimitiveDependency {
+                kind: PrimitiveDependencyKind::OpacityBinding,
+                count: info.opacity_bindings.len() as u16,
+            });
+        }
+
+        // Include any clip nodes that this primitive depends on.
+        if !info.clips.is_empty() {
+            self.descriptor.clips.extend_from_slice(&info.clips);
+            self.descriptor.extra_dependencies.push(PrimitiveDependency {
+                kind: PrimitiveDependencyKind::Clip,
+                count: info.clips.len() as u16,
+            });
+        }
+
+        // If the primitive has the same spatial node, the relative transform
+        // will always be the same, so there's no need to depend on it.
+        let current_transform_count = self.descriptor.transforms.len();
+        if info.prim_spatial_node_index != cache_spatial_node_index {
+            self.descriptor.transforms.push(info.prim_spatial_node_index);
+            used_spatial_nodes.insert(info.prim_spatial_node_index);
+        }
+        for spatial_node_index in &info.clip_spatial_nodes {
+            self.descriptor.transforms.push(*spatial_node_index);
+            used_spatial_nodes.insert(*spatial_node_index);
+        }
+        let transform_dep_count = self.descriptor.transforms.len() - current_transform_count;
+        if transform_dep_count != 0 {
+            self.descriptor.extra_dependencies.push(PrimitiveDependency {
+                kind: PrimitiveDependencyKind::Transform,
+                count: transform_dep_count as u16,
+            });
+        }
 
         // TODO(gw): The origin of background rects produced by APZ changes
         //           in Gecko during scrolling. Consider investigating this so the
@@ -516,21 +549,9 @@ impl Tile {
         self.descriptor.prims.push(PrimitiveDescriptor {
             prim_uid: info.prim_uid,
             origin: prim_origin.into(),
-            first_clip: self.descriptor.clips.len() as u16,
-            clip_count: info.clips.len() as u16,
             prim_clip_rect: prim_clip_rect.into(),
+            extra_dep_count: (self.descriptor.extra_dependencies.len() - initial_extra_dep_count) as u16,
         });
-
-        self.descriptor.clips.extend_from_slice(&info.clips);
-
-        // If the primitive has the same spatial node, the relative transform
-        // will always be the same, so there's no need to depend on it.
-        if info.prim_spatial_node_index != cache_spatial_node_index {
-            self.transforms.insert(info.prim_spatial_node_index);
-        }
-        for spatial_node_index in &info.clip_spatial_nodes {
-            self.transforms.insert(*spatial_node_index);
-        }
     }
 
     /// Called during tile cache instance post_update. Allows invalidation and dirty
@@ -543,36 +564,41 @@ impl Tile {
         // Check if this tile can be considered opaque.
         self.is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
 
-        // Update tile transforms
-        let mut transform_spatial_nodes: Vec<SpatialNodeIndex> = self.transforms.drain().collect();
-        transform_spatial_nodes.sort();
-        for spatial_node_index in transform_spatial_nodes {
-            // Note: this is the only place where we don't know beforehand if the tile-affecting
-            // spatial node is below or above the current picture.
-            let transform = if ctx.cache_spatial_node_index >= spatial_node_index {
-                ctx.clip_scroll_tree
-                    .get_relative_transform(
-                        ctx.cache_spatial_node_index,
-                        spatial_node_index,
-                    )
-            } else {
-                ctx.clip_scroll_tree
-                    .get_relative_transform(
-                        spatial_node_index,
-                        ctx.cache_spatial_node_index,
-                    )
-            };
-            self.descriptor.transforms.push(transform.into());
+        // Content has changed if any opacity bindings changed.
+        if self.is_same_content {
+            for binding in self.descriptor.opacity_bindings.items() {
+                if let OpacityBinding::Binding(id) = binding {
+                    let changed = ctx.opacity_bindings
+                        .get(id)
+                        .map_or(true, |info| info.changed);
+                    if changed {
+                        self.is_same_content = false;
+                        break;
+                    }
+                }
+            }
         }
 
         // Content has changed if any images have changed.
         // NOTE: This invalidation must be done after the request_resources
         //       calls for primitives during visibility update, or the
         //       is_image_dirty check may be incorrect.
-        for image_key in self.descriptor.image_keys.items() {
-            if state.resource_cache.is_image_dirty(*image_key) {
-                self.is_same_content = false;
-                break;
+        if self.is_same_content {
+            for image_key in self.descriptor.image_keys.items() {
+                if state.resource_cache.is_image_dirty(*image_key) {
+                    self.is_same_content = false;
+                    break;
+                }
+            }
+        }
+
+        // Content has changed if any transform values have changed.
+        if self.is_same_content {
+            for spatial_node_index in self.descriptor.transforms.items() {
+                if ctx.spatial_nodes[spatial_node_index].changed {
+                    self.is_same_content = false;
+                    break;
+                }
             }
         }
 
@@ -718,6 +744,23 @@ impl Tile {
     }
 }
 
+/// The various things that a primitive may depend on.
+#[derive(Debug, Copy, Clone, PartialEq)]
+#[repr(u16)]
+enum PrimitiveDependencyKind {
+    Clip,
+    ImageKey,
+    OpacityBinding,
+    Transform,
+}
+
+/// Specify what kind of dependency, and how many of that kind, a primitive has.
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct PrimitiveDependency {
+    kind: PrimitiveDependencyKind,
+    count: u16,
+}
+
 /// Defines a key that uniquely identifies a primitive instance.
 #[derive(Debug, Clone)]
 pub struct PrimitiveDescriptor {
@@ -729,10 +772,8 @@ pub struct PrimitiveDescriptor {
     /// dependencies since there is no entry in the clip chain
     /// dependencies for the local clip rect.
     prim_clip_rect: RectangleKey,
-    /// The first clip in the clip_uids array of clips that affect this tile.
-    first_clip: u16,
-    /// The number of clips that affect this primitive instance.
-    clip_count: u16,
+    /// The number of extra dependencies that this primitive has.
+    extra_dep_count: u16,
 }
 
 impl PartialEq for PrimitiveDescriptor {
@@ -742,10 +783,7 @@ impl PartialEq for PrimitiveDescriptor {
         if self.prim_uid != other.prim_uid {
             return false;
         }
-        if self.first_clip != other.first_clip {
-            return false;
-        }
-        if self.clip_count != other.clip_count {
+        if self.extra_dep_count != other.extra_dep_count {
             return false;
         }
 
@@ -823,7 +861,11 @@ pub struct TileDescriptor {
 
     /// List of the effects of transforms that we care about
     /// tracking for this tile.
-    transforms: ComparableVec<TransformKey>,
+    transforms: ComparableVec<SpatialNodeIndex>,
+
+    /// List that identifies which extra dependencies a given
+    /// primitive has.
+    extra_dependencies: ComparableVec<PrimitiveDependency>,
 }
 
 impl TileDescriptor {
@@ -834,6 +876,7 @@ impl TileDescriptor {
             opacity_bindings: ComparableVec::new(),
             image_keys: ComparableVec::new(),
             transforms: ComparableVec::new(),
+            extra_dependencies: ComparableVec::new(),
         }
     }
 
@@ -845,6 +888,7 @@ impl TileDescriptor {
         self.opacity_bindings.reset();
         self.image_keys.reset();
         self.transforms.reset();
+        self.extra_dependencies.reset();
     }
 
     /// Return true if the content of the tile is the same
@@ -864,6 +908,9 @@ impl TileDescriptor {
             return false;
         }
         if !self.transforms.is_valid() {
+            return false;
+        }
+        if !self.extra_dependencies.is_valid() {
             return false;
         }
 
@@ -1026,6 +1073,14 @@ pub struct TileCacheInstance {
     /// List of opacity bindings, with some extra information
     /// about whether they changed since last frame.
     opacity_bindings: FastHashMap<PropertyBindingId, OpacityBindingInfo>,
+    /// List of spatial nodes, with some extra information
+    /// about whether they changed since last frame.
+    spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
+    /// A set of spatial nodes that primitives / clips depend on found
+    /// during dependency creation. This is used to avoid trying to
+    /// calculate invalid relative transforms when building the spatial
+    /// nodes hash above.
+    used_spatial_nodes: FastHashSet<SpatialNodeIndex>,
     /// The current dirty region tracker for this picture.
     pub dirty_region: DirtyRegion,
     /// Current size of tiles in picture units.
@@ -1077,6 +1132,8 @@ impl TileCacheInstance {
                 PictureRect::zero(),
             ),
             opacity_bindings: FastHashMap::default(),
+            spatial_nodes: FastHashMap::default(),
+            used_spatial_nodes: FastHashSet::default(),
             dirty_region: DirtyRegion::new(),
             tile_size: PictureSize::zero(),
             tile_rect: TileRect::zero(),
@@ -1162,6 +1219,8 @@ impl TileCacheInstance {
         if let Some(prev_state) = frame_state.retained_tiles.caches.remove(&self.slice) {
             self.tiles.extend(prev_state.tiles);
             self.fract_offset = prev_state.fract_offset;
+            self.spatial_nodes = prev_state.spatial_nodes;
+            self.opacity_bindings = prev_state.opacity_bindings;
         }
 
         // Map an arbitrary point in picture space to world space, to work out
@@ -1328,7 +1387,6 @@ impl TileCacheInstance {
             local_rect: self.local_rect,
             pic_to_world_mapper,
             fract_changed,
-            opacity_bindings: &self.opacity_bindings,
         };
 
         for y in y0 .. y1 {
@@ -1582,6 +1640,7 @@ impl TileCacheInstance {
                 tile.add_prim_dependency(
                     &prim_info,
                     self.spatial_node_index,
+                    &mut self.used_spatial_nodes,
                 );
             }
         }
@@ -1602,13 +1661,46 @@ impl TileCacheInstance {
         self.tiles_to_draw.clear();
         self.dirty_region.clear();
 
+        // Diff the state of the spatial nodes between last frame build and now.
+        let mut old_spatial_nodes = mem::replace(&mut self.spatial_nodes, FastHashMap::default());
+
+        // TODO(gw): Maybe remove the used_spatial_nodes set and just mutate / create these
+        //           diffs inside add_prim_dependency?
+        for spatial_node_index in self.used_spatial_nodes.drain() {
+            // Get the current relative transform.
+            let mut value = get_transform_key(
+                spatial_node_index,
+                self.spatial_node_index,
+                frame_context.clip_scroll_tree,
+            );
+
+            // Check if the transform has changed from last frame
+            let mut changed = true;
+            if let Some(old_info) = old_spatial_nodes.remove(&spatial_node_index) {
+                if old_info.value == value {
+                    // Since the transform key equality check applies epsilon, if we
+                    // consider the value to be the same, store that old value to avoid
+                    // missing very slow drifts in the value over time.
+                    // TODO(gw): We should change ComparableVec to use a trait for comparison
+                    //           rather than PartialEq.
+                    value = old_info.value;
+                    changed = false;
+                }
+            }
+
+            self.spatial_nodes.insert(spatial_node_index, SpatialNodeDependency {
+                changed,
+                value,
+            });
+        }
+
         let ctx = TilePostUpdateContext {
             debug_flags: frame_context.debug_flags,
             global_device_pixel_scale: frame_context.global_device_pixel_scale,
             global_screen_world_rect: frame_context.global_screen_world_rect,
             backdrop: self.backdrop,
-            cache_spatial_node_index: self.spatial_node_index,
-            clip_scroll_tree: frame_context.clip_scroll_tree,
+            spatial_nodes: &self.spatial_nodes,
+            opacity_bindings: &self.opacity_bindings,
         };
 
         let mut state = TilePostUpdateState {
@@ -2402,6 +2494,8 @@ impl PicturePrimitive {
                     tile_cache.slice,
                     PictureCacheState {
                         tiles: tile_cache.tiles,
+                        spatial_nodes: tile_cache.spatial_nodes,
+                        opacity_bindings: tile_cache.opacity_bindings,
                         fract_offset: tile_cache.fract_offset,
                     },
                 );
@@ -3606,4 +3700,27 @@ fn create_raster_mappers(
     );
 
     (map_raster_to_world, map_pic_to_raster)
+}
+
+fn get_transform_key(
+    spatial_node_index: SpatialNodeIndex,
+    cache_spatial_node_index: SpatialNodeIndex,
+    clip_scroll_tree: &ClipScrollTree,
+) -> TransformKey {
+    // Note: this is the only place where we don't know beforehand if the tile-affecting
+    // spatial node is below or above the current picture.
+    let transform = if cache_spatial_node_index >= spatial_node_index {
+        clip_scroll_tree
+            .get_relative_transform(
+                cache_spatial_node_index,
+                spatial_node_index,
+            )
+    } else {
+        clip_scroll_tree
+            .get_relative_transform(
+                spatial_node_index,
+                cache_spatial_node_index,
+            )
+    };
+    transform.into()
 }
