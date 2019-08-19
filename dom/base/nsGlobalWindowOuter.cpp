@@ -2927,18 +2927,16 @@ void nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(
   }
 }
 
-bool nsPIDOMWindowOuter::GetAudioMuted() const { return mAudioMuted; }
+bool nsPIDOMWindowOuter::GetAudioMuted() const {
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc ? bc->Top()->GetMuted() : false;
+}
 
 void nsPIDOMWindowOuter::SetAudioMuted(bool aMuted) {
-  if (mAudioMuted == aMuted) {
-    return;
+  BrowsingContext* bc = GetBrowsingContext();
+  if (bc) {
+    bc->Top()->SetMuted(aMuted);
   }
-
-  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-          ("nsPIDOMWindowOuter %p, SetAudioMuted=%s", this,
-           aMuted ? "muted" : "unmuted"));
-  mAudioMuted = aMuted;
-  RefreshMediaElementsVolume();
 }
 
 float nsPIDOMWindowOuter::GetAudioVolume() const { return mAudioVolume; }
@@ -7940,7 +7938,6 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
           Preferences::GetBool("media.block-autoplay-until-in-foreground", true)
               ? nsISuspendedTypes::SUSPENDED_BLOCK
               : nsISuspendedTypes::NONE_SUSPENDED),
-      mAudioMuted(false),
       mAudioVolume(1.0),
       mDesktopModeViewport(false),
       mIsRootOuterWindow(false),

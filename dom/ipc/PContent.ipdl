@@ -808,11 +808,6 @@ child:
     async StartDelayedAutoplayMediaComponents(BrowsingContext aContext);
 
     /**
-    * This method is used to notifty content process to mute or unmute media.
-    */
-    async SetMediaMuted(BrowsingContext aContext, bool aMuted);
-
-    /**
      * This method is used to apply the media action to outer window in the
      * content process, such as play, pause, stop ..e.t.c.
      */

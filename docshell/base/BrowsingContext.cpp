@@ -1076,6 +1076,18 @@ void BrowsingContext::DidSetIsActivatedByUserGesture() {
       Id());
 }
 
+void BrowsingContext::DidSetMuted() {
+  MOZ_ASSERT(!mParent, "Set muted flag on non top-level context!");
+  USER_ACTIVATION_LOG("Set audio muted %d for %s browsing context 0x%08" PRIx64,
+                      mMuted, XRE_IsParentProcess() ? "Parent" : "Child", Id());
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    nsPIDOMWindowOuter* win = aContext->GetDOMWindow();
+    if (win) {
+      win->RefreshMediaElementsVolume();
+    }
+  });
+}
+
 }  // namespace dom
 
 namespace ipc {
