@@ -13,8 +13,13 @@
 
 #include "mozilla/Maybe.h"
 
+#include "gc/GCRuntime.h"
 #include "gc/Zone.h"
-#include "vm/Realm.h"
+#include "vm/Compartment.h"
+
+namespace JS {
+class Realm;
+}
 
 namespace js {
 
