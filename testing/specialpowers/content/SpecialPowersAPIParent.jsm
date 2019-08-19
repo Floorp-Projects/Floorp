@@ -875,6 +875,9 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
         return ServiceWorkerCleanUp.removeFromHost("example.com");
       }
 
+      case "Wakeup":
+        return undefined;
+
       default:
         throw new SpecialPowersError(
           `Unrecognized Special Powers API: ${aMessage.name}`
