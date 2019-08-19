@@ -338,6 +338,7 @@ nsChildView::nsChildView()
       mIsDispatchPaint(false),
       mPluginFocused{false},
       mCompositingState("nsChildView::mCompositingState"),
+      mOpaqueRegion("nsChildView::mOpaqueRegion"),
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -612,6 +613,8 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
   if (windowWidget) {
     windowWidget->SetTransparencyMode(aMode);
   }
+
+  UpdateInternalOpaqueRegion();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2492,6 +2495,8 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
   changed |= vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION,
                                     activeSourceListSelectionRegion);
 
+  UpdateInternalOpaqueRegion();
+
   if (changed) {
     SuspendAsyncCATransactions();
   }
@@ -2513,6 +2518,19 @@ mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
     mVibrancyManager = MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
   }
   return *mVibrancyManager;
+}
+
+void nsChildView::UpdateInternalOpaqueRegion() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "This should only be called on the main thread.");
+  auto opaqueRegion = mOpaqueRegion.Lock();
+  bool widgetIsOpaque = GetTransparencyMode() == eTransparencyOpaque;
+  if (!widgetIsOpaque) {
+    opaqueRegion->SetEmpty();
+  } else if (VibrancyManager::SystemSupportsVibrancy()) {
+    opaqueRegion->Sub(mBounds, EnsureVibrancyManager().GetUnionOfVibrantRegions());
+  } else {
+    *opaqueRegion = mBounds;
+  }
 }
 
 nsChildView::SwipeInfo nsChildView::SendMayStartSwipe(
