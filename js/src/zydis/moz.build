@@ -11,7 +11,7 @@ LOCAL_INCLUDES += [
 include('../js-config.mozbuild')
 include('../js-cxxflags.mozbuild')
 
-if (CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']) and CONFIG['JS_JITSPEW']:
+if CONFIG['JS_CODEGEN_X64'] and CONFIG['JS_JITSPEW'] and CONFIG['ENABLE_WASM_CRANELIFT']:
     SOURCES += [
         'Zycore/Allocator.c',
         'Zycore/API/Memory.c',
