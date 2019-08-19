@@ -48,6 +48,7 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputSelectionOnly = (1 << 0);
 
   /** Plaintext output: Convert html to plaintext that looks like the html.
+    * Can't be used in conjunction with `OutputPreformatted`.
     * Implies wrap (except inside <pre>), since html wraps.
     * HTML, XHTML and XML output: do prettyprinting, ignoring existing formatting.
     * XML output : it doesn't implicitly wrap
@@ -73,8 +74,8 @@ interface nsIDocumentEncoder : nsISupports
    * Output as though the content is preformatted
    * (e.g. maybe it's wrapped in a PRE or PRE_WRAP style tag)
    * Plaintext output only.
-   * XXXbz How does this interact with
-   * OutputFormatted/OutputRaw/OutputPreformatted/OutputFormatFlowed?
+   * Can't be used together with `OutputFormatted`/`OutputFormatFlowed`.
+   * XXXbz How does this interact with OutputRaw?
    */
   const unsigned long OutputPreformatted  = (1 << 4);
 
@@ -95,8 +96,8 @@ interface nsIDocumentEncoder : nsISupports
    * but in an important way from normal formatted, and that is that
    * lines are space stuffed. This can't (correctly) be done later.
    * PlainText output only.
-   * XXXbz How does this interact with
-   * OutputFormatted/OutputRaw/OutputPreformatted/OutputWrap?
+   * If this flag is set, `OutputFormat` has to be set too.
+   * XXXbz How does this interact with OutputRaw/OutputWrap?
    */
   const unsigned long OutputFormatFlowed  = (1 << 6);
 
