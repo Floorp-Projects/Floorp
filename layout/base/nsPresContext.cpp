@@ -819,7 +819,7 @@ nsIWidget* nsPresContext::GetNearestWidget(nsPoint* aOffset) {
   return frame->GetView()->GetNearestWidget(aOffset);
 }
 
-nsIWidget* nsPresContext::GetRootWidget() {
+nsIWidget* nsPresContext::GetRootWidget() const {
   NS_ENSURE_TRUE(mPresShell, nullptr);
   nsViewManager* vm = mPresShell->GetViewManager();
   if (!vm) {
