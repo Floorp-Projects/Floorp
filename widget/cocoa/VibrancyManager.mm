@@ -23,6 +23,14 @@ bool VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
   });
 }
 
+LayoutDeviceIntRegion VibrancyManager::GetUnionOfVibrantRegions() const {
+  LayoutDeviceIntRegion result;
+  for (auto it = mVibrantRegions.ConstIter(); !it.Done(); it.Next()) {
+    result.OrWith(it.UserData()->Region());
+  }
+  return result;
+}
+
 @interface NSView (CurrentFillColor)
 - (NSColor*)_currentFillColor;
 @end
