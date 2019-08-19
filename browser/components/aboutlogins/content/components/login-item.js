@@ -481,8 +481,8 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this._toggleEditing(false);
     this._login = login;
+    this._toggleEditing(false);
     this.render();
   }
 
@@ -498,8 +498,8 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this._toggleEditing(false);
     this._login = {};
+    this._toggleEditing(false);
     this.render();
   }
 
