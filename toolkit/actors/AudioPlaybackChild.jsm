@@ -23,12 +23,6 @@ class AudioPlaybackChild extends JSWindowActorChild {
 
     let suspendTypes = Ci.nsISuspendedTypes;
     switch (msg) {
-      case "mute":
-        utils.audioMuted = true;
-        break;
-      case "unmute":
-        utils.audioMuted = false;
-        break;
       case "lostAudioFocus":
         utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
         break;

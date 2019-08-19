@@ -19,9 +19,9 @@ function runTest() {
   var iframe = document.querySelector("iframe");
   iframe.src = "file_pluginAudioNonAutoStart.html";
 
-  function muteBeforePlay() {
+  async function muteBeforePlay() {
     ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
-    iframe.contentWindow.toggleMuteState(true);
+    await iframe.contentWindow.toggleMuteState(true);
 
     iframe.contentWindow.startAudio();
     ok(iframe.contentWindow.pluginMuted(), "Plugin should still be muted after playing");
@@ -29,13 +29,13 @@ function runTest() {
     iframe.contentWindow.stopAudio();
 
     // Reset the window's mute state, avoid to interrupt other tests.
-    iframe.contentWindow.toggleMuteState(false);
+    await iframe.contentWindow.toggleMuteState(false);
     SimpleTest.finish();
   }
 
-  iframe.onload = function() {
+  iframe.onload = async function() {
     ok(true, "Already load iframe.");
-    muteBeforePlay();
+    await muteBeforePlay();
   }
 }
 
