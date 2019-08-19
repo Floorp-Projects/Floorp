@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MEDIA_DATA_DECODER_CODEC_H_
-#define MEDIA_DATA_DECODER_CODEC_H_
+#ifndef MEDIA_DATA_CODEC_H_
+#define MEDIA_DATA_CODEC_H_
 
 #include "MediaConduitInterface.h"
 #include "webrtc/common_types.h"
@@ -12,7 +12,7 @@ namespace mozilla {
 
 class WebrtcVideoDecoder;
 class WebrtcVideoEncoder;
-class MediaDataDecoderCodec {
+class MediaDataCodec {
  public:
   /**
    * Create encoder object for codec type |aCodecType|. Return |nullptr| when
@@ -28,4 +28,4 @@ class MediaDataDecoderCodec {
 };
 }  // namespace mozilla
 
-#endif  // MEDIA_DATA_DECODER_CODEC_H_
+#endif  // MEDIA_DATA_CODEC_H_
