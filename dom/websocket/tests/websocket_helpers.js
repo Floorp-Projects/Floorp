@@ -28,22 +28,18 @@ function ignoreError(e) {}
 function CreateTestWS(ws_location, ws_protocol) {
   var ws;
 
-  try {
-    if (ws_protocol == undefined) {
-      ws = new WebSocket(ws_location);
-    } else {
-      ws = new WebSocket(ws_location, ws_protocol);
-    }
-
-    ws._testNumber = current_test;
-    ok(true, "Created websocket for test " + ws._testNumber + "\n");
-
-    ws.onerror = function(e) {
-      ok(false, "onerror called on test " + e.target._testNumber + "!");
-    };
-  } catch (e) {
-    throw e;
+  if (ws_protocol == undefined) {
+    ws = new WebSocket(ws_location);
+  } else {
+    ws = new WebSocket(ws_location, ws_protocol);
   }
+
+  ws._testNumber = current_test;
+  ok(true, "Created websocket for test " + ws._testNumber + "\n");
+
+  ws.onerror = function(e) {
+    ok(false, "onerror called on test " + e.target._testNumber + "!");
+  };
 
   return ws;
 }
