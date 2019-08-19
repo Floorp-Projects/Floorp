@@ -13,18 +13,19 @@ import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.ContextMenu
+import org.mozilla.fenix.GleanMetrics.CrashReporter
+import org.mozilla.fenix.GleanMetrics.ErrorPage
+import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Library
+import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.R
-import java.lang.IllegalArgumentException
 import java.util.Locale
 
 sealed class Event {
 
-    data class OpenedApp(val source: Source) : Event() {
-        enum class Source { APP_ICON, LINK, CUSTOM_TAB }
-        override val extras: Map<String, String>?
-            get() = hashMapOf("source" to source.name)
-    }
-
+    // Interaction Events
     object OpenedAppFirstRun : Event()
     object InteractWithSearchURLArea : Event()
     object FXANewSignup : Event()
@@ -91,6 +92,13 @@ sealed class Event {
     object CollectionRenamePressed : Event()
     object SearchWidgetNewTabPressed : Event()
     object SearchWidgetVoiceSearchPressed : Event()
+    object FindInPageOpened : Event()
+    object FindInPageClosed : Event()
+    object FindInPageNext : Event()
+    object FindInPagePrevious : Event()
+    object FindInPageSearchCommitted : Event()
+
+    // Interaction events with extras
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(
@@ -101,10 +109,10 @@ sealed class Event {
             context.getString(R.string.pref_key_tracking_protection)
         )
 
-        override val extras: Map<String, String>?
+        override val extras: Map<Events.preferenceToggledKeys, String>?
             get() = mapOf(
-                "preference_key" to preferenceKey,
-                "enabled" to enabled.toString()
+                Events.preferenceToggledKeys.preferenceKey to preferenceKey,
+                Events.preferenceToggledKeys.enabled to enabled.toString()
             )
 
         init {
@@ -113,47 +121,52 @@ sealed class Event {
         }
     }
 
-    // Interaction Events
+    data class OpenedApp(val source: Source) : Event() {
+        enum class Source { APP_ICON, LINK, CUSTOM_TAB }
+        override val extras: Map<Events.appOpenedKeys, String>?
+            get() = hashMapOf(Events.appOpenedKeys.source to source.name)
+    }
+
     data class CollectionSaveButtonPressed(val fromScreen: String) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("from_screen" to fromScreen)
+        override val extras: Map<Collections.saveButtonKeys, String>?
+            get() = mapOf(Collections.saveButtonKeys.fromScreen to fromScreen)
     }
 
     data class CollectionSaved(val tabsOpenCount: Int, val tabsSelectedCount: Int) : Event() {
-        override val extras: Map<String, String>?
+        override val extras: Map<Collections.savedKeys, String>?
             get() = mapOf(
-                "tabs_open" to tabsOpenCount.toString(),
-                "tabs_selected" to tabsSelectedCount.toString()
+                Collections.savedKeys.tabsOpen to tabsOpenCount.toString(),
+                Collections.savedKeys.tabsSelected to tabsSelectedCount.toString()
             )
     }
 
     data class CollectionTabsAdded(val tabsOpenCount: Int, val tabsSelectedCount: Int) : Event() {
-        override val extras: Map<String, String>?
+        override val extras: Map<Collections.tabsAddedKeys, String>?
             get() = mapOf(
-                "tabs_open" to tabsOpenCount.toString(),
-                "tabs_selected" to tabsSelectedCount.toString()
+                Collections.tabsAddedKeys.tabsOpen to tabsOpenCount.toString(),
+                Collections.tabsAddedKeys.tabsSelected to tabsSelectedCount.toString()
             )
     }
 
     data class LibrarySelectedItem(val item: String) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("item" to item)
+        override val extras: Map<Library.selectedItemKeys, String>?
+            get() = mapOf(Library.selectedItemKeys.item to item)
     }
 
     data class ErrorPageVisited(val errorType: ErrorType) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("error_type" to errorType.name)
+        override val extras: Map<ErrorPage.visitedErrorKeys, String>?
+            get() = mapOf(ErrorPage.visitedErrorKeys.errorType to errorType.name)
     }
 
     data class SearchBarTapped(val source: Source) : Event() {
         enum class Source { HOME, BROWSER }
-        override val extras: Map<String, String>?
-            get() = mapOf("source" to source.name)
+        override val extras: Map<Events.searchBarTappedKeys, String>?
+            get() = mapOf(Events.searchBarTappedKeys.source to source.name)
     }
 
     data class EnteredUrl(val autoCompleted: Boolean) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("autocomplete" to autoCompleted.toString())
+        override val extras: Map<Events.enteredUrlKeys, String>?
+            get() = mapOf(Events.enteredUrlKeys.autocomplete to autoCompleted.toString())
     }
 
     data class PerformedSearch(val eventSource: EventSource) : Event() {
@@ -197,25 +210,19 @@ sealed class Event {
                 get() = "${source.descriptor}.$label"
         }
 
-        override val extras: Map<String, String>?
-            get() = mapOf("source" to eventSource.sourceLabel)
+        override val extras: Map<Events.performedSearchKeys, String>?
+            get() = mapOf(Events.performedSearchKeys.source to eventSource.sourceLabel)
     }
 
     // Track only built-in engine selection. Do not track user-added engines!
     data class SearchShortcutSelected(val engine: String) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("engine" to engine)
+        override val extras: Map<SearchShortcuts.selectedKeys, String>?
+            get() = mapOf(SearchShortcuts.selectedKeys.engine to engine)
     }
 
-    object FindInPageOpened : Event()
-    object FindInPageClosed : Event()
-    object FindInPageNext : Event()
-    object FindInPagePrevious : Event()
-    object FindInPageSearchCommitted : Event()
-
     class ContextMenuItemTapped private constructor(val item: String) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("named" to item)
+        override val extras: Map<ContextMenu.itemTappedKeys, String>?
+            get() = mapOf(ContextMenu.itemTappedKeys.named to item)
 
         companion object {
             fun create(context_item: String) = allowList[context_item]?.let { ContextMenuItemTapped(it) }
@@ -234,8 +241,8 @@ sealed class Event {
 
     object CrashReporterOpened : Event()
     data class CrashReporterClosed(val crashSubmitted: Boolean) : Event() {
-        override val extras: Map<String, String>?
-            get() = mapOf("crash_submitted" to crashSubmitted.toString())
+        override val extras: Map<CrashReporter.closedKeys, String>?
+            get() = mapOf(CrashReporter.closedKeys.crashSubmitted to crashSubmitted.toString())
     }
 
     data class BrowserMenuItemTapped(val item: Item) : Event() {
@@ -245,13 +252,13 @@ sealed class Event {
             SAVE_TO_COLLECTION
         }
 
-        override val extras: Map<String, String>?
-            get() = mapOf("item" to item.toString().toLowerCase())
+        override val extras: Map<Events.browserMenuActionKeys, String>?
+            get() = mapOf(Events.browserMenuActionKeys.item to item.toString().toLowerCase())
     }
 
     sealed class Search
 
-    open val extras: Map<String, String>?
+    internal open val extras: Map<*, String>?
         get() = null
 }
 

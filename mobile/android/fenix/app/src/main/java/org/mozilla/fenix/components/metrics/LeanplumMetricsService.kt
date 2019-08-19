@@ -11,7 +11,6 @@ import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
 import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import java.util.UUID
 
@@ -29,6 +28,7 @@ private val Event.name: String?
         is Event.SyncAuthSignOut -> "E_Sign_Out_FxA"
         is Event.FXANewSignup -> "E_New_Sign_Up_FxA"
         is Event.ClearedPrivateData -> "E_Cleared_Private_Data"
+        is Event.DismissedOnboarding -> "E_Dismissed_Onboarding"
 
         // Do not track other events in Leanplum
         else -> ""
@@ -99,8 +99,12 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun track(event: Event) {
+        val leanplumExtras = event.extras?.map {
+            it.key.toString() to it.value
+        }?.toMap()
+
         event.name?.also {
-            Leanplum.track(it, event.extras)
+            Leanplum.track(it, leanplumExtras)
         }
     }
 

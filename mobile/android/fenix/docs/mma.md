@@ -220,7 +220,12 @@ Here is the list of current Events sent, which can be found here in the code bas
     <td>`E_Cleared_Private_Data`</td>
     <td>The user cleared one or many types of private data</td>
     <td><a href="https://github.com/mozilla-mobile/fenix/pull/4626#issuecomment-519691332">#4626</a></td>
-  </tr> 
+  </tr>
+  <tr>
+    <td>`E_Dismissed_Onboarding`</td>
+    <td>The user finished onboarding. Could be triggered by pressing "start browsing," opening settings, or invoking a search.</td>
+    <td><a href="https://github.com/mozilla-mobile/fenix/pull/3459#issuecomment-502191109">#3459</a></td>
+  </tr>
 </table>
 
 Deep links

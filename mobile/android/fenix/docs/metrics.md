@@ -86,34 +86,6 @@ Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button</td></
         <td>2020-03-01</td>
     </tr>
     <tr>
-        <td>ss_menu_opened</td>
-        <td>event</td>
-        <td>A user opened the search shortcut menu in the search view by pressing the shortcuts button</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
-        <td></td>
-        <td>2020-03-01</td>
-    </tr>
-    <tr>
-        <td>ss_menu_closed</td>
-        <td>event</td>
-        <td> A user closed the search shortcut menu in the search view by pressing the shortcuts button</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
-        <td></td>
-        <td>2020-03-01</td>
-    </tr>
-    <tr>
-        <td>ss_selected</td>
-        <td>event</td>
-        <td>A user selected a search shortcut engine to use</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
-        <td>
-            <table>
-                <tr><td>engine</td><td>The name of the built-in search engine the user selected as a string</td></tr>
-            </table>
-        </td>
-        <td>2020-03-01</td>
-    </tr>
-    <tr>
         <td>total_uri_count</td>
         <td>counter</td>
         <td>A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.</td>
@@ -133,6 +105,40 @@ make_default_browser, show_search_suggestions, show_visited_sites_bookmarks, rem
 tracking_protection</td>
                 </tr>
                 <tr><td>enabled</td><td>Whether or not the preference is <b>now</b> enabled</td></tr>
+            </table>
+        </td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
+
+## search_shortcuts
+<pre>
+<table style="width: 100%">
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened the search shortcut menu in the search view by pressing the shortcuts button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>closed</td>
+        <td>event</td>
+        <td> A user closed the search shortcut menu in the search view by pressing the shortcuts button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>selected</td>
+        <td>event</td>
+        <td>A user selected a search shortcut engine to use</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449">link</a></td>
+        <td>
+            <table>
+                <tr><td>engine</td><td>The name of the built-in search engine the user selected as a string</td></tr>
             </table>
         </td>
         <td>2020-03-01</td>

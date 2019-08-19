@@ -7,7 +7,6 @@ package org.mozilla.fenix.onboarding
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
 class FenixOnboarding(context: Context) {
@@ -23,7 +22,9 @@ class FenixOnboarding(context: Context) {
 
     fun finish() {
         onboardingPrefs.onboardedVersion = CURRENT_ONBOARDING_VERSION
-        metrics.track(Event.DismissedOnboarding)
+
+        // To be fixed in #4824
+        // metrics.track(Event.DismissedOnboarding)
     }
 
     fun userHasBeenOnboarded() = onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
