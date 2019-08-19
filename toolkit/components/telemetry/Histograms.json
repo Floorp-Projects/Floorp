@@ -6801,33 +6801,6 @@
     "bug_numbers": [1254099],
     "description": "Generic histogram to track uptake of remote content like blocklists, settings or updates."
   },
-  "THUNDERBIRD_GLODA_SIZE_MB": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 1000,
-    "n_buckets": 40,
-    "description": "Gloda: size of global-messages-db.sqlite (MB)"
-  },
-  "THUNDERBIRD_CONVERSATIONS_TIME_TO_2ND_GLODA_QUERY_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 30,
-    "description": "Conversations: time between the moment we click and the second gloda query returns (ms)"
-  },
-  "THUNDERBIRD_INDEXING_RATE_MSG_PER_S": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Gloda: indexing rate (message/s)"
-  },
   "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
