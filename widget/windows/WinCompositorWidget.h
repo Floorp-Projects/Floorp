@@ -67,7 +67,7 @@ class WinCompositorWidget : public CompositorWidget,
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
       gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
-      const LayoutDeviceIntRect& aClearRect) override;
+      bool* aOutIsCleared) override;
   already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
   bool InitCompositor(layers::Compositor* aCompositor) override;
   uintptr_t GetWidgetKey() override;
