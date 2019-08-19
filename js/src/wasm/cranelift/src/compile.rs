@@ -21,7 +21,9 @@
 use std::fmt;
 use std::mem;
 
-use cranelift_codegen::binemit::{Addend, CodeInfo, CodeOffset, NullTrapSink, Reloc, RelocSink};
+use cranelift_codegen::binemit::{
+    Addend, CodeInfo, CodeOffset, NullStackmapSink, NullTrapSink, Reloc, RelocSink,
+};
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir;
 use cranelift_codegen::ir::stackslot::StackSize;
@@ -178,6 +180,10 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
                 &mut self.current_func.rodata_relocs,
             );
             let mut trap_sink = NullTrapSink {};
+
+            // TODO (bug 1574865) Support reference types and stackmaps in Baldrdash.
+            let mut stackmap_sink = NullStackmapSink {};
+
             unsafe {
                 let code_buffer = &mut self.current_func.code_buffer;
                 self.context.emit_to_memory(
@@ -185,6 +191,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
                     code_buffer.as_mut_ptr(),
                     emit_env,
                     &mut trap_sink,
+                    &mut stackmap_sink,
                 )
             };
         }
