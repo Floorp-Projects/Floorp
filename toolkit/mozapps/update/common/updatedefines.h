@@ -75,7 +75,7 @@ static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt,
 #  define NS_tstrchr wcschr
 #  define NS_tstrrchr wcsrchr
 #  define NS_tstrstr wcsstr
-#  include "win_dirent.h"
+#  include "updateutils_win.h"
 #  define NS_tDIR DIR
 #  define NS_tdirent dirent
 #  define NS_topendir opendir
