@@ -23,7 +23,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     'AudioConduit.cpp',
     'GmpVideoCodec.cpp',
-    'MediaDataDecoderCodec.cpp',
+    'MediaDataCodec.cpp',
     'RtpSourceObserver.cpp',
     'VideoConduit.cpp',
     'VideoStreamFactory.cpp',

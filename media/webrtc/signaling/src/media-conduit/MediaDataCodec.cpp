@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaDataDecoderCodec.h"
+#include "MediaDataCodec.h"
 #include "WebrtcMediaDataDecoderCodec.h"
 #include "WebrtcMediaDataEncoderCodec.h"
 #include "WebrtcGmpVideoCodec.h"
@@ -11,7 +11,7 @@
 namespace mozilla {
 
 /* static */
-WebrtcVideoEncoder* MediaDataDecoderCodec::CreateEncoder(
+WebrtcVideoEncoder* MediaDataCodec::CreateEncoder(
     webrtc::VideoCodecType aCodecType) {
 #ifdef MOZ_APPLEMEDIA
   if (aCodecType == webrtc::VideoCodecType::kVideoCodecH264) {
@@ -22,7 +22,7 @@ WebrtcVideoEncoder* MediaDataDecoderCodec::CreateEncoder(
 }
 
 /* static */
-WebrtcVideoDecoder* MediaDataDecoderCodec::CreateDecoder(
+WebrtcVideoDecoder* MediaDataCodec::CreateDecoder(
     webrtc::VideoCodecType aCodecType) {
   switch (aCodecType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
