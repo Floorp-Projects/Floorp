@@ -5,13 +5,13 @@
 function boom()
 {
   document.getElementById("div").style.display = "none";
-  document.documentElement.style.display = "-moz-inline-grid";
+  document.documentElement.style.display = "-moz-inline-box";
 }
 </script>
 </head>
 <body onload="boom();">
 
-<xul:treeitem style="display: -moz-inline-grid;"><xul:hbox><span><div id="div"></div></span></xul:hbox></xul:treeitem>
+<xul:treeitem style="display: -moz-inline-box;"><xul:hbox><span><div id="div"></div></span></xul:hbox></xul:treeitem>
 
 </body>
 </html>

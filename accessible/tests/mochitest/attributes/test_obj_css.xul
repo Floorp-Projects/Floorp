@@ -23,11 +23,9 @@
       testCSSAttrs("display_mozbox");
       testCSSAttrs("display_mozinlinebox");
       testCSSAttrs("display_mozgrid");
-      testCSSAttrs("display_mozinlinegrid");
       testCSSAttrs("display_mozgridgroup");
       testCSSAttrs("display_mozgridline");
       testCSSAttrs("display_mozstack");
-      testCSSAttrs("display_mozinlinestack");
       testCSSAttrs("display_mozdeck");
       testCSSAttrs("display_mozpopup");
       testCSSAttrs("display_mozgroupbox");
@@ -58,11 +56,9 @@
   <vbox id="display_mozbox" style="display: -moz-box;" role="img"/>
   <vbox id="display_mozinlinebox" style="display: -moz-inline-box;" role="img"/>
   <vbox id="display_mozgrid" style="display: -moz-grid;" role="img"/>
-  <vbox id="display_mozinlinegrid" style="display: -moz-inline-grid;" role="img"/>
   <vbox id="display_mozgridgroup" style="display: -moz-grid-group;" role="img"/>
   <vbox id="display_mozgridline" style="display: -moz-grid-line;" role="img"/>
   <vbox id="display_mozstack" style="display: -moz-stack;" role="img"/>
-  <vbox id="display_mozinlinestack" style="display: -moz-inline-stack;" role="img"/>
   <vbox id="display_mozdeck" style="display: -moz-deck;" role="img"/>
   <vbox id="display_mozpopup" style="display: -moz-popup;" role="img"/>
   <vbox id="display_mozgroupbox" style="display: -moz-groupbox;" role="img"/>
