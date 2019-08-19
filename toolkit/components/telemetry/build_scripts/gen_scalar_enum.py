@@ -35,14 +35,14 @@ file_footer = """\
 
 def main(output, *filenames):
     # Load the scalars first.
-    if len(filenames) > 1:
-        raise Exception('We don\'t support loading from more than one file.')
-
-    try:
-        scalars = parse_scalars.load_scalars(filenames[0])
-    except ParserError as ex:
-        print("\nError processing scalars:\n" + str(ex) + "\n")
-        sys.exit(1)
+    scalars = []
+    for filename in filenames:
+        try:
+            batch = parse_scalars.load_scalars(filename)
+            scalars.extend(batch)
+        except ParserError as ex:
+            print("\nError processing %s:\n%s\n" % (filename, str(ex)), file=sys.stderr)
+            sys.exit(1)
 
     # Write the enum file.
     print(banner, file=output)
