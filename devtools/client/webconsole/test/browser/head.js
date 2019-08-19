@@ -1520,3 +1520,14 @@ function toggleLayout(hud) {
   });
   return waitFor(() => isEditorModeEnabled(hud) === !enabled);
 }
+
+/**
+ * Wait until all lazily fetch requests in netmonitor get finished.
+ * Otherwise test will be shutdown too early and cause failure.
+ */
+async function waitForLazyRequests(toolbox) {
+  const { wrapper } = toolbox.getCurrentPanel().hud.ui;
+  return waitUntil(() => {
+    return !wrapper.networkDataProvider.lazyRequestData.size;
+  });
+}
