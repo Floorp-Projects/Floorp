@@ -312,7 +312,7 @@ var UninstallObserver = {
         let storage = Services.domStorageManager.getStorage(
           null,
           principal,
-          storagePrincipal
+          principal
         );
         if (storage) {
           storage.clear();
