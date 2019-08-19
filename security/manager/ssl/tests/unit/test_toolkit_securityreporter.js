@@ -20,7 +20,7 @@ const Cm = Components.manager;
 const { updateAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 ); // Imported via AppInfo.jsm.
-/* global updateAppInfo:false */ updateAppInfo();
+updateAppInfo();
 
 // We must get the profile before performing operations on the cert db.
 do_get_profile();

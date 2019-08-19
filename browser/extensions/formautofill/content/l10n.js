@@ -10,8 +10,6 @@
  * Fluent conversion
  */
 
-/* global content */
-
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://formautofill/FormAutofillUtils.jsm"
 );

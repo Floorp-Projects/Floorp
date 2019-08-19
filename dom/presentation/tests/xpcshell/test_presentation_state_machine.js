@@ -1,20 +1,15 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* jshint esnext:true, globalstrict:true, moz:true, undef:true, unused:true */
-/* globals Components,Assert,run_next_test,add_test,do_execute_soon */
 
 "use strict";
 
-/* globals ControllerStateMachine */
 const { ControllerStateMachine } = ChromeUtils.import(
   "resource://gre/modules/presentation/ControllerStateMachine.jsm"
 );
-/* globals ReceiverStateMachine */
 const { ReceiverStateMachine } = ChromeUtils.import(
   "resource://gre/modules/presentation/ReceiverStateMachine.jsm"
 );
-/* globals State */
 const { State } = ChromeUtils.import(
   "resource://gre/modules/presentation/StateMachineHelper.jsm"
 );
