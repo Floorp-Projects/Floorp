@@ -22,10 +22,6 @@ var handlers = [() => { g.f(); },
 function testHookEnabled(hookName, trigger) {
   for (var h of handlers) {
     assertThrowsInstanceOf(h, Debugger.DebuggeeWouldRun);
-    dbg.enabled = false;
-    h();
-    dbg.enabled = true;
-    assertThrowsInstanceOf(h, Debugger.DebuggeeWouldRun);
   }
 }
 
