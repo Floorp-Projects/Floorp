@@ -2938,43 +2938,6 @@ screenshots:
     record_in_processes:
       - 'main'
 
-idb.type:
-  persistent_count:
-    bug_numbers:
-      - 1360567
-    description: >
-      Number of times indexeddb.open(name, {storage: "persistent"}) has been used.
-    expires: "62"
-    kind: uint
-    notification_emails:
-      - shuang@mozilla.com
-    release_channel_collection: opt-in
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
-  temporary_count:
-    bug_numbers:
-      - 1360567
-    description: >
-      Number of times indexeddb.open(name, {storage: "temporary"}) has been used.
-    expires: "62"
-    kind: uint
-    notification_emails:
-      - shuang@mozilla.com
-    release_channel_collection: opt-in
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
 # The following section is for tracking the number of failure for indexedDB.
 idb.failure:
   fileinfo_error:
