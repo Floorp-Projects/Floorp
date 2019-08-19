@@ -906,9 +906,9 @@ async function compareFavicons(icon1, icon2, msg) {
   }
 
   let data1 = await getIconData(icon1);
-  Assert.ok(data1.length > 0, "Should fetch icon data");
+  Assert.greater(data1.length, 0, "Should fetch icon data");
   let data2 = await getIconData(icon2);
-  Assert.ok(data2.length > 0, "Should fetch icon data");
+  Assert.greater(data2.length, 0, "Should fetch icon data");
   Assert.deepEqual(data1, data2, msg);
 }
 

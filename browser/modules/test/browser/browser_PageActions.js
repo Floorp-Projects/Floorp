@@ -310,7 +310,11 @@ add_task(async function simple() {
   // unregister
   PageActions._actionsByID.delete(action.id);
   let index = PageActions._nonBuiltInActions.findIndex(a => a.id == action.id);
-  Assert.ok(index >= 0, "Action should be in _nonBuiltInActions to begin with");
+  Assert.greaterEqual(
+    index,
+    0,
+    "Action should be in _nonBuiltInActions to begin with"
+  );
   PageActions._nonBuiltInActions.splice(index, 1);
 
   // register again
