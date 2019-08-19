@@ -47,9 +47,7 @@ function run_test() {
     Ci.nsISiteSecurityService
   );
   let uri = Services.io.newURI("http://localhost");
-  let secInfo = Cc[
-    "@mozilla.org/security/transportsecurityinfo;1"
-  ].createInstance(Ci.nsITransportSecurityInfo);
+  let secInfo = new FakeTransportSecurityInfo();
   SSService.processHeader(
     Ci.nsISiteSecurityService.HEADER_HSTS,
     uri,
