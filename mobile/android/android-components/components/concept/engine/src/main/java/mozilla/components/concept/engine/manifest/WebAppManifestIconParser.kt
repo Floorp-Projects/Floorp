@@ -43,11 +43,22 @@ private fun parseIconSizes(json: JSONObject): List<Size> {
         .mapNotNull { Size.parse(it) }
 }
 
+@Suppress("ComplexMethod")
 private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
-    val purpose = json.tryGetString("purpose") ?: return setOf(WebAppManifest.Icon.Purpose.ANY)
+    // "purpose" is normally a space-separated string, but Gecko current returns an array instead.
+    val purposeRaw = if (json.has("purpose")) {
+        json.get("purpose")
+    } else {
+        null
+    }
+
+    val purpose = when (purposeRaw) {
+        is String -> purposeRaw.split(whitespace).asSequence()
+        is JSONArray -> purposeRaw.asSequence { i -> getString(i) }
+        else -> return setOf(WebAppManifest.Icon.Purpose.ANY)
+    }
 
     return purpose
-        .split(whitespace)
         .mapNotNull {
             when (it.toLowerCase()) {
                 "badge" -> WebAppManifest.Icon.Purpose.BADGE

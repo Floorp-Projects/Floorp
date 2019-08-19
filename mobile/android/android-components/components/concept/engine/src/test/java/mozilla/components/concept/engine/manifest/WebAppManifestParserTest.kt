@@ -370,6 +370,52 @@ class WebAppManifestParserTest {
     }
 
     @Test
+    fun `Parsing manifest where purpose field is array instead of string`() {
+        val json = loadManifest("purpose_array.json")
+        val result = WebAppManifestParser().parse(json)
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertNotNull(manifest)
+        assertEquals("The Sample Manifest", manifest.name)
+        assertEquals("Sample", manifest.shortName)
+        assertEquals("/start", manifest.startUrl)
+        assertEquals(WebAppManifest.DisplayMode.MINIMAL_UI, manifest.display)
+        assertNull(manifest.backgroundColor)
+        assertNull(manifest.description)
+        assertEquals(WebAppManifest.TextDirection.RTL, manifest.dir)
+        assertNull(manifest.lang)
+        assertEquals(WebAppManifest.Orientation.PORTRAIT, manifest.orientation)
+        assertEquals("/", manifest.scope)
+        assertNull(manifest.themeColor)
+
+        assertEquals(2, manifest.icons.size)
+
+        manifest.icons[0].apply {
+            assertEquals("/images/icon/favicon.ico", src)
+            assertEquals("image/png", type)
+            assertEquals(3, sizes.size)
+            assertEquals(48, sizes[0].width)
+            assertEquals(48, sizes[0].height)
+            assertEquals(96, sizes[1].width)
+            assertEquals(96, sizes[1].height)
+            assertEquals(128, sizes[2].width)
+            assertEquals(128, sizes[2].height)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.BADGE), purpose)
+        }
+
+        manifest.icons[1].apply {
+            assertEquals("/images/icon/512-512.png", src)
+            assertEquals("image/png", type)
+            assertEquals(1, sizes.size)
+            assertEquals("image/png", type)
+            assertEquals(512, sizes[0].width)
+            assertEquals(512, sizes[0].height)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.MASKABLE, WebAppManifest.Icon.Purpose.ANY), purpose)
+        }
+    }
+
+    @Test
     fun `Serializing minimal manifest`() {
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
         val json = WebAppManifestParser().serialize(manifest)
