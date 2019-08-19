@@ -38,7 +38,7 @@ add_task(async function() {
     },
     dialog => {
       let savedItemId = dialog.gEditItemOverlay.itemId;
-      Assert.ok(savedItemId > 0, "Found the itemId");
+      Assert.greater(savedItemId, 0, "Found the itemId");
       return PlacesTestUtils.waitForNotification(
         "onItemRemoved",
         id => id === savedItemId

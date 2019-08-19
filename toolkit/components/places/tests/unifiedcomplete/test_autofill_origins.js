@@ -259,15 +259,15 @@ add_task(async function groupByHost() {
   let httpFrec = frecencyForUrl("http://example.com/");
   let httpsFrec = frecencyForUrl("https://example.com/");
   let otherFrec = frecencyForUrl("https://mozilla.org/");
-  Assert.ok(httpFrec < httpsFrec, "Sanity check");
-  Assert.ok(httpsFrec < otherFrec, "Sanity check");
+  Assert.less(httpFrec, httpsFrec, "Sanity check");
+  Assert.less(httpsFrec, otherFrec, "Sanity check");
 
   // Make sure the frecencies of the three origins are as expected in relation
   // to the threshold.
   let threshold = await getOriginAutofillThreshold();
-  Assert.ok(httpFrec < threshold, "http origin should be < threshold");
-  Assert.ok(httpsFrec < threshold, "https origin should be < threshold");
-  Assert.ok(threshold <= otherFrec, "Other origin should cross threshold");
+  Assert.less(httpFrec, threshold, "http origin should be < threshold");
+  Assert.less(httpsFrec, threshold, "https origin should be < threshold");
+  Assert.lessEqual(threshold, otherFrec, "Other origin should cross threshold");
 
   Assert.ok(
     threshold <= httpFrec + httpsFrec,
@@ -328,15 +328,15 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
   let httpFrec = frecencyForUrl("http://example.com/");
   let httpsFrec = frecencyForUrl("https://example.com/");
   let otherFrec = frecencyForUrl("https://mozilla.org/");
-  Assert.ok(httpFrec < httpsFrec, "Sanity check");
-  Assert.ok(httpsFrec < otherFrec, "Sanity check");
+  Assert.less(httpFrec, httpsFrec, "Sanity check");
+  Assert.less(httpsFrec, otherFrec, "Sanity check");
 
   // Make sure the frecencies of the three origins are as expected in relation
   // to the threshold.
   let threshold = await getOriginAutofillThreshold();
-  Assert.ok(httpFrec < threshold, "http origin should be < threshold");
-  Assert.ok(httpsFrec < threshold, "https origin should be < threshold");
-  Assert.ok(threshold <= otherFrec, "Other origin should cross threshold");
+  Assert.less(httpFrec, threshold, "http origin should be < threshold");
+  Assert.less(httpsFrec, threshold, "https origin should be < threshold");
+  Assert.lessEqual(threshold, otherFrec, "Other origin should cross threshold");
 
   Assert.ok(
     threshold <= httpFrec + httpsFrec,

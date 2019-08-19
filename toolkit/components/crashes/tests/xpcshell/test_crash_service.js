@@ -114,7 +114,7 @@ async function test_addCrashBase(crashId, allThreads) {
     }
 
     let frames = stackTraces.threads[0].frames;
-    Assert.ok(frames && frames.length > 0, "The stack trace is present.\n");
+    Assert.greater(frames && frames.length, 0, "The stack trace is present.\n");
   } catch (e) {
     Assert.ok(false, "StackTraces does not contain valid JSON.");
   }

@@ -382,7 +382,7 @@ add_task(async function create_bookmark_frecency() {
   checkBookmarkObject(bm);
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  Assert.ok(frecencyForUrl(bm.url) > 0, "Check frecency has been updated");
+  Assert.greater(frecencyForUrl(bm.url), 0, "Check frecency has been updated");
 });
 
 add_task(async function create_bookmark_without_type() {
