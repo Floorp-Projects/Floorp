@@ -111,8 +111,10 @@
 ####################################################################################################
 
 -dontwarn android.**
+-dontwarn androidx.**
 -dontwarn com.google.**
 -dontwarn org.mozilla.geckoview.**
+-dontwarn mozilla.components.**
 
 # https://developer.android.com/topic/libraries/architecture/release-notes.html
 # According to the docs this won't be needed when 1.0 of the library is released.
