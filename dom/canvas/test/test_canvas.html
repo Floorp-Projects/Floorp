@@ -25606,14 +25606,14 @@ function runTests() {
  try {
   test_getImageData_after_zero_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_getImageData_after_zero_canvas");
+  throw e;
  }
  try {
   test_opaque();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_opaque");
+  throw e;
  }
  try {
   test_2d_transformation_reset_transform();
@@ -25764,8 +25764,8 @@ function runTests() {
  try {
    test_2d_clearRect_testdoubleprecision();
  } catch(e) {
-   throw e;
    ok(false, "unexpected exception thrown in: test_2d_clearRect_testdoubleprecision");
+   throw e;
  }
 
  //run the asynchronous tests
