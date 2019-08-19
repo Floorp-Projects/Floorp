@@ -17,6 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
 
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
       const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
+      const allow_nonzero_unitless_lengths = !SpecialPowers.getBoolPref('mathml.nonzero_unitless_lengths.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -50,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
           status: [false, false],
           args: [["BAD!","scriptlevel"], ["BAD!","scriptsizemultiplier"]]
         },
-      /* <math><mo rspace="2..0">+</mo></math>
+      /* <math><mo rspace="2..0px">+</mo></math>
         <math><mo minsize="1.5notaunit">+</mo></math>
         <math><mspace width="2"/></math>
         <math><mo lspace="BADlspace">+</mo></math>
@@ -62,6 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mstyle mathsize="small"></mstyle></math>
         <math><mstyle mathsize="normal"></mstyle></math>
         <math><mstyle mathsize="big"></mstyle></math>
+        <math><mo minsize="17">+</mo></math>
       */
         LengthParsingError : {
             status: [false,
@@ -76,8 +78,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                      allow_mathsize_names,
                      allow_mathsize_names,
                      allow_mathsize_names,
+                     allow_nonzero_unitless_lengths,
                     ],
-            args: [["2..0"],
+            args: [["2..0px"],
                    ["1.5notaunit"],
                    ["2"],
                    ["BADlspace"],
@@ -89,6 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                    ["small"],
                    ["normal"],
                    ["big"],
+                   ["17"]
                   ]
         },
       /*<math><mmultiscripts></mmultiscripts></math>
@@ -98,9 +102,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
           status: [false, false, false],
           args: ["NoBase","DuplicateMprescripts", "SubSupMismatch"]
         },
-      /*<math><mo minsize="2">+</mo></math>*/
+      /*<math><mo minsize="17">+</mo></math>*/
         UnitlessValuesAreDeprecated : {
-          status : [false],
+          status : [!allow_nonzero_unitless_lengths],
           args : [[]] }};
       
       var g_errorTypes = ["ChildCountIncorrect","DeprecatedSupersededBy","AttributeParsingError",
@@ -185,7 +189,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math scriptsizemultiplier="BAD!"></math>
     
     <!-- LengthParsingError -->
-    <math><mo rspace="2..0">+</mo></math>
+    <math><mo rspace="2..0px">+</mo></math>
     <math><mo minsize="1.5notaunit">+</mo></math>
     <math><mspace width="2"/></math>
     <math><mo lspace="BADlspace">+</mo></math>
@@ -204,6 +208,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mmultiscripts><mi>x</mi><mi>y</mi></mmultiscripts></math>
     
     <!-- UnitlessValuesAreDeprecated -->
-    <math><mo minsize="2">+</mo></math>
+    <math><mo minsize="17">+</mo></math>
   </body>
 </html>

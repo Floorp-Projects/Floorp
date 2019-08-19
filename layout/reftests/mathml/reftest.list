@@ -150,7 +150,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == munderover-align-accent-
 == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
 == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
-== mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
+pref(mathml.nonzero_unitless_lengths.disabled,false) == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
 == mathml-negativespace.html mathml-negativespace-ref.html
 == negative-mspace-1.html negative-mspace-1-ref.html
@@ -198,7 +198,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == opentype-fraction-dynamic-linethickness.html opentype-fraction-dynamic-linethickness-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
-== number-size-1.xhtml number-size-1-ref.xhtml
+pref(mathml.nonzero_unitless_lengths.disabled,false) == number-size-1.xhtml number-size-1-ref.xhtml
 fuzzy-if(skiaContent,0-1,0-80) fuzzy-if(Android,0-255,0-105) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
