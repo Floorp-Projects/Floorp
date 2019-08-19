@@ -10,7 +10,7 @@
             getContainerForCookieStoreId,
             isValidCookieStoreId, isContainerCookieStoreId,
             EventManager, URL */
-/* global getCookieStoreIdForTab:false, getCookieStoreIdForOriginAttributes:false,
+/* global getCookieStoreIdForTab:false,
           getCookieStoreIdForContainer:false,
           getContainerForCookieStoreId: false,
           isValidCookieStoreId:false, isContainerCookieStoreId:false,

@@ -176,7 +176,8 @@ void IMEStateManager::OnFocusMovedBetweenBrowsers(BrowserParent* aBlur,
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIWidget> oldWidget = sWidget;
-  nsCOMPtr<nsIWidget> newWidget = aFocus ? aFocus->GetWidget() : nullptr;
+  nsCOMPtr<nsIWidget> newWidget =
+      aFocus ? aFocus->GetTextInputHandlingWidget() : nullptr;
   // In the chrome-process case, we'll get sWidget from a PresShell later.
   sWidget = newWidget;
   if (oldWidget && sTextCompositions) {
@@ -471,7 +472,7 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIWidget> oldWidget = sWidget;
   nsCOMPtr<nsIWidget> newWidget =
-      aPresContext ? aPresContext->GetRootWidget() : nullptr;
+      aPresContext ? aPresContext->GetTextInputHandlingWidget() : nullptr;
   bool focusActuallyChanging =
       (sContent != aContent || sPresContext != aPresContext ||
        oldWidget != newWidget ||
@@ -767,8 +768,8 @@ void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetRootWidget() ||
-             sPresContext->GetRootWidget() == widget);
+  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
+             sPresContext->GetTextInputHandlingWidget() == widget);
 
   if (!aMouseEvent->IsTrusted()) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -951,8 +952,8 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetRootWidget() ||
-             sPresContext->GetRootWidget() == widget);
+  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
+             sPresContext->GetTextInputHandlingWidget() == widget);
 
   // Even if there is active IMEContentObserver, it may not be observing the
   // editor with current editable root content due to reframed.  In such case,
@@ -1165,8 +1166,8 @@ void IMEStateManager::SetInputContextForChildProcess(
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetRootWidget() ||
-             sPresContext->GetRootWidget() == widget);
+  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
+             sPresContext->GetTextInputHandlingWidget() == widget);
   MOZ_ASSERT(aInputContext.mOrigin == InputContext::ORIGIN_CONTENT);
 
   sActiveChildInputContext = aInputContext;
@@ -1679,7 +1680,8 @@ nsresult IMEStateManager::NotifyIME(const IMENotification& aNotification,
       }
 #ifdef DEBUG
       if (aBrowserParent) {
-        nsCOMPtr<nsIWidget> browserParentWidget = aBrowserParent->GetWidget();
+        nsCOMPtr<nsIWidget> browserParentWidget =
+            aBrowserParent->GetTextInputHandlingWidget();
         MOZ_ASSERT(browserParentWidget == aWidget);
       }
 #endif
@@ -1803,7 +1805,7 @@ nsresult IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsIWidget* widget = aPresContext->GetRootWidget();
+  nsIWidget* widget = aPresContext->GetTextInputHandlingWidget();
   if (NS_WARN_IF(!widget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
             ("  NotifyIME(), FAILED due to no widget for the "
@@ -1928,7 +1930,7 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase* aEditorBase) {
     return;
   }
 
-  MOZ_ASSERT(sPresContext->GetRootWidget() == widget);
+  MOZ_ASSERT(sPresContext->GetTextInputHandlingWidget() == widget);
 
   MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  CreateIMEContentObserver() is creating an "

@@ -4,8 +4,6 @@
 
 // @flow
 
-/* global window */
-
 /**
  * Redux middleware that sets performance markers for all actions such that they
  * will appear in performance tooling under the User Timing API

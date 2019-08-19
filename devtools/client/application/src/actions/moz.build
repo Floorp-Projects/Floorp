@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'index.js',
+    'manifest.js',
     'page.js',
     'ui.js',
     'workers.js',

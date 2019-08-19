@@ -29,9 +29,6 @@ AddonTestUtils.init(this);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "69");
 
-/* globals BulkKeyBundle, CommonUtils, EncryptionRemoteTransformer */
-/* globals Utils */
-
 function handleCannedResponse(cannedResponse, request, response) {
   response.setStatusLine(
     null,

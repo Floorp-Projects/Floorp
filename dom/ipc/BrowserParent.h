@@ -159,6 +159,12 @@ class BrowserParent final : public PBrowserParent,
   // Returns the top-level widget for our frameloader's document.
   already_AddRefed<nsIWidget> GetDocWidget() const;
 
+  /**
+   * Returns the widget which may have native focus and handles text input
+   * like keyboard input, IME, etc.
+   */
+  already_AddRefed<nsIWidget> GetTextInputHandlingWidget() const;
+
   nsIXULBrowserWindow* GetXULBrowserWindow();
 
   static uint32_t GetMaxTouchPoints(Element* aElement);

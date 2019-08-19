@@ -552,7 +552,6 @@ if (runningInParent) {
   );
 
   // This gets imported via fakeNow();
-  /* global TelemetrySend */
   registerCleanupFunction(() => TelemetrySend.shutdown());
 }
 

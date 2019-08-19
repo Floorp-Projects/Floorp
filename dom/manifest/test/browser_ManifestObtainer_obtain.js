@@ -1,5 +1,5 @@
 // Used by JSHint:
-/* global ok, is, Cu, BrowserTestUtils, add_task, gBrowser, makeTestURL, requestLongerTimeout*/
+/* global ok, is, Cu, BrowserTestUtils, add_task, gBrowser, requestLongerTimeout*/
 "use strict";
 
 const { ManifestObtainer } = ChromeUtils.import(

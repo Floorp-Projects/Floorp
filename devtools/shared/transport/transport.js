@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global uneval */
-
 const { Cc, Cr, CC } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
