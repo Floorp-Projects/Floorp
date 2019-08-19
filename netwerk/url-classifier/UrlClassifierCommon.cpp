@@ -439,29 +439,37 @@ bool UrlClassifierCommon::IsAllowListed(nsIChannel* aChannel) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> topWinURI;
-  nsresult rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
+  nsCOMPtr<nsIPrincipal> cbAllowListPrincipal;
+  nsresult rv = channel->GetContentBlockingAllowListPrincipal(
+      getter_AddRefs(cbAllowListPrincipal));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
 
-  if (!topWinURI && StaticPrefs::channelclassifier_allowlist_example()) {
+  if (!cbAllowListPrincipal &&
+      StaticPrefs::channelclassifier_allowlist_example()) {
     UC_LOG(("nsChannelClassifier: Allowlisting test domain"));
     nsCOMPtr<nsIIOService> ios = services::GetIOService();
     if (NS_WARN_IF(!ios)) {
       return false;
     }
 
+    nsCOMPtr<nsIURI> uri;
     rv = ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
-                     nullptr, nullptr, getter_AddRefs(topWinURI));
+                     nullptr, nullptr, getter_AddRefs(uri));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
     }
+
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    RefPtr<BasePrincipal> bp = BasePrincipal::CreateContentPrincipal(
+        uri, loadInfo->GetOriginAttributes());
+    cbAllowListPrincipal = bp.forget();
   }
 
   bool isAllowListed = false;
   rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
-      topWinURI, NS_UsePrivateBrowsing(aChannel), isAllowListed);
+      cbAllowListPrincipal, NS_UsePrivateBrowsing(aChannel), isAllowListed);
   if (NS_FAILED(rv)) {  // normal for some loads, no need to print a warning
     return false;
   }

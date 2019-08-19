@@ -132,8 +132,8 @@ class AntiTrackingCommon final {
       const nsCString& aParentOrigin, const nsCString& aGrantedOrigin,
       int aAllowMode);
 
-  // Check whether a top window URI is on the content blocking allow list.
-  static nsresult IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+  // Check whether a top window principal is on the content blocking allow list.
+  static nsresult IsOnContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
                                                bool aIsPrivateBrowsing,
                                                bool& aIsAllowListed);
 
