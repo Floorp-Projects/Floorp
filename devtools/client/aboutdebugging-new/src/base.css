@@ -180,7 +180,6 @@ p, h1 {
   font-size: var(--display-10-font-size);
   font-weight: var(--display-10-font-weight);
   line-height: 1.2;
-  color: var(--in-content-text-color);
 }
 
 .main-heading__icon {
