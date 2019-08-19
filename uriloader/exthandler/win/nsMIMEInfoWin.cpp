@@ -22,6 +22,7 @@
 #include "nsITextToSubURI.h"
 #include "nsVariant.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
+#include "mozilla/UrlmonHeaderOnlyUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #define RUNDLL32_EXE L"\\rundll32.exe"
@@ -225,10 +226,11 @@ nsresult nsMIMEInfoWin::LoadUriInternal(nsIURI* aURL) {
       CopyASCIItoUTF16(urlSpec, utf16Spec);
     }
 
-    // Ask the shell to parse |utf16Spec| to avoid malformed URLs. Failure is
-    // indicative of a potential security issue so we should bail out if so.
-    UniqueAbsolutePidl pidl = ShellParseDisplayName(utf16Spec.get());
-    if (!pidl) {
+    // Ask the shell/urlmon to parse |utf16Spec| to avoid malformed URLs.
+    // Failure is indicative of a potential security issue so we should
+    // bail out if so.
+    LauncherResult<_bstr_t> validatedUri = UrlmonValidateUri(utf16Spec.get());
+    if (validatedUri.isErr()) {
       return NS_ERROR_FAILURE;
     }
 
@@ -240,7 +242,8 @@ nsresult nsMIMEInfoWin::LoadUriInternal(nsIURI* aURL) {
     // Ask Explorer to ShellExecute on our behalf, as some URL handlers do not
     // start correctly when inheriting our process's process migitations.
     mozilla::LauncherVoidResult shellExecuteOk =
-        mozilla::ShellExecuteByExplorer(pidl, args, verb, workingDir, showCmd);
+        mozilla::ShellExecuteByExplorer(validatedUri.unwrap(), args, verb,
+                                        workingDir, showCmd);
     if (shellExecuteOk.isErr()) {
       return NS_ERROR_FAILURE;
     }
