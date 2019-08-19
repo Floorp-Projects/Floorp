@@ -922,6 +922,8 @@ void BasicCompositor::BeginFrame(
 
   BufferMode bufferMode = BufferMode::BUFFERED;
   if (mTarget) {
+    MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
+
     // If we have a copy target, then we don't have a widget-provided
     // mDrawTarget (currently). Use a dummy placeholder so that
     // CreateRenderTarget() works. This is only used to create a new buffered
@@ -954,10 +956,6 @@ void BasicCompositor::BeginFrame(
     } else {
       mDrawTargetBounds = IntRect(IntPoint(0, 0), dtSize);
     }
-  }
-
-  if (!mDrawTarget || mInvalidRect.IsEmpty()) {
-    return;
   }
 
   LayoutDeviceIntRegion clearRegion = mInvalidRegion;
