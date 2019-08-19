@@ -252,7 +252,7 @@ function runTest(testCase, cb) {
   function doCheck() {
     if (testCase.setURL || testCase.loadURL) {
       gURLBar.valueIsTyped = !!testCase.setURL;
-      is(gURLBar.textValue, testCase.expectedURL, "url bar value set");
+      is(gURLBar.value, testCase.expectedURL, "url bar value set");
     }
 
     testCopy(testCase.copyVal, testCase.copyExpected, cb);
@@ -292,7 +292,7 @@ function testCopy(copyVal, targetValue, cb) {
       offsets.push([startBracket, endBracket - 1]);
       copyVal = copyVal.replace("<", "").replace(">", "");
     }
-    if (offsets.length == 0 || copyVal != gURLBar.textValue) {
+    if (offsets.length == 0 || copyVal != gURLBar.value) {
       ok(false, "invalid copyVal: " + copyVal);
     }
     gURLBar.selectionStart = offsets[0][0];

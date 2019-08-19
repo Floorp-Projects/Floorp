@@ -99,8 +99,8 @@ add_task(async function() {
 
   ok(!tab.linkedBrowser.isRemoteBrowser, "Browser should no longer be remote");
 
-  is(gURLBar.textValue, TESTURL, "URL bar visible value should be correct.");
-  is(gURLBar.value, TESTURL, "URL bar value should be correct.");
+  is(gURLBar.value, TESTURL, "URL bar visible value should be correct.");
+  is(gURLBar.untrimmedValue, TESTURL, "URL bar value should be correct.");
   is(
     gURLBar.getAttribute("pageproxystate"),
     "valid",

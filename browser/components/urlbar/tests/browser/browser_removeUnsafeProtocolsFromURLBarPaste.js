@@ -80,7 +80,7 @@ add_task(async function test_stripUnsafeProtocolPaste() {
     await paste(inputValue);
 
     Assert.equal(
-      gURLBar.textValue,
+      gURLBar.value,
       expectedURL,
       `entering ${inputValue} strips relevant bits.`
     );

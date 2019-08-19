@@ -34,7 +34,11 @@ add_task(async function() {
   let sawChange = false;
   let handler = e => {
     sawChange = true;
-    is(gURLBar.value, expectedURLBarChange, "Should not change URL bar value!");
+    is(
+      gURLBar.untrimmedValue,
+      expectedURLBarChange,
+      "Should not change URL bar value!"
+    );
   };
 
   let obs = new MutationObserver(handler);
@@ -50,7 +54,7 @@ add_task(async function() {
   gURLBar.value = expectedURLBarChange;
   gURLBar.handleCommand();
   is(
-    gURLBar.value,
+    gURLBar.untrimmedValue,
     expectedURLBarChange,
     "Should not have changed URL bar value synchronously."
   );
@@ -107,7 +111,7 @@ add_task(async function() {
   // get new tab, switch to it
   let newTab = (await newTabPromise).target;
   await BrowserTestUtils.switchTab(gBrowser, newTab);
-  is(gURLBar.value, SLOW_HOST, "Should have slow page in URL bar");
+  is(gURLBar.untrimmedValue, SLOW_HOST, "Should have slow page in URL bar");
   let browserStoppedPromise = BrowserTestUtils.browserStopped(
     newTab.linkedBrowser,
     null,
@@ -117,7 +121,7 @@ add_task(async function() {
   await browserStoppedPromise;
 
   is(
-    gURLBar.value,
+    gURLBar.untrimmedValue,
     SLOW_HOST,
     "Should still have slow page in URL bar after stop"
   );
@@ -175,7 +179,7 @@ add_task(async function() {
   // get new tab, switch to it
   let newTab = (await newTabPromise).target;
   await BrowserTestUtils.switchTab(gBrowser, newTab);
-  is(gURLBar.value, SLOW_HOST1, "Should have slow page in URL bar");
+  is(gURLBar.untrimmedValue, SLOW_HOST1, "Should have slow page in URL bar");
   let browserStoppedPromise = BrowserTestUtils.browserStopped(
     newTab.linkedBrowser,
     null,
@@ -185,7 +189,11 @@ add_task(async function() {
   gURLBar.handleCommand();
   await browserStoppedPromise;
 
-  is(gURLBar.value, SLOW_HOST2, "Should have second slow page in URL bar");
+  is(
+    gURLBar.untrimmedValue,
+    SLOW_HOST2,
+    "Should have second slow page in URL bar"
+  );
   browserStoppedPromise = BrowserTestUtils.browserStopped(
     newTab.linkedBrowser,
     null,
@@ -195,7 +203,7 @@ add_task(async function() {
   await browserStoppedPromise;
 
   is(
-    gURLBar.value,
+    gURLBar.untrimmedValue,
     SLOW_HOST2,
     "Should still have second slow page in URL bar after stop"
   );
