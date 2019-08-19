@@ -21,6 +21,8 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "js/TypeDecls.h"
+#include "unicode/uloc.h"
+#include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/StringType.h"

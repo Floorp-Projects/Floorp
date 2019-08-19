@@ -28,7 +28,6 @@
 #include "builtin/Boolean.h"
 #if ENABLE_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
-#  include "builtin/intl/ICUStubs.h"
 #endif
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
@@ -42,6 +41,8 @@
 #if ENABLE_INTL_API
 #  include "unicode/uchar.h"
 #  include "unicode/unorm2.h"
+#  include "unicode/ustring.h"
+#  include "unicode/utypes.h"
 #endif
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
