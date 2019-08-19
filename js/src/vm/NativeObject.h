@@ -18,6 +18,7 @@
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
 #include "gc/Marking.h"
+#include "gc/ZoneAllocator.h"
 #include "js/Value.h"
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
@@ -1645,6 +1646,39 @@ extern bool CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
                                      HandleNativeObject from,
                                      HandlePlainObject excludedItems,
                                      bool* optimized);
+
+// Initialize an object's reserved slot with a private value pointing to
+// malloc-allocated memory and associate the memory with the object.
+//
+// This call should be matched with a call to JSFreeOp::free_/delete_ in the
+// object's finalizer to free the memory and update the memory accounting.
+
+inline void InitReservedSlot(NativeObject* obj, uint32_t slot, void* ptr,
+                             size_t nbytes, MemoryUse use) {
+  AddCellMemory(obj, nbytes, use);
+  obj->initReservedSlot(slot, PrivateValue(ptr));
+}
+template <typename T>
+inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
+                             MemoryUse use) {
+  InitReservedSlot(obj, slot, ptr, sizeof(T), use);
+}
+
+// Initialize an object's private slot with a pointer to malloc-allocated memory
+// and associate the memory with the object.
+//
+// This call should be matched with a call to JSFreeOp::free_/delete_ in the
+// object's finalizer to free the memory and update the memory accounting.
+
+inline void InitObjectPrivate(NativeObject* obj, void* ptr, size_t nbytes,
+                              MemoryUse use) {
+  AddCellMemory(obj, nbytes, use);
+  obj->initPrivate(ptr);
+}
+template <typename T>
+inline void InitObjectPrivate(NativeObject* obj, T* ptr, MemoryUse use) {
+  InitObjectPrivate(obj, ptr, sizeof(T), use);
+}
 
 }  // namespace js
 
