@@ -4029,9 +4029,7 @@ static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
   }
 
 #ifdef MOZ_XUL
-  return (aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
-          aDisplay->mDisplay == StyleDisplay::MozInlineStack ||
-          aDisplay->mDisplay == StyleDisplay::MozGrid ||
+  return (aDisplay->mDisplay == StyleDisplay::MozGrid ||
           aDisplay->mDisplay == StyleDisplay::MozStack ||
           aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
           aDisplay->mDisplay == StyleDisplay::MozGridLine ||
@@ -4235,8 +4233,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     if (IsXULDisplayType(displayStyle)) {
       gfxScrollFrame = NS_NewXULScrollFrame(
           mPresShell, contentStyle, aIsRoot,
-          displayStyle->mDisplay == StyleDisplay::MozStack ||
-              displayStyle->mDisplay == StyleDisplay::MozInlineStack);
+          displayStyle->mDisplay == StyleDisplay::MozStack);
     } else {
       gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
@@ -4553,8 +4550,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       return &data;
     }
 #ifdef MOZ_XUL
-    case StyleDisplayInside::MozGrid:
-    case StyleDisplayInside::MozInlineGrid: {
+    case StyleDisplayInside::MozGrid: {
       static const FrameConstructionData data =
           SCROLLABLE_XUL_FCDATA(NS_NewGridBoxFrame);
       return &data;
@@ -4569,8 +4565,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
           SCROLLABLE_XUL_FCDATA(NS_NewGridRowLeafFrame);
       return &data;
     }
-    case StyleDisplayInside::MozStack:
-    case StyleDisplayInside::MozInlineStack: {
+    case StyleDisplayInside::MozStack: {
       static const FrameConstructionData data =
           SCROLLABLE_XUL_FCDATA(NS_NewStackFrame);
       return &data;
