@@ -37,6 +37,7 @@ function ThreadClient(client, actor) {
   this._actor = actor;
   this._pauseGrips = {};
   this._threadGrips = {};
+  this.targetFront = null;
   this.request = this.client.request;
 }
 
@@ -235,6 +236,7 @@ ThreadClient.prototype = {
   }),
 
   destroy: function() {
+    this.targetFront = null;
     return this.detach();
   },
 
