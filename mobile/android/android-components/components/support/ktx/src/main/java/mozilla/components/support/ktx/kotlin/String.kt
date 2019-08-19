@@ -4,7 +4,6 @@
 
 package mozilla.components.support.ktx.kotlin
 
-import android.net.Uri
 import mozilla.components.support.utils.URLStringUtils
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -49,12 +48,6 @@ fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
         Date()
     }
 }
-
-/**
- * Converts a [String] to a [Uri] object.
- */
-@Deprecated("Use Android KTX instead", ReplaceWith("toUri()", "androidx.core.net.toUri"))
-fun String.toUri() = Uri.parse(this)
 
 /**
  * Calculates a SHA1 hash for this string.
