@@ -53,7 +53,7 @@ add_task(async function shift_left_click_test() {
     gBrowser.selectedBrowser,
     "Content window should be focused"
   );
-  is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
+  is(win.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
   let ourWindowRefocusedPromise = Promise.all([
@@ -97,7 +97,7 @@ add_task(async function shift_accel_left_click_test() {
 
   // Select the new background tab
   gBrowser.selectedTab = gBrowser.selectedTab.nextElementSibling;
-  is(gURLBar.textValue, TEST_VALUE, "New URL is loaded in new tab");
+  is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
 
   // Cleanup.
   gBrowser.removeCurrentTab();
@@ -143,7 +143,7 @@ add_task(async function load_in_current_tab_test() {
     await loadStartedPromise;
 
     info("URL should be loaded in the current tab");
-    is(gURLBar.textValue, TEST_VALUE, "Urlbar still has the value we entered");
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
     await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(
       document.activeElement,
@@ -192,7 +192,7 @@ add_task(async function load_in_new_tab_test() {
 
     // Check the load occurred in a new tab.
     info("URL should be loaded in a new focused tab");
-    is(gURLBar.textValue, TEST_VALUE, "Urlbar still has the value we entered");
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
     await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(
       document.activeElement,

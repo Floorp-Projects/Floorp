@@ -204,6 +204,6 @@ function assertState(result, oneOff, textValue = undefined) {
     "Expected one-off should be selected"
   );
   if (textValue !== undefined) {
-    Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
+    Assert.equal(gURLBar.value, textValue, "Expected textValue");
   }
 }

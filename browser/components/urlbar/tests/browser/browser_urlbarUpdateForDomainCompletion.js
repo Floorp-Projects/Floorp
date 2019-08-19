@@ -18,7 +18,7 @@ add_task(async function() {
       );
       EventUtils.sendKey("return");
       await loadPromise;
-      is(gURLBar.textValue, "www.example.com");
+      is(gURLBar.value, "www.example.com");
     }
   );
 });
