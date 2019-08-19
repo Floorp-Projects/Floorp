@@ -66,6 +66,7 @@ struct CraneliftStaticEnvironment {
   bool hasBmi1;
   bool hasBmi2;
   bool hasLzcnt;
+  bool platformIsWindows;
   size_t staticMemoryBound;
   size_t memoryGuardSize;
   size_t instanceTlsOffset;
