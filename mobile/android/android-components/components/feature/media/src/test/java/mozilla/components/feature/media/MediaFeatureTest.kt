@@ -51,12 +51,12 @@ class MediaFeatureTest {
         media.playbackState = Media.PlaybackState.WAITING
 
         // So far nothing has happened yet
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         // Media starts playing!
         media.playbackState = Media.PlaybackState.PLAYING
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 
     @Test
@@ -81,13 +81,13 @@ class MediaFeatureTest {
         media.playbackState = Media.PlaybackState.WAITING
 
         // So far nothing has happened yet
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         // Media starts playing!
         media.playbackState = Media.PlaybackState.PLAYING
 
         // Service still not started since duration is too short
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
     }
 
     @Test
@@ -106,11 +106,11 @@ class MediaFeatureTest {
         feature.enable()
 
         reset(context)
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         media.playbackState = Media.PlaybackState.PAUSE
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 
     @Test
@@ -130,13 +130,13 @@ class MediaFeatureTest {
 
         media.playbackState = Media.PlaybackState.PLAYING
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
 
         reset(context)
-        verify(context, never()).startService(any())
+        verify(context, never()).startForegroundService(any())
 
         media.playbackState = Media.PlaybackState.ENDED
 
-        verify(context).startService(any())
+        verify(context).startForegroundService(any())
     }
 }
