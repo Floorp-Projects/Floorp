@@ -461,10 +461,29 @@ struct Loader::Sheets {
   // The SheetLoadData pointers in mLoadingDatas below are weak references.
   nsDataHashtable<SheetLoadDataHashKey, SheetLoadData*> mLoadingDatas;
 
+  nsRefPtrHashtable<nsStringHashKey, StyleSheet> mInlineSheets;
+
+
+  RefPtr<StyleSheet> LookupInline(const nsAString&);
+
   // A cache hit or miss. It is a miss if the `StyleSheet` is null.
   using CacheResult = Tuple<RefPtr<StyleSheet>, SheetState>;
   CacheResult Lookup(SheetLoadDataHashKey&, bool aSyncLoad);
 };
+
+RefPtr<StyleSheet> Loader::Sheets::LookupInline(const nsAString& aBuffer) {
+  auto result = mInlineSheets.Lookup(aBuffer);
+  if (!result) {
+    return nullptr;
+  }
+  if (result.Data()->HasForcedUniqueInner()) {
+    // Remove it now that we know that we're never going to use this stylesheet
+    // again.
+    result.Remove();
+    return nullptr;
+  }
+  return result.Data()->Clone(nullptr, nullptr, nullptr, nullptr);
+}
 
 static void AssertComplete(const StyleSheet& aSheet) {
   // This sheet came from the XUL cache or our per-document hashtable; it
@@ -1825,6 +1844,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
 
   // Check IsAlternateSheet now, since it can mutate our document.
   auto isAlternate = IsAlternateSheet(aInfo.mTitle, aInfo.mHasAlternateRel);
+  LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
   // Use the document's base URL so that @import in the inline sheet picks up
   // the right base.
@@ -1833,48 +1853,71 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   nsIURI* originalURI = nullptr;
 
   MOZ_ASSERT(aInfo.mIntegrity.IsEmpty());
-  auto sheet = MakeRefPtr<StyleSheet>(eAuthorSheetFeatures, aInfo.mCORSMode,
-                                      SRIMetadata{});
-  sheet->SetURIs(sheetURI, originalURI, baseURI);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSResources(aInfo.mContent->OwnerDoc());
-  sheet->SetReferrerInfo(referrerInfo);
 
-  nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
-  if (aInfo.mTriggeringPrincipal) {
-    // The triggering principal may be an expanded principal, which is safe to
-    // use for URL security checks, but not as the loader principal for a
-    // stylesheet. So treat this as principal inheritance, and downgrade if
-    // necessary.
-    principal =
-        BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
+  // We only cache sheets if in shadow trees, since regular document sheets are
+  // likely to be unique.
+  const bool isWorthCaching = aInfo.mContent->IsInShadowTree();
+  RefPtr<StyleSheet> sheet;
+  if (isWorthCaching) {
+    if (!mSheets) {
+      mSheets = MakeUnique<Sheets>();
+    }
+    sheet = mSheets->LookupInline(aBuffer);
   }
+  const bool sheetFromCache = !!sheet;
+  if (!sheet) {
+    sheet = MakeRefPtr<StyleSheet>(eAuthorSheetFeatures, aInfo.mCORSMode,
+                                   SRIMetadata{});
+    sheet->SetURIs(sheetURI, originalURI, baseURI);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForInternalCSSResources(aInfo.mContent->OwnerDoc());
+    sheet->SetReferrerInfo(referrerInfo);
 
-  // We never actually load this, so just set its principal directly
-  sheet->SetPrincipal(principal);
+    nsIPrincipal* principal = aInfo.mContent->NodePrincipal();
+    if (aInfo.mTriggeringPrincipal) {
+      // The triggering principal may be an expanded principal, which is safe to
+      // use for URL security checks, but not as the loader principal for a
+      // stylesheet. So treat this as principal inheritance, and downgrade if
+      // necessary.
+      principal =
+          BasePrincipal::Cast(aInfo.mTriggeringPrincipal)->PrincipalToInherit();
+    }
 
-  LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
+    // We never actually load this, so just set its principal directly
+    sheet->SetPrincipal(principal);
+  }
 
   auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);
 
   InsertSheetInTree(*sheet, aInfo.mContent);
 
-  auto data = MakeRefPtr<SheetLoadData>(
-      this, aInfo.mTitle, nullptr, sheet, false, owningElement, isAlternate,
-      matched, aObserver, nullptr, aInfo.mReferrerInfo, aInfo.mContent);
-  data->mLineNumber = aLineNumber;
-  // Parse completion releases the load data.
-  //
-  // Note that we need to parse synchronously, since the web expects that the
-  // effects of inline stylesheets are visible immediately (aside from
-  // @imports).
-  NS_ConvertUTF16toUTF8 utf8(aBuffer);
-  Completed completed = ParseSheet(utf8, *data, AllowAsyncParse::No);
-
-  if (completed == Completed::No) {
-    data->mMustNotify = true;
+  Completed completed;
+  if (sheetFromCache) {
+    MOZ_ASSERT(sheet->IsComplete());
+    completed = Completed::Yes;
+  } else {
+    auto data = MakeRefPtr<SheetLoadData>(
+        this, aInfo.mTitle, nullptr, sheet, false, owningElement, isAlternate,
+        matched, aObserver, nullptr, aInfo.mReferrerInfo, aInfo.mContent);
+    data->mLineNumber = aLineNumber;
+    // Parse completion releases the load data.
+    //
+    // Note that we need to parse synchronously, since the web expects that the
+    // effects of inline stylesheets are visible immediately (aside from
+    // @imports).
+    NS_ConvertUTF16toUTF8 utf8(aBuffer);
+    completed = ParseSheet(utf8, *data, AllowAsyncParse::No);
+    if (completed == Completed::Yes) {
+      // TODO(emilio): Try to cache sheets with @import rules, maybe?
+      if (isWorthCaching) {
+        mSheets->mInlineSheets.Put(aBuffer, sheet);
+      }
+    } else {
+      data->mMustNotify = true;
+    }
   }
+
   return LoadSheetResult{completed, isAlternate, matched};
 }
 
