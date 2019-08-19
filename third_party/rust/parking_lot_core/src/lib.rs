@@ -56,42 +56,9 @@
     feature(thread_local, checked_duration_since)
 )]
 
-use cfg_if::cfg_if;
-
-cfg_if! {
-    if #[cfg(all(has_sized_atomics, target_os = "linux"))] {
-        #[path = "thread_parker/linux.rs"]
-        mod thread_parker;
-    } else if #[cfg(unix)] {
-        #[path = "thread_parker/unix.rs"]
-        mod thread_parker;
-    } else if #[cfg(windows)] {
-        #[path = "thread_parker/windows/mod.rs"]
-        mod thread_parker;
-    } else if #[cfg(all(has_sized_atomics, target_os = "redox"))] {
-        #[path = "thread_parker/redox.rs"]
-        mod thread_parker;
-    } else if #[cfg(all(target_env = "sgx", target_vendor = "fortanix"))] {
-        #[path = "thread_parker/sgx.rs"]
-        mod thread_parker;
-    } else if #[cfg(all(
-        feature = "nightly",
-        target_arch = "wasm32",
-        target_feature = "atomics"
-    ))] {
-        #[path = "thread_parker/wasm.rs"]
-        mod thread_parker;
-    } else if #[cfg(all(feature = "nightly", target_os = "cloudabi"))] {
-        #[path = "thread_parker/cloudabi.rs"]
-        mod thread_parker;
-    } else {
-        #[path = "thread_parker/generic.rs"]
-        mod thread_parker;
-    }
-}
-
 mod parking_lot;
 mod spinwait;
+mod thread_parker;
 mod util;
 mod word_lock;
 
