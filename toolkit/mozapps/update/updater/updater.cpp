@@ -129,7 +129,7 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
         CloseHandle(handle);                        \
       }                                             \
       if (NS_tremove(path) && errno != ENOENT) {    \
-        ImpersonatedLogFinish();                    \
+        LogFinish();                                \
         return retCode;                             \
       }                                             \
     }
@@ -285,33 +285,6 @@ static NS_tchar* gDestPath;
 static NS_tchar gCallbackRelPath[MAXPATHLEN];
 static NS_tchar gCallbackBackupPath[MAXPATHLEN];
 static NS_tchar gDeleteDirPath[MAXPATHLEN];
-
-#  ifdef MOZ_MAINTENANCE_SERVICE
-// Token used to impersonate the original user when running via the
-// maintenance service. If nullptr no impersonation is performed.
-static HANDLE gUserToken;
-
-static void ImpersonatedLogInit(NS_tchar* sourcePath,
-                                const NS_tchar* fileName) {
-  ImpersonationScope impersonated(gUserToken);
-  if (!gUserToken || impersonated) {
-    LogInit(sourcePath, fileName);
-  }
-}
-
-static void ImpersonatedLogFinish() {
-  ImpersonationScope impersonated(gUserToken);
-  if (!gUserToken || impersonated) {
-    LogFinish();
-  }
-}
-
-#  endif  // MOZ_MAINTENANCE_SERVICE
-#endif    // XP_WIN
-
-#if !defined(XP_WIN) || !defined(MOZ_MAINTENANCE_SERVICE)
-#  define ImpersonatedLogInit LogInit
-#  define ImpersonatedLogFinish LogFinish
 #endif
 
 static const NS_tchar kWhitespace[] = NS_T(" \t");
@@ -2073,13 +2046,6 @@ static void LaunchCallbackApp(const NS_tchar* workingDir, int argc,
 static bool WriteToFile(const NS_tchar* aFilename, const char* aStatus) {
   NS_tchar filename[MAXPATHLEN] = {NS_T('\0')};
 #if defined(XP_WIN)
-#  if defined(MOZ_MAINTENANCE_SERVICE)
-  ImpersonationScope impersonated(gUserToken);
-  if (gUserToken && !impersonated) {
-    return false;
-  }
-#  endif
-
   // The temp file is not removed on failure since there is client code that
   // will remove it.
   if (!GetUUIDTempFilePath(gPatchDirPath, L"sta", filename)) {
@@ -2153,13 +2119,6 @@ static void WriteStatusFile(int status) {
  *         or pending-service.
  */
 static bool IsUpdateStatusPendingService() {
-#  if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
-  ImpersonationScope impersonated(gUserToken);
-  if (gUserToken && !impersonated) {
-    return false;
-  }
-#  endif
-
   NS_tchar filename[MAXPATHLEN];
   NS_tsnprintf(filename, sizeof(filename) / sizeof(filename[0]),
                NS_T("%s/update.status"), gPatchDirPath);
@@ -2190,13 +2149,6 @@ static bool IsUpdateStatusPendingService() {
  * @return true if the information was retrieved and it is succeeded.
  */
 static bool IsUpdateStatusSucceeded(bool& isSucceeded) {
-#  if defined(MOZ_MAINTENANCE_SERVICE)
-  ImpersonationScope impersonated(gUserToken);
-  if (gUserToken && !impersonated) {
-    return false;
-  }
-#  endif
-
   isSucceeded = false;
   NS_tchar filename[MAXPATHLEN];
   NS_tsnprintf(filename, sizeof(filename) / sizeof(filename[0]),
@@ -2631,41 +2583,6 @@ int NS_main(int argc, NS_tchar** argv) {
 #ifdef MOZ_MAINTENANCE_SERVICE
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
-
-#  if XP_WIN
-  // Null gUserToken is treated as "no impersonation required".
-  gUserToken = nullptr;
-
-#    ifndef DISABLE_USER_IMPERSONATION
-  if (sUsingService) {
-    char* tokenStr = getenv(USER_TOKEN_VAR_NAME);
-
-    if (tokenStr) {
-      // If a token is provided ensure that we can use it.
-
-      if (sscanf_s(tokenStr, "%p", &gUserToken) != 1 || !gUserToken) {
-        fprintf(stderr,
-                "Invalid impersonation token %p (from " USER_TOKEN_VAR_NAME
-                "=%s).",
-                gUserToken, tokenStr);
-        return 1;
-      } else if (!SetThreadToken(nullptr, gUserToken)) {
-        fprintf(stderr, "Failed to test impersonation token %p. (%lu)",
-                gUserToken, GetLastError());
-        gUserToken = nullptr;
-        return 1;
-      }
-
-      RevertToSelf();
-    } else {
-      // If there is no token provided, then even if we are running via the
-      // maintenance service we will proceed without impersonation. This
-      // prevents failure if an old maintenance service somehow attempts to
-      // run a new updater.
-    }
-  }
-#    endif  // DISABLE_USER_IMPERSONATION
-#  endif
 #endif
 
   // The callback is the remaining arguments starting at callbackIndex.
@@ -2936,7 +2853,7 @@ int NS_main(int argc, NS_tchar** argv) {
   }
 #endif
 
-  ImpersonatedLogInit(gPatchDirPath, NS_T("update.log"));
+  LogInit(gPatchDirPath, NS_T("update.log"));
 
   if (!WriteStatusFile("applying")) {
     LOG(("failed setting status to 'applying'"));
@@ -2968,7 +2885,7 @@ int NS_main(int argc, NS_tchar** argv) {
       LOG(
           ("Installation directory and working directory must be the same "
            "for non-staged updates. Exiting."));
-      ImpersonatedLogFinish();
+      LogFinish();
       return 1;
     }
 
@@ -2979,7 +2896,7 @@ int NS_main(int argc, NS_tchar** argv) {
     if (!PathRemoveFileSpecW(workingDirParent)) {
       WriteStatusFile(REMOVE_FILE_SPEC_ERROR);
       LOG(("Error calling PathRemoveFileSpecW: %d", GetLastError()));
-      ImpersonatedLogFinish();
+      LogFinish();
       return 1;
     }
 
@@ -2988,7 +2905,7 @@ int NS_main(int argc, NS_tchar** argv) {
       LOG(
           ("The apply-to directory must be the same as or "
            "a child of the installation directory! Exiting."));
-      ImpersonatedLogFinish();
+      LogFinish();
       return 1;
     }
   }
@@ -3113,30 +3030,14 @@ int NS_main(int argc, NS_tchar** argv) {
     if (updateLockFileHandle == INVALID_HANDLE_VALUE ||
         (useService && testOnlyFallbackKeyExists && noServiceFallback)) {
       HANDLE elevatedFileHandle;
-
-      // A block to contain ImpersonationScope when testing access, removing,
-      // and the creating elevated lock file.
-      {
-#  if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
-        ImpersonationScope impersonated(gUserToken);
-        if (gUserToken && !impersonated) {
-          fprintf(stderr,
-                  "Unable to impersonate when creating elevated "
-                  "lock file. Exiting\n");
-          return 1;
-        }
-#  endif
-
-        if (NS_tremove(elevatedLockFilePath) && errno != ENOENT) {
-          fprintf(stderr, "Unable to create elevated lock file! Exiting\n");
-          return 1;
-        }
-
-        elevatedFileHandle = CreateFileW(
-            elevatedLockFilePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-            OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, nullptr);
+      if (NS_tremove(elevatedLockFilePath) && errno != ENOENT) {
+        fprintf(stderr, "Unable to create elevated lock file! Exiting\n");
+        return 1;
       }
 
+      elevatedFileHandle =
+          CreateFileW(elevatedLockFilePath, GENERIC_READ | GENERIC_WRITE, 0,
+                      nullptr, OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, nullptr);
       if (elevatedFileHandle == INVALID_HANDLE_VALUE) {
         LOG(("Unable to create elevated lock file! Exiting"));
         return 1;
@@ -3203,9 +3104,9 @@ int NS_main(int argc, NS_tchar** argv) {
       // If we still want to use the service try to launch the service
       // comamnd for the update.
       if (useService) {
-        // Write a catchall service failure status until the service can obtain
-        // an impersonation token for this process.
-        WriteStatusFile(SERVICE_COULD_NOT_IMPERSONATE);
+        // Write a catchall service failure status in case it fails without
+        // changing the status.
+        WriteStatusFile(SERVICE_UPDATE_STATUS_UNCHANGED);
 
         // If the update couldn't be started, then set useService to false so
         // we do the update the old way.
@@ -3409,7 +3310,7 @@ int NS_main(int argc, NS_tchar** argv) {
           gWorkingDirPath, applyDirLongPath,
           sizeof(applyDirLongPath) / sizeof(applyDirLongPath[0]))) {
     LOG(("NS_main: unable to find apply to dir: " LOG_S, gWorkingDirPath));
-    ImpersonatedLogFinish();
+    LogFinish();
     WriteStatusFile(WRITE_ERROR_APPLY_DIR_PATH);
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
     if (argc > callbackIndex) {
@@ -3463,7 +3364,7 @@ int NS_main(int argc, NS_tchar** argv) {
             targetPath, callbackLongPath,
             sizeof(callbackLongPath) / sizeof(callbackLongPath[0]))) {
       LOG(("NS_main: unable to find callback file: " LOG_S, targetPath));
-      ImpersonatedLogFinish();
+      LogFinish();
       WriteStatusFile(WRITE_ERROR_CALLBACK_PATH);
       EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
       if (argc > callbackIndex) {
@@ -3509,7 +3410,7 @@ int NS_main(int argc, NS_tchar** argv) {
           callbackBackupPathLen >=
               static_cast<int>(callbackBackupPathBufSize)) {
         LOG(("NS_main: callback backup path truncated"));
-        ImpersonatedLogFinish();
+        LogFinish();
         WriteStatusFile(USAGE_ERROR);
 
         // Don't attempt to launch the callback when the callback path is
@@ -3524,7 +3425,7 @@ int NS_main(int argc, NS_tchar** argv) {
         LOG(("NS_main: failed to copy callback file " LOG_S
              " into place at " LOG_S,
              argv[callbackIndex], gCallbackBackupPath));
-        ImpersonatedLogFinish();
+        LogFinish();
         if (copyFileError == ERROR_ACCESS_DENIED) {
           WriteStatusFile(WRITE_ERROR_ACCESS_DENIED);
         } else {
@@ -3573,7 +3474,7 @@ int NS_main(int argc, NS_tchar** argv) {
               ("NS_main: callback app file in use, failed to exclusively open "
                "executable file: " LOG_S,
                argv[callbackIndex]));
-          ImpersonatedLogFinish();
+          LogFinish();
           if (lastWriteError == ERROR_ACCESS_DENIED) {
             WriteStatusFile(WRITE_ERROR_ACCESS_DENIED);
           } else {
@@ -3688,7 +3589,7 @@ int NS_main(int argc, NS_tchar** argv) {
   }
 #endif /* XP_MACOSX */
 
-  ImpersonatedLogFinish();
+  LogFinish();
 
   int retVal = LaunchCallbackAndPostProcessApps(argc, argv, callbackIndex
 #ifdef XP_WIN

@@ -7,6 +7,13 @@
 #ifndef WINDIRENT_H__
 #define WINDIRENT_H__
 
+/**
+ * Note: The reason that these functions are separated from those in
+ *       updatehelper.h/updatehelper.cpp is that those functions are strictly
+ *       used within the updater, whereas changing functions in updateutils_win
+ *       will have effects reaching beyond application update.
+ */
+
 #ifndef XP_WIN
 #  error This library should only be used on Windows
 #endif
@@ -28,5 +35,8 @@ struct dirent {
 DIR* opendir(const WCHAR* path);
 int closedir(DIR* dir);
 dirent* readdir(DIR* dir);
+
+BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
+BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath);
 
 #endif  // WINDIRENT_H__
