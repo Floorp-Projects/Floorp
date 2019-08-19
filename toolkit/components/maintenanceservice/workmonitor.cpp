@@ -830,15 +830,6 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
       return FALSE;
     }
 
-    mozilla::UniquePtr<wchar_t[]> updateDir;
-    HRESULT permResult = GetCommonUpdateDirectory(
-        installDir, SetPermissionsOf::AllFilesAndDirs, updateDir);
-    if (FAILED(permResult)) {
-      LOG_WARN(
-          ("Unable to set the permissions on the update directory ('%S'): %d",
-           updateDir.get(), permResult));
-    }
-
     if (!DoesFallbackKeyExist()) {
       WCHAR maintenanceServiceKey[MAX_PATH + 1];
       if (CalculateRegistryPathFromFilePath(installDir,
