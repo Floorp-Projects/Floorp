@@ -20,7 +20,6 @@
  */
 
 /* eslint-env mozilla/chrome-worker, node */
-/* global OS */
 
 // eslint-disable-next-line no-lone-blocks
 {

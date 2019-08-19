@@ -1,7 +1,6 @@
 /**
  * Common infrastructure for manifest tests.
  **/
-/* globals SpecialPowers, ManifestProcessor*/
 "use strict";
 const { ManifestProcessor } = SpecialPowers.Cu.import(
   "resource://gre/modules/ManifestProcessor.jsm"

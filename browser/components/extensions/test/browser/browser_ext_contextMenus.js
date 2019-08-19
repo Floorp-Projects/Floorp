@@ -6,8 +6,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/places/tests/browser/head.js",
   this
 );
-/* globals withSidebarTree, synthesizeClickOnSelectedTreeCell,
- * promiseLibrary, promiseLibraryClosed
+/* globals withSidebarTree, synthesizeClickOnSelectedTreeCell, promiseLibrary, promiseLibraryClosed
  */
 
 const PAGE =

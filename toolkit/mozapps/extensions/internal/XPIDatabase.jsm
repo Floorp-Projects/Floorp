@@ -51,12 +51,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const { nsIBlocklistService } = Ci;
 
 // These are injected from XPIProvider.jsm
-/* globals
- *         BOOTSTRAP_REASONS,
- *         DB_SCHEMA,
- *         XPIStates,
- *         migrateAddonLoader
- */
+/* globals BOOTSTRAP_REASONS, DB_SCHEMA, XPIStates, migrateAddonLoader */
 
 for (let sym of [
   "BOOTSTRAP_REASONS",

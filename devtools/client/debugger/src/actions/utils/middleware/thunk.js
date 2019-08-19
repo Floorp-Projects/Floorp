@@ -4,8 +4,6 @@
 
 // @flow
 
-/* global window */
-
 import type { ThunkArgs, ActionType } from "../../types";
 
 /**

@@ -2,7 +2,6 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env browser */
-/* global browser */
 
 "use strict";
 
