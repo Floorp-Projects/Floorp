@@ -132,7 +132,7 @@ add_task(async function test_separator_first() {
   await promiseReady;
 
   let children = gToolbarContent.children;
-  Assert.greater(children.length, 2, "Multiple elements are visible");
+  Assert.ok(children.length > 2, "Multiple elements are visible");
   Assert.equal(
     children[1]._placesNode.uri,
     "http://test.places.0/",
