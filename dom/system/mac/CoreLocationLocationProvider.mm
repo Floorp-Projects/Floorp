@@ -32,6 +32,8 @@ using namespace mozilla;
 static const CLLocationAccuracy kHIGH_ACCURACY = kCLLocationAccuracyBest;
 static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTenMeters;
 
+bool isMacGeoSystemPermissionEnabled() { return [CLLocationManager locationServicesEnabled]; }
+
 @interface LocationDelegate : NSObject <CLLocationManagerDelegate> {
   CoreLocationLocationProvider* mProvider;
 }
