@@ -15693,5 +15693,25 @@
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
     "description": "How many milliseconds it took to load a hyphenation resource."
+  },
+  "IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "bug_numbers": [1566758],
+    "alert_emails": ["sgiesecke@mozilla.com"],
+    "expires_in_version": "74",
+    "kind": "categorical",
+    "labels": [
+      "system",
+      "content_file",
+      "content_http_https",
+      "content_moz_ext",
+      "content_about",
+      "content_other",
+      "expanded",
+      "other"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "description": "Tracking the use of the custom IDBFactory.open overload accepting an options dictionary in one of the categories."
   }
 }

@@ -56,6 +56,51 @@ namespace {
 
 const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
+Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT IdentifyPrincipalType(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  switch (aPrincipalInfo.type()) {
+    case PrincipalInfo::TSystemPrincipalInfo:
+      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::system;
+    case PrincipalInfo::TContentPrincipalInfo: {
+      const ContentPrincipalInfo& info =
+          aPrincipalInfo.get_ContentPrincipalInfo();
+
+      nsCOMPtr<nsIURI> uri;
+
+      if (NS_WARN_IF(NS_FAILED(NS_NewURI(getter_AddRefs(uri), info.spec())))) {
+        // This could be discriminated as an extra error value, but this is
+        // extremely unlikely to fail, so we just misuse ContentOther
+        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+            content_other;
+      }
+
+      // TODO Are there constants defined for the schemes somewhere?
+      if (uri->SchemeIs("file")) {
+        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+            content_file;
+      }
+      if (uri->SchemeIs("http") || uri->SchemeIs("https")) {
+        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+            content_http_https;
+      }
+      if (uri->SchemeIs("moz-extension")) {
+        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+            content_moz_ext;
+      }
+      if (uri->SchemeIs("about")) {
+        return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+            content_about;
+      }
+      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::
+          content_other;
+    }
+    case PrincipalInfo::TExpandedPrincipalInfo:
+      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::expanded;
+    default:
+      return Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT::other;
+  }
+}
+
 }  // namespace
 
 struct IDBFactory::PendingRequestInfo {
@@ -439,6 +484,10 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
       WorkerPrivate::ReportErrorToConsole("IDBOpenDBOptions_StorageType");
     }
   }
+
+  const auto principalType = IdentifyPrincipalType(*mPrincipalInfo);
+
+  Telemetry::AccumulateCategorical(principalType);
 
   return OpenInternal(aCx,
                       /* aPrincipal */ nullptr, aName, aOptions.mVersion,
