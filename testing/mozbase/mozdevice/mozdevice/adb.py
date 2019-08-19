@@ -47,6 +47,11 @@ class ADBProcess(object):
         else:
             self.stdout_file.seek(0, os.SEEK_SET)
             content = self.stdout_file.read().rstrip()
+            # File read() returns str on Python 2 while Python 3 returns bytes.
+            # If we are running under Python3, convert content to str to match
+            # the expectations of the existing code.
+            if six.PY3:
+                content = content.decode("utf-8")
         return content
 
     def __str__(self):
@@ -313,7 +318,7 @@ class ADBCommand(object):
                 raise ADBTimeoutError("%s" % adb_process)
             elif adb_process.exitcode:
                 raise ADBProcessError(adb_process)
-            output = adb_process.stdout_file.read().rstrip()
+            output = adb_process.stdout
             if self._verbose:
                 self._logger.debug('command_output: %s, '
                                    'timeout: %s, '
@@ -981,13 +986,14 @@ class ADBDevice(ADBCommand):
             char = file_obj.read(1)
             if not char:
                 break
+            if six.PY3:
+                char = char.decode("utf-8")
             if char != '\r' and char != '\n':
                 line = char + line
             elif line:
                 # we have collected everything up to the beginning of the line
                 break
             offset += 1
-
         match = re_returncode.match(line)
         if match:
             exitcode = int(match.group(1))
@@ -1004,6 +1010,8 @@ class ADBDevice(ADBCommand):
             # appropriate match.
             file_obj.seek(0, os.SEEK_SET)
             for line in file_obj:
+                if six.PY3:
+                    line = line.decode("utf-8")
                 match = re_returncode.search(line)
                 if match:
                     exitcode = int(match.group(1))
@@ -1535,7 +1543,7 @@ class ADBDevice(ADBCommand):
         finally:
             if adb_process:
                 if self._verbose:
-                    output = adb_process.stdout_file.read().rstrip()
+                    output = adb_process.stdout
                     self._logger.debug('shell_bool: %s, '
                                        'timeout: %s, '
                                        'root: %s, '
@@ -1581,7 +1589,7 @@ class ADBDevice(ADBCommand):
                 raise ADBTimeoutError("%s" % adb_process)
             elif adb_process.exitcode:
                 raise ADBProcessError(adb_process)
-            output = adb_process.stdout_file.read().rstrip()
+            output = adb_process.stdout
             if self._verbose:
                 self._logger.debug('shell_output: %s, '
                                    'timeout: %s, '
