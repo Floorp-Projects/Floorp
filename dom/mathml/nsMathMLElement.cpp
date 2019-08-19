@@ -9,6 +9,7 @@
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/TextUtils.h"
 #include "nsGkAtoms.h"
 #include "nsITableCellLayout.h"  // for MAX_COLSPAN / MAX_ROWSPAN
@@ -506,7 +507,7 @@ void nsMathMLElement::MapMathMLAttributesInto(
   // In both cases, we don't allow negative values.
   // Unitless values give a multiple of the default value.
   //
-  bool parseSizeKeywords = true;
+  bool parseSizeKeywords = !StaticPrefs::mathml_mathsize_names_disabled();
   value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
   if (!value) {
     parseSizeKeywords = false;
@@ -520,10 +521,12 @@ void nsMathMLElement::MapMathMLAttributesInto(
       !aDecls.PropertyIsSet(eCSSProperty_font_size)) {
     nsAutoString str(value->GetStringValue());
     nsCSSValue fontSize;
-    if (!ParseNumericValue(str, fontSize,
-                           PARSE_SUPPRESS_WARNINGS | PARSE_ALLOW_UNITLESS |
-                               CONVERT_UNITLESS_TO_PERCENT,
-                           nullptr) &&
+    uint32_t flags = PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT;
+    if (parseSizeKeywords) {
+      // Do not warn for invalid value if mathsize keywords are accepted.
+      flags |= PARSE_SUPPRESS_WARNINGS;
+    }
+    if (!ParseNumericValue(str, fontSize, flags, nullptr) &&
         parseSizeKeywords) {
       static const char sizes[3][7] = {"small", "normal", "big"};
       static const int32_t values[MOZ_ARRAY_LENGTH(sizes)] = {
