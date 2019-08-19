@@ -378,7 +378,7 @@ class OriginKeyStore : public nsISupports {
   virtual ~OriginKeyStore() {
     StaticMutexAutoLock lock(sOriginKeyStoreMutex);
     sOriginKeyStore = nullptr;
-    LOG((__FUNCTION__));
+    LOG(("%s", __FUNCTION__));
   }
 
  public:
@@ -509,7 +509,7 @@ template <class Super>
 void Parent<Super>::ActorDestroy(ActorDestroyReason aWhy) {
   // No more IPC from here
   mDestroyed = true;
-  LOG((__FUNCTION__));
+  LOG(("%s", __FUNCTION__));
 }
 
 template <class Super>

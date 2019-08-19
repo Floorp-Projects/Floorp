@@ -28,7 +28,7 @@ mozilla::LazyLogModule gVideoEngineLog("VideoEngine");
 int VideoEngine::sId = 0;
 #if defined(ANDROID)
 int VideoEngine::SetAndroidObjects() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 
   JavaVM* const javaVM = mozilla::jni::GetVM();
   if (!javaVM || webrtc::SetCaptureAndroidVM(javaVM) != 0) {
@@ -47,7 +47,7 @@ int VideoEngine::SetAndroidObjects() {
 
 void VideoEngine::CreateVideoCapture(int32_t& id,
                                      const char* deviceUniqueIdUTF8) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(deviceUniqueIdUTF8);
 
   id = GenerateId();
@@ -140,7 +140,7 @@ int VideoEngine::ReleaseVideoCapture(const int32_t id) {
 
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
 VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   int64_t currentTime = 0;
 
   const char* capDevTypeName =
@@ -215,7 +215,7 @@ const UniquePtr<const webrtc::Config>& VideoEngine::GetConfiguration() {
 
 already_AddRefed<VideoEngine> VideoEngine::Create(
     UniquePtr<const webrtc::Config>&& aConfig) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("Creating new VideoEngine with CaptureDeviceType %s",
        aConfig->Get<webrtc::CaptureDeviceInfo>().TypeName()));
   return do_AddRef(new VideoEngine(std::move(aConfig)));
@@ -263,7 +263,7 @@ VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
       mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>()),
       mDeviceInfo(nullptr),
       mConfig(std::move(aConfig)) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 }
 
 }  // namespace camera
