@@ -300,6 +300,7 @@
     <style name="CreateCollectionDialogStyle" parent="DialogStyleBase"/>
     <style name="FirefoxAccountsDialogStyle" parent="DialogStyleBase">
         <item name="android:windowBackground">@drawable/scrim_background</item>
+        <item name="android:colorControlHighlight">@android:color/transparent</item>
     </style>
 
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
