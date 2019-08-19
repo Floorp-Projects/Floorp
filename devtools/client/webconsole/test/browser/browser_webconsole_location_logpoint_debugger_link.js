@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -32,13 +30,13 @@ add_task(async function() {
   await selectSource(dbg, "test-location-debugger-link-logpoint-1.js");
 
   info("Add a logpoint with an invalid expression");
-  await setLogPoint(dbg, 9, "undefinedVariable");
+  await setLogPoint(dbg, 7, "undefinedVariable");
 
   info("Add a logpoint with a valid expression");
-  await setLogPoint(dbg, 10, "`a is ${a}`");
+  await setLogPoint(dbg, 8, "`a is ${a}`");
 
-  await assertEditorLogpoint(dbg, 9, { hasLog: true });
-  await assertEditorLogpoint(dbg, 10, { hasLog: true });
+  await assertEditorLogpoint(dbg, 7, { hasLog: true });
+  await assertEditorLogpoint(dbg, 8, { hasLog: true });
 
   info("Close the file in the debugger");
   await closeTab(dbg, "test-location-debugger-link-logpoint-1.js");
@@ -81,9 +79,9 @@ add_task(async function() {
     dbg,
     "test-location-debugger-link-logpoint-1.js"
   );
-  await removeBreakpoint(dbg, source.id, 9);
-  await removeBreakpoint(dbg, source.id, 10);
-  await addBreakpoint(dbg, "test-location-debugger-link-logpoint-1.js", 10);
+  await removeBreakpoint(dbg, source.id, 7);
+  await removeBreakpoint(dbg, source.id, 8);
+  await addBreakpoint(dbg, "test-location-debugger-link-logpoint-1.js", 8);
 
   info("Selecting the console");
   await toolbox.selectTool("webconsole");
@@ -92,13 +90,13 @@ add_task(async function() {
     toolbox,
     "undefinedVariable is not defined",
     true,
-    9,
-    12
+    8,
+    10
   );
 
   info("Selecting the console again");
   await toolbox.selectTool("webconsole");
-  await testOpenInDebugger(hud, toolbox, "a is 1", true, 10, 12);
+  await testOpenInDebugger(hud, toolbox, "a is 1", true, 8, 10);
 });
 
 // Test clicking locations of logpoints from different files
@@ -118,11 +116,11 @@ add_task(async function() {
 
   info("Add a logpoint to the first file");
   await selectSource(dbg, "test-location-debugger-link-logpoint-1.js");
-  await setLogPoint(dbg, 10, "`a is ${a}`");
+  await setLogPoint(dbg, 8, "`a is ${a}`");
 
   info("Add a logpoint to the second file");
   await selectSource(dbg, "test-location-debugger-link-logpoint-2.js");
-  await setLogPoint(dbg, 10, "`c is ${c}`");
+  await setLogPoint(dbg, 8, "`c is ${c}`");
 
   info("Selecting the console");
   await toolbox.selectTool("webconsole");
