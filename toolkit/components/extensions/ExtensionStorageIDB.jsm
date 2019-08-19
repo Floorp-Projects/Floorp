@@ -695,6 +695,9 @@ this.ExtensionStorageIDB = {
 
         promise = migrateJSONFileData(extension, storagePrincipal)
           .then(() => {
+            extension.setSharedData("storageIDBBackend", true);
+            extension.setSharedData("storageIDBPrincipal", storagePrincipal);
+            Services.ppmm.sharedData.flush();
             return {
               backendEnabled: true,
               storagePrincipal: serializedPrincipal,
@@ -714,6 +717,9 @@ this.ExtensionStorageIDB = {
               "JSONFile backend is being kept enabled by an unexpected " +
                 `IDBBackend failure: ${err.message}::${err.stack}`
             );
+            extension.setSharedData("storageIDBBackend", false);
+            Services.ppmm.sharedData.flush();
+
             return { backendEnabled: false };
           });
       }
