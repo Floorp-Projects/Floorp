@@ -70,8 +70,12 @@ fn uimm64(offset: usize) -> ir::immediates::Uimm64 {
 }
 
 /// Initialize a `Signature` from a wasm signature.
-fn init_sig_from_wsig(sig: &mut ir::Signature, wsig: bindings::FuncTypeWithId) -> WasmResult<()> {
-    sig.clear(CallConv::Baldrdash);
+fn init_sig_from_wsig(
+    call_conv: CallConv,
+    wsig: bindings::FuncTypeWithId,
+) -> WasmResult<ir::Signature> {
+    let mut sig = ir::Signature::new(call_conv);
+
     for arg in wsig.args()? {
         sig.params.push(ir::AbiParam::new(arg));
     }
@@ -93,18 +97,17 @@ fn init_sig_from_wsig(sig: &mut ir::Signature, wsig: bindings::FuncTypeWithId) -
         ir::ArgumentPurpose::VMContext,
     ));
 
-    Ok(())
+    Ok(sig)
 }
 
 /// Initialize the signature `sig` to match the function with `index` in `env`.
 pub fn init_sig(
-    sig: &mut ir::Signature,
     env: &bindings::ModuleEnvironment,
+    call_conv: CallConv,
     func_index: FuncIndex,
-) -> WasmResult<bindings::FuncTypeWithId> {
+) -> WasmResult<ir::Signature> {
     let wsig = env.function_signature(func_index);
-    init_sig_from_wsig(sig, wsig)?;
-    Ok(wsig)
+    init_sig_from_wsig(call_conv, wsig)
 }
 
 /// A `TargetIsa` and `ModuleEnvironment` joined so we can implement `FuncEnvironment`.
@@ -438,7 +441,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     fn make_heap(&mut self, func: &mut ir::Function, index: MemoryIndex) -> WasmResult<ir::Heap> {
         // Currently, Baldrdash doesn't support multiple memories.
         if index.index() != 0 {
-            return Err(WasmError::Unsupported("only one wasm memory supported".to_string()));
+            return Err(WasmError::Unsupported(
+                "only one wasm memory supported".to_string(),
+            ));
         }
 
         // Get the address of the `TlsData::memoryBase` field.
@@ -484,9 +489,8 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         func: &mut ir::Function,
         index: SignatureIndex,
     ) -> WasmResult<ir::SigRef> {
-        let mut sigdata = ir::Signature::new(CallConv::Baldrdash);
         let wsig = self.env.signature(index);
-        init_sig_from_wsig(&mut sigdata, wsig)?;
+        let mut sigdata = init_sig_from_wsig(self.static_env.call_conv(), wsig)?;
 
         if wsig.id_kind() != bindings::FuncTypeIdDescKind::None {
             // A signature to be used for an indirect call also takes a signature id.
@@ -533,8 +537,7 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         index: FuncIndex,
     ) -> WasmResult<ir::FuncRef> {
         // Create a signature.
-        let mut sigdata = ir::Signature::new(CallConv::Baldrdash);
-        init_sig(&mut sigdata, &self.env, index)?;
+        let sigdata = init_sig(&self.env, self.static_env.call_conv(), index)?;
         let signature = func.import_signature(sigdata);
 
         Ok(func.import_function(ir::ExtFuncData {
@@ -558,7 +561,9 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
 
         // Currently, Baldrdash doesn't support multiple tables.
         if table_index.index() != 0 {
-            return Err(WasmError::Unsupported("only one wasm table supported".to_string()));
+            return Err(WasmError::Unsupported(
+                "only one wasm table supported".to_string(),
+            ));
         }
         let wtable = self.get_table(pos.func, table_index);
 
@@ -717,9 +722,10 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     ) -> WasmResult<ir::Value> {
         // We emit a call to `uint32_t memoryGrow_i32(Instance* instance, uint32_t delta)` via a
         // stub.
+        let call_conv = self.static_env.call_conv();
         let (fnref, sigref) =
             self.symbolic_funcref(pos.func, bindings::SymbolicAddress::MemoryGrow, || {
-                let mut sig = ir::Signature::new(CallConv::Baldrdash);
+                let mut sig = ir::Signature::new(call_conv);
                 sig.params.push(ir::AbiParam::new(native_pointer_type()));
                 sig.params.push(ir::AbiParam::new(ir::types::I32).uext());
                 sig.params.push(ir::AbiParam::special(
@@ -753,9 +759,10 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
         _heap: ir::Heap,
     ) -> WasmResult<ir::Value> {
         // We emit a call to `uint32_t memorySize_i32(Instance* instance)` via a stub.
+        let call_conv = self.static_env.call_conv();
         let (fnref, sigref) =
             self.symbolic_funcref(pos.func, bindings::SymbolicAddress::MemorySize, || {
-                let mut sig = ir::Signature::new(CallConv::Baldrdash);
+                let mut sig = ir::Signature::new(call_conv);
                 sig.params.push(ir::AbiParam::new(native_pointer_type()));
                 sig.params.push(ir::AbiParam::special(
                     native_pointer_type(),
