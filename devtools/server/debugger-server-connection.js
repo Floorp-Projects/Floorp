@@ -253,15 +253,10 @@ DebuggerServerConnection.prototype = {
           );
         }
 
-        // It might happen that a function doesn't return anything (e.g. webconsole's
-        // evaluateJSAsync, which use sendActorEvent instead).
-        if (!response) {
-          return;
-        }
-
         if (!response.from) {
           response.from = from;
         }
+
         this.transport.send(response);
       })
       .catch(error => {
