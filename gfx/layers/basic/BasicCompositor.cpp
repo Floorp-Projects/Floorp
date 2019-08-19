@@ -292,7 +292,7 @@ BasicCompositor::CreateRenderTargetFromSource(
 
 already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetForWindow(
-    const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect,
+    const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRegion& aClearRegion,
     BufferMode aBufferMode) {
   MOZ_ASSERT(mDrawTarget);
   MOZ_ASSERT(!aRect.IsZeroArea(),
@@ -325,9 +325,12 @@ BasicCompositor::CreateRenderTargetForWindow(
 
   rt->mDrawTarget->SetTransform(Matrix::Translation(-rt->GetOrigin()));
 
-  if (!aClearRect.IsEmpty() && !isCleared) {
-    gfx::IntRect clearRect = aClearRect.ToUnknownRect();
+  if (!aClearRegion.IsEmpty() && !isCleared) {
+    gfx::IntRegion clearRegion = aClearRegion.ToUnknownRegion();
+    gfx::IntRect clearRect = clearRegion.GetBounds();
+    gfxUtils::ClipToRegion(rt->mDrawTarget, clearRegion);
     rt->mDrawTarget->ClearRect(gfx::Rect(clearRect));
+    rt->mDrawTarget->PopClip();
   }
 
   return rt.forget();
@@ -949,24 +952,15 @@ void BasicCompositor::BeginFrame(
     return;
   }
 
-  LayoutDeviceIntRect clearRect;
+  LayoutDeviceIntRegion clearRegion = mInvalidRegion;
   if (!aOpaqueRegion.IsEmpty()) {
-    LayoutDeviceIntRegion clearRegion = mInvalidRegion;
     clearRegion.SubOut(LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion));
-    clearRect = clearRegion.GetBounds();
-  } else {
-    clearRect = mInvalidRect;
   }
-
-  // Prevent CreateRenderTargetForWindow from clearing unwanted area.
-  gfxUtils::ClipToRegion(mDrawTarget, mInvalidRegion.ToUnknownRegion());
 
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
-      CreateRenderTargetForWindow(mInvalidRect, clearRect, bufferMode);
-
-  mDrawTarget->PopClip();
+      CreateRenderTargetForWindow(mInvalidRect, clearRegion, bufferMode);
 
   if (!target) {
     if (!mTarget) {
@@ -1071,7 +1065,7 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
 
     // The source DrawTarget is clipped to the invalidation region, so we have
     // to copy the individual rectangles in the region or else we'll draw
-    // blank pixels.
+    // garbage pixels.
     // CopySurface ignores both the transform and the clip.
     for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const LayoutDeviceIntRect& r = iter.Get();
