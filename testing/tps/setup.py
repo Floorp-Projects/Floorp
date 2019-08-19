@@ -18,6 +18,7 @@ deps = ['httplib2 == 0.9.2',
         'mozprofile ~= 2.1',
         'mozrunner ~= 7.2',
         'mozversion == 1.5',
+        'PyYAML >= 4.0',
         ]
 
 # we only support python 2.6+ right now
