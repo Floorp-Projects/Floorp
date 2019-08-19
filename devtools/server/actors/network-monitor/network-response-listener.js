@@ -323,7 +323,9 @@ NetworkResponseListener.prototype = {
     // the nsIRequest received in onStartRequest. If response to this request
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
-    const secinfo = this.httpActivity.channel.securityInfo;
+    const secinfo = this.httpActivity.channel.securityInfo.QueryInterface(
+      Ci.nsITransportSecurityInfo
+    );
     const info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
 
     let isRacing = false;
