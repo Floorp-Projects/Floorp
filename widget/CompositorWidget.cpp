@@ -39,7 +39,6 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
       mLastBackBuffer->GetFormat() == format &&
       mLastBackBuffer->GetSize() == clientSize) {
     target = mLastBackBuffer;
-    target->SetTransform(gfx::Matrix());
     if (!aClearRect.IsEmpty()) {
       gfx::IntRect clearRect =
           aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
