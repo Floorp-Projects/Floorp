@@ -588,3 +588,5 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrende
 
 == mask-resource.html mask-resource-ref.html
 fails-if(Android) != mask-resource.html about:blank # The image the test uses is not on Android
+
+!= bug-1562091.html bug-1562091-ref.html
