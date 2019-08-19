@@ -499,7 +499,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   }
 
-  static const bool IsExclusive = true;
+  static const bool IsExclusive = false;
   using BlobPromise =
       MozPromise<nsMainThreadPtrHandle<Blob>, nsresult, IsExclusive>;
   class BlobStorer : public MutableBlobStorageCallback {
@@ -528,17 +528,40 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<BlobPromise> Promise() { return mHolder.Ensure(__func__); }
   };
 
-  // Stops gathering data into the current blob and resolves when the current
-  // blob is available. Future data will be stored in a new blob.
-  RefPtr<BlobPromise> GatherBlob() {
-    MOZ_ASSERT(NS_IsMainThread());
+ protected:
+  RefPtr<BlobPromise> GatherBlobImpl() {
     RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
     MaybeCreateMutableBlobStorage();
     mMutableBlobStorage->GetBlobWhenReady(
         mRecorder->GetOwner(), NS_ConvertUTF16toUTF8(mMimeType), storer);
     mMutableBlobStorage = nullptr;
 
+    storer->Promise()->Then(
+        mMainThread, __func__,
+        [self = RefPtr<Session>(this), p = storer->Promise()] {
+          if (self->mBlobPromise == p) {
+            // Reset BlobPromise.
+            self->mBlobPromise = nullptr;
+          }
+        });
+
     return storer->Promise();
+  }
+
+ public:
+  // Stops gathering data into the current blob and resolves when the current
+  // blob is available. Future data will be stored in a new blob.
+  // Should a previous async GatherBlob() operation still be in progress, we'll
+  // wait for it to finish before starting this one.
+  RefPtr<BlobPromise> GatherBlob() {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mBlobPromise) {
+      return mBlobPromise = GatherBlobImpl();
+    }
+    return mBlobPromise = mBlobPromise->Then(mMainThread, __func__,
+                                             [self = RefPtr<Session>(this)] {
+                                               return self->GatherBlobImpl();
+                                             });
   }
 
   RefPtr<SizeOfPromise> SizeOfExcludingThis(
@@ -1142,6 +1165,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   RefPtr<MutableBlobStorage> mMutableBlobStorage;
   // Max memory to use for the MutableBlobStorage.
   uint64_t mMaxMemory;
+  // If set, is a promise for the latest GatherBlob() operation. Allows
+  // GatherBlob() operations to be serialized in order to avoid races.
+  RefPtr<BlobPromise> mBlobPromise;
   // Current session mimeType
   nsString mMimeType;
   // Timestamp of the last fired dataavailable event.
