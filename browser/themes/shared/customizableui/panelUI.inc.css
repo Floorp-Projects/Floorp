@@ -1861,6 +1861,12 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #PanelUI-whatsNew .whatsNew-message-body {
   padding: 6px;
+  text-align: inherit;
+  text-decoration: none;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 #protections-popup-message .whatsNew-message-body {
@@ -1892,26 +1898,29 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 #protections-popup-message .whatsNew-message-body p {
   font-size: 13px;
   line-height: 18px;
-  margin: 0;
 }
 
-#PanelUI-whatsNew button,
-#protections-popup-message button {
+#PanelUI-whatsNew .text-link,
+#protections-popup-message .text-link {
   background: none;
   border: 0;
   color: #45a1ff;
   cursor: pointer;
   font-size: 12px;
   margin-top: 16px;
-  padding: 0;
 }
 
-#PanelUI-whatsNew button:hover {
+#PanelUI-whatsNew .text-link:hover {
   color: #0a84ff;
   text-decoration: underline;
 }
 
-#PanelUI-whatsNew button:active {
+#PanelUI-whatsNew .text-link:focus {
+  color: #0a84ff;
+  text-decoration: underline;
+}
+
+#PanelUI-whatsNew .text-link:active {
   color: #0060df;
 }
 
