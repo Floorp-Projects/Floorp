@@ -14,6 +14,15 @@ function setupStore({ preloadedState } = {}) {
   return store;
 }
 
+/**
+ * This gives an opportunity to Promises to resolve in tests, even if they are
+ * resolve immediately (since they are microtasks)
+ */
+async function flushPromises() {
+  return new Promise(resolve => resolve());
+}
+
 module.exports = {
+  flushPromises,
   setupStore,
 };
