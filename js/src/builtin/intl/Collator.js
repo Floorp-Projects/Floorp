@@ -225,7 +225,7 @@ var collatorInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["co", "kn", "kf"],
+    relevantExtensionKeys: ["co", "kf", "kn"],
 };
 
 /**
