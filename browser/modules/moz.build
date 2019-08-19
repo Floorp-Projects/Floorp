@@ -145,7 +145,6 @@ EXTRA_JS_MODULES += [
     'EveryWindow.jsm',
     'ExtensionsUI.jsm',
     'FaviconLoader.jsm',
-    'FormValidationHandler.jsm',
     'HomePage.jsm',
     'LaterRun.jsm',
     'LiveBookmarkMigrator.jsm',
