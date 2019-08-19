@@ -220,21 +220,6 @@ interface nsIPermissionManager : nsISupports
                                        in ACString type);
 
   /**
-   * Test whether a website specified by a given origin string has permission
-   * to perform the given action.  This function is similar to testPermission()
-   * and is intended to be used where the cost of parsing a URI in the common
-   * case is to be avoided.
-   * @param originNoSuffix the origin string to be tested.
-   * @param type           a case-sensitive ASCII string, identifying the
-   *                       permission.
-   * @param return         see add(), param permission. returns UNKNOWN_ACTION
-   *                       when there is no stored permission for this uri and/
-   *                       or type.
-   */
-  uint32_t testPermissionOriginNoSuffix(in ACString originNoSuffix,
-                                        in ACString type);
-
-  /**
    * Test whether the principal associated with the window's document has the
    * permission to perform a given action.  System principals will always
    * have permissions granted.
