@@ -765,7 +765,7 @@ Toolbox.prototype = {
       if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
         splitConsolePromise = this.openSplitConsole();
         this.telemetry.addEventProperty(
-          this.win,
+          this.topWindow,
           "open",
           "tools",
           null,
@@ -774,7 +774,7 @@ Toolbox.prototype = {
         );
       } else {
         this.telemetry.addEventProperty(
-          this.win,
+          this.topWindow,
           "open",
           "tools",
           null,
@@ -1295,7 +1295,7 @@ Toolbox.prototype = {
     const currentTheme = Services.prefs.getCharPref("devtools.theme");
     this.telemetry.keyedScalarAdd(CURRENT_THEME_SCALAR, currentTheme, 1);
 
-    const browserWin = this.win.top;
+    const browserWin = this.topWindow;
     this.telemetry.preparePendingEvent(browserWin, "open", "tools", null, [
       "entrypoint",
       "first_panel",
@@ -2576,7 +2576,7 @@ Toolbox.prototype = {
       });
     }
 
-    this.telemetry.addEventProperties(this.win, "open", "tools", null, {
+    this.telemetry.addEventProperties(this.topWindow, "open", "tools", null, {
       width: width,
       session_id: this.sessionId,
     });
