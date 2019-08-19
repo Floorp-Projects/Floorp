@@ -59,6 +59,12 @@ union PrincipalInfo
   ExpandedPrincipalInfo;
 };
 
+union OptionalPrincipalInfo
+{
+  PrincipalInfo;
+  void_t;
+};
+
 struct PolicyInfo
 {
   nsCString policy;

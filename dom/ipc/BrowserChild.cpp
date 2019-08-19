@@ -3600,6 +3600,18 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
                                      &locationChangeData->contentPrincipal(),
                                      false));
 
+    nsIPrincipal* contentBlockingAllowListPrincipal =
+
+        document->GetContentBlockingAllowListPrincipal();
+    if (contentBlockingAllowListPrincipal) {
+      PrincipalInfo principalInfo;
+      MOZ_TRY(PrincipalToPrincipalInfo(contentBlockingAllowListPrincipal,
+                                       &principalInfo, false));
+      locationChangeData->contentBlockingAllowListPrincipal() = principalInfo;
+    } else {
+      locationChangeData->contentBlockingAllowListPrincipal() = void_t();
+    }
+
     if (const nsCOMPtr<nsIContentSecurityPolicy> csp = document->GetCsp()) {
       locationChangeData->csp().emplace();
       MOZ_TRY(CSPToCSPInfo(csp, &locationChangeData->csp().ref()));
