@@ -416,6 +416,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   MediaStreamTrack(
       nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
+      MediaStreamTrackState aReadyState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -616,9 +617,9 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // We need this to track our parent object.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
-  // The input MediaStream assigned us by the data producer. Valid until we end.
+  // The input MediaStream assigned us by the data producer.
   // Owned by the producer.
-  RefPtr<MediaStream> mInputStream;
+  const RefPtr<MediaStream> mInputStream;
   // The MediaStream representing this MediaStreamTrack in the MediaStreamGraph.
   // Valid until we end. Owned by us.
   RefPtr<ProcessedMediaStream> mStream;
