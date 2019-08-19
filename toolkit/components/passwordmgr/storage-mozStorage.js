@@ -678,8 +678,6 @@ LoginManagerStorage_mozStorage.prototype = {
       let params = { guid: aLogin.guid, timeDeleted: Date.now() };
       let stmt = this._dbCreateStatement(query, params);
       stmt.execute();
-    } catch (ex) {
-      throw ex;
     } finally {
       if (stmt) {
         stmt.reset();

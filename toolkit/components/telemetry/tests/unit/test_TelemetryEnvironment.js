@@ -169,11 +169,8 @@ var SysInfo = {
     if (name in this.overrides) {
       return this.overrides[name];
     }
-    try {
-      return this._genuine.getProperty(name);
-    } catch (ex) {
-      throw ex;
-    }
+
+    return this._genuine.getProperty(name);
   },
 
   getPropertyAsUint32(name) {

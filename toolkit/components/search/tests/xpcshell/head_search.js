@@ -416,8 +416,6 @@ async function withGeoServer(
 
   try {
     await testFn(gRequests);
-  } catch (ex) {
-    throw ex;
   } finally {
     srv.stop(() => {});
     defaultBranch.setCharPref(PREF_SEARCH_URL, originalURL);
