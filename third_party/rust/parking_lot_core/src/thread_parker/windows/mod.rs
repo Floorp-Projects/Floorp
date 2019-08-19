@@ -34,7 +34,6 @@ impl Backend {
     }
 
     #[cold]
-    #[inline(never)]
     fn create() -> &'static Backend {
         // Try to create a new Backend
         let backend;
