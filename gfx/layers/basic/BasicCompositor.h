@@ -183,6 +183,9 @@ class BasicCompositor : public Compositor {
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
+  // The bounds that mDrawTarget occupies in window space.
+  gfx::IntRect mDrawTargetBounds;
+
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
 
