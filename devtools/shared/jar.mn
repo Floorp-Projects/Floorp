@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 devtools.jar:
+%   content devtools %content/
+    content/shared/webextension-fallback.html (webextension-fallback.html)
 %   resource devtools %modules/devtools/
 %   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
 %   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes
