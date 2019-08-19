@@ -18,12 +18,12 @@ namespace dom {
 
 class SVGSVGElement;
 
-class SVGRect final : public nsISupports, public nsWrapperCache {
+class SVGRect final : public nsWrapperCache {
  public:
   typedef enum { BaseValue, AnimValue, CreatedValue } RectType;
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGRect)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGRect)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGRect)
 
   /**
    * Generic ctor for objects that are created for an attribute.

@@ -19,15 +19,10 @@ namespace dom {
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGRect, mParent)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGRect, mParent)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SVGRect)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SVGRect)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGRect)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGRect, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGRect, Release)
 
 //----------------------------------------------------------------------
 // implementation:
