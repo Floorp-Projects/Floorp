@@ -1180,7 +1180,6 @@ class GetUserMediaStreamRunnable : public Runnable {
         MOZ_ASSERT(IsOn(mConstraints.mAudio));
         RefPtr<MediaStreamTrack> track = new dom::AudioStreamTrack(
             window, stream, kAudioTrack, audioTrackSource,
-            dom::MediaStreamTrackState::Live,
             GetInvariant(mConstraints.mAudio));
         domStream->AddTrackInternal(track);
       }
@@ -1194,7 +1193,6 @@ class GetUserMediaStreamRunnable : public Runnable {
         MOZ_ASSERT(IsOn(mConstraints.mVideo));
         RefPtr<MediaStreamTrack> track = new dom::VideoStreamTrack(
             window, stream, kVideoTrack, videoTrackSource,
-            dom::MediaStreamTrackState::Live,
             GetInvariant(mConstraints.mVideo));
         domStream->AddTrackInternal(track);
         switch (mVideoDevice->GetMediaSource()) {
