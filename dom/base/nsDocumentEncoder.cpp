@@ -740,8 +740,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   nsINode* maybeFixedNode =
       &fixupNodeDeterminer.GetFixupNodeFallBackToOriginalNode();
 
-  if ((mFlags & SkipInvisibleContent) &&
-      !(mFlags & OutputNonTextContentAsPlaceholder)) {
+  if (mFlags & SkipInvisibleContent) {
     if (aNode->IsContent()) {
       if (nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame()) {
         if (!frame->IsSelectable(nullptr)) {

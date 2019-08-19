@@ -192,12 +192,6 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputIgnoreMozDirty = (1 << 22);
 
   /**
-   * Output the content of non-text elements as the placehodler character
-   * U+FFFC (OBJECT REPLACEMENT CHARACTER, only for serializing to plaintext).
-   */
-  const unsigned long OutputNonTextContentAsPlaceholder = (1 << 23);
-
-  /**
    * Serialize in a way that is suitable for copying a plaintext version of the
    * document to the clipboard.  This can for example cause line endings to be
    * injected at preformatted block element boundaries.
