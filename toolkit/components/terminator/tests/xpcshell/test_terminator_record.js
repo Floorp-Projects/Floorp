@@ -69,7 +69,7 @@ add_task(async function test_record() {
   Assert.ok(PHASE0 in data, "The file contains the expected key");
   let duration = data[PHASE0];
   Assert.equal(typeof duration, "number");
-  Assert.ok(duration >= 0, "Duration is a non-negative number");
+  Assert.greaterEqual(duration, 0, "Duration is a non-negative number");
   Assert.ok(
     duration <= Math.ceil((t1 - t0) / 1000) + 1,
     "Duration is reasonable"
