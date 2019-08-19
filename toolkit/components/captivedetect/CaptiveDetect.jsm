@@ -528,13 +528,14 @@ CaptivePortalDetector.prototype = {
   },
 };
 
-/* globals debug: true */
 var debug;
 if (DEBUG) {
+  // eslint-disable-next-line no-global-assign
   debug = function(s) {
     dump("-*- CaptivePortalDetector component: " + s + "\n");
   };
 } else {
+  // eslint-disable-next-line no-global-assign
   debug = function(s) {};
 }
 

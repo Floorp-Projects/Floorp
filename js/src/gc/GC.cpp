@@ -3480,11 +3480,14 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
                                          JS::GCReason reason) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.
-    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
+    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone() ||
+               JS::RuntimeHeapIsBusy());
     return false;
   }
 
-  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
+  if (rt->heapState() != JS::HeapState::Idle) {
+    return false;
+  }
 
   size_t usedBytes = heap.gcBytes();
   size_t thresholdBytes = threshold.gcTriggerBytes();
@@ -7086,7 +7089,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
   switch (incrementalState) {
     case State::NotActive:
       incMajorGcNumber();
-      invocationKind = gckind.value();
+      invocationKind = gckind.valueOr(GC_NORMAL);
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
       sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);

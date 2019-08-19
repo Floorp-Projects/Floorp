@@ -71,7 +71,6 @@ function test() {
   uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
 
   const url = `moz-extension://${uuid}/`;
-  /* globals MatchPatternSet, WebExtensionPolicy */
   let policy = new WebExtensionPolicy({
     id: FAKE_ADDON_ID,
     mozExtensionHostname: uuid,

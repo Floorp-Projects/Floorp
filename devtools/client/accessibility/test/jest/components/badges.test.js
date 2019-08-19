@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global L10N */
-
 const { mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");

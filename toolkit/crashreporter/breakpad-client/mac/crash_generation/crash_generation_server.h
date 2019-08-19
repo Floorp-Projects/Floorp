@@ -51,7 +51,7 @@ enum {
 struct ExceptionInfo {
   int32_t exception_type;
   int32_t exception_code;
-  int64_t exception_subcode;
+  int32_t exception_subcode;
   int32_t child_pid;
 };
 

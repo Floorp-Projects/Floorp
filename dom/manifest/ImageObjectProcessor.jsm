@@ -18,7 +18,7 @@
  *
  */
 /* exported EXPORTED_SYMBOLS*/
-/* globals Components */
+
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.import(

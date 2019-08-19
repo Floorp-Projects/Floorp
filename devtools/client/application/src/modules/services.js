@@ -10,10 +10,23 @@ class Services {
   }
 
   selectTool(toolId) {
+    this._assertInit();
+    return this._toolbox.selectTool(toolId);
+  }
+
+  async fetchManifest() {
+    this._assertInit();
+
+    const manifestFront = await this._toolbox.target.getFront("manifest");
+    const response = await manifestFront.fetchCanonicalManifest();
+
+    return response;
+  }
+
+  _assertInit() {
     if (!this._toolbox) {
       throw new Error("Services singleton has not been initialized");
     }
-    return this._toolbox.selectTool(toolId);
   }
 }
 

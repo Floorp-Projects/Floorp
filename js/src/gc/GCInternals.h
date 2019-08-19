@@ -15,9 +15,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/GC.h"
-#include "gc/RelocationOverlay.h"
-#include "vm/HelperThreads.h"
-#include "vm/Runtime.h"
+#include "vm/JSContext.h"
 
 namespace js {
 namespace gc {

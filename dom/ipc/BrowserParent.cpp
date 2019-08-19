@@ -359,6 +359,22 @@ already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
   return nullptr;
 }
 
+already_AddRefed<nsIWidget> BrowserParent::GetTextInputHandlingWidget() const {
+  if (!mFrameElement) {
+    return nullptr;
+  }
+  PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
+  if (!presShell) {
+    return nullptr;
+  }
+  nsPresContext* presContext = presShell->GetPresContext();
+  if (!presContext) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIWidget> widget = presContext->GetTextInputHandlingWidget();
+  return widget.forget();
+}
+
 already_AddRefed<nsIWidget> BrowserParent::GetWidget() const {
   if (!mFrameElement) {
     return nullptr;
@@ -1985,7 +2001,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEFocus(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWidget> widget = GetWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget) {
     aResolve(IMENotificationRequests());
     return IPC_OK();
@@ -2006,7 +2022,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEFocus(
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMETextChange(
     const ContentCache& aContentCache,
     const IMENotification& aIMENotification) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
@@ -2018,7 +2034,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMETextChange(
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMECompositionUpdate(
     const ContentCache& aContentCache,
     const IMENotification& aIMENotification) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
@@ -2030,7 +2046,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMECompositionUpdate(
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMESelection(
     const ContentCache& aContentCache,
     const IMENotification& aIMENotification) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
@@ -2041,7 +2057,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMESelection(
 
 mozilla::ipc::IPCResult BrowserParent::RecvUpdateContentCache(
     const ContentCache& aContentCache) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
@@ -2052,7 +2068,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvUpdateContentCache(
 
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEMouseButtonEvent(
     const IMENotification& aIMENotification, bool* aConsumedByIME) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     *aConsumedByIME = false;
     return IPC_OK();
@@ -2065,7 +2081,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEMouseButtonEvent(
 mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEPositionChange(
     const ContentCache& aContentCache,
     const IMENotification& aIMENotification) {
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
@@ -2080,7 +2096,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnEventNeedingAckHandled(
   // WidgetSelectionEvent.
   // FYI: Don't check if widget is nullptr here because it's more important to
   //      notify mContentCahce of this than handling something in it.
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
 
   // While calling OnEventNeedingAckHandled(), BrowserParent *might* be
   // destroyed since it may send notifications to IME.
@@ -2709,11 +2725,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
 }
 
 bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  nsCOMPtr<nsIWidget> textInputHandlingWidget = GetTextInputHandlingWidget();
+  if (!textInputHandlingWidget) {
     return true;
   }
-  if (NS_WARN_IF(!mContentCache.HandleQueryContentEvent(aEvent, widget)) ||
+  if (NS_WARN_IF(!mContentCache.HandleQueryContentEvent(
+          aEvent, textInputHandlingWidget)) ||
       NS_WARN_IF(!aEvent.mSucceeded)) {
     return true;
   }
@@ -2721,11 +2738,10 @@ bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
     case eQueryTextRect:
     case eQueryCaretRect:
     case eQueryEditorRect: {
-      nsCOMPtr<nsIWidget> widget = GetWidget();
-      nsCOMPtr<nsIWidget> docWidget = GetDocWidget();
-      if (widget != docWidget) {
-        aEvent.mReply.mRect +=
-            nsLayoutUtils::WidgetToWidgetOffset(widget, docWidget);
+      nsCOMPtr<nsIWidget> browserWidget = GetWidget();
+      if (browserWidget != textInputHandlingWidget) {
+        aEvent.mReply.mRect += nsLayoutUtils::WidgetToWidgetOffset(
+            browserWidget, textInputHandlingWidget);
       }
       aEvent.mReply.mRect = TransformChildToParent(aEvent.mReply.mRect);
       break;
@@ -2871,7 +2887,7 @@ void BrowserParent::PopFocusAll() {
 
 mozilla::ipc::IPCResult BrowserParent::RecvRequestIMEToCommitComposition(
     const bool& aCancel, bool* aIsCommitted, nsString* aCommittedString) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
+  nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget) {
     *aIsCommitted = false;
     return IPC_OK();
