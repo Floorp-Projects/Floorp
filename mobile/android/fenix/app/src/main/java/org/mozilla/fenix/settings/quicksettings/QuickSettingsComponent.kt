@@ -18,7 +18,6 @@ import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.settings.toStatus
 import org.mozilla.fenix.settings.toggle
 import org.mozilla.fenix.utils.Settings
 

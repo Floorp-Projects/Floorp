@@ -40,21 +40,6 @@ internal fun SitePermissions.Status.toString(context: Context): String {
     }
 }
 
-fun SitePermissionsRules.Action.toStatus(): SitePermissions.Status {
-    return when (this) {
-        SitePermissionsRules.Action.BLOCKED -> SitePermissions.Status.BLOCKED
-        SitePermissionsRules.Action.ASK_TO_ALLOW -> SitePermissions.Status.NO_DECISION
-    }
-}
-
-fun SitePermissions.Status.toggle(): SitePermissions.Status {
-    return when (this) {
-        SitePermissions.Status.BLOCKED -> SitePermissions.Status.ALLOWED
-        SitePermissions.Status.NO_DECISION -> SitePermissions.Status.ALLOWED
-        SitePermissions.Status.ALLOWED -> SitePermissions.Status.BLOCKED
-    }
-}
-
 fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
     return when (featurePhone) {
         PhoneFeature.CAMERA -> {
