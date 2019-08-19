@@ -118,7 +118,6 @@ bool js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
     return false;
   }
 
-#if ENABLE_INTL_API
   RootedAtom a(cx);
   uint32_t count = countAvailable();
   for (uint32_t i = 0; i < count; i++) {
@@ -140,7 +139,6 @@ bool js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
       return false;
     }
   }
-#endif
 
   result.setObject(*locales);
   return true;
