@@ -292,7 +292,7 @@ async function test_apply_same_record_with_different_times() {
     true,
     true
   );
-  /* eslint-enable no-unsed-vars */
+  /* eslint-enable no-unused-vars */
 }
 
 async function test_LoginRec_toString(store, recordData) {

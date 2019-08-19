@@ -12,10 +12,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-/* globals AddonManagerPrivate*/
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-/* globals OS*/
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 // These symbols are, unfortunately, accessed via the module global from
 // tests, and therefore cannot be lexical definitions.

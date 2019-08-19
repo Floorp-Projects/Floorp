@@ -456,7 +456,8 @@ async function nextCycle() {
         postToControlServer("status", `update tab: ${testTabID}`);
 
         // update the test page - browse to our test URL
-        ext.tabs.update(testTabID, { url: testURL }, testTabUpdated);
+        // "null" = active tab
+        ext.tabs.update(testTabID || null, { url: testURL }, testTabUpdated);
 
         if (testType == TEST_SCENARIO) {
           scenarioTimer();

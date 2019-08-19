@@ -928,5 +928,4 @@ class SyncTelemetryImpl {
   }
 }
 
-/* global SyncTelemetry */
 var SyncTelemetry = new SyncTelemetryImpl(ENGINES);

@@ -23,8 +23,6 @@ const { debug, warn } = GeckoViewUtils.initLogging(
 
 var EXPORTED_SYMBOLS = ["GeckoViewTelemetryController"];
 
-/* global debug warn */
-
 // Persistent data loading topic - see TelemetryGeckoViewPersistence.cpp.
 const LOAD_COMPLETE_TOPIC = "internal-telemetry-geckoview-load-complete";
 

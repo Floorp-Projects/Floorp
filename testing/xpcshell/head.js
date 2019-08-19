@@ -22,6 +22,7 @@
 /* globals Cc, Ci */
 
 /* defined by this file but is defined as read-only for tests */
+// eslint-disable-next-line no-redeclare
 /* globals runningInParent: true */
 
 /* may be defined in test files */
