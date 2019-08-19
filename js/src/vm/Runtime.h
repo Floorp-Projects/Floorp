@@ -22,7 +22,9 @@
 #include <setjmp.h>
 
 #include "builtin/AtomicsObject.h"
-#include "builtin/intl/SharedIntlData.h"
+#ifdef ENABLE_INTL_API
+#  include "builtin/intl/SharedIntlData.h"
+#endif
 #include "builtin/Promise.h"
 #include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameCollections.h"
@@ -816,10 +818,12 @@ struct JSRuntime {
   // these are shared with the parentRuntime, if any.
   js::WriteOnceData<js::WellKnownSymbols*> wellKnownSymbols;
 
+#ifdef ENABLE_INTL_API
   /* Shared Intl data for this runtime. */
   js::MainThreadData<js::intl::SharedIntlData> sharedIntlData;
 
   void traceSharedIntlData(JSTracer* trc);
+#endif
 
   // Table of bytecode and other data that may be shared across scripts
   // within the runtime. This may be modified by threads using

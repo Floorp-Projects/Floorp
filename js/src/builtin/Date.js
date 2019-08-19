@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if ENABLE_INTL_API
 // This cache, once primed, has these properties:
 //
 //   runtimeDefaultLocale:
@@ -166,3 +167,4 @@ function Date_toLocaleTimeString() {
     // Step 7.
     return intl_FormatDateTime(dateTimeFormat, x, /* formatToParts = */ false);
 }
+#endif  // ENABLE_INTL_API

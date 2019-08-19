@@ -242,7 +242,9 @@ void JSRuntime::destroyRuntime() {
   MOZ_ASSERT(childRuntimeCount == 0);
   MOZ_ASSERT(initialized_);
 
+#ifdef ENABLE_INTL_API
   sharedIntlData.ref().destroyInstance();
+#endif
 
   if (gcInitialized) {
     /*
@@ -368,8 +370,10 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
         sharedImmutableStrings_->sizeOfExcludingThis(mallocSizeOf);
   }
 
+#ifdef ENABLE_INTL_API
   rtSizes->sharedIntlData +=
       sharedIntlData.ref().sizeOfExcludingThis(mallocSizeOf);
+#endif
 
   {
     AutoLockScriptData lock(this);
@@ -564,9 +568,11 @@ const char* JSRuntime::getDefaultLocale() {
   return defaultLocale.ref().get();
 }
 
+#ifdef ENABLE_INTL_API
 void JSRuntime::traceSharedIntlData(JSTracer* trc) {
   sharedIntlData.ref().trace(trc);
 }
+#endif
 
 JSFreeOp::JSFreeOp(JSRuntime* maybeRuntime, bool isDefault)
     : runtime_(maybeRuntime), isDefault(isDefault), isCollecting_(!isDefault) {
