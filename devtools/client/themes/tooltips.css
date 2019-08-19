@@ -222,12 +222,14 @@ strong {
   flex-shrink: 0;
 }
 
-/* In RTL locales, only use RTL on the tooltip content, keep LTR for positioning */
-.tooltip-container:-moz-locale-dir(rtl) {
+/* In RTL locales and context, only use RTL on the tooltip content, keep LTR for positioning */
+.tooltip-container:-moz-locale-dir(rtl),
+.tooltip-container:dir(rtl) {
   direction: ltr;
 }
 
-.tooltip-panel:-moz-locale-dir(rtl) {
+.tooltip-panel:-moz-locale-dir(rtl),
+.tooltip-panel:dir(rtl) {
   direction: rtl;
 }
 
