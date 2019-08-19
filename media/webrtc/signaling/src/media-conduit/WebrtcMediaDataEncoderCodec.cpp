@@ -13,6 +13,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace mozilla {
 
@@ -77,7 +78,17 @@ WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
     : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
-      mFactory(new PEMFactory()) {}
+      mFactory(new PEMFactory()),
+      // Use the same lower and upper bound as h264_video_toolbox_encoder which
+      // is an encoder from webrtc's upstream codebase.
+      // 0.5 is set as a mininum to prevent overcompensating for large temporary
+      // overshoots. We don't want to degrade video quality too badly.
+      // 0.95 is set to prevent oscillations. When a lower bitrate is set on the
+      // encoder than previously set, its output seems to have a brief period of
+      // drastically reduced bitrate, so we want to avoid that. In steady state
+      // conditions, 0.95 seems to give us better overall bitrate over long
+      // periods of time.
+      mBitrateAdjuster(webrtc::Clock::GetRealTimeClock(), 0.5, 0.95) {}
 
 int32_t WebrtcMediaDataEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
@@ -107,6 +118,11 @@ bool WebrtcMediaDataEncoder::SetupConfig(
               ? webrtc::H264PacketizationMode::NonInterleaved
               : webrtc::H264PacketizationMode::SingleNalUnit;
   mMaxFrameRate = aCodecSettings->maxFramerate;
+  // Those bitrates in codec setting are all kbps, so we have to covert them to
+  // bps.
+  mMaxBitrateBps = aCodecSettings->maxBitrate * 1000;
+  mMinBitrateBps = aCodecSettings->minBitrate * 1000;
+  mBitrateAdjuster.SetTargetBitrateBps(aCodecSettings->startBitrate * 1000);
   return true;
 }
 
@@ -118,13 +134,13 @@ bool WebrtcMediaDataEncoder::CreateEncoder(
   if (mEncoder) {
     Release();
   }
-  LOG("Request platform encoder for %s, bitRate=%u kpbs, frameRate=%u",
-      mInfo.mMimeType.get(), aCodecSettings->startBitrate,
+  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u",
+      mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
       aCodecSettings->maxFramerate);
   mEncoder = mFactory->CreateEncoder(CreateEncoderParams(
       mInfo, MediaDataEncoder::Usage::Realtime, mTaskQueue,
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
-      aCodecSettings->startBitrate * 1000 /* kpbs to bps*/,
+      mBitrateAdjuster.GetTargetBitrateBps(),
       GetCodecSpecific(aCodecSettings)));
   return !!mEncoder;
 }
@@ -265,8 +281,10 @@ void WebrtcMediaDataEncoder::ProcessEncode(
               webrtc::CodecSpecificInfo codecSpecific;
               codecSpecific.codecType = webrtc::kVideoCodecH264;
               codecSpecific.codecSpecific.H264.packetization_mode = mMode;
+
               LOG_V("Send encoded image");
               mCallback->OnEncodedImage(image, &codecSpecific, &header);
+              mBitrateAdjuster.Update(image._size);
             }
           },
           [self = RefPtr<WebrtcMediaDataEncoder>(this)](
@@ -276,6 +294,37 @@ void WebrtcMediaDataEncoder::ProcessEncode(
 int32_t WebrtcMediaDataEncoder::SetChannelParameters(uint32_t aPacketLoss,
                                                      int64_t aRtt) {
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int32_t WebrtcMediaDataEncoder::SetRates(uint32_t aNewBitrateKbps,
+                                         uint32_t aFrameRate) {
+  if (!mEncoder) {
+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+
+  if (!aFrameRate) {
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
+
+  if (NS_FAILED(mError)) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  const uint32_t newBitrateBps = aNewBitrateKbps * 1000;
+  if (newBitrateBps < mMinBitrateBps || newBitrateBps > mMaxBitrateBps) {
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
+
+  // We have already been in this bitrate.
+  if (mBitrateAdjuster.GetAdjustedBitrateBps() == newBitrateBps) {
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+  mBitrateAdjuster.SetTargetBitrateBps(newBitrateBps);
+  LOG("Set bitrate %u bps, minBitrate %u bps, maxBitrate %u bps", newBitrateBps,
+      mMinBitrateBps, mMaxBitrateBps);
+  auto rv =
+      media::Await(do_AddRef(mThreadPool), mEncoder->SetBitrate(newBitrateBps));
+  return rv.IsResolve() ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
 
 }  // namespace mozilla

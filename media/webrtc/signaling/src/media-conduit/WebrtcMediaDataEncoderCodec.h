@@ -9,6 +9,7 @@
 #include "MediaInfo.h"
 #include "MediaResult.h"
 #include "PlatformEncoderModule.h"
+#include "common_video/include/bitrate_adjuster.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
 namespace mozilla {
@@ -38,6 +39,8 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRtt) override;
 
+  int32_t SetRates(uint32_t aNewBitrateKbps, uint32_t aFrameRate) override;
+
  private:
   virtual ~WebrtcMediaDataEncoder() = default;
 
@@ -62,7 +65,10 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   MediaResult mError = NS_OK;
   MediaDataEncoder::EncodedData mEncodedFrames;
   webrtc::H264PacketizationMode mMode;
+  webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate;
+  uint32_t mMinBitrateBps;
+  uint32_t mMaxBitrateBps;
 };
 
 }  // namespace mozilla
