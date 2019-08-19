@@ -155,57 +155,16 @@ inline LauncherVoidResult ShellExecuteByExplorer(const _bstr_t& aPath,
 using UniqueAbsolutePidl =
     UniquePtr<RemovePointer<PIDLIST_ABSOLUTE>::Type, CoTaskMemFreeDeleter>;
 
-inline UniqueAbsolutePidl ShellParseDisplayName(const wchar_t* aPath) {
+inline LauncherResult<UniqueAbsolutePidl> ShellParseDisplayName(
+    const wchar_t* aPath) {
   PIDLIST_ABSOLUTE rawAbsPidl = nullptr;
   SFGAOF sfgao;
   HRESULT hr = ::SHParseDisplayName(aPath, nullptr, &rawAbsPidl, 0, &sfgao);
   if (FAILED(hr)) {
-    return nullptr;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   return UniqueAbsolutePidl(rawAbsPidl);
-}
-
-/**
- * Since IShellDispatch2::ShellExecute does not accept a PIDL as one of its
- * parameters, we need to convert a PIDL back to a path. This overload handles
- * that conversion and then proceeds with the ShellExecuteByExplorer call.
- */
-inline LauncherVoidResult ShellExecuteByExplorer(
-    const UniqueAbsolutePidl& aPath, const _variant_t& aArgs,
-    const _variant_t& aVerb, const _variant_t& aWorkingDir,
-    const _variant_t& aShowCmd) {
-  // |aPath| is an absolute path. IShellFolder::GetDisplayNameOf requires a
-  // valid child ID, so the first thing we need to resolve is the IShellFolder
-  // for |aPath|'s parent, as well as the childId that represents |aPath|.
-  // Fortunately SHBindToParent does exactly that!
-  PCUITEMID_CHILD childId = nullptr;
-  RefPtr<IShellFolder> parentFolder;
-  HRESULT hr = ::SHBindToParent(aPath.get(), IID_IShellFolder,
-                                getter_AddRefs(parentFolder), &childId);
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // Now we retrieve the display name of |childId|, telling the shell that we
-  // plan to have the string parsed.
-  STRRET strret;
-  hr = parentFolder->GetDisplayNameOf(childId, SHGDN_FORPARSING, &strret);
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // Since ShellExecuteByExplorer wants a BSTR, we convert |strret|. Calling
-  // StrRetToBSTR is advantageous since it automatically takes care of
-  // freeing any dynamically allocated memory in |strret|.
-  _bstr_t bstrPath;
-  hr = ::StrRetToBSTR(&strret, nullptr, bstrPath.GetAddress());
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // Now we have a bstr_t so we can invoke the overload.
-  return ShellExecuteByExplorer(bstrPath, aArgs, aVerb, aWorkingDir, aShowCmd);
 }
 
 }  // namespace mozilla
