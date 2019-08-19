@@ -177,11 +177,6 @@ class Instance {
                      Code::SeenSet* seenCode, Table::SeenSet* seenTables,
                      size_t* code, size_t* data) const;
 
-  // Wasm disassembly support
-
-  void disassembleExport(JSContext* cx, uint32_t funcIndex, Tier tier,
-                         PrintCallback callback) const;
-
  public:
   // Functions to be called directly from wasm code.
   static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
