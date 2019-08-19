@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <style>
+        .IconElement { direction: ltr; text-align: left; height: 24px; overflow: hidden; width: 24px; display: inline-block; position: relative; }
+        .IconImage::before { content: url("./bug-1562091-icon.svg"); }
+        .IconImage { position: absolute; left: 0px; top: -7224px; }
+    </style>
+</head>
+
+<body>
+    There should be a visible icon after this text:
+    <div class="IconElement"> <div class="IconImage">&nbsp;</div> </div>
+</body>
+</html>
