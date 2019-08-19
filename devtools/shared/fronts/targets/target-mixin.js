@@ -417,6 +417,7 @@ function TargetMixin(parentClass) {
         this.threadFront = new ThreadClient(this._client, this._threadActor);
         this.fronts.set("thread", this.threadFront);
         this.threadFront.actorID = this._threadActor;
+        this.threadFront.targetFront = this;
         this.manage(this.threadFront);
       }
       const result = await this.threadFront.attach(options);
