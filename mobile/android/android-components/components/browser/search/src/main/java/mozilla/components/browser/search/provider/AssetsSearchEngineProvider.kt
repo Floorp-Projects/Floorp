@@ -13,6 +13,7 @@ import kotlinx.coroutines.async
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineParser
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
+import mozilla.components.browser.search.provider.localization.SearchLocalization
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.components.support.ktx.android.org.json.toList
@@ -32,7 +33,7 @@ import org.json.JSONObject
  * Optionally <code>additionalIdentifiers</code> to be loaded can be specified. A search engine
  * identifier corresponds to the search plugin XML file name (e.g. duckduckgo -> duckduckgo.xml).
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class AssetsSearchEngineProvider(
     private val localizationProvider: SearchLocalizationProvider,
     private val filters: List<SearchEngineFilter> = emptyList(),
@@ -44,7 +45,8 @@ class AssetsSearchEngineProvider(
      * Load search engines from this provider.
      */
     override suspend fun loadSearchEngines(context: Context): SearchEngineList {
-        val localizedConfiguration = loadAndFilterConfiguration(context)
+        val localization = localizationProvider.determineRegion()
+        val localizedConfiguration = loadAndFilterConfiguration(context, localization)
         val searchEngineIdentifiers = localizedConfiguration.visibleDefaultEngines + additionalIdentifiers
 
         val searchEngines = loadSearchEnginesFromList(
@@ -120,33 +122,39 @@ class AssetsSearchEngineProvider(
         identifier: String
     ): SearchEngine = parser.load(assets, identifier, "searchplugins/$identifier.xml")
 
-    private fun loadAndFilterConfiguration(context: Context): SearchEngineListConfiguration {
+    private fun loadAndFilterConfiguration(
+        context: Context,
+        localization: SearchLocalization
+    ): SearchEngineListConfiguration {
         val config = context.assets.readJSONObject("search/list.json")
 
-        val configBlocks = pickConfigurationBlocks(config)
-        val jsonSearchEngineIdentifiers = getSearchEngineIdentifiersFromBlock(configBlocks)
+        val configBlocks = pickConfigurationBlocks(localization, config)
+        val jsonSearchEngineIdentifiers = getSearchEngineIdentifiersFromBlock(localization, configBlocks)
 
-        val searchOrder = getSearchOrderFromBlock(configBlocks)
-        val searchDefault = getSearchDefaultFromBlock(configBlocks)
+        val searchOrder = getSearchOrderFromBlock(localization, configBlocks)
+        val searchDefault = getSearchDefaultFromBlock(localization, configBlocks)
 
         return SearchEngineListConfiguration(
-            applyOverridesIfNeeded(config, jsonSearchEngineIdentifiers),
+            applyOverridesIfNeeded(localization, config, jsonSearchEngineIdentifiers),
             searchOrder.toList(),
             searchDefault
         )
     }
 
-    private fun pickConfigurationBlocks(config: JSONObject): Array<JSONObject> {
+    private fun pickConfigurationBlocks(
+        localization: SearchLocalization,
+        config: JSONObject
+    ): Array<JSONObject> {
         val localesConfig = config.getJSONObject("locales")
 
         val localizedConfig = when {
             // First try (Locale): locales/xx_XX/
-            localesConfig.has(localizationProvider.languageTag) ->
-                localesConfig.getJSONObject(localizationProvider.languageTag)
+            localesConfig.has(localization.languageTag) ->
+                localesConfig.getJSONObject(localization.languageTag)
 
             // Second try (Language): locales/xx/
-            localesConfig.has(localizationProvider.language) ->
-                localesConfig.getJSONObject(localizationProvider.language)
+            localesConfig.has(localization.language) ->
+                localesConfig.getJSONObject(localization.language)
 
             // Give up, and fallback to defaults
             else -> null
@@ -157,31 +165,42 @@ class AssetsSearchEngineProvider(
         } ?: arrayOf(config)
     }
 
-    private fun getSearchEngineIdentifiersFromBlock(configBlocks: Array<JSONObject>): JSONArray {
+    private fun getSearchEngineIdentifiersFromBlock(
+        localization: SearchLocalization,
+        configBlocks: Array<JSONObject>
+    ): JSONArray {
         // Now test if there's an override for the region (if it's set)
-        return getArrayFromBlock("visibleDefaultEngines", configBlocks)
+        return getArrayFromBlock(localization, "visibleDefaultEngines", configBlocks)
             ?: throw IllegalStateException("No visibleDefaultEngines for " +
-                    "${localizationProvider.languageTag} in " +
-                    (localizationProvider.region ?: "default"))
+                    "${localization.languageTag} in " +
+                    (localization.region ?: "default"))
     }
 
-    private fun getSearchDefaultFromBlock(configBlocks: Array<JSONObject>): String? {
-        return getStringFromBlock("searchDefault", configBlocks)
+    private fun getSearchDefaultFromBlock(
+        localization: SearchLocalization,
+        configBlocks: Array<JSONObject>
+    ): String? = getStringFromBlock(localization, "searchDefault", configBlocks)
+
+    private fun getSearchOrderFromBlock(
+        localization: SearchLocalization,
+        configBlocks: Array<JSONObject>
+    ): JSONArray? = getArrayFromBlock(localization, "searchOrder", configBlocks)
+
+    private fun getStringFromBlock(
+        localization: SearchLocalization,
+        key: String,
+        blocks: Array<JSONObject>
+    ): String? = getValueFromBlock(localization, blocks) {
+        it.tryGetString(key)
     }
 
-    private fun getSearchOrderFromBlock(configBlocks: Array<JSONObject>): JSONArray? {
-        return getArrayFromBlock("searchOrder", configBlocks)
+    private fun getArrayFromBlock(
+        localization: SearchLocalization,
+        key: String,
+        blocks: Array<JSONObject>
+    ): JSONArray? = getValueFromBlock(localization, blocks) {
+        it.optJSONArray(key)
     }
-
-    private fun getStringFromBlock(key: String, blocks: Array<JSONObject>): String? =
-            getValueFromBlock(blocks) {
-                it.tryGetString(key)
-            }
-
-    private fun getArrayFromBlock(key: String, blocks: Array<JSONObject>): JSONArray? =
-            getValueFromBlock(blocks) {
-                it.optJSONArray(key)
-            }
 
     /**
      * This looks for a JSONObject in the config blocks it is passed that is able to be transformed
@@ -192,8 +211,12 @@ class AssetsSearchEngineProvider(
      * given locale/region is not grouped into one object, but spread across the json file,
      * according to these rules.
      */
-    private fun <T : Any> getValueFromBlock(blocks: Array<JSONObject>, transform: (JSONObject) -> T?): T? {
-        val regions = arrayOf(localizationProvider.region, "default")
+    private fun <T : Any> getValueFromBlock(
+        localization: SearchLocalization,
+        blocks: Array<JSONObject>,
+        transform: (JSONObject) -> T?
+    ): T? {
+        val regions = arrayOf(localization.region, "default")
             .mapNotNull { it }
 
         return blocks
@@ -204,10 +227,14 @@ class AssetsSearchEngineProvider(
             .firstOrNull()
     }
 
-    private fun applyOverridesIfNeeded(config: JSONObject, jsonSearchEngineIdentifiers: JSONArray): List<String> {
+    private fun applyOverridesIfNeeded(
+        localization: SearchLocalization,
+        config: JSONObject,
+        jsonSearchEngineIdentifiers: JSONArray
+    ): List<String> {
         val overrides = config.getJSONObject("regionOverrides")
         val searchEngineIdentifiers = mutableListOf<String>()
-        val region = localizationProvider.region
+        val region = localization.region
         val regionOverrides = if (region != null && overrides.has(region)) {
             overrides.getJSONObject(region)
         } else {

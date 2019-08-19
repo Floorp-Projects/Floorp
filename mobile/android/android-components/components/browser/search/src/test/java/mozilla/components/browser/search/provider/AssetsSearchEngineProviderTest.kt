@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
+import mozilla.components.browser.search.provider.localization.SearchLocalization
 import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -20,10 +21,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `Load search engines for en-US from assets`() = runBlocking {
-        val localizationProvider = object : SearchLocalizationProvider() {
-            override val country: String = "US"
-            override val language = "en"
-            override val region: String? = null
+        val localizationProvider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("en", "US", "US")
         }
 
         val searchEngineProvider = AssetsSearchEngineProvider(localizationProvider)
@@ -36,10 +35,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `Load search engines for en-US with with filter`() = runBlocking {
-        val localizationProvider = object : SearchLocalizationProvider() {
-            override val country: String = "US"
-            override val language = "en"
-            override val region: String? = null
+        val localizationProvider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("en", "US", "US")
         }
 
         val filter = object : SearchEngineFilter {
@@ -62,10 +59,8 @@ class AssetsSearchEngineProviderTest {
     fun `Load search engines for de-DE with global US region override`() = runBlocking {
         // Without region
         run {
-            val localizationProviderWithoutRegion = object : SearchLocalizationProvider() {
-                override val country: String = "DE"
-                override val language = "de"
-                override val region: String? = null
+            val localizationProviderWithoutRegion = object : SearchLocalizationProvider {
+                override suspend fun determineRegion() = SearchLocalization("de", "DE")
             }
 
             val searchEngineProvider = AssetsSearchEngineProvider(localizationProviderWithoutRegion)
@@ -78,10 +73,8 @@ class AssetsSearchEngineProviderTest {
         }
         // With region
         run {
-            val localizationProviderWithRegion = object : SearchLocalizationProvider() {
-                override val country: String = "DE"
-                override val language = "de"
-                override val region: String? = "US"
+            val localizationProviderWithRegion = object : SearchLocalizationProvider {
+                override suspend fun determineRegion() = SearchLocalization("de", "DE", "US")
             }
 
             val searchEngineProvider = AssetsSearchEngineProvider(localizationProviderWithRegion)
@@ -98,31 +91,29 @@ class AssetsSearchEngineProviderTest {
     fun `Load search engines for en-US with local RU region override`() = runBlocking {
         // Without region
         run {
-            val localizationProviderWithoutRegion = object : SearchLocalizationProvider() {
-                override val country: String = "US"
-                override val language = "en"
-                override val region: String? = null
+            val localizationProviderWithoutRegion = object : SearchLocalizationProvider {
+                override suspend fun determineRegion() = SearchLocalization("en", "US")
             }
 
             val searchEngineProvider = AssetsSearchEngineProvider(localizationProviderWithoutRegion)
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
+            println("searchEngines = $searchEngines")
             assertEquals(6, searchEngines.size)
             assertContainsNotSearchEngine("yandex-en", searchEngines)
         }
         // With region
         run {
-            val localizationProviderWithRegion = object : SearchLocalizationProvider() {
-                override val country: String = "US"
-                override val language = "en"
-                override val region: String? = "RU"
+            val localizationProviderWithRegion = object : SearchLocalizationProvider {
+                override suspend fun determineRegion() = SearchLocalization("en", "US", "RU")
             }
 
             val searchEngineProvider = AssetsSearchEngineProvider(localizationProviderWithRegion)
             val engines = searchEngineProvider.loadSearchEngines(testContext)
             val searchEngines = engines.list
 
+            println("searchEngines = $searchEngines")
             assertEquals(7, searchEngines.size)
             assertContainsSearchEngine("yandex-en", searchEngines)
         }
@@ -130,10 +121,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `Load search engines for zh-CN_CN locale with searchDefault override`() = runBlocking {
-        val provider = object : SearchLocalizationProvider() {
-            override val country: String = "CN"
-            override val language = "zh"
-            override val region: String? = "CN"
+        val provider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("zh", "CN", "CN")
         }
 
         val searchEngineProvider = AssetsSearchEngineProvider(provider)
@@ -154,10 +143,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `Load search engines for ru_RU locale with engines not in searchOrder`() = runBlocking {
-        val provider = object : SearchLocalizationProvider() {
-            override val country: String = ""
-            override val language = "ru"
-            override val region: String? = "RU"
+        val provider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("ru", "RU", "RU")
         }
 
         val searchEngineProvider = AssetsSearchEngineProvider(provider)
@@ -178,10 +165,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `Load search engines for trs locale with non-google initial engines and no default`() = runBlocking {
-        val provider = object : SearchLocalizationProvider() {
-            override val country: String = ""
-            override val language = "trs"
-            override val region: String? = null
+        val provider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("trs", "", "")
         }
 
         val searchEngineProvider = AssetsSearchEngineProvider(provider)
@@ -202,10 +187,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `load search engines for locale not in configuration`() = runBlocking {
-        val provider = object : SearchLocalizationProvider() {
-            override val country: String = "XX"
-            override val language = "xx"
-            override val region: String? = null
+        val provider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("xx", "XX", "XX")
         }
 
         val searchEngineProvider = AssetsSearchEngineProvider(provider)
@@ -217,10 +200,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `provider loads additional identifiers`() {
-        val usProvider = object : SearchLocalizationProvider() {
-            override val country: String = "US"
-            override val language = "en"
-            override val region: String? = null
+        val usProvider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("en", "US", "US")
         }
 
         // Loading "en-US" without additional identifiers
@@ -248,10 +229,8 @@ class AssetsSearchEngineProviderTest {
 
     @Test
     fun `provider loads additional identifiers if search order specified`() {
-        val usProvider = object : SearchLocalizationProvider() {
-            override val country: String = "US"
-            override val language = "en"
-            override val region: String? = null
+        val usProvider = object : SearchLocalizationProvider {
+            override suspend fun determineRegion() = SearchLocalization("en", "US", "US")
         }
 
         // Loading "en-US" without additional identifiers. This will
