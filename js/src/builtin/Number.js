@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if ENABLE_INTL_API
 var numberFormatCache = new Record();
-
 
 /**
  * Format this Number object into a string, using the locale and formatting options
@@ -37,6 +37,7 @@ function Number_toLocaleString() {
     // Step 5.
     return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false);
 }
+#endif  // ENABLE_INTL_API
 
 // ES6 draft ES6 20.1.2.4
 function Number_isFinite(num) {

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if ENABLE_INTL_API
 /**
  * Format this BigInt object into a string, using the locale and formatting
  * options provided.
@@ -32,3 +33,4 @@ function BigInt_toLocaleString() {
     // Step 3.
     return intl_FormatNumber(numberFormat, x, /* formatToParts = */ false);
 }
+#endif  // ENABLE_INTL_API

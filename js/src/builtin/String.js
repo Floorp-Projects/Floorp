@@ -561,6 +561,7 @@ function StringIteratorNext() {
     return result;
 }
 
+#if ENABLE_INTL_API
 var collatorCache = new Record();
 
 /**
@@ -678,6 +679,7 @@ function String_toLocaleUpperCase() {
     // Steps 7-16.
     return intl_toLocaleUpperCase(string, requestedLocale);
 }
+#endif  // ENABLE_INTL_API
 
 // ES2018 draft rev 8fadde42cf6a9879b4ab0cb6142b31c4ee501667
 // 21.1.2.4 String.raw ( template, ...substitutions )
