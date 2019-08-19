@@ -14,7 +14,15 @@ interface nsIInputStream;
 %}
 
 /**
- * This interface is a unicode encoder for use by scripts
+ * In new code, please use the WebIDL TextDecoder and TextEncoder
+ * instead. They represent bytes as Uint8Array (or as view to such
+ * array), which is the current best practice for representing bytes
+ * in JavaScript.
+ *
+ * This interface converts between UTF-16 in JavaScript strings
+ * and bytes transported as the unsigned value of each byte
+ * transported in a code unit of the same numeric value in
+ * a JavaScript string.
  *
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
