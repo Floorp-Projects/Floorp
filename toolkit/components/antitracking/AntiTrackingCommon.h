@@ -22,6 +22,8 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 
+class OriginAttributes;
+
 class AntiTrackingCommon final {
  public:
   // Normally we would include PContentParent.h here and use the
@@ -140,6 +142,10 @@ class AntiTrackingCommon final {
   // right after setting up the document principal.
   static void ComputeContentBlockingAllowListPrincipal(
       nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal);
+
+  static void RecomputeContentBlockingAllowListPrincipal(
+      nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs,
+      nsIPrincipal** aPrincipal);
 
   enum class BlockingDecision {
     eBlock,

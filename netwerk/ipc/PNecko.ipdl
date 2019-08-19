@@ -116,6 +116,7 @@ parent:
   async PChannelDiverter(ChannelDiverterArgs channel);
 
   async PClassifierDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
+                                nsIPrincipal contentBlockingAllowListPrincipal,
                                 nsresult aTopWindowURIResult,
                                 LoadInfoArgs? loadInfo);
 
