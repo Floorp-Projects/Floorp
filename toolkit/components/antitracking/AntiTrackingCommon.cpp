@@ -310,24 +310,20 @@ ContentBlockingAllowListCache& GetContentBlockingAllowListCache() {
   return cache;
 }
 
-bool CheckContentBlockingAllowList(nsIURI* aTopWinURI,
+bool CheckContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
                                    bool aIsPrivateBrowsing) {
   bool isAllowed = false;
   nsresult rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
-      aTopWinURI, aIsPrivateBrowsing, isAllowed);
+      aTopWinPrincipal, aIsPrivateBrowsing, isAllowed);
   if (NS_SUCCEEDED(rv) && isAllowed) {
-    LOG_SPEC(
-        ("The top-level window (%s) is on the content blocking allow list, "
-         "bail out early",
-         _spec),
-        aTopWinURI);
+    LOG(
+        ("The top-level window is on the content blocking allow list, "
+         "bail out early"));
     return true;
   }
   if (NS_FAILED(rv)) {
-    LOG_SPEC(
-        ("Checking the content blocking allow list for %s failed with %" PRIx32,
-         _spec, static_cast<uint32_t>(rv)),
-        aTopWinURI);
+    LOG(("Checking the content blocking allow list for failed with %" PRIx32,
+         static_cast<uint32_t>(rv)));
   }
   return false;
 }
@@ -343,14 +339,12 @@ bool CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow) {
   }
 
   nsPIDOMWindowOuter* top = aWindow->GetInProcessScriptableTop();
-  if (top) {
-    nsIURI* topWinURI = top->GetDocumentURI();
-    Document* doc = top->GetExtantDoc();
-    bool isPrivateBrowsing =
-        doc ? nsContentUtils::IsInPrivateBrowsing(doc) : false;
+  Document* doc = top ? top->GetExtantDoc() : nullptr;
+  if (doc) {
+    bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
 
-    const bool result =
-        CheckContentBlockingAllowList(topWinURI, isPrivateBrowsing);
+    const bool result = CheckContentBlockingAllowList(
+        doc->GetContentBlockingAllowListPrincipal(), isPrivateBrowsing);
 
     entry.Set(ContentBlockingAllowListEntry(aWindow, result));
 
@@ -374,28 +368,12 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
     return entry.Data().mResult;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsContentPolicyType contentPolicyType =
-      loadInfo->GetExternalContentPolicyType();
-
-  nsCOMPtr<nsIURI> uri;
-
-  // This is the top-level request. Let's use the channel URI.
-  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
-    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
-      LOG(
-          ("Could not check the content blocking allow list because the "
-           "channel URI is not accessible"));
-      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
-      return false;
-    }
-  } else {
-    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
-    MOZ_ASSERT(chan);
-
-    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv) || !uri) {
+  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIHttpChannelInternal> httpChan = do_QueryInterface(aChannel);
+  if (httpChan) {
+    nsresult rv = httpChan->GetContentBlockingAllowListPrincipal(
+        getter_AddRefs(principal));
+    if (NS_FAILED(rv) || !principal) {
       LOG(
           ("Could not check the content blocking allow list because the top "
            "window wasn't accessible"));
@@ -404,10 +382,8 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
     }
   }
 
-  MOZ_ASSERT(uri);
-
   const bool result =
-      CheckContentBlockingAllowList(uri, NS_UsePrivateBrowsing(aChannel));
+      CheckContentBlockingAllowList(principal, NS_UsePrivateBrowsing(aChannel));
   entry.Set(ContentBlockingAllowListEntry(aChannel, result));
   return result;
 }
@@ -1841,25 +1817,21 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
 }
 
 nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
-    nsIURI* aTopWinURI, bool aIsPrivateBrowsing, bool& aIsAllowListed) {
+    nsIPrincipal* aTopWinPrincipal, bool aIsPrivateBrowsing,
+    bool& aIsAllowListed) {
   aIsAllowListed = false;
+
+  if (!aTopWinPrincipal) {
+    // Nothing to do!
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << aTopWinPrincipal->GetURI(getter_AddRefs(uri));
 
   LOG_SPEC(("Deciding whether the user has overridden content blocking for %s",
             _spec),
-           aTopWinURI);
-
-  // Take the host/port portion so we can allowlist by site. Also ignore the
-  // scheme, since users who put sites on the allowlist probably don't expect
-  // allowlisting to depend on scheme.
-  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
-  nsAutoCString temp;
-  nsresult rv = aTopWinURI ? aTopWinURI->GetHostPort(temp) : NS_ERROR_FAILURE;
-  // GetHostPort returns an empty string (with a success error code) for file://
-  // URIs.
-  if (NS_FAILED(rv) || temp.IsEmpty()) {
-    return rv;  // normal for some loads, no need to print a warning
-  }
-  escaped.Append(temp);
+           uri);
 
   nsPermissionManager* permManager = nsPermissionManager::GetInstance();
   NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
@@ -1870,21 +1842,19 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
       {NS_LITERAL_CSTRING("trackingprotection"), false},
       {NS_LITERAL_CSTRING("trackingprotection-pb"), true}};
 
-  auto topWinURI = PromiseFlatCString(escaped);
   for (size_t i = 0; i < ArrayLength(types); ++i) {
     if (aIsPrivateBrowsing != types[i].second()) {
       continue;
     }
 
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permManager->TestPermissionOriginNoSuffix(topWinURI, types[i].first(),
-                                                   &permissions);
+    nsresult rv = permManager->TestPermissionFromPrincipal(
+        aTopWinPrincipal, types[i].first(), &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (permissions == nsIPermissionManager::ALLOW_ACTION) {
       aIsAllowListed = true;
-      LOG(("Found user override type %s for %s", types[i].first().get(),
-           topWinURI.get()));
+      LOG(("Found user override type %s", types[i].first().get()));
       // Stop checking the next permisson type if we decided to override.
       break;
     }
