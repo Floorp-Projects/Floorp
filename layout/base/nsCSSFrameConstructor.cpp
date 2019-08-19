@@ -6313,9 +6313,7 @@ nsIFrame* nsCSSFrameConstructor::GetInsertionPrevSibling(
   // XBL insertion point is involved, we'll need to use _that_ to find
   // the preceding frame.
   FlattenedChildIterator iter(aInsertion->mContainer);
-  bool xblCase = iter.XBLInvolved() || aInsertion->mParentFrame->GetContent() !=
-                                           aInsertion->mContainer;
-  if (xblCase || !aChild->IsRootOfAnonymousSubtree()) {
+  if (iter.XBLInvolved() || !aChild->IsRootOfAnonymousSubtree()) {
     // The check for IsRootOfAnonymousSubtree() is because editor is
     // severely broken and calls us directly for native anonymous
     // nodes that it creates.

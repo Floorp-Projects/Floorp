@@ -11,14 +11,21 @@
 #ifndef gc_ZoneAllocator_h
 #define gc_ZoneAllocator_h
 
+#include "gc/Cell.h"
 #include "gc/Scheduling.h"
-#include "vm/Runtime.h"  // For JSRuntime::gc.
+#include "vm/MallocProvider.h"
 
 namespace JS {
 class Zone;
 }  // namespace JS
 
 namespace js {
+
+class ZoneAllocator;
+
+#ifdef DEBUG
+bool CurrentThreadIsGCSweeping();
+#endif
 
 namespace gc {
 void MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
@@ -146,10 +153,9 @@ class ZoneAllocator : public JS::shadow::Zone,
   void maybeTriggerZoneGC(const js::gc::HeapSize& heap,
                           const js::gc::ZoneThreshold& threshold,
                           JS::GCReason reason) {
-    JSRuntime* rt = runtimeFromAnyThread();
-    if (heap.gcBytes() >= threshold.gcTriggerBytes() &&
-        rt->heapState() == JS::HeapState::Idle) {
-      gc::MaybeMallocTriggerZoneGC(rt, this, heap, threshold, reason);
+    if (heap.gcBytes() >= threshold.gcTriggerBytes()) {
+      gc::MaybeMallocTriggerZoneGC(runtimeFromAnyThread(), this, heap,
+                                   threshold, reason);
     }
   }
 
@@ -317,39 +323,6 @@ inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use,
   if (cell->isTenured()) {
     RemoveCellMemory(&cell->asTenured(), nbytes, use, wasSwept);
   }
-}
-
-// Initialize an object's reserved slot with a private value pointing to
-// malloc-allocated memory and associate the memory with the object.
-//
-// This call should be matched with a call to JSFreeOp::free_/delete_ in the
-// object's finalizer to free the memory and update the memory accounting.
-
-inline void InitReservedSlot(NativeObject* obj, uint32_t slot, void* ptr,
-                             size_t nbytes, MemoryUse use) {
-  AddCellMemory(obj, nbytes, use);
-  obj->initReservedSlot(slot, PrivateValue(ptr));
-}
-template <typename T>
-inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
-                             MemoryUse use) {
-  InitReservedSlot(obj, slot, ptr, sizeof(T), use);
-}
-
-// Initialize an object's private slot with a pointer to malloc-allocated memory
-// and associate the memory with the object.
-//
-// This call should be matched with a call to JSFreeOp::free_/delete_ in the
-// object's finalizer to free the memory and update the memory accounting.
-
-inline void InitObjectPrivate(NativeObject* obj, void* ptr, size_t nbytes,
-                              MemoryUse use) {
-  AddCellMemory(obj, nbytes, use);
-  obj->initPrivate(ptr);
-}
-template <typename T>
-inline void InitObjectPrivate(NativeObject* obj, T* ptr, MemoryUse use) {
-  InitObjectPrivate(obj, ptr, sizeof(T), use);
 }
 
 }  // namespace js

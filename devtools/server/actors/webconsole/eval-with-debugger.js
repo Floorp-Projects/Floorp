@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global XPCNativeWrapper */
-
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(

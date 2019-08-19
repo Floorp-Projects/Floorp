@@ -353,7 +353,6 @@ stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
 }));
 
 stubPackets.set(`new Date(0)`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "new Date(0)",
   "result": {
     "type": "object",
@@ -371,11 +370,11 @@ stubPackets.set(`new Date(0)`, {
   "exception": null,
   "frame": null,
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`asdf()`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "asdf()",
   "result": {
     "type": "undefined"
@@ -417,11 +416,11 @@ stubPackets.set(`asdf()`, {
     "column": 1
   },
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`1 + @`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "1 + @",
   "result": {
     "type": "undefined"
@@ -455,11 +454,11 @@ stubPackets.set(`1 + @`, {
     "column": 4
   },
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`inspect({a: 1})`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "inspect({a: 1})",
   "result": {
     "type": "undefined"
@@ -495,11 +494,11 @@ stubPackets.set(`inspect({a: 1})`, {
       }
     }
   },
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`cd(document)`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "cd(document)",
   "result": {
     "type": "undefined"
@@ -511,11 +510,11 @@ stubPackets.set(`cd(document)`, {
     "type": "error",
     "message": "cdFunctionInvalidArgument"
   },
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`undefined`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "undefined",
   "result": {
     "type": "undefined"
@@ -524,11 +523,11 @@ stubPackets.set(`undefined`, {
   "exception": null,
   "frame": null,
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`longString message Error`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "throw new Error(\"Long error \".repeat(10000))",
   "result": {
     "type": "undefined"
@@ -579,11 +578,11 @@ stubPackets.set(`longString message Error`, {
     "column": 7
   },
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`eval throw ""`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "throw \"\"",
   "result": {
     "type": "undefined"
@@ -607,11 +606,11 @@ stubPackets.set(`eval throw ""`, {
     "column": 1
   },
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set(`eval throw "tomato"`, {
-  "from": "server1.conn0.child1/consoleActor2",
   "input": "throw \"tomato\"",
   "result": {
     "type": "undefined"
@@ -635,7 +634,8 @@ stubPackets.set(`eval throw "tomato"`, {
     "column": 1
   },
   "helperResult": null,
-  "notes": null
+  "notes": null,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 module.exports = {

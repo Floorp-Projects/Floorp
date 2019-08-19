@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 // Various tests in this directory may define gTestBrowser, to use as the
 // default browser under test in some of the functions below.
-/* global gTestBrowser */
+/* global gTestBrowser:true */
 
 /**
  * Waits a specified number of miliseconds.

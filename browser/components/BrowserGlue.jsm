@@ -557,9 +557,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ReaderParent: "resource:///modules/ReaderParent.jsm",
 });
 
-/* global ContentPrefServiceParent:false, ContentSearch:false,
-          UpdateListener:false, webrtcUI:false */
-
 /**
  * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
  * XXX Bug 1325373 is for making eslint detect these automatically.

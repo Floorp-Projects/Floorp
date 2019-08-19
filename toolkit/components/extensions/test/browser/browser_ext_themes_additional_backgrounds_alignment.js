@@ -1,7 +1,5 @@
 "use strict";
 
-/* globals InspectorUtils */
-
 // Case 1 - When there is a theme_frame image and additional_backgrounds_alignment is not specified.
 // So background-position should default to "right top"
 add_task(async function test_default_additional_backgrounds_alignment() {

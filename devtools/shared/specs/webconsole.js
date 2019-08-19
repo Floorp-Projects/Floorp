@@ -46,7 +46,6 @@ const webconsoleSpecPrototype = {
   events: {
     evaluationResult: {
       resultID: Option(0, "string"),
-      type: "evaluationResult",
       awaitResult: Option(0, "nullable:boolean"),
       errorMessageName: Option(0, "nullable:string"),
       exception: Option(0, "nullable:json"),
