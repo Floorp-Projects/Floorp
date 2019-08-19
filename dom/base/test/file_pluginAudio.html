@@ -12,8 +12,6 @@ function pluginMuted() {
   return plugin.audioMuted();
 }
 function toggleMuteState(muted) {
-  var Ci = SpecialPowers.Ci;
-  var utils = SpecialPowers.getDOMWindowUtils(window.top);
-  utils.audioMuted = muted;
+  return SpecialPowers.toggleMuteState(muted, window.top);
 }
 </script>
