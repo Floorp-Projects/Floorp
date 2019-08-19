@@ -64,9 +64,10 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     private val onDestinationChangedListener =
         NavController.OnDestinationChangedListener { _, destination, args ->
             if (destination.id != R.id.bookmarkFragment ||
-                args != null && BookmarkFragmentArgs.fromBundle(args).currentRoot != currentRoot?.guid
-            )
-                bookmarkInteractor.deselectAll()
+                args != null && BookmarkFragmentArgs.fromBundle(args).currentRoot != currentRoot?.guid) {
+
+                bookmarkInteractor.onAllBookmarksDeselected()
+            }
         }
     lateinit var initialJob: Job
     private var pendingBookmarkDeletionJob: (suspend () -> Unit)? = null
@@ -84,12 +85,15 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
             BookmarkStore(BookmarkState(null))
         }
         bookmarkInteractor = BookmarkFragmentInteractor(
-            context!!,
-            findNavController(),
-            bookmarkStore,
-            sharedViewModel,
-            FenixSnackbarPresenter(view),
-            ::deleteMulti
+            bookmarkStore = bookmarkStore,
+            viewModel = sharedViewModel,
+            bookmarksController = DefaultBookmarkController(
+                context = context!!,
+                navController = findNavController(),
+                snackbarPresenter = FenixSnackbarPresenter(view),
+                deleteBookmarkNodes = ::deleteMulti
+            ),
+            metrics = metrics!!
         )
 
         bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor)
@@ -137,7 +141,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
             if (!isActive) return@launch
             launch(Main) {
-                bookmarkInteractor.change(currentRoot!!)
+                bookmarkInteractor.onBookmarksChanged(currentRoot!!)
                 sharedViewModel.selectedFolder = currentRoot
             }
         }
@@ -146,8 +150,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     private fun checkIfSignedIn() {
         context?.components?.backgroundServices?.accountManager?.let {
             it.register(this, owner = this)
-            it.authenticatedAccount()?.let { bookmarkInteractor.signedIn() }
-                ?: bookmarkInteractor.signedOut()
+            it.authenticatedAccount()?.let { bookmarkInteractor.onSignedIn() }
+                ?: bookmarkInteractor.onSignedOut()
         }
     }
 
@@ -226,14 +230,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     override fun onBackPressed(): Boolean = bookmarkView.onBackPressed()
 
     override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-        bookmarkInteractor.signedIn()
+        bookmarkInteractor.onSignedIn()
         lifecycleScope.launch {
             refreshBookmarks()
         }
     }
 
     override fun onLoggedOut() {
-        bookmarkInteractor.signedOut()
+        bookmarkInteractor.onSignedOut()
     }
 
     private suspend fun refreshBookmarks() {
@@ -247,7 +251,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
                 pendingBookmarksToDelete.forEach {
                     rootNode -= it.guid
                 }
-                bookmarkInteractor.change(rootNode)
+                bookmarkInteractor.onBookmarksChanged(rootNode)
             }
     }
 
@@ -269,7 +273,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
         pendingBookmarksToDelete.forEach {
             bookmarkTree -= it.guid
         }
-        bookmarkInteractor.change(bookmarkTree!!)
+        bookmarkInteractor.onBookmarksChanged(bookmarkTree!!)
 
         val deleteOperation: (suspend () -> Unit) = {
             deleteSelectedBookmarks(selected)
@@ -293,7 +297,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
                     bookmarkNode.url?.urlToTrimmedHost(context!!) ?: bookmarkNode.title
                 )
             }
-            else -> throw IllegalStateException("Illegal event type in deleteMulti")
+            else -> throw IllegalStateException("Illegal event type in onDeleteSome")
         }
 
         lifecycleScope.allowUndo(

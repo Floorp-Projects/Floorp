@@ -96,8 +96,8 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
     private fun checkIfSignedIn() {
         val accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(this, owner = this)
-        accountManager.authenticatedAccount()?.let { bookmarkInteractor.signedIn() }
-            ?: bookmarkInteractor.signedOut()
+        accountManager.authenticatedAccount()?.let { bookmarkInteractor.onSignedIn() }
+            ?: bookmarkInteractor.onSignedOut()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -125,10 +125,10 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
         }
     }
     override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
-        bookmarkInteractor.signedIn()
+        bookmarkInteractor.onSignedIn()
     }
 
     override fun onLoggedOut() {
-        bookmarkInteractor.signedOut()
+        bookmarkInteractor.onSignedOut()
     }
 }

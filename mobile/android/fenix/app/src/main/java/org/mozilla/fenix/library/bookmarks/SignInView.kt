@@ -12,9 +12,9 @@ import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
 
 interface SignInInteractor {
-    fun clickedSignIn()
-    fun signedIn()
-    fun signedOut()
+    fun onSignInPressed()
+    fun onSignedIn()
+    fun onSignedOut()
 }
 
 class SignInView(
@@ -31,7 +31,7 @@ class SignInView(
 
     init {
         view.setOnClickListener {
-            interactor.clickedSignIn()
+            interactor.onSignInPressed()
         }
     }
 

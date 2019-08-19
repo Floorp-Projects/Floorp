@@ -4,142 +4,79 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import android.content.Context
-import androidx.navigation.NavController
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingMode
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.asActivity
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.copyUrl
-import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.lib.Do
 
 /**
  * Interactor for the Bookmarks screen.
  * Provides implementations for the BookmarkViewInteractor.
  *
- * @property context The current Android Context
- * @property navController The Android Navigation NavController
- * @property bookmarkStore The BookmarkStore
- * @property sharedViewModel The shared ViewModel used between the Bookmarks screens
- * @property snackbarPresenter A presenter for the FenixSnackBar
- * @property deleteBookmarkNodes A lambda function for deleting bookmark nodes with undo
+ * @property bookmarkStore bookmarks state
+ * @property viewModel view state
+ * @property bookmarksController view controller
+ * @property metrics telemetry controller
  */
 @SuppressWarnings("TooManyFunctions")
 class BookmarkFragmentInteractor(
-    private val context: Context,
-    private val navController: NavController,
     private val bookmarkStore: BookmarkStore,
-    private val sharedViewModel: BookmarksSharedViewModel,
-    private val snackbarPresenter: FenixSnackbarPresenter,
-    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit
+    private val viewModel: BookmarksSharedViewModel,
+    private val bookmarksController: BookmarkController,
+    private val metrics: MetricController
 ) : BookmarkViewInteractor, SignInInteractor {
 
-    val activity: HomeActivity?
-        get() = context.asActivity() as? HomeActivity
-    val metrics: MetricController
-        get() = context.components.analytics.metrics
-
-    override fun change(node: BookmarkNode) {
+    override fun onBookmarksChanged(node: BookmarkNode) {
         bookmarkStore.dispatch(BookmarkAction.Change(node))
     }
 
-    override fun open(item: BookmarkNode) {
-        when (item.type) {
-            BookmarkNodeType.ITEM -> openItem(item)
-            BookmarkNodeType.FOLDER -> {
-                navController.nav(
-                    R.id.bookmarkFragment,
-                    BookmarkFragmentDirections.actionBookmarkFragmentSelf(item.guid)
-                )
-            }
-            BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot open separators")
-        }
+    override fun onSelectionModeSwitch(mode: BookmarkState.Mode) {
+        bookmarksController.handleSelectionModeSwitch()
     }
 
-    override fun switchMode(mode: BookmarkState.Mode) {
-        activity?.invalidateOptionsMenu()
+    override fun onEditPressed(node: BookmarkNode) {
+        bookmarksController.handleBookmarkEdit(node)
     }
 
-    override fun edit(node: BookmarkNode) {
-        navController.nav(
-            R.id.bookmarkFragment,
-            BookmarkFragmentDirections
-                .actionBookmarkFragmentToBookmarkEditFragment(node.guid)
-        )
-    }
-
-    override fun select(item: BookmarkNode) {
-        if (item.inRoots()) {
-            snackbarPresenter.present(context.getString(R.string.bookmark_cannot_edit_root))
-            return
-        }
-        bookmarkStore.dispatch(BookmarkAction.Select(item))
-    }
-
-    override fun deselect(item: BookmarkNode) {
-        bookmarkStore.dispatch(BookmarkAction.Deselect(item))
-    }
-
-    override fun deselectAll() {
+    override fun onAllBookmarksDeselected() {
         bookmarkStore.dispatch(BookmarkAction.DeselectAll)
     }
 
-    override fun copy(item: BookmarkNode) {
+    override fun onCopyPressed(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
-        item.copyUrl(activity!!)
-        snackbarPresenter.present(context.getString(R.string.url_copied))
-        metrics.track(Event.CopyBookmark)
+        item.url?.let {
+            bookmarksController.handleCopyUrl(item)
+            metrics.track(Event.CopyBookmark)
+        }
     }
 
-    override fun share(item: BookmarkNode) {
+    override fun onSharePressed(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
-        item.url?.apply {
-            navController.nav(
-                R.id.bookmarkFragment,
-                BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                    url = this,
-                    title = item.title
-                )
-            )
+        item.url?.let {
+            bookmarksController.handleBookmarkSharing(item)
             metrics.track(Event.ShareBookmark)
         }
     }
 
-    override fun openInNewTab(item: BookmarkNode) {
-        openItem(item, BrowsingMode.Normal)
-    }
-
-    override fun openInPrivateTab(item: BookmarkNode) {
-        openItem(item, BrowsingMode.Private)
-    }
-
-    private fun openItem(item: BookmarkNode, tabMode: BrowsingMode? = null) {
+    override fun onOpenInNormalTab(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
-        item.url?.let { url ->
-            tabMode?.let { activity?.browsingModeManager?.mode = it }
-            activity?.openToBrowserAndLoad(
-                searchTermOrURL = url,
-                newTab = true,
-                from = BrowserDirection.FromBookmarks
-            )
-            metrics.track(
-                when (tabMode) {
-                    BrowsingMode.Private -> Event.OpenedBookmarkInPrivateTab
-                    BrowsingMode.Normal -> Event.OpenedBookmarkInNewTab
-                    null -> Event.OpenedBookmark
-                }
-            )
+        item.url?.let {
+            bookmarksController.handleOpeningBookmark(item, BrowsingMode.Normal)
+            metrics.track(Event.OpenedBookmarkInNewTab)
         }
     }
 
-    override fun delete(nodes: Set<BookmarkNode>) {
+    override fun onOpenInPrivateTab(item: BookmarkNode) {
+        require(item.type == BookmarkNodeType.ITEM)
+        item.url?.let {
+            bookmarksController.handleOpeningBookmark(item, BrowsingMode.Private)
+            metrics.track(Event.OpenedBookmarkInPrivateTab)
+        }
+    }
+
+    override fun onDelete(nodes: Set<BookmarkNode>) {
         if (nodes.find { it.type == BookmarkNodeType.SEPARATOR } != null) {
             throw IllegalStateException("Cannot delete separators")
         }
@@ -149,22 +86,44 @@ class BookmarkFragmentInteractor(
             BookmarkNodeType.FOLDER -> Event.RemoveBookmarkFolder
             null -> Event.RemoveBookmarks
         }
-        deleteBookmarkNodes(nodes, eventType)
+        bookmarksController.handleBookmarkDeletion(nodes, eventType)
     }
 
-    override fun backPressed() {
-        navController.popBackStack()
+    override fun onBackPressed() {
+        bookmarksController.handleBackPressed()
     }
 
-    override fun clickedSignIn() {
-        context.components.services.launchPairingSignIn(context, navController)
+    override fun onSignInPressed() {
+        bookmarksController.handleSigningIn()
     }
 
-    override fun signedIn() {
-        sharedViewModel.signedIn.postValue(true)
+    override fun onSignedIn() {
+        viewModel.signedIn.postValue(true)
     }
 
-    override fun signedOut() {
-        sharedViewModel.signedIn.postValue(false)
+    override fun onSignedOut() {
+        viewModel.signedIn.postValue(false)
+    }
+
+    override fun open(item: BookmarkNode) {
+        Do exhaustive when (item.type) {
+            BookmarkNodeType.ITEM -> {
+                bookmarksController.handleBookmarkTapped(item)
+                metrics.track(Event.OpenedBookmark)
+            }
+            BookmarkNodeType.FOLDER -> bookmarksController.handleBookmarkExpand(item)
+            BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot open separators")
+        }
+    }
+
+    override fun select(item: BookmarkNode) {
+        when (item.inRoots()) {
+            true -> bookmarksController.handleBookmarkSelected(item)
+            false -> bookmarkStore.dispatch(BookmarkAction.Select(item))
+        }
+    }
+
+    override fun deselect(item: BookmarkNode) {
+        bookmarkStore.dispatch(BookmarkAction.Deselect(item))
     }
 }

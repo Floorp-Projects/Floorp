@@ -27,68 +27,68 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
      *
      * @param node the head node of the new bookmarks tree
      */
-    fun change(node: BookmarkNode)
+    fun onBookmarksChanged(node: BookmarkNode)
 
     /**
      * Switches the current bookmark multi-selection mode.
      *
      * @param mode the multi-select mode to switch to
      */
-    fun switchMode(mode: BookmarkState.Mode)
+    fun onSelectionModeSwitch(mode: BookmarkState.Mode)
 
     /**
      * Opens up an interface to edit a bookmark node.
      *
      * @param node the bookmark node to edit
      */
-    fun edit(node: BookmarkNode)
+    fun onEditPressed(node: BookmarkNode)
 
     /**
      * De-selects all bookmark nodes, clearing the multi-selection mode.
      *
      */
-    fun deselectAll()
+    fun onAllBookmarksDeselected()
 
     /**
      * Copies the URL of a bookmark item to the copy-paste buffer.
      *
      * @param item the bookmark item to copy the URL from
      */
-    fun copy(item: BookmarkNode)
+    fun onCopyPressed(item: BookmarkNode)
 
     /**
      * Opens the share sheet for a bookmark item.
      *
      * @param item the bookmark item to share
      */
-    fun share(item: BookmarkNode)
+    fun onSharePressed(item: BookmarkNode)
 
     /**
      * Opens a bookmark item in a new tab.
      *
      * @param item the bookmark item to open in a new tab
      */
-    fun openInNewTab(item: BookmarkNode)
+    fun onOpenInNormalTab(item: BookmarkNode)
 
     /**
      * Opens a bookmark item in a private tab.
      *
      * @param item the bookmark item to open in a private tab
      */
-    fun openInPrivateTab(item: BookmarkNode)
+    fun onOpenInPrivateTab(item: BookmarkNode)
 
     /**
-     * Deletes a set of bookmark node.
+     * Deletes a set of bookmark nodes.
      *
      * @param nodes the bookmark nodes to delete
      */
-    fun delete(nodes: Set<BookmarkNode>)
+    fun onDelete(nodes: Set<BookmarkNode>)
 
     /**
      * Handles back presses for the bookmark screen, so navigation up the tree is possible.
      *
      */
-    fun backPressed()
+    fun onBackPressed()
 }
 
 class BookmarkView(
@@ -117,7 +117,7 @@ class BookmarkView(
         tree = state.tree
         if (state.mode != mode) {
             mode = state.mode
-            interactor.switchMode(mode)
+            interactor.onSelectionModeSwitch(mode)
         }
 
         bookmarkAdapter.updateData(state.tree, mode)
@@ -132,11 +132,11 @@ class BookmarkView(
     override fun onBackPressed(): Boolean {
         return when {
             mode is BookmarkState.Mode.Selecting -> {
-                interactor.deselectAll()
+                interactor.onAllBookmarksDeselected()
                 true
             }
             canGoBack -> {
-                interactor.backPressed()
+                interactor.onBackPressed()
                 true
             }
             else -> false

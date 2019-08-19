@@ -16,15 +16,15 @@ class SelectBookmarkFolderInteractor(
     private val sharedViewModel: BookmarksSharedViewModel
 ) : SignInInteractor {
 
-    override fun clickedSignIn() {
+    override fun onSignInPressed() {
         context.components.services.launchPairingSignIn(context, navController)
     }
 
-    override fun signedIn() {
+    override fun onSignedIn() {
         sharedViewModel.signedIn.postValue(true)
     }
 
-    override fun signedOut() {
+    override fun onSignedOut() {
         sharedViewModel.signedIn.postValue(false)
     }
 }

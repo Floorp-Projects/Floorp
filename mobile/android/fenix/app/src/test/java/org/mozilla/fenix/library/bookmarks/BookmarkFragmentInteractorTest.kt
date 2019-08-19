@@ -4,16 +4,9 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import androidx.core.content.getSystemService
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination
 import io.mockk.called
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -22,46 +15,25 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbarPresenter
-import org.mozilla.fenix.components.Services
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.asActivity
-import org.mozilla.fenix.ext.components
 
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class BookmarkFragmentInteractorTest {
 
     private lateinit var interactor: BookmarkFragmentInteractor
 
-    private val context: Context = mockk(relaxed = true)
-    private val navController: NavController = mockk(relaxed = true)
     private val bookmarkStore = spyk(BookmarkStore(BookmarkState(null)))
     private val sharedViewModel: BookmarksSharedViewModel = mockk(relaxed = true)
-    private val snackbarPresenter: FenixSnackbarPresenter = mockk(relaxed = true)
-    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
-
-    private val applicationContext: FenixApplication = mockk(relaxed = true)
-    private val homeActivity: HomeActivity = mockk(relaxed = true)
+    private val bookmarkController: DefaultBookmarkController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", null)
     private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1, null, null, null)
     private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, listOf())
-    private val childItem = BookmarkNode(
-        BookmarkNodeType.ITEM,
-        "987",
-        "123",
-        2,
-        "Firefox",
-        "https://www.mozilla.org/en-US/firefox/",
-        null
-    )
-    private val tree = BookmarkNode(
-        BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, listOf(item, separator, childItem, subfolder)
+    private val tree: BookmarkNode = BookmarkNode(
+        BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, listOf(item, separator, item, subfolder)
     )
     private val root = BookmarkNode(
         BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, null
@@ -69,31 +41,20 @@ class BookmarkFragmentInteractorTest {
 
     @Before
     fun setup() {
-        mockkStatic(
-            "org.mozilla.fenix.ext.ContextKt",
-            "androidx.core.content.ContextCompat",
-            "android.content.ClipData"
-        )
-        every { any<Context>().asActivity() } returns homeActivity
-        every { context.applicationContext } returns applicationContext
-        every { applicationContext.components.analytics.metrics } returns metrics
-        every { navController.currentDestination } returns NavDestination("").apply { id = R.id.bookmarkFragment }
         every { bookmarkStore.dispatch(any()) } returns mockk()
 
         interactor =
             BookmarkFragmentInteractor(
-                context,
-                navController,
-                bookmarkStore,
-                sharedViewModel,
-                snackbarPresenter,
-                deleteBookmarkNodes
+                bookmarkStore = bookmarkStore,
+                viewModel = sharedViewModel,
+                bookmarksController = bookmarkController,
+                metrics = metrics
             )
     }
 
     @Test
     fun `update bookmarks tree`() {
-        interactor.change(tree)
+        interactor.onBookmarksChanged(tree)
 
         verify {
             bookmarkStore.dispatch(BookmarkAction.Change(tree))
@@ -104,15 +65,10 @@ class BookmarkFragmentInteractorTest {
     fun `open a bookmark item`() {
         interactor.open(item)
 
-        val url = item.url!!
         verifyOrder {
-            homeActivity.openToBrowserAndLoad(
-                searchTermOrURL = url,
-                newTab = true,
-                from = BrowserDirection.FromBookmarks
-            )
+            bookmarkController.handleBookmarkTapped(item)
+            metrics.track(Event.OpenedBookmark)
         }
-        metrics.track(Event.OpenedBookmark)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -125,25 +81,25 @@ class BookmarkFragmentInteractorTest {
         interactor.open(tree)
 
         verify {
-            navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid))
+            bookmarkController.handleBookmarkExpand(tree)
         }
     }
 
     @Test
     fun `switch between bookmark selection modes`() {
-        interactor.switchMode(BookmarkState.Mode.Normal)
+        interactor.onSelectionModeSwitch(BookmarkState.Mode.Normal)
 
         verify {
-            homeActivity.invalidateOptionsMenu()
+            bookmarkController.handleSelectionModeSwitch()
         }
     }
 
     @Test
     fun `press the edit bookmark button`() {
-        interactor.edit(item)
+        interactor.onEditPressed(item)
 
         verify {
-            navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(item.guid))
+            bookmarkController.handleBookmarkEdit(item)
         }
     }
 
@@ -167,7 +123,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `deselectAll bookmark items`() {
-        interactor.deselectAll()
+        interactor.onAllBookmarksDeselected()
 
         verify {
             bookmarkStore.dispatch(BookmarkAction.DeselectAll)
@@ -183,119 +139,97 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `copy a bookmark item`() {
-        val clipboardManager: ClipboardManager = mockk(relaxed = true)
-        every { any<Context>().getSystemService<ClipboardManager>() } returns clipboardManager
-        every { ClipData.newPlainText(any(), any()) } returns mockk(relaxed = true)
+        interactor.onCopyPressed(item)
 
-        interactor.copy(item)
-
-        verify {
+        verifyOrder {
+            bookmarkController.handleCopyUrl(item)
             metrics.track(Event.CopyBookmark)
         }
     }
 
     @Test
     fun `share a bookmark item`() {
-        interactor.share(item)
+        interactor.onSharePressed(item)
 
         verifyOrder {
-            navController.navigate(
-                BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
-                    item.url,
-                    item.title
-                )
-            )
+            bookmarkController.handleBookmarkSharing(item)
             metrics.track(Event.ShareBookmark)
         }
     }
 
     @Test
     fun `open a bookmark item in a new tab`() {
-        interactor.openInNewTab(item)
+        interactor.onOpenInNormalTab(item)
 
-        val url = item.url!!
         verifyOrder {
-            homeActivity.openToBrowserAndLoad(
-                searchTermOrURL = url,
-                newTab = true,
-                from = BrowserDirection.FromBookmarks
-            )
+            bookmarkController.handleOpeningBookmark(item, BrowsingMode.Normal)
             metrics.track(Event.OpenedBookmarkInNewTab)
         }
     }
 
     @Test
     fun `open a bookmark item in a private tab`() {
-        interactor.openInPrivateTab(item)
+        interactor.onOpenInPrivateTab(item)
 
-        val url = item.url!!
         verifyOrder {
-            homeActivity.openToBrowserAndLoad(
-                searchTermOrURL = url,
-                newTab = true,
-                from = BrowserDirection.FromBookmarks
-            )
+            bookmarkController.handleOpeningBookmark(item, BrowsingMode.Private)
             metrics.track(Event.OpenedBookmarkInPrivateTab)
         }
     }
 
     @Test
     fun `delete a bookmark item`() {
-        interactor.delete(setOf(item))
+        interactor.onDelete(setOf(item))
 
         verify {
-            deleteBookmarkNodes(setOf(item), Event.RemoveBookmark)
+            bookmarkController.handleBookmarkDeletion(setOf(item), Event.RemoveBookmark)
         }
     }
 
     @Test(expected = IllegalStateException::class)
     fun `delete a separator`() {
-        interactor.delete(setOf(item, item.copy(type = BookmarkNodeType.SEPARATOR)))
+        interactor.onDelete(setOf(item, item.copy(type = BookmarkNodeType.SEPARATOR)))
     }
 
     @Test
     fun `delete a bookmark folder`() {
-        interactor.delete(setOf(subfolder))
+        interactor.onDelete(setOf(subfolder))
 
         verify {
-            deleteBookmarkNodes(setOf(subfolder), Event.RemoveBookmarkFolder)
+            bookmarkController.handleBookmarkDeletion(setOf(subfolder), Event.RemoveBookmarkFolder)
         }
     }
 
     @Test
     fun `delete multiple bookmarks`() {
-        interactor.delete(setOf(item, subfolder))
+        interactor.onDelete(setOf(item, subfolder))
 
         verify {
-            deleteBookmarkNodes(setOf(item, subfolder), Event.RemoveBookmarks)
+            bookmarkController.handleBookmarkDeletion(setOf(item, subfolder), Event.RemoveBookmarks)
         }
     }
 
     @Test
     fun `press the back button`() {
-        interactor.backPressed()
+        interactor.onBackPressed()
 
         verify {
-            navController.popBackStack()
+            bookmarkController.handleBackPressed()
         }
     }
 
     @Test
     fun `clicked sign in on bookmarks screen`() {
-        val services: Services = mockk(relaxed = true)
-        every { context.components.services } returns services
-
-        interactor.clickedSignIn()
+        interactor.onSignInPressed()
 
         verify {
-            context.components.services
-            services.launchPairingSignIn(context, navController)
+            bookmarkController.handleSigningIn()
         }
     }
 
     @Test
     fun `got signed in signal on bookmarks screen`() {
-        interactor.signedIn()
+        interactor.onSignedIn()
 
         verify {
             sharedViewModel.signedIn.postValue(true)
@@ -304,7 +238,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `got signed out signal on bookmarks screen`() {
-        interactor.signedOut()
+        interactor.onSignedOut()
 
         verify {
             sharedViewModel.signedIn.postValue(false)

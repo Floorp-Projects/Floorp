@@ -30,13 +30,13 @@ abstract class BookmarkNodeViewHolder(
     protected fun setupMenu(item: BookmarkNode) {
         val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
             when (it) {
-                BookmarkItemMenu.Item.Edit -> interactor.edit(item)
+                BookmarkItemMenu.Item.Edit -> interactor.onEditPressed(item)
                 BookmarkItemMenu.Item.Select -> interactor.select(item)
-                BookmarkItemMenu.Item.Copy -> interactor.copy(item)
-                BookmarkItemMenu.Item.Share -> interactor.share(item)
-                BookmarkItemMenu.Item.OpenInNewTab -> interactor.openInNewTab(item)
-                BookmarkItemMenu.Item.OpenInPrivateTab -> interactor.openInPrivateTab(item)
-                BookmarkItemMenu.Item.Delete -> interactor.delete(setOf(item))
+                BookmarkItemMenu.Item.Copy -> interactor.onCopyPressed(item)
+                BookmarkItemMenu.Item.Share -> interactor.onSharePressed(item)
+                BookmarkItemMenu.Item.OpenInNewTab -> interactor.onOpenInNormalTab(item)
+                BookmarkItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTab(item)
+                BookmarkItemMenu.Item.Delete -> interactor.onDelete(setOf(item))
             }
         }
 
