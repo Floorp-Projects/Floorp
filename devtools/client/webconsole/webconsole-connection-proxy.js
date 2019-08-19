@@ -355,15 +355,6 @@ class WebConsoleConnectionProxy {
     this.webConsoleUI.wrapper.dispatchMessageUpdate(networkInfo, response);
   }
 
-  dispatchRequestUpdate(id, data) {
-    // Some request might try to update while we are closing the toolbox.
-    if (!this.webConsoleUI) {
-      return Promise.resolve();
-    }
-
-    return this.webConsoleUI.wrapper.dispatchRequestUpdate(id, data);
-  }
-
   /**
    * Release an object actor.
    *
