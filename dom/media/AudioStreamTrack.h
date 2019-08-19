@@ -17,9 +17,8 @@ class AudioStreamTrack : public MediaStreamTrack {
   AudioStreamTrack(
       nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
-      MediaStreamTrackState aReadyState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-      : MediaStreamTrack(aWindow, aInputStream, aTrackID, aSource, aReadyState,
+      : MediaStreamTrack(aWindow, aInputStream, aTrackID, aSource,
                          aConstraints) {}
 
   AudioStreamTrack* AsAudioStreamTrack() override { return this; }
@@ -35,7 +34,11 @@ class AudioStreamTrack : public MediaStreamTrack {
   void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
 
  protected:
-  already_AddRefed<MediaStreamTrack> CloneInternal() override;
+  already_AddRefed<MediaStreamTrack> CloneInternal() override {
+    return do_AddRef(
+        new AudioStreamTrack(mWindow, Ended() ? nullptr : mInputStream.get(),
+                             mTrackID, mSource, mConstraints));
+  }
 };
 
 }  // namespace dom
