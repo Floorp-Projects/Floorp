@@ -1054,13 +1054,10 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
 
   if (mCompositionRecorder) {
-    bool hasContentPaint = false;
-    for (CompositionPayload& payload : mPayload) {
-      if (payload.mType == CompositionPayloadType::eContentPaint) {
-        hasContentPaint = true;
-        break;
-      }
-    }
+    bool hasContentPaint = std::any_of(
+        mPayload.begin(), mPayload.end(), [](CompositionPayload& payload) {
+          return payload.mType == CompositionPayloadType::eContentPaint;
+        });
 
     if (hasContentPaint) {
       if (RefPtr<RecordedFrame> frame =
