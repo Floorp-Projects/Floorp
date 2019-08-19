@@ -35,5 +35,5 @@ cross-compile ARMv7 from a Linux host system is as follows:
          % cd testing/geckodriver
          % cargo build --release --target armv7-unknown-linux-gnueabihf
 
-[announce the intent]: https://lists.mozilla.org/pipermail/tools-marionette/2018-September/000035.html
+[announced the intent]: https://lists.mozilla.org/pipermail/tools-marionette/2018-September/000035.html
 [central]: https://hg.mozilla.org/mozilla-central/
