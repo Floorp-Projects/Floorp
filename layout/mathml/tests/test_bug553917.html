@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                     .getService(SpecialPowers.Ci.nsIStringBundleService);
       var g_bundl =
         stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
+
+      const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -58,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
       */
         LengthParsingError : {
-          status: [false, false, false, false, false, false, false, false, false],
+          status: [false, false, false, false, false, false, allow_linethickness_names, allow_linethickness_names, allow_linethickness_names],
           args: [["2..0"], ["1.5notaunit"], ["2"],["BADlspace"],["BADheight"],["BADdepth"], ["thin"],["medium"],["thick"]]
         },
       /*<math><mmultiscripts></mmultiscripts></math>
