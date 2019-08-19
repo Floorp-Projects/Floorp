@@ -181,24 +181,22 @@ class MediaStreamTrack::TrackSink : public MediaStreamTrackSource::Sink {
 MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
                                    MediaStream* aInputStream, TrackID aTrackID,
                                    MediaStreamTrackSource* aSource,
-                                   MediaStreamTrackState aReadyState,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
       mInputStream(aInputStream),
-      mStream(aReadyState == MediaStreamTrackState::Live
-                  ? mInputStream->Graph()->CreateTrackUnionStream()
-                  : nullptr),
+      mStream(mInputStream ? mInputStream->Graph()->CreateTrackUnionStream()
+                           : nullptr),
       mPort(mStream ? mStream->AllocateInputPort(mInputStream) : nullptr),
       mTrackID(aTrackID),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
       mPrincipal(aSource->GetPrincipal()),
-      mReadyState(aReadyState),
+      mReadyState(mStream ? MediaStreamTrackState::Live
+                          : MediaStreamTrackState::Ended),
       mEnabled(true),
       mMuted(false),
       mConstraints(aConstraints) {
   if (!Ended()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mInputStream->IsDestroyed());
     GetSource().RegisterSink(mSink.get());
 
     mMSGListener = new MSGListener(this);
@@ -501,6 +499,7 @@ already_AddRefed<MediaStreamTrack> MediaStreamTrack::Clone() {
   RefPtr<MediaStreamTrack> newTrack = CloneInternal();
   newTrack->SetEnabled(Enabled());
   newTrack->SetMuted(Muted());
+  MOZ_DIAGNOSTIC_ASSERT(newTrack->ReadyState() == ReadyState());
   return newTrack.forget();
 }
 
@@ -604,7 +603,10 @@ already_AddRefed<MediaInputPort> MediaStreamTrack::ForwardTrackContentsTo(
     ProcessedMediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
-  return aStream->AllocateInputPort(mStream, mTrackID, mTrackID);
+  MOZ_DIAGNOSTIC_ASSERT(!Ended());
+  RefPtr<MediaInputPort> port =
+      aStream->AllocateInputPort(mStream, mTrackID, mTrackID);
+  return port.forget();
 }
 
 }  // namespace dom
