@@ -16,10 +16,14 @@
 #include <utility>
 
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "js/Utility.h"
+#include "unicode/ucal.h"
+#include "unicode/ucol.h"
+#include "unicode/udatpg.h"
+#include "unicode/uenum.h"
+#include "unicode/utypes.h"
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"
 

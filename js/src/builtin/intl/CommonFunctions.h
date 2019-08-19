@@ -14,9 +14,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "builtin/intl/ICUStubs.h"
 #include "js/RootingAPI.h"
 #include "js/Vector.h"
+#include "unicode/utypes.h"
 #include "vm/StringType.h"
 
 namespace js {
