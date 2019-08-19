@@ -242,21 +242,6 @@ bool nsPlainTextSerializer::PopBool(nsTArray<bool>& aStack) {
   return returnValue;
 }
 
-bool nsPlainTextSerializer::ShouldReplaceContainerWithPlaceholder(
-    nsAtom* aTag) {
-  // If nsIDocumentEncoder::OutputNonTextContentAsPlaceholder is set,
-  // non-textual container element should be serialized as placeholder
-  // character and its child nodes should be ignored. See bug 895239.
-  if (!(mFlags & nsIDocumentEncoder::OutputNonTextContentAsPlaceholder)) {
-    return false;
-  }
-
-  return (aTag == nsGkAtoms::audio) || (aTag == nsGkAtoms::canvas) ||
-         (aTag == nsGkAtoms::iframe) || (aTag == nsGkAtoms::meter) ||
-         (aTag == nsGkAtoms::progress) || (aTag == nsGkAtoms::object) ||
-         (aTag == nsGkAtoms::svg) || (aTag == nsGkAtoms::video);
-}
-
 bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) {
   if (mWithRubyAnnotation) {
     return false;
@@ -453,17 +438,6 @@ nsPlainTextSerializer::AppendDocumentStart(Document* aDocument,
 }
 
 nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
-  // Check if we need output current node as placeholder character and ignore
-  // child nodes.
-  if (ShouldReplaceContainerWithPlaceholder(mElement->NodeInfo()->NameAtom())) {
-    if (mIgnoredChildNodeLevel == 0) {
-      // Serialize current node as placeholder character
-      Write(NS_LITERAL_STRING(u"\xFFFC"));
-    }
-    // Ignore child nodes.
-    mIgnoredChildNodeLevel++;
-    return NS_OK;
-  }
   if (IsIgnorableRubyAnnotation(aTag)) {
     // Ignorable ruby annotation shouldn't be replaced by a placeholder
     // character, neither any of its descendants.
@@ -774,10 +748,6 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
 }
 
 nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
-  if (ShouldReplaceContainerWithPlaceholder(mElement->NodeInfo()->NameAtom())) {
-    mIgnoredChildNodeLevel--;
-    return NS_OK;
-  }
   if (IsIgnorableRubyAnnotation(aTag)) {
     mIgnoredChildNodeLevel--;
     return NS_OK;
@@ -1062,8 +1032,6 @@ nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
     Write(line);
 
     EnsureVerticalSpace(0);
-  } else if (mFlags & nsIDocumentEncoder::OutputNonTextContentAsPlaceholder) {
-    Write(NS_LITERAL_STRING(u"\xFFFC"));
   } else if (aTag == nsGkAtoms::img) {
     /* Output (in decreasing order of preference)
        alt, title or nothing */

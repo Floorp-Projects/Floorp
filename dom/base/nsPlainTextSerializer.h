@@ -126,7 +126,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
 
-  bool ShouldReplaceContainerWithPlaceholder(nsAtom* aTag);
   bool IsIgnorableRubyAnnotation(nsAtom* aTag);
 
   bool IsElementPreformatted(mozilla::dom::Element* aElement);
@@ -234,8 +233,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // variable, but that causes issues with OpenBSD and module unloading.
   const nsString kSpace;
 
-  // If nsIDocumentEncoder::OutputNonTextContentAsPlaceholder is set, the child
-  // nodes of specific nodes - <iframe>, <canvas>, etc. should be ignored.
   // mIgnoredChildNodeLevel is used to tell if current node is an ignorable
   // child node. The initial value of mIgnoredChildNodeLevel is 0. When
   // serializer enters those specific nodes, mIgnoredChildNodeLevel increases
