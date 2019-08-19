@@ -21,7 +21,10 @@ const WebConsoleWrapper = require("devtools/client/webconsole/webconsole-wrapper
 const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
 async function getWebConsoleWrapper() {
-  const hud = { target: { client: {} }, getMappedExpression: () => {} };
+  const hud = {
+    target: { client: {}, getFront: () => {} },
+    getMappedExpression: () => {},
+  };
   const webConsoleUi = getWebConsoleUiMock(hud);
 
   const wcow = new WebConsoleWrapper(null, webConsoleUi, null, null);

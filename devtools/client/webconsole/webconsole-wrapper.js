@@ -34,6 +34,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
 const ObjectClient = require("devtools/shared/client/object-client");
 const LongStringClient = require("devtools/shared/client/long-string-client");
+const DataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
+
 loader.lazyRequireGetter(
   this,
   "Constants",
@@ -73,17 +75,26 @@ class WebConsoleWrapper {
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
     this.throttledDispatchPromise = null;
-
     this.telemetry = new Telemetry();
   }
 
   init() {
-    return new Promise(resolve => {
+    return new Promise(async resolve => {
       const attachRefToWebConsoleUI = (id, node) => {
         this.webConsoleUI[id] = node;
       };
       const { webConsoleUI } = this;
       const debuggerClient = this.hud.target.client;
+
+      const webConsoleClient = await this.hud.target.getFront("console");
+      this.networkDataProvider = new DataProvider({
+        actions: {
+          updateRequest: (id, data) => {
+            return this.batchedRequestUpdates({ id, data });
+          },
+        },
+        webConsoleClient,
+      });
 
       const serviceContainer = {
         attachRefToWebConsoleUI,
@@ -136,9 +147,8 @@ class WebConsoleWrapper {
           const proxy = webConsoleUI.getProxy();
           return proxy.webConsoleClient.getString(grip);
         },
-        requestData(id, type) {
-          const proxy = webConsoleUI.getProxy();
-          return proxy.networkDataProvider.requestData(id, type);
+        requestData: (id, type) => {
+          return this.networkDataProvider.requestData(id, type);
         },
         onViewSource(frame) {
           if (webConsoleUI && webConsoleUI.hud && webConsoleUI.hud.viewSource) {
@@ -582,10 +592,6 @@ class WebConsoleWrapper {
     if (res.networkInfo.updates.length === expectedLength) {
       this.batchedMessageUpdates({ res, message });
     }
-  }
-
-  dispatchRequestUpdate(id, data) {
-    return this.batchedRequestUpdates({ id, data });
   }
 
   dispatchSidebarClose() {

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const DataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
-
 const {
   getAllNetworkMessagesUpdateById,
 } = require("devtools/client/webconsole/selectors/messages");
@@ -29,35 +27,15 @@ const {
  * unnecessary data over RDP.
  */
 function enableNetProvider(webConsoleUI) {
-  let dataProvider;
   return next => (reducer, initialState, enhancer) => {
     function netProviderEnhancer(state, action) {
-      const proxy = webConsoleUI ? webConsoleUI.getProxy() : null;
-      if (!proxy) {
+      const dataProvider =
+        webConsoleUI &&
+        webConsoleUI.wrapper &&
+        webConsoleUI.wrapper.networkDataProvider;
+
+      if (!dataProvider) {
         return reducer(state, action);
-      }
-
-      const actions = {
-        updateRequest: (id, data, batch) => {
-          return proxy.dispatchRequestUpdate(id, data);
-        },
-      };
-
-      // Data provider implements async logic for fetching
-      // data from the backend. It's created the first
-      // time it's needed.
-      if (!dataProvider && proxy.webConsoleClient) {
-        dataProvider = new DataProvider({
-          actions,
-          webConsoleClient: proxy.webConsoleClient,
-        });
-
-        // /!\ This is terrible, but it allows ResponsePanel to be able to call
-        // `dataProvider.requestData` to fetch response content lazily.
-        // `proxy.networkDataProvider` is put by WebConsoleOutputWrapper on
-        // `serviceContainer` which allow NetworkEventMessage to expose requestData on
-        // the fake `connector` object it hands over to ResponsePanel.
-        proxy.networkDataProvider = dataProvider;
       }
 
       const type = action.type;
