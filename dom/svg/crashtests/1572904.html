@@ -1,0 +1,15 @@
+<script>
+function go() {
+  a.addEventListener("DOMSubtreeModified", go)
+  b.setAttribute("y", "")
+  SpecialPowers.gc()
+  SpecialPowers.forceCC()
+  try { c.viewBox.animVal[undefined] = ''} catch(e) { }
+  try { c.viewBox.animVal.x; } catch(e) { }
+}
+</script>
+<filter id="a">
+<svg id="" onload="go()">
+<path id="b">
+<view id="c" viewBox="1 9 0 1" />
+
