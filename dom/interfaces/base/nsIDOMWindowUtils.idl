@@ -1753,19 +1753,6 @@ interface nsIDOMWindowUtils : nsISupports {
   attribute uint32_t mediaSuspend;
 
   /**
-   * With this it's possible to mute all the MediaElements in this window.
-   * We have audioMuted and audioVolume to preserve the volume across
-   * mute/umute.
-   */
-  attribute boolean audioMuted;
-
-  /**
-   * range: greater or equal to 0. The real volume level is affected by the
-   * volume of all ancestor windows.
-   */
-  attribute float audioVolume;
-
-  /**
    * This method doesn't do anything useful.  It was solely added for the
    * purpose of the test for bug 503926.
    */
