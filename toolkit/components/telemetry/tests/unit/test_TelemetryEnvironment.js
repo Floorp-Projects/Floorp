@@ -756,11 +756,7 @@ function checkSystemSection(data) {
 
   Assert.ok(Array.isArray(gfxData.monitors));
   if (gIsWindows || gIsMac || gIsLinux) {
-    Assert.greaterEqual(
-      gfxData.monitors.length,
-      1,
-      "There is at least one monitor."
-    );
+    Assert.ok(gfxData.monitors.length >= 1, "There is at least one monitor.");
     Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
     Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
     if (gIsWindows) {

@@ -33,7 +33,7 @@ add_task(async function test_eraseEverything() {
   Assert.equal(root.childCount, 4, "The folder should have 4 children");
   for (let i = 0; i < root.childCount; ++i) {
     let node = root.getChild(i);
-    Assert.greater(node.itemId, 0, "The node should have an itemId");
+    Assert.ok(node.itemId > 0, "The node should have an itemId");
   }
   Assert.equal(root.getChild(0).title, "title 1");
   Assert.equal(root.getChild(1).title, "title 2");

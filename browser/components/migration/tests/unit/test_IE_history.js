@@ -45,6 +45,6 @@ add_task(async function test_IE_history() {
     let entry = await PlacesUtils.history.fetch(url, { includeVisits: true });
     Assert.equal(entry.url, url, "Should have the correct URL");
     Assert.equal(entry.title, title, "Should have the correct title");
-    Assert.greater(entry.visits.length, 0, "Should have some visits");
+    Assert.ok(entry.visits.length > 0, "Should have some visits");
   }
 });
