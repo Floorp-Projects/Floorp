@@ -322,8 +322,11 @@ BasicCompositor::CreateRenderTargetForWindow(
     }
     rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
   }
+
+  rt->mDrawTarget->SetTransform(Matrix::Translation(-rt->GetOrigin()));
+
   if (!aClearRect.IsEmpty() && !isCleared) {
-    gfx::IntRect clearRect = aClearRect.ToUnknownRect() - rt->GetOrigin();
+    gfx::IntRect clearRect = aClearRect.ToUnknownRect();
     rt->mDrawTarget->ClearRect(gfx::Rect(clearRect));
   }
 
@@ -973,11 +976,6 @@ void BasicCompositor::BeginFrame(
   }
   SetRenderTarget(target);
 
-  // We only allocate a surface sized to the invalidated region, so we need to
-  // translate future coordinates.
-  mRenderTarget->mDrawTarget->SetTransform(
-      Matrix::Translation(-mRenderTarget->GetOrigin()));
-
   if (ShouldRecordFrames()) {
     IntSize windowSize = rect.ToUnknownRect().Size();
 
@@ -1034,7 +1032,7 @@ void BasicCompositor::EndFrame() {
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
-  // Reset the translation that was applied in BeginFrame.
+  // Reset the translation that was applied in CreateRenderTargetForWindow.
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
   TryToEndRemoteDrawing();
