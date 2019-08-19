@@ -135,6 +135,12 @@ class AntiTrackingCommon final {
                                                bool aIsPrivateBrowsing,
                                                bool& aIsAllowListed);
 
+  // Computes the principal used to check the content blocking allow list for a
+  // top-level document based on the document principal.  This function is used
+  // right after setting up the document principal.
+  static void ComputeContentBlockingAllowListPrincipal(
+      nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal);
+
   enum class BlockingDecision {
     eBlock,
     eAllow,

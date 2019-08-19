@@ -14,6 +14,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/Pair.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozIThirdPartyUtil.h"
@@ -1894,6 +1895,64 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   }
 
   return NS_OK;
+}
+
+/* static */ void AntiTrackingCommon::ComputeContentBlockingAllowListPrincipal(
+    nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  auto returnInputArgument =
+      MakeScopeExit([&] { NS_IF_ADDREF(*aPrincipal = aDocumentPrincipal); });
+
+  BasePrincipal* bp = BasePrincipal::Cast(aDocumentPrincipal);
+  if (!bp || !bp->IsContentPrincipal()) {
+    // If we have something other than a content principal, just return what we
+    // have.  This includes the case where we were passed a nullptr.
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aDocumentPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Take the host/port portion so we can allowlist by site. Also ignore the
+  // scheme, since users who put sites on the allowlist probably don't expect
+  // allowlisting to depend on scheme.
+  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
+  nsAutoCString temp;
+  rv = uri->GetHostPort(temp);
+  // view-source URIs will be handled by the next block.
+  if (NS_FAILED(rv) && !uri->SchemeIs("view-source")) {
+    // Normal for some loads, no need to print a warning
+    return;
+  }
+
+  // GetHostPort returns an empty string (with a success error code) for file://
+  // URIs.
+  if (temp.IsEmpty()) {
+    // In this case we want to make sure that our allow list principal would be
+    // computed as null.
+    returnInputArgument.release();
+    *aPrincipal = nullptr;
+    return;
+  }
+  escaped.Append(temp);
+
+  rv = NS_NewURI(getter_AddRefs(uri), escaped);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+      uri, aDocumentPrincipal->OriginAttributesRef());
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  returnInputArgument.release();
+  principal.forget(aPrincipal);
 }
 
 /* static */
