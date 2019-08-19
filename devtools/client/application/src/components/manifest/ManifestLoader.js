@@ -49,8 +49,14 @@ class ManifestLoader extends PureComponent {
 
   renderResult() {
     return this.state.hasManifest
-      ? Localized({ id: "manifest-loaded-ok" }, p({}))
-      : Localized({ id: "manifest-non-existing" }, p({}));
+      ? Localized(
+          { id: "manifest-loaded-ok" },
+          p({ className: "js-manifest-loaded-ok" })
+        )
+      : Localized(
+          { id: "manifest-non-existing" },
+          p({ className: "js-manifest-non-existing" })
+        );
   }
 
   renderError() {
@@ -62,7 +68,7 @@ class ManifestLoader extends PureComponent {
           id: "manifest-loaded-error",
           key: "manifest-error-label",
         },
-        p({})
+        p({ className: "js-manifest-loaded-error" })
       ),
       p({ className: "technical-text", key: "manifest-error-message" }, error),
     ];
