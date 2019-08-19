@@ -305,9 +305,10 @@ BasicCompositor::CreateRenderTargetForWindow(
   RefPtr<BasicCompositingRenderTarget> rt;
   IntRect rect = aRect.ToUnknownRect();
 
+  bool isCleared = false;
   if (aBufferMode != BufferMode::BUFFER_NONE) {
     RefPtr<DrawTarget> target =
-        mWidget->GetBackBufferDrawTarget(mDrawTarget, aRect, aClearRect);
+        mWidget->GetBackBufferDrawTarget(mDrawTarget, aRect, &isCleared);
     if (!target) {
       return nullptr;
     }
@@ -320,10 +321,10 @@ BasicCompositor::CreateRenderTargetForWindow(
       windowRect.ExpandToEnclose(IntPoint(0, 0));
     }
     rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
-    if (!aClearRect.IsEmpty()) {
-      IntRect clearRect = aClearRect.ToUnknownRect();
-      mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
-    }
+  }
+  if (!aClearRect.IsEmpty() && !isCleared) {
+    gfx::IntRect clearRect = aClearRect.ToUnknownRect() - rt->GetOrigin();
+    rt->mDrawTarget->ClearRect(gfx::Rect(clearRect));
   }
 
   return rt.forget();

@@ -23,7 +23,7 @@ void CompositorWidget::CleanupRemoteDrawing() { mLastBackBuffer = nullptr; }
 
 already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
     gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
-    const LayoutDeviceIntRect& aClearRect) {
+    bool* aOutIsCleared) {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format =
       aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8
@@ -32,24 +32,17 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
   gfx::IntSize size = aRect.ToUnknownRect().Size();
   gfx::IntSize clientSize = Max(size, GetClientSize().ToUnknownSize());
 
-  RefPtr<gfx::DrawTarget> target;
+  *aOutIsCleared = false;
   // Re-use back buffer if possible
-  if (mLastBackBuffer &&
-      mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
-      mLastBackBuffer->GetFormat() == format &&
-      mLastBackBuffer->GetSize() == clientSize) {
-    target = mLastBackBuffer;
-    if (!aClearRect.IsEmpty()) {
-      gfx::IntRect clearRect =
-          aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
-      target->ClearRect(gfx::Rect(clearRect.X(), clearRect.Y(),
-                                  clearRect.Width(), clearRect.Height()));
-    }
-  } else {
-    target = aScreenTarget->CreateSimilarDrawTarget(clientSize, format);
-    mLastBackBuffer = target;
+  if (!mLastBackBuffer ||
+      mLastBackBuffer->GetBackendType() != aScreenTarget->GetBackendType() ||
+      mLastBackBuffer->GetFormat() != format ||
+      mLastBackBuffer->GetSize() != clientSize) {
+    mLastBackBuffer =
+        aScreenTarget->CreateSimilarDrawTarget(clientSize, format);
+    *aOutIsCleared = true;
   }
-  return target.forget();
+  return do_AddRef(mLastBackBuffer);
 }
 
 already_AddRefed<gfx::SourceSurface> CompositorWidget::EndBackBufferDrawing() {
