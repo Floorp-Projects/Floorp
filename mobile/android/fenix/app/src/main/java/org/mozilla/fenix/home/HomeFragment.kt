@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -111,21 +110,6 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
-    private val preDrawListener = object : ViewTreeObserver.OnPreDrawListener {
-        override fun onPreDraw(): Boolean {
-            if (view != null) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(ANIM_SCROLL_DELAY)
-                    restoreLayoutState()
-                    startPostponedEnterTransition()
-                }.invokeOnCompletion {
-                    sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this)
-                }
-            }
-            return true
-        }
-    }
-
     private var homeMenu: HomeMenu? = null
 
     private val sessionManager: SessionManager
@@ -199,18 +183,20 @@ class HomeFragment : Fragment(), AccountObserver {
         activity.themeManager.applyStatusBarTheme(activity)
 
         postponeEnterTransition()
-        sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
+        TransitionPreDrawListener(
+            fragment = this,
+            viewTreeObserver = sessionControlComponent.view.viewTreeObserver,
+            restoreLayoutState = {
+                val homeViewModel: HomeScreenViewModel by activityViewModels()
+                homeViewModel.layoutManagerState?.also { parcelable ->
+                    sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+                }
+                homeLayout?.progress = homeViewModel.motionLayoutProgress
+                homeViewModel.layoutManagerState = null
+            }
+        )
 
         return view
-    }
-
-    private fun restoreLayoutState() {
-        val homeViewModel: HomeScreenViewModel by activityViewModels()
-        homeViewModel.layoutManagerState?.also { parcelable ->
-            sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
-        }
-        homeLayout?.progress = homeViewModel.motionLayoutProgress
-        homeViewModel.layoutManagerState = null
     }
 
     @SuppressWarnings("LongMethod")
@@ -276,7 +262,6 @@ class HomeFragment : Fragment(), AccountObserver {
 
     override fun onDestroyView() {
         homeMenu = null
-        sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(preDrawListener)
         super.onDestroyView()
     }
 
