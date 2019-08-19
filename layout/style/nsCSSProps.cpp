@@ -241,11 +241,9 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
     {eCSSKeyword__moz_inline_box, StyleDisplay::MozInlineBox},
 #ifdef MOZ_XUL
     {eCSSKeyword__moz_grid, StyleDisplay::MozGrid},
-    {eCSSKeyword__moz_inline_grid, StyleDisplay::MozInlineGrid},
     {eCSSKeyword__moz_grid_group, StyleDisplay::MozGridGroup},
     {eCSSKeyword__moz_grid_line, StyleDisplay::MozGridLine},
     {eCSSKeyword__moz_stack, StyleDisplay::MozStack},
-    {eCSSKeyword__moz_inline_stack, StyleDisplay::MozInlineStack},
     {eCSSKeyword__moz_deck, StyleDisplay::MozDeck},
     {eCSSKeyword__moz_popup, StyleDisplay::MozPopup},
     {eCSSKeyword__moz_groupbox, StyleDisplay::MozGroupbox},
