@@ -245,7 +245,7 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
   return notif;
 }
 
-async function hideDoorhangerPopup(browser) {
+async function hideDoorhangerPopup() {
   info("hideDoorhangerPopup");
   if (!PopupNotifications.isPanelOpen) {
     return;
@@ -271,33 +271,6 @@ async function submitForm(browser) {
       );
     }, "Wait for form submission load");
   });
-}
-
-function verifyLogins(expectedValues) {
-  let allLogins = Services.logins.getAllLogins();
-  is(allLogins.length, expectedValues.count, "Check saved logins count");
-  for (let i = 0; i < expectedValues.loginProperties.length; i++) {
-    let expected = expectedValues[i];
-    if (expected) {
-      let login = allLogins[i];
-      if (expected.hasOwnProperty("timesUsed")) {
-        is(login.timesUsed, expected.timesUsed, "Check timesUsed");
-      }
-      if (expected.hasOwnProperty("passwordLength")) {
-        is(
-          login.password.length,
-          expected.passwordLength,
-          "Check passwordLength"
-        );
-      }
-      if (expected.hasOwnProperty("username")) {
-        is(login.username, expected.username, "Check username");
-      }
-      if (expected.hasOwnProperty("usedSince")) {
-        ok(login.timeLastUsed > expected.usedSince, "Check timeLastUsed");
-      }
-    }
-  }
 }
 
 add_task(async function setup() {
@@ -359,7 +332,7 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         !notif.anchorElement.hasAttribute("extraAttr"),
         "Check if the extraAttr attribute was removed"
       );
-      notif.remove();
+      await cleanupDoorhanger(notif);
 
       storageChangedPromise = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
@@ -369,16 +342,12 @@ add_task(async function autocomplete_generated_password_auto_saved() {
       info("waiting for submitForm");
       await submitForm(browser);
       await storageChangedPromise;
-      verifyLogins({
-        count: 1,
-        loginProperties: [
-          {
-            timesUsed: autoSavedLogin.timesUsed + 1,
-            username: "",
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
+      verifyLogins([
+        {
+          timesUsed: autoSavedLogin.timesUsed + 1,
+          username: "",
+        },
+      ]);
     }
   );
 });
@@ -412,7 +381,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await hideDoorhangerPopup(browser);
+      await hideDoorhangerPopup();
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
@@ -428,17 +397,13 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 1,
-        loginProperties: [
-          {
-            timesUsed: savedLogin.timesUsed + 1,
-            username: "",
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
-      notif && notif.remove();
+      verifyLogins([
+        {
+          timesUsed: savedLogin.timesUsed + 1,
+          username: "",
+        },
+      ]);
+      await cleanupDoorhanger(notif); // cleanup the doorhanger for next test
     }
   );
 });
@@ -476,7 +441,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
         usernameValue: "myusername",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await hideDoorhangerPopup(browser);
+      await hideDoorhangerPopup();
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
@@ -492,22 +457,18 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
       await clickDoorhangerButton(notif, REMEMBER_BUTTON);
       info("Waiting for addLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 2,
-        loginProperties: [
-          {
-            timesUsed: savedLogin.timesUsed,
-            username: "",
-            password: "xyzpassword",
-          },
-          {
-            timesUsed: 1,
-            username: "myusername",
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
-      notif && notif.remove();
+      verifyLogins([
+        {
+          timesUsed: savedLogin.timesUsed,
+          username: "",
+          password: "xyzpassword",
+        },
+        {
+          timesUsed: 1,
+          username: "myusername",
+        },
+      ]);
+      await cleanupDoorhanger(notif); // cleanup the doorhanger for next test
     }
   );
 });
@@ -544,7 +505,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await hideDoorhangerPopup(browser);
+      await hideDoorhangerPopup();
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
@@ -560,17 +521,13 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 1,
-        loginProperties: [
-          {
-            timesUsed: savedLogin.timesUsed + 1,
-            username: "",
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
-      notif && notif.remove();
+      verifyLogins([
+        {
+          timesUsed: savedLogin.timesUsed + 1,
+          username: "",
+        },
+      ]);
+      await cleanupDoorhanger(notif); // cleanup the doorhanger for next test
     }
   );
 });
@@ -623,16 +580,13 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
       });
       await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
 
-      verifyLogins({
-        count: 1,
-        loginProperties: [
-          {
-            timesUsed: savedLogin.timesUsed,
-            username: "",
-            password: "xyzpassword",
-          },
-        ],
-      });
+      verifyLogins([
+        {
+          timesUsed: savedLogin.timesUsed,
+          username: "",
+          password: "xyzpassword",
+        },
+      ]);
 
       info("waiting for submitForm");
       await submitForm(browser);
@@ -646,17 +600,13 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 1,
-        loginProperties: [
-          {
-            timesUsed: savedLogin.timesUsed + 1,
-            username: "",
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
-      notif && notif.remove();
+      verifyLogins([
+        {
+          timesUsed: savedLogin.timesUsed + 1,
+          username: "",
+        },
+      ]);
+      await cleanupDoorhanger(notif); // cleanup the doorhanger for next test
     }
   );
 
@@ -718,17 +668,14 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
       info("waiting for addLogin");
       await storageChangedPromise;
       // Check properties of the newly auto-saved login
-      verifyLogins({
-        count: 2,
-        loginProperties: [
-          null, // ignore the first one
-          {
-            timesUsed: 1,
-            username: "",
-            passwordLength: LoginTestUtils.generation.LENGTH,
-          },
-        ],
-      });
+      verifyLogins([
+        null, // ignore the first one
+        {
+          timesUsed: 1,
+          username: "",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+        },
+      ]);
 
       info("Waiting to openAndVerifyDoorhanger");
       await openAndVerifyDoorhanger(browser, "password-change", {
@@ -737,7 +684,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         usernameValue: "differentuser",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await hideDoorhangerPopup(browser);
+      await hideDoorhangerPopup();
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
@@ -757,19 +704,15 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 2,
-        loginProperties: [
-          null,
-          {
-            username: "differentuser",
-            passwordLength: LoginTestUtils.generation.LENGTH,
-            timesUsed: 1,
-          },
-        ],
-      });
-      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
-      notif && notif.remove();
+      verifyLogins([
+        null,
+        {
+          username: "differentuser",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+          timesUsed: 2,
+        },
+      ]);
+      await cleanupDoorhanger(notif); // cleanup the doorhanger for next test
     }
   );
 });
@@ -818,18 +761,15 @@ add_task(async function contextmenu_password_change_form_without_username() {
       info("waiting for addLogin");
       await storageChangedPromise;
       // Check properties of the newly auto-saved login
-      verifyLogins({
-        count: 3,
-        loginProperties: [
-          null, // ignore the first one
-          null, // ignore the 2nd one
-          {
-            timesUsed: 1,
-            username: "",
-            passwordLength: LoginTestUtils.generation.LENGTH,
-          },
-        ],
-      });
+      verifyLogins([
+        null, // ignore the first one
+        null, // ignore the 2nd one
+        {
+          timesUsed: 1,
+          username: "",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+        },
+      ]);
 
       info("Waiting to openAndVerifyDoorhanger");
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
@@ -838,9 +778,8 @@ add_task(async function contextmenu_password_change_form_without_username() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await hideDoorhangerPopup(browser);
       // remove notification so we can unambiguously check no new notification gets created later
-      notif && notif.remove();
+      await cleanupDoorhanger(notif);
 
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
@@ -856,20 +795,18 @@ add_task(async function contextmenu_password_change_form_without_username() {
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins({
-        count: 3,
-        loginProperties: [
-          null, // ignore the first one
-          null, // ignore the 2nd one
-          {
-            timesUsed: 2,
-            usedSince: timeLastUsed,
-          },
-        ],
-      });
+      verifyLogins([
+        null, // ignore the first one
+        null, // ignore the 2nd one
+        {
+          timesUsed: 2,
+          usedSince: timeLastUsed,
+        },
+      ]);
       // Check no new doorhanger was shown
       notif = getCaptureDoorhanger("password-change");
       ok(!notif, "No new doorhanger should be shown");
+      await cleanupDoorhanger(); // cleanup for next test
     }
   );
 });
