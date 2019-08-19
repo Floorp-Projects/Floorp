@@ -924,11 +924,9 @@ void BasicCompositor::BeginFrame(
   if (mTarget) {
     MOZ_RELEASE_ASSERT(!mInvalidRect.IsEmpty());
 
-    // If we have a copy target, then we don't have a widget-provided
-    // mDrawTarget (currently). Use a dummy placeholder so that
-    // CreateRenderTarget() works. This is only used to create a new buffered
-    // draw target that we composite into, then copy the results the
-    // destination.
+    // If we have a copy target, render into that DrawTarget directly without
+    // any intermediate buffer. We don't need to call StartRemoteDrawingInRegion
+    // because we don't need a widget-provided DrawTarget.
     mDrawTarget = mTarget;
     mDrawTargetBounds = mTargetBounds;
     bufferMode = BufferMode::BUFFER_NONE;
@@ -963,8 +961,10 @@ void BasicCompositor::BeginFrame(
     clearRegion.SubOut(LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion));
   }
 
-  // Setup an intermediate render target to buffer all compositing. We will
-  // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
+  // Setup a render target for drawing. In cases where we need to buffer all
+  // compositing (bufferMode == BufferMode::BUFFERED), this will set up the back
+  // buffer. We will copy the drawing into mDrawTarget (the widget) in
+  // TryToEndRemoteDrawing(), which gets called during EndFrame().
   RefPtr<CompositingRenderTarget> target =
       CreateRenderTargetForWindow(mInvalidRect, clearRegion, bufferMode);
 
