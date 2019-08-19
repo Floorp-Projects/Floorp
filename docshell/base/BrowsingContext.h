@@ -492,6 +492,11 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Ensure that we only set the flag on the top level browsing context.
   void DidSetIsActivatedByUserGesture();
 
+  // Ensure that we only set the flag on the top level browsingContext.
+  // And then, we do a pre-order walk in the tree to refresh the
+  // volume of all media elements.
+  void DidSetMuted();
+
   // Type of BrowsingContent
   const Type mType;
 

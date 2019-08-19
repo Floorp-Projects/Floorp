@@ -175,13 +175,9 @@ void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
 }
 
 void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
-  nsPIDOMWindowOuter* window = GetDOMWindow();
-  if (window) {
-    window->SetAudioMuted(aMuted);
-  }
-  Group()->EachParent([&](ContentParent* aParent) {
-    Unused << aParent->SendSetMediaMuted(this, aMuted);
-  });
+  MOZ_ASSERT(!GetParent(),
+             "Notify media mute change on non top-level context!");
+  SetMuted(aMuted);
 }
 
 void CanonicalBrowsingContext::UpdateMediaAction(MediaControlActions aAction) {

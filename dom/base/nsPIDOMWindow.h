@@ -697,7 +697,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   ~nsPIDOMWindowOuter();
 
-  void RefreshMediaElementsVolume();
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
   bool IsDisposableSuspend(SuspendTypes aSuspend) const;
   void MaybeNotifyMediaResumedFromBlock(SuspendTypes aSuspend);
@@ -757,6 +756,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   nsresult SetAudioVolume(float aVolume);
 
   void MaybeActiveMediaComponents();
+
+  void RefreshMediaElementsVolume();
 
   void UpdateMediaAction(const mozilla::dom::MediaControlActions aAction);
 
