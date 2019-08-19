@@ -242,6 +242,14 @@ HashStore::~HashStore() = default;
 nsresult HashStore::Reset() {
   LOG(("HashStore resetting"));
 
+  // Close InputStream before removing the file
+  if (mInputStream) {
+    nsresult rv = mInputStream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mInputStream = nullptr;
+  }
+
   nsCOMPtr<nsIFile> storeFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -253,7 +261,6 @@ nsresult HashStore::Reset() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mFileSize = 0;
-  mInputStream = nullptr;
 
   return NS_OK;
 }
