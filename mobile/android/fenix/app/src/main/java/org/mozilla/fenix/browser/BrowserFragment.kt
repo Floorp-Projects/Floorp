@@ -173,7 +173,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
-
+        getSessionById()?.let { quickActionSheetSessionObserver?.updateBookmarkState(it) }
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
     }
 
