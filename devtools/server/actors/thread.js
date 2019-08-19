@@ -441,6 +441,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.pauseOverlay
     ) {
       const reason = this._priorPause.why.type;
+
+      // Do not show the pause overlay when scanning
+      if (this.dbg.replaying) {
+        return;
+      }
+
       this.pauseOverlay.show(null, { reason });
     }
   },
