@@ -581,7 +581,7 @@ DevTools.prototype = {
       : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
     this._telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
 
-    const browserWin = toolbox.win.top;
+    const browserWin = toolbox.topWindow;
     this._telemetry.addEventProperty(
       browserWin,
       "open",
