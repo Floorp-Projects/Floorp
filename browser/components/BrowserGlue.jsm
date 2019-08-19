@@ -61,6 +61,22 @@ let ACTORS = {
     allFrames: true,
   },
 
+  FormValidation: {
+    parent: {
+      moduleURI: "resource:///actors/FormValidationParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/FormValidationChild.jsm",
+      events: {
+        MozInvalidForm: {},
+      },
+      messages: ["FormValidation:ShowPopup", "FormValidation:HidePopup"],
+    },
+
+    allFrames: true,
+  },
+
   Plugin: {
     parent: {
       moduleURI: "resource:///actors/PluginParent.jsm",
@@ -241,15 +257,6 @@ let LEGACY_ACTORS = {
         "MozDOMFullscreen:Exited": {},
       },
       messages: ["DOMFullscreen:Entered", "DOMFullscreen:CleanUp"],
-    },
-  },
-
-  FormValidation: {
-    child: {
-      module: "resource:///actors/FormValidationChild.jsm",
-      events: {
-        MozInvalidForm: {},
-      },
     },
   },
 
@@ -550,7 +557,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
-  FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   PluginManager: "resource:///actors/PluginParent.jsm",
   PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
@@ -652,8 +658,6 @@ const listeners = {
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     "Content:Click": ["ContentClick"],
     ContentSearch: ["ContentSearch"],
-    "FormValidation:ShowPopup": ["FormValidationHandler"],
-    "FormValidation:HidePopup": ["FormValidationHandler"],
     "PictureInPicture:Request": ["PictureInPicture"],
     "PictureInPicture:Close": ["PictureInPicture"],
     "PictureInPicture:Playing": ["PictureInPicture"],
