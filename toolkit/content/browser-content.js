@@ -5,7 +5,6 @@
 
 /* eslint-env mozilla/frame-script */
 /* eslint no-unused-vars: ["error", {args: "none"}] */
-/* global sendAsyncMessage */
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { XPCOMUtils } = ChromeUtils.import(

@@ -16,6 +16,11 @@ var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserAc
 var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
 
 add_task(async function test_query_highlighted() {
+  if (!SpecialPowers.Services.androidBridge.isFennec) {
+    // GeckoView does not support extension popups
+    info('skipping test_query_highlighted');
+    return;
+  }
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -100,11 +105,10 @@ add_task(async function test_query_index() {
     },
   });
 
-  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
   await extension.startup();
-  let tab = BrowserApp.addTab("http://example.com/");
+  const win = window.open("http://example.com");
   await extension.awaitFinish("tabs.query");
-  BrowserApp.closeTab(tab);
+  win.close();
   await extension.unload();
 });
 </script>

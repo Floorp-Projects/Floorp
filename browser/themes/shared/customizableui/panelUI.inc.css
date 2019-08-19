@@ -1113,7 +1113,7 @@ panelview .toolbarbutton-1,
   content: url(chrome://browser/skin/back-12.svg);
   fill: currentColor;
   fill-opacity: 0.6;
-  float: right;
+  float: inline-end;
   transform: translateY(1px);
 }
 

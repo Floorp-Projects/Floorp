@@ -48,6 +48,11 @@ add_task(async function testExecuteScript() {
 
     try {
       [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      // TODO bug 1565536: tab.active is broken in GeckoView.
+      if (!SpecialPowers.Services.androidBridge.isFennec) {
+        browser.test.assertEq(undefined, tab, "currentWindow's tab is not active (bug 1565536)");
+        [tab] = await browser.tabs.query({currentWindow: true});
+      }
 
       let success = false;
       for (let tries = 0; !success && tries < MAX_TRIES; tries++) {
