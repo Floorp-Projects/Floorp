@@ -49,12 +49,6 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun registerDeviceObserver(observer: DeviceConstellationObserver, owner: LifecycleOwner, autoPause: Boolean)
 
     /**
-     * Get all devices in the constellation.
-     * @return A list of all devices in the constellation, or `null` on failure.
-     */
-    fun fetchAllDevicesAsync(): Deferred<List<Device>?>
-
-    /**
      * Set name of the current device.
      * @param name New device name.
      * @return A [Deferred] that will be resolved with a success flag once operation is complete.
@@ -84,29 +78,19 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun processRawEventAsync(payload: String): Deferred<Boolean>
 
     /**
-     * Poll for events targeted at the current [Device]. It's expected that if a [DeviceEvent] was
-     * returned after a poll, it will not be returned in consequent polls.
-     * @return A list of [DeviceEvent] instances that are currently pending for this [Device], or `null` on failure.
-     */
-    fun pollForEventsAsync(): Deferred<List<DeviceEvent>?>
-
-    /**
-     * Begin periodically refreshing constellation state, including polling for events.
-     */
-    fun startPeriodicRefresh()
-
-    /**
-     * Stop periodically refreshing constellation state and polling for events.
-     */
-    fun stopPeriodicRefresh()
-
-    /**
-     * Refreshes [ConstellationState] and polls for device events.
+     * Refreshes [ConstellationState]. Registered [DeviceConstellationObserver] observers will be notified.
      *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete. Failure may
-     * indicate a partial success.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun refreshDeviceStateAsync(): Deferred<Boolean>
+    fun refreshDevicesAsync(): Deferred<Boolean>
+
+    /**
+     * Polls for any pending [DeviceEvent] events.
+     * In case of new events, registered [DeviceEventsObserver] observers will be notified.
+     *
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     */
+    fun pollForEventsAsync(): Deferred<Boolean>
 }
 
 /**

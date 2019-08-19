@@ -4,13 +4,13 @@
 
 package mozilla.components.service.fxa
 
+import androidx.annotation.GuardedBy
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.FirefoxAccount
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -22,8 +22,6 @@ import mozilla.components.concept.sync.DeviceEventOutgoing
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.service.fxa.manager.DeviceManagerProvider
-import mozilla.components.service.fxa.manager.PollingDeviceManager
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -39,19 +37,12 @@ class FxaDeviceConstellation(
     private val logger = Logger("FxaDeviceConstellation")
 
     private val deviceObserverRegistry = ObserverRegistry<DeviceConstellationObserver>()
-    private val deviceManager = PollingDeviceManager(this, scope, deviceObserverRegistry)
 
-    init {
-        DeviceManagerProvider.deviceManager = deviceManager
+    @GuardedBy("this")
+    private var constellationState: ConstellationState? = null
 
-        deviceManager.register(object : DeviceEventsObserver {
-            override fun onEvents(events: List<DeviceEvent>) {
-                // TODO notifyObserversOnMainThread
-                CoroutineScope(Dispatchers.Main).launch {
-                    notifyObservers { onEvents(events) }
-                }
-            }
-        })
+    override fun state(): ConstellationState? = synchronized(this) {
+        return constellationState
     }
 
     override fun initDeviceAsync(
@@ -77,33 +68,7 @@ class FxaDeviceConstellation(
     override fun processRawEventAsync(payload: String): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "processing raw events") {
-                val events = account.handlePushMessage(payload).filter {
-                    it is AccountEvent.TabReceived
-                }.map {
-                    (it as AccountEvent.TabReceived).into()
-                }
-                deviceManager.processEvents(events)
-            }
-        }
-    }
-
-    override fun pollForEventsAsync(): Deferred<List<DeviceEvent>?> {
-        // Currently ignoring non-TabReceived events.
-        return scope.async {
-            handleFxaExceptions(logger, "polling for device events", { null }) {
-                account.pollDeviceCommands().filter {
-                    it is AccountEvent.TabReceived
-                }.map {
-                    (it as AccountEvent.TabReceived).into()
-                }
-            }
-        }
-    }
-
-    override fun fetchAllDevicesAsync(): Deferred<List<Device>?> {
-        return scope.async {
-            handleFxaExceptions(logger, "fetching all devices", { null }) {
-                account.getDevices().map { it.into() }
+                processEvents(account.handlePushMessage(payload).map { it.into() })
             }
         }
     }
@@ -122,7 +87,7 @@ class FxaDeviceConstellation(
                 account.setDeviceDisplayName(name)
             }
             // See the latest device (name) changes after changing it.
-            val refreshDevices = deviceManager.refreshDevicesAsync().await()
+            val refreshDevices = refreshDevicesAsync().await()
 
             rename && refreshDevices
         }
@@ -151,26 +116,67 @@ class FxaDeviceConstellation(
         }
     }
 
-    override fun state(): ConstellationState? {
-        return deviceManager.constellationState()
-    }
-
-    override fun startPeriodicRefresh() {
-        deviceManager.startPolling()
-    }
-
-    override fun stopPeriodicRefresh() {
-        deviceManager.stopPolling()
-    }
-
-    override fun refreshDeviceStateAsync(): Deferred<Boolean> {
+    override fun pollForEventsAsync(): Deferred<Boolean> {
         return scope.async {
-            val refreshedDevices = deviceManager.refreshDevicesAsync().await()
-            val events = pollForEventsAsync().await()?.let {
-                deviceManager.processEvents(it)
+            val events = handleFxaExceptions(logger, "polling for device events", { null }) {
+                account.pollDeviceCommands().map { it.into() }
+            }
+
+            if (events == null) {
+                false
+            } else {
+                processEvents(events)
                 true
-            } ?: false
-            refreshedDevices && events
+            }
+        }
+    }
+
+    private fun processEvents(events: List<DeviceEvent>) = CoroutineScope(Dispatchers.Main).launch {
+        notifyObservers { onEvents(events) }
+    }
+
+    override fun refreshDevicesAsync(): Deferred<Boolean> = synchronized(this) {
+        return scope.async {
+            logger.info("Refreshing device list...")
+
+            // Attempt to fetch devices, or bail out on failure.
+            val allDevices = fetchAllDevicesAsync().await() ?: return@async false
+
+            // Find the current device.
+            val currentDevice = allDevices.find { it.isCurrentDevice }
+            // Filter out the current devices.
+            val otherDevices = allDevices.filter { !it.isCurrentDevice }
+
+            val newState = ConstellationState(currentDevice, otherDevices)
+            constellationState = newState
+
+            CoroutineScope(Dispatchers.Main).launch {
+                // NB: at this point, 'constellationState' might have changed.
+                // Notify with an immutable, local 'newState' instead.
+                deviceObserverRegistry.notifyObservers { onDevicesUpdate(newState) }
+            }
+
+            // Check if our current device's push subscription needs to be renewed.
+            constellationState?.currentDevice?.let {
+                if (it.subscriptionExpired) {
+                    logger.info("Current device needs push endpoint registration")
+                }
+            }
+
+            logger.info("Refreshed device list; saw ${allDevices.size} device(s).")
+            true
+        }
+    }
+
+    /**
+     * Get all devices in the constellation.
+     * @return A list of all devices in the constellation, or `null` on failure.
+     */
+    private fun fetchAllDevicesAsync(): Deferred<List<Device>?> {
+        return scope.async {
+            handleFxaExceptions(logger, "fetching all devices", { null }) {
+                account.getDevices().map { it.into() }
+            }
         }
     }
 }

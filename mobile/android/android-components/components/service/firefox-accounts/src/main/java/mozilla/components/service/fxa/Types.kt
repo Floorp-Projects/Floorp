@@ -159,6 +159,12 @@ fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry {
     )
 }
 
+fun AccountEvent.into(): mozilla.components.concept.sync.DeviceEvent {
+    return when (this) {
+        is AccountEvent.TabReceived -> this.into()
+    }
+}
+
 fun AccountEvent.TabReceived.into(): mozilla.components.concept.sync.DeviceEvent.TabReceived {
     return mozilla.components.concept.sync.DeviceEvent.TabReceived(
         from = this.from?.into(),

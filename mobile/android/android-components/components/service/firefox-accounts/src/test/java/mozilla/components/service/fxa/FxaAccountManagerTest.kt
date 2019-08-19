@@ -185,8 +185,8 @@ class FxaAccountManagerTest {
             return inner.isSyncActive()
         }
 
-        override fun syncNow(startup: Boolean) {
-            inner.syncNow(startup)
+        override fun syncNow(startup: Boolean, debounce: Boolean) {
+            inner.syncNow(startup, debounce)
         }
 
         override fun startPeriodicSync(unit: TimeUnit, period: Long) {
@@ -242,7 +242,7 @@ class FxaAccountManagerTest {
     fun `updating sync config, without it at first`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
 
         val syncAccessTokenExpiresAt = System.currentTimeMillis() + 10 * 60 * 1000L
         val account = StatePersistenceTestableAccount(profile, constellation, tokenServerEndpointUrl = "https://some.server.com/test") {
@@ -306,14 +306,14 @@ class FxaAccountManagerTest {
         assertNotNull(latestSyncManager?.dispatcher?.inner)
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // With periodic sync.
         manager.setSyncConfigAsync(SyncConfig(setOf("history"), 60 * 1000L)).await()
 
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Make sure sync status listeners are working.
         // TODO fix these tests.
@@ -340,7 +340,7 @@ class FxaAccountManagerTest {
     fun `updating sync config, with one to begin with`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
 
         val syncAccessTokenExpiresAt = System.currentTimeMillis() + 10 * 60 * 1000L
         val account = StatePersistenceTestableAccount(profile, constellation, tokenServerEndpointUrl = "https://some.server.com/test") {
@@ -398,13 +398,15 @@ class FxaAccountManagerTest {
         assertNotNull(latestSyncManager!!.dispatcher.inner)
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Can trigger syncs.
         manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
         manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
+        manager.syncNowAsync(startup = true, debounce = true).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = true)
 
         // TODO fix these tests
 //        assertEquals(0, syncStatusObserver.onStartedCount)
@@ -425,13 +427,13 @@ class FxaAccountManagerTest {
 
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
 
         // Can trigger syncs.
         manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
         manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
 
         // Pretend sync is running.
         `when`(latestSyncManager!!.dispatcher.inner.isSyncActive()).thenReturn(true)
@@ -450,7 +452,7 @@ class FxaAccountManagerTest {
         // - all good, migrated successfully
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
 
@@ -511,7 +513,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
@@ -535,11 +537,9 @@ class FxaAccountManagerTest {
         verify(constellation).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
-        // Assert that periodic account refresh never started.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
-        // Assert that we cancel any existing periodic jobs.
-        verify(constellation).stopPeriodicRefresh()
+        // Assert that we refresh device state.
+        verify(constellation).refreshDevicesAsync()
+        verify(constellation).pollForEventsAsync()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -550,7 +550,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence, ensureCapabilities hit an intermittent error`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
@@ -574,10 +574,6 @@ class FxaAccountManagerTest {
         verify(constellation).ensureCapabilitiesAsync(setOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
-        // Assert that periodic account refresh never started.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
-
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
         verify(accountStorage).write("test")
@@ -587,7 +583,7 @@ class FxaAccountManagerTest {
     fun `restored account state persistence, hit an auth error`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation, ableToRecoverFromAuthError = false)
 
         val accountObserver: AccountObserver = mock()
@@ -657,7 +653,7 @@ class FxaAccountManagerTest {
     fun `newly authenticated account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-        val constellation: DeviceConstellation = mock()
+        val constellation: DeviceConstellation = mockDeviceConstellation()
         val account = StatePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
@@ -687,17 +683,10 @@ class FxaAccountManagerTest {
 
         assertEquals("auth://url", manager.beginAuthenticationAsync().await())
 
-        // Assert that periodic account refresh didn't start after kicking off auth.
-        verify(constellation, never()).startPeriodicRefresh()
-
         manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
 
         // Assert that persistence callback is set.
         assertNotNull(account.persistenceCallback)
-
-        // Assert that periodic account refresh is never started after finishing auth.
-        // See https://github.com/mozilla-mobile/android-components/issues/3433
-        verify(constellation, never()).startPeriodicRefresh()
 
         // Assert that initDevice fired, but not ensureCapabilities (since we're initing a new account).
         verify(constellation).initDeviceAsync(any(), any(), eq(setOf(DeviceCapability.SEND_TAB)))
@@ -892,6 +881,10 @@ class FxaAccountManagerTest {
 
         assertEquals(mockAccount, manager.authenticatedAccount())
         assertEquals(profile, manager.accountProfile())
+
+        // Assert that we don't refresh device state for non-SEND_TAB enabled devices.
+        verify(constellation, never()).refreshDevicesAsync()
+        verify(constellation, never()).pollForEventsAsync()
 
         // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
@@ -1576,5 +1569,12 @@ class FxaAccountManagerTest {
         }
 
         return manager
+    }
+
+    private fun mockDeviceConstellation(): DeviceConstellation {
+        val c: DeviceConstellation = mock()
+        `when`(c.refreshDevicesAsync()).thenReturn(CompletableDeferred(true))
+        `when`(c.pollForEventsAsync()).thenReturn(CompletableDeferred(true))
+        return c
     }
 }

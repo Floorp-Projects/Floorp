@@ -28,6 +28,14 @@ permalink: /changelog/
 * **browser-toolbar**
   * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
 
+* **service-firefox-accounts**, `concept-sync`
+  * `FxaAccountManager`, if configured with `DeviceCapability.SEND_TAB`, will now automatically refresh device constellation state and poll for device events during initialization and login.
+  * `FxaAccountManager.syncNowAsync` can now receive a `debounce` parameter, allowing consumers to specify debounce behaviour of their sync requests.
+  * ⚠️ **This is a breaking change:**
+  * Removed public methods from `DeviceConstellation` and its implementation in `FxaDeviceConstellation`: `fetchAllDevicesAsync`, `startPeriodicRefresh`, `stopPeriodicRefresh`.
+  * `DeviceConstellation`@`refreshDeviceStateAsync` no longer polls for device events, and was renamed to `refreshDevicesAsync`.
+  * `pollForEventsAsync` no longer returns the events. Use the observer API instead.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)
