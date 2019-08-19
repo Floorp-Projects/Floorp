@@ -4884,6 +4884,13 @@
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
 
+# Whether to disable legacy names "small", "normal" and "big" for the
+# mathsize attribute.
+- name: mathml.mathsize_names.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable legacy names "thin", "thick" and "medium" for the
 # linethickness attribute of the mfrac element.
 - name: mathml.mfrac_linethickness_names.disabled

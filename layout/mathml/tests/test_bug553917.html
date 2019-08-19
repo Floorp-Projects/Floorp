@@ -16,6 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
 
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
+      const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -58,10 +59,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
         <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
         <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
+        <math><mstyle mathsize="small"></mstyle></math>
+        <math><mstyle mathsize="normal"></mstyle></math>
+        <math><mstyle mathsize="big"></mstyle></math>
       */
         LengthParsingError : {
-          status: [false, false, false, false, false, false, allow_linethickness_names, allow_linethickness_names, allow_linethickness_names],
-          args: [["2..0"], ["1.5notaunit"], ["2"],["BADlspace"],["BADheight"],["BADdepth"], ["thin"],["medium"],["thick"]]
+            status: [false,
+                     false,
+                     false,
+                     false,
+                     false,
+                     false,
+                     allow_linethickness_names,
+                     allow_linethickness_names,
+                     allow_linethickness_names,
+                     allow_mathsize_names,
+                     allow_mathsize_names,
+                     allow_mathsize_names,
+                    ],
+            args: [["2..0"],
+                   ["1.5notaunit"],
+                   ["2"],
+                   ["BADlspace"],
+                   ["BADheight"],
+                   ["BADdepth"],
+                   ["thin"],
+                   ["medium"],
+                   ["thick"],
+                   ["small"],
+                   ["normal"],
+                   ["big"],
+                  ]
         },
       /*<math><mmultiscripts></mmultiscripts></math>
         <math><mmultiscripts><mprescripts/><mprescripts/></mmultiscripts></math>
@@ -166,6 +194,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mfrac linethickness="thin"><mn>1</mn><mn>2</mn></mfrac></math>
     <math><mfrac linethickness="medium"><mn>1</mn><mn>2</mn></mfrac></math>
     <math><mfrac linethickness="thick"><mn>1</mn><mn>2</mn></mfrac></math>
+    <math><mstyle mathsize="small"></mstyle></math>
+    <math><mstyle mathsize="normal"></mstyle></math>
+    <math><mstyle mathsize="big"></mstyle></math>
     
     <!-- MMultiscriptsErrors -->
     <math><mmultiscripts></mmultiscripts></math>
