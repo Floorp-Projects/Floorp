@@ -193,7 +193,8 @@ class _ToolbarPanelHub {
       );
     }
 
-    const wrapperEl = this._createElement(doc, "div");
+    const wrapperEl = this._createElement(doc, "button");
+    wrapperEl.doCommand = () => {};
     wrapperEl.classList.add("whatsNew-message-body");
     messageEl.appendChild(wrapperEl);
     wrapperEl.addEventListener("click", () => {
@@ -227,7 +228,7 @@ class _ToolbarPanelHub {
     wrapperEl.appendChild(bodyEl);
 
     if (content.link_text) {
-      const linkEl = this._createElement(doc, "button");
+      const linkEl = this._createElement(doc, "a");
       linkEl.classList.add("text-link");
       this._setString(doc, linkEl, content.link_text);
       wrapperEl.appendChild(linkEl);
@@ -263,7 +264,7 @@ class _ToolbarPanelHub {
     wrapperEl.appendChild(bodyEl);
 
     if (content.link_text) {
-      const linkEl = this._createElement(doc, "button");
+      const linkEl = this._createElement(doc, "a");
       linkEl.classList.add("text-link");
       this._setString(doc, linkEl, content.link_text);
       wrapperEl.appendChild(linkEl);
