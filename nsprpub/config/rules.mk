@@ -280,10 +280,13 @@ ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
 
-$(LIBRARY): $(OBJS)
+# Same as OBJS, but without any file that matches p*vrsion.o, since these
+# collide for static libraries, and are not useful for that case anyway.
+STATICLIB_OBJS = $(filter-out $(OBJDIR)/p%vrsion.$(OBJ_SUFFIX),$(OBJS))
+$(LIBRARY): $(STATICLIB_OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(AR) $(AR_FLAGS) $(OBJS) $(AR_EXTRA_ARGS)
+	$(AR) $(AR_FLAGS) $(STATICLIB_OBJS) $(AR_EXTRA_ARGS)
 	$(RANLIB) $@
 
 ifeq ($(OS_TARGET), OS2)
