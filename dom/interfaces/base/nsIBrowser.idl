@@ -81,6 +81,8 @@ interface nsIBrowser : nsISupports
                                        in Array<ACString> disabledCommands);
 
   readonly attribute nsIPrincipal contentPrincipal;
+  readonly attribute nsIPrincipal contentStoragePrincipal;
+  readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
   readonly attribute nsIReferrerInfo referrerInfo;
 
@@ -154,6 +156,7 @@ interface nsIBrowser : nsISupports
                                in AString aTitle,
                                in nsIPrincipal aContentPrincipal,
                                in nsIPrincipal aContentStoragePrincipal,
+                               in nsIPrincipal aContentBlockingAllowListPrincipal,
                                in nsIContentSecurityPolicy aCSP,
                                in nsIReferrerInfo aReferrerInfo,
                                in boolean aIsSynthetic,

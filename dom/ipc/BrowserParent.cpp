@@ -2505,6 +2505,13 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         PrincipalInfoToPrincipal(aLocationChangeData->contentPrincipal());
     nsCOMPtr<nsIPrincipal> contentStoragePrincipal = PrincipalInfoToPrincipal(
         aLocationChangeData->contentStoragePrincipal());
+    nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+    if (aLocationChangeData->contentBlockingAllowListPrincipal().type() ==
+        OptionalPrincipalInfo::TPrincipalInfo) {
+      contentBlockingAllowListPrincipal = PrincipalInfoToPrincipal(
+          aLocationChangeData->contentBlockingAllowListPrincipal()
+              .get_PrincipalInfo());
+    }
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
         aLocationChangeData->referrerInfo();
 
@@ -2514,7 +2521,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->mayEnableCharacterEncodingMenu(),
         aLocationChangeData->charsetAutodetected(),
         aLocationChangeData->documentURI(), aLocationChangeData->title(),
-        contentPrincipal, contentStoragePrincipal, csp, referrerInfo,
+        contentPrincipal, contentStoragePrincipal,
+        contentBlockingAllowListPrincipal, csp, referrerInfo,
         aLocationChangeData->isSyntheticDocument(),
         aWebProgressData->innerDOMWindowID(),
         aLocationChangeData->requestContextID().isSome(),
