@@ -529,7 +529,7 @@ mozilla::ipc::IPCResult LocalStorageCacheParent::RecvNotify(
       // not match.
       Unused << localStorageCacheParent->SendObserve(
           mPrincipalInfo, localStorageCacheParent->PrincipalInfo(),
-          mPrivateBrowsingId, aKey, aDocumentURI, aOldValue, aNewValue);
+          mPrivateBrowsingId, aDocumentURI, aKey, aOldValue, aNewValue);
     }
   }
 
