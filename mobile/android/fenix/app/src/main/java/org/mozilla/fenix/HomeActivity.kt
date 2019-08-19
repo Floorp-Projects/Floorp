@@ -122,8 +122,14 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        handleCrashIfNecessary(intent)
-        handleOpenedFromExternalSourceIfNecessary(intent)
+
+        intent?.let {
+            if (Crash.isCrashIntent(it)) {
+                openToCrashReporter(it)
+            } else {
+                handleOpenedFromExternalSourceIfNecessary(it)
+            }
+        }
     }
 
     override fun onResume() {
@@ -162,17 +168,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             }
         }
         super.onBackPressed()
-    }
-
-    private fun handleCrashIfNecessary(intent: Intent?) {
-        if (intent == null) {
-            return
-        }
-        if (!Crash.isCrashIntent(intent)) {
-            return
-        }
-
-        openToCrashReporter(intent)
     }
 
     private fun openToCrashReporter(intent: Intent) {

@@ -11,12 +11,14 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.Settings
 
@@ -61,7 +63,7 @@ class CrashReporterFragment : Fragment() {
         } else {
             requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
             requireComponents.useCases.sessionUseCases.crashRecovery.invoke()
-            navigateHome(view!!)
+            navigateHome()
         }
     }
 
@@ -74,7 +76,8 @@ class CrashReporterFragment : Fragment() {
         requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(didSubmitCrashReport))
     }
 
-    private fun navigateHome(fromView: View) {
-        Navigation.findNavController(fromView).popBackStack(R.id.browserFragment, true)
+    private fun navigateHome() {
+        val directions = CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
+        findNavController().nav(R.id.crashReporterFragment, directions)
     }
 }

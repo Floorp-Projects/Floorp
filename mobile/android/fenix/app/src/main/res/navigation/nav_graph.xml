@@ -369,7 +369,8 @@
         android:label="CrashReporterFragment">
         <action
             android:id="@+id/action_crashReporterFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_graph"/>
         <argument
             android:name="crashIntent"
             app:argType="android.content.Intent" />
