@@ -1347,7 +1347,6 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
    * signed messages according to the OpenPGP standard (RFC 2440).
    */
   if (!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-      !(mFlags & nsIDocumentEncoder::OutputDontRemoveLineEndingSpaces) &&
       (aSoftlinebreak || !(mCurrentLine.EqualsLiteral("-- ") ||
                            mCurrentLine.EqualsLiteral("- -- ")))) {
     // Remove spaces from the end of the line.
