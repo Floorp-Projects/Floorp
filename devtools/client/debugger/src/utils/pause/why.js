@@ -18,6 +18,8 @@ const reasons = {
   breakpointConditionThrown: "whyPaused.breakpointConditionThrown",
   eventBreakpoint: "whyPaused.eventBreakpoint",
   mutationBreakpoint: "whyPaused.mutationBreakpoint",
+  interrupted: "whyPaused.interrupted",
+  replayForcedPause: "whyPaused.replayForcedPause",
 
   // V8
   DOM: "whyPaused.breakpoint",
