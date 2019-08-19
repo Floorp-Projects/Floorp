@@ -438,43 +438,6 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::Open(
       // so this will be reported every time.
       WorkerPrivate::ReportErrorToConsole("IDBOpenDBOptions_StorageType");
     }
-
-    bool ignore = false;
-    // Ignore internal usage on about: pages.
-    if (NS_IsMainThread()) {
-      nsCOMPtr<nsIPrincipal> principal =
-          PrincipalInfoToPrincipal(*mPrincipalInfo);
-      if (principal) {
-        nsCOMPtr<nsIURI> uri;
-        nsresult rv = principal->GetURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv) && uri && uri->SchemeIs("about")) {
-          ignore = true;
-        }
-      }
-    }
-
-    if (!ignore) {
-      switch (aOptions.mStorage.Value()) {
-        case StorageType::Persistent: {
-          Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_PERSISTENT_COUNT,
-                               1);
-          break;
-        }
-
-        case StorageType::Temporary: {
-          Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_TEMPORARY_COUNT,
-                               1);
-          break;
-        }
-
-        case StorageType::Default:
-        case StorageType::EndGuard_:
-          break;
-
-        default:
-          MOZ_CRASH("Invalid storage type!");
-      }
-    }
   }
 
   return OpenInternal(aCx,
