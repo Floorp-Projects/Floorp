@@ -102,7 +102,7 @@ StaticMutex CamerasParent::sMutex;
 
 // InputObserver is owned by CamerasParent, and it has a ref to CamerasParent
 void InputObserver::OnDeviceChange() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(mParent);
 
   RefPtr<InputObserver> self(this);
@@ -201,7 +201,7 @@ nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
 }
 
 void CamerasParent::StopVideoCapture() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   // We are called from the main thread (xpcom-shutdown) or
   // from PBackground (when the Actor shuts down).
   // Shut down the WebRTC stack (on the capture thread)
@@ -283,7 +283,7 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
-  LOG_VERBOSE((__PRETTY_FUNCTION__));
+  LOG_VERBOSE(("%s", __PRETTY_FUNCTION__));
   RefPtr<DeliverFrameRunnable> runnable = nullptr;
   // Get frame properties
   camera::VideoFrameProperties properties;
@@ -319,7 +319,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvReleaseFrame(
 }
 
 bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
 
   if (!engine) {
@@ -371,7 +371,7 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
 }
 
 void CamerasParent::CloseEngines() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   if (!mWebRTCAlive) {
     return;
   }
@@ -411,7 +411,7 @@ void CamerasParent::CloseEngines() {
 }
 
 VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
-  LOG_VERBOSE((__PRETTY_FUNCTION__));
+  LOG_VERBOSE(("%s", __PRETTY_FUNCTION__));
   // We're shutting down, don't try to do new WebRTC ops.
   if (!mWebRTCAlive) {
     return nullptr;
@@ -432,7 +432,7 @@ VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
 // perhaps via Promises.
 mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
     const CaptureEngine& aCapEngine) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("CaptureEngine=%d", aCapEngine));
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine]() {
@@ -466,7 +466,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
 
 mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
     const CaptureEngine& aCapEngine) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine]() {
@@ -496,7 +496,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
 
 mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
     const CaptureEngine& aCapEngine, const nsCString& unique_id) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("Getting caps for %s", unique_id.get()));
 
   RefPtr<CamerasParent> self(this);
@@ -533,7 +533,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
 mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
     const CaptureEngine& aCapEngine, const nsCString& unique_id,
     const int& num) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("RecvGetCaptureCapability: %s %d", unique_id.get(), num));
 
   RefPtr<CamerasParent> self(this);
@@ -586,7 +586,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
 
 mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
     const CaptureEngine& aCapEngine, const int& aListNumber) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine,
@@ -756,7 +756,7 @@ int CamerasParent::ReleaseCaptureDevice(const CaptureEngine& aCapEngine,
 
 mozilla::ipc::IPCResult CamerasParent::RecvReleaseCaptureDevice(
     const CaptureEngine& aCapEngine, const int& numdev) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("RecvReleaseCamera device nr %d", numdev));
 
   RefPtr<CamerasParent> self(this);
@@ -788,12 +788,12 @@ mozilla::ipc::IPCResult CamerasParent::RecvReleaseCaptureDevice(
 mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
     const CaptureEngine& aCapEngine, const int& capnum,
     const VideoCaptureCapability& ipcCaps) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine, capnum,
                                                       ipcCaps]() {
-    LOG((__PRETTY_FUNCTION__));
+    LOG(("%s", __PRETTY_FUNCTION__));
     CallbackHelper** cbh;
     int error = -1;
     if (self->EnsureInitialized(aCapEngine)) {
@@ -915,7 +915,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
 
 mozilla::ipc::IPCResult CamerasParent::RecvFocusOnSelectedSource(
     const CaptureEngine& aCapEngine, const int& aCapNum) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom(
       [self = RefPtr<CamerasParent>(this), aCapEngine, aCapNum]() {
         if (auto engine = self->EnsureInitialized(aCapEngine)) {
@@ -977,7 +977,7 @@ void CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
 
 mozilla::ipc::IPCResult CamerasParent::RecvStopCapture(
     const CaptureEngine& aCapEngine, const int& capnum) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable =
@@ -1015,7 +1015,7 @@ void CamerasParent::StopIPC() {
 }
 
 mozilla::ipc::IPCResult CamerasParent::RecvAllDone() {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   // Don't try to send anything to the child now
   mChildIsAlive = false;
   IProtocol* mgr = Manager();
@@ -1027,7 +1027,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvAllDone() {
 
 void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
   // No more IPC from here
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   StopIPC();
   // Shut down WebRTC (if we're not in full shutdown, else this
   // will already have happened)
