@@ -133,14 +133,21 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
   switch (aArgs.type()) {
     case HttpChannelCreationArgs::THttpChannelOpenArgs: {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
+      PrincipalInfo contentBlockingAllowListPrincipal;
+      if (a.contentBlockingAllowListPrincipal().type() ==
+          OptionalPrincipalInfo::TPrincipalInfo) {
+        contentBlockingAllowListPrincipal =
+            a.contentBlockingAllowListPrincipal();
+      }
       return DoAsyncOpen(
           a.uri(), a.original(), a.doc(), a.referrerInfo(), a.apiRedirectTo(),
-          a.topWindowURI(), a.loadFlags(), a.requestHeaders(),
-          a.requestMethod(), a.uploadStream(), a.uploadStreamHasHeaders(),
-          a.priority(), a.classOfService(), a.redirectionLimit(), a.allowSTS(),
-          a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
-          a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
-          a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
+          a.topWindowURI(), contentBlockingAllowListPrincipal, a.loadFlags(),
+          a.requestHeaders(), a.requestMethod(), a.uploadStream(),
+          a.uploadStreamHasHeaders(), a.priority(), a.classOfService(),
+          a.redirectionLimit(), a.allowSTS(), a.thirdPartyFlags(), a.resumeAt(),
+          a.startPos(), a.entityID(), a.chooseApplicationCache(),
+          a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(),
+          a.beConservative(), a.tlsFlags(), a.loadInfo(),
           a.synthesizedResponseHead(), a.synthesizedSecurityInfoSerialization(),
           a.cacheKey(), a.requestContextID(), a.preflightArgs(),
           a.initialRwin(), a.blockAuthPrompt(),
@@ -382,13 +389,14 @@ bool HttpChannelParent::DoAsyncOpen(
     const URIParams& aURI, const Maybe<URIParams>& aOriginalURI,
     const Maybe<URIParams>& aDocURI, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectToURI,
-    const Maybe<URIParams>& aTopWindowURI, const uint32_t& aLoadFlags,
-    const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
-    const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
-    const int16_t& priority, const uint32_t& classOfService,
-    const uint8_t& redirectionLimit, const bool& allowSTS,
-    const uint32_t& thirdPartyFlags, const bool& doResumeAt,
-    const uint64_t& startPos, const nsCString& entityID,
+    const Maybe<URIParams>& aTopWindowURI,
+    const PrincipalInfo& aContentBlockingAllowListPrincipal,
+    const uint32_t& aLoadFlags, const RequestHeaderTuples& requestHeaders,
+    const nsCString& requestMethod, const Maybe<IPCStream>& uploadStream,
+    const bool& uploadStreamHasHeaders, const int16_t& priority,
+    const uint32_t& classOfService, const uint8_t& redirectionLimit,
+    const bool& allowSTS, const uint32_t& thirdPartyFlags,
+    const bool& doResumeAt, const uint64_t& startPos, const nsCString& entityID,
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
     const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
     const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
@@ -424,6 +432,10 @@ bool HttpChannelParent::DoAsyncOpen(
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
+  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal =
+      (aContentBlockingAllowListPrincipal.type() != PrincipalInfo::T__None)
+          ? PrincipalInfoToPrincipal(aContentBlockingAllowListPrincipal)
+          : nullptr;
 
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64
        " topwinid=%" PRIx64 "]\n",
@@ -488,6 +500,11 @@ bool HttpChannelParent::DoAsyncOpen(
   if (topWindowUri) {
     rv = httpChannel->SetTopWindowURI(topWindowUri);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
+  if (contentBlockingAllowListPrincipal) {
+    httpChannel->SetContentBlockingAllowListPrincipal(
+        contentBlockingAllowListPrincipal);
   }
 
   if (aLoadFlags != nsIRequest::LOAD_NORMAL)

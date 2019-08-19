@@ -1955,6 +1955,49 @@ nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
   principal.forget(aPrincipal);
 }
 
+/* static */ void
+AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
+    nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs,
+    nsIPrincipal** aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  auto returnInputArgument = MakeScopeExit([&] { *aPrincipal = nullptr; });
+
+  // Take the host/port portion so we can allowlist by site. Also ignore the
+  // scheme, since users who put sites on the allowlist probably don't expect
+  // allowlisting to depend on scheme.
+  nsAutoCString escaped(NS_LITERAL_CSTRING("https://"));
+  nsAutoCString temp;
+  nsresult rv = aURIBeingLoaded->GetHostPort(temp);
+  // view-source URIs will be handled by the next block.
+  if (NS_FAILED(rv) && !aURIBeingLoaded->SchemeIs("view-source")) {
+    // Normal for some loads, no need to print a warning
+    return;
+  }
+
+  // GetHostPort returns an empty string (with a success error code) for file://
+  // URIs.
+  if (temp.IsEmpty()) {
+    return;
+  }
+  escaped.Append(temp);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), escaped);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateContentPrincipal(uri, aAttrs);
+  if (NS_WARN_IF(!principal)) {
+    return;
+  }
+
+  returnInputArgument.release();
+  principal.forget(aPrincipal);
+}
+
 /* static */
 void AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
                                                 BlockingDecision aDecision,
