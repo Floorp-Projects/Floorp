@@ -126,6 +126,15 @@ class MenuButtonTest {
         verify(context).getDrawable(R.drawable.mozac_menu_indicator)
     }
 
+    @Test
+    fun `menu can be dismissed`() {
+        menuButton.menu = menu
+
+        menuButton.dismissMenu()
+
+        verify(menuButton.menu)?.dismiss()
+    }
+
     private fun extractIcon() =
         menuButton.iterator().asSequence().find { it is AppCompatImageView } as AppCompatImageView
 

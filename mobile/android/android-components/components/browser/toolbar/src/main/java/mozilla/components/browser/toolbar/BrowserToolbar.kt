@@ -557,6 +557,10 @@ class BrowserToolbar @JvmOverloads constructor(
         return false
     }
 
+    override fun onStop() {
+        displayToolbar.onStop()
+    }
+
     override fun setSearchTerms(searchTerms: String) {
         this.searchTerms = searchTerms
     }

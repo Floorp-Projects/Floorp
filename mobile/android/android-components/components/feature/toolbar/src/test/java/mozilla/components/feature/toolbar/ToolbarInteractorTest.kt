@@ -42,6 +42,10 @@ class ToolbarInteractorTest {
             return false
         }
 
+        override fun onStop() {
+            fail()
+        }
+
         override fun setOnUrlCommitListener(listener: (String) -> Boolean) {
             listener("https://mozilla.org")
         }

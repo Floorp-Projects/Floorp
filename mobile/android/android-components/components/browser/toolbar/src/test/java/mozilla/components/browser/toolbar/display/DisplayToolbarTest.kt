@@ -1092,6 +1092,18 @@ class DisplayToolbarTest {
         assertNull(toolbar.displayToolbar.siteSecurityIconView.background)
     }
 
+    @Test
+    fun `Backgrounding the app dismisses menu if already open`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val menuView = extractMenuView(displayToolbar)
+
+        menuView.menu = mock()
+        displayToolbar.onStop()
+
+        verify(menuView.menu)?.dismiss()
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView =
             extractView(displayToolbar) {
