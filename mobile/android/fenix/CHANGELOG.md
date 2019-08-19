@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- #4704 - Adds ability to show a different alpha when no elements available to be deleted for a delete browsing data item
 - #4137 - Adds pagination to the history view
 - #3695 - Made search suggestions for other tabs clickable
 

@@ -19,6 +19,11 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
+    private companion object {
+        private const val ENABLED_ALPHA = 1f
+        private const val DISABLED_ALPHA = 0.6f
+    }
+
     val titleView: TextView
         get() = title
 
@@ -60,5 +65,10 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
             title.text = resources.getString(titleId)
             subtitle.text = resources.getString(subtitleId)
         }
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
     }
 }
