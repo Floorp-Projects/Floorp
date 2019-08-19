@@ -5,6 +5,7 @@
 import { updateSelectedItem } from "../certviewer.js";
 import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
+import { normalizeToKebabCase } from "../utils.js";
 
 class CertificateSection extends HTMLElement {
   constructor(certs, error) {
@@ -125,7 +126,7 @@ class CertificateSection extends HTMLElement {
   createTabSection(tabName, i, certificateTabs) {
     let tab = document.createElement("button");
     tab.textContent = tabName;
-    tab.setAttribute("id", "tab" + i);
+    tab.setAttribute("id", normalizeToKebabCase(tabName));
     tab.setAttribute("aria-controls", "panel" + i);
     tab.setAttribute("idnumber", i);
     tab.setAttribute("role", "tab");
