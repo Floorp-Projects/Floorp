@@ -18,7 +18,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'uachelper.h',
         'updatehelper.cpp',
         'updatehelper.h',
-        'win_dirent.h',
+        'updateutils_win.h',
     ]
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         EXPORTS += [
@@ -38,7 +38,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'pathhash.cpp',
         'uachelper.cpp',
         'updatehelper.cpp',
-        'win_dirent.cpp',
+        'updateutils_win.cpp',
     ]
     OS_LIBS += [
         'advapi32',

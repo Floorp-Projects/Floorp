@@ -11,6 +11,7 @@
 #include "nsAutoRef.h"
 #include "nscore.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/UniquePtr.h"
 
 // ----------------------------------------------------------------------------
 // Critical Section helper class
@@ -26,30 +27,6 @@ class AutoCriticalSection {
 
  private:
   LPCRITICAL_SECTION mSection;
-};
-
-class ImpersonationScope {
- private:
-  bool success;
-
- public:
-  explicit ImpersonationScope(HANDLE token) {
-    success = token && SetThreadToken(nullptr, token);
-  }
-
-  MOZ_IMPLICIT operator bool() const { return success; }
-
-  ~ImpersonationScope() {
-    if (success) {
-      RevertToSelf();
-    }
-  }
-
- private:
-  ImpersonationScope(const ImpersonationScope&) = delete;
-  ImpersonationScope& operator=(const ImpersonationScope&) = delete;
-  ImpersonationScope(ImpersonationScope&&) = delete;
-  ImpersonationScope& operator=(ImpersonationScope&&) = delete;
 };
 
 template <>
@@ -233,19 +210,6 @@ class nsAutoRefTraits<nsHPRINTER> {
   static void Release(RawRef hPrinter) { ::ClosePrinter(hPrinter); }
 };
 
-template <>
-class nsAutoRefTraits<PSID> {
- public:
-  typedef PSID RawRef;
-  static RawRef Void() { return nullptr; }
-
-  static void Release(RawRef aFD) {
-    if (aFD != Void()) {
-      FreeSid(aFD);
-    }
-  }
-};
-
 typedef nsAutoRef<HKEY> nsAutoRegKey;
 typedef nsAutoRef<HDC> nsAutoHDC;
 typedef nsAutoRef<HBRUSH> nsAutoBrush;
@@ -257,7 +221,6 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 typedef nsAutoRef<DEVMODEW*> nsAutoDevMode;
 typedef nsAutoRef<nsHGLOBAL> nsAutoGlobalMem;
 typedef nsAutoRef<nsHPRINTER> nsAutoPrinter;
-typedef nsAutoRef<PSID> nsAutoSid;
 
 namespace {
 
@@ -320,11 +283,12 @@ struct LocalFreeDeleter {
   void operator()(void* aPtr) { ::LocalFree(aPtr); }
 };
 
-// for UnqiuePtr<_PROC_THREAD_ATTRIBUTE_LIST, ProcThreadAttributeListDeleter>
-struct ProcThreadAttributeListDeleter {
-  void operator()(void* aPtr) {
-    ::DeleteProcThreadAttributeList(
-        static_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(aPtr));
-  }
+// for UniquePtr to store a PSID
+struct FreeSidDeleter {
+  void operator()(void* aPtr) { ::FreeSid(aPtr); }
 };
+// Unfortunately, although SID is a struct, PSID is a void*
+// This typedef will work for storing a PSID in a UniquePtr and should make
+// things a bit more readable.
+typedef mozilla::UniquePtr<void, FreeSidDeleter> UniqueSidPtr;
 #endif

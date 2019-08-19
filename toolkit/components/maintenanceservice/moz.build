@@ -10,7 +10,6 @@ SOURCES += [
     'maintenanceservice.cpp',
     'servicebase.cpp',
     'serviceinstall.cpp',
-    'usertoken.cpp',
     'workmonitor.cpp',
 ]
 
@@ -27,7 +26,6 @@ DEFINES['NS_NO_XPCOM'] = True
 
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += [
-    '/mfbt',
     '/toolkit/mozapps/update/common',
     '/toolkit/xre',
 ]
@@ -45,8 +43,6 @@ OS_LIBS += [
     'comctl32',
     'ws2_32',
     'shell32',
-    'oleaut32',
-    'wbemuuid',
 ]
 
 with Files('**'):
