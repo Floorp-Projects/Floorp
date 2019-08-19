@@ -767,7 +767,7 @@ var dateTimeFormatInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["ca", "nu", "hc"],
+    relevantExtensionKeys: ["ca", "hc", "nu"],
 };
 
 function dateTimeFormatLocaleData() {
