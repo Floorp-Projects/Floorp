@@ -133,7 +133,7 @@ int32_t WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t WebrtcMediaDataEncoder::Release() {
+int32_t WebrtcMediaDataEncoder::Shutdown() {
   LOG("Release encoder");
   auto rv = media::Await(do_AddRef(mThreadPool), mEncoder->Shutdown());
   mEncoder = nullptr;

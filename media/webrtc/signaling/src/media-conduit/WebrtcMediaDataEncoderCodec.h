@@ -18,7 +18,7 @@ class PEMFactory;
 class SharedThreadPool;
 class TaskQueue;
 
-class WebrtcMediaDataEncoder : public WebrtcVideoEncoder {
+class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
  public:
   WebrtcMediaDataEncoder();
 
@@ -30,7 +30,7 @@ class WebrtcMediaDataEncoder : public WebrtcVideoEncoder {
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) override;
 
-  int32_t Release() override;
+  int32_t Shutdown() override;
 
   int32_t Encode(const webrtc::VideoFrame& aFrame,
                  const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
@@ -39,7 +39,7 @@ class WebrtcMediaDataEncoder : public WebrtcVideoEncoder {
   int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRtt) override;
 
  private:
-  ~WebrtcMediaDataEncoder() = default;
+  virtual ~WebrtcMediaDataEncoder() = default;
 
   bool SetupConfig(const webrtc::VideoCodec* aCodecSettings);
   bool CreateEncoder(const webrtc::VideoCodec* aCodecSettings);
