@@ -150,14 +150,6 @@ class WebConsole {
   }
 
   /**
-   * Alias for the WebConsoleUI.setFilterState() method.
-   * @see webconsole.js::WebConsoleUI.setFilterState()
-   */
-  setFilterState() {
-    this.ui && this.ui.setFilterState.apply(this.ui, arguments);
-  }
-
-  /**
    * Open a link in a new tab.
    *
    * @param string link
