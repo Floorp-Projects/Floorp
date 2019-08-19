@@ -57,14 +57,3 @@ export const hashify = hash => {
 export const pemToDER = pem => {
   return stringToArrayBuffer(window.atob(pem));
 };
-
-export const normalizeToKebabCase = string => {
-  let kebabString = string
-    .replace(/\s+/g, "-")
-    .replace(/\./g, "")
-    .replace(/\//g, "")
-    .replace(/--/g, "-")
-    .toLowerCase();
-
-  return kebabString;
-};
