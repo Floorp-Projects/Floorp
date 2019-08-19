@@ -93,8 +93,8 @@ pub fn promote_current_thread_to_real_time_internal(audio_buffer_frames: u32,
 {
     let thread_id = unsafe { libc::syscall(libc::SYS_gettid) };
     let pthread_id = unsafe { libc::pthread_self() };
+    let mut param = unsafe { std::mem::zeroed::<libc::sched_param>() };
     let mut policy = 0;
-    let mut param = libc::sched_param { sched_priority: 0 };
 
     if unsafe { libc::pthread_getschedparam(pthread_id, &mut policy, &mut param) } < 0 {
         error!("pthread_getschedparam error {}", pthread_id);
