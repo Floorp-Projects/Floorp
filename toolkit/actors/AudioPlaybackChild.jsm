@@ -6,13 +6,21 @@
 
 var EXPORTED_SYMBOLS = ["AudioPlaybackChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
+class AudioPlaybackChild extends JSWindowActorChild {
+  receiveMessage({ name, data }) {
+    switch (name) {
+      case "AudioPlayback":
+        this.handleMediaControlMessage(data.type);
+        break;
+    }
+  }
 
-class AudioPlaybackChild extends ActorChild {
   handleMediaControlMessage(msg) {
-    let utils = this.content.windowUtils;
+    let utils = this.contentWindow.windowUtils;
+    if (!utils) {
+      return;
+    }
+
     let suspendTypes = Ci.nsISuspendedTypes;
     switch (msg) {
       case "mute":
@@ -44,25 +52,15 @@ class AudioPlaybackChild extends ActorChild {
 
   observe(subject, topic, data) {
     if (topic === "audio-playback") {
-      if (subject && subject.top == this.content) {
-        let name = "AudioPlayback:";
-        if (data === "activeMediaBlockStart") {
-          name += "ActiveMediaBlockStart";
-        } else if (data === "activeMediaBlockStop") {
-          name += "ActiveMediaBlockStop";
-        } else {
-          name += data === "active" ? "Start" : "Stop";
-        }
-        this.mm.sendAsyncMessage(name);
+      let name = "AudioPlayback:";
+      if (data === "activeMediaBlockStart") {
+        name += "ActiveMediaBlockStart";
+      } else if (data === "activeMediaBlockStop") {
+        name += "ActiveMediaBlockStop";
+      } else {
+        name += data === "active" ? "Start" : "Stop";
       }
-    }
-  }
-
-  receiveMessage({ name, data }) {
-    switch (name) {
-      case "AudioPlayback":
-        this.handleMediaControlMessage(data.type);
-        break;
+      this.sendAsyncMessage(name);
     }
   }
 }

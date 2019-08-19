@@ -3685,16 +3685,6 @@ mozilla::ipc::IPCResult ContentChild::RecvStartDelayedAutoplayMediaComponents(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvSetMediaMuted(
-    BrowsingContext* aContext, bool aMuted) {
-  MOZ_ASSERT(aContext);
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
-  if (window) {
-    window->SetAudioMuted(aMuted);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaAction(
     BrowsingContext* aContext, MediaControlActions aAction) {
   MOZ_ASSERT(aContext);

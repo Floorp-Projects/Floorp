@@ -20,6 +20,7 @@ TESTING_JS_MODULES += [
 
 FINAL_TARGET_FILES.actors += [
     'AudioPlaybackChild.jsm',
+    'AudioPlaybackParent.jsm',
     'AutoplayChild.jsm',
     'AutoplayParent.jsm',
     'BrowserElementChild.jsm',
