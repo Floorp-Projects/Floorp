@@ -1033,6 +1033,9 @@ void BasicCompositor::EndFrame() {
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
+  // Reset the translation that was applied in BeginFrame.
+  mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
+
   TryToEndRemoteDrawing();
 
   // If we are no longer recording a profile, we can drop the render target if
