@@ -7,8 +7,6 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-console.error = jest.fn();
-
 // Import setupStore with imported & combined reducers
 const {
   setupStore,
@@ -35,8 +33,16 @@ describe("PageSwitcher", () => {
     });
   }
 
+  const consoleErrorSpy = jest
+    .spyOn(console, "error")
+    .mockImplementation(() => {});
+
   beforeEach(() => {
     console.error.mockClear();
+  });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it("renders the ManifestPage component when manifest page is selected", () => {
