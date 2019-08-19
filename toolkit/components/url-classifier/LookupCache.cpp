@@ -875,6 +875,12 @@ nsresult LookupCacheV2::LoadLegacyFile() {
   nsresult rv = store.Open(3);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (store.AddChunks().Length() == 0 &&
+      store.SubChunks().Length() == 0) {
+    // Return when file doesn't exist
+    return NS_OK;
+  }
+
   AddPrefixArray prefix;
   AddCompleteArray addComplete;
 
