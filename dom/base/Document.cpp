@@ -3505,6 +3505,9 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
   mIntrinsicStoragePrincipal = aNewStoragePrincipal;
 
+  AntiTrackingCommon::ComputeContentBlockingAllowListPrincipal(
+      aNewPrincipal, getter_AddRefs(mContentBlockingAllowListPrincipal));
+
 #ifdef DEBUG
   // Validate that the docgroup is set correctly by calling its getter and
   // triggering its sanity check.
