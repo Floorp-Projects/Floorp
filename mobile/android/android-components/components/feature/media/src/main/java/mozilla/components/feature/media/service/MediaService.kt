@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.ext.toPlaybackState
@@ -25,7 +26,7 @@ import mozilla.components.support.base.ids.NotificationIds
 import mozilla.components.support.base.log.logger.Logger
 
 private const val NOTIFICATION_TAG = "mozac.feature.media.foreground-service"
-private const val ACTION_UODATE_STATE = "mozac.feature.media.service.UPDATE_STATE"
+private const val ACTION_UPDATE_STATE = "mozac.feature.media.service.UPDATE_STATE"
 private const val ACTION_PLAY = "mozac.feature.media.service.PLAY"
 private const val ACTION_PAUSE = "mozac.feature.media.service.PAUSE"
 
@@ -55,7 +56,7 @@ internal class MediaService : Service() {
         logger.debug("Command received")
 
         when (intent?.action) {
-            ACTION_UODATE_STATE -> processCurrentState()
+            ACTION_UPDATE_STATE -> processCurrentState()
             ACTION_PLAY -> MediaStateMachine.state.playIfPaused()
             ACTION_PAUSE -> MediaStateMachine.state.pauseIfPlaying()
             else -> logger.debug("Can't process action: ${intent?.action}")
@@ -112,10 +113,10 @@ internal class MediaService : Service() {
 
     companion object {
         fun updateState(context: Context) {
-            context.startService(updateStateIntent(context))
+            ContextCompat.startForegroundService(context, updateStateIntent(context))
         }
 
-        fun updateStateIntent(context: Context) = Intent(ACTION_UODATE_STATE).apply {
+        fun updateStateIntent(context: Context) = Intent(ACTION_UPDATE_STATE).apply {
             component = ComponentName(context, MediaService::class.java)
         }
 
