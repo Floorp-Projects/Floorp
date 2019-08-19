@@ -493,8 +493,9 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType, long aMaxTargets,
   MOZ_ASSERT(!acc->IsProxy());
   Relation rel = acc->RelationByType(*relationType);
   Accessible* target = nullptr;
-  while ((target = rel.Next()) &&
-         static_cast<long>(targets.Length()) <= aMaxTargets) {
+  while (
+      (target = rel.Next()) &&
+      (aMaxTargets == 0 || static_cast<long>(targets.Length()) < aMaxTargets)) {
     targets.AppendElement(target);
   }
 
