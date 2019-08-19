@@ -315,12 +315,7 @@ BasicCompositor::CreateRenderTargetForWindow(
     MOZ_ASSERT(target != mDrawTarget);
     rt = new BasicCompositingRenderTarget(target, rect);
   } else {
-    IntRect windowRect = rect;
-    // Adjust bounds rect to account for new origin at (0, 0).
-    if (windowRect.Size() != mDrawTarget->GetSize()) {
-      windowRect.ExpandToEnclose(IntPoint(0, 0));
-    }
-    rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
+    rt = new BasicCompositingRenderTarget(mDrawTarget, mDrawTargetBounds);
   }
 
   rt->mDrawTarget->SetTransform(Matrix::Translation(-rt->GetOrigin()));
@@ -933,6 +928,7 @@ void BasicCompositor::BeginFrame(
     // draw target that we composite into, then copy the results the
     // destination.
     mDrawTarget = mTarget;
+    mDrawTargetBounds = mTargetBounds;
     bufferMode = BufferMode::BUFFER_NONE;
   } else {
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
@@ -945,6 +941,18 @@ void BasicCompositor::BeginFrame(
     if (mInvalidRect.IsEmpty()) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
       return;
+    }
+
+    // The DrawTarget returned by StartRemoteDrawingInRegion can cover different
+    // rectangles in window space. It can either cover the entire window, or it
+    // can cover just the invalid region. We discern between the two cases by
+    // comparing the DrawTarget's size with the invalild region's size.
+    IntSize dtSize = mDrawTarget->GetSize();
+    if (bufferMode == BufferMode::BUFFER_NONE &&
+        dtSize == mInvalidRect.Size().ToUnknownSize()) {
+      mDrawTargetBounds = mInvalidRect.ToUnknownRect();
+    } else {
+      mDrawTargetBounds = IntRect(IntPoint(0, 0), dtSize);
     }
   }
 
@@ -1061,7 +1069,7 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
     // drawing.
     RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
     IntPoint srcOffset = mRenderTarget->GetOrigin();
-    IntPoint dstOffset = mTarget ? mTargetBounds.TopLeft() : IntPoint();
+    IntPoint dstOffset = mDrawTargetBounds.TopLeft();
 
     // The source DrawTarget is clipped to the invalidation region, so we have
     // to copy the individual rectangles in the region or else we'll draw
