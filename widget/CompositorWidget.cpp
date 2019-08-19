@@ -22,14 +22,14 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::StartRemoteDrawing() {
 void CompositorWidget::CleanupRemoteDrawing() { mLastBackBuffer = nullptr; }
 
 already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
-    gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
+    gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
     bool* aOutIsCleared) {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format =
       aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8
           ? gfx::SurfaceFormat::B8G8R8X8
           : gfx::SurfaceFormat::B8G8R8A8;
-  gfx::IntSize size = aRect.ToUnknownRect().Size();
+  gfx::IntSize size = aRect.Size();
   gfx::IntSize clientSize = Max(size, GetClientSize().ToUnknownSize());
 
   *aOutIsCleared = false;

@@ -157,7 +157,7 @@ bool WinCompositorWidget::NeedsToDeferEndRemoteDrawing() {
 }
 
 already_AddRefed<gfx::DrawTarget> WinCompositorWidget::GetBackBufferDrawTarget(
-    gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
+    gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
     bool* aOutIsCleared) {
   MOZ_ASSERT(!mLockedBackBufferData);
 
