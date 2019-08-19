@@ -366,8 +366,10 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
   // Trace the self-hosting global compartment.
   rt->traceSelfHostingGlobal(trc);
 
+#ifdef ENABLE_INTL_API
   // Trace the shared Intl data.
   rt->traceSharedIntlData(trc);
+#endif
 
   // Trace the JSContext.
   rt->mainContextFromOwnThread()->trace(trc);

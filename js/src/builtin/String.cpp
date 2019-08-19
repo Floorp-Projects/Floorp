@@ -26,8 +26,10 @@
 
 #include "builtin/Array.h"
 #include "builtin/Boolean.h"
-#include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/ICUStubs.h"
+#if ENABLE_INTL_API
+#  include "builtin/intl/CommonFunctions.h"
+#  include "builtin/intl/ICUStubs.h"
+#endif
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
@@ -885,6 +887,10 @@ bool js::str_toLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#if ENABLE_INTL_API
+// String.prototype.toLocaleLowerCase is self-hosted when Intl is exposed,
+// with core functionality performed by the intrinsic below.
+
 static const char* CaseMappingLocale(JSContext* cx, JSString* str) {
   JSLinearString* locale = str->ensureLinear(cx);
   if (!locale) {
@@ -972,11 +978,6 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setString(result);
   return true;
 }
-
-#if ENABLE_INTL_API
-
-// String.prototype.toLocaleLowerCase is self-hosted when Intl is exposed,
-// with core functionality performed by the intrinsic above.
 
 #else
 
@@ -1328,6 +1329,10 @@ bool js::str_toUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#if ENABLE_INTL_API
+// String.prototype.toLocaleUpperCase is self-hosted when Intl is exposed,
+// with core functionality performed by the intrinsic below.
+
 bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -1389,11 +1394,6 @@ bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setString(result);
   return true;
 }
-
-#if ENABLE_INTL_API
-
-// String.prototype.toLocaleUpperCase is self-hosted when Intl is exposed,
-// with core functionality performed by the intrinsic above.
 
 #else
 

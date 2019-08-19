@@ -205,15 +205,6 @@ UNIFIED_SOURCES += [
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
-    'builtin/intl/Collator.cpp',
-    'builtin/intl/CommonFunctions.cpp',
-    'builtin/intl/DateTimeFormat.cpp',
-    'builtin/intl/IntlObject.cpp',
-    'builtin/intl/Locale.cpp',
-    'builtin/intl/NumberFormat.cpp',
-    'builtin/intl/PluralRules.cpp',
-    'builtin/intl/RelativeTimeFormat.cpp',
-    'builtin/intl/SharedIntlData.cpp',
     'builtin/JSON.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
@@ -355,6 +346,19 @@ SOURCES += [
     'vm/ProfilingStack.cpp',
 ]
 
+if CONFIG['ENABLE_INTL_API']:
+    UNIFIED_SOURCES += [
+        'builtin/intl/Collator.cpp',
+        'builtin/intl/CommonFunctions.cpp',
+        'builtin/intl/DateTimeFormat.cpp',
+        'builtin/intl/IntlObject.cpp',
+        'builtin/intl/Locale.cpp',
+        'builtin/intl/NumberFormat.cpp',
+        'builtin/intl/PluralRules.cpp',
+        'builtin/intl/RelativeTimeFormat.cpp',
+        'builtin/intl/SharedIntlData.cpp',
+    ]
+
 if CONFIG['MOZ_INSTRUMENTS']:
     SOURCES += [
         'devtools/Instruments.cpp',
@@ -428,17 +432,6 @@ selfhosted.inputs = [
     'builtin/Error.js',
     'builtin/Function.js',
     'builtin/Generator.js',
-    'builtin/intl/Collator.js',
-    'builtin/intl/CommonFunctions.js',
-    'builtin/intl/CurrencyDataGenerated.js',
-    'builtin/intl/DateTimeFormat.js',
-    'builtin/intl/IntlObject.js',
-    'builtin/intl/LangTagMappingsGenerated.js',
-    'builtin/intl/Locale.js',
-    'builtin/intl/NumberFormat.js',
-    'builtin/intl/PluralRules.js',
-    'builtin/intl/RelativeTimeFormat.js',
-    'builtin/intl/UnicodeExtensionsGenerated.js',
     'builtin/Iterator.js',
     'builtin/Map.js',
     'builtin/Module.js',
@@ -457,6 +450,21 @@ selfhosted.inputs = [
     'builtin/WeakMap.js',
     'builtin/WeakSet.js'
 ]
+
+if CONFIG['ENABLE_INTL_API']:
+    selfhosted.inputs += [
+        'builtin/intl/Collator.js',
+        'builtin/intl/CommonFunctions.js',
+        'builtin/intl/CurrencyDataGenerated.js',
+        'builtin/intl/DateTimeFormat.js',
+        'builtin/intl/IntlObject.js',
+        'builtin/intl/LangTagMappingsGenerated.js',
+        'builtin/intl/Locale.js',
+        'builtin/intl/NumberFormat.js',
+        'builtin/intl/PluralRules.js',
+        'builtin/intl/RelativeTimeFormat.js',
+        'builtin/intl/UnicodeExtensionsGenerated.js',
+    ]
 
 if CONFIG['JS_HAS_CTYPES']:
     if CONFIG['MOZ_SYSTEM_FFI']:
