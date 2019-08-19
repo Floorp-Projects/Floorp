@@ -44,6 +44,9 @@ permalink: /changelog/
   * `DeviceConstellation`@`refreshDeviceStateAsync` no longer polls for device events, and was renamed to `refreshDevicesAsync`.
   * `pollForEventsAsync` no longer returns the events. Use the observer API instead.
 
+* **browser-session**
+  * Removed deprecated `CustomTabConfig` helpers. Use the equivalent methods in **feature-customtabs** instead.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)
