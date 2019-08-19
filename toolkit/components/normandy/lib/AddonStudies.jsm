@@ -74,9 +74,7 @@ var EXPORTED_SYMBOLS = ["AddonStudies"];
 const DB_NAME = "shield";
 const STORE_NAME = "addon-studies";
 const VERSION_STORE_NAME = "addon-studies-version";
-const DB_OPTIONS = {
-  version: 2,
-};
+const DB_VERSION = 2;
 const STUDY_ENDED_TOPIC = "shield-study-ended";
 const log = LogManager.getLogger("addon-studies");
 
@@ -84,7 +82,7 @@ const log = LogManager.getLogger("addon-studies");
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_OPTIONS, async (db, event) => {
+  return IndexedDB.open(DB_NAME, DB_VERSION, async (db, event) => {
     if (event.oldVersion < 1) {
       db.createObjectStore(STORE_NAME, {
         keyPath: "recipeId",
