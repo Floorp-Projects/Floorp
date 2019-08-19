@@ -1,0 +1,5 @@
+{
+  "phabricator.uri" : "https://phabricator.services.mozilla.com/",
+  "repository.callsign": "NSPR",
+  "history.immutable": false
+}
