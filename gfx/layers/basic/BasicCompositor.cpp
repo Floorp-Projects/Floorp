@@ -992,6 +992,10 @@ void BasicCompositor::BeginFrame(
       mFullWindowRenderTarget =
           new BasicCompositingRenderTarget(drawTarget, rect);
     }
+  } else if (mFullWindowRenderTarget) {
+    // If we are no longer recording a profile, we can drop the render target
+    // if it exists.
+    mFullWindowRenderTarget = nullptr;
   }
 
   gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget,
@@ -1034,12 +1038,6 @@ void BasicCompositor::EndFrame() {
   mRenderTarget->mDrawTarget->SetTransform(gfx::Matrix());
 
   TryToEndRemoteDrawing();
-
-  // If we are no longer recording a profile, we can drop the render target if
-  // it exists.
-  if (mFullWindowRenderTarget && !ShouldRecordFrames()) {
-    mFullWindowRenderTarget = nullptr;
-  }
 }
 
 void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
