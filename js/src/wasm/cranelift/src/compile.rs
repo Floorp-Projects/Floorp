@@ -115,19 +115,18 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
     }
 
     /// Translate the WebAssembly code to Cranelift IR.
-    pub fn translate_wasm(
-        &mut self,
-        func: &bindings::FuncCompileInput,
-    ) -> WasmResult<bindings::FuncTypeWithId> {
+    pub fn translate_wasm(&mut self, func: &bindings::FuncCompileInput) -> WasmResult<()> {
         self.context.clear();
+
+        let tenv = &mut TransEnv::new(&*self.isa, &self.environ, self.static_environ);
 
         // Set up the signature before translating the WebAssembly byte code.
         // The translator refers to it.
         let index = FuncIndex::new(func.index as usize);
-        let wsig = init_sig(&mut self.context.func.signature, &self.environ, index)?;
+        self.context.func.signature =
+            init_sig(&self.environ, self.static_environ.call_conv(), index)?;
         self.context.func.name = wasm_function_name(index);
 
-        let tenv = &mut TransEnv::new(&*self.isa, &self.environ, self.static_environ);
         self.trans.translate(
             func.bytecode(),
             func.offset_in_module as usize,
@@ -137,7 +136,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
         info!("Translated wasm function {}.", func.index);
         debug!("Translated wasm function IR: {}", self);
-        Ok(wsig)
+        Ok(())
     }
 
     /// Emit binary machine code to `emitter`.

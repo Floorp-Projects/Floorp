@@ -23,6 +23,7 @@ use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder, SourceLoc};
+use cranelift_codegen::isa;
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
 
 use crate::compile;
@@ -266,6 +267,17 @@ impl MetadataEntry {
             codeOffset: code_offset,
             moduleBytecodeOffset: 0,
             extra: sym as usize,
+        }
+    }
+}
+
+impl StaticEnvironment {
+    /// Returns the default calling convention on this machine.
+    pub fn call_conv(&self) -> isa::CallConv {
+        if self.platformIsWindows {
+            isa::CallConv::BaldrdashWindows
+        } else {
+            isa::CallConv::BaldrdashSystemV
         }
     }
 }
