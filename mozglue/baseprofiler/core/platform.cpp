@@ -1726,7 +1726,8 @@ static void PrintUsageThenExit(int aExitCode) {
       "  '..._VERBOSE_LOGGING' (most verbose)\n"
       "\n"
       "  MOZ_BASE_PROFILER_STARTUP\n"
-      "  If set to any value, starts the profiler immediately on start-up.\n"
+      "  If set to any value other than '' or '0'/'N'/'n', starts the\n"
+      "  profiler immediately on start-up.\n"
       "  Useful if you want profile code that runs very early.\n"
       "\n"
       "  MOZ_BASE_PROFILER_STARTUP_ENTRIES=<1..>\n"
@@ -2244,7 +2245,10 @@ void profiler_init(void* aStackTop) {
     // created on demand at the first call to PlatformStart().
 
     const char* startupEnv = getenv("MOZ_BASE_PROFILER_STARTUP");
-    if (!startupEnv || startupEnv[0] == '\0') {
+    if (!startupEnv || startupEnv[0] == '\0' ||
+        ((startupEnv[0] == '0' || startupEnv[0] == 'N' ||
+          startupEnv[0] == 'n') &&
+         startupEnv[1] == '\0')) {
       return;
     }
 
