@@ -51,6 +51,8 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         tempMap.put(context.getString(R.string.pref_key_privacy_block_analytics), "Analytics");
         tempMap.put(context.getString(R.string.pref_key_privacy_block_social), "Social");
         tempMap.put(context.getString(R.string.pref_key_privacy_block_other), "Content");
+        tempMap.put(context.getString(R.string.pref_key_privacy_block_fingerprinting), "Fingerprinting");
+        tempMap.put(context.getString(R.string.pref_key_privacy_block_cryptomining), "Cryptomining");
 
         // This is a "fake" category - webfont handling is independent of the blocklists
         tempMap.put(context.getString(R.string.pref_key_performance_block_webfonts), WEBFONTS);
@@ -113,7 +115,7 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         // enabled/disable categories that have actually been configured).
         for (final Map.Entry<String, Trie> entry: categoryMap.entrySet()) {
             if (!categoryPrefMap.values().contains(entry.getKey())) {
-                throw new IllegalArgumentException("categoryMap contains undeclared category");
+                throw new IllegalArgumentException("categoryMap contains undeclared category: " + entry.getKey());
             }
 
             // Failsafe: enable all categories (we load preferences in the next step anyway)
