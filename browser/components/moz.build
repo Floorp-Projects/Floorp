@@ -66,6 +66,8 @@ if CONFIG['NIGHTLY_BUILD']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['touchbar']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DIRS += ['installerprefs']
 
 XPIDL_SOURCES += [
     'nsIBrowserHandler.idl',
