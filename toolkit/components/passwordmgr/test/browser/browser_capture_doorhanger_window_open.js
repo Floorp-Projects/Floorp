@@ -71,7 +71,7 @@ add_task(async function test_saveChromeHiddenAutoClose() {
     info("waiting for popupshown");
     await notifShownPromise;
     // the popup closes and the doorhanger should appear in the opener
-    let popup = getCaptureDoorhanger("password-save");
+    let popup = await getCaptureDoorhangerThatMayOpen("password-save");
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     // Sanity check, no logins should exist yet.
@@ -99,7 +99,7 @@ add_task(async function test_changeChromeHiddenAutoClose() {
   await withTestTabUntilStorageChange(url, async function() {
     info("waiting for popupshown");
     await notifShownPromise;
-    let popup = getCaptureDoorhanger("password-change");
+    let popup = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
@@ -133,7 +133,7 @@ add_task(async function test_saveChromeVisibleSameWindow() {
   );
   await withTestTabUntilStorageChange(url, async function() {
     await notifShownPromise;
-    let popup = getCaptureDoorhanger("password-save");
+    let popup = await getCaptureDoorhangerThatMayOpen("password-save");
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu2", "notifyp2");
     clickDoorhangerButton(popup, REMEMBER_BUTTON);
@@ -157,7 +157,7 @@ add_task(async function test_changeChromeVisibleSameWindow() {
   );
   await withTestTabUntilStorageChange(url, async function() {
     await notifShownPromise;
-    let popup = getCaptureDoorhanger("password-change");
+    let popup = await getCaptureDoorhangerThatMayOpen("password-change");
     ok(popup, "got notification popup");
     await checkDoorhangerUsernamePassword("notifyu2", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
