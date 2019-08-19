@@ -361,12 +361,6 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Počet položiek na odstránenie: %1$d</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Dnes</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Tento týždeň</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Tento mesiac</string>
 
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Staršia</string>
@@ -495,7 +489,6 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnutá</string>
 
-    <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolekcie</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -622,12 +615,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Chcete povoliť aplikácii %s odstrániť vaše údaje o prehliadaní?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Vaše údaje o prehliadaní budú odstránené.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Nepovoliť</string>
+    <string name="delete_browsing_data_prompt_cancel">Zrušiť</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Povoliť</string>
+    <string name="delete_browsing_data_prompt_allow">Odstrániť</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Údaje o prehliadaní boli odstránené</string>
 
@@ -649,14 +642,21 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využite %s naplno.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Na tomto telefóne ste prihlásení do iného Firefoxu.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">V inom Firefoxe na tomto telefóne ste prihlásení ako %s. Chceli by ste sa prihlásiť s týmto účtom?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Prihlásiť sa</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Prebieha prihlasovanie…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Prihlásiť sa do Firefoxu</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Zostať prihlásený</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Odhlásiť sa</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Zostať odhlásení</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Synchronizácia je zapnutá</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Prihlásenie zlyhalo</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Chráňte sa</string>
     <!-- text for the tracking protection card description
@@ -712,4 +712,21 @@
     <string name="sign_out_disconnect">Odpojiť</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Zrušiť</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Predvolené priečinky nie je možné upravovať</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Nastavenia ochrany</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Rozšírená ochrana pred sledovaním</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ďalšie informácie</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Vaše práva</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Open source knižnice, ktoré používame</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS knižnice</string>
 </resources>

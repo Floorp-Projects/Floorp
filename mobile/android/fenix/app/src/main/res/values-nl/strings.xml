@@ -81,6 +81,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Koppeling vanaf klembord invullen</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Zoeken</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Zoeken op het web</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Instellingen</string>
@@ -203,7 +209,7 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Inschakelen voor alle websites</string>
     <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Met uitzonderingen kunt u de trackingbeveiliging voor geselecteerde websites uitschakelen.\n\nMeer informatie</string>
+    <string name="exceptions_empty_message">Met uitzonderingen kunt u beveiliging tegen volgen voor geselecteerde websites uitschakelen.\n\nMeer informatie</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Globaal uitgeschakeld, ga naar Instellingen om in te schakelen.</string>
 
@@ -359,12 +365,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d items verwijderen</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Vandaag</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Deze week</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Deze maand</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Laatste 24 uur</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Afgelopen 7 dagen</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Afgelopen 30 dagen</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Ouder</string>
     <!-- Text shown when no history exists -->
@@ -493,6 +499,8 @@
     <string name="tracking_protection_off">Uit</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Verzamel de dingen die belangrijk voor u zijn. Sla eerst geopende tabbladen op in een nieuwe collectie.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collecties</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -618,12 +626,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Navigatiegegevens verwijderen</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Mag %s uw navigatiegegevens verwijderen?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Hierdoor worden al uw navigatiegegevens verwijderd.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Niet toestaan</string>
+    <string name="delete_browsing_data_prompt_cancel">Annuleren</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Toestaan</string>
+    <string name="delete_browsing_data_prompt_allow">Verwijderen</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Navigatiegegevens verwijderd</string>
 
@@ -644,14 +652,21 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Haal het meeste uit %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">U bent aangemeld bij een andere Firefox-browser op deze telefoon.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">U bent op een andere Firefox-browser op deze telefoon aangemeld als %s. Wilt u zich aanmelden met deze account?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Ja, mij aanmelden</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Aanmelden…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Aanmelden bij Firefox</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Aangemeld blijven</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Afmelden</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Afgemeld blijven</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Synchronisatie is ingeschakeld</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Aanmelden mislukt</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Bescherm uzelf</string>
     <!-- text for the tracking protection card description
@@ -711,4 +726,65 @@
     <string name="sign_out_disconnect">Verbinding verbreken</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Annuleren</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Kan standaardmappen niet bewerken</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Beschermingsinstellingen</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Verbeterde bescherming tegen volgen</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Surf zonder te worden gevolgd</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Houd uw gegevens voor uzelf. %s beschermt u tegen veel van de meest voorkomende trackers die volgen wat u online doet.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Meer info</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Standaard (aanbevolen)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Gebalanceerd voor bescherming en prestaties.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Streng</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Sterkere bescherming, maar kan ervoor zorgen dat sommige websites of inhoud niet werken.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Geblokkeerd</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Niet geblokkeerd</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sociale-mediatrackers</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Beperkt de mogelijkheid van sociale netwerken om uw surfactiviteit op internet te volgen.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cross-site-trackingcookies</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokkeert cookies die advertentienetwerken en analysebedrijven gebruiken om uw surfgegevens op veel websites te verzamelen.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Cryptominers</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Voorkomt dat kwaadaardige scripts toegang krijgen tot uw apparaat om digitale valuta te minen.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Fingerprinters</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Voorkomt dat uniek identificeerbare gegevens over uw apparaat worden verzameld die kunnen worden gebruikt voor volgdoeleinden.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Volginhoud</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Voorkomt dat externe advertenties, video’s en andere inhoud die volgcode bevat worden geladen. Kan invloed hebben op de functionaliteit van sommige websites.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Wanneer het schild van kleur verandert, blokkeert %s trackers op een website. Tik erop om te zien wat er wordt geblokkeerd.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Beschermingen voor deze website staan AAN</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Beschermingen voor deze website staan UIT</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Verbeterde bescherming tegen volgen is uit voor deze websites</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Uw rechten</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Door ons gebruikte opensource-bibliotheken</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS-bibliotheken</string>
 </resources>

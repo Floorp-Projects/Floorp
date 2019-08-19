@@ -84,6 +84,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Вставить ссылку из буфера обмена</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Поиск</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Поиск в Интернете</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Настройки</string>
@@ -118,7 +124,7 @@
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Приватность</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Разрешения сайта</string>
+    <string name="preferences_site_permissions">Разрешения для сайтов</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Специальные возможности</string>
     <!-- Preference category for account information -->
@@ -218,7 +224,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Использование и технические данные</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Поделиться сведениями о производительности, использовании, аппаратном обеспечении и настройках вашего браузера с Mozilla, чтобы помочь нам сделать %1$s ещё лучше</string>
+    <string name="preferences_usage_data_description">Делиться сведениями о производительности, использовании, аппаратном обеспечении и настройках вашего браузера с Mozilla, чтобы помогать нам делать %1$s ещё лучше</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Сообщения о падениях</string>
     <!-- Preference switch for Mozilla location service -->
@@ -364,12 +370,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Удалить %1$d элемент(а)</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Сегодня</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">На этой неделе</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">В этом месяце</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Последние 24 часа</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Последние 7 дней</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Последние 30 дней</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Старее</string>
 
@@ -469,7 +475,7 @@
         Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Панель быстрых настроек</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">Рекомендованные</string>
+    <string name="phone_feature_recommended">Рекомендуется</string>
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">Управление разрешениями сайта</string>
     <!-- Button label for clearing all the information of site permissions-->
@@ -502,6 +508,8 @@
     <string name="tracking_protection_off">Отключена</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Собирайте то, что важно для вас. Чтобы начать, сохраните открытые вкладки в новую коллекцию.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Коллекции</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -643,13 +651,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Удалить данные веб-сёрфинга</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Разрешить %s удалить ваши данные веб-сёрфинга?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Это действие удалит все данные вашего веб-сёрфинга.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Не разрешать</string>
+    <string name="delete_browsing_data_prompt_cancel">Отмена</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Разрешить</string>
-
+    <string name="delete_browsing_data_prompt_allow">Удалить</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Данные веб-сёрфинга удалены</string>
 
@@ -670,14 +677,21 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Получите максимум от %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Вы уже вошли в другой браузер Firefox с этого устройства.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">В другом браузере Firefox на этом телефоне вы вошли как %s. Вы хотите авторизоваться с помощью этого аккаунта?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Да, авторизоваться</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Идет вход…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Войти в Firefox</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Запомнить меня</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Выйти</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Запомнить меня</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Началась синхронизация</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Не удалось выполнить вход</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Защитите себя</string>
     <!-- text for the tracking protection card description
@@ -734,4 +748,65 @@
     <string name="sign_out_disconnect">Отсоединить</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Отмена</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Нельзя редактировать папки по-умолчанию</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Настройки защиты</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Расширенная защита от отслеживания</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Сёрфите по Интернету без слежки</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Храните свои данные при себе. %s защитит вас от многих наиболее известных трекеров, которые следят за вашим поведением в Интернете.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Узнать больше</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Стандартная (рекомендуемая)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Обеспечивает наилучший баланс защиты и производительности.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Усиленная защита может вызывать проблемы с некоторыми веб-сайтами и их содержимым.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Блокируются</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Не блокируются</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Трекеры социальных сетей</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Ограничивает возможности социальных сетей по отслеживанию вашей активности в Интернете.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Межсайтовые отслеживающие куки</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Блокирует куки, которые рекламные сети и анализирующие компании используют, чтобы объединять ваши данные сёрфинга со многих сайтов.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Криптомайнеры</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Предотвращает получение вредоносными скриптами доступа к вашему устройству для добычи цифровой валюты.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Сборщики цифровых отпечатков</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Останавливает сбор однозначно идентифицируемых данных о вашем устройстве, которые могут быть использованы в целях отслеживания.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Отслеживающее содержимое</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Блокирует загрузку внешней рекламы, видео и другого содержимого, если они содержат отслеживающий код. Может повлиять на работу некоторых веб-сайтов.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Если щит меняет цвет, это значит, что %s блокирует трекеры на веб-сайте. Нажмите на него, чтобы увидеть, что блокируется.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Защита для этого сайта включена</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Защита для этого сайта отключена</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Расширенная защита от отслеживания отключена для следующих веб-сайтов</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Ваши права</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Используемые свободные библиотеки</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Свободные библиотеки</string>
 </resources>

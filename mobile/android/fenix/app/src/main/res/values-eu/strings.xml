@@ -79,6 +79,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Osatu lotura arbeletik</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Bilatu</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Bilatu webean</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Ezarpenak</string>
@@ -360,12 +366,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Ezabatu %1$d elementu</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Gaur</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Aste honetan</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Hilabete honetan</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Azken 24 orduak</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Azken 7 egunak</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Azken 30 egunak</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Zaharragoa</string>
     <!-- Text shown when no history exists -->
@@ -496,6 +502,8 @@
     <string name="tracking_protection_off">Desaktibatuta</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Bildu zuretzat garrantzitsua dena. Hasteko, gorde irekitako fitxak bilduma berri batean.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Bildumak</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -621,12 +629,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Ezabatu nabigatze-datuak</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Baimendu %s(r)i zure nabigatze-datuak ezabatzea?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Zure nabigatze-datu guztiak ezabatuko ditu honek.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Ez baimendu</string>
+    <string name="delete_browsing_data_prompt_cancel">Utzi</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Baimendu</string>
+    <string name="delete_browsing_data_prompt_allow">Ezabatu</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Nabigatze-datuak ezabatuta</string>
 
@@ -647,15 +655,22 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Atera %s(r)i ahalik eta zuku gehiena.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Beste Firefox nabigatzaile batean saioa hasita duzu telefono honetan.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">%s bezala saioa hasita duzu telefono honetako beste Firefox nabigatzaile batean. Kontu honekin saioa hasi nahi duzu?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Bai, hasi saioa</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Saioa hasten…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Hasi saioa Firefoxen</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Mantendu saioa hasita</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Amaitu saioa</string>
 
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Mantendu saiotik kanpo</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sinkronizazioa aktibo dago</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Huts egin du saioa hastean</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Babestu zure burua</string>
     <!-- text for the tracking protection card description
@@ -711,4 +726,65 @@
     <string name="sign_out_disconnect">Deskonektatu</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Utzi</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Ezin dira karpeta lehenetsiak editatu</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Babesaren ezarpenak</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Jarraipenaren babes hobetua</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nabigatu inor segika izan gabe</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Mantendu zure datuak zuretzat. Lineako zure jardueraren jarraipena egiten duten elementu ohikoenetatik babesten zaitu %s(e)k.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Argibide gehiago</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Oinarrizkoa (gomendatua)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Babeserako eta errendimendurako orekatua.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Babes sendoagoa baina zenbait gune edo eduki apurtzea eragin lezake.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Blokeatzen</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Ez blokeatzen</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sare sozialetako jarraipen-elementuak</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Sare sozialek zure webeko jardueraren jarraipena egiteko ahalmena mugatzen du.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Guneen arteko cookie jarraipen-egileak</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Hainbat gunetan zehar iragarleen eta estatistiken enpresek zure nabigatze-datuak biltzeko erabiltzen dituzten cookieak blokeatzen ditu.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Kriptomeatzariak</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Script maltzurrek diru digitala ustiatzeko zure gailurako sarbidea lortzea eragozten du.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Hatz-marka bidezko jarraipena</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Jarraipena egiteko erabil litezkeen zure gailuari buruzko identifikazio bakarreko datuak biltzea eragozten du.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Edukiaren jarraipena</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Jarraipenerako kodea izan lezaketen kanpoko iragarkiak, bideoak eta bestelako edukia kargatzea eragozten du. Zenbait webguneren eginbideetan eragina izan lezake.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Babesaren ikonoak kolorea aldatzen duenean, %s(e)k webgune batean jarraipen-elementuak blokeatzen ditu. Sakatu gainean blokeatzen ari dena ikusteko.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Babesak aktibo daude gune honetarako</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Babesak inaktibo daude gune honetarako</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Jarraipenaren babes hobetua desgaituta dago gune hauetarako</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Zure eskubideak</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Erabiltzen ditugun kode irekiko liburutegiak</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Kode irekiko liburutegiak</string>
 </resources>

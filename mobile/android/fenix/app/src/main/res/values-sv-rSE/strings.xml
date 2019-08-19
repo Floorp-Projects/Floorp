@@ -81,6 +81,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Kopiera länk från urklipp</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Sök</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Sök på webben</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Inställningar</string>
@@ -363,12 +369,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Ta bort %1$d poster</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Idag</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Denna vecka</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Denna månad</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Senaste 24 timmarna</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Senaste 7 dagarna</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Senaste 30 dagarna</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Äldre</string>
 
@@ -497,7 +503,6 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Av</string>
 
-    <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Samlingar</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -624,13 +629,10 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Ta bort surfdata</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Tillåt %s att ta bort dina surfdata?</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Tillåt inte</string>
+    <string name="delete_browsing_data_prompt_cancel">Avbryt</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Tillåt</string>
-
+    <string name="delete_browsing_data_prompt_allow">Ta bort</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Surfdata borttagen</string>
 
@@ -650,16 +652,11 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Få ut det mesta av %s.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Du är inloggad på en annan Firefox-webbläsare på den här telefonen.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Loggar in…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Logga in till Firefox</string>
 
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Fortsätt vara inloggad</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Logga ut</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Skydda dig</string>
     <!-- text for the tracking protection card description
@@ -716,4 +713,11 @@
     <string name="sign_out_disconnect">Koppla från</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Avbryt</string>
-</resources>
+
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Blockerar</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Blockerar inte</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Dina rättigheter</string>
+    </resources>

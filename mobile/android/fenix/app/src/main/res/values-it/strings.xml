@@ -22,7 +22,7 @@
     <string name="private_browsing_title">Ti trovi in una sessione anonima</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%1$s cancella la cronologia di ricerca e navigazione appena esci dall’app o chiudi tutte le schede private. Questo non ti garantisce l’anonimato sui siti che visiti o verso il provider di servizi internet, ma è utile per mantenere le tue attività riservate dagli altri utenti che accedono al tuo stesso dispositivo.\n\nMiti comuni sulla navigazione privata</string>
+    <string name="private_browsing_placeholder">%1$s cancella la cronologia di ricerca e navigazione appena esci dall’app o chiudi tutte le schede anonime. Nonostante questa modalità non ti renda completamente anonimo nei confronti dei siti web o del tuo fornitore di servizi internet, si tratta comunque di uno strumento utile per impedire ad altri utilizzatori di questo dispositivo di ottenere informazioni sulla tua attività online.\n\nMiti da sfatare sulla navigazione anonima</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Elimina sessione</string>
 
@@ -79,6 +79,13 @@
 
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Copia il link dagli appunti</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Cerca</string>
+
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Cerca sul Web</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -366,12 +373,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Elimina %1$d elementi</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Oggi</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Questa settimana</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Questo mese</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Ultime 24 ore</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Ultimi 7 giorni</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Ultimi 30 giorni</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Più vecchi</string>
 
@@ -504,6 +511,8 @@
     <string name="tracking_protection_off">Disattivata</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Raggruppa i contenuti che ritieni importanti. Per iniziare, salva le schede aperte in una nuova collezione.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Raccolte</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -646,13 +655,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Elimina dati di navigazione</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Consentire a %s di eliminare i dati di navigazione?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Questa azione eliminerà tutti i dati di navigazione.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Non consentire</string>
+    <string name="delete_browsing_data_prompt_cancel">Annulla</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Consenti</string>
-
+    <string name="delete_browsing_data_prompt_allow">Elimina</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Dati di navigazione eliminati</string>
 
@@ -673,14 +681,21 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ottieni il massimo da %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">Hai già effettuato l’accesso su questo telefono con un altro browser Firefox.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Sei già connesso come %s in un altro browser Firefox sul dispositivo in uso. Desideri accedere con questo account?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Sì, accedi</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Accesso in corso…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Accedi a Firefox</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Rimani connesso</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Disconnetti</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Rimani disconnesso</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">La sincronizzazione è attiva</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Accesso non riuscito</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Proteggiti</string>
 
@@ -733,4 +748,65 @@
     <string name="sign_out_disconnect">Disconnetti</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Annulla</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Impossibile modificare le cartelle predefinite</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Impostazioni protezione</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Protezione antitracciamento avanzata</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Naviga senza lasciarti seguire</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Mantieni i tuoi dati al riparo da occhi indiscreti. %s ti protegge dagli elementi traccianti più comuni che cercano di seguire le tue attività online.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ulteriori informazioni</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Normale (consigliato)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Equilibrio tra protezione e prestazioni.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Restrittivo</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Maggiore protezione, alcuni siti o contenuti potrebbero non funzionare correttamente.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Bloccati</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Non bloccati</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Traccianti dei social media</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Limita la capacità dei social network di tracciare le tue attività sul Web.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookie traccianti intersito</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blocca i cookie che le reti pubblicitarie e le società di analisi dati utilizzano per raccogliere i dati di navigazione quando passi da un sito all’altro.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Cryptominer</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Impedisce agli script dannosi di accedere al dispositivo per produrre moneta digitale.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Fingerprinter</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Impedisce la raccolta di dati identificativi univoci sul dispositivo che possono essere utilizzati a scopo di tracciamento.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Contenuti traccianti</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Interrompe il caricamento di annunci esterni, video e altri contenuti che contengono codice di tracciamento. Può influire su alcune funzionalità del sito web.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Quando lo scudo cambia colore significa che %s ha bloccato degli elementi traccianti. Tocca l’icona per visualizzare gli elementi bloccati.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Le protezioni sono attive per questo sito</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Le protezioni sono disattivate per questo sito</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">La protezione antitracciamento avanzata è disattivata per questi siti</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">I tuoi diritti</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Librerie open source utilizzate</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Librerie OSS</string>
 </resources>

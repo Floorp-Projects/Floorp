@@ -79,6 +79,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">クリップボードからリンクを入力</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">検索</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">ウェブ検索</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">設定</string>
@@ -362,12 +368,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d 項目を削除</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">今日</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">今週</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">今月</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">24 時間以内</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">7 日以内</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">30 日以内</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">古い</string>
 
@@ -501,6 +507,8 @@
     <string name="tracking_protection_off">オフ</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">あなたにとって価値のあるものを収集します。開始するには、開いているタブを新しいコレクションに保存します。</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">コレクション</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -629,12 +637,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">ブラウジングデータを削除</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">%s にブラウジングデータの削除を許可しますか？</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">この操作はすべてのブラウジングデータを削除します。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">許可しない</string>
+    <string name="delete_browsing_data_prompt_cancel">キャンセル</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">許可する</string>
+    <string name="delete_browsing_data_prompt_allow">削除</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">ブラウジングデータを削除しました</string>
 
@@ -655,14 +663,21 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">%s を最大限に活用しよう。</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated -->
-    <string name="onboarding_firefox_account_auto_signin_header">この端末の別の Firefox ブラウザーにログインしています。</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">すでに、この端末の別の Firefox ブラウザーで %s としてログインしています。このアカウントでログインしますか？</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">はい、ログインします</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">ログイン中...</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Firefox にログイン</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">ログイン状態を維持</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">ログアウト</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">ログアウトする</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sync が有効です</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ログインに失敗しました</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">自己防衛しよう</string>
     <!-- text for the tracking protection card description
@@ -714,4 +729,49 @@
     <string name="sign_out_disconnect">接続を解除</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">キャンセル</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">既定のフォルダーは編集できません</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">追跡防止の設定</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">強化されたトラッキング防止</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">詳細情報</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">標準 (推奨)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">追跡防止とパフォーマンスを均等にします。</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">厳格</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">SNS メディアトラッカー</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">クロスサイトトラッキング Cookie</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">暗号通貨マイニング</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">フィンガープリント採取</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">トラッキングコンテンツ</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">追跡コードを含む外部の広告、動画、その他のコンテンツの読み込みを停止します。一部のウェブサイトの機能に影響する場合があります。</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">%s がウェブサイト上のトラッカーをブロックすると、シールドの色が変化します。タップするとブロックされているコンテンツを確認できます。</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">このサイトでは保護が有効になっています</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">このサイトでは保護が無効になっています</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">これらのウェブサイトでは強化されたトラッキング防止が無効になります</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">あなたの権利</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">使用しているオープンソースライブラリー</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS ライブラリー</string>
 </resources>

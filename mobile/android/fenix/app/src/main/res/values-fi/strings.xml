@@ -36,6 +36,8 @@
     <string name="browser_menu_help">Ohje</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Asetukset</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Kirjasto</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Työpöytäsivusto</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -76,6 +78,8 @@
     <string name="preferences_category_about">Tietoja</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Hakukone</string>
+    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
+    <string name="preference_show_visited_sites_bookmarks">Näytä vieraillut sivut ja kirjanmerkit</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ohje</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -97,18 +101,32 @@
     <string name="preferences_set_as_default_browser">Aseta oletusselaimeksi</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Lisäasetukset</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Yksityisyys</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Sivustojen käyttöoikeudet</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Saavutettavuus</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Tili</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Kirjaudu sisään</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Teema</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Synkronoi kirjanmerkit, historia ja paljon muuta Firefox-tilillä</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-tili</string>
     <!-- Preference for language -->
     <string name="preferences_language">Kieli</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">Yksityisyyskäytäntö</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Kehittäjätyökalut</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Etävianjäljitys USB:n kautta</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Näytä hakuehdotukset</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Tilin asetukset</string>
 
@@ -138,8 +156,55 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Viimeksi synkronoitu: ei koskaan</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s laitteella %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Vastaanotetut välilehdet</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Ilmoitukset muista Firefox-laitteista vastaanotetuista välilehdistä.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Välilehti vastaanotettu</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Välilehtiä vastaanotettu</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Välilehti laitteesta %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Seurannan suojaus</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Seurannan suojaus</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Estä sisältö ja komentosarjat, jotka seuraavat sinua verkossa</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Poikkeukset</string>
+
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Seurannan suojaus on pois käytöstä seuraaville sivustoille</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ota käyttöön kaikille sivustoille</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Poikkeukset mahdollistavat kytkeä seurannan suojauksen pois käytöstä valituilla sivustoilla.\n\nLue lisää</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozillan sijaintipalvelu</string>
+
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s-terveysraportti</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Ota Sync käyttöön</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Skannaa parituskoodi Firefoxin työpöytäversiossa</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Kirjaudu sisän</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Poista tili</string>
 
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Avaa kamera</string>
@@ -151,6 +216,8 @@
     <string name="preference_light_theme">Vaalea</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Tumma</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Asetettu virransäästön toimesta</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
 
@@ -159,6 +226,8 @@
     <string name="quick_action_share">Jaa</string>
     <!-- Button in the browser chrome to download the current page -->
     <string name="quick_action_download">Lataa</string>
+    <!-- Button in the browser chrome in the browser to bookmark the current page -->
+    <string name="quick_action_bookmark">Kirjanmerkki</string>
     <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
     <string name="quick_action_bookmark_edit">Muokkaa kirjanmerkkiä</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
@@ -182,14 +251,26 @@
     <string name="library_downloads">Lataukset</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Kirjanmerkit</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Työpöydän kirjanmerkit</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Kirjanmerkkivalikko</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Kirjanmerkkipalkki</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Muut kirjanmerkit</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historia</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lukulista</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Etsi</string>
+    <!-- Library Page Title -->
+    <string name="library_title">Kirjasto</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Asetukset</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Historiatietue valikossa</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Sulje</string>
 
@@ -202,6 +283,8 @@
     <string name="add_tab">Lisää välilehti</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Sulje välilehti</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Avointen välilehtien valikko</string>
     <!-- Open tabs menu item to close all tabs -->
     <string name="tabs_menu_close_all_tabs">Sulje kaikki välilehdet</string>
     <!-- Open tabs menu item to share all tabs -->
@@ -240,18 +323,18 @@
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d valittu</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Tänään</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Poista %1$d tietuetta</string>
 
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Tällä viikolla</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Tässä kuussa</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Vanhemmat</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ei historiaa täällä</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Pahoittelut, %1$s ei voi ladata tätä sivua.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Lähetä kaatumisraportti Mozillalle</string>
     <!-- Close tab button text on the tab crash page -->
@@ -355,10 +438,16 @@
     <string name="preference_option_phone_feature_blocked">Estetty</string>
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">Sallittu</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Estetty Androidin toimesta</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Poikkeukset</string>
 
-    <!-- Collections -->
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Päällä</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Pois</string>
+
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kokoelmat</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -377,6 +466,8 @@
     <string name="create_collection_add_new_collection">Lisää uusi kokoelma</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Valitse kaikki</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Poista kaikkien valinta</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Valitse tallennettavat välilehdet</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -405,6 +496,20 @@
     <string name="share_button_content_description">Jaa</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Jaa linkki</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Lähetä laitteeseen</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Kirjaudu sisään Synciin</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Lähetä kaikkiin laitteisiin</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Yhdistä uudelleen Synciin</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Ei yhteydessä</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Yhdistä toinen laite</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Lähetä välilehti kirjautumalla Firefoxiin vähintään yhdellä muulla laitteella.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Selvä</string>
 
@@ -419,6 +524,9 @@
     <string name="snackbar_tabs_deleted">Välilehdet poistettu</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">KUMOA</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Salli %1$sin avata %2$s</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">SALLI</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -434,6 +542,16 @@
     <string name="full_screen_notification">Siirrytään koko näytön tilaan</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Osoite kopioitu</string>
+
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Tee verkkosivujen tekstistä suurempaa tai pienempää</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Fontin koko</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Automaattinen fonttikoko</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Fonttikoko vastaa Androidin asetuksia. Poista valinta käytöstä hallitaksesi fontin kokoa täällä.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Poista selaustiedot</string>
@@ -454,10 +572,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Poista selaustiedot</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Kaikki selaustietosi poistetaan.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Älä salli</string>
+    <string name="delete_browsing_data_prompt_cancel">Peruuta</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Salli</string>
+    <string name="delete_browsing_data_prompt_allow">Poista</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Selaustiedot poistettu</string>
 
@@ -474,12 +594,19 @@
     <string name="onboarding_theme_picker_header">Valitse teema</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description">Kokeile tummaa teemaa, se säästää akkua ja silmiäsi.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Ota kaikki irti %sista.</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Kyllä, kirjaa minut sisään</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Kirjaudutaan sisään…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Kirjaudu sisään Firefoxiin</string>
-    <!-- text for the button to stay signed into your Firefox account. -->
-    <string name="onboarding_firefox_account_stay_signed_in">Pysy sisäänkirjautuneena</string>
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">Kirjaudu ulos</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Sync on päällä</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Sisäänkirjautuminen epäonnistui</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Suojaa itsesi</string>
     <!-- text for the tracking protection card description
@@ -528,4 +655,22 @@
     <string name="sign_out_disconnect">Katkaise yhteys</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Peruuta</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Oletuskansioita ei voi muokata</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Suojauksen asetukset</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Selaa ilman seurantaa</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lue lisää</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Oikeutesi</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Käyttämämme avoimen lähdekoodin kirjastot</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Avoimen lähdekoodin kirjastot</string>
 </resources>

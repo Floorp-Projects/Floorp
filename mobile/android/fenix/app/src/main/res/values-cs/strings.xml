@@ -9,15 +9,15 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Zakáže režim anonymního prohlížení</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">Zadejte adresu nebo dotaz pro vyhledávač</string>
+    <string name="search_hint">Zadejte hledání nebo adresu</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Nemáte otevřeny žádné panely</string>
+    <string name="no_open_tabs_header">Nemáte žádné otevřené panely</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tady se zobrazí vaše otevřené panely.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Jste v režimu anonymního prohlížení</string>
+    <string name="private_browsing_title">Používáte anonymní prohlížení</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder">
@@ -44,7 +44,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Knihovna</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Verze stránky pro počítač</string>
+    <string name="browser_menu_desktop_site">Verze pro počítač</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najít na stránce</string>
     <!-- Browser menu button that creates a private tab -->
@@ -79,6 +79,12 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Vložit odkaz ze schránky</string>
 
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Vyhledávání</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Vyhledat na webu</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Nastavení</string>
@@ -106,7 +112,7 @@
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Platební karty a adresy</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Nastavit jako výchozí prohlížeč</string>
+    <string name="preferences_set_as_default_browser">Jako výchozí prohlížeč</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Rozšířené</string>
     <!-- Preference category for privacy settings -->
@@ -194,7 +200,7 @@
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Ochrana proti sledování</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Blokujte obsah a skripty, které vás na internetu sledují</string>
+    <string name="preferences_tracking_protection_description">Blokuje obsah a skripty, které vás na internetu sledují</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Výjimky</string>
 
@@ -209,6 +215,8 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Údaje a používání a technická data</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Zaznamenává data o výkonu, hardwaru, používání a přizpůsobení prohlížeče %1$s. Data o prohlížeči jsou sdílena s organizací Mozilla z důvodu jeho vylepšení.</string>
     <!-- Preference switch for crash reporter -->
@@ -248,7 +256,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Podle nastavení šetření baterie</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Podle nastaveného vzhledu zařízení</string>
+    <string name="preference_follow_device_theme">Podle nastavení zařízení</string>
 
     <!-- Quick Action Sheet -->
     <!-- Button in the browser chrome to share the current page -->
@@ -307,7 +315,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otevřené panely</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Anonymní relace</string>
+    <string name="tabs_header_private_title">Anonymní panely</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Přidat panel</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -363,18 +371,23 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Položek ke smazání: %1$d</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Dnes</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Tento týden</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Tento měsíc</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Posledních 24 hodin</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Posledních 7 dnů</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Posledních 30 dnů</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Starší</string>
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Zatím nemáte žádnou historii prohlížení</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Promiňte, aplikace %1$s nemůže tuto stránku načíst.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Níže se můžete pokusit panel obnovit nebo ho zavřít.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Poslat Mozille hlášení o pádu</string>
     <!-- Close tab button text on the tab crash page -->
@@ -400,7 +413,7 @@
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_created_snackbar">Záložka vytvořena.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_saved_snackbar">Záložka uložena!</string>
+    <string name="bookmark_saved_snackbar">Záložka uložena</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">UPRAVIT</string>
     <!-- Bookmark overflow menu edit button -->
@@ -424,6 +437,8 @@
     <string name="edit_bookmark_fragment_title">Upravit záložku</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">Upravit složku</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Pro zobrazení synchronizovaných záložek se prosím přihlaste</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -439,6 +454,8 @@
     <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Neplatná URL adresa</string>
 
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Nemáte žádné záložky</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Záložka odstraněna: %1$s</string>
@@ -454,6 +471,10 @@
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Přejít do Nastavení</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Rychlá nastavení</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Doporučeno</string>
     <!-- button that allows editing site permissions settings -->
@@ -488,6 +509,8 @@
     <string name="tracking_protection_off">Vypnuta</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Ukládejte si stránky a panely, na kterých vám záleží, do sbírek.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Sbírky</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -525,6 +548,9 @@
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">Uložit</string>
 
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Sbírka č. %d</string>
+
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Poslat a sdílet</string>
@@ -535,6 +561,8 @@
     <string name="share_link_subheader">Sdílet odkaz</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Poslat do zařízení</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Přihlásit ke službě Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Poslat do všech zařízení</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -544,6 +572,8 @@
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Připojit další zařízení</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Pro poslání panelu se prosím přihlaste účtem Firefox na dalším zařízení.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Rozumím</string>
 
@@ -576,11 +606,18 @@
     <string name="full_screen_notification">Spuštěn režim celé obrazovky</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL adresa zkopírována</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">Příliš žluťoučký kůň úpěl ďábelské ódy. Příliš žluťoučký kůň úpěl ďábelské ódy. Příliš žluťoučký kůň úpěl ďábelské ódy. Příliš žluťoučký kůň úpěl ďábelské ódy.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Úprava velikosti textu na webových stránkách</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Velikost písma</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Automatická velikost písma</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Zrušte tuto volbu, pokud nechcete, aby se velikost písma řídila nastavením systému Android.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Smazat data o prohlížení</string>
@@ -601,12 +638,12 @@
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Smazat data o prohlížení</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">Chcete aplikaci %s povolit smazat vaše data o prohlížení?</string>
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Opravdu chcete smazat informace o vašem prohlížení?</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_cancel">Nepovolit</string>
+    <string name="delete_browsing_data_prompt_cancel">Zrušit</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="preferences_delete_browsing_data_prompt_allow">Smazat</string>
+    <string name="delete_browsing_data_prompt_allow">Smazat</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Data o prohlížení smazána</string>
 
@@ -616,6 +653,9 @@
     <string name="onboarding_header">Vítá vás %s</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Už máte účet?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">Poznejte aplikaci %s</string>
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Vyberte si vzhled</string>
     <!-- text for the theme picker onboarding card description -->
@@ -623,14 +663,40 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Využijte aplikaci %s naplno.</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">V dalším prohlížeči Firefox na tomto telefonu už jste přihlášení jako %s. Chcete se přihlásit tímto účtem?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Ano, přihlásit</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Přihlašování…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Přihlásit se do Firefoxu</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Nepřihlašovat</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Synchronizace je zapnutá</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Přihlášení selhalo</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Chraňte se</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description">%s blokuje reklamy, které vás sledujíc napříč internetem.
     </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Prohlížejte v soukromí</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">Kdykoliv uvidíte tuto ikonu %s, anonymní prohlížení máte přímo po ruce.
+   </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaše soukromí</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">%s vám dává kontrolu nad tím, co sdílíte online a co sdílíte s námi.
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Přečíst zásady ochrany osobních údajů</string>
 
@@ -655,10 +721,77 @@
     <string name="sync_scan_code">Naskenovat kód</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Otevřte Firefoxu na svém počítači a navštivte stránku <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Připraveno ke skenování</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Přihlásit se pomocí fotoaparátu</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Použít raději e-mail</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox ukončí synchronizaci s tímto účtem, ale neodstraní žádnou historii prohlížení na tomto zařízení.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Odpojit</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Zrušit</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Výchozí složky nelze upravovat</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Nastavení ochrany</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Rozšířená ochrana proti sledování</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nenechte se sledovat při prohlížení</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">%s vás chrání před mnoha častými sledujícími prvky, které sbírají informace o tom, co děláte na internetu.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Zjistit více</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Standardní (doporučeno)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Vyvážená ochrana a výkon.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Přísná</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Silnější ochrana. Může omezit fungování některých stránek.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">Blokováno</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">Neblokováno</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sledující prvky sociálních sítí</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Omezuje možnosti sociálních sítí sledovat vaše aktivity napříč internetem.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Sledovací cookies</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokuje cookies, které používají reklamní sítě a firmy ke sběru informací z mnoha serverů na internetu.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Těžba kryptoměn</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Zabraňuje skriptům přístup k vašemu zařízení pro účel těžby digitálních měn.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Vytváření otisku prohlížeče</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Zastaví shromažďování dat o vašem zařízení, která mohou být využita k vaší identifikaci nebo vašemu sledování.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Sledující obsah</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Blokuje načítání reklam, videí a dalšího obsahu, který obsahuje sledující kód. To může ovlivnit fungování některých webových stránek.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Změna barvy ikony štítu indikuje, že %s na stránce blokuje nějaké sledující prvky. Pro zobrazení seznamu, co je blokováno, na ikonu štítu klepněte.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Ochrana je na tomto serveru zapnuta</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Ochrana je na tomto serveru vypnuta</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Rozšířená ochrana proti sledování je pro tyto servery vypnutá</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Vaše práva</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Open source knihovny, které používáme</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS knihovny</string>
 </resources>

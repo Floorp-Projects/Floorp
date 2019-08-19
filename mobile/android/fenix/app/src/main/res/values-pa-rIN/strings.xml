@@ -18,6 +18,13 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">ਤੁਸੀਂ ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ‘ਚ ਹੋ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder">
+         ਜਦੋਂ ਤੁਸੀਂ ਐਪ ਤੋਂ ਬਾਹਰ ਜਾਂਦੇ ਹੋ ਜਾਂ ਸਾਰੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੀ ਖੋਜ ਅਤੇ ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਨੂੰ ਸਾਫ ਕਰਦਾ ਹੈ। ਹਾਲਾਂਕਿ ਇਹ ਤੁਹਾਨੂੰ ਵੈਬਸਾਈਟਾਂ ਜਾਂ ਤੁਹਾਡੇ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਲਈ ਅਣਪਛਾਤਾ ਨਹੀਂ ਬਣਾਉਂਦਾ, ਪਰ ਇਸ ਨਾਲ
+        ਇਸ ਡਿਵਾਈਸ ਨੂੰ ਵਰਤੇ ਵਾਲੇ ਕਿਸੇ ਤੋਂ ਵੀ ਤੁਹਾਡੇ ਵਲੋਂ ਆਨਲਾਈਨ ਕੀਤੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਣਾ ਹੋਰ ਸੌਖਾ ਹੋ ਜਾਂਦਾ ਹੈ।\n\nਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰ ਬਾਰੇ ਆਮ ਭਰਮ
+    
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ਸ਼ੈਸ਼ਨ ਹਟਾਓ</string>
 
@@ -73,6 +80,12 @@
     <string name="search_shortcuts_search_with">ਇਸ ਨਾਲ ਖੋਜੋ</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">ਕਲਿੱਪਬੋਰਡ ਤੋਂ ਲਿੰਕ ਭਰੋ</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">ਖੋਜੋ</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">ਵੈੱਬ ‘ਤੇ ਖੋਜੋ</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -197,10 +210,17 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ਸਾਰੀਆਂ ਸਾਈਟਾਂ ਲਈ ਚਾਲੂ ਕਰੋ</string>
 
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">ਛੋਟਾਂ ਤੁਹਾਨੂੰ ਚੁਣੀਆਂ ਸਾਈਤਾਂ ਲਈ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਨੂੰ ਅਸਮਰੱਥ ਕਰਨ ਦਿੰਦੀਆਂ ਹਨ।\n\nਹੋਰ ਸਿੱਖੋ</string>
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">ਪੂਰੇ ਤੌਰ ‘ਤੇ ਬੰਦ ਹੈ, ਇਸ ਨੂੰ ਚਾਲੂ ਕਰਨ ਲਈ ਸੈਟਿੰਗਾਂ ‘ਤੇ ਜਾਓ।</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ਟੈਲੀਮੈਟਰੀ</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ਵਰਤੋਂ ਅਤੇ ਤਕਨੀਕੀ ਡਾਟਾ</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">ਸਾਨੂੰ %1$s ਵਧੀਆ ਬਣਾਉਣ ਲਈ ਆਪਣੇ ਬਰਾਊਜ਼ਰ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ, ਵਰਤੋ, ਹਾਰਡਵੇਅਰ ਅਤੇ ਪਸੰਦ ਬਦਲਣ ਦਾ ਡਾਟਾ ਸਾਂਝਾ ਕਰੋ</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">ਕਰੈਸ਼ ਰਿਪੋਰਟਰ</string>
     <!-- Preference switch for Mozilla location service -->
@@ -221,6 +241,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">ਖਾਤਾ ਹਟਾਓ</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[ਆਪਣਾ QR ਕੋਡ ਲੈਣ ਲਈ ਆਪਣੇ ਕੰਪਿਊਟਰ ‘ਤੇ ਫਾਇਰਫਾਕਸ <b>firefox.com/pair</b> ਖੋਲ੍ਹੋ।]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">ਕੈਮਰਾ ਖੋਲ੍ਹੋ</string>
     <!-- Button to cancel pairing -->
@@ -345,12 +368,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">%1$d ਚੀਜ਼ਾਂ ਹਟਾਓ</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">ਅੱਜ</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">ਇਸ ਹਫ਼ਤੇ</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">ਇਸ ਮਹੀਨੇ</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">ਪਿਛਲੇ 24 ਘੰਟੇ</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">ਪਿਛਲੇ 7 ਦਿਨ</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">ਪਿਛਲੇ 30 ਦਿਨ</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">ਹੋਰ ਪੁਰਾਣੇ</string>
 
@@ -360,6 +383,10 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">ਅਫ਼ਸੋਸ ਹੈ। %1$s ਉਸ ਸਫ਼ੇ ਨੂੰ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕਦਾ ਹੈ।</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">ਤੁਸੀਂ ਬਹਾਲ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰ ਸਕਦੇ ਹੋ ਜਾਂ ਹੇਠਾਂ ਇਹ ਟੈਬ ਬੰਦ ਕਰ ਸਕਦੇ ਹੋ।</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">ਕਰੈਸ਼ ਰਿਪੋਰਟ ਮੌਜ਼ੀਲਾ ਨੂੰ ਭੇਜੋ</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">ਟੈਬ ਬੰਦ ਕਰੋ</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -476,6 +503,8 @@
     <string name="tracking_protection_off">ਬੰਦ</string>
 
     <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">ਜੋ ਚੀਜ਼ਾਂ ਤੁਹਾਡੇ ਲਈ ਮਹੱਤਵ ਰੱਖਦੀਆਂ ਹਨ, ਨੂੰ ਇਕੱਤਰ ਕਰੋ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਨਵੇਂ ਭੰਡਾਰ ਵਿੱਚ ਖੋਲ੍ਹੀਆਂ ਟੈਬਾਂ ਨੂੰ ਸੰਭਾਲੋ।</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">ਭੰਡਾਰ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -571,10 +600,45 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL ਕਾਪੀ ਕੀਤਾ</string>
 
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">ਵੈੱਬਸਾਈਟਾਂ ‘ਤੇ ਲਿਖਤ ਤੋਂ ਹੋਰ ਵੱਡਾ ਜਾਂ ਛੋਟਾ ਬਣਾਓ</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">ਆਪਣੇ-ਆਪ ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਬਣਾਓ</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਤੁਹਾਡੀਆਂ ਐਂਡਰਾਈਡ ਸੈਟਿੰਗਾਂ ਨਾਲ ਮਿਲਾਏਗਾ। ਫ਼ੋਂਟ ਦਾ ਆਕਾਰ ਇੱਥੇ ਇੰਤਜ਼ਾਮ ਕਰਨ ਲਈ ਅਸਮਰੱਥ ਕਰੋ।</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">ਬਰਾਊਜ਼ਰ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਓ</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title">ਟੈਬ ਖੋਲ੍ਹੋ</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ਟੈਬਾਂ</string>
+
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਅਤੇ ਸਾਈਟ ਡਾਟਾ</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ਸਿਰਨਾਵੇਂ</string>
+
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">ਭੰਡਾਰ</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d ਭੰਡਾਰ</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਓ</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">ਇਹ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਸਾਰੇ ਡਾਟੇ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">ਰੱਦ ਕਰੋ</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">ਹਟਾਓ</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਇਆ</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -582,19 +646,62 @@
     <string name="onboarding_header">%s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ?</string>
-    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s ਬਾਰੇ ਜਾਣੋ</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">ਆਪਣਾ ਸਰੂਪ ਚੁਣੋ</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">ਗੂੜ੍ਹਾ ਸਰੂਪ ਵਰਤ ਕੇ ਵੇਖੋ: ਤੁਹਾਡੀ ਬੈਟਰੀ ਅਤੇ ਤੁਹਾਡੀਆਂ ਅੱਖਾਂ ਲਈ ਵੱਧ ਸੌਖਾ।</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">%s ਤੋਂ ਪੂਰਾ ਪੂਰਾ ਫਾਇਦਾ ਲਵੋ।</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">ਤੁਸੀਂ ਇਸ ਫ਼ੋਨ ‘ਤੇ ਹੋਰ ਫਾਇਰਫਾਕਸ ਬਰਾਊਜ਼ਰ ਉੱਤੇ %s ਵਜੋਂ ਸਾਈਨ ਇਨ ਹੋ। ਕੀ ਤੁਸੀਂ ਇਸ ਖਾਤੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">ਹਾਂ, ਮੈਨੂੰ ਸਾਈਨ ਇਨ ਕਰੋ</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">…ਸਾਇਨ ਇਨ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">ਫਾਇਰਫਾਕਸ ‘ਚ ਸਾਇਨ ਇਨ ਕਰੋ</string>
 
-    <!-- text for the button to sign out of your Firefox account. -->
-    <string name="onboarding_firefox_account_sign_out">ਸਾਈਨ ਆਉਟ</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">ਸਾਈਨ ਆਉਟ ਰਹੋ</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ਸਾਈਨ-ਇਨ ਲਈ ਅਸਫ਼ਲ</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">ਖੁਦ ਨੂੰ ਸੁਰੱਖਿਅਤ ਰੱਖੋ</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s ਨੇ ਇਸ਼ਤਿਹਾਰ ਟਰੈਕਰਾਂ ‘ਤੇ ਪਾਬੰਦੀ ਲਗਾਉਂਦਾ ਹੈ, ਜੋ ਕਿ ਵੈੱਬ ‘ਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">ਪ੍ਰਾਈਵੇਟ ਢੰਗ ਨਾਲ ਬਰਾਊਜ਼ ਕਰੋ</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">ਜਦੋਂ ਤੁਸੀਂ %s ਆਈਕਾਨ ਵੇਖਦੇ ਹੋ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰਨਾ ਸਿਰਫ਼ ਛੂਹ ਭਰ ਦੂਰ ਹੁੰਦਾ ਹੈ।
+   </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">ਅਸੀਂ %s ਨੂੰ ਤੁਹਾਨੂੰ ਕੰਟਰੋਲ ਦੇਣ ਵਾਸਤੇ ਬਣਾਇਆ ਹੈ ਕਿ ਤੁਸੀਂ ਆਨਲਾਈਨ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ ਅਤੇ ਸਾਡੇ ਨਾਲ ਤੁਸੀਂ ਕੀ ਸਾਂਝਾ ਕਰਦੇ ਹੋ।
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">ਬਰਾਊਜ਼ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ</string>
 
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ਆਪਣੇ-ਆਪ</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">ਆਪਣੇ ਡਿਵਾਈਸ ਦੀਆਂ ਸੈਟਿੰਗਾਂ ਨੂੰ ਮੁਆਫ਼ਕ ਬਣਾਓ</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">ਗੂੜ੍ਹਾ ਥੀਮ</string>
     <!-- Theme setting for light mode -->
@@ -604,10 +711,59 @@
     <string name="sync_sent_tabs_snackbar">ਟੈਬਾਂ ਭੇਜੀਆਂ!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">ਟੈਬ ਭੇਜੀ!</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[ਆਪਣੇ ਕੰਪਿਊਟਰ ‘ਤੇ ਫਾਇਰਫਾਕਸ ਖੋਲ੍ਹੋ ਅਤੇ <b>https://firefox.com/pair</b> ‘ਤੇ ਜਾਓ]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">ਸਕੈਨ ਕਰਨ ਲਈ ਤਿਆਰ</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">ਆਪਣੇ ਕੈਮਰੇ ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ਇਸ ਦੀ ਬਜਾਏ ਈਮੇਲ ਵਰਤੋਂ</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">ਫਾਇਰਫਾਕਸ ਤੁਹਾਡੇ ਖਾਤੇ ਨਾਲ ਸਿੰਕ ਕਰਨਾ ਰੋਕੇਗਾ, ਪਰ ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਕਿਸੇ ਵੀ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ਰ ਡਾਟੇ ਨੂੰ ਨਹੀਂ ਹਟਾਏਗਾ।</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">ਡਿਸ-ਕਨੈਕਟ ਕਰੋ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">ਰੱਦ ਕਰੋ</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">ਮੂਲ ਫ਼ੋਲਡਰਾਂ ਨੂੰ ਸੋਧਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">ਸੁਰੱਖਿਆ ਸੈਟਿੰਗਾਂ</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">ਟਰੈਕ ਹੋਣ ਤੋਂ ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">ਬਿਨਾਂ ਪਿੱਛੇ ਕੀਤੇ ਜਾਣ ਤੋਂ ਬਰਾਊਜ਼ ਕਰੋ</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">ਮਿਆਰੀ (ਸਿਫਾਰਸ਼ੀ)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">ਸੁਰੱਖਿਆ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਲਈ ਸੰਤੁਲਿਤ ਕੀਤਾ।</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">ਸਖ਼ਤ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">ਮਜ਼ਬੂਤ ਸੁਰੱਖਿਆ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਜਾਂ ਸਮੱਗਰੀ ਦੇ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ ਦਾ ਕਾਰਨ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocking">ਪਾਬੰਦੀ ਲਾਉਣ</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_not_blocking">ਪਾਬੰਦੀ ਨਹੀਂ</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">ਸਮਾਜਿਕ ਮੀਡਿਆ ਟਰੈਕਰ</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">ਕ੍ਰਿਪਟੋਮਾਈਨਰ</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">ਫਿੰਗਰਪਰਿੰਟਰ</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ਸਮੱਗਰੀ ਟਰੈਕ ਕਰਨ ਵਾਲੇ</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">ਸਾਡੇ ਵਲੋਂ ਵਰਤੀਆਂ ਆਜ਼ਾਦ ਸਰੋਤ ਲਾਇਬਰੇਰੀਆਂ</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS ਲਾਇਬਰੇਰੀਆਂ</string>
 </resources>
