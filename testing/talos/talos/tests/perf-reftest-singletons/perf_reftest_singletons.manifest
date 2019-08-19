@@ -23,4 +23,3 @@
 % http://localhost/tests/perf-reftest-singletons/id-getter-7.html
 % http://localhost/tests/perf-reftest-singletons/abspos-reflow-1.html
 % http://localhost/tests/perf-reftest-singletons/scrollbar-styles-1.html
-% http://localhost/tests/perf-reftest-singletons/inline-style-cache-1.html
