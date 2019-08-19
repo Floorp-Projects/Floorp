@@ -34,9 +34,9 @@ add_task(async function test_proc_info() {
       }
       // see https://bugzilla.mozilla.org/show_bug.cgi?id=1529023
       if (!MAC) {
-        Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
+        Assert.ok(cpuThreads > 0, "Got some cpu time in the threads");
       }
-      Assert.greater(cpuUser, 0, "Got some cpu time");
+      Assert.ok(cpuUser > 0, "Got some cpu time");
     }
   );
 });

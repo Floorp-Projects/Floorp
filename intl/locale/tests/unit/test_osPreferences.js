@@ -33,7 +33,7 @@ function run_test()
     const pattern = osprefs.getDateTimePattern(...test);
     if (test[0] !== osprefs.dateTimeFormatStyleNone &&
         test[1] !== osprefs.dateTImeFormatStyleNone) {
-      Assert.greater(pattern.length, 0, "pattern is not empty.");
+      Assert.ok(pattern.length > 0, "pattern is not empty.");
     }
   }
 
