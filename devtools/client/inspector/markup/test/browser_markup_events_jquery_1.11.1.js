@@ -1,4 +1,3 @@
-/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from helper_events_test_runner.js */
@@ -61,18 +60,18 @@ const TEST_DATA = [
               $("#livediv").live("dblclick", handler1);
               $("#livediv").live("dragstart", handler2);
             }
-          
+
             if ($("#livediv").delegate) {
               $(document).delegate("#livediv", "dragleave", handler3);
               $(document).delegate("#livediv", "dragend", handler4);
             }
-          
+
             if ($("#livediv").on) {
               $(document).on("drop", "#livediv", handler5);
               $(document).on("dragover", "#livediv", handler6);
               $(document).on("dragout", "#livediv:xxxxx", handler10);
             }
-          
+
             var div = $("div")[0];
             $(div).click(handler7);
             $(div).click(handler8);
