@@ -63,6 +63,10 @@ class NativeLayer {
   virtual void SetRect(const gfx::IntRect& aRect) = 0;
   virtual gfx::IntRect GetRect() = 0;
 
+  // Define which parts of the layer are opaque..
+  virtual void SetOpaqueRegion(const gfx::IntRegion& aRegion) = 0;
+  virtual gfx::IntRegion OpaqueRegion() = 0;
+
  protected:
   virtual ~NativeLayer() {}
 };
