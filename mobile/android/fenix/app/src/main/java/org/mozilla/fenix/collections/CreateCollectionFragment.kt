@@ -121,7 +121,7 @@ class CreateCollectionFragment : DialogFragment() {
                         }
 
                         context.components.analytics.metrics.track(
-                            Event.CollectionSaved(context.components.core.sessionManager.size, sessionBundle.size)
+                            Event.CollectionSaved(normalSessionSize(), sessionBundle.size)
                         )
 
                         closeTabsIfNecessary(it.tabs)
@@ -137,7 +137,7 @@ class CreateCollectionFragment : DialogFragment() {
                         }
 
                         context.components.analytics.metrics.track(
-                            Event.CollectionTabsAdded(context.components.core.sessionManager.size, sessionBundle.size)
+                            Event.CollectionTabsAdded(normalSessionSize(), sessionBundle.size)
                         )
 
                         closeTabsIfNecessary(it.tabs)
@@ -152,6 +152,12 @@ class CreateCollectionFragment : DialogFragment() {
                 }
             }
         }
+    }
+
+    private fun normalSessionSize(): Int {
+        return requireComponents.core.sessionManager.sessions.filter { session ->
+            (!session.isCustomTabSession() && !session.private)
+        }.size
     }
 
     private fun handleBackPress(backPressFrom: SaveCollectionStep) {

@@ -793,6 +793,17 @@ sync_auth:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+  sign_up:
+    type: event
+    description: >
+      A user signed up for a new FxA account
+    bugs:
+      - 4421
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4816
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
   scan_pairing:
     type: event
     description: >

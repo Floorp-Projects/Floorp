@@ -212,6 +212,9 @@ private val Event.wrapper
         is Event.SyncAuthSignOut -> EventWrapper<NoExtraKeys>(
             { SyncAuth.signOut.record(it) }
         )
+        is Event.FXANewSignup -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.signUp.record(it) }
+        )
         is Event.SyncAuthScanPairing -> EventWrapper<NoExtraKeys>(
             { SyncAuth.scanPairing.record(it) }
         )
@@ -299,9 +302,6 @@ private val Event.wrapper
         )
         is Event.SearchWidgetVoiceSearchPressed -> EventWrapper<NoExtraKeys>(
             { SearchWidget.voiceButton.record(it) }
-        )
-        is Event.FXANewSignup -> EventWrapper<NoExtraKeys>(
-            { Collections.renameButton.record(it) }
         )
 
         // Don't track other events with Glean
