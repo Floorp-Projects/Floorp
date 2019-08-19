@@ -24,7 +24,7 @@ import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 
@@ -47,7 +47,6 @@ class DefaultBrowserToolbarController(
     private val viewModel: CreateCollectionViewModel,
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
-    private val currentSessionAsTab: Tab,
     private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>
 ) : BrowserToolbarController {
 
@@ -58,7 +57,7 @@ class DefaultBrowserToolbarController(
         navController.nav(
             R.id.browserFragment,
             BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                customTabSession?.id
+                customTabSession?.id ?: context.components.core.sessionManager.selectedSession?.id
             )
         )
     }
@@ -124,17 +123,19 @@ class DefaultBrowserToolbarController(
                 context.components.analytics.metrics
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
 
-                viewModel.tabs = listOf(currentSessionAsTab)
-                val selectedSet = mutableSetOf(currentSessionAsTab)
-                viewModel.selectedTabs = selectedSet
-                viewModel.tabCollections =
-                    context.components.core.tabCollectionStorage.cachedTabCollections.reversed()
-                viewModel.saveCollectionStep = viewModel.tabCollections.getStepForCollectionsSize()
-                viewModel.snackbarAnchorView = nestedScrollQuickActionView
-                viewModel.previousFragmentId = R.id.browserFragment
+                currentSession?.toTab(context)?.let {
+                    viewModel.tabs = listOf(it)
+                    val selectedSet = mutableSetOf(it)
+                    viewModel.selectedTabs = selectedSet
+                    viewModel.tabCollections =
+                        context.components.core.tabCollectionStorage.cachedTabCollections.reversed()
+                    viewModel.saveCollectionStep = viewModel.tabCollections.getStepForCollectionsSize()
+                    viewModel.snackbarAnchorView = nestedScrollQuickActionView
+                    viewModel.previousFragmentId = R.id.browserFragment
 
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
-                navController.nav(R.id.browserFragment, directions)
+                    val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
+                    navController.nav(R.id.browserFragment, directions)
+                }
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 // Release the session from this view so that it can immediately be rendered by a different view

@@ -11,6 +11,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -34,6 +35,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
@@ -73,9 +75,13 @@ class DefaultBrowserToolbarControllerTest {
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            currentSessionAsTab = currentSessionAsTab,
             bottomSheetBehavior = bottomSheetBehavior
         )
+
+        mockkStatic(
+            "org.mozilla.fenix.ext.SessionKt"
+        )
+        every { any<Session>().toTab(any()) } returns currentSessionAsTab
 
         every { context.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
@@ -342,7 +348,6 @@ class DefaultBrowserToolbarControllerTest {
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
-            currentSessionAsTab = currentSessionAsTab,
             bottomSheetBehavior = bottomSheetBehavior
         )
 
