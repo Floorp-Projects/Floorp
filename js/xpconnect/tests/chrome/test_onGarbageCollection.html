@@ -14,7 +14,7 @@
 
     const { gc } = Cu.getJSTestingFunctions();
 
-    // Instanciate `Debugger` in a sandbox as Debugger requires to be created
+    // Instantiate `Debugger` in a sandbox as Debugger requires to be created
     // in a compartment different than the debuggee.
     let sandbox = Cu.Sandbox(Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
                              {freshCompartment: true});
@@ -28,7 +28,8 @@
 
     dbg.memory.onGarbageCollection = function (data) {
       // Don't keep calling this hook after we finish.
-      dbg.enabled = false;
+      dbg.memory.onGarbageCollection = undefined;
+      dbg.removeAllDebuggees();
 
       ok(data, "The onGarbageCollection hook was fired.");
       SimpleTest.finish();
