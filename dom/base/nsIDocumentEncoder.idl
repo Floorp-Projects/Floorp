@@ -198,11 +198,6 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputNonTextContentAsPlaceholder = (1 << 23);
 
   /**
-   * Don't Strip ending spaces from a line (only for serializing to plaintext).
-   */
-  const unsigned long OutputDontRemoveLineEndingSpaces = (1 << 24);
-
-  /**
    * Serialize in a way that is suitable for copying a plaintext version of the
    * document to the clipboard.  This can for example cause line endings to be
    * injected at preformatted block element boundaries.
