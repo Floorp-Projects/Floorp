@@ -112,9 +112,6 @@ add_task(async function() {
     gBrowser.selectedBrowser,
     { oldCanRecord: gOldContentCanRecord },
     async function(arg) {
-      const { PromiseUtils } = ChromeUtils.import(
-        "resource://gre/modules/PromiseUtils.jsm"
-      );
       await new Promise(resolve => {
         let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
           Ci.nsITelemetry
@@ -127,16 +124,13 @@ add_task(async function() {
 });
 
 function waitForDestroyedDocuments() {
-  let deferred = PromiseUtils.defer();
-  SpecialPowers.exactGC(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.exactGC(resolve);
+  });
 }
 
 function waitForPageLoad(browser) {
   return ContentTask.spawn(browser, null, async function() {
-    const { PromiseUtils } = ChromeUtils.import(
-      "resource://gre/modules/PromiseUtils.jsm"
-    );
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("load", listener, true);
@@ -203,29 +197,25 @@ var check_use_counter_iframe = async function(
   await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(
     opts
   ) {
-    const { PromiseUtils } = ChromeUtils.import(
-      "resource://gre/modules/PromiseUtils.jsm"
-    );
-    let deferred = PromiseUtils.defer();
-
     let wu = content.window.windowUtils;
 
     let iframe = content.document.getElementById("content");
     iframe.src = opts.file;
-    let listener = event => {
-      event.target.removeEventListener("load", listener, true);
 
-      // We flush the main document first, then the iframe's document to
-      // ensure any propagation that might happen from content->parent should
-      // have already happened when counters are reported to telemetry.
-      wu.forceUseCounterFlush(content.document);
-      wu.forceUseCounterFlush(iframe.contentDocument);
+    return new Promise(resolve => {
+      let listener = event => {
+        event.target.removeEventListener("load", listener, true);
 
-      deferred.resolve();
-    };
-    iframe.addEventListener("load", listener, true);
+        // We flush the main document first, then the iframe's document to
+        // ensure any propagation that might happen from content->parent should
+        // have already happened when counters are reported to telemetry.
+        wu.forceUseCounterFlush(content.document);
+        wu.forceUseCounterFlush(iframe.contentDocument);
 
-    return deferred.promise;
+        resolve();
+      };
+      iframe.addEventListener("load", listener, true);
+    });
   });
 
   // Tear down the page.
@@ -294,30 +284,26 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
     gBrowser.selectedBrowser,
     { file: file },
     async function(opts) {
-      const { PromiseUtils } = ChromeUtils.import(
-        "resource://gre/modules/PromiseUtils.jsm"
-      );
-      let deferred = PromiseUtils.defer();
-
       let img = content.document.getElementById("display");
       img.src = opts.file;
-      let listener = event => {
-        img.removeEventListener("load", listener, true);
 
-        // Flush for the image.  It matters what order we do these in, so that
-        // the image can propagate its use counters to the document prior to the
-        // document reporting its use counters.
-        let wu = content.window.windowUtils;
-        wu.forceUseCounterFlush(img);
+      return new Promise(resolve => {
+        let listener = event => {
+          img.removeEventListener("load", listener, true);
 
-        // Flush for the main window.
-        wu.forceUseCounterFlush(content.document);
+          // Flush for the image.  It matters what order we do these in, so that
+          // the image can propagate its use counters to the document prior to the
+          // document reporting its use counters.
+          let wu = content.window.windowUtils;
+          wu.forceUseCounterFlush(img);
 
-        deferred.resolve();
-      };
-      img.addEventListener("load", listener, true);
+          // Flush for the main window.
+          wu.forceUseCounterFlush(content.document);
 
-      return deferred.promise;
+          resolve();
+        };
+        img.addEventListener("load", listener, true);
+      });
     }
   );
 
@@ -383,9 +369,6 @@ var check_use_counter_direct = async function(
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gHttpTestRoot + file);
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    const { PromiseUtils } = ChromeUtils.import(
-      "resource://gre/modules/PromiseUtils.jsm"
-    );
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("load", listener, true);
