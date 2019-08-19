@@ -2422,8 +2422,33 @@ class SeqStream {
 		if (block.length < 2) return 0;
 		//endregion
 
-		//region Convert byte array to "Uint32Array" value
+		//region Convert byte array to "Uint16Array" value
 		const value = new Uint16Array(1);
+		const view = new Uint8Array(value.buffer);
+
+		view[0] = block[1];
+		view[1] = block[0];
+		//endregion
+
+		return value[0];
+	}
+	//**********************************************************************************
+	// noinspection JSUnusedGlobalSymbols, FunctionWithMultipleReturnPointsJS, FunctionNamingConventionJS
+	/**
+  * Get 2-byte signed integer value
+  * @param {boolean} [changeLength=true] Should we change "length" and "start" value after reading the data block
+  * @returns {number}
+  */
+	getInt16(changeLength = true) {
+		const block = this.getBlock(2, changeLength);
+
+		//region Check posibility for convertion
+		// noinspection ConstantOnRightSideOfComparisonJS, ConstantOnLeftSideOfComparisonJS, NonBlockStatementBodyJS
+		if (block.length < 2) return 0;
+		//endregion
+
+		//region Convert byte array to "Int16Array" value
+		const value = new Int16Array(1);
 		const view = new Uint8Array(value.buffer);
 
 		view[0] = block[1];
@@ -2474,6 +2499,30 @@ class SeqStream {
 
 		//region Convert byte array to "Uint32Array" value
 		const value = new Uint32Array(1);
+		const view = new Uint8Array(value.buffer);
+
+		// noinspection ConstantOnRightSideOfComparisonJS, ConstantOnLeftSideOfComparisonJS, NonBlockStatementBodyJS
+		for (let i = 3; i >= 0; i--) view[3 - i] = block[i];
+		//endregion
+
+		return value[0];
+	}
+	//**********************************************************************************
+	/**
+  * Get 4-byte signed integer value
+  * @param {boolean} [changeLength=true] Should we change "length" and "start" value after reading the data block
+  * @returns {number}
+  */
+	getInt32(changeLength = true) {
+		const block = this.getBlock(4, changeLength);
+
+		//region Check posibility for convertion
+		// noinspection ConstantOnRightSideOfComparisonJS, ConstantOnLeftSideOfComparisonJS, NonBlockStatementBodyJS
+		if (block.length < 4) return 0;
+		//endregion
+
+		//region Convert byte array to "Int32Array" value
+		const value = new Int32Array(1);
 		const view = new Uint8Array(value.buffer);
 
 		// noinspection ConstantOnRightSideOfComparisonJS, ConstantOnLeftSideOfComparisonJS, NonBlockStatementBodyJS
@@ -29825,7 +29874,7 @@ class PublicKeyInfo {
       case "1.2.840.10045.2.1":
         // ECDSA
         if ("algorithmParams" in this.algorithm) {
-          if (this.algorithm.algorithmParams instanceof asn1js.ObjectIdentifier) {
+          if (this.algorithm.algorithmParams.constructor.blockName() === asn1js.ObjectIdentifier.blockName()) {
             try {
               this.parsedKey = new _ECPublicKey.default({
                 namedCurve: this.algorithm.algorithmParams.valueBlock.toString(),
@@ -40586,20 +40635,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
-exports.RawData = exports.Repeated = exports.Any = exports.Choice = exports.TIME = exports.Duration = exports.DateTime = exports.TimeOfDay = exports.DATE = exports.GeneralizedTime = exports.UTCTime = exports.CharacterString = exports.GeneralString = exports.VisibleString = exports.GraphicString = exports.IA5String = exports.VideotexString = exports.TeletexString = exports.PrintableString = exports.NumericString = exports.UniversalString = exports.BmpString = exports.Utf8String = exports.ObjectIdentifier = exports.Enumerated = exports.Integer = exports.BitString = exports.OctetString = exports.Null = exports.Set = exports.Sequence = exports.Boolean = exports.EndOfContent = exports.Constructed = exports.Primitive = exports.BaseBlock = undefined;
 exports.fromBER = fromBER;
 exports.compareSchema = compareSchema;
 exports.verifySchema = verifySchema;
 exports.fromJSON = fromJSON;
+exports.RawData = exports.Repeated = exports.Any = exports.Choice = exports.TIME = exports.Duration = exports.DateTime = exports.TimeOfDay = exports.DATE = exports.GeneralizedTime = exports.UTCTime = exports.CharacterString = exports.GeneralString = exports.VisibleString = exports.GraphicString = exports.IA5String = exports.VideotexString = exports.TeletexString = exports.PrintableString = exports.NumericString = exports.UniversalString = exports.BmpString = exports.RelativeObjectIdentifier = exports.Utf8String = exports.ObjectIdentifier = exports.Enumerated = exports.Integer = exports.BitString = exports.OctetString = exports.Null = exports.Set = exports.Sequence = exports.Boolean = exports.EndOfContent = exports.Constructed = exports.Primitive = exports.BaseBlock = exports.ValueBlock = exports.HexBlock = void 0;
 
 var _pvutils = require("pvutils");
 
-//**************************************************************************************
-//region Declaration of global variables
-//**************************************************************************************
-const powers2 = [new Uint8Array([1])]; /* eslint-disable indent */
+/* eslint-disable indent */
+
 /*
  * Copyright (c) 2016-2018, Peculiar Ventures
  * All rights reserved.
@@ -40633,13 +40680,16 @@ const powers2 = [new Uint8Array([1])]; /* eslint-disable indent */
  *
  */
 //**************************************************************************************
-
-const digitsString = "0123456789";
 //**************************************************************************************
+//region Declaration of global variables
+//**************************************************************************************
+const powers2 = [new Uint8Array([1])];
+const digitsString = "0123456789"; //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration for "LocalBaseBlock" class
 //**************************************************************************************
+
 /**
  * Class used as a base block for all remaining ASN.1 classes
  * @typedef LocalBaseBlock
@@ -40649,65 +40699,75 @@ const digitsString = "0123456789";
  * @property {Array.<string>} warnings
  * @property {ArrayBuffer} valueBeforeDecode
  */
+
 class LocalBaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalBaseBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueBeforeDecode]
-  */
-	constructor(parameters = {}) {
-		/**
-   * @type {number} blockLength
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalBaseBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueBeforeDecode]
    */
-		this.blockLength = (0, _pvutils.getParametersValue)(parameters, "blockLength", 0);
-		/**
-   * @type {string} error
+  constructor(parameters = {}) {
+    /**
+     * @type {number} blockLength
+     */
+    this.blockLength = (0, _pvutils.getParametersValue)(parameters, "blockLength", 0);
+    /**
+     * @type {string} error
+     */
+
+    this.error = (0, _pvutils.getParametersValue)(parameters, "error", "");
+    /**
+     * @type {Array.<string>} warnings
+     */
+
+    this.warnings = (0, _pvutils.getParametersValue)(parameters, "warnings", []); //noinspection JSCheckFunctionSignatures
+
+    /**
+     * @type {ArrayBuffer} valueBeforeDecode
+     */
+
+    if ("valueBeforeDecode" in parameters) this.valueBeforeDecode = parameters.valueBeforeDecode.slice(0);else this.valueBeforeDecode = new ArrayBuffer(0);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
    */
-		this.error = (0, _pvutils.getParametersValue)(parameters, "error", "");
-		/**
-   * @type {Array.<string>} warnings
+
+
+  static blockName() {
+    return "baseBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
    */
-		this.warnings = (0, _pvutils.getParametersValue)(parameters, "warnings", []);
-		//noinspection JSCheckFunctionSignatures
-		/**
-   * @type {ArrayBuffer} valueBeforeDecode
-   */
-		if ("valueBeforeDecode" in parameters) this.valueBeforeDecode = parameters.valueBeforeDecode.slice(0);else this.valueBeforeDecode = new ArrayBuffer(0);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "baseBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		return {
-			blockName: this.constructor.blockName(),
-			blockLength: this.blockLength,
-			error: this.error,
-			warnings: this.warnings,
-			valueBeforeDecode: (0, _pvutils.bufferToHexCodes)(this.valueBeforeDecode, 0, this.valueBeforeDecode.byteLength)
-		};
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+
+
+  toJSON() {
+    return {
+      blockName: this.constructor.blockName(),
+      blockLength: this.blockLength,
+      error: this.error,
+      warnings: this.warnings,
+      valueBeforeDecode: (0, _pvutils.bufferToHexCodes)(this.valueBeforeDecode, 0, this.valueBeforeDecode.byteLength)
+    };
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
-//region Description for "LocalHexBlock" class
+//region Description for "HexBlock" class
 //**************************************************************************************
+
 /**
  * Class used as a base block for all remaining ASN.1 classes
  * @extends LocalBaseBlock
- * @typedef LocalHexBlock
+ * @typedef HexBlock
  * @property {number} blockLength
  * @property {string} error
  * @property {Array.<string>} warnings
@@ -40716,4173 +40776,4820 @@ class LocalBaseBlock {
  * @property {ArrayBuffer} valueHex
  */
 //noinspection JSUnusedLocalSymbols
-const LocalHexBlock = BaseClass => class LocalHexBlockMixin extends BaseClass {
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Constructor for "LocalHexBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		/**
-   * @type {boolean}
+
+const HexBlock = BaseClass => class LocalHexBlockMixin extends BaseClass {
+  //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Constructor for "HexBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
    */
-		this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", false);
-		/**
-   * @type {ArrayBuffer}
+  constructor(parameters = {}) {
+    super(parameters);
+    /**
+     * @type {boolean}
+     */
+
+    this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", false);
+    /**
+     * @type {ArrayBuffer}
+     */
+
+    if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else this.valueHex = new ArrayBuffer(0);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
    */
-		if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else this.valueHex = new ArrayBuffer(0);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "hexBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
 
-		//region Initial checks
-		if (intBuffer.length === 0) {
-			this.warnings.push("Zero buffer length");
-			return inputOffset;
-		}
-		//endregion
+  static blockName() {
+    return "hexBlock";
+  } //**********************************************************************************
 
-		//region Copy input buffer to internal buffer
-		this.valueHex = inputBuffer.slice(inputOffset, inputOffset + inputLength);
-		//endregion
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		this.blockLength = inputLength;
 
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		if (this.isHexOnly !== true) {
-			this.error = "Flag \"isHexOnly\" is not set, abort";
-			return new ArrayBuffer(0);
-		}
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-		if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength);
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+    //region Initial checks
 
-		//noinspection JSCheckFunctionSignatures
-		return this.valueHex.slice(0);
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+    if (intBuffer.length === 0) {
+      this.warnings.push("Zero buffer length");
+      return inputOffset;
+    } //endregion
+    //region Copy input buffer to internal buffer
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.blockName = this.constructor.blockName();
-		object.isHexOnly = this.isHexOnly;
-		object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    this.valueHex = inputBuffer.slice(inputOffset, inputOffset + inputLength); //endregion
 
-		return object;
-	}
-	//**********************************************************************************
-};
-//**************************************************************************************
+    this.blockLength = inputLength;
+    return inputOffset + inputLength;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    if (this.isHexOnly !== true) {
+      this.error = "Flag \"isHexOnly\" is not set, abort";
+      return new ArrayBuffer(0);
+    }
+
+    if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength); //noinspection JSCheckFunctionSignatures
+
+    return this.valueHex.slice(0);
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.blockName = this.constructor.blockName();
+    object.isHexOnly = this.isHexOnly;
+    object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    return object;
+  } //**********************************************************************************
+
+
+}; //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of identification block class
 //**************************************************************************************
-class LocalIdentificationBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalBaseBlock" class
-  * @param {Object} [parameters={}]
-  * @property {Object} [idBlock]
-  */
-	constructor(parameters = {}) {
-		super();
 
-		if ("idBlock" in parameters) {
-			//region Properties from hexBlock class
-			this.isHexOnly = (0, _pvutils.getParametersValue)(parameters.idBlock, "isHexOnly", false);
-			this.valueHex = (0, _pvutils.getParametersValue)(parameters.idBlock, "valueHex", new ArrayBuffer(0));
-			//endregion
 
-			this.tagClass = (0, _pvutils.getParametersValue)(parameters.idBlock, "tagClass", -1);
-			this.tagNumber = (0, _pvutils.getParametersValue)(parameters.idBlock, "tagNumber", -1);
-			this.isConstructed = (0, _pvutils.getParametersValue)(parameters.idBlock, "isConstructed", false);
-		} else {
-			this.tagClass = -1;
-			this.tagNumber = -1;
-			this.isConstructed = false;
-		}
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "identificationBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		//region Initial variables
-		let firstOctet = 0;
-		let retBuf;
-		let retView;
-		//endregion
+exports.HexBlock = HexBlock;
 
-		switch (this.tagClass) {
-			case 1:
-				firstOctet |= 0x00; // UNIVERSAL
-				break;
-			case 2:
-				firstOctet |= 0x40; // APPLICATION
-				break;
-			case 3:
-				firstOctet |= 0x80; // CONTEXT-SPECIFIC
-				break;
-			case 4:
-				firstOctet |= 0xC0; // PRIVATE
-				break;
-			default:
-				this.error = "Unknown tag class";
-				return new ArrayBuffer(0);
-		}
+class LocalIdentificationBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
 
-		if (this.isConstructed) firstOctet |= 0x20;
+  /**
+   * Constructor for "LocalBaseBlock" class
+   * @param {Object} [parameters={}]
+   * @property {Object} [idBlock]
+   */
+  constructor(parameters = {}) {
+    super();
 
-		if (this.tagNumber < 31 && !this.isHexOnly) {
-			retBuf = new ArrayBuffer(1);
-			retView = new Uint8Array(retBuf);
+    if ("idBlock" in parameters) {
+      //region Properties from hexBlock class
+      this.isHexOnly = (0, _pvutils.getParametersValue)(parameters.idBlock, "isHexOnly", false);
+      this.valueHex = (0, _pvutils.getParametersValue)(parameters.idBlock, "valueHex", new ArrayBuffer(0)); //endregion
 
-			if (!sizeOnly) {
-				let number = this.tagNumber;
-				number &= 0x1F;
-				firstOctet |= number;
+      this.tagClass = (0, _pvutils.getParametersValue)(parameters.idBlock, "tagClass", -1);
+      this.tagNumber = (0, _pvutils.getParametersValue)(parameters.idBlock, "tagNumber", -1);
+      this.isConstructed = (0, _pvutils.getParametersValue)(parameters.idBlock, "isConstructed", false);
+    } else {
+      this.tagClass = -1;
+      this.tagNumber = -1;
+      this.isConstructed = false;
+    }
+  } //**********************************************************************************
 
-				retView[0] = firstOctet;
-			}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-			return retBuf;
-		}
 
-		if (this.isHexOnly === false) {
-			const encodedBuf = (0, _pvutils.utilToBase)(this.tagNumber, 7);
-			const encodedView = new Uint8Array(encodedBuf);
-			const size = encodedBuf.byteLength;
+  static blockName() {
+    return "identificationBlock";
+  } //**********************************************************************************
 
-			retBuf = new ArrayBuffer(size + 1);
-			retView = new Uint8Array(retBuf);
-			retView[0] = firstOctet | 0x1F;
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-			if (!sizeOnly) {
-				for (let i = 0; i < size - 1; i++) retView[i + 1] = encodedView[i] | 0x80;
 
-				retView[size] = encodedView[size - 1];
-			}
+  toBER(sizeOnly = false) {
+    //region Initial variables
+    let firstOctet = 0;
+    let retBuf;
+    let retView; //endregion
 
-			return retBuf;
-		}
+    switch (this.tagClass) {
+      case 1:
+        firstOctet |= 0x00; // UNIVERSAL
 
-		retBuf = new ArrayBuffer(this.valueHex.byteLength + 1);
-		retView = new Uint8Array(retBuf);
+        break;
 
-		retView[0] = firstOctet | 0x1F;
+      case 2:
+        firstOctet |= 0x40; // APPLICATION
 
-		if (sizeOnly === false) {
-			const curView = new Uint8Array(this.valueHex);
+        break;
 
-			for (let i = 0; i < curView.length - 1; i++) retView[i + 1] = curView[i] | 0x80;
+      case 3:
+        firstOctet |= 0x80; // CONTEXT-SPECIFIC
 
-			retView[this.valueHex.byteLength] = curView[curView.length - 1];
-		}
+        break;
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+      case 4:
+        firstOctet |= 0xC0; // PRIVATE
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
+        break;
 
-		//region Initial checks
-		if (intBuffer.length === 0) {
-			this.error = "Zero buffer length";
-			return -1;
-		}
-		//endregion
+      default:
+        this.error = "Unknown tag class";
+        return new ArrayBuffer(0);
+    }
 
-		//region Find tag class
-		const tagClassMask = intBuffer[0] & 0xC0;
+    if (this.isConstructed) firstOctet |= 0x20;
 
-		switch (tagClassMask) {
-			case 0x00:
-				this.tagClass = 1; // UNIVERSAL
-				break;
-			case 0x40:
-				this.tagClass = 2; // APPLICATION
-				break;
-			case 0x80:
-				this.tagClass = 3; // CONTEXT-SPECIFIC
-				break;
-			case 0xC0:
-				this.tagClass = 4; // PRIVATE
-				break;
-			default:
-				this.error = "Unknown tag class";
-				return -1;
-		}
-		//endregion
+    if (this.tagNumber < 31 && !this.isHexOnly) {
+      retBuf = new ArrayBuffer(1);
+      retView = new Uint8Array(retBuf);
 
-		//region Find it's constructed or not
-		this.isConstructed = (intBuffer[0] & 0x20) === 0x20;
-		//endregion
+      if (!sizeOnly) {
+        let number = this.tagNumber;
+        number &= 0x1F;
+        firstOctet |= number;
+        retView[0] = firstOctet;
+      }
 
-		//region Find tag number
-		this.isHexOnly = false;
+      return retBuf;
+    }
 
-		const tagNumberMask = intBuffer[0] & 0x1F;
+    if (this.isHexOnly === false) {
+      const encodedBuf = (0, _pvutils.utilToBase)(this.tagNumber, 7);
+      const encodedView = new Uint8Array(encodedBuf);
+      const size = encodedBuf.byteLength;
+      retBuf = new ArrayBuffer(size + 1);
+      retView = new Uint8Array(retBuf);
+      retView[0] = firstOctet | 0x1F;
 
-		//region Simple case (tag number < 31)
-		if (tagNumberMask !== 0x1F) {
-			this.tagNumber = tagNumberMask;
-			this.blockLength = 1;
-		}
-		//endregion
-		//region Tag number bigger or equal to 31
-		else {
-				let count = 1;
+      if (!sizeOnly) {
+        for (let i = 0; i < size - 1; i++) retView[i + 1] = encodedView[i] | 0x80;
 
-				this.valueHex = new ArrayBuffer(255);
-				let tagNumberBufferMaxLength = 255;
-				let intTagNumberBuffer = new Uint8Array(this.valueHex);
+        retView[size] = encodedView[size - 1];
+      }
 
-				//noinspection JSBitwiseOperatorUsage
-				while (intBuffer[count] & 0x80) {
-					intTagNumberBuffer[count - 1] = intBuffer[count] & 0x7F;
-					count++;
+      return retBuf;
+    }
 
-					if (count >= intBuffer.length) {
-						this.error = "End of input reached before message was fully decoded";
-						return -1;
-					}
+    retBuf = new ArrayBuffer(this.valueHex.byteLength + 1);
+    retView = new Uint8Array(retBuf);
+    retView[0] = firstOctet | 0x1F;
 
-					//region In case if tag number length is greater than 255 bytes (rare but possible case)
-					if (count === tagNumberBufferMaxLength) {
-						tagNumberBufferMaxLength += 255;
+    if (sizeOnly === false) {
+      const curView = new Uint8Array(this.valueHex);
 
-						const tempBuffer = new ArrayBuffer(tagNumberBufferMaxLength);
-						const tempBufferView = new Uint8Array(tempBuffer);
+      for (let i = 0; i < curView.length - 1; i++) retView[i + 1] = curView[i] | 0x80;
 
-						for (let i = 0; i < intTagNumberBuffer.length; i++) tempBufferView[i] = intTagNumberBuffer[i];
+      retView[this.valueHex.byteLength] = curView[curView.length - 1];
+    }
 
-						this.valueHex = new ArrayBuffer(tagNumberBufferMaxLength);
-						intTagNumberBuffer = new Uint8Array(this.valueHex);
-					}
-					//endregion
-				}
+    return retBuf;
+  } //**********************************************************************************
 
-				this.blockLength = count + 1;
-				intTagNumberBuffer[count - 1] = intBuffer[count] & 0x7F; // Write last byte to buffer
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-				//region Cut buffer
-				const tempBuffer = new ArrayBuffer(count);
-				const tempBufferView = new Uint8Array(tempBuffer);
 
-				for (let i = 0; i < count; i++) tempBufferView[i] = intTagNumberBuffer[i];
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-				this.valueHex = new ArrayBuffer(count);
-				intTagNumberBuffer = new Uint8Array(this.valueHex);
-				intTagNumberBuffer.set(tempBufferView);
-				//endregion
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+    //region Initial checks
 
-				//region Try to convert long tag number to short form
-				if (this.blockLength <= 9) this.tagNumber = (0, _pvutils.utilFromBase)(intTagNumberBuffer, 7);else {
-					this.isHexOnly = true;
-					this.warnings.push("Tag too long, represented as hex-coded");
-				}
-				//endregion
-			}
-		//endregion
-		//endregion
+    if (intBuffer.length === 0) {
+      this.error = "Zero buffer length";
+      return -1;
+    } //endregion
+    //region Find tag class
 
-		//region Check if constructed encoding was using for primitive type
-		if (this.tagClass === 1 && this.isConstructed) {
-			switch (this.tagNumber) {
-				case 1: // Boolean
-				case 2: // REAL
-				case 5: // Null
-				case 6: // OBJECT IDENTIFIER
-				case 9: // REAL
-				case 14: // Time
-				case 23:
-				case 24:
-				case 31:
-				case 32:
-				case 33:
-				case 34:
-					this.error = "Constructed encoding used for primitive type";
-					return -1;
-				default:
-			}
-		}
-		//endregion
 
-		return inputOffset + this.blockLength; // Return current offset in input buffer
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName: string,
-  *  tagClass: number,
-  *  tagNumber: number,
-  *  isConstructed: boolean,
-  *  isHexOnly: boolean,
-  *  valueHex: ArrayBuffer,
-  *  blockLength: number,
-  *  error: string, warnings: Array.<string>,
-  *  valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+    const tagClassMask = intBuffer[0] & 0xC0;
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+    switch (tagClassMask) {
+      case 0x00:
+        this.tagClass = 1; // UNIVERSAL
 
-		object.blockName = this.constructor.blockName();
-		object.tagClass = this.tagClass;
-		object.tagNumber = this.tagNumber;
-		object.isConstructed = this.isConstructed;
+        break;
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+      case 0x40:
+        this.tagClass = 2; // APPLICATION
+
+        break;
+
+      case 0x80:
+        this.tagClass = 3; // CONTEXT-SPECIFIC
+
+        break;
+
+      case 0xC0:
+        this.tagClass = 4; // PRIVATE
+
+        break;
+
+      default:
+        this.error = "Unknown tag class";
+        return -1;
+    } //endregion
+    //region Find it's constructed or not
+
+
+    this.isConstructed = (intBuffer[0] & 0x20) === 0x20; //endregion
+    //region Find tag number
+
+    this.isHexOnly = false;
+    const tagNumberMask = intBuffer[0] & 0x1F; //region Simple case (tag number < 31)
+
+    if (tagNumberMask !== 0x1F) {
+      this.tagNumber = tagNumberMask;
+      this.blockLength = 1;
+    } //endregion
+    //region Tag number bigger or equal to 31
+    else {
+        let count = 1;
+        this.valueHex = new ArrayBuffer(255);
+        let tagNumberBufferMaxLength = 255;
+        let intTagNumberBuffer = new Uint8Array(this.valueHex); //noinspection JSBitwiseOperatorUsage
+
+        while (intBuffer[count] & 0x80) {
+          intTagNumberBuffer[count - 1] = intBuffer[count] & 0x7F;
+          count++;
+
+          if (count >= intBuffer.length) {
+            this.error = "End of input reached before message was fully decoded";
+            return -1;
+          } //region In case if tag number length is greater than 255 bytes (rare but possible case)
+
+
+          if (count === tagNumberBufferMaxLength) {
+            tagNumberBufferMaxLength += 255;
+            const tempBuffer = new ArrayBuffer(tagNumberBufferMaxLength);
+            const tempBufferView = new Uint8Array(tempBuffer);
+
+            for (let i = 0; i < intTagNumberBuffer.length; i++) tempBufferView[i] = intTagNumberBuffer[i];
+
+            this.valueHex = new ArrayBuffer(tagNumberBufferMaxLength);
+            intTagNumberBuffer = new Uint8Array(this.valueHex);
+          } //endregion
+
+        }
+
+        this.blockLength = count + 1;
+        intTagNumberBuffer[count - 1] = intBuffer[count] & 0x7F; // Write last byte to buffer
+        //region Cut buffer
+
+        const tempBuffer = new ArrayBuffer(count);
+        const tempBufferView = new Uint8Array(tempBuffer);
+
+        for (let i = 0; i < count; i++) tempBufferView[i] = intTagNumberBuffer[i];
+
+        this.valueHex = new ArrayBuffer(count);
+        intTagNumberBuffer = new Uint8Array(this.valueHex);
+        intTagNumberBuffer.set(tempBufferView); //endregion
+        //region Try to convert long tag number to short form
+
+        if (this.blockLength <= 9) this.tagNumber = (0, _pvutils.utilFromBase)(intTagNumberBuffer, 7);else {
+          this.isHexOnly = true;
+          this.warnings.push("Tag too long, represented as hex-coded");
+        } //endregion
+      } //endregion
+    //endregion
+    //region Check if constructed encoding was using for primitive type
+
+
+    if (this.tagClass === 1 && this.isConstructed) {
+      switch (this.tagNumber) {
+        case 1: // Boolean
+
+        case 2: // REAL
+
+        case 5: // Null
+
+        case 6: // OBJECT IDENTIFIER
+
+        case 9: // REAL
+
+        case 13: // RELATIVE OBJECT IDENTIFIER
+
+        case 14: // Time
+
+        case 23:
+        case 24:
+        case 31:
+        case 32:
+        case 33:
+        case 34:
+          this.error = "Constructed encoding used for primitive type";
+          return -1;
+
+        default:
+      }
+    } //endregion
+
+
+    return inputOffset + this.blockLength; // Return current offset in input buffer
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName: string,
+   *  tagClass: number,
+   *  tagNumber: number,
+   *  isConstructed: boolean,
+   *  isHexOnly: boolean,
+   *  valueHex: ArrayBuffer,
+   *  blockLength: number,
+   *  error: string, warnings: Array.<string>,
+   *  valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.blockName = this.constructor.blockName();
+    object.tagClass = this.tagClass;
+    object.tagNumber = this.tagNumber;
+    object.isConstructed = this.isConstructed;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of length block class
 //**************************************************************************************
+
+
 class LocalLengthBlock extends LocalBaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalLengthBlock" class
-  * @param {Object} [parameters={}]
-  * @property {Object} [lenBlock]
-  */
-	constructor(parameters = {}) {
-		super();
+  //**********************************************************************************
 
-		if ("lenBlock" in parameters) {
-			this.isIndefiniteForm = (0, _pvutils.getParametersValue)(parameters.lenBlock, "isIndefiniteForm", false);
-			this.longFormUsed = (0, _pvutils.getParametersValue)(parameters.lenBlock, "longFormUsed", false);
-			this.length = (0, _pvutils.getParametersValue)(parameters.lenBlock, "length", 0);
-		} else {
-			this.isIndefiniteForm = false;
-			this.longFormUsed = false;
-			this.length = 0;
-		}
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "lengthBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+  /**
+   * Constructor for "LocalLengthBlock" class
+   * @param {Object} [parameters={}]
+   * @property {Object} [lenBlock]
+   */
+  constructor(parameters = {}) {
+    super();
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
+    if ("lenBlock" in parameters) {
+      this.isIndefiniteForm = (0, _pvutils.getParametersValue)(parameters.lenBlock, "isIndefiniteForm", false);
+      this.longFormUsed = (0, _pvutils.getParametersValue)(parameters.lenBlock, "longFormUsed", false);
+      this.length = (0, _pvutils.getParametersValue)(parameters.lenBlock, "length", 0);
+    } else {
+      this.isIndefiniteForm = false;
+      this.longFormUsed = false;
+      this.length = 0;
+    }
+  } //**********************************************************************************
 
-		//region Initial checks
-		if (intBuffer.length === 0) {
-			this.error = "Zero buffer length";
-			return -1;
-		}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (intBuffer[0] === 0xFF) {
-			this.error = "Length block 0xFF is reserved by standard";
-			return -1;
-		}
-		//endregion
 
-		//region Check for length form type
-		this.isIndefiniteForm = intBuffer[0] === 0x80;
-		//endregion
+  static blockName() {
+    return "lengthBlock";
+  } //**********************************************************************************
 
-		//region Stop working in case of indefinite length form
-		if (this.isIndefiniteForm === true) {
-			this.blockLength = 1;
-			return inputOffset + this.blockLength;
-		}
-		//endregion
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-		//region Check is long form of length encoding using
-		this.longFormUsed = !!(intBuffer[0] & 0x80);
-		//endregion
 
-		//region Stop working in case of short form of length value
-		if (this.longFormUsed === false) {
-			this.length = intBuffer[0];
-			this.blockLength = 1;
-			return inputOffset + this.blockLength;
-		}
-		//endregion
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-		//region Calculate length value in case of long form
-		const count = intBuffer[0] & 0x7F;
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+    //region Initial checks
 
-		if (count > 8) // Too big length value
-			{
-				this.error = "Too big integer";
-				return -1;
-			}
+    if (intBuffer.length === 0) {
+      this.error = "Zero buffer length";
+      return -1;
+    }
 
-		if (count + 1 > intBuffer.length) {
-			this.error = "End of input reached before message was fully decoded";
-			return -1;
-		}
+    if (intBuffer[0] === 0xFF) {
+      this.error = "Length block 0xFF is reserved by standard";
+      return -1;
+    } //endregion
+    //region Check for length form type
 
-		const lengthBufferView = new Uint8Array(count);
 
-		for (let i = 0; i < count; i++) lengthBufferView[i] = intBuffer[i + 1];
+    this.isIndefiniteForm = intBuffer[0] === 0x80; //endregion
+    //region Stop working in case of indefinite length form
 
-		if (lengthBufferView[count - 1] === 0x00) this.warnings.push("Needlessly long encoded length");
+    if (this.isIndefiniteForm === true) {
+      this.blockLength = 1;
+      return inputOffset + this.blockLength;
+    } //endregion
+    //region Check is long form of length encoding using
 
-		this.length = (0, _pvutils.utilFromBase)(lengthBufferView, 8);
 
-		if (this.longFormUsed && this.length <= 127) this.warnings.push("Unneccesary usage of long length form");
+    this.longFormUsed = !!(intBuffer[0] & 0x80); //endregion
+    //region Stop working in case of short form of length value
 
-		this.blockLength = count + 1;
-		//endregion
+    if (this.longFormUsed === false) {
+      this.length = intBuffer[0];
+      this.blockLength = 1;
+      return inputOffset + this.blockLength;
+    } //endregion
+    //region Calculate length value in case of long form
 
-		return inputOffset + this.blockLength; // Return current offset in input buffer
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		//region Initial variables
-		let retBuf;
-		let retView;
-		//endregion
 
-		if (this.length > 127) this.longFormUsed = true;
+    const count = intBuffer[0] & 0x7F;
 
-		if (this.isIndefiniteForm) {
-			retBuf = new ArrayBuffer(1);
+    if (count > 8) // Too big length value
+      {
+        this.error = "Too big integer";
+        return -1;
+      }
 
-			if (sizeOnly === false) {
-				retView = new Uint8Array(retBuf);
-				retView[0] = 0x80;
-			}
+    if (count + 1 > intBuffer.length) {
+      this.error = "End of input reached before message was fully decoded";
+      return -1;
+    }
 
-			return retBuf;
-		}
+    const lengthBufferView = new Uint8Array(count);
 
-		if (this.longFormUsed === true) {
-			const encodedBuf = (0, _pvutils.utilToBase)(this.length, 8);
+    for (let i = 0; i < count; i++) lengthBufferView[i] = intBuffer[i + 1];
 
-			if (encodedBuf.byteLength > 127) {
-				this.error = "Too big length";
-				return new ArrayBuffer(0);
-			}
+    if (lengthBufferView[count - 1] === 0x00) this.warnings.push("Needlessly long encoded length");
+    this.length = (0, _pvutils.utilFromBase)(lengthBufferView, 8);
+    if (this.longFormUsed && this.length <= 127) this.warnings.push("Unneccesary usage of long length form");
+    this.blockLength = count + 1; //endregion
 
-			retBuf = new ArrayBuffer(encodedBuf.byteLength + 1);
+    return inputOffset + this.blockLength; // Return current offset in input buffer
+  } //**********************************************************************************
 
-			if (sizeOnly === true) return retBuf;
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-			const encodedView = new Uint8Array(encodedBuf);
-			retView = new Uint8Array(retBuf);
 
-			retView[0] = encodedBuf.byteLength | 0x80;
+  toBER(sizeOnly = false) {
+    //region Initial variables
+    let retBuf;
+    let retView; //endregion
 
-			for (let i = 0; i < encodedBuf.byteLength; i++) retView[i + 1] = encodedView[i];
+    if (this.length > 127) this.longFormUsed = true;
 
-			return retBuf;
-		}
+    if (this.isIndefiniteForm) {
+      retBuf = new ArrayBuffer(1);
 
-		retBuf = new ArrayBuffer(1);
+      if (sizeOnly === false) {
+        retView = new Uint8Array(retBuf);
+        retView[0] = 0x80;
+      }
 
-		if (sizeOnly === false) {
-			retView = new Uint8Array(retBuf);
+      return retBuf;
+    }
 
-			retView[0] = this.length;
-		}
+    if (this.longFormUsed === true) {
+      const encodedBuf = (0, _pvutils.utilToBase)(this.length, 8);
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+      if (encodedBuf.byteLength > 127) {
+        this.error = "Too big length";
+        return new ArrayBuffer(0);
+      }
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+      retBuf = new ArrayBuffer(encodedBuf.byteLength + 1);
+      if (sizeOnly === true) return retBuf;
+      const encodedView = new Uint8Array(encodedBuf);
+      retView = new Uint8Array(retBuf);
+      retView[0] = encodedBuf.byteLength | 0x80;
 
-		object.blockName = this.constructor.blockName();
-		object.isIndefiniteForm = this.isIndefiniteForm;
-		object.longFormUsed = this.longFormUsed;
-		object.length = this.length;
+      for (let i = 0; i < encodedBuf.byteLength; i++) retView[i + 1] = encodedView[i];
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+      return retBuf;
+    }
+
+    retBuf = new ArrayBuffer(1);
+
+    if (sizeOnly === false) {
+      retView = new Uint8Array(retBuf);
+      retView[0] = this.length;
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.blockName = this.constructor.blockName();
+    object.isIndefiniteForm = this.isIndefiniteForm;
+    object.longFormUsed = this.longFormUsed;
+    object.length = this.length;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of value block class
 //**************************************************************************************
-class LocalValueBlock extends LocalBaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "valueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols,JSUnusedLocalSymbols
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Throw an exception for a function which needs to be specified in extended classes
-		throw TypeError("User need to make a specific function in a class which extends \"LocalValueBlock\"");
-		//endregion
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		//region Throw an exception for a function which needs to be specified in extended classes
-		throw TypeError("User need to make a specific function in a class which extends \"LocalValueBlock\"");
-		//endregion
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+
+
+class ValueBlock extends LocalBaseBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "ValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "valueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols,JSUnusedLocalSymbols
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Throw an exception for a function which needs to be specified in extended classes
+    throw TypeError("User need to make a specific function in a class which extends \"ValueBlock\""); //endregion
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    //region Throw an exception for a function which needs to be specified in extended classes
+    throw TypeError("User need to make a specific function in a class which extends \"ValueBlock\""); //endregion
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of basic ASN.1 block class
 //**************************************************************************************
+
+
+exports.ValueBlock = ValueBlock;
+
 class BaseBlock extends LocalBaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "BaseBlock" class
-  * @param {Object} [parameters={}]
-  * @property {Object} [primitiveSchema]
-  * @property {string} [name]
-  * @property {boolean} [optional]
-  * @param valueBlockType Type of value block
-  */
-	constructor(parameters = {}, valueBlockType = LocalValueBlock) {
-		super(parameters);
+  //**********************************************************************************
 
-		if ("name" in parameters) this.name = parameters.name;
-		if ("optional" in parameters) this.optional = parameters.optional;
-		if ("primitiveSchema" in parameters) this.primitiveSchema = parameters.primitiveSchema;
+  /**
+   * Constructor for "BaseBlock" class
+   * @param {Object} [parameters={}]
+   * @property {Object} [primitiveSchema]
+   * @property {string} [name]
+   * @property {boolean} [optional]
+   * @param valueBlockType Type of value block
+   */
+  constructor(parameters = {}, valueBlockType = ValueBlock) {
+    super(parameters);
+    if ("name" in parameters) this.name = parameters.name;
+    if ("optional" in parameters) this.optional = parameters.optional;
+    if ("primitiveSchema" in parameters) this.primitiveSchema = parameters.primitiveSchema;
+    this.idBlock = new LocalIdentificationBlock(parameters);
+    this.lenBlock = new LocalLengthBlock(parameters);
+    this.valueBlock = new valueBlockType(parameters);
+  } //**********************************************************************************
 
-		this.idBlock = new LocalIdentificationBlock(parameters);
-		this.lenBlock = new LocalLengthBlock(parameters);
-		this.valueBlock = new valueBlockType(parameters);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BaseBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "BaseBlock";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		let retBuf;
 
-		const idBlockBuf = this.idBlock.toBER(sizeOnly);
-		const valueBlockSizeBuf = this.valueBlock.toBER(true);
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		this.lenBlock.length = valueBlockSizeBuf.byteLength;
-		const lenBlockBuf = this.lenBlock.toBER(sizeOnly);
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		retBuf = (0, _pvutils.utilConcatBuf)(idBlockBuf, lenBlockBuf);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		let valueBlockBuf;
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-		if (sizeOnly === false) valueBlockBuf = this.valueBlock.toBER(sizeOnly);else valueBlockBuf = new ArrayBuffer(this.lenBlock.length);
 
-		retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBlockBuf);
+  toBER(sizeOnly = false) {
+    let retBuf;
+    const idBlockBuf = this.idBlock.toBER(sizeOnly);
+    const valueBlockSizeBuf = this.valueBlock.toBER(true);
+    this.lenBlock.length = valueBlockSizeBuf.byteLength;
+    const lenBlockBuf = this.lenBlock.toBER(sizeOnly);
+    retBuf = (0, _pvutils.utilConcatBuf)(idBlockBuf, lenBlockBuf);
+    let valueBlockBuf;
+    if (sizeOnly === false) valueBlockBuf = this.valueBlock.toBER(sizeOnly);else valueBlockBuf = new ArrayBuffer(this.lenBlock.length);
+    retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBlockBuf);
 
-		if (this.lenBlock.isIndefiniteForm === true) {
-			const indefBuf = new ArrayBuffer(2);
+    if (this.lenBlock.isIndefiniteForm === true) {
+      const indefBuf = new ArrayBuffer(2);
 
-			if (sizeOnly === false) {
-				const indefView = new Uint8Array(indefBuf);
+      if (sizeOnly === false) {
+        const indefView = new Uint8Array(indefBuf);
+        indefView[0] = 0x00;
+        indefView[1] = 0x00;
+      }
 
-				indefView[0] = 0x00;
-				indefView[1] = 0x00;
-			}
+      retBuf = (0, _pvutils.utilConcatBuf)(retBuf, indefBuf);
+    }
 
-			retBuf = (0, _pvutils.utilConcatBuf)(retBuf, indefBuf);
-		}
+    return retBuf;
+  } //**********************************************************************************
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.idBlock = this.idBlock.toJSON();
-		object.lenBlock = this.lenBlock.toJSON();
-		object.valueBlock = this.valueBlock.toJSON();
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
 
-		if ("name" in this) object.name = this.name;
-		if ("optional" in this) object.optional = this.optional;
-		if ("primitiveSchema" in this) object.primitiveSchema = this.primitiveSchema.toJSON();
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
 
-		return object;
-	}
-	//**********************************************************************************
-}
-exports.BaseBlock = BaseBlock; //**************************************************************************************
+
+    object.idBlock = this.idBlock.toJSON();
+    object.lenBlock = this.lenBlock.toJSON();
+    object.valueBlock = this.valueBlock.toJSON();
+    if ("name" in this) object.name = this.name;
+    if ("optional" in this) object.optional = this.optional;
+    if ("primitiveSchema" in this) object.primitiveSchema = this.primitiveSchema.toJSON();
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of basic block for all PRIMITIVE types
 //**************************************************************************************
 
-class LocalPrimitiveValueBlock extends LocalValueBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalPrimitiveValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueBeforeDecode]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		//region Variables from "hexBlock" class
-		if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else this.valueHex = new ArrayBuffer(0);
+exports.BaseBlock = BaseBlock;
 
-		this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", true);
-		//endregion
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+class LocalPrimitiveValueBlock extends ValueBlock {
+  //**********************************************************************************
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
+  /**
+   * Constructor for "LocalPrimitiveValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueBeforeDecode]
+   */
+  constructor(parameters = {}) {
+    super(parameters); //region Variables from "hexBlock" class
 
-		//region Initial checks
-		if (intBuffer.length === 0) {
-			this.warnings.push("Zero buffer length");
-			return inputOffset;
-		}
-		//endregion
+    if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else this.valueHex = new ArrayBuffer(0);
+    this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", true); //endregion
+  } //**********************************************************************************
 
-		//region Copy input buffer into internal buffer
-		this.valueHex = new ArrayBuffer(intBuffer.length);
-		const valueHexView = new Uint8Array(this.valueHex);
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-		for (let i = 0; i < intBuffer.length; i++) valueHexView[i] = intBuffer[i];
-		//endregion
 
-		this.blockLength = inputLength;
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		return this.valueHex.slice(0);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "PrimitiveValueBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+    //region Initial checks
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+    if (intBuffer.length === 0) {
+      this.warnings.push("Zero buffer length");
+      return inputOffset;
+    } //endregion
+    //region Copy input buffer into internal buffer
 
-		object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
-		object.isHexOnly = this.isHexOnly;
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+    this.valueHex = new ArrayBuffer(intBuffer.length);
+    const valueHexView = new Uint8Array(this.valueHex);
+
+    for (let i = 0; i < intBuffer.length; i++) valueHexView[i] = intBuffer[i]; //endregion
+
+
+    this.blockLength = inputLength;
+    return inputOffset + inputLength;
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    return this.valueHex.slice(0);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "PrimitiveValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    object.isHexOnly = this.isHexOnly;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class Primitive extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Primitive" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalPrimitiveValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.isConstructed = false;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "PRIMITIVE";
-	}
-	//**********************************************************************************
-}
-exports.Primitive = Primitive; //**************************************************************************************
+  /**
+   * Constructor for "Primitive" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalPrimitiveValueBlock);
+    this.idBlock.isConstructed = false;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "PRIMITIVE";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of basic block for all CONSTRUCTED types
 //**************************************************************************************
 
-class LocalConstructedValueBlock extends LocalValueBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalConstructedValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.value = (0, _pvutils.getParametersValue)(parameters, "value", []);
-		this.isIndefiniteForm = (0, _pvutils.getParametersValue)(parameters, "isIndefiniteForm", false);
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Store initial offset and length
-		const initialOffset = inputOffset;
-		const initialLength = inputLength;
-		//endregion
+exports.Primitive = Primitive;
 
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+class LocalConstructedValueBlock extends ValueBlock {
+  //**********************************************************************************
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
+  /**
+   * Constructor for "LocalConstructedValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.value = (0, _pvutils.getParametersValue)(parameters, "value", []);
+    this.isIndefiniteForm = (0, _pvutils.getParametersValue)(parameters, "isIndefiniteForm", false);
+  } //**********************************************************************************
 
-		//region Initial checks
-		if (intBuffer.length === 0) {
-			this.warnings.push("Zero buffer length");
-			return inputOffset;
-		}
-		//endregion
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-		//region Aux function
-		function checkLen(indefiniteLength, length) {
-			if (indefiniteLength === true) return 1;
 
-			return length;
-		}
-		//endregion
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Store initial offset and length
+    const initialOffset = inputOffset;
+    const initialLength = inputLength; //endregion
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
 
-		let currentOffset = inputOffset;
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-		while (checkLen(this.isIndefiniteForm, inputLength) > 0) {
-			const returnObject = LocalFromBER(inputBuffer, currentOffset, inputLength);
-			if (returnObject.offset === -1) {
-				this.error = returnObject.result.error;
-				this.warnings.concat(returnObject.result.warnings);
-				return -1;
-			}
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+    //region Initial checks
 
-			currentOffset = returnObject.offset;
+    if (intBuffer.length === 0) {
+      this.warnings.push("Zero buffer length");
+      return inputOffset;
+    } //endregion
+    //region Aux function
 
-			this.blockLength += returnObject.result.blockLength;
-			inputLength -= returnObject.result.blockLength;
 
-			this.value.push(returnObject.result);
+    function checkLen(indefiniteLength, length) {
+      if (indefiniteLength === true) return 1;
+      return length;
+    } //endregion
 
-			if (this.isIndefiniteForm === true && returnObject.result.constructor.blockName() === EndOfContent.blockName()) break;
-		}
 
-		if (this.isIndefiniteForm === true) {
-			if (this.value[this.value.length - 1].constructor.blockName() === EndOfContent.blockName()) this.value.pop();else this.warnings.push("No EndOfContent block encoded");
-		}
+    let currentOffset = inputOffset;
 
-		//region Copy "inputBuffer" to "valueBeforeDecode"
-		this.valueBeforeDecode = inputBuffer.slice(initialOffset, initialOffset + initialLength);
-		//endregion
+    while (checkLen(this.isIndefiniteForm, inputLength) > 0) {
+      const returnObject = LocalFromBER(inputBuffer, currentOffset, inputLength);
 
-		return currentOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		let retBuf = new ArrayBuffer(0);
+      if (returnObject.offset === -1) {
+        this.error = returnObject.result.error;
+        this.warnings.concat(returnObject.result.warnings);
+        return -1;
+      }
 
-		for (let i = 0; i < this.value.length; i++) {
-			const valueBuf = this.value[i].toBER(sizeOnly);
-			retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBuf);
-		}
+      currentOffset = returnObject.offset;
+      this.blockLength += returnObject.result.blockLength;
+      inputLength -= returnObject.result.blockLength;
+      this.value.push(returnObject.result);
+      if (this.isIndefiniteForm === true && returnObject.result.constructor.blockName() === EndOfContent.blockName()) break;
+    }
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "ConstructedValueBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+    if (this.isIndefiniteForm === true) {
+      if (this.value[this.value.length - 1].constructor.blockName() === EndOfContent.blockName()) this.value.pop();else this.warnings.push("No EndOfContent block encoded");
+    } //region Copy "inputBuffer" to "valueBeforeDecode"
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.isIndefiniteForm = this.isIndefiniteForm;
-		object.value = [];
-		for (let i = 0; i < this.value.length; i++) object.value.push(this.value[i].toJSON());
+    this.valueBeforeDecode = inputBuffer.slice(initialOffset, initialOffset + initialLength); //endregion
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+    return currentOffset;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    let retBuf = new ArrayBuffer(0);
+
+    for (let i = 0; i < this.value.length; i++) {
+      const valueBuf = this.value[i].toBER(sizeOnly);
+      retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBuf);
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "ConstructedValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.isIndefiniteForm = this.isIndefiniteForm;
+    object.value = [];
+
+    for (let i = 0; i < this.value.length; i++) object.value.push(this.value[i].toJSON());
+
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class Constructed extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Constructed" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalConstructedValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.isConstructed = true;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "CONSTRUCTED";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
+  /**
+   * Constructor for "Constructed" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalConstructedValueBlock);
+    this.idBlock.isConstructed = true;
+  } //**********************************************************************************
 
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "CONSTRUCTED";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-}
-exports.Constructed = Constructed; //**************************************************************************************
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
+
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
+
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 EndOfContent type class
 //**************************************************************************************
 
-class LocalEndOfContentValueBlock extends LocalValueBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalEndOfContentValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number}
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region There is no "value block" for EndOfContent type and we need to return the same offset
-		return inputOffset;
-		//endregion
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		return new ArrayBuffer(0);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "EndOfContentValueBlock";
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
-class EndOfContent extends BaseBlock {
-	//**********************************************************************************
-	constructor(paramaters = {}) {
-		super(paramaters, LocalEndOfContentValueBlock);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 0; // EndOfContent
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "EndOfContent";
-	}
-	//**********************************************************************************
-}
-exports.EndOfContent = EndOfContent; //**************************************************************************************
+exports.Constructed = Constructed;
+
+class LocalEndOfContentValueBlock extends ValueBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalEndOfContentValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number}
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region There is no "value block" for EndOfContent type and we need to return the same offset
+    return inputOffset; //endregion
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    return new ArrayBuffer(0);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "EndOfContentValueBlock";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+class EndOfContent extends BaseBlock {
+  //**********************************************************************************
+  constructor(paramaters = {}) {
+    super(paramaters, LocalEndOfContentValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 0; // EndOfContent
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "EndOfContent";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 Boolean type class
 //**************************************************************************************
 
-class LocalBooleanValueBlock extends LocalValueBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalBooleanValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.value = (0, _pvutils.getParametersValue)(parameters, "value", false);
-		this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", false);
+exports.EndOfContent = EndOfContent;
 
-		if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else {
-			this.valueHex = new ArrayBuffer(1);
-			if (this.value === true) {
-				const view = new Uint8Array(this.valueHex);
-				view[0] = 0xFF;
-			}
-		}
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+class LocalBooleanValueBlock extends ValueBlock {
+  //**********************************************************************************
 
-		//region Getting Uint8Array from ArrayBuffer
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-		//endregion
+  /**
+   * Constructor for "LocalBooleanValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.value = (0, _pvutils.getParametersValue)(parameters, "value", false);
+    this.isHexOnly = (0, _pvutils.getParametersValue)(parameters, "isHexOnly", false);
+    if ("valueHex" in parameters) this.valueHex = parameters.valueHex.slice(0);else {
+      this.valueHex = new ArrayBuffer(1);
 
-		if (inputLength > 1) this.warnings.push("Boolean value encoded in more then 1 octet");
+      if (this.value === true) {
+        const view = new Uint8Array(this.valueHex);
+        view[0] = 0xFF;
+      }
+    }
+  } //**********************************************************************************
 
-		this.isHexOnly = true;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		//region Copy input buffer to internal array
-		this.valueHex = new ArrayBuffer(intBuffer.length);
-		const view = new Uint8Array(this.valueHex);
 
-		for (let i = 0; i < intBuffer.length; i++) view[i] = intBuffer[i];
-		//endregion
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+    //region Getting Uint8Array from ArrayBuffer
 
-		if (_pvutils.utilDecodeTC.call(this) !== 0) this.value = true;else this.value = false;
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
 
-		this.blockLength = inputLength;
+    if (inputLength > 1) this.warnings.push("Boolean value encoded in more then 1 octet");
+    this.isHexOnly = true; //region Copy input buffer to internal array
 
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		return this.valueHex;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BooleanValueBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+    this.valueHex = new ArrayBuffer(intBuffer.length);
+    const view = new Uint8Array(this.valueHex);
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+    for (let i = 0; i < intBuffer.length; i++) view[i] = intBuffer[i]; //endregion
 
-		object.value = this.value;
-		object.isHexOnly = this.isHexOnly;
-		object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+    if (_pvutils.utilDecodeTC.call(this) !== 0) this.value = true;else this.value = false;
+    this.blockLength = inputLength;
+    return inputOffset + inputLength;
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    return this.valueHex;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "BooleanValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.value;
+    object.isHexOnly = this.isHexOnly;
+    object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class Boolean extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Boolean" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalBooleanValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 1; // Boolean
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Boolean";
-	}
-	//**********************************************************************************
-}
-exports.Boolean = Boolean; //**************************************************************************************
+  /**
+   * Constructor for "Boolean" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalBooleanValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 1; // Boolean
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Boolean";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 Sequence and Set type classes
 //**************************************************************************************
 
-class Sequence extends Constructed {
-	//**********************************************************************************
-	/**
-  * Constructor for "Sequence" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 16; // Sequence
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Sequence";
-	}
-	//**********************************************************************************
-}
-exports.Sequence = Sequence; //**************************************************************************************
+exports.Boolean = Boolean;
+
+class Sequence extends Constructed {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Sequence" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 16; // Sequence
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Sequence";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+exports.Sequence = Sequence;
 
 class Set extends Constructed {
-	//**********************************************************************************
-	/**
-  * Constructor for "Set" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 17; // Set
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Set";
-	}
-	//**********************************************************************************
-}
-exports.Set = Set; //**************************************************************************************
+  /**
+   * Constructor for "Set" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 17; // Set
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Set";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 Null type class
 //**************************************************************************************
 
+
+exports.Set = Set;
+
 class Null extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Null" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalBaseBlock); // We will not have a call to "Null value block" because of specified "fromBER" and "toBER" functions
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 5; // Null
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Null";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedLocalSymbols
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		if (this.lenBlock.length > 0) this.warnings.push("Non-zero length of value block for Null type");
+  /**
+   * Constructor for "Null" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalBaseBlock); // We will not have a call to "Null value block" because of specified "fromBER" and "toBER" functions
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    this.idBlock.tagNumber = 5; // Null
+  } //**********************************************************************************
 
-		this.blockLength += inputLength;
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (inputOffset + inputLength > inputBuffer.byteLength) {
-			this.error = "End of input reached before message was fully decoded (inconsistent offset and length values)";
-			return -1;
-		}
 
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		const retBuf = new ArrayBuffer(2);
+  static blockName() {
+    return "Null";
+  } //**********************************************************************************
+  //noinspection JSUnusedLocalSymbols
 
-		if (sizeOnly === true) return retBuf;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		const retView = new Uint8Array(retBuf);
-		retView[0] = 0x05;
-		retView[1] = 0x00;
 
-		return retBuf;
-	}
-	//**********************************************************************************
-}
-exports.Null = Null; //**************************************************************************************
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    if (this.lenBlock.length > 0) this.warnings.push("Non-zero length of value block for Null type");
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    this.blockLength += inputLength;
+
+    if (inputOffset + inputLength > inputBuffer.byteLength) {
+      this.error = "End of input reached before message was fully decoded (inconsistent offset and length values)";
+      return -1;
+    }
+
+    return inputOffset + inputLength;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    const retBuf = new ArrayBuffer(2);
+    if (sizeOnly === true) return retBuf;
+    const retView = new Uint8Array(retBuf);
+    retView[0] = 0x05;
+    retView[1] = 0x00;
+    return retBuf;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 OctetString type class
 //**************************************************************************************
 
-class LocalOctetStringValueBlock extends LocalHexBlock(LocalConstructedValueBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalOctetStringValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.isConstructed = (0, _pvutils.getParametersValue)(parameters, "isConstructed", false);
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		let resultOffset = 0;
+exports.Null = Null;
 
-		if (this.isConstructed === true) {
-			this.isHexOnly = false;
+class LocalOctetStringValueBlock extends HexBlock(LocalConstructedValueBlock) {
+  //**********************************************************************************
 
-			resultOffset = LocalConstructedValueBlock.prototype.fromBER.call(this, inputBuffer, inputOffset, inputLength);
-			if (resultOffset === -1) return resultOffset;
+  /**
+   * Constructor for "LocalOctetStringValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.isConstructed = (0, _pvutils.getParametersValue)(parameters, "isConstructed", false);
+  } //**********************************************************************************
 
-			for (let i = 0; i < this.value.length; i++) {
-				const currentBlockName = this.value[i].constructor.blockName();
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-				if (currentBlockName === EndOfContent.blockName()) {
-					if (this.isIndefiniteForm === true) break;else {
-						this.error = "EndOfContent is unexpected, OCTET STRING may consists of OCTET STRINGs only";
-						return -1;
-					}
-				}
 
-				if (currentBlockName !== OctetString.blockName()) {
-					this.error = "OCTET STRING may consists of OCTET STRINGs only";
-					return -1;
-				}
-			}
-		} else {
-			this.isHexOnly = true;
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    let resultOffset = 0;
 
-			resultOffset = super.fromBER(inputBuffer, inputOffset, inputLength);
-			this.blockLength = inputLength;
-		}
+    if (this.isConstructed === true) {
+      this.isHexOnly = false;
+      resultOffset = LocalConstructedValueBlock.prototype.fromBER.call(this, inputBuffer, inputOffset, inputLength);
+      if (resultOffset === -1) return resultOffset;
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		if (this.isConstructed === true) return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
+      for (let i = 0; i < this.value.length; i++) {
+        const currentBlockName = this.value[i].constructor.blockName();
 
-		let retBuf = new ArrayBuffer(this.valueHex.byteLength);
+        if (currentBlockName === EndOfContent.blockName()) {
+          if (this.isIndefiniteForm === true) break;else {
+            this.error = "EndOfContent is unexpected, OCTET STRING may consists of OCTET STRINGs only";
+            return -1;
+          }
+        }
 
-		if (sizeOnly === true) return retBuf;
+        if (currentBlockName !== OctetString.blockName()) {
+          this.error = "OCTET STRING may consists of OCTET STRINGs only";
+          return -1;
+        }
+      }
+    } else {
+      this.isHexOnly = true;
+      resultOffset = super.fromBER(inputBuffer, inputOffset, inputLength);
+      this.blockLength = inputLength;
+    }
 
-		if (this.valueHex.byteLength === 0) return retBuf;
+    return resultOffset;
+  } //**********************************************************************************
 
-		retBuf = this.valueHex.slice(0);
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "OctetStringValueBlock";
-	}
-	//**********************************************************************************
-	toJSON() {
-		let object = {};
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+  toBER(sizeOnly = false) {
+    if (this.isConstructed === true) return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
+    let retBuf = new ArrayBuffer(this.valueHex.byteLength);
+    if (sizeOnly === true) return retBuf;
+    if (this.valueHex.byteLength === 0) return retBuf;
+    retBuf = this.valueHex.slice(0);
+    return retBuf;
+  } //**********************************************************************************
 
-		object.isConstructed = this.isConstructed;
-		object.isHexOnly = this.isHexOnly;
-		object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+
+  static blockName() {
+    return "OctetStringValueBlock";
+  } //**********************************************************************************
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.isConstructed = this.isConstructed;
+    object.isHexOnly = this.isHexOnly;
+    object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class OctetString extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "OctetString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalOctetStringValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 4; // OctetString
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		this.valueBlock.isConstructed = this.idBlock.isConstructed;
-		this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
+  /**
+   * Constructor for "OctetString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalOctetStringValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		//region Ability to encode empty OCTET STRING
-		if (inputLength === 0) {
-			if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    this.idBlock.tagNumber = 4; // OctetString
+  } //**********************************************************************************
 
-			if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-			return inputOffset;
-		}
-		//endregion
 
-		return super.fromBER(inputBuffer, inputOffset, inputLength);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "OctetString";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Checking that two OCTETSTRINGs are equal
-  * @param {OctetString} octetString
-  */
-	isEqual(octetString) {
-		//region Check input type
-		if (octetString instanceof OctetString === false) return false;
-		//endregion
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    this.valueBlock.isConstructed = this.idBlock.isConstructed;
+    this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm; //region Ability to encode empty OCTET STRING
 
-		//region Compare two JSON strings
-		if (JSON.stringify(this) !== JSON.stringify(octetString)) return false;
-		//endregion
+    if (inputLength === 0) {
+      if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+      if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+      return inputOffset;
+    } //endregion
 
-		return true;
-	}
-	//**********************************************************************************
-}
-exports.OctetString = OctetString; //**************************************************************************************
+
+    return super.fromBER(inputBuffer, inputOffset, inputLength);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "OctetString";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Checking that two OCTETSTRINGs are equal
+   * @param {OctetString} octetString
+   */
+
+
+  isEqual(octetString) {
+    //region Check input type
+    if (octetString instanceof OctetString === false) return false; //endregion
+    //region Compare two JSON strings
+
+    if (JSON.stringify(this) !== JSON.stringify(octetString)) return false; //endregion
+
+    return true;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 BitString type class
 //**************************************************************************************
 
-class LocalBitStringValueBlock extends LocalHexBlock(LocalConstructedValueBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalBitStringValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.unusedBits = (0, _pvutils.getParametersValue)(parameters, "unusedBits", 0);
-		this.isConstructed = (0, _pvutils.getParametersValue)(parameters, "isConstructed", false);
-		this.blockLength = this.valueHex.byteLength;
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Ability to decode zero-length BitString value
-		if (inputLength === 0) return inputOffset;
-		//endregion
+exports.OctetString = OctetString;
 
-		let resultOffset = -1;
+class LocalBitStringValueBlock extends HexBlock(LocalConstructedValueBlock) {
+  //**********************************************************************************
 
-		//region If the BISTRING supposed to be a constructed value
-		if (this.isConstructed === true) {
-			resultOffset = LocalConstructedValueBlock.prototype.fromBER.call(this, inputBuffer, inputOffset, inputLength);
-			if (resultOffset === -1) return resultOffset;
+  /**
+   * Constructor for "LocalBitStringValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.unusedBits = (0, _pvutils.getParametersValue)(parameters, "unusedBits", 0);
+    this.isConstructed = (0, _pvutils.getParametersValue)(parameters, "isConstructed", false);
+    this.blockLength = this.valueHex.byteLength;
+  } //**********************************************************************************
 
-			for (let i = 0; i < this.value.length; i++) {
-				const currentBlockName = this.value[i].constructor.blockName();
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-				if (currentBlockName === EndOfContent.blockName()) {
-					if (this.isIndefiniteForm === true) break;else {
-						this.error = "EndOfContent is unexpected, BIT STRING may consists of BIT STRINGs only";
-						return -1;
-					}
-				}
 
-				if (currentBlockName !== BitString.blockName()) {
-					this.error = "BIT STRING may consists of BIT STRINGs only";
-					return -1;
-				}
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Ability to decode zero-length BitString value
+    if (inputLength === 0) return inputOffset; //endregion
 
-				if (this.unusedBits > 0 && this.value[i].valueBlock.unusedBits > 0) {
-					this.error = "Usign of \"unused bits\" inside constructive BIT STRING allowed for least one only";
-					return -1;
-				}
+    let resultOffset = -1; //region If the BISTRING supposed to be a constructed value
 
-				this.unusedBits = this.value[i].valueBlock.unusedBits;
-				if (this.unusedBits > 7) {
-					this.error = "Unused bits for BitString must be in range 0-7";
-					return -1;
-				}
-			}
+    if (this.isConstructed === true) {
+      resultOffset = LocalConstructedValueBlock.prototype.fromBER.call(this, inputBuffer, inputOffset, inputLength);
+      if (resultOffset === -1) return resultOffset;
 
-			return resultOffset;
-		}
-		//endregion
-		//region If the BitString supposed to be a primitive value
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
+      for (let i = 0; i < this.value.length; i++) {
+        const currentBlockName = this.value[i].constructor.blockName();
 
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
+        if (currentBlockName === EndOfContent.blockName()) {
+          if (this.isIndefiniteForm === true) break;else {
+            this.error = "EndOfContent is unexpected, BIT STRING may consists of BIT STRINGs only";
+            return -1;
+          }
+        }
 
-		this.unusedBits = intBuffer[0];
+        if (currentBlockName !== BitString.blockName()) {
+          this.error = "BIT STRING may consists of BIT STRINGs only";
+          return -1;
+        }
 
-		if (this.unusedBits > 7) {
-			this.error = "Unused bits for BitString must be in range 0-7";
-			return -1;
-		}
+        if (this.unusedBits > 0 && this.value[i].valueBlock.unusedBits > 0) {
+          this.error = "Usign of \"unused bits\" inside constructive BIT STRING allowed for least one only";
+          return -1;
+        }
 
-		//region Copy input buffer to internal buffer
-		this.valueHex = new ArrayBuffer(intBuffer.length - 1);
-		const view = new Uint8Array(this.valueHex);
-		for (let i = 0; i < inputLength - 1; i++) view[i] = intBuffer[i + 1];
-		//endregion
+        this.unusedBits = this.value[i].valueBlock.unusedBits;
 
-		this.blockLength = intBuffer.length;
+        if (this.unusedBits > 7) {
+          this.error = "Unused bits for BitString must be in range 0-7";
+          return -1;
+        }
+      }
 
-		return inputOffset + inputLength;
-		//endregion
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		if (this.isConstructed === true) return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
+      return resultOffset;
+    } //endregion
+    //region If the BitString supposed to be a primitive value
+    //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
 
-		if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength + 1);
 
-		if (this.valueHex.byteLength === 0) return new ArrayBuffer(0);
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
 
-		const curView = new Uint8Array(this.valueHex);
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
+    this.unusedBits = intBuffer[0];
 
-		const retBuf = new ArrayBuffer(this.valueHex.byteLength + 1);
-		const retView = new Uint8Array(retBuf);
+    if (this.unusedBits > 7) {
+      this.error = "Unused bits for BitString must be in range 0-7";
+      return -1;
+    } //region Copy input buffer to internal buffer
 
-		retView[0] = this.unusedBits;
 
-		for (let i = 0; i < this.valueHex.byteLength; i++) retView[i + 1] = curView[i];
+    this.valueHex = new ArrayBuffer(intBuffer.length - 1);
+    const view = new Uint8Array(this.valueHex);
 
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BitStringValueBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-  */
-	toJSON() {
-		let object = {};
+    for (let i = 0; i < inputLength - 1; i++) view[i] = intBuffer[i + 1]; //endregion
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.unusedBits = this.unusedBits;
-		object.isConstructed = this.isConstructed;
-		object.isHexOnly = this.isHexOnly;
-		object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    this.blockLength = intBuffer.length;
+    return inputOffset + inputLength; //endregion
+  } //**********************************************************************************
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    if (this.isConstructed === true) return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
+    if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength + 1);
+    if (this.valueHex.byteLength === 0) return new ArrayBuffer(0);
+    const curView = new Uint8Array(this.valueHex);
+    const retBuf = new ArrayBuffer(this.valueHex.byteLength + 1);
+    const retView = new Uint8Array(retBuf);
+    retView[0] = this.unusedBits;
+
+    for (let i = 0; i < this.valueHex.byteLength; i++) retView[i + 1] = curView[i];
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "BitStringValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.unusedBits = this.unusedBits;
+    object.isConstructed = this.isConstructed;
+    object.isHexOnly = this.isHexOnly;
+    object.valueHex = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class BitString extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "BitString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalBitStringValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 3; // BitString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BitString";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		//region Ability to encode empty BitString
-		if (inputLength === 0) return inputOffset;
-		//endregion
+  /**
+   * Constructor for "BitString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalBitStringValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		this.valueBlock.isConstructed = this.idBlock.isConstructed;
-		this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
+    this.idBlock.tagNumber = 3; // BitString
+  } //**********************************************************************************
 
-		return super.fromBER(inputBuffer, inputOffset, inputLength);
-	}
-	//**********************************************************************************
-	/**
-  * Checking that two BITSTRINGs are equal
-  * @param {BitString} bitString
-  */
-	isEqual(bitString) {
-		//region Check input type
-		if (bitString instanceof BitString === false) return false;
-		//endregion
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		//region Compare two JSON strings
-		if (JSON.stringify(this) !== JSON.stringify(bitString)) return false;
-		//endregion
 
-		return true;
-	}
-	//**********************************************************************************
-}
-exports.BitString = BitString; //**************************************************************************************
+  static blockName() {
+    return "BitString";
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    //region Ability to encode empty BitString
+    if (inputLength === 0) return inputOffset; //endregion
+
+    this.valueBlock.isConstructed = this.idBlock.isConstructed;
+    this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
+    return super.fromBER(inputBuffer, inputOffset, inputLength);
+  } //**********************************************************************************
+
+  /**
+   * Checking that two BITSTRINGs are equal
+   * @param {BitString} bitString
+   */
+
+
+  isEqual(bitString) {
+    //region Check input type
+    if (bitString instanceof BitString === false) return false; //endregion
+    //region Compare two JSON strings
+
+    if (JSON.stringify(this) !== JSON.stringify(bitString)) return false; //endregion
+
+    return true;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 Integer type class
 //**************************************************************************************
+
 /**
- * @extends LocalValueBlock
+ * @extends ValueBlock
  */
 
-class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalIntegerValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		if ("value" in parameters) this.valueDec = parameters.value;
-	}
-	//**********************************************************************************
-	/**
-  * Setter for "valueHex"
-  * @param {ArrayBuffer} _value
-  */
-	set valueHex(_value) {
-		this._valueHex = _value.slice(0);
+exports.BitString = BitString;
 
-		if (_value.byteLength >= 4) {
-			this.warnings.push("Too big Integer for decoding, hex only");
-			this.isHexOnly = true;
-			this._valueDec = 0;
-		} else {
-			this.isHexOnly = false;
+class LocalIntegerValueBlock extends HexBlock(ValueBlock) {
+  //**********************************************************************************
 
-			if (_value.byteLength > 0) this._valueDec = _pvutils.utilDecodeTC.call(this);
-		}
-	}
-	//**********************************************************************************
-	/**
-  * Getter for "valueHex"
-  * @returns {ArrayBuffer}
-  */
-	get valueHex() {
-		return this._valueHex;
-	}
-	//**********************************************************************************
-	/**
-  * Getter for "valueDec"
-  * @param {number} _value
-  */
-	set valueDec(_value) {
-		this._valueDec = _value;
+  /**
+   * Constructor for "LocalIntegerValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    if ("value" in parameters) this.valueDec = parameters.value;
+  } //**********************************************************************************
 
-		this.isHexOnly = false;
-		this._valueHex = (0, _pvutils.utilEncodeTC)(_value);
-	}
-	//**********************************************************************************
-	/**
-  * Getter for "valueDec"
-  * @returns {number}
-  */
-	get valueDec() {
-		return this._valueDec;
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from DER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 DER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 DER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @param {number} [expectedLength=0] Expected length of converted "valueHex" buffer
-  * @returns {number} Offset after least decoded byte
-  */
-	fromDER(inputBuffer, inputOffset, inputLength, expectedLength = 0) {
-		const offset = this.fromBER(inputBuffer, inputOffset, inputLength);
-		if (offset === -1) return offset;
+  /**
+   * Setter for "valueHex"
+   * @param {ArrayBuffer} _value
+   */
 
-		const view = new Uint8Array(this._valueHex);
 
-		if (view[0] === 0x00 && (view[1] & 0x80) !== 0) {
-			const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
-			const updatedView = new Uint8Array(updatedValueHex);
+  set valueHex(_value) {
+    this._valueHex = _value.slice(0);
 
-			updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
+    if (_value.byteLength >= 4) {
+      this.warnings.push("Too big Integer for decoding, hex only");
+      this.isHexOnly = true;
+      this._valueDec = 0;
+    } else {
+      this.isHexOnly = false;
+      if (_value.byteLength > 0) this._valueDec = _pvutils.utilDecodeTC.call(this);
+    }
+  } //**********************************************************************************
 
-			this._valueHex = updatedValueHex.slice(0);
-		} else {
-			if (expectedLength !== 0) {
-				if (this._valueHex.byteLength < expectedLength) {
-					if (expectedLength - this._valueHex.byteLength > 1) expectedLength = this._valueHex.byteLength + 1;
+  /**
+   * Getter for "valueHex"
+   * @returns {ArrayBuffer}
+   */
 
-					const updatedValueHex = new ArrayBuffer(expectedLength);
-					const updatedView = new Uint8Array(updatedValueHex);
 
-					updatedView.set(view, expectedLength - this._valueHex.byteLength);
+  get valueHex() {
+    return this._valueHex;
+  } //**********************************************************************************
 
-					this._valueHex = updatedValueHex.slice(0);
-				}
-			}
-		}
+  /**
+   * Getter for "valueDec"
+   * @param {number} _value
+   */
 
-		return offset;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (DER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toDER(sizeOnly = false) {
-		const view = new Uint8Array(this._valueHex);
 
-		switch (true) {
-			case (view[0] & 0x80) !== 0:
-				{
-					const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength + 1);
-					const updatedView = new Uint8Array(updatedValueHex);
+  set valueDec(_value) {
+    this._valueDec = _value;
+    this.isHexOnly = false;
+    this._valueHex = (0, _pvutils.utilEncodeTC)(_value);
+  } //**********************************************************************************
 
-					updatedView[0] = 0x00;
-					updatedView.set(view, 1);
+  /**
+   * Getter for "valueDec"
+   * @returns {number}
+   */
 
-					this._valueHex = updatedValueHex.slice(0);
-				}
-				break;
-			case view[0] === 0x00 && (view[1] & 0x80) === 0:
-				{
-					const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
-					const updatedView = new Uint8Array(updatedValueHex);
 
-					updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
+  get valueDec() {
+    return this._valueDec;
+  } //**********************************************************************************
 
-					this._valueHex = updatedValueHex.slice(0);
-				}
-				break;
-			default:
-		}
+  /**
+   * Base function for converting block from DER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 DER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 DER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @param {number} [expectedLength=0] Expected length of converted "valueHex" buffer
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return this.toBER(sizeOnly);
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = super.fromBER(inputBuffer, inputOffset, inputLength);
-		if (resultOffset === -1) return resultOffset;
 
-		this.blockLength = inputLength;
+  fromDER(inputBuffer, inputOffset, inputLength, expectedLength = 0) {
+    const offset = this.fromBER(inputBuffer, inputOffset, inputLength);
+    if (offset === -1) return offset;
+    const view = new Uint8Array(this._valueHex);
 
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		//noinspection JSCheckFunctionSignatures
-		return this.valueHex.slice(0);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "IntegerValueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+    if (view[0] === 0x00 && (view[1] & 0x80) !== 0) {
+      const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
+      const updatedView = new Uint8Array(updatedValueHex);
+      updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
+      this._valueHex = updatedValueHex.slice(0);
+    } else {
+      if (expectedLength !== 0) {
+        if (this._valueHex.byteLength < expectedLength) {
+          if (expectedLength - this._valueHex.byteLength > 1) expectedLength = this._valueHex.byteLength + 1;
+          const updatedValueHex = new ArrayBuffer(expectedLength);
+          const updatedView = new Uint8Array(updatedValueHex);
+          updatedView.set(view, expectedLength - this._valueHex.byteLength);
+          this._valueHex = updatedValueHex.slice(0);
+        }
+      }
+    }
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+    return offset;
+  } //**********************************************************************************
 
-		object.valueDec = this.valueDec;
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (DER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-		return object;
-	}
-	//**********************************************************************************
-	/**
-  * Convert current value to decimal string representation
-  */
-	toString() {
-		//region Aux functions
-		function viewAdd(first, second) {
-			//region Initial variables
-			const c = new Uint8Array([0]);
 
-			let firstView = new Uint8Array(first);
-			let secondView = new Uint8Array(second);
+  toDER(sizeOnly = false) {
+    const view = new Uint8Array(this._valueHex);
 
-			let firstViewCopy = firstView.slice(0);
-			const firstViewCopyLength = firstViewCopy.length - 1;
-			let secondViewCopy = secondView.slice(0);
-			const secondViewCopyLength = secondViewCopy.length - 1;
+    switch (true) {
+      case (view[0] & 0x80) !== 0:
+        {
+          const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength + 1);
+          const updatedView = new Uint8Array(updatedValueHex);
+          updatedView[0] = 0x00;
+          updatedView.set(view, 1);
+          this._valueHex = updatedValueHex.slice(0);
+        }
+        break;
 
-			let value = 0;
+      case view[0] === 0x00 && (view[1] & 0x80) === 0:
+        {
+          const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
+          const updatedView = new Uint8Array(updatedValueHex);
+          updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
+          this._valueHex = updatedValueHex.slice(0);
+        }
+        break;
 
-			const max = secondViewCopyLength < firstViewCopyLength ? firstViewCopyLength : secondViewCopyLength;
+      default:
+    }
 
-			let counter = 0;
-			//endregion
+    return this.toBER(sizeOnly);
+  } //**********************************************************************************
 
-			for (let i = max; i >= 0; i--, counter++) {
-				switch (true) {
-					case counter < secondViewCopy.length:
-						value = firstViewCopy[firstViewCopyLength - counter] + secondViewCopy[secondViewCopyLength - counter] + c[0];
-						break;
-					default:
-						value = firstViewCopy[firstViewCopyLength - counter] + c[0];
-				}
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-				c[0] = value / 10;
 
-				switch (true) {
-					case counter >= firstViewCopy.length:
-						firstViewCopy = (0, _pvutils.utilConcatView)(new Uint8Array([value % 10]), firstViewCopy);
-						break;
-					default:
-						firstViewCopy[firstViewCopyLength - counter] = value % 10;
-				}
-			}
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = super.fromBER(inputBuffer, inputOffset, inputLength);
+    if (resultOffset === -1) return resultOffset;
+    this.blockLength = inputLength;
+    return inputOffset + inputLength;
+  } //**********************************************************************************
 
-			if (c[0] > 0) firstViewCopy = (0, _pvutils.utilConcatView)(c, firstViewCopy);
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
 
-			return firstViewCopy.slice(0);
-		}
 
-		function power2(n) {
-			if (n >= powers2.length) {
-				for (let p = powers2.length; p <= n; p++) {
-					const c = new Uint8Array([0]);
-					let digits = powers2[p - 1].slice(0);
+  toBER(sizeOnly = false) {
+    //noinspection JSCheckFunctionSignatures
+    return this.valueHex.slice(0);
+  } //**********************************************************************************
 
-					for (let i = digits.length - 1; i >= 0; i--) {
-						const newValue = new Uint8Array([(digits[i] << 1) + c[0]]);
-						c[0] = newValue[0] / 10;
-						digits[i] = newValue[0] % 10;
-					}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-					if (c[0] > 0) digits = (0, _pvutils.utilConcatView)(c, digits);
 
-					powers2.push(digits);
-				}
-			}
+  static blockName() {
+    return "IntegerValueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
 
-			return powers2[n];
-		}
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
 
-		function viewSub(first, second) {
-			//region Initial variables
-			let b = 0;
 
-			let firstView = new Uint8Array(first);
-			let secondView = new Uint8Array(second);
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
 
-			let firstViewCopy = firstView.slice(0);
-			const firstViewCopyLength = firstViewCopy.length - 1;
-			let secondViewCopy = secondView.slice(0);
-			const secondViewCopyLength = secondViewCopy.length - 1;
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
 
-			let value;
 
-			let counter = 0;
-			//endregion
+    object.valueDec = this.valueDec;
+    return object;
+  } //**********************************************************************************
 
-			for (let i = secondViewCopyLength; i >= 0; i--, counter++) {
-				value = firstViewCopy[firstViewCopyLength - counter] - secondViewCopy[secondViewCopyLength - counter] - b;
+  /**
+   * Convert current value to decimal string representation
+   */
 
-				switch (true) {
-					case value < 0:
-						b = 1;
-						firstViewCopy[firstViewCopyLength - counter] = value + 10;
-						break;
-					default:
-						b = 0;
-						firstViewCopy[firstViewCopyLength - counter] = value;
-				}
-			}
 
-			if (b > 0) {
-				for (let i = firstViewCopyLength - secondViewCopyLength + 1; i >= 0; i--, counter++) {
-					value = firstViewCopy[firstViewCopyLength - counter] - b;
+  toString() {
+    //region Aux functions
+    function viewAdd(first, second) {
+      //region Initial variables
+      const c = new Uint8Array([0]);
+      let firstView = new Uint8Array(first);
+      let secondView = new Uint8Array(second);
+      let firstViewCopy = firstView.slice(0);
+      const firstViewCopyLength = firstViewCopy.length - 1;
+      let secondViewCopy = secondView.slice(0);
+      const secondViewCopyLength = secondViewCopy.length - 1;
+      let value = 0;
+      const max = secondViewCopyLength < firstViewCopyLength ? firstViewCopyLength : secondViewCopyLength;
+      let counter = 0; //endregion
 
-					if (value < 0) {
-						b = 1;
-						firstViewCopy[firstViewCopyLength - counter] = value + 10;
-					} else {
-						b = 0;
-						firstViewCopy[firstViewCopyLength - counter] = value;
-						break;
-					}
-				}
-			}
+      for (let i = max; i >= 0; i--, counter++) {
+        switch (true) {
+          case counter < secondViewCopy.length:
+            value = firstViewCopy[firstViewCopyLength - counter] + secondViewCopy[secondViewCopyLength - counter] + c[0];
+            break;
 
-			return firstViewCopy.slice();
-		}
-		//endregion
+          default:
+            value = firstViewCopy[firstViewCopyLength - counter] + c[0];
+        }
 
-		//region Initial variables
-		const firstBit = this._valueHex.byteLength * 8 - 1;
+        c[0] = value / 10;
 
-		let digits = new Uint8Array(this._valueHex.byteLength * 8 / 3);
-		let bitNumber = 0;
-		let currentByte;
+        switch (true) {
+          case counter >= firstViewCopy.length:
+            firstViewCopy = (0, _pvutils.utilConcatView)(new Uint8Array([value % 10]), firstViewCopy);
+            break;
 
-		const asn1View = new Uint8Array(this._valueHex);
+          default:
+            firstViewCopy[firstViewCopyLength - counter] = value % 10;
+        }
+      }
 
-		let result = "";
+      if (c[0] > 0) firstViewCopy = (0, _pvutils.utilConcatView)(c, firstViewCopy);
+      return firstViewCopy.slice(0);
+    }
 
-		let flag = false;
-		//endregion
+    function power2(n) {
+      if (n >= powers2.length) {
+        for (let p = powers2.length; p <= n; p++) {
+          const c = new Uint8Array([0]);
+          let digits = powers2[p - 1].slice(0);
 
-		//region Calculate number
-		for (let byteNumber = this._valueHex.byteLength - 1; byteNumber >= 0; byteNumber--) {
-			currentByte = asn1View[byteNumber];
+          for (let i = digits.length - 1; i >= 0; i--) {
+            const newValue = new Uint8Array([(digits[i] << 1) + c[0]]);
+            c[0] = newValue[0] / 10;
+            digits[i] = newValue[0] % 10;
+          }
 
-			for (let i = 0; i < 8; i++) {
-				if ((currentByte & 1) === 1) {
-					switch (bitNumber) {
-						case firstBit:
-							digits = viewSub(power2(bitNumber), digits);
-							result = "-";
-							break;
-						default:
-							digits = viewAdd(digits, power2(bitNumber));
-					}
-				}
+          if (c[0] > 0) digits = (0, _pvutils.utilConcatView)(c, digits);
+          powers2.push(digits);
+        }
+      }
 
-				bitNumber++;
-				currentByte >>= 1;
-			}
-		}
-		//endregion
+      return powers2[n];
+    }
 
-		//region Print number
-		for (let i = 0; i < digits.length; i++) {
-			if (digits[i]) flag = true;
+    function viewSub(first, second) {
+      //region Initial variables
+      let b = 0;
+      let firstView = new Uint8Array(first);
+      let secondView = new Uint8Array(second);
+      let firstViewCopy = firstView.slice(0);
+      const firstViewCopyLength = firstViewCopy.length - 1;
+      let secondViewCopy = secondView.slice(0);
+      const secondViewCopyLength = secondViewCopy.length - 1;
+      let value;
+      let counter = 0; //endregion
 
-			if (flag) result += digitsString.charAt(digits[i]);
-		}
+      for (let i = secondViewCopyLength; i >= 0; i--, counter++) {
+        value = firstViewCopy[firstViewCopyLength - counter] - secondViewCopy[secondViewCopyLength - counter] - b;
 
-		if (flag === false) result += digitsString.charAt(0);
-		//endregion
+        switch (true) {
+          case value < 0:
+            b = 1;
+            firstViewCopy[firstViewCopyLength - counter] = value + 10;
+            break;
 
-		return result;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+          default:
+            b = 0;
+            firstViewCopy[firstViewCopyLength - counter] = value;
+        }
+      }
+
+      if (b > 0) {
+        for (let i = firstViewCopyLength - secondViewCopyLength + 1; i >= 0; i--, counter++) {
+          value = firstViewCopy[firstViewCopyLength - counter] - b;
+
+          if (value < 0) {
+            b = 1;
+            firstViewCopy[firstViewCopyLength - counter] = value + 10;
+          } else {
+            b = 0;
+            firstViewCopy[firstViewCopyLength - counter] = value;
+            break;
+          }
+        }
+      }
+
+      return firstViewCopy.slice();
+    } //endregion
+    //region Initial variables
+
+
+    const firstBit = this._valueHex.byteLength * 8 - 1;
+    let digits = new Uint8Array(this._valueHex.byteLength * 8 / 3);
+    let bitNumber = 0;
+    let currentByte;
+    const asn1View = new Uint8Array(this._valueHex);
+    let result = "";
+    let flag = false; //endregion
+    //region Calculate number
+
+    for (let byteNumber = this._valueHex.byteLength - 1; byteNumber >= 0; byteNumber--) {
+      currentByte = asn1View[byteNumber];
+
+      for (let i = 0; i < 8; i++) {
+        if ((currentByte & 1) === 1) {
+          switch (bitNumber) {
+            case firstBit:
+              digits = viewSub(power2(bitNumber), digits);
+              result = "-";
+              break;
+
+            default:
+              digits = viewAdd(digits, power2(bitNumber));
+          }
+        }
+
+        bitNumber++;
+        currentByte >>= 1;
+      }
+    } //endregion
+    //region Print number
+
+
+    for (let i = 0; i < digits.length; i++) {
+      if (digits[i]) flag = true;
+      if (flag) result += digitsString.charAt(digits[i]);
+    }
+
+    if (flag === false) result += digitsString.charAt(0); //endregion
+
+    return result;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
 class Integer extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Integer" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalIntegerValueBlock);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 2; // Integer
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Integer";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Compare two Integer object, or Integer and ArrayBuffer objects
-  * @param {!Integer|ArrayBuffer} otherValue
-  * @returns {boolean}
-  */
-	isEqual(otherValue) {
-		if (otherValue instanceof Integer) {
-			if (this.valueBlock.isHexOnly && otherValue.valueBlock.isHexOnly) // Compare two ArrayBuffers
-				return (0, _pvutils.isEqualBuffer)(this.valueBlock.valueHex, otherValue.valueBlock.valueHex);
+  /**
+   * Constructor for "Integer" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalIntegerValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-			if (this.valueBlock.isHexOnly === otherValue.valueBlock.isHexOnly) return this.valueBlock.valueDec === otherValue.valueBlock.valueDec;
+    this.idBlock.tagNumber = 2; // Integer
+  } //**********************************************************************************
 
-			return false;
-		}
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (otherValue instanceof ArrayBuffer) return (0, _pvutils.isEqualBuffer)(this.valueBlock.valueHex, otherValue);
 
-		return false;
-	}
-	//**********************************************************************************
-	/**
-  * Convert current Integer value from BER into DER format
-  * @returns {Integer}
-  */
-	convertToDER() {
-		const integer = new Integer({ valueHex: this.valueBlock.valueHex });
-		integer.valueBlock.toDER();
+  static blockName() {
+    return "Integer";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
 
-		return integer;
-	}
-	//**********************************************************************************
-	/**
-  * Convert current Integer value from DER to BER format
-  * @returns {Integer}
-  */
-	convertFromDER() {
-		const expectedLength = this.valueBlock.valueHex.byteLength % 2 ? this.valueBlock.valueHex.byteLength + 1 : this.valueBlock.valueHex.byteLength;
-		const integer = new Integer({ valueHex: this.valueBlock.valueHex });
-		integer.valueBlock.fromDER(integer.valueBlock.valueHex, 0, integer.valueBlock.valueHex.byteLength, expectedLength);
+  /**
+   * Compare two Integer object, or Integer and ArrayBuffer objects
+   * @param {!Integer|ArrayBuffer} otherValue
+   * @returns {boolean}
+   */
 
-		return integer;
-	}
-	//**********************************************************************************
-}
-exports.Integer = Integer; //**************************************************************************************
+
+  isEqual(otherValue) {
+    if (otherValue instanceof Integer) {
+      if (this.valueBlock.isHexOnly && otherValue.valueBlock.isHexOnly) // Compare two ArrayBuffers
+        return (0, _pvutils.isEqualBuffer)(this.valueBlock.valueHex, otherValue.valueBlock.valueHex);
+      if (this.valueBlock.isHexOnly === otherValue.valueBlock.isHexOnly) return this.valueBlock.valueDec === otherValue.valueBlock.valueDec;
+      return false;
+    }
+
+    if (otherValue instanceof ArrayBuffer) return (0, _pvutils.isEqualBuffer)(this.valueBlock.valueHex, otherValue);
+    return false;
+  } //**********************************************************************************
+
+  /**
+   * Convert current Integer value from BER into DER format
+   * @returns {Integer}
+   */
+
+
+  convertToDER() {
+    const integer = new Integer({
+      valueHex: this.valueBlock.valueHex
+    });
+    integer.valueBlock.toDER();
+    return integer;
+  } //**********************************************************************************
+
+  /**
+   * Convert current Integer value from DER to BER format
+   * @returns {Integer}
+   */
+
+
+  convertFromDER() {
+    const expectedLength = this.valueBlock.valueHex.byteLength % 2 ? this.valueBlock.valueHex.byteLength + 1 : this.valueBlock.valueHex.byteLength;
+    const integer = new Integer({
+      valueHex: this.valueBlock.valueHex
+    });
+    integer.valueBlock.fromDER(integer.valueBlock.valueHex, 0, integer.valueBlock.valueHex.byteLength, expectedLength);
+    return integer;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 Enumerated type class
 //**************************************************************************************
 
-class Enumerated extends Integer {
-	//**********************************************************************************
-	/**
-  * Constructor for "Enumerated" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 10; // Enumerated
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Enumerated";
-	}
-	//**********************************************************************************
-}
-exports.Enumerated = Enumerated; //**************************************************************************************
+exports.Integer = Integer;
+
+class Enumerated extends Integer {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Enumerated" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 10; // Enumerated
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Enumerated";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of ASN.1 ObjectIdentifier type class
 //**************************************************************************************
 
-class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalSidValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {number} [valueDec]
-  * @property {boolean} [isFirstSid]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
-
-		this.valueDec = (0, _pvutils.getParametersValue)(parameters, "valueDec", -1);
-		this.isFirstSid = (0, _pvutils.getParametersValue)(parameters, "isFirstSid", false);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "sidBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		if (inputLength === 0) return inputOffset;
-
-		//region Basic check for parameters
-		//noinspection JSCheckFunctionSignatures
-		if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1;
-		//endregion
-
-		const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-
-		this.valueHex = new ArrayBuffer(inputLength);
-		let view = new Uint8Array(this.valueHex);
-
-		for (let i = 0; i < inputLength; i++) {
-			view[i] = intBuffer[i] & 0x7F;
-
-			this.blockLength++;
-
-			if ((intBuffer[i] & 0x80) === 0x00) break;
-		}
-
-		//region Ajust size of valueHex buffer
-		const tempValueHex = new ArrayBuffer(this.blockLength);
-		const tempView = new Uint8Array(tempValueHex);
-
-		for (let i = 0; i < this.blockLength; i++) tempView[i] = view[i];
-
-		//noinspection JSCheckFunctionSignatures
-		this.valueHex = tempValueHex.slice(0);
-		view = new Uint8Array(this.valueHex);
-		//endregion
-
-		if ((intBuffer[this.blockLength - 1] & 0x80) !== 0x00) {
-			this.error = "End of input reached before message was fully decoded";
-			return -1;
-		}
-
-		if (view[0] === 0x00) this.warnings.push("Needlessly long format of SID encoding");
-
-		if (this.blockLength <= 8) this.valueDec = (0, _pvutils.utilFromBase)(view, 7);else {
-			this.isHexOnly = true;
-			this.warnings.push("Too big SID for decoding, hex only");
-		}
-
-		return inputOffset + this.blockLength;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		//region Initial variables
-		let retBuf;
-		let retView;
-		//endregion
-
-		if (this.isHexOnly) {
-			if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength);
-
-			const curView = new Uint8Array(this.valueHex);
-
-			retBuf = new ArrayBuffer(this.blockLength);
-			retView = new Uint8Array(retBuf);
-
-			for (let i = 0; i < this.blockLength - 1; i++) retView[i] = curView[i] | 0x80;
-
-			retView[this.blockLength - 1] = curView[this.blockLength - 1];
-
-			return retBuf;
-		}
-
-		const encodedBuf = (0, _pvutils.utilToBase)(this.valueDec, 7);
-		if (encodedBuf.byteLength === 0) {
-			this.error = "Error during encoding SID value";
-			return new ArrayBuffer(0);
-		}
-
-		retBuf = new ArrayBuffer(encodedBuf.byteLength);
-
-		if (sizeOnly === false) {
-			const encodedView = new Uint8Array(encodedBuf);
-			retView = new Uint8Array(retBuf);
-
-			for (let i = 0; i < encodedBuf.byteLength - 1; i++) retView[i] = encodedView[i] | 0x80;
-
-			retView[encodedBuf.byteLength - 1] = encodedView[encodedBuf.byteLength - 1];
-		}
-
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Create string representation of current SID block
-  * @returns {string}
-  */
-	toString() {
-		let result = "";
-
-		if (this.isHexOnly === true) result = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);else {
-			if (this.isFirstSid) {
-				let sidValue = this.valueDec;
-
-				if (this.valueDec <= 39) result = "0.";else {
-					if (this.valueDec <= 79) {
-						result = "1.";
-						sidValue -= 40;
-					} else {
-						result = "2.";
-						sidValue -= 80;
-					}
-				}
-
-				result += sidValue.toString();
-			} else result = this.valueDec.toString();
-		}
-
-		return result;
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
-
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
-
-		object.valueDec = this.valueDec;
-		object.isFirstSid = this.isFirstSid;
-
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
-class LocalObjectIdentifierValueBlock extends LocalValueBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalObjectIdentifierValueBlock" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
-
-		this.fromString((0, _pvutils.getParametersValue)(parameters, "value", ""));
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		let resultOffset = inputOffset;
-
-		while (inputLength > 0) {
-			const sidBlock = new LocalSidValueBlock();
-			resultOffset = sidBlock.fromBER(inputBuffer, resultOffset, inputLength);
-			if (resultOffset === -1) {
-				this.blockLength = 0;
-				this.error = sidBlock.error;
-				return resultOffset;
-			}
-
-			if (this.value.length === 0) sidBlock.isFirstSid = true;
-
-			this.blockLength += sidBlock.blockLength;
-			inputLength -= sidBlock.blockLength;
-
-			this.value.push(sidBlock);
-		}
-
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		let retBuf = new ArrayBuffer(0);
-
-		for (let i = 0; i < this.value.length; i++) {
-			const valueBuf = this.value[i].toBER(sizeOnly);
-			if (valueBuf.byteLength === 0) {
-				this.error = this.value[i].error;
-				return new ArrayBuffer(0);
-			}
-
-			retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBuf);
-		}
-
-		return retBuf;
-	}
-	//**********************************************************************************
-	/**
-  * Create "LocalObjectIdentifierValueBlock" class from string
-  * @param {string} string Input string to convert from
-  * @returns {boolean}
-  */
-	fromString(string) {
-		this.value = []; // Clear existing SID values
-
-		let pos1 = 0;
-		let pos2 = 0;
-
-		let sid = "";
-
-		let flag = false;
-
-		do {
-			pos2 = string.indexOf(".", pos1);
-			if (pos2 === -1) sid = string.substr(pos1);else sid = string.substr(pos1, pos2 - pos1);
-
-			pos1 = pos2 + 1;
-
-			if (flag) {
-				const sidBlock = this.value[0];
-
-				let plus = 0;
-
-				switch (sidBlock.valueDec) {
-					case 0:
-						break;
-					case 1:
-						plus = 40;
-						break;
-					case 2:
-						plus = 80;
-						break;
-					default:
-						this.value = []; // clear SID array
-						return false; // ???
-				}
-
-				const parsedSID = parseInt(sid, 10);
-				if (isNaN(parsedSID)) return true;
-
-				sidBlock.valueDec = parsedSID + plus;
-
-				flag = false;
-			} else {
-				const sidBlock = new LocalSidValueBlock();
-				sidBlock.valueDec = parseInt(sid, 10);
-				if (isNaN(sidBlock.valueDec)) return true;
-
-				if (this.value.length === 0) {
-					sidBlock.isFirstSid = true;
-					flag = true;
-				}
-
-				this.value.push(sidBlock);
-			}
-		} while (pos2 !== -1);
-
-		return true;
-	}
-	//**********************************************************************************
-	/**
-  * Converts "LocalObjectIdentifierValueBlock" class to string
-  * @returns {string}
-  */
-	toString() {
-		let result = "";
-		let isHexOnly = false;
-
-		for (let i = 0; i < this.value.length; i++) {
-			isHexOnly = this.value[i].isHexOnly;
-
-			let sidStr = this.value[i].toString();
-
-			if (i !== 0) result = `${result}.`;
-
-			if (isHexOnly) {
-				sidStr = `{${sidStr}}`;
-
-				if (this.value[i].isFirstSid) result = `2.{${sidStr} - 80}`;else result += sidStr;
-			} else result += sidStr;
-		}
-
-		return result;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "ObjectIdentifierValueBlock";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
-
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
-
-		object.value = this.toString();
-		object.sidArray = [];
-		for (let i = 0; i < this.value.length; i++) object.sidArray.push(this.value[i].toJSON());
-
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+
+exports.Enumerated = Enumerated;
+
+class LocalSidValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalSidValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {number} [valueDec]
+   * @property {boolean} [isFirstSid]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.valueDec = (0, _pvutils.getParametersValue)(parameters, "valueDec", -1);
+    this.isFirstSid = (0, _pvutils.getParametersValue)(parameters, "isFirstSid", false);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "sidBlock";
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    if (inputLength === 0) return inputOffset; //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
+    this.valueHex = new ArrayBuffer(inputLength);
+    let view = new Uint8Array(this.valueHex);
+
+    for (let i = 0; i < inputLength; i++) {
+      view[i] = intBuffer[i] & 0x7F;
+      this.blockLength++;
+      if ((intBuffer[i] & 0x80) === 0x00) break;
+    } //region Ajust size of valueHex buffer
+
+
+    const tempValueHex = new ArrayBuffer(this.blockLength);
+    const tempView = new Uint8Array(tempValueHex);
+
+    for (let i = 0; i < this.blockLength; i++) tempView[i] = view[i]; //noinspection JSCheckFunctionSignatures
+
+
+    this.valueHex = tempValueHex.slice(0);
+    view = new Uint8Array(this.valueHex); //endregion
+
+    if ((intBuffer[this.blockLength - 1] & 0x80) !== 0x00) {
+      this.error = "End of input reached before message was fully decoded";
+      return -1;
+    }
+
+    if (view[0] === 0x00) this.warnings.push("Needlessly long format of SID encoding");
+    if (this.blockLength <= 8) this.valueDec = (0, _pvutils.utilFromBase)(view, 7);else {
+      this.isHexOnly = true;
+      this.warnings.push("Too big SID for decoding, hex only");
+    }
+    return inputOffset + this.blockLength;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    //region Initial variables
+    let retBuf;
+    let retView; //endregion
+
+    if (this.isHexOnly) {
+      if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength);
+      const curView = new Uint8Array(this.valueHex);
+      retBuf = new ArrayBuffer(this.blockLength);
+      retView = new Uint8Array(retBuf);
+
+      for (let i = 0; i < this.blockLength - 1; i++) retView[i] = curView[i] | 0x80;
+
+      retView[this.blockLength - 1] = curView[this.blockLength - 1];
+      return retBuf;
+    }
+
+    const encodedBuf = (0, _pvutils.utilToBase)(this.valueDec, 7);
+
+    if (encodedBuf.byteLength === 0) {
+      this.error = "Error during encoding SID value";
+      return new ArrayBuffer(0);
+    }
+
+    retBuf = new ArrayBuffer(encodedBuf.byteLength);
+
+    if (sizeOnly === false) {
+      const encodedView = new Uint8Array(encodedBuf);
+      retView = new Uint8Array(retBuf);
+
+      for (let i = 0; i < encodedBuf.byteLength - 1; i++) retView[i] = encodedView[i] | 0x80;
+
+      retView[encodedBuf.byteLength - 1] = encodedView[encodedBuf.byteLength - 1];
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Create string representation of current SID block
+   * @returns {string}
+   */
+
+
+  toString() {
+    let result = "";
+    if (this.isHexOnly === true) result = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);else {
+      if (this.isFirstSid) {
+        let sidValue = this.valueDec;
+        if (this.valueDec <= 39) result = "0.";else {
+          if (this.valueDec <= 79) {
+            result = "1.";
+            sidValue -= 40;
+          } else {
+            result = "2.";
+            sidValue -= 80;
+          }
+        }
+        result += sidValue.toString();
+      } else result = this.valueDec.toString();
+    }
+    return result;
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.valueDec = this.valueDec;
+    object.isFirstSid = this.isFirstSid;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+class LocalObjectIdentifierValueBlock extends ValueBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalObjectIdentifierValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.fromString((0, _pvutils.getParametersValue)(parameters, "value", ""));
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    let resultOffset = inputOffset;
+
+    while (inputLength > 0) {
+      const sidBlock = new LocalSidValueBlock();
+      resultOffset = sidBlock.fromBER(inputBuffer, resultOffset, inputLength);
+
+      if (resultOffset === -1) {
+        this.blockLength = 0;
+        this.error = sidBlock.error;
+        return resultOffset;
+      }
+
+      if (this.value.length === 0) sidBlock.isFirstSid = true;
+      this.blockLength += sidBlock.blockLength;
+      inputLength -= sidBlock.blockLength;
+      this.value.push(sidBlock);
+    }
+
+    return resultOffset;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    let retBuf = new ArrayBuffer(0);
+
+    for (let i = 0; i < this.value.length; i++) {
+      const valueBuf = this.value[i].toBER(sizeOnly);
+
+      if (valueBuf.byteLength === 0) {
+        this.error = this.value[i].error;
+        return new ArrayBuffer(0);
+      }
+
+      retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBuf);
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Create "LocalObjectIdentifierValueBlock" class from string
+   * @param {string} string Input string to convert from
+   * @returns {boolean}
+   */
+
+
+  fromString(string) {
+    this.value = []; // Clear existing SID values
+
+    let pos1 = 0;
+    let pos2 = 0;
+    let sid = "";
+    let flag = false;
+
+    do {
+      pos2 = string.indexOf(".", pos1);
+      if (pos2 === -1) sid = string.substr(pos1);else sid = string.substr(pos1, pos2 - pos1);
+      pos1 = pos2 + 1;
+
+      if (flag) {
+        const sidBlock = this.value[0];
+        let plus = 0;
+
+        switch (sidBlock.valueDec) {
+          case 0:
+            break;
+
+          case 1:
+            plus = 40;
+            break;
+
+          case 2:
+            plus = 80;
+            break;
+
+          default:
+            this.value = []; // clear SID array
+
+            return false;
+          // ???
+        }
+
+        const parsedSID = parseInt(sid, 10);
+        if (isNaN(parsedSID)) return true;
+        sidBlock.valueDec = parsedSID + plus;
+        flag = false;
+      } else {
+        const sidBlock = new LocalSidValueBlock();
+        sidBlock.valueDec = parseInt(sid, 10);
+        if (isNaN(sidBlock.valueDec)) return true;
+
+        if (this.value.length === 0) {
+          sidBlock.isFirstSid = true;
+          flag = true;
+        }
+
+        this.value.push(sidBlock);
+      }
+    } while (pos2 !== -1);
+
+    return true;
+  } //**********************************************************************************
+
+  /**
+   * Converts "LocalObjectIdentifierValueBlock" class to string
+   * @returns {string}
+   */
+
+
+  toString() {
+    let result = "";
+    let isHexOnly = false;
+
+    for (let i = 0; i < this.value.length; i++) {
+      isHexOnly = this.value[i].isHexOnly;
+      let sidStr = this.value[i].toString();
+      if (i !== 0) result = `${result}.`;
+
+      if (isHexOnly) {
+        sidStr = `{${sidStr}}`;
+        if (this.value[i].isFirstSid) result = `2.{${sidStr} - 80}`;else result += sidStr;
+      } else result += sidStr;
+    }
+
+    return result;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "ObjectIdentifierValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.toString();
+    object.sidArray = [];
+
+    for (let i = 0; i < this.value.length; i++) object.sidArray.push(this.value[i].toJSON());
+
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends BaseBlock
  */
-class ObjectIdentifier extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "ObjectIdentifier" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalObjectIdentifierValueBlock);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 6; // OBJECT IDENTIFIER
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "ObjectIdentifier";
-	}
-	//**********************************************************************************
-}
-exports.ObjectIdentifier = ObjectIdentifier; //**************************************************************************************
+
+class ObjectIdentifier extends BaseBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "ObjectIdentifier" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalObjectIdentifierValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 6; // OBJECT IDENTIFIER
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "ObjectIdentifier";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of all string's classes
 //**************************************************************************************
 
-class LocalUtf8StringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Constructor for "LocalUtf8StringValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.isHexOnly = true;
-		this.value = ""; // String representation of decoded ArrayBuffer
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Utf8StringValueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+exports.ObjectIdentifier = ObjectIdentifier;
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+class LocalUtf8StringValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
 
-		object.value = this.value;
+  /**
+   * Constructor for "LocalUtf8StringValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.isHexOnly = true;
+    this.value = ""; // String representation of decoded ArrayBuffer
+  } //**********************************************************************************
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Utf8StringValueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.value;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends BaseBlock
  */
+
+
 class Utf8String extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "Utf8String" class
-  * @param {Object} [parameters={}]
-  * @property {ArrayBuffer} [valueHex]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalUtf8StringValueBlock);
+  //**********************************************************************************
 
-		if ("value" in parameters) this.fromString(parameters.value);
+  /**
+   * Constructor for "Utf8String" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalUtf8StringValueBlock);
+    if ("value" in parameters) this.fromString(parameters.value);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 12; // Utf8String
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Utf8String";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+    this.idBlock.tagNumber = 12; // Utf8String
+  } //**********************************************************************************
 
-		this.fromBuffer(this.valueBlock.valueHex);
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "Utf8String";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		this.valueBlock.value = String.fromCharCode.apply(null, new Uint8Array(inputBuffer));
 
-		try {
-			//noinspection JSDeprecatedSymbols
-			this.valueBlock.value = decodeURIComponent(escape(this.valueBlock.value));
-		} catch (ex) {
-			this.warnings.push(`Error during "decodeURIComponent": ${ex}, using raw string`);
-		}
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		//noinspection JSDeprecatedSymbols
-		const str = unescape(encodeURIComponent(inputString));
-		const strLen = str.length;
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		this.valueBlock.valueHex = new ArrayBuffer(strLen);
-		const view = new Uint8Array(this.valueBlock.valueHex);
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		for (let i = 0; i < strLen; i++) view[i] = str.charCodeAt(i);
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		this.valueBlock.value = inputString;
-	}
-	//**********************************************************************************
-}
-exports.Utf8String = Utf8String; //**************************************************************************************
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
+
+
+  fromBuffer(inputBuffer) {
+    this.valueBlock.value = String.fromCharCode.apply(null, new Uint8Array(inputBuffer));
+
+    try {
+      //noinspection JSDeprecatedSymbols
+      this.valueBlock.value = decodeURIComponent(escape(this.valueBlock.value));
+    } catch (ex) {
+      this.warnings.push(`Error during "decodeURIComponent": ${ex}, using raw string`);
+    }
+  } //**********************************************************************************
+
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
+
+
+  fromString(inputString) {
+    //noinspection JSDeprecatedSymbols
+    const str = unescape(encodeURIComponent(inputString));
+    const strLen = str.length;
+    this.valueBlock.valueHex = new ArrayBuffer(strLen);
+    const view = new Uint8Array(this.valueBlock.valueHex);
+
+    for (let i = 0; i < strLen; i++) view[i] = str.charCodeAt(i);
+
+    this.valueBlock.value = inputString;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+//region Declaration of ASN.1 RelativeObjectIdentifier type class
+//**************************************************************************************
+
+
+exports.Utf8String = Utf8String;
+
+class LocalRelativeSidValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalRelativeSidValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {number} [valueDec]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.valueDec = (0, _pvutils.getParametersValue)(parameters, "valueDec", -1);
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "relativeSidBlock";
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    if (inputLength === 0) return inputOffset; //region Basic check for parameters
+    //noinspection JSCheckFunctionSignatures
+
+    if ((0, _pvutils.checkBufferParams)(this, inputBuffer, inputOffset, inputLength) === false) return -1; //endregion
+
+    const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
+    this.valueHex = new ArrayBuffer(inputLength);
+    let view = new Uint8Array(this.valueHex);
+
+    for (let i = 0; i < inputLength; i++) {
+      view[i] = intBuffer[i] & 0x7F;
+      this.blockLength++;
+      if ((intBuffer[i] & 0x80) === 0x00) break;
+    } //region Ajust size of valueHex buffer
+
+
+    const tempValueHex = new ArrayBuffer(this.blockLength);
+    const tempView = new Uint8Array(tempValueHex);
+
+    for (let i = 0; i < this.blockLength; i++) tempView[i] = view[i]; //noinspection JSCheckFunctionSignatures
+
+
+    this.valueHex = tempValueHex.slice(0);
+    view = new Uint8Array(this.valueHex); //endregion
+
+    if ((intBuffer[this.blockLength - 1] & 0x80) !== 0x00) {
+      this.error = "End of input reached before message was fully decoded";
+      return -1;
+    }
+
+    if (view[0] === 0x00) this.warnings.push("Needlessly long format of SID encoding");
+    if (this.blockLength <= 8) this.valueDec = (0, _pvutils.utilFromBase)(view, 7);else {
+      this.isHexOnly = true;
+      this.warnings.push("Too big SID for decoding, hex only");
+    }
+    return inputOffset + this.blockLength;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    //region Initial variables
+    let retBuf;
+    let retView; //endregion
+
+    if (this.isHexOnly) {
+      if (sizeOnly === true) return new ArrayBuffer(this.valueHex.byteLength);
+      const curView = new Uint8Array(this.valueHex);
+      retBuf = new ArrayBuffer(this.blockLength);
+      retView = new Uint8Array(retBuf);
+
+      for (let i = 0; i < this.blockLength - 1; i++) retView[i] = curView[i] | 0x80;
+
+      retView[this.blockLength - 1] = curView[this.blockLength - 1];
+      return retBuf;
+    }
+
+    const encodedBuf = (0, _pvutils.utilToBase)(this.valueDec, 7);
+
+    if (encodedBuf.byteLength === 0) {
+      this.error = "Error during encoding SID value";
+      return new ArrayBuffer(0);
+    }
+
+    retBuf = new ArrayBuffer(encodedBuf.byteLength);
+
+    if (sizeOnly === false) {
+      const encodedView = new Uint8Array(encodedBuf);
+      retView = new Uint8Array(retBuf);
+
+      for (let i = 0; i < encodedBuf.byteLength - 1; i++) retView[i] = encodedView[i] | 0x80;
+
+      retView[encodedBuf.byteLength - 1] = encodedView[encodedBuf.byteLength - 1];
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Create string representation of current SID block
+   * @returns {string}
+   */
+
+
+  toString() {
+    let result = "";
+    if (this.isHexOnly === true) result = (0, _pvutils.bufferToHexCodes)(this.valueHex, 0, this.valueHex.byteLength);else {
+      result = this.valueDec.toString();
+    }
+    return result;
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.valueDec = this.valueDec;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+class LocalRelativeObjectIdentifierValueBlock extends ValueBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalRelativeObjectIdentifierValueBlock" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.fromString((0, _pvutils.getParametersValue)(parameters, "value", ""));
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    let resultOffset = inputOffset;
+
+    while (inputLength > 0) {
+      const sidBlock = new LocalRelativeSidValueBlock();
+      resultOffset = sidBlock.fromBER(inputBuffer, resultOffset, inputLength);
+
+      if (resultOffset === -1) {
+        this.blockLength = 0;
+        this.error = sidBlock.error;
+        return resultOffset;
+      }
+
+      this.blockLength += sidBlock.blockLength;
+      inputLength -= sidBlock.blockLength;
+      this.value.push(sidBlock);
+    }
+
+    return resultOffset;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    let retBuf = new ArrayBuffer(0);
+
+    for (let i = 0; i < this.value.length; i++) {
+      const valueBuf = this.value[i].toBER(sizeOnly);
+
+      if (valueBuf.byteLength === 0) {
+        this.error = this.value[i].error;
+        return new ArrayBuffer(0);
+      }
+
+      retBuf = (0, _pvutils.utilConcatBuf)(retBuf, valueBuf);
+    }
+
+    return retBuf;
+  } //**********************************************************************************
+
+  /**
+   * Create "LocalRelativeObjectIdentifierValueBlock" class from string
+   * @param {string} string Input string to convert from
+   * @returns {boolean}
+   */
+
+
+  fromString(string) {
+    this.value = []; // Clear existing SID values
+
+    let pos1 = 0;
+    let pos2 = 0;
+    let sid = "";
+
+    do {
+      pos2 = string.indexOf(".", pos1);
+      if (pos2 === -1) sid = string.substr(pos1);else sid = string.substr(pos1, pos2 - pos1);
+      pos1 = pos2 + 1;
+      const sidBlock = new LocalRelativeSidValueBlock();
+      sidBlock.valueDec = parseInt(sid, 10);
+      if (isNaN(sidBlock.valueDec)) return true;
+      this.value.push(sidBlock);
+    } while (pos2 !== -1);
+
+    return true;
+  } //**********************************************************************************
+
+  /**
+   * Converts "LocalRelativeObjectIdentifierValueBlock" class to string
+   * @returns {string}
+   */
+
+
+  toString() {
+    let result = "";
+    let isHexOnly = false;
+
+    for (let i = 0; i < this.value.length; i++) {
+      isHexOnly = this.value[i].isHexOnly;
+      let sidStr = this.value[i].toString();
+      if (i !== 0) result = `${result}.`;
+
+      if (isHexOnly) {
+        sidStr = `{${sidStr}}`;
+        result += sidStr;
+      } else result += sidStr;
+    }
+
+    return result;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "RelativeObjectIdentifierValueBlock";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.toString();
+    object.sidArray = [];
+
+    for (let i = 0; i < this.value.length; i++) object.sidArray.push(this.value[i].toJSON());
+
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+/**
+ * @extends BaseBlock
+ */
+
+
+class RelativeObjectIdentifier extends BaseBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "RelativeObjectIdentifier" class
+   * @param {Object} [parameters={}]
+   * @property {ArrayBuffer} [valueHex]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalRelativeObjectIdentifierValueBlock);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 13; // RELATIVE OBJECT IDENTIFIER
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "RelativeObjectIdentifier";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+//endregion
+//**************************************************************************************
+
 /**
  * @extends LocalBaseBlock
- * @extends LocalHexBlock
+ * @extends HexBlock
  */
 
-class LocalBmpStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalBmpStringValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.isHexOnly = true;
-		this.value = "";
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BmpStringValueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+exports.RelativeObjectIdentifier = RelativeObjectIdentifier;
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+class LocalBmpStringValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
 
-		object.value = this.value;
+  /**
+   * Constructor for "LocalBmpStringValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.isHexOnly = true;
+    this.value = "";
+  } //**********************************************************************************
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "BmpStringValueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.value;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends BaseBlock
  */
+
+
 class BmpString extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "BmpString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalBmpStringValueBlock);
+  //**********************************************************************************
 
-		if ("value" in parameters) this.fromString(parameters.value);
+  /**
+   * Constructor for "BmpString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalBmpStringValueBlock);
+    if ("value" in parameters) this.fromString(parameters.value);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 30; // BmpString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "BmpString";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+    this.idBlock.tagNumber = 30; // BmpString
+  } //**********************************************************************************
 
-		this.fromBuffer(this.valueBlock.valueHex);
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "BmpString";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		//noinspection JSCheckFunctionSignatures
-		const copyBuffer = inputBuffer.slice(0);
-		const valueView = new Uint8Array(copyBuffer);
 
-		for (let i = 0; i < valueView.length; i += 2) {
-			const temp = valueView[i];
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-			valueView[i] = valueView[i + 1];
-			valueView[i + 1] = temp;
-		}
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		this.valueBlock.value = String.fromCharCode.apply(null, new Uint16Array(copyBuffer));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		const strLength = inputString.length;
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		this.valueBlock.valueHex = new ArrayBuffer(strLength * 2);
-		const valueHexView = new Uint8Array(this.valueBlock.valueHex);
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
 
-		for (let i = 0; i < strLength; i++) {
-			const codeBuf = (0, _pvutils.utilToBase)(inputString.charCodeAt(i), 8);
-			const codeView = new Uint8Array(codeBuf);
-			if (codeView.length > 2) continue;
 
-			const dif = 2 - codeView.length;
+  fromBuffer(inputBuffer) {
+    //noinspection JSCheckFunctionSignatures
+    const copyBuffer = inputBuffer.slice(0);
+    const valueView = new Uint8Array(copyBuffer);
 
-			for (let j = codeView.length - 1; j >= 0; j--) valueHexView[i * 2 + j + dif] = codeView[j];
-		}
+    for (let i = 0; i < valueView.length; i += 2) {
+      const temp = valueView[i];
+      valueView[i] = valueView[i + 1];
+      valueView[i + 1] = temp;
+    }
 
-		this.valueBlock.value = inputString;
-	}
-	//**********************************************************************************
-}
-exports.BmpString = BmpString; //**************************************************************************************
+    this.valueBlock.value = String.fromCharCode.apply(null, new Uint16Array(copyBuffer));
+  } //**********************************************************************************
 
-class LocalUniversalStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalUniversalStringValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
 
-		this.isHexOnly = true;
-		this.value = "";
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "UniversalStringValueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+  fromString(inputString) {
+    const strLength = inputString.length;
+    this.valueBlock.valueHex = new ArrayBuffer(strLength * 2);
+    const valueHexView = new Uint8Array(this.valueBlock.valueHex);
 
-		object.value = this.value;
+    for (let i = 0; i < strLength; i++) {
+      const codeBuf = (0, _pvutils.utilToBase)(inputString.charCodeAt(i), 8);
+      const codeView = new Uint8Array(codeBuf);
+      if (codeView.length > 2) continue;
+      const dif = 2 - codeView.length;
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+      for (let j = codeView.length - 1; j >= 0; j--) valueHexView[i * 2 + j + dif] = codeView[j];
+    }
+
+    this.valueBlock.value = inputString;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+exports.BmpString = BmpString;
+
+class LocalUniversalStringValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalUniversalStringValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.isHexOnly = true;
+    this.value = "";
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "UniversalStringValueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.value;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends BaseBlock
  */
+
+
 class UniversalString extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "UniversalString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalUniversalStringValueBlock);
+  //**********************************************************************************
 
-		if ("value" in parameters) this.fromString(parameters.value);
+  /**
+   * Constructor for "UniversalString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalUniversalStringValueBlock);
+    if ("value" in parameters) this.fromString(parameters.value);
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 28; // UniversalString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "UniversalString";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+    this.idBlock.tagNumber = 28; // UniversalString
+  } //**********************************************************************************
 
-		this.fromBuffer(this.valueBlock.valueHex);
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "UniversalString";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		//noinspection JSCheckFunctionSignatures
-		const copyBuffer = inputBuffer.slice(0);
-		const valueView = new Uint8Array(copyBuffer);
 
-		for (let i = 0; i < valueView.length; i += 4) {
-			valueView[i] = valueView[i + 3];
-			valueView[i + 1] = valueView[i + 2];
-			valueView[i + 2] = 0x00;
-			valueView[i + 3] = 0x00;
-		}
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		this.valueBlock.value = String.fromCharCode.apply(null, new Uint32Array(copyBuffer));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		const strLength = inputString.length;
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		this.valueBlock.valueHex = new ArrayBuffer(strLength * 4);
-		const valueHexView = new Uint8Array(this.valueBlock.valueHex);
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		for (let i = 0; i < strLength; i++) {
-			const codeBuf = (0, _pvutils.utilToBase)(inputString.charCodeAt(i), 8);
-			const codeView = new Uint8Array(codeBuf);
-			if (codeView.length > 4) continue;
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
 
-			const dif = 4 - codeView.length;
 
-			for (let j = codeView.length - 1; j >= 0; j--) valueHexView[i * 4 + j + dif] = codeView[j];
-		}
+  fromBuffer(inputBuffer) {
+    //noinspection JSCheckFunctionSignatures
+    const copyBuffer = inputBuffer.slice(0);
+    const valueView = new Uint8Array(copyBuffer);
 
-		this.valueBlock.value = inputString;
-	}
-	//**********************************************************************************
-}
-exports.UniversalString = UniversalString; //**************************************************************************************
+    for (let i = 0; i < valueView.length; i += 4) {
+      valueView[i] = valueView[i + 3];
+      valueView[i + 1] = valueView[i + 2];
+      valueView[i + 2] = 0x00;
+      valueView[i + 3] = 0x00;
+    }
 
-class LocalSimpleStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalSimpleStringValueBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+    this.valueBlock.value = String.fromCharCode.apply(null, new Uint32Array(copyBuffer));
+  } //**********************************************************************************
 
-		this.value = "";
-		this.isHexOnly = true;
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "SimpleStringValueBlock";
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.value = this.value;
+  fromString(inputString) {
+    const strLength = inputString.length;
+    this.valueBlock.valueHex = new ArrayBuffer(strLength * 4);
+    const valueHexView = new Uint8Array(this.valueBlock.valueHex);
 
-		return object;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+    for (let i = 0; i < strLength; i++) {
+      const codeBuf = (0, _pvutils.utilToBase)(inputString.charCodeAt(i), 8);
+      const codeView = new Uint8Array(codeBuf);
+      if (codeView.length > 4) continue;
+      const dif = 4 - codeView.length;
+
+      for (let j = codeView.length - 1; j >= 0; j--) valueHexView[i * 4 + j + dif] = codeView[j];
+    }
+
+    this.valueBlock.value = inputString;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
+
+exports.UniversalString = UniversalString;
+
+class LocalSimpleStringValueBlock extends HexBlock(LocalBaseBlock) {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "LocalSimpleStringValueBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.value = "";
+    this.isHexOnly = true;
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "SimpleStringValueBlock";
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.value = this.value;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends BaseBlock
  */
+
+
 class LocalSimpleStringBlock extends BaseBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "LocalSimpleStringBlock" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters, LocalSimpleStringValueBlock);
+  //**********************************************************************************
 
-		if ("value" in parameters) this.fromString(parameters.value);
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "SIMPLESTRING";
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+  /**
+   * Constructor for "LocalSimpleStringBlock" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters, LocalSimpleStringValueBlock);
+    if ("value" in parameters) this.fromString(parameters.value);
+  } //**********************************************************************************
 
-		this.fromBuffer(this.valueBlock.valueHex);
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+  static blockName() {
+    return "SIMPLESTRING";
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		this.valueBlock.value = String.fromCharCode.apply(null, new Uint8Array(inputBuffer));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		const strLen = inputString.length;
 
-		this.valueBlock.valueHex = new ArrayBuffer(strLen);
-		const view = new Uint8Array(this.valueBlock.valueHex);
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		for (let i = 0; i < strLen; i++) view[i] = inputString.charCodeAt(i);
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		this.valueBlock.value = inputString;
-	}
-	//**********************************************************************************
-}
-//**************************************************************************************
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
+
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
+
+
+  fromBuffer(inputBuffer) {
+    this.valueBlock.value = String.fromCharCode.apply(null, new Uint8Array(inputBuffer));
+  } //**********************************************************************************
+
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
+
+
+  fromString(inputString) {
+    const strLen = inputString.length;
+    this.valueBlock.valueHex = new ArrayBuffer(strLen);
+    const view = new Uint8Array(this.valueBlock.valueHex);
+
+    for (let i = 0; i < strLen; i++) view[i] = inputString.charCodeAt(i);
+
+    this.valueBlock.value = inputString;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
 class NumericString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "NumericString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 18; // NumericString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "NumericString";
-	}
-	//**********************************************************************************
-}
-exports.NumericString = NumericString; //**************************************************************************************
+  /**
+   * Constructor for "NumericString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 18; // NumericString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "NumericString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.NumericString = NumericString;
 
 class PrintableString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "PrintableString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 19; // PrintableString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "PrintableString";
-	}
-	//**********************************************************************************
-}
-exports.PrintableString = PrintableString; //**************************************************************************************
+  /**
+   * Constructor for "PrintableString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 19; // PrintableString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "PrintableString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.PrintableString = PrintableString;
 
 class TeletexString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "TeletexString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 20; // TeletexString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "TeletexString";
-	}
-	//**********************************************************************************
-}
-exports.TeletexString = TeletexString; //**************************************************************************************
+  /**
+   * Constructor for "TeletexString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 20; // TeletexString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "TeletexString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.TeletexString = TeletexString;
 
 class VideotexString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "VideotexString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 21; // VideotexString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "VideotexString";
-	}
-	//**********************************************************************************
-}
-exports.VideotexString = VideotexString; //**************************************************************************************
+  /**
+   * Constructor for "VideotexString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 21; // VideotexString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "VideotexString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.VideotexString = VideotexString;
 
 class IA5String extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "IA5String" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 22; // IA5String
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "IA5String";
-	}
-	//**********************************************************************************
-}
-exports.IA5String = IA5String; //**************************************************************************************
+  /**
+   * Constructor for "IA5String" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 22; // IA5String
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "IA5String";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.IA5String = IA5String;
 
 class GraphicString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "GraphicString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 25; // GraphicString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "GraphicString";
-	}
-	//**********************************************************************************
-}
-exports.GraphicString = GraphicString; //**************************************************************************************
+  /**
+   * Constructor for "GraphicString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 25; // GraphicString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "GraphicString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.GraphicString = GraphicString;
 
 class VisibleString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "VisibleString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 26; // VisibleString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "VisibleString";
-	}
-	//**********************************************************************************
-}
-exports.VisibleString = VisibleString; //**************************************************************************************
+  /**
+   * Constructor for "VisibleString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 26; // VisibleString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "VisibleString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
+
+
+exports.VisibleString = VisibleString;
 
 class GeneralString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "GeneralString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 27; // GeneralString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "GeneralString";
-	}
-	//**********************************************************************************
-}
-exports.GeneralString = GeneralString; //**************************************************************************************
+  /**
+   * Constructor for "GeneralString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 27; // GeneralString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "GeneralString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends LocalSimpleStringBlock
  */
 
-class CharacterString extends LocalSimpleStringBlock {
-	//**********************************************************************************
-	/**
-  * Constructor for "CharacterString" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 29; // CharacterString
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "CharacterString";
-	}
-	//**********************************************************************************
-}
-exports.CharacterString = CharacterString; //**************************************************************************************
+exports.GeneralString = GeneralString;
+
+class CharacterString extends LocalSimpleStringBlock {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "CharacterString" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 29; // CharacterString
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "CharacterString";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of all date and time classes
 //**************************************************************************************
+
 /**
  * @extends VisibleString
  */
+
+
+exports.CharacterString = CharacterString;
 
 class UTCTime extends VisibleString {
-	//**********************************************************************************
-	/**
-  * Constructor for "UTCTime" class
-  * @param {Object} [parameters={}]
-  * @property {string} [value] String representatio of the date
-  * @property {Date} [valueDate] JavaScript "Date" object
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.year = 0;
-		this.month = 0;
-		this.day = 0;
-		this.hour = 0;
-		this.minute = 0;
-		this.second = 0;
+  /**
+   * Constructor for "UTCTime" class
+   * @param {Object} [parameters={}]
+   * @property {string} [value] String representatio of the date
+   * @property {Date} [valueDate] JavaScript "Date" object
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.year = 0;
+    this.month = 0;
+    this.day = 0;
+    this.hour = 0;
+    this.minute = 0;
+    this.second = 0; //region Create UTCTime from ASN.1 UTC string value
 
-		//region Create UTCTime from ASN.1 UTC string value
-		if ("value" in parameters) {
-			this.fromString(parameters.value);
+    if ("value" in parameters) {
+      this.fromString(parameters.value);
+      this.valueBlock.valueHex = new ArrayBuffer(parameters.value.length);
+      const view = new Uint8Array(this.valueBlock.valueHex);
 
-			this.valueBlock.valueHex = new ArrayBuffer(parameters.value.length);
-			const view = new Uint8Array(this.valueBlock.valueHex);
+      for (let i = 0; i < parameters.value.length; i++) view[i] = parameters.value.charCodeAt(i);
+    } //endregion
+    //region Create GeneralizedTime from JavaScript Date type
 
-			for (let i = 0; i < parameters.value.length; i++) view[i] = parameters.value.charCodeAt(i);
-		}
-		//endregion
-		//region Create GeneralizedTime from JavaScript Date type
-		if ("valueDate" in parameters) {
-			this.fromDate(parameters.valueDate);
-			this.valueBlock.valueHex = this.toBuffer();
-		}
-		//endregion
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 23; // UTCTime
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+    if ("valueDate" in parameters) {
+      this.fromDate(parameters.valueDate);
+      this.valueBlock.valueHex = this.toBuffer();
+    } //endregion
 
-		this.fromBuffer(this.valueBlock.valueHex);
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    this.idBlock.tagNumber = 23; // UTCTime
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ASN.1 internal string into ArrayBuffer
-  * @returns {ArrayBuffer}
-  */
-	toBuffer() {
-		const str = this.toString();
 
-		const buffer = new ArrayBuffer(str.length);
-		const view = new Uint8Array(buffer);
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		for (let i = 0; i < str.length; i++) view[i] = str.charCodeAt(i);
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		return buffer;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting "Date" object into ASN.1 internal string
-  * @param {!Date} inputDate JavaScript "Date" object
-  */
-	fromDate(inputDate) {
-		this.year = inputDate.getUTCFullYear();
-		this.month = inputDate.getUTCMonth() + 1;
-		this.day = inputDate.getUTCDate();
-		this.hour = inputDate.getUTCHours();
-		this.minute = inputDate.getUTCMinutes();
-		this.second = inputDate.getUTCSeconds();
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Function converting ASN.1 internal string into "Date" object
-  * @returns {Date}
-  */
-	toDate() {
-		return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		//region Parse input string
-		const parser = /(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/ig;
-		const parserArray = parser.exec(inputString);
-		if (parserArray === null) {
-			this.error = "Wrong input string for convertion";
-			return;
-		}
-		//endregion
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		//region Store parsed values
-		const year = parseInt(parserArray[1], 10);
-		if (year >= 50) this.year = 1900 + year;else this.year = 2000 + year;
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
 
-		this.month = parseInt(parserArray[2], 10);
-		this.day = parseInt(parserArray[3], 10);
-		this.hour = parseInt(parserArray[4], 10);
-		this.minute = parseInt(parserArray[5], 10);
-		this.second = parseInt(parserArray[6], 10);
-		//endregion
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ASN.1 internal class into JavaScript string
-  * @returns {string}
-  */
-	toString() {
-		const outputArray = new Array(7);
 
-		outputArray[0] = (0, _pvutils.padNumber)(this.year < 2000 ? this.year - 1900 : this.year - 2000, 2);
-		outputArray[1] = (0, _pvutils.padNumber)(this.month, 2);
-		outputArray[2] = (0, _pvutils.padNumber)(this.day, 2);
-		outputArray[3] = (0, _pvutils.padNumber)(this.hour, 2);
-		outputArray[4] = (0, _pvutils.padNumber)(this.minute, 2);
-		outputArray[5] = (0, _pvutils.padNumber)(this.second, 2);
-		outputArray[6] = "Z";
+  fromBuffer(inputBuffer) {
+    this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
+  } //**********************************************************************************
 
-		return outputArray.join("");
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "UTCTime";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+  /**
+   * Function converting ASN.1 internal string into ArrayBuffer
+   * @returns {ArrayBuffer}
+   */
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
 
-		object.year = this.year;
-		object.month = this.month;
-		object.day = this.day;
-		object.hour = this.hour;
-		object.minute = this.minute;
-		object.second = this.second;
+  toBuffer() {
+    const str = this.toString();
+    const buffer = new ArrayBuffer(str.length);
+    const view = new Uint8Array(buffer);
 
-		return object;
-	}
-	//**********************************************************************************
-}
-exports.UTCTime = UTCTime; //**************************************************************************************
+    for (let i = 0; i < str.length; i++) view[i] = str.charCodeAt(i);
+
+    return buffer;
+  } //**********************************************************************************
+
+  /**
+   * Function converting "Date" object into ASN.1 internal string
+   * @param {!Date} inputDate JavaScript "Date" object
+   */
+
+
+  fromDate(inputDate) {
+    this.year = inputDate.getUTCFullYear();
+    this.month = inputDate.getUTCMonth() + 1;
+    this.day = inputDate.getUTCDate();
+    this.hour = inputDate.getUTCHours();
+    this.minute = inputDate.getUTCMinutes();
+    this.second = inputDate.getUTCSeconds();
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
+
+  /**
+   * Function converting ASN.1 internal string into "Date" object
+   * @returns {Date}
+   */
+
+
+  toDate() {
+    return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second));
+  } //**********************************************************************************
+
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
+
+
+  fromString(inputString) {
+    //region Parse input string
+    const parser = /(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/ig;
+    const parserArray = parser.exec(inputString);
+
+    if (parserArray === null) {
+      this.error = "Wrong input string for convertion";
+      return;
+    } //endregion
+    //region Store parsed values
+
+
+    const year = parseInt(parserArray[1], 10);
+    if (year >= 50) this.year = 1900 + year;else this.year = 2000 + year;
+    this.month = parseInt(parserArray[2], 10);
+    this.day = parseInt(parserArray[3], 10);
+    this.hour = parseInt(parserArray[4], 10);
+    this.minute = parseInt(parserArray[5], 10);
+    this.second = parseInt(parserArray[6], 10); //endregion
+  } //**********************************************************************************
+
+  /**
+   * Function converting ASN.1 internal class into JavaScript string
+   * @returns {string}
+   */
+
+
+  toString() {
+    const outputArray = new Array(7);
+    outputArray[0] = (0, _pvutils.padNumber)(this.year < 2000 ? this.year - 1900 : this.year - 2000, 2);
+    outputArray[1] = (0, _pvutils.padNumber)(this.month, 2);
+    outputArray[2] = (0, _pvutils.padNumber)(this.day, 2);
+    outputArray[3] = (0, _pvutils.padNumber)(this.hour, 2);
+    outputArray[4] = (0, _pvutils.padNumber)(this.minute, 2);
+    outputArray[5] = (0, _pvutils.padNumber)(this.second, 2);
+    outputArray[6] = "Z";
+    return outputArray.join("");
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "UTCTime";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.year = this.year;
+    object.month = this.month;
+    object.day = this.day;
+    object.hour = this.hour;
+    object.minute = this.minute;
+    object.second = this.second;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends VisibleString
  */
 
+
+exports.UTCTime = UTCTime;
+
 class GeneralizedTime extends VisibleString {
-	//**********************************************************************************
-	/**
-  * Constructor for "GeneralizedTime" class
-  * @param {Object} [parameters={}]
-  * @property {string} [value] String representatio of the date
-  * @property {Date} [valueDate] JavaScript "Date" object
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.year = 0;
-		this.month = 0;
-		this.day = 0;
-		this.hour = 0;
-		this.minute = 0;
-		this.second = 0;
-		this.millisecond = 0;
+  /**
+   * Constructor for "GeneralizedTime" class
+   * @param {Object} [parameters={}]
+   * @property {string} [value] String representatio of the date
+   * @property {Date} [valueDate] JavaScript "Date" object
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.year = 0;
+    this.month = 0;
+    this.day = 0;
+    this.hour = 0;
+    this.minute = 0;
+    this.second = 0;
+    this.millisecond = 0; //region Create UTCTime from ASN.1 UTC string value
 
-		//region Create UTCTime from ASN.1 UTC string value
-		if ("value" in parameters) {
-			this.fromString(parameters.value);
+    if ("value" in parameters) {
+      this.fromString(parameters.value);
+      this.valueBlock.valueHex = new ArrayBuffer(parameters.value.length);
+      const view = new Uint8Array(this.valueBlock.valueHex);
 
-			this.valueBlock.valueHex = new ArrayBuffer(parameters.value.length);
-			const view = new Uint8Array(this.valueBlock.valueHex);
+      for (let i = 0; i < parameters.value.length; i++) view[i] = parameters.value.charCodeAt(i);
+    } //endregion
+    //region Create GeneralizedTime from JavaScript Date type
 
-			for (let i = 0; i < parameters.value.length; i++) view[i] = parameters.value.charCodeAt(i);
-		}
-		//endregion
-		//region Create GeneralizedTime from JavaScript Date type
-		if ("valueDate" in parameters) {
-			this.fromDate(parameters.valueDate);
-			this.valueBlock.valueHex = this.toBuffer();
-		}
-		//endregion
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 24; // GeneralizedTime
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
-		if (resultOffset === -1) {
-			this.error = this.valueBlock.error;
-			return resultOffset;
-		}
+    if ("valueDate" in parameters) {
+      this.fromDate(parameters.valueDate);
+      this.valueBlock.valueHex = this.toBuffer();
+    } //endregion
 
-		this.fromBuffer(this.valueBlock.valueHex);
 
-		if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    this.idBlock.tagClass = 1; // UNIVERSAL
 
-		if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    this.idBlock.tagNumber = 24; // GeneralizedTime
+  } //**********************************************************************************
 
-		if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
 
-		return resultOffset;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ArrayBuffer into ASN.1 internal string
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  */
-	fromBuffer(inputBuffer) {
-		this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ASN.1 internal string into ArrayBuffer
-  * @returns {ArrayBuffer}
-  */
-	toBuffer() {
-		const str = this.toString();
 
-		const buffer = new ArrayBuffer(str.length);
-		const view = new Uint8Array(buffer);
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
 
-		for (let i = 0; i < str.length; i++) view[i] = str.charCodeAt(i);
+    if (resultOffset === -1) {
+      this.error = this.valueBlock.error;
+      return resultOffset;
+    }
 
-		return buffer;
-	}
-	//**********************************************************************************
-	/**
-  * Function converting "Date" object into ASN.1 internal string
-  * @param {!Date} inputDate JavaScript "Date" object
-  */
-	fromDate(inputDate) {
-		this.year = inputDate.getUTCFullYear();
-		this.month = inputDate.getUTCMonth() + 1;
-		this.day = inputDate.getUTCDate();
-		this.hour = inputDate.getUTCHours();
-		this.minute = inputDate.getUTCMinutes();
-		this.second = inputDate.getUTCSeconds();
-		this.millisecond = inputDate.getUTCMilliseconds();
-	}
-	//**********************************************************************************
-	//noinspection JSUnusedGlobalSymbols
-	/**
-  * Function converting ASN.1 internal string into "Date" object
-  * @returns {Date}
-  */
-	toDate() {
-		return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second, this.millisecond));
-	}
-	//**********************************************************************************
-	/**
-  * Function converting JavaScript string into ASN.1 internal class
-  * @param {!string} inputString ASN.1 BER encoded array
-  */
-	fromString(inputString) {
-		//region Initial variables
-		let isUTC = false;
+    this.fromBuffer(this.valueBlock.valueHex);
+    if (this.idBlock.error.length === 0) this.blockLength += this.idBlock.blockLength;
+    if (this.lenBlock.error.length === 0) this.blockLength += this.lenBlock.blockLength;
+    if (this.valueBlock.error.length === 0) this.blockLength += this.valueBlock.blockLength;
+    return resultOffset;
+  } //**********************************************************************************
 
-		let timeString = "";
-		let dateTimeString = "";
-		let fractionPart = 0;
+  /**
+   * Function converting ArrayBuffer into ASN.1 internal string
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   */
 
-		let parser;
 
-		let hourDifference = 0;
-		let minuteDifference = 0;
-		//endregion
+  fromBuffer(inputBuffer) {
+    this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
+  } //**********************************************************************************
 
-		//region Convert as UTC time
-		if (inputString[inputString.length - 1] === "Z") {
-			timeString = inputString.substr(0, inputString.length - 1);
+  /**
+   * Function converting ASN.1 internal string into ArrayBuffer
+   * @returns {ArrayBuffer}
+   */
 
-			isUTC = true;
-		}
-		//endregion
-		//region Convert as local time
-		else {
-				//noinspection JSPrimitiveTypeWrapperUsage
-				const number = new Number(inputString[inputString.length - 1]);
 
-				if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+  toBuffer() {
+    const str = this.toString();
+    const buffer = new ArrayBuffer(str.length);
+    const view = new Uint8Array(buffer);
 
-				timeString = inputString;
-			}
-		//endregion
+    for (let i = 0; i < str.length; i++) view[i] = str.charCodeAt(i);
 
-		//region Check that we do not have a "+" and "-" symbols inside UTC time
-		if (isUTC) {
-			if (timeString.indexOf("+") !== -1) throw new Error("Wrong input string for convertion");
+    return buffer;
+  } //**********************************************************************************
 
-			if (timeString.indexOf("-") !== -1) throw new Error("Wrong input string for convertion");
-		}
-		//endregion
-		//region Get "UTC time difference" in case of local time
-		else {
-				let multiplier = 1;
-				let differencePosition = timeString.indexOf("+");
-				let differenceString = "";
+  /**
+   * Function converting "Date" object into ASN.1 internal string
+   * @param {!Date} inputDate JavaScript "Date" object
+   */
 
-				if (differencePosition === -1) {
-					differencePosition = timeString.indexOf("-");
-					multiplier = -1;
-				}
 
-				if (differencePosition !== -1) {
-					differenceString = timeString.substr(differencePosition + 1);
-					timeString = timeString.substr(0, differencePosition);
+  fromDate(inputDate) {
+    this.year = inputDate.getUTCFullYear();
+    this.month = inputDate.getUTCMonth() + 1;
+    this.day = inputDate.getUTCDate();
+    this.hour = inputDate.getUTCHours();
+    this.minute = inputDate.getUTCMinutes();
+    this.second = inputDate.getUTCSeconds();
+    this.millisecond = inputDate.getUTCMilliseconds();
+  } //**********************************************************************************
+  //noinspection JSUnusedGlobalSymbols
 
-					if (differenceString.length !== 2 && differenceString.length !== 4) throw new Error("Wrong input string for convertion");
+  /**
+   * Function converting ASN.1 internal string into "Date" object
+   * @returns {Date}
+   */
 
-					//noinspection JSPrimitiveTypeWrapperUsage
-					let number = new Number(differenceString.substr(0, 2));
 
-					if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+  toDate() {
+    return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second, this.millisecond));
+  } //**********************************************************************************
 
-					hourDifference = multiplier * number;
+  /**
+   * Function converting JavaScript string into ASN.1 internal class
+   * @param {!string} inputString ASN.1 BER encoded array
+   */
 
-					if (differenceString.length === 4) {
-						//noinspection JSPrimitiveTypeWrapperUsage
-						number = new Number(differenceString.substr(2, 2));
 
-						if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+  fromString(inputString) {
+    //region Initial variables
+    let isUTC = false;
+    let timeString = "";
+    let dateTimeString = "";
+    let fractionPart = 0;
+    let parser;
+    let hourDifference = 0;
+    let minuteDifference = 0; //endregion
+    //region Convert as UTC time
 
-						minuteDifference = multiplier * number;
-					}
-				}
-			}
-		//endregion
+    if (inputString[inputString.length - 1] === "Z") {
+      timeString = inputString.substr(0, inputString.length - 1);
+      isUTC = true;
+    } //endregion
+    //region Convert as local time
+    else {
+        //noinspection JSPrimitiveTypeWrapperUsage
+        const number = new Number(inputString[inputString.length - 1]);
+        if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+        timeString = inputString;
+      } //endregion
+    //region Check that we do not have a "+" and "-" symbols inside UTC time
 
-		//region Get position of fraction point
-		let fractionPointPosition = timeString.indexOf("."); // Check for "full stop" symbol
-		if (fractionPointPosition === -1) fractionPointPosition = timeString.indexOf(","); // Check for "comma" symbol
-		//endregion
 
-		//region Get fraction part
-		if (fractionPointPosition !== -1) {
-			//noinspection JSPrimitiveTypeWrapperUsage
-			const fractionPartCheck = new Number(`0${timeString.substr(fractionPointPosition)}`);
+    if (isUTC) {
+      if (timeString.indexOf("+") !== -1) throw new Error("Wrong input string for convertion");
+      if (timeString.indexOf("-") !== -1) throw new Error("Wrong input string for convertion");
+    } //endregion
+    //region Get "UTC time difference" in case of local time
+    else {
+        let multiplier = 1;
+        let differencePosition = timeString.indexOf("+");
+        let differenceString = "";
 
-			if (isNaN(fractionPartCheck.valueOf())) throw new Error("Wrong input string for convertion");
+        if (differencePosition === -1) {
+          differencePosition = timeString.indexOf("-");
+          multiplier = -1;
+        }
 
-			fractionPart = fractionPartCheck.valueOf();
+        if (differencePosition !== -1) {
+          differenceString = timeString.substr(differencePosition + 1);
+          timeString = timeString.substr(0, differencePosition);
+          if (differenceString.length !== 2 && differenceString.length !== 4) throw new Error("Wrong input string for convertion"); //noinspection JSPrimitiveTypeWrapperUsage
 
-			dateTimeString = timeString.substr(0, fractionPointPosition);
-		} else dateTimeString = timeString;
-		//endregion
+          let number = new Number(differenceString.substr(0, 2));
+          if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+          hourDifference = multiplier * number;
 
-		//region Parse internal date
-		switch (true) {
-			case dateTimeString.length === 8:
-				// "YYYYMMDD"
-				parser = /(\d{4})(\d{2})(\d{2})/ig;
-				if (fractionPointPosition !== -1) throw new Error("Wrong input string for convertion"); // Here we should not have a "fraction point"
-				break;
-			case dateTimeString.length === 10:
-				// "YYYYMMDDHH"
-				parser = /(\d{4})(\d{2})(\d{2})(\d{2})/ig;
+          if (differenceString.length === 4) {
+            //noinspection JSPrimitiveTypeWrapperUsage
+            number = new Number(differenceString.substr(2, 2));
+            if (isNaN(number.valueOf())) throw new Error("Wrong input string for convertion");
+            minuteDifference = multiplier * number;
+          }
+        }
+      } //endregion
+    //region Get position of fraction point
 
-				if (fractionPointPosition !== -1) {
-					let fractionResult = 60 * fractionPart;
-					this.minute = Math.floor(fractionResult);
 
-					fractionResult = 60 * (fractionResult - this.minute);
-					this.second = Math.floor(fractionResult);
+    let fractionPointPosition = timeString.indexOf("."); // Check for "full stop" symbol
 
-					fractionResult = 1000 * (fractionResult - this.second);
-					this.millisecond = Math.floor(fractionResult);
-				}
-				break;
-			case dateTimeString.length === 12:
-				// "YYYYMMDDHHMM"
-				parser = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/ig;
+    if (fractionPointPosition === -1) fractionPointPosition = timeString.indexOf(","); // Check for "comma" symbol
+    //endregion
+    //region Get fraction part
 
-				if (fractionPointPosition !== -1) {
-					let fractionResult = 60 * fractionPart;
-					this.second = Math.floor(fractionResult);
+    if (fractionPointPosition !== -1) {
+      //noinspection JSPrimitiveTypeWrapperUsage
+      const fractionPartCheck = new Number(`0${timeString.substr(fractionPointPosition)}`);
+      if (isNaN(fractionPartCheck.valueOf())) throw new Error("Wrong input string for convertion");
+      fractionPart = fractionPartCheck.valueOf();
+      dateTimeString = timeString.substr(0, fractionPointPosition);
+    } else dateTimeString = timeString; //endregion
+    //region Parse internal date
 
-					fractionResult = 1000 * (fractionResult - this.second);
-					this.millisecond = Math.floor(fractionResult);
-				}
-				break;
-			case dateTimeString.length === 14:
-				// "YYYYMMDDHHMMSS"
-				parser = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/ig;
 
-				if (fractionPointPosition !== -1) {
-					const fractionResult = 1000 * fractionPart;
-					this.millisecond = Math.floor(fractionResult);
-				}
-				break;
-			default:
-				throw new Error("Wrong input string for convertion");
-		}
-		//endregion
+    switch (true) {
+      case dateTimeString.length === 8:
+        // "YYYYMMDD"
+        parser = /(\d{4})(\d{2})(\d{2})/ig;
+        if (fractionPointPosition !== -1) throw new Error("Wrong input string for convertion"); // Here we should not have a "fraction point"
 
-		//region Put parsed values at right places
-		const parserArray = parser.exec(dateTimeString);
-		if (parserArray === null) throw new Error("Wrong input string for convertion");
+        break;
 
-		for (let j = 1; j < parserArray.length; j++) {
-			switch (j) {
-				case 1:
-					this.year = parseInt(parserArray[j], 10);
-					break;
-				case 2:
-					this.month = parseInt(parserArray[j], 10);
-					break;
-				case 3:
-					this.day = parseInt(parserArray[j], 10);
-					break;
-				case 4:
-					this.hour = parseInt(parserArray[j], 10) + hourDifference;
-					break;
-				case 5:
-					this.minute = parseInt(parserArray[j], 10) + minuteDifference;
-					break;
-				case 6:
-					this.second = parseInt(parserArray[j], 10);
-					break;
-				default:
-					throw new Error("Wrong input string for convertion");
-			}
-		}
-		//endregion
+      case dateTimeString.length === 10:
+        // "YYYYMMDDHH"
+        parser = /(\d{4})(\d{2})(\d{2})(\d{2})/ig;
 
-		//region Get final date
-		if (isUTC === false) {
-			const tempDate = new Date(this.year, this.month, this.day, this.hour, this.minute, this.second, this.millisecond);
+        if (fractionPointPosition !== -1) {
+          let fractionResult = 60 * fractionPart;
+          this.minute = Math.floor(fractionResult);
+          fractionResult = 60 * (fractionResult - this.minute);
+          this.second = Math.floor(fractionResult);
+          fractionResult = 1000 * (fractionResult - this.second);
+          this.millisecond = Math.floor(fractionResult);
+        }
 
-			this.year = tempDate.getUTCFullYear();
-			this.month = tempDate.getUTCMonth();
-			this.day = tempDate.getUTCDay();
-			this.hour = tempDate.getUTCHours();
-			this.minute = tempDate.getUTCMinutes();
-			this.second = tempDate.getUTCSeconds();
-			this.millisecond = tempDate.getUTCMilliseconds();
-		}
-		//endregion
-	}
-	//**********************************************************************************
-	/**
-  * Function converting ASN.1 internal class into JavaScript string
-  * @returns {string}
-  */
-	toString() {
-		const outputArray = [];
+        break;
 
-		outputArray.push((0, _pvutils.padNumber)(this.year, 4));
-		outputArray.push((0, _pvutils.padNumber)(this.month, 2));
-		outputArray.push((0, _pvutils.padNumber)(this.day, 2));
-		outputArray.push((0, _pvutils.padNumber)(this.hour, 2));
-		outputArray.push((0, _pvutils.padNumber)(this.minute, 2));
-		outputArray.push((0, _pvutils.padNumber)(this.second, 2));
-		if (this.millisecond !== 0) {
-			outputArray.push(".");
-			outputArray.push((0, _pvutils.padNumber)(this.millisecond, 3));
-		}
-		outputArray.push("Z");
+      case dateTimeString.length === 12:
+        // "YYYYMMDDHHMM"
+        parser = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/ig;
 
-		return outputArray.join("");
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "GeneralizedTime";
-	}
-	//**********************************************************************************
-	/**
-  * Convertion for the block to JSON object
-  * @returns {Object}
-  */
-	toJSON() {
-		let object = {};
+        if (fractionPointPosition !== -1) {
+          let fractionResult = 60 * fractionPart;
+          this.second = Math.floor(fractionResult);
+          fractionResult = 1000 * (fractionResult - this.second);
+          this.millisecond = Math.floor(fractionResult);
+        }
 
-		//region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
-		try {
-			object = super.toJSON();
-		} catch (ex) {}
-		//endregion
+        break;
 
-		object.year = this.year;
-		object.month = this.month;
-		object.day = this.day;
-		object.hour = this.hour;
-		object.minute = this.minute;
-		object.second = this.second;
-		object.millisecond = this.millisecond;
+      case dateTimeString.length === 14:
+        // "YYYYMMDDHHMMSS"
+        parser = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/ig;
 
-		return object;
-	}
-	//**********************************************************************************
-}
-exports.GeneralizedTime = GeneralizedTime; //**************************************************************************************
+        if (fractionPointPosition !== -1) {
+          const fractionResult = 1000 * fractionPart;
+          this.millisecond = Math.floor(fractionResult);
+        }
+
+        break;
+
+      default:
+        throw new Error("Wrong input string for convertion");
+    } //endregion
+    //region Put parsed values at right places
+
+
+    const parserArray = parser.exec(dateTimeString);
+    if (parserArray === null) throw new Error("Wrong input string for convertion");
+
+    for (let j = 1; j < parserArray.length; j++) {
+      switch (j) {
+        case 1:
+          this.year = parseInt(parserArray[j], 10);
+          break;
+
+        case 2:
+          this.month = parseInt(parserArray[j], 10);
+          break;
+
+        case 3:
+          this.day = parseInt(parserArray[j], 10);
+          break;
+
+        case 4:
+          this.hour = parseInt(parserArray[j], 10) + hourDifference;
+          break;
+
+        case 5:
+          this.minute = parseInt(parserArray[j], 10) + minuteDifference;
+          break;
+
+        case 6:
+          this.second = parseInt(parserArray[j], 10);
+          break;
+
+        default:
+          throw new Error("Wrong input string for convertion");
+      }
+    } //endregion
+    //region Get final date
+
+
+    if (isUTC === false) {
+      const tempDate = new Date(this.year, this.month, this.day, this.hour, this.minute, this.second, this.millisecond);
+      this.year = tempDate.getUTCFullYear();
+      this.month = tempDate.getUTCMonth();
+      this.day = tempDate.getUTCDay();
+      this.hour = tempDate.getUTCHours();
+      this.minute = tempDate.getUTCMinutes();
+      this.second = tempDate.getUTCSeconds();
+      this.millisecond = tempDate.getUTCMilliseconds();
+    } //endregion
+
+  } //**********************************************************************************
+
+  /**
+   * Function converting ASN.1 internal class into JavaScript string
+   * @returns {string}
+   */
+
+
+  toString() {
+    const outputArray = [];
+    outputArray.push((0, _pvutils.padNumber)(this.year, 4));
+    outputArray.push((0, _pvutils.padNumber)(this.month, 2));
+    outputArray.push((0, _pvutils.padNumber)(this.day, 2));
+    outputArray.push((0, _pvutils.padNumber)(this.hour, 2));
+    outputArray.push((0, _pvutils.padNumber)(this.minute, 2));
+    outputArray.push((0, _pvutils.padNumber)(this.second, 2));
+
+    if (this.millisecond !== 0) {
+      outputArray.push(".");
+      outputArray.push((0, _pvutils.padNumber)(this.millisecond, 3));
+    }
+
+    outputArray.push("Z");
+    return outputArray.join("");
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "GeneralizedTime";
+  } //**********************************************************************************
+
+  /**
+   * Convertion for the block to JSON object
+   * @returns {Object}
+   */
+
+
+  toJSON() {
+    let object = {}; //region Seems at the moment (Sep 2016) there is no way how to check method is supported in "super" object
+
+    try {
+      object = super.toJSON();
+    } catch (ex) {} //endregion
+
+
+    object.year = this.year;
+    object.month = this.month;
+    object.day = this.day;
+    object.hour = this.hour;
+    object.minute = this.minute;
+    object.second = this.second;
+    object.millisecond = this.millisecond;
+    return object;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends Utf8String
  */
+
+
+exports.GeneralizedTime = GeneralizedTime;
 
 class DATE extends Utf8String {
-	//**********************************************************************************
-	/**
-  * Constructor for "DATE" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 31; // DATE
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "DATE";
-	}
-	//**********************************************************************************
-}
-exports.DATE = DATE; //**************************************************************************************
+  /**
+   * Constructor for "DATE" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 31; // DATE
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "DATE";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends Utf8String
  */
+
+
+exports.DATE = DATE;
 
 class TimeOfDay extends Utf8String {
-	//**********************************************************************************
-	/**
-  * Constructor for "TimeOfDay" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 32; // TimeOfDay
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "TimeOfDay";
-	}
-	//**********************************************************************************
-}
-exports.TimeOfDay = TimeOfDay; //**************************************************************************************
+  /**
+   * Constructor for "TimeOfDay" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 32; // TimeOfDay
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "TimeOfDay";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends Utf8String
  */
+
+
+exports.TimeOfDay = TimeOfDay;
 
 class DateTime extends Utf8String {
-	//**********************************************************************************
-	/**
-  * Constructor for "DateTime" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 33; // DateTime
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "DateTime";
-	}
-	//**********************************************************************************
-}
-exports.DateTime = DateTime; //**************************************************************************************
+  /**
+   * Constructor for "DateTime" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 33; // DateTime
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "DateTime";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends Utf8String
  */
+
+
+exports.DateTime = DateTime;
 
 class Duration extends Utf8String {
-	//**********************************************************************************
-	/**
-  * Constructor for "Duration" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
+  //**********************************************************************************
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 34; // Duration
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "Duration";
-	}
-	//**********************************************************************************
-}
-exports.Duration = Duration; //**************************************************************************************
+  /**
+   * Constructor for "Duration" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 34; // Duration
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "Duration";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
+
 /**
  * @extends Utf8String
  */
 
-class TIME extends Utf8String {
-	//**********************************************************************************
-	/**
-  * Constructor for "Time" class
-  * @param {Object} [parameters={}]
-  */
-	constructor(parameters = {}) {
-		super(parameters);
 
-		this.idBlock.tagClass = 1; // UNIVERSAL
-		this.idBlock.tagNumber = 14; // Time
-	}
-	//**********************************************************************************
-	/**
-  * Aux function, need to get a block name. Need to have it here for inhiritence
-  * @returns {string}
-  */
-	static blockName() {
-		return "TIME";
-	}
-	//**********************************************************************************
-}
-exports.TIME = TIME; //**************************************************************************************
+exports.Duration = Duration;
+
+class TIME extends Utf8String {
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Time" class
+   * @param {Object} [parameters={}]
+   */
+  constructor(parameters = {}) {
+    super(parameters);
+    this.idBlock.tagClass = 1; // UNIVERSAL
+
+    this.idBlock.tagNumber = 14; // Time
+  } //**********************************************************************************
+
+  /**
+   * Aux function, need to get a block name. Need to have it here for inhiritence
+   * @returns {string}
+   */
+
+
+  static blockName() {
+    return "TIME";
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of special ASN.1 schema type Choice
 //**************************************************************************************
 
+
+exports.TIME = TIME;
+
 class Choice {
-	//**********************************************************************************
-	/**
-  * Constructor for "Choice" class
-  * @param {Object} [parameters={}]
-  * @property {Array} [value] Array of ASN.1 types for make a choice from
-  * @property {boolean} [optional]
-  */
-	constructor(parameters = {}) {
-		this.value = (0, _pvutils.getParametersValue)(parameters, "value", []);
-		this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
-	}
-	//**********************************************************************************
-}
-exports.Choice = Choice; //**************************************************************************************
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Choice" class
+   * @param {Object} [parameters={}]
+   * @property {Array} [value] Array of ASN.1 types for make a choice from
+   * @property {boolean} [optional]
+   */
+  constructor(parameters = {}) {
+    this.value = (0, _pvutils.getParametersValue)(parameters, "value", []);
+    this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of special ASN.1 schema type Any
 //**************************************************************************************
 
+
+exports.Choice = Choice;
+
 class Any {
-	//**********************************************************************************
-	/**
-  * Constructor for "Any" class
-  * @param {Object} [parameters={}]
-  * @property {string} [name]
-  * @property {boolean} [optional]
-  */
-	constructor(parameters = {}) {
-		this.name = (0, _pvutils.getParametersValue)(parameters, "name", "");
-		this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
-	}
-	//**********************************************************************************
-}
-exports.Any = Any; //**************************************************************************************
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Any" class
+   * @param {Object} [parameters={}]
+   * @property {string} [name]
+   * @property {boolean} [optional]
+   */
+  constructor(parameters = {}) {
+    this.name = (0, _pvutils.getParametersValue)(parameters, "name", "");
+    this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of special ASN.1 schema type Repeated
 //**************************************************************************************
 
+
+exports.Any = Any;
+
 class Repeated {
-	//**********************************************************************************
-	/**
-  * Constructor for "Repeated" class
-  * @param {Object} [parameters={}]
-  * @property {string} [name]
-  * @property {boolean} [optional]
-  */
-	constructor(parameters = {}) {
-		this.name = (0, _pvutils.getParametersValue)(parameters, "name", "");
-		this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
-		this.value = (0, _pvutils.getParametersValue)(parameters, "value", new Any());
-		this.local = (0, _pvutils.getParametersValue)(parameters, "local", false); // Could local or global array to store elements
-	}
-	//**********************************************************************************
-}
-exports.Repeated = Repeated; //**************************************************************************************
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Repeated" class
+   * @param {Object} [parameters={}]
+   * @property {string} [name]
+   * @property {boolean} [optional]
+   */
+  constructor(parameters = {}) {
+    this.name = (0, _pvutils.getParametersValue)(parameters, "name", "");
+    this.optional = (0, _pvutils.getParametersValue)(parameters, "optional", false);
+    this.value = (0, _pvutils.getParametersValue)(parameters, "value", new Any());
+    this.local = (0, _pvutils.getParametersValue)(parameters, "local", false); // Could local or global array to store elements
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Declaration of special ASN.1 schema type RawData
 //**************************************************************************************
+
 /**
  * @description Special class providing ability to have "toBER/fromBER" for raw ArrayBuffer
  */
 
+
+exports.Repeated = Repeated;
+
 class RawData {
-	//**********************************************************************************
-	/**
-  * Constructor for "Repeated" class
-  * @param {Object} [parameters={}]
-  * @property {string} [name]
-  * @property {boolean} [optional]
-  */
-	constructor(parameters = {}) {
-		this.data = (0, _pvutils.getParametersValue)(parameters, "data", new ArrayBuffer(0));
-	}
-	//**********************************************************************************
-	/**
-  * Base function for converting block from BER encoded array of bytes
-  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-  * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-  * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-  * @returns {number} Offset after least decoded byte
-  */
-	fromBER(inputBuffer, inputOffset, inputLength) {
-		this.data = inputBuffer.slice(inputOffset, inputLength);
-		return inputOffset + inputLength;
-	}
-	//**********************************************************************************
-	/**
-  * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-  * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-  * @returns {ArrayBuffer}
-  */
-	toBER(sizeOnly = false) {
-		return this.data;
-	}
-	//**********************************************************************************
-}
-exports.RawData = RawData; //**************************************************************************************
+  //**********************************************************************************
+
+  /**
+   * Constructor for "Repeated" class
+   * @param {Object} [parameters={}]
+   * @property {string} [name]
+   * @property {boolean} [optional]
+   */
+  constructor(parameters = {}) {
+    this.data = (0, _pvutils.getParametersValue)(parameters, "data", new ArrayBuffer(0));
+  } //**********************************************************************************
+
+  /**
+   * Base function for converting block from BER encoded array of bytes
+   * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+   * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+   * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+   * @returns {number} Offset after least decoded byte
+   */
+
+
+  fromBER(inputBuffer, inputOffset, inputLength) {
+    this.data = inputBuffer.slice(inputOffset, inputLength);
+    return inputOffset + inputLength;
+  } //**********************************************************************************
+
+  /**
+   * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+   * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+   * @returns {ArrayBuffer}
+   */
+
+
+  toBER(sizeOnly = false) {
+    return this.data;
+  } //**********************************************************************************
+
+
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Major ASN.1 BER decoding function
 //**************************************************************************************
+
 /**
  * Internal library function for decoding ASN.1 BER
  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
@@ -44891,341 +45598,377 @@ exports.RawData = RawData; //***************************************************
  * @returns {{offset: number, result: Object}}
  */
 
+
+exports.RawData = RawData;
+
 function LocalFromBER(inputBuffer, inputOffset, inputLength) {
-	const incomingOffset = inputOffset; // Need to store initial offset since "inputOffset" is changing in the function
+  const incomingOffset = inputOffset; // Need to store initial offset since "inputOffset" is changing in the function
+  //region Local function changing a type for ASN.1 classes
 
-	//region Local function changing a type for ASN.1 classes
-	function localChangeType(inputObject, newType) {
-		if (inputObject instanceof newType) return inputObject;
+  function localChangeType(inputObject, newType) {
+    if (inputObject instanceof newType) return inputObject;
+    const newObject = new newType();
+    newObject.idBlock = inputObject.idBlock;
+    newObject.lenBlock = inputObject.lenBlock;
+    newObject.warnings = inputObject.warnings; //noinspection JSCheckFunctionSignatures
 
-		const newObject = new newType();
-		newObject.idBlock = inputObject.idBlock;
-		newObject.lenBlock = inputObject.lenBlock;
-		newObject.warnings = inputObject.warnings;
-		//noinspection JSCheckFunctionSignatures
-		newObject.valueBeforeDecode = inputObject.valueBeforeDecode.slice(0);
+    newObject.valueBeforeDecode = inputObject.valueBeforeDecode.slice(0);
+    return newObject;
+  } //endregion
+  //region Create a basic ASN.1 type since we need to return errors and warnings from the function
 
-		return newObject;
-	}
-	//endregion
 
-	//region Create a basic ASN.1 type since we need to return errors and warnings from the function
-	let returnObject = new BaseBlock({}, Object);
-	//endregion
+  let returnObject = new BaseBlock({}, Object); //endregion
+  //region Basic check for parameters
 
-	//region Basic check for parameters
-	if ((0, _pvutils.checkBufferParams)(new LocalBaseBlock(), inputBuffer, inputOffset, inputLength) === false) {
-		returnObject.error = "Wrong input parameters";
-		return {
-			offset: -1,
-			result: returnObject
-		};
-	}
-	//endregion
+  const baseBlock = new LocalBaseBlock();
 
-	//region Getting Uint8Array from ArrayBuffer
-	const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength);
-	//endregion
+  if ((0, _pvutils.checkBufferParams)(baseBlock, inputBuffer, inputOffset, inputLength) === false) {
+    returnObject.error = baseBlock.error;
+    return {
+      offset: -1,
+      result: returnObject
+    };
+  } //endregion
+  //region Getting Uint8Array from ArrayBuffer
 
-	//region Initial checks
-	if (intBuffer.length === 0) {
-		this.error = "Zero buffer length";
-		return {
-			offset: -1,
-			result: returnObject
-		};
-	}
-	//endregion
 
-	//region Decode indentifcation block of ASN.1 BER structure
-	let resultOffset = returnObject.idBlock.fromBER(inputBuffer, inputOffset, inputLength);
-	returnObject.warnings.concat(returnObject.idBlock.warnings);
-	if (resultOffset === -1) {
-		returnObject.error = returnObject.idBlock.error;
-		return {
-			offset: -1,
-			result: returnObject
-		};
-	}
+  const intBuffer = new Uint8Array(inputBuffer, inputOffset, inputLength); //endregion
+  //region Initial checks
 
-	inputOffset = resultOffset;
-	inputLength -= returnObject.idBlock.blockLength;
-	//endregion
+  if (intBuffer.length === 0) {
+    this.error = "Zero buffer length";
+    return {
+      offset: -1,
+      result: returnObject
+    };
+  } //endregion
+  //region Decode indentifcation block of ASN.1 BER structure
 
-	//region Decode length block of ASN.1 BER structure
-	resultOffset = returnObject.lenBlock.fromBER(inputBuffer, inputOffset, inputLength);
-	returnObject.warnings.concat(returnObject.lenBlock.warnings);
-	if (resultOffset === -1) {
-		returnObject.error = returnObject.lenBlock.error;
-		return {
-			offset: -1,
-			result: returnObject
-		};
-	}
 
-	inputOffset = resultOffset;
-	inputLength -= returnObject.lenBlock.blockLength;
-	//endregion
+  let resultOffset = returnObject.idBlock.fromBER(inputBuffer, inputOffset, inputLength);
+  returnObject.warnings.concat(returnObject.idBlock.warnings);
 
-	//region Check for usign indefinite length form in encoding for primitive types
-	if (returnObject.idBlock.isConstructed === false && returnObject.lenBlock.isIndefiniteForm === true) {
-		returnObject.error = "Indefinite length form used for primitive encoding form";
-		return {
-			offset: -1,
-			result: returnObject
-		};
-	}
-	//endregion
+  if (resultOffset === -1) {
+    returnObject.error = returnObject.idBlock.error;
+    return {
+      offset: -1,
+      result: returnObject
+    };
+  }
 
-	//region Switch ASN.1 block type
-	let newASN1Type = BaseBlock;
+  inputOffset = resultOffset;
+  inputLength -= returnObject.idBlock.blockLength; //endregion
+  //region Decode length block of ASN.1 BER structure
 
-	switch (returnObject.idBlock.tagClass) {
-		//region UNIVERSAL
-		case 1:
-			//region Check for reserved tag numbers
-			if (returnObject.idBlock.tagNumber >= 37 && returnObject.idBlock.isHexOnly === false) {
-				returnObject.error = "UNIVERSAL 37 and upper tags are reserved by ASN.1 standard";
-				return {
-					offset: -1,
-					result: returnObject
-				};
-			}
-			//endregion
+  resultOffset = returnObject.lenBlock.fromBER(inputBuffer, inputOffset, inputLength);
+  returnObject.warnings.concat(returnObject.lenBlock.warnings);
 
-			switch (returnObject.idBlock.tagNumber) {
-				//region EndOfContent type
-				case 0:
-					//region Check for EndOfContent type
-					if (returnObject.idBlock.isConstructed === true && returnObject.lenBlock.length > 0) {
-						returnObject.error = "Type [UNIVERSAL 0] is reserved";
-						return {
-							offset: -1,
-							result: returnObject
-						};
-					}
-					//endregion
+  if (resultOffset === -1) {
+    returnObject.error = returnObject.lenBlock.error;
+    return {
+      offset: -1,
+      result: returnObject
+    };
+  }
 
-					newASN1Type = EndOfContent;
+  inputOffset = resultOffset;
+  inputLength -= returnObject.lenBlock.blockLength; //endregion
+  //region Check for usign indefinite length form in encoding for primitive types
 
-					break;
-				//endregion
-				//region Boolean type
-				case 1:
-					newASN1Type = Boolean;
-					break;
-				//endregion
-				//region Integer type
-				case 2:
-					newASN1Type = Integer;
-					break;
-				//endregion
-				//region BitString type
-				case 3:
-					newASN1Type = BitString;
-					break;
-				//endregion
-				//region OctetString type
-				case 4:
-					newASN1Type = OctetString;
-					break;
-				//endregion
-				//region Null type
-				case 5:
-					newASN1Type = Null;
-					break;
-				//endregion
-				//region OBJECT IDENTIFIER type
-				case 6:
-					newASN1Type = ObjectIdentifier;
-					break;
-				//endregion
-				//region Enumerated type
-				case 10:
-					newASN1Type = Enumerated;
-					break;
-				//endregion
-				//region Utf8String type
-				case 12:
-					newASN1Type = Utf8String;
-					break;
-				//endregion
-				//region Time type
-				case 14:
-					newASN1Type = TIME;
-					break;
-				//endregion
-				//region ASN.1 reserved type
-				case 15:
-					returnObject.error = "[UNIVERSAL 15] is reserved by ASN.1 standard";
-					return {
-						offset: -1,
-						result: returnObject
-					};
-				//endregion
-				//region Sequence type
-				case 16:
-					newASN1Type = Sequence;
-					break;
-				//endregion
-				//region Set type
-				case 17:
-					newASN1Type = Set;
-					break;
-				//endregion
-				//region NumericString type
-				case 18:
-					newASN1Type = NumericString;
-					break;
-				//endregion
-				//region PrintableString type
-				case 19:
-					newASN1Type = PrintableString;
-					break;
-				//endregion
-				//region TeletexString type
-				case 20:
-					newASN1Type = TeletexString;
-					break;
-				//endregion
-				//region VideotexString type
-				case 21:
-					newASN1Type = VideotexString;
-					break;
-				//endregion
-				//region IA5String type
-				case 22:
-					newASN1Type = IA5String;
-					break;
-				//endregion
-				//region UTCTime type
-				case 23:
-					newASN1Type = UTCTime;
-					break;
-				//endregion
-				//region GeneralizedTime type
-				case 24:
-					newASN1Type = GeneralizedTime;
-					break;
-				//endregion
-				//region GraphicString type
-				case 25:
-					newASN1Type = GraphicString;
-					break;
-				//endregion
-				//region VisibleString type
-				case 26:
-					newASN1Type = VisibleString;
-					break;
-				//endregion
-				//region GeneralString type
-				case 27:
-					newASN1Type = GeneralString;
-					break;
-				//endregion
-				//region UniversalString type
-				case 28:
-					newASN1Type = UniversalString;
-					break;
-				//endregion
-				//region CharacterString type
-				case 29:
-					newASN1Type = CharacterString;
-					break;
-				//endregion
-				//region BmpString type
-				case 30:
-					newASN1Type = BmpString;
-					break;
-				//endregion
-				//region DATE type
-				case 31:
-					newASN1Type = DATE;
-					break;
-				//endregion
-				//region TimeOfDay type
-				case 32:
-					newASN1Type = TimeOfDay;
-					break;
-				//endregion
-				//region Date-Time type
-				case 33:
-					newASN1Type = DateTime;
-					break;
-				//endregion
-				//region Duration type
-				case 34:
-					newASN1Type = Duration;
-					break;
-				//endregion
-				//region default
-				default:
-					{
-						let newObject;
+  if (returnObject.idBlock.isConstructed === false && returnObject.lenBlock.isIndefiniteForm === true) {
+    returnObject.error = "Indefinite length form used for primitive encoding form";
+    return {
+      offset: -1,
+      result: returnObject
+    };
+  } //endregion
+  //region Switch ASN.1 block type
 
-						if (returnObject.idBlock.isConstructed === true) newObject = new Constructed();else newObject = new Primitive();
 
-						newObject.idBlock = returnObject.idBlock;
-						newObject.lenBlock = returnObject.lenBlock;
-						newObject.warnings = returnObject.warnings;
+  let newASN1Type = BaseBlock;
 
-						returnObject = newObject;
+  switch (returnObject.idBlock.tagClass) {
+    //region UNIVERSAL
+    case 1:
+      //region Check for reserved tag numbers
+      if (returnObject.idBlock.tagNumber >= 37 && returnObject.idBlock.isHexOnly === false) {
+        returnObject.error = "UNIVERSAL 37 and upper tags are reserved by ASN.1 standard";
+        return {
+          offset: -1,
+          result: returnObject
+        };
+      } //endregion
 
-						resultOffset = returnObject.fromBER(inputBuffer, inputOffset, inputLength);
-					}
-				//endregion
-			}
-			break;
-		//endregion
-		//region All other tag classes
-		case 2: // APPLICATION
-		case 3: // CONTEXT-SPECIFIC
-		case 4: // PRIVATE
-		default:
-			{
-				if (returnObject.idBlock.isConstructed === true) newASN1Type = Constructed;else newASN1Type = Primitive;
-			}
-		//endregion
-	}
-	//endregion
 
-	//region Change type and perform BER decoding
-	returnObject = localChangeType(returnObject, newASN1Type);
-	resultOffset = returnObject.fromBER(inputBuffer, inputOffset, returnObject.lenBlock.isIndefiniteForm === true ? inputLength : returnObject.lenBlock.length);
-	//endregion
+      switch (returnObject.idBlock.tagNumber) {
+        //region EndOfContent type
+        case 0:
+          //region Check for EndOfContent type
+          if (returnObject.idBlock.isConstructed === true && returnObject.lenBlock.length > 0) {
+            returnObject.error = "Type [UNIVERSAL 0] is reserved";
+            return {
+              offset: -1,
+              result: returnObject
+            };
+          } //endregion
 
-	//region Coping incoming buffer for entire ASN.1 block
-	returnObject.valueBeforeDecode = inputBuffer.slice(incomingOffset, incomingOffset + returnObject.blockLength);
-	//endregion
 
-	return {
-		offset: resultOffset,
-		result: returnObject
-	};
-}
-//**************************************************************************************
+          newASN1Type = EndOfContent;
+          break;
+        //endregion
+        //region Boolean type
+
+        case 1:
+          newASN1Type = Boolean;
+          break;
+        //endregion
+        //region Integer type
+
+        case 2:
+          newASN1Type = Integer;
+          break;
+        //endregion
+        //region BitString type
+
+        case 3:
+          newASN1Type = BitString;
+          break;
+        //endregion
+        //region OctetString type
+
+        case 4:
+          newASN1Type = OctetString;
+          break;
+        //endregion
+        //region Null type
+
+        case 5:
+          newASN1Type = Null;
+          break;
+        //endregion
+        //region OBJECT IDENTIFIER type
+
+        case 6:
+          newASN1Type = ObjectIdentifier;
+          break;
+        //endregion
+        //region Enumerated type
+
+        case 10:
+          newASN1Type = Enumerated;
+          break;
+        //endregion
+        //region Utf8String type
+
+        case 12:
+          newASN1Type = Utf8String;
+          break;
+        //endregion
+        //region Time type
+        //region RELATIVE OBJECT IDENTIFIER type
+
+        case 13:
+          newASN1Type = RelativeObjectIdentifier;
+          break;
+        //endregion
+
+        case 14:
+          newASN1Type = TIME;
+          break;
+        //endregion
+        //region ASN.1 reserved type
+
+        case 15:
+          returnObject.error = "[UNIVERSAL 15] is reserved by ASN.1 standard";
+          return {
+            offset: -1,
+            result: returnObject
+          };
+        //endregion
+        //region Sequence type
+
+        case 16:
+          newASN1Type = Sequence;
+          break;
+        //endregion
+        //region Set type
+
+        case 17:
+          newASN1Type = Set;
+          break;
+        //endregion
+        //region NumericString type
+
+        case 18:
+          newASN1Type = NumericString;
+          break;
+        //endregion
+        //region PrintableString type
+
+        case 19:
+          newASN1Type = PrintableString;
+          break;
+        //endregion
+        //region TeletexString type
+
+        case 20:
+          newASN1Type = TeletexString;
+          break;
+        //endregion
+        //region VideotexString type
+
+        case 21:
+          newASN1Type = VideotexString;
+          break;
+        //endregion
+        //region IA5String type
+
+        case 22:
+          newASN1Type = IA5String;
+          break;
+        //endregion
+        //region UTCTime type
+
+        case 23:
+          newASN1Type = UTCTime;
+          break;
+        //endregion
+        //region GeneralizedTime type
+
+        case 24:
+          newASN1Type = GeneralizedTime;
+          break;
+        //endregion
+        //region GraphicString type
+
+        case 25:
+          newASN1Type = GraphicString;
+          break;
+        //endregion
+        //region VisibleString type
+
+        case 26:
+          newASN1Type = VisibleString;
+          break;
+        //endregion
+        //region GeneralString type
+
+        case 27:
+          newASN1Type = GeneralString;
+          break;
+        //endregion
+        //region UniversalString type
+
+        case 28:
+          newASN1Type = UniversalString;
+          break;
+        //endregion
+        //region CharacterString type
+
+        case 29:
+          newASN1Type = CharacterString;
+          break;
+        //endregion
+        //region BmpString type
+
+        case 30:
+          newASN1Type = BmpString;
+          break;
+        //endregion
+        //region DATE type
+
+        case 31:
+          newASN1Type = DATE;
+          break;
+        //endregion
+        //region TimeOfDay type
+
+        case 32:
+          newASN1Type = TimeOfDay;
+          break;
+        //endregion
+        //region Date-Time type
+
+        case 33:
+          newASN1Type = DateTime;
+          break;
+        //endregion
+        //region Duration type
+
+        case 34:
+          newASN1Type = Duration;
+          break;
+        //endregion
+        //region default
+
+        default:
+          {
+            let newObject;
+            if (returnObject.idBlock.isConstructed === true) newObject = new Constructed();else newObject = new Primitive();
+            newObject.idBlock = returnObject.idBlock;
+            newObject.lenBlock = returnObject.lenBlock;
+            newObject.warnings = returnObject.warnings;
+            returnObject = newObject;
+            resultOffset = returnObject.fromBER(inputBuffer, inputOffset, inputLength);
+          }
+        //endregion
+      }
+
+      break;
+    //endregion
+    //region All other tag classes
+
+    case 2: // APPLICATION
+
+    case 3: // CONTEXT-SPECIFIC
+
+    case 4: // PRIVATE
+
+    default:
+      {
+        if (returnObject.idBlock.isConstructed === true) newASN1Type = Constructed;else newASN1Type = Primitive;
+      }
+    //endregion
+  } //endregion
+  //region Change type and perform BER decoding
+
+
+  returnObject = localChangeType(returnObject, newASN1Type);
+  resultOffset = returnObject.fromBER(inputBuffer, inputOffset, returnObject.lenBlock.isIndefiniteForm === true ? inputLength : returnObject.lenBlock.length); //endregion
+  //region Coping incoming buffer for entire ASN.1 block
+
+  returnObject.valueBeforeDecode = inputBuffer.slice(incomingOffset, incomingOffset + returnObject.blockLength); //endregion
+
+  return {
+    offset: resultOffset,
+    result: returnObject
+  };
+} //**************************************************************************************
+
 /**
  * Major function for decoding ASN.1 BER array into internal library structuries
  * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array of bytes
  */
+
+
 function fromBER(inputBuffer) {
-	if (inputBuffer.byteLength === 0) {
-		const result = new BaseBlock({}, Object);
-		result.error = "Input buffer has zero length";
+  if (inputBuffer.byteLength === 0) {
+    const result = new BaseBlock({}, Object);
+    result.error = "Input buffer has zero length";
+    return {
+      offset: -1,
+      result
+    };
+  }
 
-		return {
-			offset: -1,
-			result
-		};
-	}
-
-	return LocalFromBER(inputBuffer, 0, inputBuffer.byteLength);
-}
-//**************************************************************************************
+  return LocalFromBER(inputBuffer, 0, inputBuffer.byteLength);
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Major scheme verification function
 //**************************************************************************************
+
 /**
  * Compare of two ASN.1 object trees
  * @param {!Object} root Root of input ASN.1 object tree
@@ -45233,437 +45976,470 @@ function fromBER(inputBuffer) {
  * @param {!Object} inputSchema Input ASN.1 schema to compare with
  * @return {{verified: boolean}|{verified:boolean, result: Object}}
  */
+
+
 function compareSchema(root, inputData, inputSchema) {
-	//region Special case for Choice schema element type
-	if (inputSchema instanceof Choice) {
-		const choiceResult = false;
+  //region Special case for Choice schema element type
+  if (inputSchema instanceof Choice) {
+    const choiceResult = false;
 
-		for (let j = 0; j < inputSchema.value.length; j++) {
-			const result = compareSchema(root, inputData, inputSchema.value[j]);
-			if (result.verified === true) {
-				return {
-					verified: true,
-					result: root
-				};
-			}
-		}
+    for (let j = 0; j < inputSchema.value.length; j++) {
+      const result = compareSchema(root, inputData, inputSchema.value[j]);
 
-		if (choiceResult === false) {
-			const _result = {
-				verified: false,
-				result: {
-					error: "Wrong values for Choice type"
-				}
-			};
+      if (result.verified === true) {
+        return {
+          verified: true,
+          result: root
+        };
+      }
+    }
 
-			if (inputSchema.hasOwnProperty("name")) _result.name = inputSchema.name;
+    if (choiceResult === false) {
+      const _result = {
+        verified: false,
+        result: {
+          error: "Wrong values for Choice type"
+        }
+      };
+      if (inputSchema.hasOwnProperty("name")) _result.name = inputSchema.name;
+      return _result;
+    }
+  } //endregion
+  //region Special case for Any schema element type
 
-			return _result;
-		}
-	}
-	//endregion
 
-	//region Special case for Any schema element type
-	if (inputSchema instanceof Any) {
-		//region Add named component of ASN.1 schema
-		if (inputSchema.hasOwnProperty("name")) root[inputSchema.name] = inputData;
-		//endregion
+  if (inputSchema instanceof Any) {
+    //region Add named component of ASN.1 schema
+    if (inputSchema.hasOwnProperty("name")) root[inputSchema.name] = inputData; //endregion
 
-		return {
-			verified: true,
-			result: root
-		};
-	}
-	//endregion
+    return {
+      verified: true,
+      result: root
+    };
+  } //endregion
+  //region Initial check
 
-	//region Initial check
-	if (root instanceof Object === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong root object" }
-		};
-	}
 
-	if (inputData instanceof Object === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 data" }
-		};
-	}
+  if (root instanceof Object === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong root object"
+      }
+    };
+  }
 
-	if (inputSchema instanceof Object === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
+  if (inputData instanceof Object === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 data"
+      }
+    };
+  }
 
-	if ("idBlock" in inputSchema === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
-	//endregion
+  if (inputSchema instanceof Object === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-	//region Comparing idBlock properties in ASN.1 data and ASN.1 schema
-	//region Encode and decode ASN.1 schema idBlock
-	/// <remarks>This encoding/decoding is neccessary because could be an errors in schema definition</remarks>
-	if ("fromBER" in inputSchema.idBlock === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
+  if ("idBlock" in inputSchema === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  } //endregion
+  //region Comparing idBlock properties in ASN.1 data and ASN.1 schema
+  //region Encode and decode ASN.1 schema idBlock
+  /// <remarks>This encoding/decoding is neccessary because could be an errors in schema definition</remarks>
 
-	if ("toBER" in inputSchema.idBlock === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
 
-	const encodedId = inputSchema.idBlock.toBER(false);
-	if (encodedId.byteLength === 0) {
-		return {
-			verified: false,
-			result: { error: "Error encoding idBlock for ASN.1 schema" }
-		};
-	}
+  if ("fromBER" in inputSchema.idBlock === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-	const decodedOffset = inputSchema.idBlock.fromBER(encodedId, 0, encodedId.byteLength);
-	if (decodedOffset === -1) {
-		return {
-			verified: false,
-			result: { error: "Error decoding idBlock for ASN.1 schema" }
-		};
-	}
-	//endregion
+  if ("toBER" in inputSchema.idBlock === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-	//region tagClass
-	if (inputSchema.idBlock.hasOwnProperty("tagClass") === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
+  const encodedId = inputSchema.idBlock.toBER(false);
 
-	if (inputSchema.idBlock.tagClass !== inputData.idBlock.tagClass) {
-		return {
-			verified: false,
-			result: root
-		};
-	}
-	//endregion
-	//region tagNumber
-	if (inputSchema.idBlock.hasOwnProperty("tagNumber") === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
+  if (encodedId.byteLength === 0) {
+    return {
+      verified: false,
+      result: {
+        error: "Error encoding idBlock for ASN.1 schema"
+      }
+    };
+  }
 
-	if (inputSchema.idBlock.tagNumber !== inputData.idBlock.tagNumber) {
-		return {
-			verified: false,
-			result: root
-		};
-	}
-	//endregion
-	//region isConstructed
-	if (inputSchema.idBlock.hasOwnProperty("isConstructed") === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema" }
-		};
-	}
+  const decodedOffset = inputSchema.idBlock.fromBER(encodedId, 0, encodedId.byteLength);
 
-	if (inputSchema.idBlock.isConstructed !== inputData.idBlock.isConstructed) {
-		return {
-			verified: false,
-			result: root
-		};
-	}
-	//endregion
-	//region isHexOnly
-	if ("isHexOnly" in inputSchema.idBlock === false) // Since 'isHexOnly' is an inhirited property
-		{
-			return {
-				verified: false,
-				result: { error: "Wrong ASN.1 schema" }
-			};
-		}
+  if (decodedOffset === -1) {
+    return {
+      verified: false,
+      result: {
+        error: "Error decoding idBlock for ASN.1 schema"
+      }
+    };
+  } //endregion
+  //region tagClass
 
-	if (inputSchema.idBlock.isHexOnly !== inputData.idBlock.isHexOnly) {
-		return {
-			verified: false,
-			result: root
-		};
-	}
-	//endregion
-	//region valueHex
-	if (inputSchema.idBlock.isHexOnly === true) {
-		if ("valueHex" in inputSchema.idBlock === false) // Since 'valueHex' is an inhirited property
-			{
-				return {
-					verified: false,
-					result: { error: "Wrong ASN.1 schema" }
-				};
-			}
 
-		const schemaView = new Uint8Array(inputSchema.idBlock.valueHex);
-		const asn1View = new Uint8Array(inputData.idBlock.valueHex);
+  if (inputSchema.idBlock.hasOwnProperty("tagClass") === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-		if (schemaView.length !== asn1View.length) {
-			return {
-				verified: false,
-				result: root
-			};
-		}
+  if (inputSchema.idBlock.tagClass !== inputData.idBlock.tagClass) {
+    return {
+      verified: false,
+      result: root
+    };
+  } //endregion
+  //region tagNumber
 
-		for (let i = 0; i < schemaView.length; i++) {
-			if (schemaView[i] !== asn1View[1]) {
-				return {
-					verified: false,
-					result: root
-				};
-			}
-		}
-	}
-	//endregion
-	//endregion
 
-	//region Add named component of ASN.1 schema
-	if (inputSchema.hasOwnProperty("name")) {
-		inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-		if (inputSchema.name !== "") root[inputSchema.name] = inputData;
-	}
-	//endregion
+  if (inputSchema.idBlock.hasOwnProperty("tagNumber") === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-	//region Getting next ASN.1 block for comparition
-	if (inputSchema.idBlock.isConstructed === true) {
-		let admission = 0;
-		let result = { verified: false };
+  if (inputSchema.idBlock.tagNumber !== inputData.idBlock.tagNumber) {
+    return {
+      verified: false,
+      result: root
+    };
+  } //endregion
+  //region isConstructed
 
-		let maxLength = inputSchema.valueBlock.value.length;
 
-		if (maxLength > 0) {
-			if (inputSchema.valueBlock.value[0] instanceof Repeated) maxLength = inputData.valueBlock.value.length;
-		}
+  if (inputSchema.idBlock.hasOwnProperty("isConstructed") === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema"
+      }
+    };
+  }
 
-		//region Special case when constructive value has no elements
-		if (maxLength === 0) {
-			return {
-				verified: true,
-				result: root
-			};
-		}
-		//endregion
+  if (inputSchema.idBlock.isConstructed !== inputData.idBlock.isConstructed) {
+    return {
+      verified: false,
+      result: root
+    };
+  } //endregion
+  //region isHexOnly
 
-		//region Special case when "inputData" has no values and "inputSchema" has all optional values
-		if (inputData.valueBlock.value.length === 0 && inputSchema.valueBlock.value.length !== 0) {
-			let _optional = true;
 
-			for (let i = 0; i < inputSchema.valueBlock.value.length; i++) _optional = _optional && (inputSchema.valueBlock.value[i].optional || false);
+  if ("isHexOnly" in inputSchema.idBlock === false) // Since 'isHexOnly' is an inhirited property
+    {
+      return {
+        verified: false,
+        result: {
+          error: "Wrong ASN.1 schema"
+        }
+      };
+    }
 
-			if (_optional === true) {
-				return {
-					verified: true,
-					result: root
-				};
-			}
+  if (inputSchema.idBlock.isHexOnly !== inputData.idBlock.isHexOnly) {
+    return {
+      verified: false,
+      result: root
+    };
+  } //endregion
+  //region valueHex
 
-			//region Delete early added name of block
-			if (inputSchema.hasOwnProperty("name")) {
-				inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-				if (inputSchema.name !== "") delete root[inputSchema.name];
-			}
-			//endregion
 
-			root.error = "Inconsistent object length";
+  if (inputSchema.idBlock.isHexOnly === true) {
+    if ("valueHex" in inputSchema.idBlock === false) // Since 'valueHex' is an inhirited property
+      {
+        return {
+          verified: false,
+          result: {
+            error: "Wrong ASN.1 schema"
+          }
+        };
+      }
 
-			return {
-				verified: false,
-				result: root
-			};
-		}
-		//endregion
+    const schemaView = new Uint8Array(inputSchema.idBlock.valueHex);
+    const asn1View = new Uint8Array(inputData.idBlock.valueHex);
 
-		for (let i = 0; i < maxLength; i++) {
-			//region Special case when there is an "optional" element of ASN.1 schema at the end
-			if (i - admission >= inputData.valueBlock.value.length) {
-				if (inputSchema.valueBlock.value[i].optional === false) {
-					const _result = {
-						verified: false,
-						result: root
-					};
+    if (schemaView.length !== asn1View.length) {
+      return {
+        verified: false,
+        result: root
+      };
+    }
 
-					root.error = "Inconsistent length between ASN.1 data and schema";
+    for (let i = 0; i < schemaView.length; i++) {
+      if (schemaView[i] !== asn1View[1]) {
+        return {
+          verified: false,
+          result: root
+        };
+      }
+    }
+  } //endregion
+  //endregion
+  //region Add named component of ASN.1 schema
 
-					//region Delete early added name of block
-					if (inputSchema.hasOwnProperty("name")) {
-						inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-						if (inputSchema.name !== "") {
-							delete root[inputSchema.name];
-							_result.name = inputSchema.name;
-						}
-					}
-					//endregion
 
-					return _result;
-				}
-			}
-			//endregion
-			else {
-					//region Special case for Repeated type of ASN.1 schema element
-					if (inputSchema.valueBlock.value[0] instanceof Repeated) {
-						result = compareSchema(root, inputData.valueBlock.value[i], inputSchema.valueBlock.value[0].value);
-						if (result.verified === false) {
-							if (inputSchema.valueBlock.value[0].optional === true) admission++;else {
-								//region Delete early added name of block
-								if (inputSchema.hasOwnProperty("name")) {
-									inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-									if (inputSchema.name !== "") delete root[inputSchema.name];
-								}
-								//endregion
+  if (inputSchema.hasOwnProperty("name")) {
+    inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+    if (inputSchema.name !== "") root[inputSchema.name] = inputData;
+  } //endregion
+  //region Getting next ASN.1 block for comparition
 
-								return result;
-							}
-						}
 
-						if ("name" in inputSchema.valueBlock.value[0] && inputSchema.valueBlock.value[0].name.length > 0) {
-							let arrayRoot = {};
+  if (inputSchema.idBlock.isConstructed === true) {
+    let admission = 0;
+    let result = {
+      verified: false
+    };
+    let maxLength = inputSchema.valueBlock.value.length;
 
-							if ("local" in inputSchema.valueBlock.value[0] && inputSchema.valueBlock.value[0].local === true) arrayRoot = inputData;else arrayRoot = root;
+    if (maxLength > 0) {
+      if (inputSchema.valueBlock.value[0] instanceof Repeated) maxLength = inputData.valueBlock.value.length;
+    } //region Special case when constructive value has no elements
 
-							if (typeof arrayRoot[inputSchema.valueBlock.value[0].name] === "undefined") arrayRoot[inputSchema.valueBlock.value[0].name] = [];
 
-							arrayRoot[inputSchema.valueBlock.value[0].name].push(inputData.valueBlock.value[i]);
-						}
-					}
-					//endregion
-					else {
-							result = compareSchema(root, inputData.valueBlock.value[i - admission], inputSchema.valueBlock.value[i]);
-							if (result.verified === false) {
-								if (inputSchema.valueBlock.value[i].optional === true) admission++;else {
-									//region Delete early added name of block
-									if (inputSchema.hasOwnProperty("name")) {
-										inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-										if (inputSchema.name !== "") delete root[inputSchema.name];
-									}
-									//endregion
+    if (maxLength === 0) {
+      return {
+        verified: true,
+        result: root
+      };
+    } //endregion
+    //region Special case when "inputData" has no values and "inputSchema" has all optional values
 
-									return result;
-								}
-							}
-						}
-				}
-		}
 
-		if (result.verified === false) // The situation may take place if last element is "optional" and verification failed
-			{
-				const _result = {
-					verified: false,
-					result: root
-				};
+    if (inputData.valueBlock.value.length === 0 && inputSchema.valueBlock.value.length !== 0) {
+      let _optional = true;
 
-				//region Delete early added name of block
-				if (inputSchema.hasOwnProperty("name")) {
-					inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-					if (inputSchema.name !== "") {
-						delete root[inputSchema.name];
-						_result.name = inputSchema.name;
-					}
-				}
-				//endregion
+      for (let i = 0; i < inputSchema.valueBlock.value.length; i++) _optional = _optional && (inputSchema.valueBlock.value[i].optional || false);
 
-				return _result;
-			}
+      if (_optional === true) {
+        return {
+          verified: true,
+          result: root
+        };
+      } //region Delete early added name of block
 
-		return {
-			verified: true,
-			result: root
-		};
-	}
-	//endregion
-	//region Ability to parse internal value for primitive-encoded value (value of OctetString, for example)
-	if ("primitiveSchema" in inputSchema && "valueHex" in inputData.valueBlock) {
-		//region Decoding of raw ASN.1 data
-		const asn1 = fromBER(inputData.valueBlock.valueHex);
-		if (asn1.offset === -1) {
-			const _result = {
-				verified: false,
-				result: asn1.result
-			};
 
-			//region Delete early added name of block
-			if (inputSchema.hasOwnProperty("name")) {
-				inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
-				if (inputSchema.name !== "") {
-					delete root[inputSchema.name];
-					_result.name = inputSchema.name;
-				}
-			}
-			//endregion
+      if (inputSchema.hasOwnProperty("name")) {
+        inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+        if (inputSchema.name !== "") delete root[inputSchema.name];
+      } //endregion
 
-			return _result;
-		}
-		//endregion
 
-		return compareSchema(root, asn1.result, inputSchema.primitiveSchema);
-	}
+      root.error = "Inconsistent object length";
+      return {
+        verified: false,
+        result: root
+      };
+    } //endregion
 
-	return {
-		verified: true,
-		result: root
-	};
-	//endregion
-}
-//**************************************************************************************
+
+    for (let i = 0; i < maxLength; i++) {
+      //region Special case when there is an "optional" element of ASN.1 schema at the end
+      if (i - admission >= inputData.valueBlock.value.length) {
+        if (inputSchema.valueBlock.value[i].optional === false) {
+          const _result = {
+            verified: false,
+            result: root
+          };
+          root.error = "Inconsistent length between ASN.1 data and schema"; //region Delete early added name of block
+
+          if (inputSchema.hasOwnProperty("name")) {
+            inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+
+            if (inputSchema.name !== "") {
+              delete root[inputSchema.name];
+              _result.name = inputSchema.name;
+            }
+          } //endregion
+
+
+          return _result;
+        }
+      } //endregion
+      else {
+          //region Special case for Repeated type of ASN.1 schema element
+          if (inputSchema.valueBlock.value[0] instanceof Repeated) {
+            result = compareSchema(root, inputData.valueBlock.value[i], inputSchema.valueBlock.value[0].value);
+
+            if (result.verified === false) {
+              if (inputSchema.valueBlock.value[0].optional === true) admission++;else {
+                //region Delete early added name of block
+                if (inputSchema.hasOwnProperty("name")) {
+                  inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+                  if (inputSchema.name !== "") delete root[inputSchema.name];
+                } //endregion
+
+
+                return result;
+              }
+            }
+
+            if ("name" in inputSchema.valueBlock.value[0] && inputSchema.valueBlock.value[0].name.length > 0) {
+              let arrayRoot = {};
+              if ("local" in inputSchema.valueBlock.value[0] && inputSchema.valueBlock.value[0].local === true) arrayRoot = inputData;else arrayRoot = root;
+              if (typeof arrayRoot[inputSchema.valueBlock.value[0].name] === "undefined") arrayRoot[inputSchema.valueBlock.value[0].name] = [];
+              arrayRoot[inputSchema.valueBlock.value[0].name].push(inputData.valueBlock.value[i]);
+            }
+          } //endregion
+          else {
+              result = compareSchema(root, inputData.valueBlock.value[i - admission], inputSchema.valueBlock.value[i]);
+
+              if (result.verified === false) {
+                if (inputSchema.valueBlock.value[i].optional === true) admission++;else {
+                  //region Delete early added name of block
+                  if (inputSchema.hasOwnProperty("name")) {
+                    inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+                    if (inputSchema.name !== "") delete root[inputSchema.name];
+                  } //endregion
+
+
+                  return result;
+                }
+              }
+            }
+        }
+    }
+
+    if (result.verified === false) // The situation may take place if last element is "optional" and verification failed
+      {
+        const _result = {
+          verified: false,
+          result: root
+        }; //region Delete early added name of block
+
+        if (inputSchema.hasOwnProperty("name")) {
+          inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+
+          if (inputSchema.name !== "") {
+            delete root[inputSchema.name];
+            _result.name = inputSchema.name;
+          }
+        } //endregion
+
+
+        return _result;
+      }
+
+    return {
+      verified: true,
+      result: root
+    };
+  } //endregion
+  //region Ability to parse internal value for primitive-encoded value (value of OctetString, for example)
+
+
+  if ("primitiveSchema" in inputSchema && "valueHex" in inputData.valueBlock) {
+    //region Decoding of raw ASN.1 data
+    const asn1 = fromBER(inputData.valueBlock.valueHex);
+
+    if (asn1.offset === -1) {
+      const _result = {
+        verified: false,
+        result: asn1.result
+      }; //region Delete early added name of block
+
+      if (inputSchema.hasOwnProperty("name")) {
+        inputSchema.name = inputSchema.name.replace(/^\s+|\s+$/g, "");
+
+        if (inputSchema.name !== "") {
+          delete root[inputSchema.name];
+          _result.name = inputSchema.name;
+        }
+      } //endregion
+
+
+      return _result;
+    } //endregion
+
+
+    return compareSchema(root, asn1.result, inputSchema.primitiveSchema);
+  }
+
+  return {
+    verified: true,
+    result: root
+  }; //endregion
+} //**************************************************************************************
 //noinspection JSUnusedGlobalSymbols
+
 /**
  * ASN.1 schema verification for ArrayBuffer data
  * @param {!ArrayBuffer} inputBuffer Input BER-encoded ASN.1 data
  * @param {!Object} inputSchema Input ASN.1 schema to verify against to
  * @return {{verified: boolean}|{verified:boolean, result: Object}}
  */
+
+
 function verifySchema(inputBuffer, inputSchema) {
-	//region Initial check
-	if (inputSchema instanceof Object === false) {
-		return {
-			verified: false,
-			result: { error: "Wrong ASN.1 schema type" }
-		};
-	}
-	//endregion
+  //region Initial check
+  if (inputSchema instanceof Object === false) {
+    return {
+      verified: false,
+      result: {
+        error: "Wrong ASN.1 schema type"
+      }
+    };
+  } //endregion
+  //region Decoding of raw ASN.1 data
 
-	//region Decoding of raw ASN.1 data
-	const asn1 = fromBER(inputBuffer);
-	if (asn1.offset === -1) {
-		return {
-			verified: false,
-			result: asn1.result
-		};
-	}
-	//endregion
 
-	//region Compare ASN.1 struct with input schema
-	return compareSchema(asn1.result, asn1.result, inputSchema);
-	//endregion
-}
-//**************************************************************************************
+  const asn1 = fromBER(inputBuffer);
+
+  if (asn1.offset === -1) {
+    return {
+      verified: false,
+      result: asn1.result
+    };
+  } //endregion
+  //region Compare ASN.1 struct with input schema
+
+
+  return compareSchema(asn1.result, asn1.result, inputSchema); //endregion
+} //**************************************************************************************
 //endregion
 //**************************************************************************************
 //region Major function converting JSON to ASN.1 objects
 //**************************************************************************************
 //noinspection JSUnusedGlobalSymbols
+
 /**
  * Converting from JSON to ASN.1 objects
  * @param {string|Object} json JSON string or object to convert to ASN.1 objects
  */
-function fromJSON(json) {}
-// TODO Implement
 
+
+function fromJSON(json) {} // TODO Implement
 //**************************************************************************************
 //endregion
 //**************************************************************************************
@@ -46638,7 +47414,7 @@ process.umask = function() { return 0; };
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const pkijs = require("pkijs"); // version 2.1.78
- 
+
 module.exports = {
   pkijs,
 };
