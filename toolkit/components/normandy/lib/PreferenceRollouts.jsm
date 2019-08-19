@@ -68,13 +68,13 @@ var EXPORTED_SYMBOLS = ["PreferenceRollouts"];
 const STARTUP_PREFS_BRANCH = "app.normandy.startupRolloutPrefs.";
 const DB_NAME = "normandy-preference-rollout";
 const STORE_NAME = "preference-rollouts";
-const DB_OPTIONS = { version: 1 };
+const DB_VERSION = 1;
 
 /**
  * Create a new connection to the database.
  */
 function openDatabase() {
-  return IndexedDB.open(DB_NAME, DB_OPTIONS, db => {
+  return IndexedDB.open(DB_NAME, DB_VERSION, db => {
     db.createObjectStore(STORE_NAME, {
       keyPath: "slug",
     });
