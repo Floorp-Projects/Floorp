@@ -1557,8 +1557,10 @@ var gPrivacyPane = {
           continue;
         }
 
-        if (tab.pinned || !otherGBrowser.discardBrowser(tab)) {
+        if (tab.pinned || tab.selected) {
           otherGBrowser.reloadTab(tab);
+        } else {
+          otherGBrowser.discardBrowser(tab);
         }
       }
     });
