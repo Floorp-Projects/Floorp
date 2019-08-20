@@ -157,9 +157,9 @@ static int32_t UTCToLocalStandardOffsetSeconds() {
   return local_secs - (utc_secs + SecondsPerDay);
 }
 
-void js::DateTimeInfo::internalResetTimeZoneAdjustment(ResetTimeZoneMode mode) {
+void js::DateTimeInfo::internalResetTimeZone(ResetTimeZoneMode mode) {
   // Nothing to do when an update request is already enqueued.
-  if (localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
+  if (timeZoneStatus_ == TimeZoneStatus::NeedsUpdate) {
     return;
   }
 
@@ -168,19 +168,18 @@ void js::DateTimeInfo::internalResetTimeZoneAdjustment(ResetTimeZoneMode mode) {
   // is beneficial when this method is called during start-up, because it avoids
   // main-thread I/O blocking the process.
   if (mode == ResetTimeZoneMode::ResetEvenIfOffsetUnchanged) {
-    localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
+    timeZoneStatus_ = TimeZoneStatus::NeedsUpdate;
   } else {
-    localTZAStatus_ = LocalTimeZoneAdjustmentStatus::UpdateIfChanged;
+    timeZoneStatus_ = TimeZoneStatus::UpdateIfChanged;
   }
 }
 
-void js::DateTimeInfo::updateTimeZoneAdjustment() {
-  MOZ_ASSERT(localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid);
+void js::DateTimeInfo::updateTimeZone() {
+  MOZ_ASSERT(timeZoneStatus_ != TimeZoneStatus::Valid);
 
-  bool updateIfChanged =
-      localTZAStatus_ == LocalTimeZoneAdjustmentStatus::UpdateIfChanged;
+  bool updateIfChanged = timeZoneStatus_ == TimeZoneStatus::UpdateIfChanged;
 
-  localTZAStatus_ = LocalTimeZoneAdjustmentStatus::Valid;
+  timeZoneStatus_ = TimeZoneStatus::Valid;
 
   /*
    * The difference between local standard time and UTC will never change for
@@ -227,7 +226,7 @@ js::DateTimeInfo::DateTimeInfo() {
   // defaults on first access. We don't yet want to initialize neither <ctime>
   // nor ICU's time zone classes, because that may cause I/O operations slowing
   // down the JS engine initialization, which we're currently in the middle of.
-  localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
+  timeZoneStatus_ = TimeZoneStatus::NeedsUpdate;
 }
 
 js::DateTimeInfo::~DateTimeInfo() = default;
@@ -533,7 +532,7 @@ void js::FinishDateTimeState() {
 }
 
 void js::ResetTimeZoneInternal(ResetTimeZoneMode mode) {
-  js::DateTimeInfo::resetTimeZoneAdjustment(mode);
+  js::DateTimeInfo::resetTimeZone(mode);
 }
 
 JS_PUBLIC_API void JS::ResetTimeZone() {

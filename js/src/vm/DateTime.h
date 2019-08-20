@@ -134,8 +134,8 @@ class DateTimeInfo {
 
   static auto acquireLockWithValidTimeZone() {
     auto guard = instance->lock();
-    if (guard->localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid) {
-      guard->updateTimeZoneAdjustment();
+    if (guard->timeZoneStatus_ != TimeZoneStatus::Valid) {
+      guard->updateTimeZone();
     }
     return guard;
   }
@@ -198,9 +198,9 @@ class DateTimeInfo {
   friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
   friend void js::ResyncICUDefaultTimeZone();
 
-  static void resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
+  static void resetTimeZone(ResetTimeZoneMode mode) {
     auto guard = instance->lock();
-    guard->internalResetTimeZoneAdjustment(mode);
+    guard->internalResetTimeZone(mode);
   }
 
   static void resyncICUDefaultTimeZone() {
@@ -223,13 +223,9 @@ class DateTimeInfo {
     void sanityCheck();
   };
 
-  enum class LocalTimeZoneAdjustmentStatus : uint8_t {
-    Valid,
-    NeedsUpdate,
-    UpdateIfChanged
-  };
+  enum class TimeZoneStatus : uint8_t { Valid, NeedsUpdate, UpdateIfChanged };
 
-  LocalTimeZoneAdjustmentStatus localTZAStatus_;
+  TimeZoneStatus timeZoneStatus_;
 
   /*
    * The current local time zone adjustment, cached because retrieving this
@@ -292,9 +288,9 @@ class DateTimeInfo {
 
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
-  void internalResetTimeZoneAdjustment(ResetTimeZoneMode mode);
+  void internalResetTimeZone(ResetTimeZoneMode mode);
 
-  void updateTimeZoneAdjustment();
+  void updateTimeZone();
 
   void internalResyncICUDefaultTimeZone();
 
