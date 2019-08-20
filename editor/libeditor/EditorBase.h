@@ -97,6 +97,7 @@ class CreateNodeResultBase;
 typedef CreateNodeResultBase<dom::Element> CreateElementResult;
 
 namespace dom {
+class AbstractRange;
 class DataTransfer;
 class DragEvent;
 class Element;
@@ -620,6 +621,9 @@ class EditorBase : public nsIEditor,
     // the range while we're changing the DOM tree.
     RefPtr<RangeItem> mSelectedRange;
 
+    // Computing changed range while we're handling sub actions.
+    RefPtr<nsRange> mChangedRange;
+
     // XXX In strict speaking, mCachedInlineStyles isn't enough to cache inline
     //     styles because inline style can be specified with "style" attribute
     //     and/or CSS in <style> elements or CSS files.  So, we need to look
@@ -662,6 +666,7 @@ class EditorBase : public nsIEditor,
       }
       mNewBlockElement = nullptr;
       mSelectedRange->Clear();
+      mChangedRange->Reset();
       mCachedInlineStyles.Clear();
       mDidDeleteSelection = false;
       mDidDeleteNonCollapsedRange = false;
@@ -1930,11 +1935,9 @@ class EditorBase : public nsIEditor,
     mAllowsTransactionsToChangeSelection = aAllow;
   }
 
-  nsresult HandleInlineSpellCheck(nsINode* previousSelectedNode,
-                                  uint32_t previousSelectedOffset,
-                                  nsINode* aStartContainer,
-                                  uint32_t aStartOffset, nsINode* aEndContainer,
-                                  uint32_t aEndOffset);
+  nsresult HandleInlineSpellCheck(
+      const EditorDOMPoint& aPreviouslySelectedStart,
+      const dom::AbstractRange* aRange = nullptr);
 
   /**
    * Likewise, but gets the editor's root instead, which is different for HTML
