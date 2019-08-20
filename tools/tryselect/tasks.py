@@ -140,14 +140,23 @@ def resolve_tests_by_suite(paths):
 
     suite_to_tests = defaultdict(list)
 
+    # A dictionary containing all the input paths that we haven't yet
+    # assigned to a specific test flavor.
+    remaining_paths_by_suite = defaultdict(lambda: set(paths))
+
     for test in run_tests:
         key, _ = get_suite_definition(test['flavor'], test.get('subsuite'), strict=True)
 
-        # Passing test files will ignore mochitest manifest conditions (see bug 1541424).
-        if test.get('dir_relpath') in paths and test['dir_relpath'] not in suite_to_tests[key]:
-            suite_to_tests[key].append(test['dir_relpath'])
-        elif (test.get('srcdir_relpath') in paths and
-              test['srcdir_relpath'] not in suite_to_tests[key]):
-            suite_to_tests[key].append(test['srcdir_relpath'])
+        test_path = test.get('srcdir_relpath')
+        if test_path is None:
+            continue
+        found_path = None
+        for path in remaining_paths_by_suite[key]:
+            if test_path.startswith(path):
+                found_path = path
+                break
+        if found_path:
+            suite_to_tests[key].append(found_path)
+            remaining_paths_by_suite[key].remove(found_path)
 
     return suite_to_tests
