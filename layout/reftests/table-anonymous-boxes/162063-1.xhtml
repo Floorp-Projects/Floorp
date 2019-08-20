@@ -5,7 +5,7 @@
 /* <![CDATA[ */
 function boom()
 {
-  var numTest = 17;
+  var numTest = 16;
   for (i = 1; i<= numTest; i++) {
     var target = "target" + i; 
     var q = document.getElementById(target);
@@ -71,23 +71,8 @@ window.addEventListener("MozReftestInvalidate", boom);
  <div id="target10" style="display:-moz-popup">target</div>
  </div>
  
- <div style="display:table; border-spacing:10px; background-color:Maroon">
-     <math xmlns="http://www.w3.org/1998/Math/MathML" id="target11">
-        <msup>
-          <mfenced>
-            <mrow>
-              <mi>a</mi>
-              <mo>+</mo>
-              <mi>b</mi>
-            </mrow>
-          </mfenced>
-          <mn>2</mn>
-        </msup>
-    </math>
- </div>
- 
  <div style="display:table; border-spacing:10px; background-color:SkyBlue ">
-  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" id="target12">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" id="target11">
       <circle cx="150" cy="100" r="50" />
     </svg>
 </div>
@@ -95,30 +80,30 @@ window.addEventListener("MozReftestInvalidate", boom);
  
  <div style="display:table; border-spacing:10px; background-color:Peru">
   <div style="display:table-row;">
-  <div id="target13" style="display:table-row-group; overflow:scroll">target</div>
+  <div id="target12" style="display:table-row-group; overflow:scroll">target</div>
   </div>
 </div>
  
  <div style="display:table; border-spacing:10px; background-color:Tomato">
   <div style="display:table-row;">
-  <input type="button" value="OK" id="target14"></input>
+  <input type="button" value="OK" id="target13"></input>
   </div>
 </div>
  
  <div style="display:table; border-spacing:10px; background-color:DarkSeaGreen ">
   <div style="display:table-row;">
-   <div id="target15" style="display:table-column;"/>
+   <div id="target14" style="display:table-column;"/>
   </div>
 </div>
 
 <div style="display:table; border-spacing:10px; background-color:MistyRose">
   <div style="display:table-row;">
-   <div id="target16" style="display:table-column-group;"/>
+   <div id="target15" style="display:table-column-group;"/>
   </div>
 </div>
 
 <div style="display:table; border-spacing:10px; background-color:Indigo">
- <div id="target17" style="display:-moz-box">target</div>
+ <div id="target16" style="display:-moz-box">target</div>
  </div>
 </body>
 </html>
