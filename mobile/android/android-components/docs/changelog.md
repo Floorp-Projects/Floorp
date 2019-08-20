@@ -15,6 +15,14 @@ permalink: /changelog/
 * **feature-toolbar**
   *  ⚠️ **This is a breaking change**: The `feature-toolbar` component has been migrated to `browser-state` from `browser-session`. Therefore creating a `ToolbarFeature` requires a `BrowserStore` instance instead of a `SessionManager` instance now.
 
+* **lib-crash**
+  * Now supports Breadcrumbs.  Use the 'recordCrashBreadcrumb()' to record Breadcrumbs if the underlying crash reporter service supports it.
+  ```Kotlin
+  crashReporter.recordCrashBreadcrumb(
+      CrashBreadcrumb("Settings button clicked", data, "UI", Level.INFO, Type.USER)
+  )
+  ```
+
 # 11.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v10.0.0...v11.0.0)

@@ -9,7 +9,6 @@ import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
-import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -38,7 +37,7 @@ class SendCrashReportServiceTest {
 
     @Test
     fun `CrashRHandlerService will forward same crash to crash reporter`() {
-        spy(CrashReporter(
+        val crashReporter = spy(CrashReporter(
                 shouldPrompt = CrashReporter.Prompt.ALWAYS,
                 services = listOf(object : CrashReporterService {
                     override fun report(crash: Crash.UncaughtExceptionCrash) {
@@ -52,7 +51,8 @@ class SendCrashReportServiceTest {
                 "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp",
                 true,
                 "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
-                false
+                false,
+                arrayListOf()
         )
 
         val intent = Intent("org.mozilla.gecko.ACTION_CRASHED")
@@ -70,9 +70,10 @@ class SendCrashReportServiceTest {
                 "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra"
         )
         intent.putExtra("minidumpSuccess", true)
+        intent.putParcelableArrayListExtra("breadcrumbs", null)
         originalCrash.fillIn(intent)
 
         service?.onStartCommand(intent, 0, 0)
-        verify(service)?.sendCrashReport(eq(originalCrash), any())
+        verify(crashReporter).submitReport(eq(originalCrash))
     }
 }

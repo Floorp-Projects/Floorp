@@ -28,11 +28,6 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 class SendCrashReportService : Service() {
     private val crashReporter: CrashReporter by lazy { CrashReporter.requireInstance }
-    private val logger by lazy { CrashReporter
-            .requireInstance
-            .logger
-    }
-
     private var reporterCoroutineContext: CoroutineContext = EmptyCoroutineContext
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -52,14 +47,9 @@ class SendCrashReportService : Service() {
             startForeground(notificationId, notification)
         }
 
-        intent.extras?.let { extras ->
-            val crash = Crash.NativeCodeCrash.fromBundle(extras)
-            NotificationManagerCompat.from(this).cancel(this, NOTIFICATION_TAG)
-
-            sendCrashReport(crash) {
-                stopSelf()
-            }
-        } ?: logger.error("Received intent with null extras")
+        NotificationManagerCompat.from(this).cancel(this, NOTIFICATION_TAG)
+        crashReporter.submitReport(Crash.fromIntent(intent))
+        stopSelf()
 
         return START_NOT_STICKY
     }

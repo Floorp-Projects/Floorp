@@ -7,8 +7,11 @@ package mozilla.components.lib.crash.service
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
+import io.sentry.context.Context
 import io.sentry.dsn.Dsn
 import mozilla.components.lib.crash.Crash
+import mozilla.components.lib.crash.Breadcrumb
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -20,6 +23,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class SentryServiceTest {
@@ -71,7 +76,7 @@ class SentryServiceTest {
             clientFactory = factory)
 
         val exception = RuntimeException("Hello World")
-        service.report(Crash.UncaughtExceptionCrash(exception))
+        service.report(Crash.UncaughtExceptionCrash(exception, arrayListOf()))
 
         verify(client).sendException(exception)
     }
@@ -88,7 +93,7 @@ class SentryServiceTest {
             },
             sendEventForNativeCrashes = true)
 
-        service.report(Crash.NativeCodeCrash("", true, "", false))
+        service.report(Crash.NativeCodeCrash("", true, "", false, arrayListOf()))
 
         verify(client).sendMessage(any())
     }
@@ -104,7 +109,7 @@ class SentryServiceTest {
                 override fun createSentryClient(dsn: Dsn?): SentryClient = client
             })
 
-        service.report(Crash.NativeCodeCrash("", true, "", false))
+        service.report(Crash.NativeCodeCrash("", true, "", false, arrayListOf()))
 
         verify(client, never()).sendMessage(any())
     }
@@ -144,5 +149,49 @@ class SentryServiceTest {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
                 })
         verify(client).environment = null
+    }
+
+    @Test
+    fun `SentryService records breadcrumb when CrashReporterService report is called`() {
+        val client: SentryClient = mock()
+        val clientContext: Context = mock()
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
+
+        val factory = object : SentryClientFactory() {
+            override fun createSentryClient(dsn: Dsn?): SentryClient {
+                return client
+            }
+        }
+
+        val service = SentryService(
+                testContext,
+                "https://not:real6@sentry.prod.example.net/405",
+                clientFactory = factory,
+                sendEventForNativeCrashes = true
+                )
+
+        val reporter = spy(CrashReporter(
+                services = listOf(service),
+                shouldPrompt = CrashReporter.Prompt.NEVER
+        ).install(testContext))
+
+        `when`(client.context).thenReturn(clientContext)
+
+        reporter.recordCrashBreadcrumb(
+                Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+        )
+        val nativeCrash = Crash.NativeCodeCrash(
+                "dump.path",
+                true,
+                "extras.path",
+                isFatal = false,
+                breadcrumbs = reporter.crashBreadcrumbs)
+
+        service.report(nativeCrash)
+        verify(clientContext).recordBreadcrumb(any())
     }
 }

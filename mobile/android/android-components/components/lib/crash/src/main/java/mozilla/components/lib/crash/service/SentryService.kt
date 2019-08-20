@@ -6,9 +6,12 @@ package mozilla.components.lib.crash.service
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.android.AndroidSentryClientFactory
+import io.sentry.event.Breadcrumb
+import io.sentry.event.BreadcrumbBuilder
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 
@@ -49,13 +52,47 @@ class SentryService(
     }
 
     override fun report(crash: Crash.UncaughtExceptionCrash) {
+        crash.breadcrumbs.forEach {
+            client.context.recordBreadcrumb(it.toSentryBreadcrumb())
+        }
         client.sendException(crash.throwable)
     }
 
     override fun report(crash: Crash.NativeCodeCrash) {
         if (sendEventForNativeCrashes) {
+            crash.breadcrumbs.forEach {
+                client.context.recordBreadcrumb(it.toSentryBreadcrumb())
+            }
             client.sendMessage(createMessage(crash))
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.toSentryBreadcrumb(): Breadcrumb {
+        return BreadcrumbBuilder()
+                .setMessage(this.message)
+                .setData(this.data)
+                .setCategory(this.category)
+                .setLevel(this.level.toSentryBreadcrumbLevel())
+                .setType(this.type.toSentryBreadcrumbType())
+                .build()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.Level.toSentryBreadcrumbLevel() = when (this) {
+        mozilla.components.lib.crash.Breadcrumb.Level.CRITICAL -> Breadcrumb.Level.CRITICAL
+        mozilla.components.lib.crash.Breadcrumb.Level.ERROR -> Breadcrumb.Level.ERROR
+        mozilla.components.lib.crash.Breadcrumb.Level.WARNING -> Breadcrumb.Level.WARNING
+        mozilla.components.lib.crash.Breadcrumb.Level.INFO -> Breadcrumb.Level.INFO
+        mozilla.components.lib.crash.Breadcrumb.Level.DEBUG -> Breadcrumb.Level.DEBUG
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun mozilla.components.lib.crash.Breadcrumb.Type.toSentryBreadcrumbType() = when (this) {
+        mozilla.components.lib.crash.Breadcrumb.Type.DEFAULT -> Breadcrumb.Type.DEFAULT
+        mozilla.components.lib.crash.Breadcrumb.Type.HTTP -> Breadcrumb.Type.HTTP
+        mozilla.components.lib.crash.Breadcrumb.Type.NAVIGATION -> Breadcrumb.Type.NAVIGATION
+        mozilla.components.lib.crash.Breadcrumb.Type.USER -> Breadcrumb.Type.USER
     }
 }
 
