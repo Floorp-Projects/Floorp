@@ -740,22 +740,6 @@ class MOZ_RAII AutoWritableJitCode : private AutoWritableJitCodeFallible {
                             code->bufferSize()) {}
 };
 
-class MOZ_STACK_CLASS MaybeAutoWritableJitCode {
-  mozilla::Maybe<AutoWritableJitCode> awjc_;
-
- public:
-  MaybeAutoWritableJitCode(void* addr, size_t size, ReprotectCode reprotect) {
-    if (reprotect) {
-      awjc_.emplace(addr, size);
-    }
-  }
-  MaybeAutoWritableJitCode(JitCode* code, ReprotectCode reprotect) {
-    if (reprotect) {
-      awjc_.emplace(code);
-    }
-  }
-};
-
 }  // namespace jit
 }  // namespace js
 
