@@ -26,21 +26,17 @@
   --urlbar-popup-action-color: #30e60b;
 }
 
-#urlbar-results {
-  position: fixed;
-  z-index: 1;
-  background: var(--autocomplete-popup-background);
-  color: var(--autocomplete-popup-color);
+.urlbarView {
   text-shadow: none;
 }
 
-#urlbar-results.megabar {
-  margin-inline-start: 5px;
-}
-
-#urlbar-results:not(.megabar) {
+.urlbarView:not(.megabar) {
+  position: fixed;
+  z-index: 1;
   left: 0;
   right: 0;
+  background: var(--autocomplete-popup-background);
+  color: var(--autocomplete-popup-color);
   border-block: 1px solid var(--chrome-content-separator-color);
 }
 
@@ -86,12 +82,11 @@
   text-align: end;
 }
 
-.urlbarView-body-inner {
-  box-sizing: border-box;
+.urlbarView.megabar .urlbarView-body-inner {
+  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutExtend@ - 2px /* urlbar border */);
 }
 
-#urlbarView-results {
-  box-sizing: border-box;
+.urlbarView-results {
   padding: @urlbarViewPadding@;
   white-space: nowrap;
 }
@@ -174,7 +169,7 @@
 }
 
 .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-type-icon,
-#urlbar-results:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
+.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }
 
@@ -230,8 +225,8 @@
 .urlbarView-row[type=remotetab]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
 .urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-title-separator,
-#urlbar-results[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
-#urlbar-results:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
+.urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
   /* Use visibility:collapse instead of display:none since the latter can
      confuse the overflow state of title and url elements when their content
      changes while they're hidden. */
@@ -256,30 +251,30 @@
 }
 
 /* Search one-offs. */
-#urlbar-results > .search-one-offs {
+#urlbar .search-one-offs {
   -moz-box-orient: horizontal;
   padding-top: 16px;
   padding-bottom: 16px;
 }
 
-#urlbar-results:not(.megabar) > .search-one-offs {
+#urlbar:not(.megabar) .search-one-offs {
   padding-inline-start: var(--item-padding-start, 5px);
   padding-inline-end: var(--item-padding-end, 5px);
 }
 
-#urlbar-results .search-panel-one-offs {
+#urlbar .search-panel-one-offs {
   padding-left: 12px;
   padding-right: 12px;
 }
 
-#urlbar-results .search-panel-header {
+#urlbar .search-panel-header {
   padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-#urlbar-results .searchbar-engine-one-off-item {
+#urlbar .searchbar-engine-one-off-item {
   min-width: 32px;
   height: 32px;
   margin: 0 4px;
