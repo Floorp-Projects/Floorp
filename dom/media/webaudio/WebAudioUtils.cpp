@@ -110,7 +110,7 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
     return;
   }
 
-  nsAutoCString spec;
+  nsAutoString spec;
   uint32_t aLineNumber, aColumnNumber;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
@@ -134,9 +134,9 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
     return;
   }
 
-  errorObject->InitWithWindowID(
-      result, NS_ConvertUTF8toUTF16(spec), EmptyString(), aLineNumber,
-      aColumnNumber, nsIScriptError::warningFlag, "Web Audio", aWindowID);
+  errorObject->InitWithWindowID(result, spec, EmptyString(), aLineNumber,
+                                aColumnNumber, nsIScriptError::warningFlag,
+                                "Web Audio", aWindowID);
   console->LogMessage(errorObject);
 }
 
