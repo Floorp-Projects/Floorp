@@ -14,6 +14,10 @@ const TEST_URI =
 const dpr = "--dpr 1";
 
 add_task(async function() {
+  // Run DevTools in a chrome frame temporarily, otherwise this test is intermittent.
+  // See Bug 1571421.
+  await pushPref("devtools.toolbox.content-frame", false);
+
   const hud = await openNewTabAndConsole(TEST_URI);
   ok(hud, "web console opened");
 
