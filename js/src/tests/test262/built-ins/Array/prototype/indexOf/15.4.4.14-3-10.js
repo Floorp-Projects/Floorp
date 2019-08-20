@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-3-10
 description: >
     Array.prototype.indexOf - value of 'length' is number primitive
     (value is NaN)

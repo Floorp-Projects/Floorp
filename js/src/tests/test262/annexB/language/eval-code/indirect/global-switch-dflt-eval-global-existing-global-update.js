@@ -4,6 +4,7 @@
 /*---
 description: Variable-scoped binding is updated following evaluation (Funtion declaration in the `default` clause of a `switch` statement in eval code in the global scope)
 esid: sec-web-compat-evaldeclarationinstantiation
+es6id: B.3.3.3
 flags: [generated, noStrict]
 includes: [fnGlobalObject.js]
 info: |

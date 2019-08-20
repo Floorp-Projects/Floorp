@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-9-b-ii-5
 description: Array.prototype.indexOf - search element is -NaN
 ---*/
 

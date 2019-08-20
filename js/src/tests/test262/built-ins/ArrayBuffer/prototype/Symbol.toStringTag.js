@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-arraybuffer.prototype-@@tostringtag
+es6id: 24.1.4.4
 description: >
     `Symbol.toStringTag` property descriptor
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-1-10
 description: Array.prototype.indexOf applied to the Math object
 ---*/
 

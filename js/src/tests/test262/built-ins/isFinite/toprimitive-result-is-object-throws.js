@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 18.2.2
 esid: sec-isfinite-number
 description: >
   Throws a TypeError if the result of calling number.@@toPrimitive is an Object

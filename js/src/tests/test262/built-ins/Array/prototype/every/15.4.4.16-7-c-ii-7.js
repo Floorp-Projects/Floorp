@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-7-c-ii-7
 description: >
     Array.prototype.every - unhandled exceptions happened in
     callbackfn terminate iteration

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-10-1
 description: >
     Array.prototype.reduceRight doesn't mutate the Array on which it
     is called on

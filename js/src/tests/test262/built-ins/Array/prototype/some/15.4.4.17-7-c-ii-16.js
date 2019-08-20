@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-7-c-ii-16
 description: >
     Array.prototype.some - 'this' of 'callback' is a Boolean object
     when 'T' is not an object ('T' is a boolean primitive)

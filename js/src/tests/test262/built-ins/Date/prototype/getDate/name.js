@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-date.prototype.getdate
+es6id: 20.3.4.2
 description: >
   Date.prototype.getDate.name is "getDate".
 info: |

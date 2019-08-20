@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.2.2.17
 esid: sec-math.fround
 description: >
   Convert to binary32 format and than to binary64 format

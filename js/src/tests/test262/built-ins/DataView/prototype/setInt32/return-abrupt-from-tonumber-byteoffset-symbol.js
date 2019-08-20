@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype.setint32
+es6id: 24.2.4.17
 description: >
   Return abrupt from ToNumber(symbol byteOffset)
 info: |

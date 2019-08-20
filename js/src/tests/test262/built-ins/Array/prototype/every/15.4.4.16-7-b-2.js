@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-7-b-2
 description: Array.prototype.every - added properties in step 2 are visible here
 ---*/
 

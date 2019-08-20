@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-3-18
 description: >
     Array.prototype.reduce - value of 'length' is a string that can't
     convert to a number

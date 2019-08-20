@@ -4,6 +4,7 @@
 /*---
 description: Computed values as accessor property names (numeric literal with non-canonical representation) (Object initializer)
 esid: sec-object-initializer-runtime-semantics-evaluation
+es6id: 12.2.6.8
 flags: [generated]
 info: |
     ObjectLiteral :

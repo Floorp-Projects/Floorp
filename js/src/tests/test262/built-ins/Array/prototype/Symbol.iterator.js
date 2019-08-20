@@ -11,6 +11,7 @@ info: |
     should be writable and configurable, but not enumerable.
 includes: [propertyHelper.js]
 features: [Symbol.iterator]
+es6id: 22.1.3.30
 esid: sec-array.prototype-@@iterator
 ---*/
 

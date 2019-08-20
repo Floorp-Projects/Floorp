@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-object.prototype.tostring
+es6id: 19.1.3.6
 description: Revoked proxy value produces a TypeError
 info: |
   [...]

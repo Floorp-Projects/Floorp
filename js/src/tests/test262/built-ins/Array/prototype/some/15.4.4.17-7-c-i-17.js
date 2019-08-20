@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-7-c-i-17
 description: >
     Array.prototype.some - element to be retrieved is own accessor
     property without a get function on an Array-like object

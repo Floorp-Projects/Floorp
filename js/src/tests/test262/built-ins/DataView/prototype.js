@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype
+es6id: 24.2.3.1
 description: >
   The initial value of DataView.prototype is the DataView prototype object.
 info: |

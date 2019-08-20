@@ -3,6 +3,7 @@
 
 /*---
 info: Operator remove leading StrWhiteSpaceChar
+es6id: 18.2.5
 esid: sec-parseint-string-radix
 description: "StrWhiteSpaceChar :: PS (U+2029)"
 ---*/

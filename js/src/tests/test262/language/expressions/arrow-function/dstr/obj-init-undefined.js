@@ -4,6 +4,7 @@
 /*---
 description: Value specifed for object binding pattern must be object coercible (undefined) (arrow function expression)
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
+es6id: 14.2.16
 features: [destructuring-binding]
 flags: [generated]
 info: |

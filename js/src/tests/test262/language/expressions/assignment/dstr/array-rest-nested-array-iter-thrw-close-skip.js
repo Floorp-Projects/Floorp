@@ -4,6 +4,7 @@
 /*---
 description: IteratorClose is not called when nested array pattern evaluation produces an abrupt completion (AssignmentExpression)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [Symbol.iterator, destructuring-binding]
 flags: [generated]
 info: |

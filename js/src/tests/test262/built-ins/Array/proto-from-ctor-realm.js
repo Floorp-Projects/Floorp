@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-array-constructor-array
+es6id: 21.1.1.1
 description: Default [[Prototype]] value derived from realm of the newTarget
 info: |
     [...]

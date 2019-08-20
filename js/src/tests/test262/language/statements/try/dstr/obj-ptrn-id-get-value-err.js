@@ -4,6 +4,7 @@
 /*---
 description: Error thrown when accessing the corresponding property of the value object (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

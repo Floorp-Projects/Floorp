@@ -4,6 +4,7 @@
 /*---
 description: Destructuring initializer with an exhausted iterator (function expression)
 esid: sec-function-definitions-runtime-semantics-evaluation
+es6id: 14.1.20
 features: [destructuring-binding]
 flags: [generated]
 info: |

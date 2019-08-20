@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-promise.all
+es6id: 25.4.4.1
 description: >
   Iterator is not closed when the "resolve" capability returns an abrupt
   completion.

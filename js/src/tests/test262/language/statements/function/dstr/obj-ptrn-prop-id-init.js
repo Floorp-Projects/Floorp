@@ -4,6 +4,7 @@
 /*---
 description: Binding as specified via property name, identifier, and initializer (function declaration)
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
+es6id: 14.1.19
 features: [destructuring-binding]
 flags: [generated]
 info: |

@@ -3,6 +3,8 @@
 
 /*---
 info: The length property of decodeURIComponent has the attribute DontEnum
+es5id: 15.1.3.2_A5.1
+es6id: 18.2.6.3
 esid: sec-decodeuricomponent-encodeduricomponent
 description: Checking use propertyIsEnumerable, for-in
 ---*/

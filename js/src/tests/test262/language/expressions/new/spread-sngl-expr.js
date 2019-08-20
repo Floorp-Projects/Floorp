@@ -4,6 +4,7 @@
 /*---
 description: Spread operator applied to AssignmentExpression as only element (`new` operator)
 esid: sec-new-operator-runtime-semantics-evaluation
+es6id: 12.3.3.1
 flags: [generated]
 info: |
     MemberExpression : new MemberExpression Arguments

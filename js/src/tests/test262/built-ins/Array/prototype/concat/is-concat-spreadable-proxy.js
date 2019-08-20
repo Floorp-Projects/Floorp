@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-isconcatspreadable
+es6id: 22.1.3.1.1
 description: >
   Proxies who final targets are arrays are considered spreadable
 info: |

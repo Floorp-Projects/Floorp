@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-3-19
 description: >
     Array.prototype.reduce - value of 'length' is an Object which has
     an own toString method

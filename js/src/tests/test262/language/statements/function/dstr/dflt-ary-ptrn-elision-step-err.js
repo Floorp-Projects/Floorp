@@ -4,6 +4,7 @@
 /*---
 description: Elision advances iterator and forwards abrupt completions (function declaration (default parameter))
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
+es6id: 14.1.19
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 info: |

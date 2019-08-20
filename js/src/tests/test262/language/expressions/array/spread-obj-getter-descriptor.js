@@ -4,6 +4,7 @@
 /*---
 description: Spread operation with getter results in data property descriptor (Array initializer)
 esid: sec-runtime-semantics-arrayaccumulation
+es6id: 12.2.5.2
 features: [object-spread]
 flags: [generated]
 includes: [propertyHelper.js]

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-7-c-i-8
 description: >
     Array.prototype.some - element to be retrieved is inherited data
     property on an Array

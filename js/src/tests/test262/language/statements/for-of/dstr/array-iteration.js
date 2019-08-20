@@ -4,6 +4,7 @@
 /*---
 description: Value iteration only proceeds for the number of elements in the ArrayAssignmentPattern. (For..of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+es6id: 13.7.5.11
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

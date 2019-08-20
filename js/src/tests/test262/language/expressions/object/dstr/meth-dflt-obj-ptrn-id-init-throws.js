@@ -4,6 +4,7 @@
 /*---
 description: Error thrown when evaluating the initializer (method (default parameter))
 esid: sec-runtime-semantics-definemethod
+es6id: 14.3.8
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 info: |

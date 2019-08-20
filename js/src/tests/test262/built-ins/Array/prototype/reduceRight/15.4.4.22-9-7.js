@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-9-7
 description: >
     Array.prototype.reduceRight not affect call when the array is
     deleted during the call

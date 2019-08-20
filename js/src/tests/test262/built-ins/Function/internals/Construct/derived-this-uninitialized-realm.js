@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-ecmascript-function-objects-construct-argumentslist-newtarget
+es6id: 9.2.2
 description: >
   Error when derived constructor does not initialize the `this` binding
   (honoring the Realm of the current execution context)

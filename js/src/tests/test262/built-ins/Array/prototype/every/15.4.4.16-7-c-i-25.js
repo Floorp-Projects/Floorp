@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-7-c-i-25
 description: >
     Array.prototype.every - This object is the Arguments object which
     implements its own property get method (number of arguments is

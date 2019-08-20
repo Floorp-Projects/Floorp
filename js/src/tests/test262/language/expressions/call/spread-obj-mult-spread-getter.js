@@ -4,6 +4,7 @@
 /*---
 description: Multiple Object Spread usage calls getter multiple times (CallExpression)
 esid: sec-function-calls-runtime-semantics-evaluation
+es6id: 12.3.4.1
 features: [object-spread]
 flags: [generated]
 info: |

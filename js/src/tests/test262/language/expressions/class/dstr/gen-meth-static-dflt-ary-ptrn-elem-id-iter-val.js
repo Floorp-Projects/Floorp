@@ -4,6 +4,7 @@
 /*---
 description: SingleNameBinding when value iteration was completed previously (static class expression generator method (default parameter))
 esid: sec-class-definitions-runtime-semantics-evaluation
+es6id: 14.5.16
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-3-10
 description: >
     Array.prototype.reduce - value of 'length' is number primitive
     (value is NaN)

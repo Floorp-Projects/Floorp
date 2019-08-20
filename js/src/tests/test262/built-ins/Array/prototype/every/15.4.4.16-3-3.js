@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-3-3
 description: Array.prototype.every - value of 'length' is a number (value is 0)
 ---*/
 

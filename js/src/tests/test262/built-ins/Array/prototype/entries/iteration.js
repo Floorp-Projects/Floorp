@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-array.prototype.entries
+es6id: 22.1.3.4
 description: >
   The return is a valid iterator with the array's numeric properties.
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-5-24
 description: >
     Array.prototype.indexOf throws TypeError exception when value of
     'fromIndex' is an object with toString and valueOf methods that

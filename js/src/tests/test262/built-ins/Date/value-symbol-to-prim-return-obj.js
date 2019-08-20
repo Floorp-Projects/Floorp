@@ -2,6 +2,7 @@
 // this code is governed by the bsd license found in the license file.
 /*---
 esid: sec-date-value
+es6id: 20.3.2.2
 description: >
     Behavior when coercion via `Symbol.toPrimitive` yields an Object
 info: |

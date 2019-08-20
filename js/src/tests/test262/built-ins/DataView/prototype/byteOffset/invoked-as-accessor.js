@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-get-dataview.prototype.byteoffset
+es6id: 24.2.4.3
 description: >
   Requires this value to have a [[DataView]] internal slot
 info: |

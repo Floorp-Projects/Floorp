@@ -4,6 +4,7 @@
 /*---
 description: Computed values as accessor property names (string literal containing LineContinuation) (Class declaration, static method)
 esid: sec-runtime-semantics-classdefinitionevaluation
+es6id: 14.5.14
 flags: [generated]
 info: |
     [...]

@@ -4,6 +4,7 @@
 /*---
 description: Elision advances iterator and forwards abrupt completions (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

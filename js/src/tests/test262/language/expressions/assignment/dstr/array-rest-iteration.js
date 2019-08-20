@@ -4,6 +4,7 @@
 /*---
 description: In the presense of an AssignmentRestElement, value iteration exhausts the iterable value; (AssignmentExpression)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

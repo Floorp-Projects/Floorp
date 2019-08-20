@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-generatorfunction.prototype.constructor
+es6id: 25.2.3.1
 description: >
   `constructor` property of the GeneratorFunction.prototype object
 info: |

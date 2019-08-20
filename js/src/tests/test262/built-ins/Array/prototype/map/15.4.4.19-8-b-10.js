@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-b-10
 description: >
     Array.prototype.map - deleting property of prototype causes
     prototype index property not to be visited on an Array-like Object

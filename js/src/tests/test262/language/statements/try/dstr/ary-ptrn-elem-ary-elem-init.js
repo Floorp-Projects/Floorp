@@ -4,6 +4,7 @@
 /*---
 description: BindingElement with array binding pattern and initializer is used (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

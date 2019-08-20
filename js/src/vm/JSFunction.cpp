@@ -493,9 +493,17 @@ static bool fun_resolve(JSContext* cx, HandleObject obj, HandleId id,
         return true;
       }
 
-      if (!JSFunction::getUnresolvedName(cx, fun, &v)) {
+      RootedString name(cx);
+      if (!JSFunction::getUnresolvedName(cx, fun, &name)) {
         return false;
       }
+
+      // Don't define an own .name property for unnamed functions.
+      if (!name) {
+        return true;
+      }
+
+      v.setString(name);
     }
 
     if (!NativeDefineDataProperty(cx, fun, id, v,
@@ -1272,23 +1280,28 @@ JSAtom* JSFunction::infallibleGetUnresolvedName(JSContext* cx) {
     return name;
   }
 
+  // Unnamed class expressions should not get a .name property at all.
+  if (isClassConstructor()) {
+    return nullptr;
+  }
+
   return cx->names().empty;
 }
 
 /* static */
 bool JSFunction::getUnresolvedName(JSContext* cx, HandleFunction fun,
-                                   MutableHandleValue v) {
+                                   MutableHandleString v) {
   if (fun->isBoundFunction()) {
     JSLinearString* name = JSFunction::getBoundFunctionName(cx, fun);
     if (!name) {
       return false;
     }
 
-    v.setString(name);
+    v.set(name);
     return true;
   }
 
-  v.setString(fun->infallibleGetUnresolvedName(cx));
+  v.set(fun->infallibleGetUnresolvedName(cx));
   return true;
 }
 
@@ -1483,9 +1496,9 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
       bound->setPrefixedBoundFunctionName(name);
     } else {
       name = targetFn->infallibleGetUnresolvedName(cx);
-      MOZ_ASSERT(name);
-
-      bound->setAtom(name);
+      if (name) {
+        bound->setAtom(name);
+      }
     }
   }
 

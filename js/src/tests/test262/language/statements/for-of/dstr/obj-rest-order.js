@@ -4,6 +4,7 @@
 /*---
 description: Rest operation follows [[OwnPropertyKeys]] order (For..of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+es6id: 13.7.5.11
 features: [Symbol, object-rest, destructuring-binding]
 flags: [generated]
 includes: [compareArray.js]

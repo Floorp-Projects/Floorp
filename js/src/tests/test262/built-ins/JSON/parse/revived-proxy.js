@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-json.parse
+es6id: 24.3.1
 description: Behavior when revived value is a Proxy exotic object
 info: |
   [...]

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype.setint16
+es6id: 24.2.4.16
 description: >
   Set value as undefined (cast to 0) when value argument is not present
 info: |

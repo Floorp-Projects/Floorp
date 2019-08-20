@@ -4,6 +4,7 @@
 /*---
 description: Spread operator following other arguments when reference is unresolvable (`new` operator)
 esid: sec-new-operator-runtime-semantics-evaluation
+es6id: 12.3.3.1
 flags: [generated]
 info: |
     MemberExpression : new MemberExpression Arguments

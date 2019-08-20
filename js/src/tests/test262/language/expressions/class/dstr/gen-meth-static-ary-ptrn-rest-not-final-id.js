@@ -5,6 +5,7 @@
 /*---
 description: Rest element (identifier) may not be followed by any element (static class expression generator method)
 esid: sec-class-definitions-runtime-semantics-evaluation
+es6id: 14.5.16
 features: [generators, destructuring-binding]
 flags: [generated]
 negative:

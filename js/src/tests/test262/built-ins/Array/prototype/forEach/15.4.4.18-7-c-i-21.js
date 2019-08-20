@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.foreach
+es5id: 15.4.4.18-7-c-i-21
 description: >
     Array.prototype.forEach - element to be retrieved is inherited
     accessor property without a get function on an Array-like object

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-isnan-number
+es6id: 18.2.3
 description: >
   number argument is converted by ToNumber
 info: |

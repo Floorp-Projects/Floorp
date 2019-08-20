@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-string.prototype.charat
+es6id: 21.1.3.1
 description: Rounding of the provided "pos" number
 info: |
   [...]

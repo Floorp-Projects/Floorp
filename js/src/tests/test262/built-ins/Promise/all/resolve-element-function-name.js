@@ -8,14 +8,9 @@ info: |
   A promise resolve function is an anonymous built-in function.
 
   17 ECMAScript Standard Built-in Objects:
-    Every built-in function object, including constructors, has a `name`
-    property whose value is a String. Functions that are identified as
-    anonymous functions use the empty string as the value of the `name`
-    property.
-    Unless otherwise specified, the `name` property of a built-in function
-    object has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*,
-    [[Configurable]]: *true* }.
-includes: [propertyHelper.js]
+    Every built-in Function object, including constructors, that is not
+    identified as an anonymous function has a name property whose value
+    is a String.
 ---*/
 
 var resolveElementFunction;
@@ -33,8 +28,7 @@ NotPromise.resolve = function(v) {
 };
 Promise.all.call(NotPromise, [thenable]);
 
-verifyProperty(resolveElementFunction, "name", {
-  value: "", writable: false, enumerable: false, configurable: true
-});
+assert.sameValue(Object.prototype.hasOwnProperty.call(resolveElementFunction, "name"), false);
+assert.sameValue(resolveElementFunction.name, "");
 
 reportCompare(0, 0);

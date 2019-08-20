@@ -4,6 +4,7 @@
 /*---
 description: Lone rest element (static class expression generator method (default parameter))
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
+es6id: 14.5.15
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 info: |

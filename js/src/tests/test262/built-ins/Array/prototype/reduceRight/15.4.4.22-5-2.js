@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-5-2
 description: >
     Array.prototype.reduceRight throws TypeError if 'length' is 0
     (subclassed Array, length overridden to null (type conversion)),

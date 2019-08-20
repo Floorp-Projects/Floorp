@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-9-b-i-3
 description: >
     Array.prototype.indexOf - element to be retrieved is own data
     property that overrides an inherited data property on an Array

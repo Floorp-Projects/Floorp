@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-1-14
 description: Array.prototype.indexOf applied to Error object
 ---*/
 

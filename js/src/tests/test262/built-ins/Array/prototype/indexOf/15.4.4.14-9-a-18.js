@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-9-a-18
 description: >
     Array.prototype.indexOf - decreasing length of array with
     prototype property causes prototype index property to be visited
