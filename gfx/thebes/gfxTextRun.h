@@ -471,6 +471,26 @@ class gfxTextRun : public gfxShapedText {
     mozilla::gfx::ShapedTextFlags
         mOrientation;  // gfxTextRunFactory::TEXT_ORIENT_* value
     FontMatchType mMatchType;
+
+    // Set up the properties (but NOT offset) of the GlyphRun.
+    void SetProperties(gfxFont* aFont,
+                       mozilla::gfx::ShapedTextFlags aOrientation,
+                       FontMatchType aMatchType) {
+      mFont = aFont;
+      mOrientation = aOrientation;
+      mMatchType = aMatchType;
+    }
+
+    // Return whether the GlyphRun matches the given properties;
+    // the given FontMatchType will be added to the run if not present.
+    bool Matches(gfxFont* aFont, mozilla::gfx::ShapedTextFlags aOrientation,
+                 FontMatchType aMatchType) {
+      if (mFont == aFont && mOrientation == aOrientation) {
+        mMatchType |= aMatchType;
+        return true;
+      }
+      return false;
+    }
   };
 
   class MOZ_STACK_CLASS GlyphRunIterator {
@@ -529,9 +549,9 @@ class gfxTextRun : public gfxShapedText {
    * are added before any further operations are performed with this
    * TextRun.
    */
-  nsresult AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
-                       uint32_t aUTF16Offset, bool aForceNewRun,
-                       mozilla::gfx::ShapedTextFlags aOrientation);
+  void AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
+                   uint32_t aUTF16Offset, bool aForceNewRun,
+                   mozilla::gfx::ShapedTextFlags aOrientation);
   void ResetGlyphRuns() {
     if (mHasGlyphRunArray) {
       MOZ_ASSERT(mGlyphRunArray.Length() > 1);
