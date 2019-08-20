@@ -6,7 +6,7 @@
 # needed to install Stylo and Node dependencies.  This class must come before
 # BaseBootstrapper in the inheritance list.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import os
 
