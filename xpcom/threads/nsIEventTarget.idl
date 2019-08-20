@@ -69,8 +69,8 @@ interface nsIEventTarget : nsISupports
    *
    * The infallible version of IsOnCurrentThread() is optimized to avoid a
    * virtual call for non-thread event targets. Thread targets should set
-   * mVirtualThread to their virtual PRThread. Non-thread targets should leave
-   * mVirtualThread null and implement IsOnCurrentThreadInfallible() to
+   * mThread to their virtual PRThread. Non-thread targets should leave
+   * mThread null and implement IsOnCurrentThreadInfallible() to
    * return the correct answer.
    *
    * The fallible version of IsOnCurrentThread may return errors, such as during
@@ -81,13 +81,13 @@ interface nsIEventTarget : nsISupports
   %{C++
 public:
   // Infallible. Defined in nsThreadUtils.cpp. Delegates to
-  // IsOnCurrentThreadInfallible when mVirtualThread is null.
+  // IsOnCurrentThreadInfallible when mThread is null.
   bool IsOnCurrentThread();
 
 protected:
-  PRThread* mVirtualThread;
+  PRThread* mThread;
 
-  nsIEventTarget() : mVirtualThread(nullptr) {}
+  nsIEventTarget() : mThread(nullptr) {}
   %}
   // Note that this method is protected.  We define it through IDL, rather than
   // in a %{C++ block, to ensure that the correct method indices are recorded

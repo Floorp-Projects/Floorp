@@ -156,13 +156,13 @@ class TaskQueue : public AbstractThread {
       sCurrentThreadTLS.set(aQueue);
 
       MOZ_ASSERT(mQueue->mRunningThread == nullptr);
-      mQueue->mRunningThread = GetCurrentPhysicalThread();
+      mQueue->mRunningThread = PR_GetCurrentThread();
     }
 
     ~AutoTaskGuard() {
       DrainDirectTasks();
 
-      MOZ_ASSERT(mQueue->mRunningThread == GetCurrentPhysicalThread());
+      MOZ_ASSERT(mQueue->mRunningThread == PR_GetCurrentThread());
       mQueue->mRunningThread = nullptr;
 
       sCurrentThreadTLS.set(mLastCurrentThread);
