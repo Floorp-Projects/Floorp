@@ -108,7 +108,6 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mEmptyLines = 1;  // The start of the document is an "empty line" in itself,
   mInWhitespace = false;
   mPreFormattedMail = false;
-  mStartedOutput = false;
 
   mPreformattedBlockBoundary = false;
   mWithRubyAnnotation = false;  // will be read from pref and flag later
@@ -1105,10 +1104,6 @@ void nsPlainTextSerializer::FlushLine() {
  * nbsp and even be confused by it.
  */
 void nsPlainTextSerializer::Output(nsString& aString) {
-  if (!aString.IsEmpty()) {
-    mStartedOutput = true;
-  }
-
   if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
     // First, replace all nbsp characters with spaces,
     // which the unicode encoder won't do for us.
