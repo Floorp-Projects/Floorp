@@ -60,6 +60,7 @@ class DebuggerScript : public NativeObject {
   // JS methods
   static bool getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp);
   static bool getIsAsyncFunction(JSContext* cx, unsigned argc, Value* vp);
+  static bool getIsFunction(JSContext* cx, unsigned argc, Value* vp);
   static bool getIsModule(JSContext* cx, unsigned argc, Value* vp);
   static bool getDisplayName(JSContext* cx, unsigned argc, Value* vp);
   static bool getUrl(JSContext* cx, unsigned argc, Value* vp);

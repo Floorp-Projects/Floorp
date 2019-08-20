@@ -280,6 +280,18 @@ bool DebuggerScript::getIsAsyncFunction(JSContext* cx, unsigned argc,
 }
 
 /* static */
+bool DebuggerScript::getIsFunction(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isFunction)",
+                                     args, obj);
+  DebuggerScriptReferent referent = obj->getReferent();
+
+  // Note: LazyScripts always have functions.
+  args.rval().setBoolean(!referent.is<JSScript*>() ||
+                         referent.as<JSScript*>()->functionNonDelazifying());
+  return true;
+}
+
+/* static */
 bool DebuggerScript::getIsModule(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get isModule)", args, obj);
   DebuggerScriptReferent referent = obj->getReferent();
@@ -2172,6 +2184,7 @@ bool DebuggerScript::construct(JSContext* cx, unsigned argc, Value* vp) {
 const JSPropertySpec DebuggerScript::properties_[] = {
     JS_PSG("isGeneratorFunction", getIsGeneratorFunction, 0),
     JS_PSG("isAsyncFunction", getIsAsyncFunction, 0),
+    JS_PSG("isFunction",  getIsFunction, 0),
     JS_PSG("isModule", getIsModule, 0),
     JS_PSG("displayName", getDisplayName, 0),
     JS_PSG("url", getUrl, 0),
