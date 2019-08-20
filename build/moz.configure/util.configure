@@ -26,6 +26,7 @@ def configure_error(message):
 @imports(_from='__builtin__', _import='unicode')
 @imports('subprocess')
 @imports(_from='mozbuild.shellutil', _import='quote')
+@imports(_from='mozbuild.util', _import='system_encoding')
 def get_cmd_output(*args, **kwargs):
     # subprocess on older Pythons can't handle unicode keys or values in
     # environment dicts. Normalize automagically so callers don't have to
@@ -53,6 +54,8 @@ def get_cmd_output(*args, **kwargs):
                             close_fds=os.name != 'nt',
                             **kwargs)
     stdout, stderr = proc.communicate()
+    stdout = stdout.decode(system_encoding, 'replace')
+    stderr = stderr.decode(system_encoding, 'replace')
     return proc.wait(), stdout, stderr
 
 
@@ -75,7 +78,7 @@ def check_cmd_output(*args, **kwargs):
         for out, desc in ((stdout, 'output'), (stderr, 'error output')):
             if out:
                 log.debug('Its %s was:', desc)
-                with LineIO(lambda l: log.debug('| %s', l), 'replace') as o:
+                with LineIO(lambda l: log.debug('| %s', l)) as o:
                     o.write(out)
         if onerror:
             return onerror()

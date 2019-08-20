@@ -71,7 +71,7 @@ def pkg_check_modules(var, package_desc, when=always,
             return True
         log.info("no")
         log_writer = log.warning if allow_missing else log.error
-        with LineIO(lambda l: log_writer(l), 'replace') as o:
+        with LineIO(lambda l: log_writer(l)) as o:
             o.write(stdout)
         if not allow_missing:
             sys.exit(1)
