@@ -1751,6 +1751,9 @@ class Matrix4x4Typed {
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits> Matrix4x4;
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits, double> Matrix4x4Double;
 
+// This typedef is for IPDL, which can't reference a template-id directly.
+typedef Maybe<Matrix4x4> MaybeMatrix4x4;
+
 class Matrix5x4 {
  public:
   Matrix5x4()

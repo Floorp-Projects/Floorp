@@ -284,7 +284,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSizeModeChanged(const nsSizeMode& aSizeMode);
 
   mozilla::ipc::IPCResult RecvChildToParentMatrix(
-      const mozilla::gfx::Matrix4x4& aMatrix);
+      const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix);
 
   mozilla::ipc::IPCResult RecvActivate();
 
