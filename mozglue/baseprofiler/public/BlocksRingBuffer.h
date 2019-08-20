@@ -160,8 +160,8 @@ class BlocksRingBuffer {
     }
 
    private:
-    // Only BlocksRingBuffer internal functions can convert between `BlockIndex`
-    // and `Index`.
+    // Only BlocksRingBuffer internal functions and serializers can convert
+    // between `BlockIndex` and `Index`.
     friend class BlocksRingBuffer;
     explicit BlockIndex(Index aBlockIndex) : mBlockIndex(aBlockIndex) {}
     explicit operator Index() const { return mBlockIndex; }
@@ -1071,6 +1071,12 @@ class BlocksRingBuffer {
     mMaybeUnderlyingBuffer.reset();
   }
 
+  // Used to de/serialize a BlocksRingBuffer (e.g., containing a backtrace).
+  friend struct Serializer<BlocksRingBuffer>;
+  friend struct Deserializer<BlocksRingBuffer>;
+  friend struct Serializer<UniquePtr<BlocksRingBuffer>>;
+  friend struct Deserializer<UniquePtr<BlocksRingBuffer>>;
+
   // Mutex guarding the following members.
   mutable baseprofiler::detail::BaseProfilerMutex mMutex;
 
@@ -1840,6 +1846,172 @@ struct BlocksRingBuffer::Deserializer<Variant<Ts...>> {
     Variant<Ts...> variant(VariantIndex<0>{});
     ReadInto(aER, variant);
     return variant;
+  }
+};
+
+// ----------------------------------------------------------------------------
+// BlocksRingBuffer
+
+// A BlocksRingBuffer can hide another one!
+// This will be used to store marker backtraces; They can be read back into a
+// UniquePtr<BlocksRingBuffer>.
+// Format: len (ULEB128) | start | end | buffer (len bytes) | pushed | cleared
+// len==0 marks an out-of-session buffer, or empty buffer.
+template <>
+struct BlocksRingBuffer::Serializer<BlocksRingBuffer> {
+  static Length Bytes(const BlocksRingBuffer& aBuffer) {
+    baseprofiler::detail::BaseProfilerAutoLock lock(aBuffer.mMutex);
+    if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
+      // Out-of-session, we only need 1 byte to store a length of 0.
+      return ULEB128Size<Length>(0);
+    }
+    const auto start = Index(aBuffer.mFirstReadIndex);
+    const auto end = Index(aBuffer.mNextWriteIndex);
+    const auto len = end - start;
+    if (len == 0) {
+      // In-session but empty, also store a length of 0.
+      return ULEB128Size<Length>(0);
+    }
+    return ULEB128Size(len) + sizeof(start) + sizeof(end) + len +
+           sizeof(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount) +
+           sizeof(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
+  }
+
+  static void Write(EntryWriter& aEW, const BlocksRingBuffer& aBuffer) {
+    baseprofiler::detail::BaseProfilerAutoLock lock(aBuffer.mMutex);
+    if (aBuffer.mMaybeUnderlyingBuffer.isNothing()) {
+      // Out-of-session, only store a length of 0.
+      aEW.WriteULEB128<Length>(0);
+      return;
+    }
+    const auto start = Index(aBuffer.mFirstReadIndex);
+    const auto end = Index(aBuffer.mNextWriteIndex);
+    MOZ_ASSERT(end - start <= std::numeric_limits<Length>::max());
+    const auto len = static_cast<Length>(end - start);
+    if (len == 0) {
+      // In-session but empty, only store a length of 0.
+      aEW.WriteULEB128<Length>(0);
+      return;
+    }
+    // In-session.
+    // Store buffer length, start and end indices.
+    aEW.WriteULEB128<Length>(len);
+    aEW.WriteObject(start);
+    aEW.WriteObject(end);
+    // Write all the bytes. TODO: Optimize with memcpy's?
+    const auto readerEnd =
+        aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(end);
+    for (auto reader = aBuffer.mMaybeUnderlyingBuffer->mBuffer.ReaderAt(start);
+         reader != readerEnd; ++reader) {
+      aEW.WriteObject(*reader);
+    }
+    // And write stats.
+    aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount);
+    aEW.WriteObject(aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount);
+  }
+};
+
+// A serialized BlocksRingBuffer can be read into an empty buffer (either
+// out-of-session, or in-session with enough room).
+template <>
+struct BlocksRingBuffer::Deserializer<BlocksRingBuffer> {
+  static void ReadInto(EntryReader& aER, BlocksRingBuffer& aBuffer) {
+    // Expect an empty buffer, as we're going to overwrite it.
+    MOZ_ASSERT(aBuffer.GetState().mRangeStart == aBuffer.GetState().mRangeEnd);
+    // Read the stored buffer length.
+    const auto len = aER.ReadULEB128<BlocksRingBuffer::Length>();
+    if (len == 0) {
+      // 0-length means an "uninteresting" buffer, just return now.
+      return;
+    }
+    // We have a non-empty buffer to read.
+    if (aBuffer.BufferLength().isSome()) {
+      // Output buffer is in-session (i.e., it already has a memory buffer
+      // attached). Make sure the caller allocated enough space.
+      MOZ_RELEASE_ASSERT(aBuffer.BufferLength()->Value() >= len);
+    } else {
+      // Output buffer is out-of-session, attach a new memory buffer.
+      aBuffer.Set(PowerOfTwo<BlocksRingBuffer::Length>(len));
+      MOZ_ASSERT(aBuffer.BufferLength()->Value() >= len);
+    }
+    // Read start and end indices.
+    const auto start = aER.ReadObject<BlocksRingBuffer::Index>();
+    aBuffer.mFirstReadIndex = BlocksRingBuffer::BlockIndex(start);
+    const auto end = aER.ReadObject<BlocksRingBuffer::Index>();
+    aBuffer.mNextWriteIndex = BlocksRingBuffer::BlockIndex(end);
+    MOZ_ASSERT(end - start == len);
+    // Copy bytes into the buffer.
+    const auto writerEnd =
+        aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(end);
+    for (auto writer = aBuffer.mMaybeUnderlyingBuffer->mBuffer.WriterAt(start);
+         writer != writerEnd; ++writer, ++aER) {
+      *writer = *aER;
+    }
+    // Finally copy stats.
+    aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount = aER.ReadObject<decltype(
+        aBuffer.mMaybeUnderlyingBuffer->mPushedBlockCount)>();
+    aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount =
+        aER.ReadObject<decltype(
+            aBuffer.mMaybeUnderlyingBuffer->mClearedBlockCount)>();
+  }
+
+  // We cannot output a BlocksRingBuffer object (not copyable), use `ReadInto()`
+  // or `aER.ReadObject<UniquePtr<BlocksRinbBuffer>>()` instead.
+  static BlocksRingBuffer Read(BlocksRingBuffer::EntryReader& aER) = delete;
+};
+
+// A BlocksRingBuffer is usually refererenced through a UniquePtr, for
+// convenience we support (de)serializing that UniquePtr directly.
+// This is compatible with the non-UniquePtr serialization above, with a null
+// pointer being treated like an out-of-session or empty buffer; and any of
+// these would be deserialized into a null pointer.
+template <>
+struct BlocksRingBuffer::Serializer<UniquePtr<BlocksRingBuffer>> {
+  static Length Bytes(const UniquePtr<BlocksRingBuffer>& aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      return ULEB128Size<Length>(0);
+    }
+    // Otherwise write the pointed-at BlocksRingBuffer (which could be
+    // out-of-session or empty.)
+    return SumBytes(*aBufferUPtr);
+  }
+
+  static void Write(EntryWriter& aEW,
+                    const UniquePtr<BlocksRingBuffer>& aBufferUPtr) {
+    if (!aBufferUPtr) {
+      // Null pointer, treat it like an empty buffer, i.e., write length of 0.
+      aEW.WriteULEB128<Length>(0);
+      return;
+    }
+    // Otherwise write the pointed-at BlocksRingBuffer (which could be
+    // out-of-session or empty.)
+    aEW.WriteObject(*aBufferUPtr);
+  }
+};
+
+template <>
+struct BlocksRingBuffer::Deserializer<UniquePtr<BlocksRingBuffer>> {
+  static void ReadInto(EntryReader& aER, UniquePtr<BlocksRingBuffer>& aBuffer) {
+    aBuffer = Read(aER);
+  }
+
+  static UniquePtr<BlocksRingBuffer> Read(BlocksRingBuffer::EntryReader& aER) {
+    UniquePtr<BlocksRingBuffer> bufferUPtr;
+    // Read the stored buffer length.
+    const auto len = aER.ReadULEB128<BlocksRingBuffer::Length>();
+    if (len == 0) {
+      // 0-length means an "uninteresting" buffer, just return nullptr.
+      return bufferUPtr;
+    }
+    // We have a non-empty buffer.
+    // allocate an empty BlocksRingBuffer.
+    bufferUPtr = MakeUnique<BlocksRingBuffer>();
+    // Rewind the reader before the length and deserialize the contents, using
+    // the non-UniquePtr Deserializer.
+    aER -= ULEB128Size(len);
+    aER.ReadIntoObject(*bufferUPtr);
+    return bufferUPtr;
   }
 };
 
