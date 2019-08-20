@@ -31,11 +31,15 @@ interface nsIReferrerInfo : nsISerializable
   [infallible] readonly attribute boolean sendReferrer;
 
   /**
-   * Get the computed referrer, if one has been set.  The computed referrer is
+  * Indicates if the referrer should not be sent or not even when it's available.
+  */
+  readonly attribute AString computedReferrerSpec;
+
+  /**
+   * Get the computed referrer, if one has been set. The computed referrer is
    * the original referrer manipulated by the referrer-policy. Use the result of
    * this function as the actual referrer value for the channel.
    */
-
   [must_use, noscript, nostdcall, notxpcom]
   URIRef GetComputedReferrer();
 

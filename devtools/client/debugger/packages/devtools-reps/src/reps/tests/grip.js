@@ -380,6 +380,8 @@ describe("Grip - Object with connected nodes", () => {
     node.at(1).simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(2);
+    expect(onDOMNodeMouseOut.mock.calls[0][0]).toBe(grips[0]);
+    expect(onDOMNodeMouseOut.mock.calls[1][0]).toBe(grips[1]);
   });
 
   it("calls the expected function on click", () => {

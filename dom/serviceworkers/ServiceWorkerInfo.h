@@ -33,6 +33,7 @@ class ServiceWorkerInfo final : public nsIServiceWorkerInfo {
   ServiceWorkerDescriptor mDescriptor;
   const nsString mCacheName;
   OriginAttributes mOriginAttributes;
+  const nsString mWorkerPrivateId;
 
   // This LoadFlags is only applied to imported scripts, since the main script
   // has already been downloaded when performing the bytecheck. This LoadFlag is

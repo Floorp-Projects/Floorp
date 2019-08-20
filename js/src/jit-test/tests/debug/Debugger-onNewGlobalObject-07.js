@@ -9,12 +9,10 @@ var hit;
 function handler(global) {
   hit++;
   log += hit;
-  if (hit == 2)
-    dbg1.enabled = dbg2.enabled = dbg3.enabled = false;
 };
 
 log = '';
 hit = 0;
 dbg1.onNewGlobalObject = dbg2.onNewGlobalObject = dbg3.onNewGlobalObject = handler;
 newGlobal();
-assertEq(log, '12');
+assertEq(log, '123');

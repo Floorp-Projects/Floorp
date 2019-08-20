@@ -1736,10 +1736,23 @@ class Matrix4x4Typed {
         aUnknown._31, aUnknown._32, aUnknown._33, aUnknown._34,
         aUnknown._41, aUnknown._42, aUnknown._43, aUnknown._44};
   }
+  /**
+   * For convenience, overload FromUnknownMatrix() for Maybe<Matrix>.
+   */
+  static Maybe<Matrix4x4Typed> FromUnknownMatrix(
+      const Maybe<Matrix4x4>& aUnknown) {
+    if (aUnknown.isSome()) {
+      return Some(FromUnknownMatrix(*aUnknown));
+    }
+    return Nothing();
+  }
 };
 
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits> Matrix4x4;
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits, double> Matrix4x4Double;
+
+// This typedef is for IPDL, which can't reference a template-id directly.
+typedef Maybe<Matrix4x4> MaybeMatrix4x4;
 
 class Matrix5x4 {
  public:

@@ -1395,8 +1395,17 @@ nsresult PendingLookup::DoLookupInternal() {
   resource->set_url(sourceSpec.get());
   resource->set_type(ClientDownloadRequest::DOWNLOAD_URL);
 
-  nsCOMPtr<nsIURI> referrer = nullptr;
-  rv = mQuery->GetReferrerURI(getter_AddRefs(referrer));
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  mozilla::Unused << mQuery->GetReferrerInfo(getter_AddRefs(referrerInfo));
+  nsCOMPtr<nsIURI> referrer;
+  // It is quite possible that referrer header is omitted due to security reason
+  // (for example navigation from https-> http). Hence we should use the
+  // original referrer which has not applied referrer policy yet, to make sure
+  // we don't mistakenly allow unsafe download.
+  if (referrerInfo) {
+    referrer = referrerInfo->GetOriginalReferrer();
+  }
+
   if (referrer) {
     nsCString referrerSpec;
     rv = GetStrippedSpec(referrer, referrerSpec);
@@ -1404,6 +1413,7 @@ nsresult PendingLookup::DoLookupInternal() {
     mBlocklistSpecs.AppendElement(referrerSpec);
     resource->set_referrer(referrerSpec.get());
   }
+
   nsCOMPtr<nsIArray> redirects;
   rv = mQuery->GetRedirects(getter_AddRefs(redirects));
   if (redirects) {

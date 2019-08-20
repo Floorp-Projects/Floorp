@@ -733,6 +733,15 @@ ReferrerInfo::Equals(nsIReferrerInfo* aOther, bool* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ReferrerInfo::GetComputedReferrerSpec(nsAString& aComputedReferrerSpec) {
+  aComputedReferrerSpec.Assign(
+      mComputedReferrer.isSome()
+          ? NS_ConvertUTF8toUTF16(mComputedReferrer.value())
+          : EmptyString());
+  return NS_OK;
+}
+
 already_AddRefed<nsIURI> ReferrerInfo::GetComputedReferrer() {
   if (!mComputedReferrer.isSome() || mComputedReferrer.value().IsEmpty()) {
     return nullptr;

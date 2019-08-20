@@ -136,6 +136,8 @@ class ServiceWorkerPrivate final {
         nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
         const nsAString& aResultingClientId, bool aIsReload) = 0;
 
+    virtual nsresult SpawnWorkerIfNeeded() = 0;
+
     virtual void TerminateWorker() = 0;
 
     virtual void UpdateState(ServiceWorkerState aState) = 0;

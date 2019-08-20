@@ -544,7 +544,12 @@ main(int argc, char **argv)
                 }
             }
             if (cipher > 0) {
-                SSL_CipherPrefSetDefault(cipher, PR_TRUE);
+                SECStatus rv = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName,
+                                    "error setting cipher default preference");
+                    goto cleanup;
+                }
             } else {
                 Usage(progName);
             }

@@ -74,32 +74,3 @@ test("Setting trackingAllocationSites to true should throw if the debugger " +
        assertEq(isTrackingAllocations(root1, d1r1), false);
        assertEq(isTrackingAllocations(root2, d1r2), false);
      });
-
-test("A Debugger isn't tracking allocation sites when disabled.",
-     () => {
-       dbg1.memory.trackingAllocationSites = true;
-       let d1r1 = dbg1.addDebuggee(root1);
-
-       assertEq(isTrackingAllocations(root1, d1r1), true);
-       dbg1.enabled = false;
-       assertEq(isTrackingAllocations(root1, d1r1), false);
-     });
-
-test("Re-enabling throws an error if we can't reinstall allocations tracking " +
-     "for all debuggees.",
-     () => {
-       dbg1.enabled = false
-       dbg1.memory.trackingAllocationSites = true;
-       let d1r1 = dbg1.addDebuggee(root1);
-       let d1r2 = dbg1.addDebuggee(root2);
-
-       // Can't install allocation hooks for root2 with this set.
-       root2.enableShellAllocationMetadataBuilder();
-
-       assertThrowsInstanceOf(() => dbg1.enabled = true,
-                              Error);
-
-       assertEq(dbg1.enabled, false);
-       assertEq(isTrackingAllocations(root1, d1r1), false);
-       assertEq(isTrackingAllocations(root2, d1r2), false);
-     });

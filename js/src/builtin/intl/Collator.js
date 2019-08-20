@@ -319,24 +319,27 @@ function collatorSearchLocaleData() {
 }
 
 /**
- * Function to be bound and returned by Intl.Collator.prototype.compare.
+ * Create function to be cached and returned by Intl.Collator.prototype.compare.
  *
  * Spec: ECMAScript Internationalization API Specification, 10.3.3.1.
  */
-function collatorCompareToBind(x, y) {
-    // Step 1.
-    var collator = this;
+function createCollatorCompare(collator) {
+    // This function is not inlined in $Intl_Collator_compare_get to avoid
+    // creating a call-object on each call to $Intl_Collator_compare_get.
+    return function(x, y) {
+        // Step 1 (implicit).
 
-    // Step 2.
-    assert(IsObject(collator), "collatorCompareToBind called with non-object");
-    assert(GuardToCollator(collator) !== null, "collatorCompareToBind called with non-Collator");
+        // Step 2.
+        assert(IsObject(collator), "collatorCompareToBind called with non-object");
+        assert(GuardToCollator(collator) !== null, "collatorCompareToBind called with non-Collator");
 
-    // Steps 3-6
-    var X = ToString(x);
-    var Y = ToString(y);
+        // Steps 3-6
+        var X = ToString(x);
+        var Y = ToString(y);
 
-    // Step 7.
-    return intl_CompareStrings(collator, X, Y);
+        // Step 7.
+        return intl_CompareStrings(collator, X, Y);
+    };
 }
 
 /**
@@ -362,11 +365,8 @@ function $Intl_Collator_compare_get() {
 
     // Step 4.
     if (internals.boundCompare === undefined) {
-        // Steps 4.a-b.
-        var F = callFunction(FunctionBind, collatorCompareToBind, collator);
-
-        // Step 4.c.
-        internals.boundCompare = F;
+        // Steps 4.a-c.
+        internals.boundCompare = createCollatorCompare(collator);
     }
 
     // Step 5.
