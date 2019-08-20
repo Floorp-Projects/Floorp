@@ -1132,7 +1132,7 @@ static bool IsSpaceStuffable(const char16_t* s) {
  */
 void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
                                       int32_t aLineFragmentLength) {
-  uint32_t prefixwidth =
+  const uint32_t prefixwidth =
       (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1 : 0) + mIndent;
 
   if (mLineBreakDue) EnsureVerticalSpace(mFloatingLines);
@@ -1166,6 +1166,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
   }
 
   mCurrentLine.Append(aLineFragment, aLineFragmentLength);
+
   if (MayWrap()) {
     mCurrentLineWidth +=
         GetUnicharStringWidth(aLineFragment, aLineFragmentLength);
@@ -1175,12 +1176,9 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
             (int32_t)mCurrentLineWidth,
         "mCurrentLineWidth and reality out of sync!");
 #endif
-  }
 
-  linelength = mCurrentLine.Length();
+    linelength = mCurrentLine.Length();
 
-  //  Wrap?
-  if (MayWrap()) {
 #ifdef DEBUG_wrapping
     NS_ASSERTION(
         GetUnicharstringWidth(mCurrentLine.get(), mCurrentLine.Length()) ==
@@ -1264,7 +1262,7 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
           mCurrentLine.Right(restOfLine, linelength - goodSpace);
         }
         // if breaker was U+0020, it has to consider for delsp=yes support
-        bool breakBySpace = mCurrentLine.CharAt(goodSpace) == ' ';
+        const bool breakBySpace = mCurrentLine.CharAt(goodSpace) == ' ';
         mCurrentLine.Truncate(goodSpace);
         EndLine(true, breakBySpace);
         mCurrentLine.Truncate();
@@ -1289,8 +1287,6 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
         break;
       }
     }
-  } else {
-    // No wrapping.
   }
 }
 
