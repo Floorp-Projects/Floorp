@@ -284,9 +284,15 @@ class AddonManager(object):
         if is_webext:
             details['version'] = manifest['version']
             details['name'] = manifest['name']
-            try:
-                details['id'] = manifest['applications']['gecko']['id']
-            except KeyError:
+            # Bug 1572404 - we support two locations for gecko-specific
+            # metadata.
+            for location in ('applications', 'browser_specific_settings'):
+                try:
+                    details['id'] = manifest[location]['gecko']['id']
+                    break
+                except KeyError:
+                    pass
+            if details['id'] is None:
                 details['id'] = cls._gen_iid(addon_path)
             details['unpack'] = False
         else:
