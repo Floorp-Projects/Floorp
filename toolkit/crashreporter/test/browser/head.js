@@ -10,6 +10,15 @@ function create_subdir(dir, subdirname) {
   return subdir;
 }
 
+function generate_uuid() {
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+    Ci.nsIUUIDGenerator
+  );
+  let uuid = uuidGenerator.generateUUID().toString();
+  // ditch the {}
+  return uuid.substring(1, uuid.length - 1);
+}
+
 // need to hold on to this to unregister for cleanup
 var _provider = null;
 
@@ -70,18 +79,13 @@ function cleanup_fake_appdir() {
 
 function add_fake_crashes(crD, count) {
   let results = [];
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
   let submitdir = crD.clone();
   submitdir.append("submitted");
   // create them from oldest to newest, to ensure that about:crashes
   // displays them in the correct order
   let date = Date.now() - count * 60000;
   for (let i = 0; i < count; i++) {
-    let uuid = uuidGenerator.generateUUID().toString();
-    // ditch the {}
-    uuid = "bp-" + uuid.substring(1, uuid.length - 2);
+    let uuid = "bp-" + generate_uuid();
     let fn = uuid + ".txt";
     let file = submitdir.clone();
     file.append(fn);
@@ -95,6 +99,17 @@ function add_fake_crashes(crD, count) {
   // that about:crashes lists them in
   results.sort((a, b) => b.date - a.date);
   return results;
+}
+
+function clear_fake_crashes(crD, crashes) {
+  let submitdir = crD.clone();
+  submitdir.append("submitted");
+  for (let i of crashes) {
+    let fn = i.id + ".txt";
+    let file = submitdir.clone();
+    file.append(fn);
+    file.remove(false);
+  }
 }
 
 function writeDataToFile(file, data) {
@@ -112,30 +127,45 @@ function writeDataToFile(file, data) {
   fstream.close();
 }
 
+function writeCrashReportFile(dir, uuid, suffix, date, data) {
+  let file = dir.clone();
+  file.append(uuid + suffix);
+  writeDataToFile(file, data);
+  file.lastModifiedTime = date;
+}
+
+function writeMinidumpFile(dir, uuid, date) {
+  // that's the start of a valid minidump, anyway
+  writeCrashReportFile(dir, uuid, ".dmp", date, "MDMP");
+}
+
+function writeExtraFile(dir, uuid, date, data) {
+  let extradata = "";
+  for (let x in data) {
+    extradata += x + "=" + data[x] + "\n";
+  }
+  writeCrashReportFile(dir, uuid, ".extra", date, extradata);
+}
+
+function writeMemoryReport(dir, uuid, date) {
+  let data = "Let's pretend this is a memory report";
+  writeCrashReportFile(dir, uuid, ".memory.json.gz", date, data);
+}
+
 function addPendingCrashreport(crD, date, extra) {
   let pendingdir = crD.clone();
   pendingdir.append("pending");
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
-    Ci.nsIUUIDGenerator
-  );
-  let uuid = uuidGenerator.generateUUID().toString();
-  // ditch the {}
-  uuid = uuid.substring(1, uuid.length - 1);
-  let dumpfile = pendingdir.clone();
-  dumpfile.append(uuid + ".dmp");
-  writeDataToFile(dumpfile, "MDMP"); // that's the start of a valid minidump, anyway
-  let extrafile = pendingdir.clone();
-  extrafile.append(uuid + ".extra");
-  let extradata = "";
-  for (let x in extra) {
-    extradata += x + "=" + extra[x] + "\n";
-  }
-  writeDataToFile(extrafile, extradata);
-  let memoryfile = pendingdir.clone();
-  memoryfile.append(uuid + ".memory.json.gz");
-  writeDataToFile(memoryfile, "Let's pretend this is a memory report");
-  dumpfile.lastModifiedTime = date;
-  extrafile.lastModifiedTime = date;
-  memoryfile.lastModifiedTime = date;
+  let uuid = generate_uuid();
+  writeMinidumpFile(pendingdir, uuid, date);
+  writeExtraFile(pendingdir, uuid, date, extra);
+  writeMemoryReport(pendingdir, uuid, date);
   return { id: uuid, date, pending: true, extra };
+}
+
+function addIncompletePendingCrashreport(crD, date) {
+  let pendingdir = crD.clone();
+  pendingdir.append("pending");
+  let uuid = generate_uuid();
+  writeMinidumpFile(pendingdir, uuid, date);
+  return { id: uuid, date, pending: true };
 }
