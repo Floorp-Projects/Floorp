@@ -85,6 +85,7 @@ const BadCertAndPinningHost sBadCertAndPinningHosts[] = {
     {"localhost", "unknownissuer"},
     {"a.pinning.example.com", "default-ee"},
     {"b.pinning.example.com", "default-ee"},
+    {"not-preloaded.example.com", "default-ee"},
     {nullptr, nullptr}};
 
 int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
