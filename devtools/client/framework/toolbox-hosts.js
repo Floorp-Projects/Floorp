@@ -437,6 +437,9 @@ function createDevToolsFrame(doc, className) {
   const frame = doc.createXULElement("iframe");
   frame.flex = 1; // Required to be able to shrink when the window shrinks
   frame.className = className;
+  if (Services.prefs.getBoolPref("devtools.toolbox.content-frame", false)) {
+    frame.setAttribute("type", "content");
+  }
   frame.tooltip = "aHTMLTooltip";
   return frame;
 }

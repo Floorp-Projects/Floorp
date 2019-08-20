@@ -408,3 +408,10 @@ pref("devtools.debugger.features.map-await-expression", true);
 // This is currently not exposed by any UI to avoid making
 // about:devtools-toolbox tabs unusable by mistake.
 pref("devtools.popup.disable_autohide", false);
+
+// Load the DevTools toolbox in a frame with type=content instead of type=chrome
+// See Bug 1539979 for more details.
+// We keep the option of running devtools in a chrome frame while we fix racy
+// tests that started failing when using type=content, but this ultimately should
+// be removed.
+pref("devtools.toolbox.content-frame", true);
