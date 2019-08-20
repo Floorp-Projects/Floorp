@@ -234,7 +234,7 @@ const queryThreadsBySourceObject: ReduceAllQuery<
     }, {})
 );
 
-export function getThreadsBySource(
+export function getAllThreadsBySource(
   state: SourceActorOuterState
 ): { [SourceId]: Array<ThreadId> } {
   return queryThreadsBySourceObject(state.sourceActors);
