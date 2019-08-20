@@ -75,16 +75,23 @@ android {
             applicationIdSuffix ".klar"
         }
 
-        x86 {
-            dimension "abi"
-        }
-
         arm {
             dimension "abi"
+            ndk {
+                abiFilter "armeabi-v7a"
+            }
         }
-
         aarch64 {
             dimension "abi"
+            ndk {
+                abiFilter "arm64-v8a"
+            }
+        }
+        x86 {
+            dimension "abi"
+            ndk {
+                abiFilter "x86"
+            }
         }
     }
 
