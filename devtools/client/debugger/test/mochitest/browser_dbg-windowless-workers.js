@@ -42,7 +42,7 @@ add_task(async function() {
   const dbg = await initDebugger("doc-windowless-workers.html");
   const mainThread = dbg.toolbox.threadFront.actor;
 
-  const workers = await getThreads(dbg);
+  const workers = await getWorkers(dbg);
   ok(workers.length == 2, "Got two workers");
   const thread1 = workers[0].actor;
   const thread2 = workers[1].actor;

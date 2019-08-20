@@ -186,7 +186,7 @@ export type Actions = {
   resumed: ActorId => void,
   newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
-  updateThreads: () => void,
+  updateWorkers: () => void,
 };
 
 type ConsoleClient = {

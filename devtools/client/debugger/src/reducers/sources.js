@@ -46,7 +46,7 @@ import {
   hasSourceActor,
   getSourceActor,
   getSourceActors,
-  getAllThreadsBySource,
+  getThreadsBySource,
   getBreakableLinesForSourceActors,
   type SourceActorId,
   type SourceActorOuterState,
@@ -851,7 +851,7 @@ type GetDisplayedSourceIDsSelector = (
   OuterState & SourceActorOuterState & DebuggeeOuterState
 ) => { [ThreadId]: Set<SourceId> };
 const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
-  getAllThreadsBySource,
+  getThreadsBySource,
   getAllDisplayedSources,
   (threadsBySource, displayedSources) => {
     const sourceIDsByThread = {};
