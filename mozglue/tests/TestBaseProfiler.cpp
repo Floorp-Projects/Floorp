@@ -1140,6 +1140,156 @@ void TestBlocksRingBufferThreading() {
   printf("TestBlocksRingBufferThreading done\n");
 }
 
+void TestBlocksRingBufferSerialization() {
+  printf("TestBlocksRingBufferSerialization...\n");
+
+  constexpr uint32_t MBSize = 64;
+  uint8_t buffer[MBSize * 3];
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer[i] = uint8_t('A' + i);
+  }
+  BlocksRingBuffer rb(&buffer[MBSize], MakePowerOfTwo32<MBSize>());
+
+  // Will expect literal string to always have the same address.
+#  define THE_ANSWER "The answer is "
+  const char* theAnswer = THE_ANSWER;
+
+  rb.PutObjects('0', WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER), 42,
+                std::string(" but pi="), 3.14);
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    char c0;
+    const char* answer;
+    int integer;
+    std::string str;
+    double pi;
+    aER.ReadIntoObjects(c0, answer, integer, str, pi);
+    MOZ_RELEASE_ASSERT(c0 == '0');
+    MOZ_RELEASE_ASSERT(answer == theAnswer);
+    MOZ_RELEASE_ASSERT(integer == 42);
+    MOZ_RELEASE_ASSERT(str == " but pi=");
+    MOZ_RELEASE_ASSERT(pi == 3.14);
+  });
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    char c0 = aER.ReadObject<char>();
+    MOZ_RELEASE_ASSERT(c0 == '0');
+    const char* answer = aER.ReadObject<const char*>();
+    MOZ_RELEASE_ASSERT(answer == theAnswer);
+    int integer = aER.ReadObject<int>();
+    MOZ_RELEASE_ASSERT(integer == 42);
+    std::string str = aER.ReadObject<std::string>();
+    MOZ_RELEASE_ASSERT(str == " but pi=");
+    double pi = aER.ReadObject<double>();
+    MOZ_RELEASE_ASSERT(pi == 3.14);
+  });
+
+  rb.Clear();
+  // Write an int and store its BlockIndex.
+  BlocksRingBuffer::BlockIndex blockIndex = rb.PutObject(123);
+  // It should be non-0.
+  MOZ_RELEASE_ASSERT(blockIndex != BlocksRingBuffer::BlockIndex{});
+  // Write that BlockIndex.
+  rb.PutObject(blockIndex);
+  rb.Read([&](BlocksRingBuffer::Reader* aR) {
+    BlocksRingBuffer::BlockIterator it = aR->begin();
+    const BlocksRingBuffer::BlockIterator itEnd = aR->end();
+    MOZ_RELEASE_ASSERT(it != itEnd);
+    MOZ_RELEASE_ASSERT((*it).ReadObject<int>() == 123);
+    ++it;
+    MOZ_RELEASE_ASSERT(it != itEnd);
+    MOZ_RELEASE_ASSERT((*it).ReadObject<BlocksRingBuffer::BlockIndex>() ==
+                       blockIndex);
+    ++it;
+    MOZ_RELEASE_ASSERT(it == itEnd);
+  });
+
+  rb.Clear();
+  rb.PutObjects(std::make_tuple(
+      '0', WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER), 42,
+      std::string(" but pi="), 3.14));
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    MOZ_RELEASE_ASSERT(aER.ReadObject<char>() == '0');
+    MOZ_RELEASE_ASSERT(aER.ReadObject<const char*>() == theAnswer);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<int>() == 42);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<std::string>() == " but pi=");
+    MOZ_RELEASE_ASSERT(aER.ReadObject<double>() == 3.14);
+  });
+
+  rb.Clear();
+  rb.PutObjects(MakeTuple('0',
+                          WrapBlocksRingBufferLiteralCStringPointer(THE_ANSWER),
+                          42, std::string(" but pi="), 3.14));
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    MOZ_RELEASE_ASSERT(aER.ReadObject<char>() == '0');
+    MOZ_RELEASE_ASSERT(aER.ReadObject<const char*>() == theAnswer);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<int>() == 42);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<std::string>() == " but pi=");
+    MOZ_RELEASE_ASSERT(aER.ReadObject<double>() == 3.14);
+  });
+
+  rb.Clear();
+  {
+    UniqueFreePtr<char> ufps(strdup(THE_ANSWER));
+    rb.PutObjects(ufps);
+  }
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    auto ufps = aER.ReadObject<UniqueFreePtr<char>>();
+    MOZ_RELEASE_ASSERT(!!ufps);
+    MOZ_RELEASE_ASSERT(std::string(THE_ANSWER) == ufps.get());
+  });
+
+  rb.Clear();
+  int intArray[] = {1, 2, 3, 4, 5};
+  rb.PutObjects(MakeSpan(intArray));
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    int intArrayOut[sizeof(intArray) / sizeof(intArray[0])] = {0};
+    auto outSpan = MakeSpan(intArrayOut);
+    aER.ReadIntoObject(outSpan);
+    for (size_t i = 0; i < sizeof(intArray) / sizeof(intArray[0]); ++i) {
+      MOZ_RELEASE_ASSERT(intArrayOut[i] == intArray[i]);
+    }
+  });
+
+  rb.Clear();
+  rb.PutObjects(Maybe<int>(Nothing{}), Maybe<int>(Some(123)));
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    Maybe<int> mi0, mi1;
+    aER.ReadIntoObjects(mi0, mi1);
+    MOZ_RELEASE_ASSERT(mi0.isNothing());
+    MOZ_RELEASE_ASSERT(mi1.isSome());
+    MOZ_RELEASE_ASSERT(*mi1 == 123);
+  });
+
+  rb.Clear();
+  using V = Variant<int, double, int>;
+  V v0(VariantIndex<0>{}, 123);
+  V v1(3.14);
+  V v2(VariantIndex<2>{}, 456);
+  rb.PutObjects(v0, v1, v2);
+  rb.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
+  });
+
+  // Check that only the provided stack-based sub-buffer was modified.
+  uint32_t changed = 0;
+  for (size_t i = MBSize; i < MBSize * 2; ++i) {
+    changed += (buffer[i] == uint8_t('A' + i)) ? 0 : 1;
+  }
+  // Expect at least 75% changes.
+  MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+
+  printf("TestBlocksRingBufferSerialization done\n");
+}
+
 // Increase the depth, to a maximum (to avoid too-deep recursion).
 static constexpr size_t NextDepth(size_t aDepth) {
   constexpr size_t MAX_DEPTH = 128;
@@ -1194,6 +1344,7 @@ void TestProfiler() {
   TestBlocksRingBufferAPI();
   TestBlocksRingBufferUnderlyingBufferChanges();
   TestBlocksRingBufferThreading();
+  TestBlocksRingBufferSerialization();
 
   {
     printf("profiler_init()...\n");
