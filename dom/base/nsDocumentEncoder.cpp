@@ -930,7 +930,6 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
           childAsNode = childAsNode->GetNextSibling();
         }
 
-        NS_ENSURE_TRUE(!!childAsNode, NS_ERROR_FAILURE);
         MOZ_ASSERT(j == startOffset);
 
         for (; childAsNode && j < endOffset; ++j) {
@@ -941,7 +940,6 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
           }
 
           NS_ENSURE_SUCCESS(rv, rv);
-
           childAsNode = childAsNode->GetNextSibling();
         }
       }
