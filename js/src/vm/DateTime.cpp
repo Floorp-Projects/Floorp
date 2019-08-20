@@ -157,11 +157,11 @@ static int32_t UTCToLocalStandardOffsetSeconds() {
   return local_secs - (utc_secs + SecondsPerDay);
 }
 
-bool js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
+void js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
     ResetTimeZoneMode mode) {
   // Nothing to do when an update request is already enqueued.
   if (localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
-    return true;
+    return;
   }
 
   // Mark the state as needing an update, but defer the actual update until it's
@@ -170,14 +170,17 @@ bool js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
   // main-thread I/O blocking the process.
   if (mode == ResetTimeZoneMode::ResetEvenIfOffsetUnchanged) {
     localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
-    return true;
+  } else {
+    localTZAStatus_ = LocalTimeZoneAdjustmentStatus::UpdateIfChanged;
   }
-
-  // In all other cases simply check if we need to perform an update.
-  return resetTimeZoneAdjustment(mode);
 }
 
-bool js::DateTimeInfo::resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
+void js::DateTimeInfo::resetTimeZoneAdjustment() {
+  MOZ_ASSERT(localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid);
+
+  bool updateIfChanged =
+      localTZAStatus_ == LocalTimeZoneAdjustmentStatus::UpdateIfChanged;
+
   localTZAStatus_ = LocalTimeZoneAdjustmentStatus::Valid;
 
   /*
@@ -187,9 +190,8 @@ bool js::DateTimeInfo::resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
   utcToLocalStandardOffsetSeconds_ = UTCToLocalStandardOffsetSeconds();
 
   int32_t newTZA = utcToLocalStandardOffsetSeconds_ * msPerSecond;
-  if (mode == ResetTimeZoneMode::DontResetIfOffsetUnchanged &&
-      newTZA == localTZA_) {
-    return false;
+  if (updateIfChanged && newTZA == localTZA_) {
+    return;
   }
 
   localTZA_ = newTZA;
@@ -212,11 +214,21 @@ bool js::DateTimeInfo::resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
   daylightSavingsName_ = nullptr;
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
-  return true;
+#if ENABLE_INTL_API
+  icuTimeZoneStatus_ = IcuTimeZoneStatus::NeedsUpdate;
+#endif
 }
 
 js::DateTimeInfo::DateTimeInfo() {
   localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
+
+#if ENABLE_INTL_API
+  // Set the ICU time zone status into the invalid state, so we compute the
+  // actual defaults on first access. We don't yet want to initialize ICU's
+  // time zone classes, because that may cause I/O operations slowing down
+  // the JS engine initialization, which we're currently in the middle of.
+  icuTimeZoneStatus_ = IcuTimeZoneStatus::NeedsUpdate;
+#endif
 }
 
 js::DateTimeInfo::~DateTimeInfo() = default;
@@ -500,7 +512,7 @@ icu::TimeZone* js::DateTimeInfo::timeZone() {
     // The current default might be stale, because JS::ResetTimeZone()
     // doesn't immediately update ICU's default time zone. So perform an
     // update if needed.
-    js::ResyncICUDefaultTimeZone();
+    internalResyncICUDefaultTimeZone();
 
     timeZone_.reset(icu::TimeZone::createDefault());
     MOZ_ASSERT(timeZone_);
@@ -512,54 +524,22 @@ icu::TimeZone* js::DateTimeInfo::timeZone() {
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instance;
 
-/* static */ js::ExclusiveData<js::IcuTimeZoneStatus>* js::IcuTimeZoneState;
-
 bool js::InitDateTimeState() {
   MOZ_ASSERT(!DateTimeInfo::instance, "we should be initializing only once");
 
   DateTimeInfo::instance =
       js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex);
-  if (!DateTimeInfo::instance) {
-    return false;
-  }
-
-  MOZ_ASSERT(!IcuTimeZoneState, "we should be initializing only once");
-
-  // Set the ICU time zone status into the invalid state, so we compute the
-  // actual defaults on first access. We don't yet want to initialize ICU's
-  // time zone classes, because that may cause I/O operations slowing down
-  // the JS engine initialization, which we're currently in the middle of.
-  IcuTimeZoneState = js_new<ExclusiveData<IcuTimeZoneStatus>>(
-      mutexid::IcuTimeZoneStateMutex, IcuTimeZoneStatus::NeedsUpdate);
-  if (!IcuTimeZoneState) {
-    js_delete(DateTimeInfo::instance);
-    DateTimeInfo::instance = nullptr;
-    return false;
-  }
-
-  return true;
+  return !!DateTimeInfo::instance;
 }
 
 /* static */
 void js::FinishDateTimeState() {
-  js_delete(IcuTimeZoneState);
-  IcuTimeZoneState = nullptr;
-
   js_delete(DateTimeInfo::instance);
   DateTimeInfo::instance = nullptr;
 }
 
 void js::ResetTimeZoneInternal(ResetTimeZoneMode mode) {
-  bool needsUpdate = js::DateTimeInfo::updateTimeZoneAdjustment(mode);
-
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-  if (needsUpdate) {
-    auto guard = js::IcuTimeZoneState->lock();
-    guard.get() = js::IcuTimeZoneStatus::NeedsUpdate;
-  }
-#else
-  mozilla::Unused << needsUpdate;
-#endif
+  js::DateTimeInfo::updateTimeZoneAdjustment(mode);
 }
 
 JS_PUBLIC_API void JS::ResetTimeZone() {
@@ -755,9 +735,12 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
 #endif /* ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT) */
 
 void js::ResyncICUDefaultTimeZone() {
+  js::DateTimeInfo::resyncICUDefaultTimeZone();
+}
+
+void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
 #if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-  auto guard = IcuTimeZoneState->lock();
-  if (guard.get() == IcuTimeZoneStatus::NeedsUpdate) {
+  if (icuTimeZoneStatus_ == IcuTimeZoneStatus::NeedsUpdate) {
     bool recreate = true;
 
     if (const char* tz = std::getenv("TZ")) {
@@ -801,7 +784,7 @@ void js::ResyncICUDefaultTimeZone() {
     if (recreate) {
       icu::TimeZone::recreateDefault();
     }
-    guard.get() = IcuTimeZoneStatus::Valid;
+    icuTimeZoneStatus_ = IcuTimeZoneStatus::Valid;
   }
 #endif
 }

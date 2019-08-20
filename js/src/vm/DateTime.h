@@ -66,7 +66,16 @@ enum class ResetTimeZoneMode : bool {
  */
 extern void ResetTimeZoneInternal(ResetTimeZoneMode mode);
 
-/*
+/**
+ * ICU's default time zone, used for various date/time formatting operations
+ * that include the local time in the representation, is allowed to go stale
+ * for unfortunate performance reasons.  Call this function when an up-to-date
+ * default time zone is required, to resync ICU's default time zone with
+ * reality.
+ */
+extern void ResyncICUDefaultTimeZone();
+
+/**
  * Stores date/time information, particularly concerning the current local
  * time zone, and implements a small cache for daylight saving time offset
  * computation.
@@ -124,9 +133,8 @@ class DateTimeInfo {
 
   static auto acquireLockWithValidTimeZone() {
     auto guard = instance->lock();
-    if (guard->localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
-      guard->resetTimeZoneAdjustment(
-          ResetTimeZoneMode::ResetEvenIfOffsetUnchanged);
+    if (guard->localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid) {
+      guard->resetTimeZoneAdjustment();
     }
     return guard;
   }
@@ -184,16 +192,19 @@ class DateTimeInfo {
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
  private:
-  // We don't want anyone accidentally calling *only*
-  // DateTimeInfo::updateTimeZoneAdjustment() to respond to a system time
-  // zone change (missing the necessary poking of ICU as well), so ensure
-  // only js::ResetTimeZoneInternal() can call this via access restrictions.
+  // The two methods below should only be called via js::ResetTimeZoneInternal()
+  // and js::ResyncICUDefaultTimeZone().
   friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
+  friend void js::ResyncICUDefaultTimeZone();
 
-  // Returns true iff the internal DST offset cache was purged.
-  static bool updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
+  static void updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
     auto guard = instance->lock();
-    return guard->internalUpdateTimeZoneAdjustment(mode);
+    guard->internalUpdateTimeZoneAdjustment(mode);
+  }
+
+  static void resyncICUDefaultTimeZone() {
+    auto guard = acquireLockWithValidTimeZone();
+    guard->internalResyncICUDefaultTimeZone();
   }
 
   struct RangeCache {
@@ -211,9 +222,26 @@ class DateTimeInfo {
     void sanityCheck();
   };
 
-  enum class LocalTimeZoneAdjustmentStatus : bool { Valid, NeedsUpdate };
+  enum class LocalTimeZoneAdjustmentStatus : uint8_t {
+    Valid,
+    NeedsUpdate,
+    UpdateIfChanged
+  };
 
   LocalTimeZoneAdjustmentStatus localTZAStatus_;
+
+#if ENABLE_INTL_API
+  // When bug 1343826 gets ever implemented, we can revert the second patch in
+  // bug 1533328 and use again a separate lock for ICU's time zone state, which
+  // may help to reduce possible lock contention when different threads access
+  // this class and at the same time also query the ICU time zone state.
+  //
+  // (With bug 1343826 implemented, the sporadic reset of the time zone cache,
+  // cf. |ResetTimeZoneMode::DontResetIfOffsetUnchanged|, is no longer needed.)
+  enum class IcuTimeZoneStatus : bool { Valid, NeedsUpdate };
+
+  IcuTimeZoneStatus icuTimeZoneStatus_;
+#endif
 
   /*
    * The current local time zone adjustment, cached because retrieving this
@@ -276,9 +304,11 @@ class DateTimeInfo {
 
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
-  bool internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
+  void internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
 
-  bool resetTimeZoneAdjustment(ResetTimeZoneMode mode);
+  void resetTimeZoneAdjustment();
+
+  void internalResyncICUDefaultTimeZone();
 
   int64_t toClampedSeconds(int64_t milliseconds);
 
@@ -321,19 +351,6 @@ class DateTimeInfo {
   icu::TimeZone* timeZone();
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 };
-
-enum class IcuTimeZoneStatus { Valid, NeedsUpdate };
-
-extern ExclusiveData<IcuTimeZoneStatus>* IcuTimeZoneState;
-
-/**
- * ICU's default time zone, used for various date/time formatting operations
- * that include the local time in the representation, is allowed to go stale
- * for unfortunate performance reasons.  Call this function when an up-to-date
- * default time zone is required, to resync ICU's default time zone with
- * reality.
- */
-extern void ResyncICUDefaultTimeZone();
 
 } /* namespace js */
 
