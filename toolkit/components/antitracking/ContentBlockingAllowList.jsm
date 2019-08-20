@@ -43,29 +43,13 @@ const ContentBlockingAllowList = {
     }
   },
 
-  _baseURIForAntiTrackingCommon(browser) {
-    // Convert document URI into the format used by
-    // AntiTrackingCommon::IsOnContentBlockingAllowList.
-    // Any scheme turned into https is correct.
-    try {
-      return Services.io.newURI("https://" + browser.currentURI.hostPort);
-    } catch (e) {
-      // Getting the hostPort for about: and file: URIs fails, but TP doesn't work with
-      // these URIs anyway, so just return null here.
-      return null;
-    }
-  },
-
   _basePrincipalForAntiTrackingCommon(browser) {
-    let baseURI = this._baseURIForAntiTrackingCommon(browser);
-    if (!baseURI) {
+    let principal = browser.contentBlockingAllowListPrincipal;
+    // We can only use content principals for this purpose.
+    if (!principal || !principal.isContentPrincipal) {
       return null;
     }
-    let attrs = browser.contentPrincipal.originAttributes;
-    return Services.scriptSecurityManager.createContentPrincipal(
-      baseURI,
-      attrs
-    );
+    return principal;
   },
 
   _permissionTypeFor(browser) {

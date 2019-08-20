@@ -64,7 +64,7 @@ class BasicCompositor : public Compositor {
       const gfx::IntPoint& aSourcePoint) override;
 
   virtual already_AddRefed<CompositingRenderTarget> CreateRenderTargetForWindow(
-      const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect,
+      const gfx::IntRect& aRect, const gfx::IntRegion& aClearRegion,
       BufferMode aBufferMode);
 
   already_AddRefed<DataTextureSource> CreateDataTextureSource(
@@ -183,11 +183,14 @@ class BasicCompositor : public Compositor {
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
+  // The bounds that mDrawTarget occupies in window space.
+  gfx::IntRect mDrawTargetBounds;
+
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
 
-  LayoutDeviceIntRect mInvalidRect;
-  LayoutDeviceIntRegion mInvalidRegion;
+  gfx::IntRect mInvalidRect;
+  gfx::IntRegion mInvalidRegion;
 
   uint32_t mMaxTextureSize;
   bool mIsPendingEndRemoteDrawing;

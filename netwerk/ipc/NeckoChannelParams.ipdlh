@@ -234,6 +234,7 @@ struct HttpChannelOpenArgs
   nsIReferrerInfo             referrerInfo;
   URIParams?                  apiRedirectTo;
   URIParams?                  topWindowURI;
+  OptionalPrincipalInfo       contentBlockingAllowListPrincipal;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;

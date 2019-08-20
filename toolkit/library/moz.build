@@ -29,6 +29,7 @@ def Libxul(name, output_category=None):
         'msimg32.dll',
         'netapi32.dll',
         'secur32.dll',
+        'urlmon.dll',
         'wininet.dll',
         'winspool.drv'
     ]

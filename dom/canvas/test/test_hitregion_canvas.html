@@ -72,8 +72,8 @@ function runTests() {
  try {
   test_hitregions();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_hitregions");
+  throw e;
  }
  SimpleTest.finish();
 }

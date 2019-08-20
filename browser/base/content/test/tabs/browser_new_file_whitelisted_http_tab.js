@@ -11,9 +11,8 @@ add_task(async function() {
   });
 
   await BrowserTestUtils.withNewTab(TEST_HTTP, async function(fileBrowser) {
-    is(
-      fileBrowser.remoteType,
-      E10SUtils.WEB_REMOTE_TYPE,
+    ok(
+      E10SUtils.isWebRemoteType(fileBrowser),
       "Check that tab normally has web remote type."
     );
   });

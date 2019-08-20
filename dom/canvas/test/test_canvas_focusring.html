@@ -60,8 +60,8 @@ function runTests() {
  try {
   test_drawFocusIfNeeded_canvas();
  } catch(e) {
-  throw e;
   ok(false, "unexpected exception thrown in: test_drawFocusIfNeeded_canvas");
+  throw e;
  }
 
  SpecialPowers.setBoolPref("canvas.focusring.enabled", false);

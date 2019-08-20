@@ -62,11 +62,7 @@
               .then(
                 result => step(gen.next(result)),
                 error => {
-                  try {
-                    step(gen.throw(error));
-                  } catch (err) {
-                    throw err;
-                  }
+                  step(gen.throw(error));
                 }
               )
               .catch(err => reject(err));
