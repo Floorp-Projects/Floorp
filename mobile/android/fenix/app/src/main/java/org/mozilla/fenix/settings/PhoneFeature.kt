@@ -35,22 +35,22 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         val label = when (this) {
             CAMERA -> {
                 sitePermissions?.camera?.toString(context) ?: settings
-                    ?.getSitePermissionsPhoneFeatureCameraAction()
+                    ?.sitePermissionsPhoneFeatureCameraAction
                     ?.toString(context)
             }
             LOCATION -> {
                 sitePermissions?.location?.toString(context) ?: settings
-                    ?.getSitePermissionsPhoneFeatureLocation()
+                    ?.sitePermissionsPhoneFeatureLocation
                     ?.toString(context)
             }
             MICROPHONE -> {
                 sitePermissions?.microphone?.toString(context) ?: settings
-                    ?.getSitePermissionsPhoneFeatureMicrophoneAction()
+                    ?.sitePermissionsPhoneFeatureMicrophoneAction
                     ?.toString(context)
             }
             NOTIFICATION -> {
                 sitePermissions?.notification?.toString(context) ?: settings
-                    ?.getSitePermissionsPhoneFeatureNotificationAction()
+                    ?.sitePermissionsPhoneFeatureNotificationAction
                     ?.toString(context)
             }
         }
@@ -61,22 +61,22 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         val status = when (this) {
             CAMERA -> {
                 sitePermissions?.camera ?: settings
-                    ?.getSitePermissionsPhoneFeatureCameraAction()
+                    ?.sitePermissionsPhoneFeatureCameraAction
                     ?.toStatus()
             }
             LOCATION -> {
                 sitePermissions?.location ?: settings
-                    ?.getSitePermissionsPhoneFeatureLocation()
+                    ?.sitePermissionsPhoneFeatureLocation
                     ?.toStatus()
             }
             MICROPHONE -> {
                 sitePermissions?.microphone ?: settings
-                    ?.getSitePermissionsPhoneFeatureMicrophoneAction()
+                    ?.sitePermissionsPhoneFeatureMicrophoneAction
                     ?.toStatus()
             }
             NOTIFICATION -> {
                 sitePermissions?.notification ?: settings
-                    ?.getSitePermissionsPhoneFeatureNotificationAction()
+                    ?.sitePermissionsPhoneFeatureNotificationAction
                     ?.toStatus()
             }
         }

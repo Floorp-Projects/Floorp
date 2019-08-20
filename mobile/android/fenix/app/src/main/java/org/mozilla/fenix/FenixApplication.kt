@@ -29,9 +29,9 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
+import org.mozilla.fenix.GleanMetrics.ExperimentsMetrics
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.GleanMetrics.ExperimentsMetrics
 import java.io.File
 
 @SuppressLint("Registered")
@@ -241,12 +241,12 @@ open class FenixApplication : Application() {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                     )
-                    settings.setFollowDeviceTheme(true)
+                    settings.shouldFollowDeviceTheme = true
                 } else {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_NO
                     )
-                    settings.setLightTheme(true)
+                    settings.shouldUseLightTheme = true
                 }
             }
         }

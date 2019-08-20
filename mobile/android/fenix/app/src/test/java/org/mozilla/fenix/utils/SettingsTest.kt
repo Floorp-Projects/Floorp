@@ -40,13 +40,13 @@ class SettingsTest {
         assertFalse(settings.usePrivateMode)
 
         // When
-        settings.setPrivateMode(true)
+        settings.usePrivateMode = true
 
         // Then
         assertTrue(settings.usePrivateMode)
 
         // When
-        settings.setPrivateMode(false)
+        settings.usePrivateMode = false
 
         // Then
         assertFalse(settings.usePrivateMode)
@@ -59,7 +59,7 @@ class SettingsTest {
         assertEquals("", settings.defaultSearchEngineName)
 
         // When
-        settings.setDefaultSearchEngineByName("Mozilla")
+        settings.defaultSearchEngineName = "Mozilla"
 
         // Then
         assertEquals("Mozilla", settings.defaultSearchEngineName)
@@ -141,7 +141,7 @@ class SettingsTest {
         assertFalse(settings.shouldUseLightTheme)
 
         // When
-        settings.setLightTheme(true)
+        settings.shouldUseLightTheme = true
 
         // Then
         assertTrue(settings.shouldUseLightTheme)
@@ -154,7 +154,7 @@ class SettingsTest {
         assertTrue(settings.shouldUseAutoSize)
 
         // When
-        settings.setAutoSize(false)
+        settings.shouldUseAutoSize = false
 
         // Then
         assertFalse(settings.shouldUseAutoSize)
@@ -167,7 +167,7 @@ class SettingsTest {
         assertEquals(1f, settings.fontSizeFactor)
 
         // When
-        settings.setFontSizeFactor(2f)
+        settings.fontSizeFactor = 2f
 
         // Then
         assertEquals(2f, settings.fontSizeFactor)
@@ -194,7 +194,7 @@ class SettingsTest {
         assertFalse(settings.shouldFollowDeviceTheme)
 
         // When
-        settings.setFollowDeviceTheme(true)
+        settings.shouldFollowDeviceTheme = true
 
         // Then
         assertTrue(settings.shouldFollowDeviceTheme)
@@ -207,7 +207,7 @@ class SettingsTest {
         assertTrue(settings.shouldUseTrackingProtection)
 
         // When
-        settings.setTrackingProtection(false)
+        settings.shouldUseTrackingProtection = false
 
         // Then
         assertFalse(settings.shouldUseTrackingProtection)
@@ -231,52 +231,52 @@ class SettingsTest {
     fun sitePermissionsPhoneFeatureCameraAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureCameraAction())
+        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureCameraAction)
 
         // When
-        settings.setSitePermissionsPhoneFeatureCameraAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureCameraAction = BLOCKED
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureCameraAction())
+        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureCameraAction)
     }
 
     @Test
     fun sitePermissionsPhoneFeatureMicrophoneAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureMicrophoneAction())
+        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureMicrophoneAction)
 
         // When
-        settings.setSitePermissionsPhoneFeatureMicrophoneAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureMicrophoneAction = BLOCKED
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureMicrophoneAction())
+        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureMicrophoneAction)
     }
 
     @Test
     fun sitePermissionsPhoneFeatureNotificationAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureNotificationAction())
+        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureNotificationAction)
 
         // When
-        settings.setSitePermissionsPhoneFeatureNotificationAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureNotificationAction = BLOCKED
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureNotificationAction())
+        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureNotificationAction)
     }
 
     @Test
     fun sitePermissionsPhoneFeatureLocation() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureLocation())
+        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureLocation)
 
         // When
-        settings.setSitePermissionsPhoneFeatureLocation(BLOCKED)
+        settings.sitePermissionsPhoneFeatureLocation = BLOCKED
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureLocation())
+        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureLocation)
     }
 
     @Test
@@ -292,7 +292,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_camera() {
         // When
-        settings.setSitePermissionsPhoneFeatureCameraAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureCameraAction = BLOCKED
 
         // Then
         assertEquals(
@@ -304,7 +304,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_notification() {
         // When
-        settings.setSitePermissionsPhoneFeatureNotificationAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureNotificationAction = BLOCKED
 
         // Then
         assertEquals(
@@ -316,7 +316,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_location() {
         // When
-        settings.setSitePermissionsPhoneFeatureLocation(BLOCKED)
+        settings.sitePermissionsPhoneFeatureLocation = BLOCKED
 
         // Then
         assertEquals(
@@ -328,7 +328,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_microphone() {
         // When
-        settings.setSitePermissionsPhoneFeatureMicrophoneAction(BLOCKED)
+        settings.sitePermissionsPhoneFeatureMicrophoneAction = BLOCKED
 
         // Then
         assertEquals(

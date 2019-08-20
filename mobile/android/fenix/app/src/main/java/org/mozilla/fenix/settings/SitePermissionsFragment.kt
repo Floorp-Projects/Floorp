@@ -11,10 +11,10 @@ import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
-import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
-import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
+import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
+import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
@@ -56,19 +56,19 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         val settings = Settings.getInstance(requireContext())
 
         val cameraAction = settings
-            .getSitePermissionsPhoneFeatureCameraAction()
+            .sitePermissionsPhoneFeatureCameraAction
             .toString(requireContext())
 
         val locationAction = settings
-            .getSitePermissionsPhoneFeatureLocation()
+            .sitePermissionsPhoneFeatureLocation
             .toString(requireContext())
 
         val microPhoneAction = settings
-            .getSitePermissionsPhoneFeatureMicrophoneAction()
+            .sitePermissionsPhoneFeatureMicrophoneAction
             .toString(requireContext())
 
         val notificationAction = settings
-            .getSitePermissionsPhoneFeatureNotificationAction()
+            .sitePermissionsPhoneFeatureNotificationAction
             .toString(requireContext())
 
         initPhoneFeature(CAMERA, cameraAction)

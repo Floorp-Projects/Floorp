@@ -21,15 +21,15 @@ import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
-import mozilla.components.service.fxa.DeviceConfig
-import mozilla.components.service.fxa.ServerConfig
-import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushConfig
 import mozilla.components.feature.push.PushSubscriptionObserver
 import mozilla.components.feature.push.PushType
+import mozilla.components.service.fxa.DeviceConfig
+import mozilla.components.service.fxa.ServerConfig
+import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
@@ -143,7 +143,7 @@ class BackgroundServices(
 
             context.components.analytics.metrics.track(Event.SyncAuthSignOut)
 
-            Settings.instance?.setFxaSignedIn(false)
+            Settings.instance?.fxaSignedIn = false
         }
 
         override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
@@ -156,7 +156,7 @@ class BackgroundServices(
 
             context.components.analytics.metrics.track(Event.SyncAuthSignIn)
 
-            Settings.instance?.setFxaSignedIn(true)
+            Settings.instance?.fxaSignedIn = true
         }
     }
 
@@ -178,7 +178,7 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
-        Settings.instance?.setFxaHasSyncedItems(syncConfig?.syncableStores?.isNotEmpty() ?: false)
+        Settings.instance?.fxaHasSyncedItems = syncConfig?.syncableStores?.isNotEmpty() ?: false
 
         if (FeatureFlags.sendTabEnabled) {
             it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)

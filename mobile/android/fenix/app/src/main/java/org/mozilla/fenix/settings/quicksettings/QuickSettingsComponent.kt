@@ -9,14 +9,14 @@ import android.view.ViewGroup
 import androidx.core.net.toUri
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.mvi.ViewState
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 import org.mozilla.fenix.mvi.UIView
+import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.toggle
 import org.mozilla.fenix.utils.Settings
@@ -48,10 +48,10 @@ class QuickSettingsComponent(
         return if (sitePermissions == null) {
             val settings = Settings.getInstance(context)
             val origin = requireNotNull(url.toUri().host)
-            var location = settings.getSitePermissionsPhoneFeatureLocation().toStatus()
-            var camera = settings.getSitePermissionsPhoneFeatureCameraAction().toStatus()
-            var microphone = settings.getSitePermissionsPhoneFeatureMicrophoneAction().toStatus()
-            var notification = settings.getSitePermissionsPhoneFeatureNotificationAction().toStatus()
+            var location = settings.sitePermissionsPhoneFeatureLocation.toStatus()
+            var camera = settings.sitePermissionsPhoneFeatureCameraAction.toStatus()
+            var microphone = settings.sitePermissionsPhoneFeatureMicrophoneAction.toStatus()
+            var notification = settings.sitePermissionsPhoneFeatureNotificationAction.toStatus()
 
             when (featurePhone) {
                 PhoneFeature.CAMERA -> camera = camera.toggle()

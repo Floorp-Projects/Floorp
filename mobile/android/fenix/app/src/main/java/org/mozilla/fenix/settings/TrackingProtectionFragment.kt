@@ -33,8 +33,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         preferenceTP?.isChecked = Settings.getInstance(context!!).shouldUseTrackingProtection
         preferenceTP?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { _, newValue ->
-                Settings.getInstance(requireContext())
-                    .setTrackingProtection(newValue = newValue as Boolean)
+                Settings.getInstance(requireContext()).shouldUseTrackingProtection = newValue as Boolean
                 with(requireComponents) {
                     val policy = core.createTrackingProtectionPolicy(newValue)
                     useCases.settingsUseCases.updateTrackingProtection.invoke(policy)

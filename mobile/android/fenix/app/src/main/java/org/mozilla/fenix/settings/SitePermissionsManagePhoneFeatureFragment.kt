@@ -122,10 +122,10 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     private val PhoneFeature.action: SitePermissionsRules.Action
         get() {
             return when (phoneFeature) {
-                PhoneFeature.CAMERA -> settings.getSitePermissionsPhoneFeatureCameraAction()
-                PhoneFeature.LOCATION -> settings.getSitePermissionsPhoneFeatureLocation()
-                PhoneFeature.MICROPHONE -> settings.getSitePermissionsPhoneFeatureMicrophoneAction()
-                PhoneFeature.NOTIFICATION -> settings.getSitePermissionsPhoneFeatureNotificationAction()
+                PhoneFeature.CAMERA -> settings.sitePermissionsPhoneFeatureCameraAction
+                PhoneFeature.LOCATION -> settings.sitePermissionsPhoneFeatureLocation
+                PhoneFeature.MICROPHONE -> settings.sitePermissionsPhoneFeatureMicrophoneAction
+                PhoneFeature.NOTIFICATION -> settings.sitePermissionsPhoneFeatureNotificationAction
             }
         }
 
@@ -145,10 +145,10 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
 
     private fun saveActionInSettings(action: SitePermissionsRules.Action) {
         when (phoneFeature) {
-            PhoneFeature.CAMERA -> settings.setSitePermissionsPhoneFeatureCameraAction(action)
-            PhoneFeature.LOCATION -> settings.setSitePermissionsPhoneFeatureLocation(action)
-            PhoneFeature.MICROPHONE -> settings.setSitePermissionsPhoneFeatureMicrophoneAction(action)
-            PhoneFeature.NOTIFICATION -> settings.setSitePermissionsPhoneFeatureNotificationAction(action)
+            PhoneFeature.CAMERA -> settings.sitePermissionsPhoneFeatureCameraAction = action
+            PhoneFeature.LOCATION -> settings.sitePermissionsPhoneFeatureLocation = action
+            PhoneFeature.MICROPHONE -> settings.sitePermissionsPhoneFeatureMicrophoneAction = action
+            PhoneFeature.NOTIFICATION -> settings.sitePermissionsPhoneFeatureNotificationAction = action
         }
     }
 }

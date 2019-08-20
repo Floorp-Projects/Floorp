@@ -25,7 +25,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
                 (newValue as? Int).let {
                     // Value is mapped from 0->30 in steps of 1 so let's convert to float in range 0.5->2.0
                     val newTextScale = ((newValue as Int * STEP_SIZE) + MIN_SCALE_VALUE).toFloat() / PERCENT_TO_DECIMAL
-                    Settings.getInstance(context!!).setFontSizeFactor(newTextScale)
+                    Settings.getInstance(context!!).fontSizeFactor = newTextScale
                     requireComponents.core.engine.settings.fontSizeFactor = newTextScale
                     requireComponents.useCases.sessionUseCases.reload.invoke()
                 }
@@ -37,7 +37,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         val useAutoSizePreference =
             findPreference<SwitchPreference>(getString(R.string.pref_key_accessibility_auto_size))
         useAutoSizePreference?.setOnPreferenceChangeListener { _, newValue ->
-            Settings.getInstance(context!!).setAutoSize(newValue as Boolean)
+            Settings.getInstance(context!!).shouldUseAutoSize = newValue as Boolean
             requireComponents.core.engine.settings.automaticFontSizeAdjustment = newValue
             if (!newValue) {
                 requireComponents.core.engine.settings.fontSizeFactor = Settings.getInstance(context!!).fontSizeFactor

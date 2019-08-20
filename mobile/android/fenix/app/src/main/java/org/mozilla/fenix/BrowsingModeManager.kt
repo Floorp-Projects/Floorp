@@ -38,7 +38,7 @@ class DefaultBrowsingModeManager(
     override var mode: BrowsingMode
         get() = BrowsingMode.fromBoolean(settings.usePrivateMode)
         set(value) {
-            settings.setPrivateMode(value.isPrivate)
+            settings.usePrivateMode = value.isPrivate
             modeDidChange(value)
         }
 }
