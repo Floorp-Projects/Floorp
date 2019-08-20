@@ -49,6 +49,8 @@ interface nsIServiceWorkerInfo : nsISupports
   const unsigned short STATE_REDUNDANT = 5;
   const unsigned short STATE_UNKNOWN = 6;
 
+  readonly attribute AString id;
+
   readonly attribute AString scriptSpec;
   readonly attribute AString cacheName;
 
