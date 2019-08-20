@@ -258,6 +258,20 @@ class BlocksRingBuffer {
     ;
   }
 
+  // Size of external resources.
+  // Note: `mEntryDestructor`'s potential external data (for its captures) is
+  // not included, as it's hidden in the `std::function` implementation.
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    if (!mMaybeUnderlyingBuffer) {
+      return 0;
+    }
+    return mMaybeUnderlyingBuffer->mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   // Snapshot of the buffer state.
   struct State {
     // Index to the first block.
