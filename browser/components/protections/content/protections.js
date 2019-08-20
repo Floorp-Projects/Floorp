@@ -58,10 +58,9 @@ document.addEventListener("DOMContentLoaded", e => {
   legend.style.gridTemplateAreas =
     "'social cookie tracker fingerprinter cryptominer'";
 
-  document.sendTelemetryEvent = (action, object) => {
+  document.sendTelemetryEvent = (action, object, value = "") => {
     // eslint-disable-next-line no-undef
-    // eslint-disable-next-line no-undef
-    RPMRecordTelemetryEvent("security.ui.protections", action, object, "", {
+    RPMRecordTelemetryEvent("security.ui.protections", action, object, value, {
       category: cbCategory,
     });
   };
@@ -199,6 +198,9 @@ document.addEventListener("DOMContentLoaded", e => {
       learnMoreLink.href = RPMGetFormatURLPref(
         `browser.contentblocking.report.${type}.url`
       );
+      learnMoreLink.addEventListener("click", () => {
+        document.sendTelemetryEvent("click", "trackers_about_link", type);
+      });
     }
 
     // Hide the trackers tab if the user is in standard and
