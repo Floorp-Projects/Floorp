@@ -49,10 +49,10 @@ CompiledModules(
     'telemetry.js',
     'text.js',
     'timings.js',
+    'threads.js',
     'ui.js',
     'url.js',
     'utils.js',
     'wasm.js',
     'worker.js',
-    'workers.js',
 )

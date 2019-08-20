@@ -461,23 +461,15 @@ export type Scope = {|
   scopeKind: string,
 |};
 
-export type MainThread = {
+export type Thread = {
   +actor: ThreadId,
   +url: string,
   +type: number,
   +name: string,
 };
 
-export type Worker = {
-  +actor: ThreadId,
-  +url: string,
-  +type: number,
-  +name: string,
-};
-
-export type Thread = MainThread & Worker;
+// export type Worker = Thread;
 export type ThreadList = Array<Thread>;
-export type WorkerList = Array<Worker>;
 
 export type Cancellable = {
   cancel: () => void,
