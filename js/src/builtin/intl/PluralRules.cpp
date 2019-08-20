@@ -100,11 +100,6 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  pluralRules->setFixedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
-  pluralRules->setPluralRules(nullptr);
-  pluralRules->setNumberFormatter(nullptr);
-  pluralRules->setFormattedNumber(nullptr);
-
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
 
