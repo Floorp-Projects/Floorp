@@ -107,8 +107,10 @@ struct hb_font_t
   hb_font_t *parent;
   hb_face_t *face;
 
-  int x_scale;
-  int y_scale;
+  int32_t x_scale;
+  int32_t y_scale;
+  int64_t x_mult;
+  int64_t y_mult;
 
   unsigned int x_ppem;
   unsigned int y_ppem;
@@ -127,16 +129,16 @@ struct hb_font_t
 
 
   /* Convert from font-space to user-space */
-  int dir_scale (hb_direction_t direction)
-  { return HB_DIRECTION_IS_VERTICAL(direction) ? y_scale : x_scale; }
-  hb_position_t em_scale_x (int16_t v) { return em_scale (v, x_scale); }
-  hb_position_t em_scale_y (int16_t v) { return em_scale (v, y_scale); }
-  hb_position_t em_scalef_x (float v) { return em_scalef (v, this->x_scale); }
-  hb_position_t em_scalef_y (float v) { return em_scalef (v, this->y_scale); }
+  int64_t dir_mult (hb_direction_t direction)
+  { return HB_DIRECTION_IS_VERTICAL(direction) ? y_mult : x_mult; }
+  hb_position_t em_scale_x (int16_t v) { return em_mult (v, x_mult); }
+  hb_position_t em_scale_y (int16_t v) { return em_mult (v, y_mult); }
+  hb_position_t em_scalef_x (float v) { return em_scalef (v, x_scale); }
+  hb_position_t em_scalef_y (float v) { return em_scalef (v, y_scale); }
   float em_fscale_x (int16_t v) { return em_fscale (v, x_scale); }
   float em_fscale_y (int16_t v) { return em_fscale (v, y_scale); }
   hb_position_t em_scale_dir (int16_t v, hb_direction_t direction)
-  { return em_scale (v, dir_scale (direction)); }
+  { return em_mult (v, dir_mult (direction)); }
 
   /* Convert from parent-font user-space to our user-space */
   hb_position_t parent_scale_x_distance (hb_position_t v)
@@ -607,12 +609,16 @@ struct hb_font_t
     return false;
   }
 
-  hb_position_t em_scale (int16_t v, int scale)
+  void mults_changed ()
   {
-    int upem = face->get_upem ();
-    int64_t scaled = v * (int64_t) scale;
-    scaled += scaled >= 0 ? upem/2 : -upem/2; /* Round. */
-    return (hb_position_t) (scaled / upem);
+    signed upem = face->get_upem ();
+    x_mult = ((int64_t) x_scale << 16) / upem;
+    y_mult = ((int64_t) y_scale << 16) / upem;
+  }
+
+  hb_position_t em_mult (int16_t v, int64_t mult)
+  {
+    return (hb_position_t) ((v * mult) >> 16);
   }
   hb_position_t em_scalef (float v, int scale)
   { return (hb_position_t) roundf (v * scale / face->get_upem ()); }

@@ -57,14 +57,14 @@ struct call_context_t
 
 /* call stack */
 const unsigned int kMaxCallLimit = 10;
-struct call_stack_t : stack_t<call_context_t, kMaxCallLimit> {};
+struct call_stack_t : cff_stack_t<call_context_t, kMaxCallLimit> {};
 
 template <typename SUBRS>
 struct biased_subrs_t
 {
-  void init (const SUBRS &subrs_)
+  void init (const SUBRS *subrs_)
   {
-    subrs = &subrs_;
+    subrs = subrs_;
     unsigned int  nSubrs = get_count ();
     if (nSubrs < 1240)
       bias = 107;
@@ -118,7 +118,7 @@ struct point_t
 template <typename ARG, typename SUBRS>
 struct cs_interp_env_t : interp_env_t<ARG>
 {
-  void init (const byte_str_t &str, const SUBRS &globalSubrs_, const SUBRS &localSubrs_)
+  void init (const byte_str_t &str, const SUBRS *globalSubrs_, const SUBRS *localSubrs_)
   {
     interp_env_t<ARG>::init (str);
 

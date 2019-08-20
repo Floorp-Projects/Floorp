@@ -564,7 +564,7 @@ _hb_ft_font_set_funcs (hb_font_t *font, FT_Face ft_face, bool unref)
 
 
 static hb_blob_t *
-reference_table  (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
+_hb_ft_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
 {
   FT_Face ft_face = (FT_Face) user_data;
   FT_Byte *buffer;
@@ -619,7 +619,7 @@ hb_ft_face_create (FT_Face           ft_face,
     face = hb_face_create (blob, ft_face->face_index);
     hb_blob_destroy (blob);
   } else {
-    face = hb_face_create_for_tables (reference_table, ft_face, destroy);
+    face = hb_face_create_for_tables (_hb_ft_reference_table, ft_face, destroy);
   }
 
   hb_face_set_index (face, ft_face->face_index);

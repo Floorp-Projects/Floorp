@@ -28,6 +28,8 @@
 
 #include "hb.hh"
 
+#ifndef HB_NO_OT_TAG
+
 
 /* hb_script_t */
 
@@ -546,5 +548,8 @@ main ()
   test_langs_sorted ();
   return 0;
 }
+
+#endif
+
 
 #endif
