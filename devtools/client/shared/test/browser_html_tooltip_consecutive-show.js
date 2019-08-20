@@ -25,6 +25,10 @@ function getTooltipContent(doc) {
 }
 
 add_task(async function() {
+  // Run DevTools in a chrome frame temporarily, otherwise this test is intermittent.
+  // See Bug 1571421.
+  await pushPref("devtools.toolbox.content-frame", false);
+
   const [, , doc] = await createHost("bottom", TEST_URI);
 
   const box1 = doc.getElementById("box1");
