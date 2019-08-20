@@ -20,15 +20,12 @@
 
 #include "mozilla/ScopeExit.h"
 
+#include "jit/Disassemble.h"
 #include "js/Printf.h"
 
 #include "wasm/cranelift/baldrapi.h"
 #include "wasm/cranelift/clifapi.h"
 #include "wasm/WasmGenerator.h"
-#if defined(JS_CODEGEN_X64) && defined(JS_JITSPEW) && \
-    defined(ENABLE_WASM_CRANELIFT)
-#  include "zydis/ZydisAPI.h"
-#endif
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -70,17 +67,6 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
       break;
   }
   MOZ_CRASH("unknown baldrdash symbolic address");
-}
-
-static void DisassembleCode(uint8_t* code, size_t codeLen) {
-#if defined(JS_CODEGEN_X64) && defined(JS_JITSPEW) && \
-    defined(ENABLE_WASM_CRANELIFT)
-  zydisDisassemble(code, codeLen, [](const char* text) {
-    JitSpew(JitSpew_Codegen, "%s", text);
-  });
-#else
-  JitSpew(JitSpew_Codegen, "*** No disassembly available ***");
-#endif
 }
 
 static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
@@ -466,7 +452,10 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
         size_t codeRangeIndex = firstCodeRangeIndex + i;
         uint32_t codeStart = codeRanges[codeRangeIndex].begin();
         uint32_t codeEnd = codeRanges[codeRangeIndex].end();
-        DisassembleCode(codeBuf + codeStart, codeEnd - codeStart);
+
+        jit::Disassemble(
+            codeBuf + codeStart, codeEnd - codeStart,
+            [](const char* text) { JitSpew(JitSpew_Codegen, "%s", text); });
 
         JitSpew(JitSpew_Codegen, "# End of wasm cranelift code for index %d",
                 funcIndex);
