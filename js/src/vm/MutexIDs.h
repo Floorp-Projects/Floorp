@@ -58,7 +58,6 @@
   _(WasmSignalInstallState, 500)      \
   _(MemoryTracker, 500)               \
                                       \
-  _(IcuTimeZoneStateMutex, 600)       \
   _(ThreadId, 600)                    \
   _(WasmCodeSegmentMap, 600)          \
   _(TraceLoggerGraphState, 600)       \
