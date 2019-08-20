@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
 #include <stdint.h>
 
@@ -204,7 +205,7 @@ class DateTimeInfo {
 
   static void resyncICUDefaultTimeZone() {
     auto guard = acquireLockWithValidTimeZone();
-    guard->internalResyncICUDefaultTimeZone();
+    mozilla::Unused << guard;
   }
 
   struct RangeCache {
@@ -229,19 +230,6 @@ class DateTimeInfo {
   };
 
   LocalTimeZoneAdjustmentStatus localTZAStatus_;
-
-#if ENABLE_INTL_API
-  // When bug 1343826 gets ever implemented, we can revert the second patch in
-  // bug 1533328 and use again a separate lock for ICU's time zone state, which
-  // may help to reduce possible lock contention when different threads access
-  // this class and at the same time also query the ICU time zone state.
-  //
-  // (With bug 1343826 implemented, the sporadic reset of the time zone cache,
-  // cf. |ResetTimeZoneMode::DontResetIfOffsetUnchanged|, is no longer needed.)
-  enum class IcuTimeZoneStatus : bool { Valid, NeedsUpdate };
-
-  IcuTimeZoneStatus icuTimeZoneStatus_;
-#endif
 
   /*
    * The current local time zone adjustment, cached because retrieving this
