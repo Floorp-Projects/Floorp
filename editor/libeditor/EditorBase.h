@@ -626,11 +626,15 @@ class EditorBase : public nsIEditor,
     //     was removed.
     bool mDidDeleteNonCollapsedRange;
 
+    // If we have deleted parent empty blocks, set to true.
+    bool mDidDeleteEmptyParentBlocks;
+
    private:
     void Clear() {
       mDidDeleteSelection = false;
       mDidExplicitlySetInterLine = false;
       mDidDeleteNonCollapsedRange = false;
+      mDidDeleteEmptyParentBlocks = false;
     }
 
     TopLevelEditSubActionData() = default;
