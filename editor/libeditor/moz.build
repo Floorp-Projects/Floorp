@@ -29,6 +29,7 @@ EXPORTS.mozilla += [
     'SelectionState.h',
     'TextEditor.h',
     'TextEditRules.h',
+    'TypeInState.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -310,19 +310,4 @@ bool TypeInState::FindPropInList(nsAtom* aProp, nsAtom* aAttr,
   return false;
 }
 
-/********************************************************************
- * mozilla::PropItem: helper struct for mozilla::TypeInState
- *******************************************************************/
-
-PropItem::PropItem() : tag(nullptr), attr(nullptr) { MOZ_COUNT_CTOR(PropItem); }
-
-PropItem::PropItem(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
-    : tag(aTag),
-      attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr),
-      value(aValue) {
-  MOZ_COUNT_CTOR(PropItem);
-}
-
-PropItem::~PropItem() { MOZ_COUNT_DTOR(PropItem); }
-
 }  // namespace mozilla

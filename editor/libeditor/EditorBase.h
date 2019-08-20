@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"               // for Maybe
 #include "mozilla/OwningNonNull.h"       // for OwningNonNull
 #include "mozilla/PresShell.h"           // for PresShell
+#include "mozilla/TypeInState.h"         // for PropItem, StyleCache
 #include "mozilla/RangeBoundary.h"       // for RawRangeBoundary, RangeBoundary
 #include "mozilla/SelectionState.h"      // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"          // for StyleSheet
@@ -619,6 +620,12 @@ class EditorBase : public nsIEditor,
     // the range while we're changing the DOM tree.
     RefPtr<RangeItem> mSelectedRange;
 
+    // XXX In strict speaking, mCachedInlineStyles isn't enough to cache inline
+    //     styles because inline style can be specified with "style" attribute
+    //     and/or CSS in <style> elements or CSS files.  So, we need to look
+    //     for better implementation about this.
+    AutoStyleCacheArray mCachedInlineStyles;
+
     // If we tried to delete selection, set to true.
     bool mDidDeleteSelection;
 
@@ -655,6 +662,7 @@ class EditorBase : public nsIEditor,
       }
       mNewBlockElement = nullptr;
       mSelectedRange->Clear();
+      mCachedInlineStyles.Clear();
       mDidDeleteSelection = false;
       mDidDeleteNonCollapsedRange = false;
       mDidDeleteEmptyParentBlocks = false;

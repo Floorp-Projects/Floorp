@@ -10,6 +10,7 @@
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"
+#include "mozilla/TypeInState.h"  // for AutoStyleCacheArray
 #include "nsCOMPtr.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -18,7 +19,6 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIEditor;
 class nsINode;
 class nsRange;
 
@@ -36,24 +36,6 @@ class Element;
 class Selection;
 }  // namespace dom
 
-struct StyleCache final : public PropItem {
-  bool mPresent;
-
-  StyleCache() : PropItem(), mPresent(false) { MOZ_COUNT_CTOR(StyleCache); }
-
-  StyleCache(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
-      : PropItem(aTag, aAttr, aValue), mPresent(false) {
-    MOZ_COUNT_CTOR(StyleCache);
-  }
-
-  StyleCache(nsAtom* aTag, nsAtom* aAttr)
-      : PropItem(aTag, aAttr, EmptyString()), mPresent(false) {
-    MOZ_COUNT_CTOR(StyleCache);
-  }
-
-  ~StyleCache() { MOZ_COUNT_DTOR(StyleCache); }
-};
-
 /**
  * Same as TextEditRules, any methods which may modify the DOM tree or
  * Selection should be marked as MOZ_MUST_USE and return nsresult directly
@@ -67,8 +49,6 @@ struct StyleCache final : public PropItem {
  * after the calls.  If it returns false, they should return
  * NS_ERROR_EDITOR_DESTROYED.
  */
-
-#define SIZE_STYLE_TABLE 19
 
 class HTMLEditRules : public TextEditRules {
  public:
@@ -1140,9 +1120,9 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
 
   /**
-   * CacheInlineStyles() caches style of aNode into mCachedStyles.
-   * This may cause flushing layout at retrieving computed value of CSS
-   * properties.
+   * CacheInlineStyles() caches style of aNode into mCachedInlineStyles of
+   * TopLevelEditSubAction.  This may cause flushing layout at retrieving
+   * computed value of CSS properties.
    */
   MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
 
@@ -1333,18 +1313,12 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT void DocumentModifiedWorker();
 
   /**
-   * InitStyleCacheArray() initializes aStyleCache for usable with
-   * GetInlineStyles().
-   */
-  void InitStyleCacheArray(StyleCache aStyleCache[SIZE_STYLE_TABLE]);
-
-  /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
-   * aStyleCache.  This might cause flushing layout at retrieving computed
+   * aStyleCacheArray.  This might cause flushing layout at retrieving computed
    * values of CSS properties.
    */
-  MOZ_MUST_USE nsresult
-  GetInlineStyles(nsINode* aNode, StyleCache aStyleCache[SIZE_STYLE_TABLE]);
+  MOZ_MUST_USE nsresult GetInlineStyles(nsINode* aNode,
+                                        AutoStyleCacheArray& aStyleCacheArray);
 
  protected:
   HTMLEditor* mHTMLEditor;
@@ -1355,12 +1329,6 @@ class HTMLEditRules : public TextEditRules {
   RefPtr<nsRange> mUtilRange;
   // Need to remember an int across willJoin/didJoin...
   uint32_t mJoinOffset;
-
-  // XXX In strict speaking, mCachedStyles isn't enough to cache inline styles
-  //     because inline style can be specified with "style" attribute and/or
-  //     CSS in <style> elements or CSS files.  So, we need to look for better
-  //     implementation about this.
-  StyleCache mCachedStyles[SIZE_STYLE_TABLE];
 
   friend class NS_CYCLE_COLLECTION_CLASSNAME(TextEditRules);
 };
