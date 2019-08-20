@@ -24,6 +24,7 @@ from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.util import (
     indented_repr,
     encode,
+    system_encoding,
 )
 import mozpack.path as mozpath
 
@@ -74,15 +75,14 @@ def config_status(config):
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
     logging.getLogger('moz.configure').info('Creating config.status')
-    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-    with codecs.open('config.status', 'w', encoding) as fh:
+    with codecs.open('config.status', 'w', system_encoding) as fh:
         fh.write(textwrap.dedent('''\
             #!%(python)s
             # coding=%(encoding)s
             from __future__ import unicode_literals
             from mozbuild.util import encode
             encoding = '%(encoding)s'
-        ''') % {'python': config['PYTHON'], 'encoding': encoding})
+        ''') % {'python': config['PYTHON'], 'encoding': system_encoding})
         # A lot of the build backend code is currently expecting byte
         # strings and breaks in subtle ways with unicode strings. (bug 1296508)
         for k, v in sanitized_config.iteritems():
@@ -125,7 +125,7 @@ def config_status(config):
 
         # A lot of the build backend code is currently expecting byte strings
         # and breaks in subtle ways with unicode strings.
-        return config_status(args=[], **encode(sanitized_config, encoding))
+        return config_status(args=[], **encode(sanitized_config, system_encoding))
     return 0
 
 
