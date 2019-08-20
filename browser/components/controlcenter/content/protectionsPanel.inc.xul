@@ -63,21 +63,21 @@
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
             <toolbarbutton id="protections-popup-category-tracking-protection"
-                           onclick="gProtectionsHandler.showTrackersSubview(event);"
+                           onclick="gProtectionsHandler.showTrackersSubview();"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon tracking-protection-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection4.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-socialblock"
-                           onclick="gProtectionsHandler.showSocialblockerSubview(event);"
+                           onclick="gProtectionsHandler.showSocialblockerSubview();"
                            class="protections-popup-category" align="center">
               <image class="protections-popup-category-icon socialblock-icon"/>
               <label flex="1"
               class="protections-popup-category-label">&contentBlocking.socialblock.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cookies"
-                           onclick="gProtectionsHandler.showCookiesSubview(event);"
+                           onclick="gProtectionsHandler.showCookiesSubview();"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon thirdpartycookies-icon"/>
@@ -88,32 +88,30 @@
                      hidden="true"></label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cryptominers"
-                           onclick="gProtectionsHandler.showCryptominersSubview(event);"
+                           onclick="gProtectionsHandler.showCryptominersSubview();"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon cryptominers-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.cryptominers.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-fingerprinters"
-                           onclick="gProtectionsHandler.showFingerprintersSubview(event);"
+                           onclick="gProtectionsHandler.showFingerprintersSubview();"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon fingerprinters-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.fingerprinters.label;</label>
             </toolbarbutton>
             <description id="protections-popup-blocking-section-header"
+                         hidden="true"
                          role="heading"
-                         aria-level="2">&protections.blocking2.label;</description>
-            <hbox id="protections-popup-not-blocking-section-header">
-              <description id="protections-popup-not-blocking-section-description">&protections.notBlocking2.label;</description>
+                         aria-level="2">&protections.blocking.label;</description>
+            <hbox id="protections-popup-not-blocking-section-header" hidden="true">
+              <description id="protections-popup-not-blocking-section-description">&protections.notBlocking.label;</description>
               <label id="protections-popup-not-blocking-section-why"
                      class="text-link"
                      onmouseover="document.getElementById(event.target.tooltip).openPopup(event.target);"
                      onmouseout="document.getElementById(event.target.tooltip).hidePopup()">&protections.notBlocking.why.label;</label>
             </hbox>
-            <description id="protections-popup-not-found-section-header"
-                         role="heading"
-                         aria-level="2">&protections.notFound.label;</description>
           </vbox>
         </vbox>
       </vbox>
