@@ -102,9 +102,6 @@ static bool Collator(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  collator->setFixedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
-  collator->setCollator(nullptr);
-
   HandleValue locales = args.get(0);
   HandleValue options = args.get(1);
 
