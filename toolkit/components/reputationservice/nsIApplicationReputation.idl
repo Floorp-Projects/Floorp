@@ -10,6 +10,7 @@ interface nsIApplicationReputationCallback;
 interface nsIApplicationReputationQuery;
 interface nsIArray;
 interface nsIURI;
+interface nsIReferrerInfo;
 
 /*
  * A service for asynchronously querying an application reputation service
@@ -63,7 +64,7 @@ interface nsIApplicationReputationQuery : nsISupports {
   /*
    * The reference, if any.
    */
-  readonly attribute nsIURI referrerURI;
+  readonly attribute nsIReferrerInfo referrerInfo;
 
   /*
    * The target filename for the downloaded file, as inferred from the source

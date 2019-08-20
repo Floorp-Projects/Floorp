@@ -147,17 +147,13 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
   RequestCredentials requestCredentials =
       InternalRequest::MapChannelToRequestCredentials(underlyingChannel);
 
-  nsCString referrer = EmptyCString();
+  nsAutoString referrer;
   uint32_t referrerPolicyInt = 0;
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
   if (referrerInfo) {
     referrerPolicyInt = referrerInfo->GetReferrerPolicy();
-    nsCOMPtr<nsIURI> computedReferrer = referrerInfo->GetComputedReferrer();
-    if (computedReferrer) {
-      rv = computedReferrer->GetSpec(referrer);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    Unused << referrerInfo->GetComputedReferrerSpec(referrer);
   }
 
   ReferrerPolicy referrerPolicy;
@@ -233,8 +229,8 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
 
   RefPtr<InternalRequest> internalRequest = new InternalRequest(
       spec, fragment, method, internalHeaders.forget(), cacheMode, requestMode,
-      requestRedirect, requestCredentials, NS_ConvertUTF8toUTF16(referrer),
-      referrerPolicy, contentPolicyType, integrity);
+      requestRedirect, requestCredentials, referrer, referrerPolicy,
+      contentPolicyType, integrity);
   internalRequest->SetBody(uploadStream, uploadStreamContentLength);
   internalRequest->SetCreatedByFetchEvent();
 

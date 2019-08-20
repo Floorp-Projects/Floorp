@@ -141,23 +141,16 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> computedReferrer;
+  nsAutoString computedReferrerSpec;
   referrerInfo = aChannel->GetReferrerInfo();
   if (referrerInfo) {
-    computedReferrer = referrerInfo->GetComputedReferrer();
+    Unused << referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
   }
 
   // Step 8 https://fetch.spec.whatwg.org/#main-fetch
   // If request’s referrer is not "no-referrer", set request’s referrer to
   // the result of invoking determine request’s referrer.
-  if (computedReferrer) {
-    nsAutoCString spec;
-    rv = computedReferrer->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aRequest->SetReferrer(NS_ConvertUTF8toUTF16(spec));
-  } else {
-    aRequest->SetReferrer(EmptyString());
-  }
+  aRequest->SetReferrer(computedReferrerSpec);
 
   return NS_OK;
 }

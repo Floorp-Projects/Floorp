@@ -1348,25 +1348,18 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // In redirect, httpChannel already took referrer-policy into account, so
   // updates request’s associated referrer policy from channel.
   if (httpChannel) {
-    nsCOMPtr<nsIURI> computedReferrer;
+    nsAutoString computedReferrerSpec;
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
       mRequest->SetReferrerPolicy(
           static_cast<net::ReferrerPolicy>(referrerInfo->GetReferrerPolicy()));
-      computedReferrer = referrerInfo->GetComputedReferrer();
+      Unused << referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
     }
 
     // Step 8 https://fetch.spec.whatwg.org/#main-fetch
     // If request’s referrer is not "no-referrer" (empty), set request’s
     // referrer to the result of invoking determine request’s referrer.
-    if (computedReferrer) {
-      nsAutoCString spec;
-      rv = computedReferrer->GetSpec(spec);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mRequest->SetReferrer(NS_ConvertUTF8toUTF16(spec));
-    } else {
-      mRequest->SetReferrer(EmptyString());
-    }
+    mRequest->SetReferrer(computedReferrerSpec);
   }
 
   aCallback->OnRedirectVerifyCallback(NS_OK);
