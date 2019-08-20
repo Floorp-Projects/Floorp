@@ -17,7 +17,7 @@ add_task(async function() {
     Toolbox.HostType.BOTTOM
   );
 
-  const hostWindow = toolbox.win.parent;
+  const hostWindow = toolbox.topWindow;
   const originalWidth = hostWindow.outerWidth;
   const originalHeight = hostWindow.outerHeight;
 
@@ -27,10 +27,11 @@ add_task(async function() {
   let onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(1350, 300);
   await onResize;
-  waitUntil(() => {
-    // Wait for all buttons are displayed.
+
+  info("Wait for all buttons to be displayed");
+  await waitUntil(() => {
     return (
-      toolbox.panelDefinitions.length !==
+      toolbox.panelDefinitions.length ===
       toolbox.doc.querySelectorAll(".devtools-tab").length
     );
   });
@@ -42,7 +43,7 @@ add_task(async function() {
   onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(800, 300);
   await onResize;
-  waitUntil(() => !toolbox.doc.querySelector(".tools-chevron-menu"));
+  await waitUntil(() => !toolbox.doc.querySelector(".tools-chevron-menu"));
 
   info("Wait until the chevron menu button is available");
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
