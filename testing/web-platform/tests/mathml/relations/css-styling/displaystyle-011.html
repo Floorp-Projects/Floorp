@@ -2,13 +2,20 @@
 <html>
   <head>
     <title>displaystyle</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#the-displaystyle-and-scriptlevel-attributes">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#style-change-mstyle">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#fractions-mfrac">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#radicals-msqrt-mroot">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#subscripts-and-superscripts-msub-msup-msubsup">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#underscripts-and-overscripts-munder-mover-munderover">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#prescripts-and-tensor-indices-mmultiscripts">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#table-or-matrix-mtable">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#operator-fence-separator-or-accent-mo">
+    <link rel="match" href="displaystyle-011-ref.html"/>
+    <meta name="assert" content="Test the effect on displaystyle and movablelimits">
+    <link rel="stylesheet" href="/fonts/ahem.css">
     <style>
-      @font-face
-      {
-          font-family: Ahem;
-          src: url(../fonts/Ahem.ttf);
-      }
       math {
           font: 25px Ahem;
       }
@@ -97,7 +104,7 @@
       </mstyle>
     </math>
 
-<!-- 
+<!--
    The munder element [...] always sets displaystyle to "false" within the
    underscript, but increments scriptlevel by 1 only when accentunder is
    "false". Within base, it always leaves both attributes unchanged.
@@ -110,7 +117,7 @@
    and overscript, but increments scriptlevel by 1 only when accentunder or
    accent, respectively, are "false". Within base, it always leaves both
    attributes unchanged.
--->   
+-->
     <math>
       <mstyle displaystyle="true">
         <munder>

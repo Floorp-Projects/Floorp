@@ -2,13 +2,9 @@
 <html>
   <head>
     <title>displaystyle</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/fonts/ahem.css">
     <style>
-      @font-face
-      {
-          font-family: Ahem;
-          src: url(../fonts/Ahem.ttf);
-      }
       math {
           font: 25px Ahem;
       }
@@ -97,7 +93,7 @@
       </mstyle>
     </math>
 
-<!-- 
+<!--
    The munder element [...] always sets displaystyle to "false" within the
    underscript, but increments scriptlevel by 1 only when accentunder is
    "false". Within base, it always leaves both attributes unchanged.
@@ -110,7 +106,7 @@
    and overscript, but increments scriptlevel by 1 only when accentunder or
    accent, respectively, are "false". Within base, it always leaves both
    attributes unchanged.
--->   
+-->
     <math>
       <mstyle displaystyle="true">
         <munder>
