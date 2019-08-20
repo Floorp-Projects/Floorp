@@ -1321,7 +1321,6 @@ class HTMLEditRules : public TextEditRules {
  protected:
   HTMLEditor* mHTMLEditor;
   bool mInitialized;
-  bool mReturnInEmptyLIKillsList;
 };
 
 }  // namespace mozilla
