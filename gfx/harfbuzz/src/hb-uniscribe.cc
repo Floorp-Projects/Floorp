@@ -28,6 +28,10 @@
 
 #ifdef HAVE_UNISCRIBE
 
+#ifdef HB_NO_OT_TAG
+#error "Cannot compile 'uniscribe' shaper with HB_NO_OT_TAG."
+#endif
+
 #include "hb-shaper-impl.hh"
 
 #include <windows.h>
@@ -53,13 +57,6 @@
  *
  * Functions for using HarfBuzz with the Windows fonts.
  **/
-
-
-static inline uint16_t hb_uint16_swap (const uint16_t v)
-{ return (v >> 8) | (v << 8); }
-static inline uint32_t hb_uint32_swap (const uint32_t v)
-{ return (hb_uint16_swap (v) << 16) | hb_uint16_swap (v >> 16); }
-
 
 typedef HRESULT (WINAPI *SIOT) /*ScriptItemizeOpenType*/(
   const WCHAR *pwcInChars,
@@ -241,8 +238,9 @@ struct hb_uniscribe_shaper_funcs_t
   }
 };
 
-
+#if HB_USE_ATEXIT
 static void free_static_uniscribe_shaper_funcs ();
+#endif
 
 static struct hb_uniscribe_shaper_funcs_lazy_loader_t : hb_lazy_loader_t<hb_uniscribe_shaper_funcs_t,
 									 hb_uniscribe_shaper_funcs_lazy_loader_t>

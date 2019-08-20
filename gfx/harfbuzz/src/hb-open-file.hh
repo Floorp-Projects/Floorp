@@ -141,14 +141,15 @@ typedef struct OffsetTable
       TableRecord &rec = tables.arrayZ[i];
       hb_blob_t *blob = items[i].blob;
       rec.tag = items[i].tag;
-      rec.length = hb_blob_get_length (blob);
+      rec.length = blob->length;
       rec.offset.serialize (c, this);
 
       /* Allocate room for the table and copy it. */
       char *start = (char *) c->allocate_size<void> (rec.length);
-      if (unlikely (!start)) {return false;}
+      if (unlikely (!start)) return false;
 
-      memcpy (start, hb_blob_get_data (blob, nullptr), rec.length);
+      if (likely (rec.length))
+	memcpy (start, blob->data, rec.length);
 
       /* 4-byte alignment. */
       c->align (4);

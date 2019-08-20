@@ -28,6 +28,9 @@
 #define HB_SHAPER_LIST_HH
 #endif /* HB_SHAPER_LIST_HH */ /* Dummy header guards */
 
+#ifndef HB_NO_SHAPER
+
+
 /* v--- Add new shapers in the right place here. */
 
 #ifdef HAVE_GRAPHITE2
@@ -35,7 +38,9 @@
 HB_SHAPER_IMPLEMENT (graphite2)
 #endif
 
+#ifndef HB_NO_OT_SHAPE
 HB_SHAPER_IMPLEMENT (ot) /* <--- This is our main OpenType shaper. */
+#endif
 
 #ifdef HAVE_UNISCRIBE
 HB_SHAPER_IMPLEMENT (uniscribe)
@@ -49,4 +54,7 @@ HB_SHAPER_IMPLEMENT (coretext)
 
 #ifndef HB_NO_FALLBACK_SHAPE
 HB_SHAPER_IMPLEMENT (fallback) /* <--- This should be last. */
+#endif
+
+
 #endif

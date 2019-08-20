@@ -50,31 +50,31 @@
 struct
 {
   /* Note.  This is dangerous in that if it's passed an rvalue, it returns rvalue-reference. */
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (T&& v) const HB_AUTO_RETURN ( hb_forward<T> (v) )
 }
 HB_FUNCOBJ (hb_identity);
 struct
 {
   /* Like identity(), but only retains lvalue-references.  Rvalues are returned as rvalues. */
-  template <typename T> T&
+  template <typename T> constexpr T&
   operator () (T& v) const { return v; }
 
-  template <typename T> hb_remove_reference<T>
+  template <typename T> constexpr hb_remove_reference<T>
   operator () (T&& v) const { return v; }
 }
 HB_FUNCOBJ (hb_lidentity);
 struct
 {
   /* Like identity(), but always returns rvalue. */
-  template <typename T> hb_remove_reference<T>
+  template <typename T> constexpr hb_remove_reference<T>
   operator () (T&& v) const { return v; }
 }
 HB_FUNCOBJ (hb_ridentity);
 
 struct
 {
-  template <typename T> bool
+  template <typename T> constexpr bool
   operator () (T&& v) const { return bool (hb_forward<T> (v)); }
 }
 HB_FUNCOBJ (hb_bool);
@@ -82,11 +82,11 @@ HB_FUNCOBJ (hb_bool);
 struct
 {
   private:
-  template <typename T> auto
+  template <typename T> constexpr auto
   impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
 
   template <typename T,
-	    hb_enable_if (hb_is_integral (T))> auto
+	    hb_enable_if (hb_is_integral (T))> constexpr auto
   impl (const T& v, hb_priority<0>) const HB_AUTO_RETURN
   (
     /* Knuth's multiplicative method: */
@@ -95,7 +95,7 @@ struct
 
   public:
 
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T& v) const HB_RETURN (uint32_t, impl (v, hb_prioritize))
 }
 HB_FUNCOBJ (hb_hash);
@@ -328,14 +328,14 @@ hb_pair (T1&& a, T2&& b) { return hb_pair_t<T1, T2> (a, b); }
 
 struct
 {
-  template <typename Pair> typename Pair::first_t
+  template <typename Pair> constexpr typename Pair::first_t
   operator () (const Pair& pair) const { return pair.first; }
 }
 HB_FUNCOBJ (hb_first);
 
 struct
 {
-  template <typename Pair> typename Pair::second_t
+  template <typename Pair> constexpr typename Pair::second_t
   operator () (const Pair& pair) const { return pair.second; }
 }
 HB_FUNCOBJ (hb_second);
@@ -346,14 +346,14 @@ HB_FUNCOBJ (hb_second);
  * comparing integers of different signedness. */
 struct
 {
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (T&& a, T2&& b) const HB_AUTO_RETURN
   (hb_forward<T> (a) <= hb_forward<T2> (b) ? hb_forward<T> (a) : hb_forward<T2> (b))
 }
 HB_FUNCOBJ (hb_min);
 struct
 {
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (T&& a, T2&& b) const HB_AUTO_RETURN
   (hb_forward<T> (a) >= hb_forward<T2> (b) ? hb_forward<T> (a) : hb_forward<T2> (b))
 }
@@ -917,7 +917,7 @@ struct hb_bitwise_and
 { HB_PARTIALIZE(2);
   static constexpr bool passthru_left = false;
   static constexpr bool passthru_right = false;
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a, const T &b) const HB_AUTO_RETURN (a & b)
 }
 HB_FUNCOBJ (hb_bitwise_and);
@@ -925,7 +925,7 @@ struct hb_bitwise_or
 { HB_PARTIALIZE(2);
   static constexpr bool passthru_left = true;
   static constexpr bool passthru_right = true;
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a, const T &b) const HB_AUTO_RETURN (a | b)
 }
 HB_FUNCOBJ (hb_bitwise_or);
@@ -933,7 +933,7 @@ struct hb_bitwise_xor
 { HB_PARTIALIZE(2);
   static constexpr bool passthru_left = true;
   static constexpr bool passthru_right = true;
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a, const T &b) const HB_AUTO_RETURN (a ^ b)
 }
 HB_FUNCOBJ (hb_bitwise_xor);
@@ -941,56 +941,56 @@ struct hb_bitwise_sub
 { HB_PARTIALIZE(2);
   static constexpr bool passthru_left = true;
   static constexpr bool passthru_right = false;
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a, const T &b) const HB_AUTO_RETURN (a & ~b)
 }
 HB_FUNCOBJ (hb_bitwise_sub);
 struct
 {
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a) const HB_AUTO_RETURN (~a)
 }
 HB_FUNCOBJ (hb_bitwise_neg);
 
 struct
 { HB_PARTIALIZE(2);
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (const T &a, const T2 &b) const HB_AUTO_RETURN (a + b)
 }
 HB_FUNCOBJ (hb_add);
 struct
 { HB_PARTIALIZE(2);
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (const T &a, const T2 &b) const HB_AUTO_RETURN (a - b)
 }
 HB_FUNCOBJ (hb_sub);
 struct
 { HB_PARTIALIZE(2);
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (const T &a, const T2 &b) const HB_AUTO_RETURN (a * b)
 }
 HB_FUNCOBJ (hb_mul);
 struct
 { HB_PARTIALIZE(2);
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (const T &a, const T2 &b) const HB_AUTO_RETURN (a / b)
 }
 HB_FUNCOBJ (hb_div);
 struct
 { HB_PARTIALIZE(2);
-  template <typename T, typename T2> auto
+  template <typename T, typename T2> constexpr auto
   operator () (const T &a, const T2 &b) const HB_AUTO_RETURN (a % b)
 }
 HB_FUNCOBJ (hb_mod);
 struct
 {
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a) const HB_AUTO_RETURN (+a)
 }
 HB_FUNCOBJ (hb_pos);
 struct
 {
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (const T &a) const HB_AUTO_RETURN (-a)
 }
 HB_FUNCOBJ (hb_neg);

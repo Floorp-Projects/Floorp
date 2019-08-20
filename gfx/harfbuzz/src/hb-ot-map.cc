@@ -26,6 +26,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-map.hh"
 #include "hb-ot-shape.hh"
 #include "hb-ot-layout.hh"
@@ -332,3 +336,6 @@ hb_ot_map_builder_t::compile (hb_ot_map_t                  &m,
     }
   }
 }
+
+
+#endif

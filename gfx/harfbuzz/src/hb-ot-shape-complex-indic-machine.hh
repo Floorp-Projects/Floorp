@@ -395,13 +395,13 @@ static const int indic_syllable_machine_en_main = 39;
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | indic_##syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
 
 static void
-find_syllables (hb_buffer_t *buffer)
+find_syllables_indic (hb_buffer_t *buffer)
 {
   unsigned int p, pe, eof, ts, te, act;
   int cs;
@@ -568,5 +568,7 @@ _again:
 #line 121 "hb-ot-shape-complex-indic-machine.rl"
 
 }
+
+#undef found_syllable
 
 #endif /* HB_OT_SHAPE_COMPLEX_INDIC_MACHINE_HH */

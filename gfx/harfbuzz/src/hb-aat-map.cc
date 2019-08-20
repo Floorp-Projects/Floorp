@@ -28,7 +28,7 @@
 
 #include "hb.hh"
 
-#ifndef HB_NO_SHAPE_AAT
+#ifndef HB_NO_AAT_SHAPE
 
 #include "hb-aat-map.hh"
 

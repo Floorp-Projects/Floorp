@@ -402,6 +402,55 @@ hb_ot_layout_feature_get_characters (hb_face_t      *face,
 				     unsigned int   *char_count    /* IN/OUT.  May be NULL */,
 				     hb_codepoint_t *characters    /* OUT.     May be NULL */);
 
+/*
+ * BASE
+ */
+
+/**
+ * hb_ot_layout_baseline_tag_t:
+ * @HB_OT_LAYOUT_BASELINE_TAG_ROMAN: The baseline used by alphabetic scripts such as Latin, Cyrillic and Greek.
+ * In vertical writing mode, the alphabetic baseline for characters rotated 90 degrees clockwise.
+ * (This would not apply to alphabetic characters that remain upright in vertical writing mode, since these
+ * characters are not rotated.)
+ * @HB_OT_LAYOUT_BASELINE_TAG_HANGING: The hanging baseline. In horizontal direction, this is the horizontal
+ * line from which syllables seem, to hang in Tibetan and other similar scripts. In vertical writing mode,
+ * for Tibetan (or some other similar script) characters rotated 90 degrees clockwise.
+ * @HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT: Ideographic character face bottom or left edge,
+ * if the direction is horizontal or vertical, respectively.
+ * @HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT: Ideographic character face top or right edge,
+ * if the direction is horizontal or vertical, respectively.
+ * @HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT: Ideographic em-box bottom or left edge,
+ * if the direction is horizontal or vertical, respectively.
+ * @HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT: Ideographic em-box top or right edge baseline,
+ * if the direction is horizontal or vertical, respectively.
+ * @HB_OT_LAYOUT_BASELINE_TAG_MATH: The baseline about which mathematical characters are centered.
+ * In vertical writing mode when mathematical characters rotated 90 degrees clockwise, are centered.
+ *
+ * Baseline tags from https://docs.microsoft.com/en-us/typography/opentype/spec/baselinetags
+ *
+ * Since: 2.6.0
+ */
+typedef enum {
+  HB_OT_LAYOUT_BASELINE_TAG_ROMAN			= HB_TAG ('r','o','m','n'),
+  HB_OT_LAYOUT_BASELINE_TAG_HANGING			= HB_TAG ('h','a','n','g'),
+  HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_BOTTOM_OR_LEFT	= HB_TAG ('i','c','f','b'),
+  HB_OT_LAYOUT_BASELINE_TAG_IDEO_FACE_TOP_OR_RIGHT	= HB_TAG ('i','c','f','t'),
+  HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT	= HB_TAG ('i','d','e','o'),
+  HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_TOP_OR_RIGHT	= HB_TAG ('i','d','t','p'),
+  HB_OT_LAYOUT_BASELINE_TAG_MATH			= HB_TAG ('m','a','t','h'),
+
+  _HB_OT_LAYOUT_BASELINE_TAG_MAX_VALUE = HB_TAG_MAX_SIGNED /*< skip >*/
+} hb_ot_layout_baseline_tag_t;
+
+HB_EXTERN hb_bool_t
+hb_ot_layout_get_baseline (hb_font_t                   *font,
+			   hb_ot_layout_baseline_tag_t  baseline_tag,
+			   hb_direction_t               direction,
+			   hb_tag_t                     script_tag,
+			   hb_tag_t                     language_tag,
+			   hb_position_t               *coord        /* OUT.  May be NULL. */);
+
+
 HB_END_DECLS
 
 #endif /* HB_OT_LAYOUT_H */
