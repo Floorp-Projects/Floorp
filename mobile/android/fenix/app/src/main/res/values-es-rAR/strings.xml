@@ -791,5 +791,5 @@
     <string name="about_open_source_licenses">Bibliotecas de código abierto que utilizamos</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">% s | Bibliotecas OSS</string>
+    <string name="open_source_licenses_title">%s | Bibliotecas OSS</string>
 </resources>
