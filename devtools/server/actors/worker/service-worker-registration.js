@@ -204,6 +204,51 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
       swm.sendPushEvent(originAttributes, scope);
     },
 
+    /**
+     * Prevent the current active worker to shutdown after the idle timeout.
+     */
+    preventShutdown() {
+      if (!swm.isParentInterceptEnabled()) {
+        // In non parent-intercept mode, this is handled by the WorkerTargetFront attach().
+        throw new Error(
+          "ServiceWorkerRegistrationActor.preventShutdown can only be used " +
+            "in parent-intercept mode"
+        );
+      }
+
+      if (!this._registration.activeWorker) {
+        throw new Error(
+          "ServiceWorkerRegistrationActor.preventShutdown could not find " +
+            "activeWorker in parent-intercept mode"
+        );
+      }
+
+      // attachDebugger has to be called from the parent process in parent-intercept mode.
+      this._registration.activeWorker.attachDebugger();
+    },
+
+    /**
+     * Allow the current active worker to shut down again.
+     */
+    allowShutdown() {
+      if (!swm.isParentInterceptEnabled()) {
+        // In non parent-intercept mode, this is handled by the WorkerTargetFront detach().
+        throw new Error(
+          "ServiceWorkerRegistrationActor.allowShutdown can only be used " +
+            "in parent-intercept mode"
+        );
+      }
+
+      if (!this._registration.activeWorker) {
+        throw new Error(
+          "ServiceWorkerRegistrationActor.allowShutdown could not find " +
+            "activeWorker in parent-intercept mode"
+        );
+      }
+
+      this._registration.activeWorker.detachDebugger();
+    },
+
     getPushSubscription() {
       const registration = this._registration;
       let pushSubscriptionActor = this._pushSubscriptionActor;
