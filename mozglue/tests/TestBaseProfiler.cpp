@@ -699,6 +699,30 @@ void TestBlocksRingBufferAPI() {
           aMaybeReader->GetEntryAt(aMaybeReader->NextBlockIndex()).isNothing());
     });
 
+    rb.Read([&](BlocksRingBuffer::Reader* aReader) {
+      MOZ_RELEASE_ASSERT(!!aReader);
+      // begin() and end() should be at the range edges (verified above).
+      MOZ_RELEASE_ASSERT(
+          ExtractBlockIndex(aReader->begin().CurrentBlockIndex()) == 11);
+      MOZ_RELEASE_ASSERT(
+          ExtractBlockIndex(aReader->end().CurrentBlockIndex()) == 26);
+      // Null BlockIndex clamped to the beginning.
+      MOZ_RELEASE_ASSERT(aReader->At(bi0) == aReader->begin());
+      // Cleared block index clamped to the beginning.
+      MOZ_RELEASE_ASSERT(aReader->At(bi2) == aReader->begin());
+      // At(begin) same as begin().
+      MOZ_RELEASE_ASSERT(aReader->At(aReader->begin().CurrentBlockIndex()) ==
+                         aReader->begin());
+      // bi5 at expected position.
+      MOZ_RELEASE_ASSERT(
+          ExtractBlockIndex(aReader->At(bi5).CurrentBlockIndex()) == 21);
+      // bi6 at expected position at the end.
+      MOZ_RELEASE_ASSERT(aReader->At(bi6) == aReader->end());
+      // At(end) same as end().
+      MOZ_RELEASE_ASSERT(aReader->At(aReader->end().CurrentBlockIndex()) ==
+                         aReader->end());
+    });
+
     // Check that we have `3` to `5`.
     count = 2;
     rb.ReadEach([&](BlocksRingBuffer::EntryReader& aReader) {
