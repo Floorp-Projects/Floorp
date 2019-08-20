@@ -1494,35 +1494,55 @@ var gProtectionsHandler = {
     });
   },
 
-  async showTrackersSubview() {
+  async showTrackersSubview(event) {
+    if (event.target.classList.contains("notFound")) {
+      return;
+    }
+
     await TrackingProtection.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-trackersView"
     );
   },
 
-  async showSocialblockerSubview() {
+  async showSocialblockerSubview(event) {
+    if (event.target.classList.contains("notFound")) {
+      return;
+    }
+
     await SocialTracking.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-socialblockView"
     );
   },
 
-  async showCookiesSubview() {
+  async showCookiesSubview(event) {
+    if (event.target.classList.contains("notFound")) {
+      return;
+    }
+
     await ThirdPartyCookies.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cookiesView"
     );
   },
 
-  async showFingerprintersSubview() {
+  async showFingerprintersSubview(event) {
+    if (event.target.classList.contains("notFound")) {
+      return;
+    }
+
     await Fingerprinting.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-fingerprintersView"
     );
   },
 
-  async showCryptominersSubview() {
+  async showCryptominersSubview(event) {
+    if (event.target.classList.contains("notFound")) {
+      return;
+    }
+
     await Cryptomining.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cryptominersView"
@@ -1693,7 +1713,7 @@ var gProtectionsHandler = {
       // runs on tab switch, so we can avoid associating the data with the document directly.
       blocker.activated = blocker.isBlocking(event);
       let detected = blocker.isDetected(event);
-      blocker.categoryItem.hidden = !detected;
+      blocker.categoryItem.classList.toggle("notFound", !detected);
       anyDetected = anyDetected || detected;
       anyBlocking = anyBlocking || blocker.activated;
     }
