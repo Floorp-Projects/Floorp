@@ -285,7 +285,7 @@ class SpecialPowersChild extends JSWindowActorChild {
           // An assertion has been done in a mochitest chrome script
           let { name, passed, stack, diag } = message.data;
 
-          let {SimpleTest} = this;
+          let { SimpleTest } = this;
           if (SimpleTest) {
             SimpleTest.record(
               passed,
