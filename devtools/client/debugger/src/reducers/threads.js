@@ -5,26 +5,24 @@
 // @flow
 
 /**
- * Debuggee reducer
- * @module reducers/debuggee
+ * Threads reducer
+ * @module reducers/threads
  */
 
 import { sortBy } from "lodash";
 import { createSelector } from "reselect";
 
-import { getDisplayName } from "../utils/threads";
-
 import type { Selector, State } from "./types";
 import type { Thread, ThreadList } from "../types";
 import type { Action } from "../actions/types";
 
-export type DebuggeeState = {
+export type ThreadsState = {
   threads: ThreadList,
   mainThread: Thread,
   isWebExtension: boolean,
 };
 
-export function initialDebuggeeState(): DebuggeeState {
+export function initialThreadsState(): ThreadsState {
   return {
     threads: [],
     mainThread: { actor: "", url: "", type: -1, name: "" },
@@ -32,10 +30,10 @@ export function initialDebuggeeState(): DebuggeeState {
   };
 }
 
-export default function debuggee(
-  state: DebuggeeState = initialDebuggeeState(),
+export default function update(
+  state: ThreadsState = initialThreadsState(),
   action: Action
-): DebuggeeState {
+): ThreadsState {
   switch (action.type) {
     case "CONNECT":
       return {
@@ -44,7 +42,11 @@ export default function debuggee(
         isWebExtension: action.isWebExtension,
       };
     case "INSERT_THREADS":
-      return insertThreads(state, action.threads);
+      return {
+        ...state,
+        threads: [...state.threads, ...action.threads],
+      };
+
     case "REMOVE_THREADS":
       const { threads } = action;
       return {
@@ -53,7 +55,7 @@ export default function debuggee(
       };
     case "NAVIGATE":
       return {
-        ...initialDebuggeeState(),
+        ...initialThreadsState(),
         mainThread: action.mainThread,
       };
     default:
@@ -61,19 +63,7 @@ export default function debuggee(
   }
 }
 
-function insertThreads(state, threads) {
-  const formatedThreads = threads.map(thread => ({
-    ...thread,
-    name: getDisplayName(thread),
-  }));
-
-  return {
-    ...state,
-    threads: [...state.threads, ...formatedThreads],
-  };
-}
-
-export const getThreads = (state: OuterState) => state.debuggee.threads;
+export const getThreads = (state: OuterState) => state.threads.threads;
 
 export const getWorkerCount = (state: OuterState) => getThreads(state).length;
 
@@ -82,7 +72,7 @@ export function getWorkerByThread(state: OuterState, thread: string) {
 }
 
 export function getMainThread(state: OuterState): Thread {
-  return state.debuggee.mainThread;
+  return state.threads.mainThread;
 }
 
 export function getDebuggeeUrl(state: OuterState): string {
@@ -92,7 +82,10 @@ export function getDebuggeeUrl(state: OuterState): string {
 export const getAllThreads: Selector<Thread[]> = createSelector(
   getMainThread,
   getThreads,
-  (mainThread, threads) => [mainThread, ...sortBy(threads, getDisplayName)]
+  (mainThread, threads) => [
+    mainThread,
+    ...sortBy(threads, thread => thread.name),
+  ]
 );
 
 // checks if a path begins with a thread actor
@@ -104,4 +97,4 @@ export function startsWithThreadActor(state: State, path: string) {
   return match && match[1];
 }
 
-type OuterState = { debuggee: DebuggeeState };
+type OuterState = { threads: ThreadsState };

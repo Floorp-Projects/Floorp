@@ -24,7 +24,7 @@ import preview from "./preview";
 import projectTextSearch from "./project-text-search";
 import quickOpen from "./quick-open";
 import sourceTree from "./source-tree";
-import debuggee from "./debuggee";
+import threads from "./threads";
 import eventListenerBreakpoints from "./event-listeners";
 
 // eslint-disable-next-line import/named
@@ -45,7 +45,7 @@ export default {
   projectTextSearch,
   quickOpen,
   sourceTree,
-  debuggee,
+  threads,
   objectInspector: objectInspector.reducer.default,
   eventListenerBreakpoints,
   preview,

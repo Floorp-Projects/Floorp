@@ -46,7 +46,7 @@
 @import url("./components/SecondaryPanes/Scopes.css");
 @import url("./components/SecondaryPanes/SecondaryPanes.css");
 @import url("./components/SecondaryPanes/WhyPaused.css");
-@import url("./components/SecondaryPanes/Workers.css");
+@import url("./components/SecondaryPanes/Threads.css");
 @import url("./components/SecondaryPanes/XHRBreakpoints.css");
 @import url("./components/ShortcutsModal.css");
 @import url("./components/WelcomeBox.css");

@@ -11,7 +11,6 @@ CompiledModules(
     'ast.js',
     'async-requests.js',
     'breakpoints.js',
-    'debuggee.js',
     'event-listeners.js',
     'expressions.js',
     'file-search.js',
@@ -25,5 +24,6 @@ CompiledModules(
     'source-tree.js',
     'sources.js',
     'tabs.js',
+    'threads.js',
     'ui.js',
 )
