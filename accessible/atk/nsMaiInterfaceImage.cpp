@@ -22,7 +22,7 @@ const gchar* getDescriptionCB(AtkObject* aAtkObj);
 
 static void getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
                                AtkCoordType aCoordType) {
-  nsIntPoint pos;
+  nsIntPoint pos = nsIntPoint(-1, -1);
   uint32_t geckoCoordType =
       (aCoordType == ATK_XY_WINDOW)
           ? nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE
@@ -46,7 +46,7 @@ static const gchar* getImageDescriptionCB(AtkImage* aImage) {
 
 static void getImageSizeCB(AtkImage* aImage, gint* aAccWidth,
                            gint* aAccHeight) {
-  nsIntSize size;
+  nsIntSize size = nsIntSize(-1, -1);
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (accWrap && accWrap->IsImage()) {
     size = accWrap->AsImage()->Size();

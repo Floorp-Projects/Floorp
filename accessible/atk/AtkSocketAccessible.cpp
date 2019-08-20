@@ -54,7 +54,7 @@ static AtkObject* RefAccessibleAtPoint(AtkComponent* aComponent, gint aX,
 
 static void GetExtents(AtkComponent* aComponent, gint* aX, gint* aY,
                        gint* aWidth, gint* aHeight, AtkCoordType aCoordType) {
-  *aX = *aY = *aWidth = *aHeight = 0;
+  *aX = *aY = *aWidth = *aHeight = -1;
 
   if (!MAI_IS_ATK_SOCKET(aComponent)) return;
 

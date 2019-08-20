@@ -364,6 +364,7 @@ static void getCharacterExtentsCB(AtkText* aText, gint aOffset, gint* aX,
   if (!aX || !aY || !aWidth || !aHeight) {
     return;
   }
+  *aX = *aY = *aWidth = *aHeight = -1;
 
   nsIntRect rect;
   uint32_t geckoCoordType;
@@ -399,6 +400,7 @@ static void getRangeExtentsCB(AtkText* aText, gint aStartOffset,
   if (!aRect) {
     return;
   }
+  aRect->x = aRect->y = aRect->width = aRect->height = -1;
 
   nsIntRect rect;
   uint32_t geckoCoordType;
