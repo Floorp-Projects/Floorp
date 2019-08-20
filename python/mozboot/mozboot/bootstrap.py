@@ -2,23 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+# If we add unicode_literals, Python 2.6.1 (required for OS X 10.6) breaks.
+from __future__ import absolute_import, print_function
 
 import platform
 import sys
 import os
 import subprocess
-
-# NOTE: This script is intended to be run with a vanilla Python install.  We
-# have to rely on the standard library instead of Python 2+3 helpers like
-# the six module.
-if sys.version_info < (3,):
+try:
     from ConfigParser import (
         Error as ConfigParserError,
         RawConfigParser,
     )
-    input = raw_input
-else:
+except ImportError:
     from configparser import (
         Error as ConfigParserError,
         RawConfigParser,
@@ -62,7 +58,6 @@ APPLICATIONS_LIST = [
     ('GeckoView/Firefox for Android', 'mobile_android'),
 ]
 
-# TODO Legacy Python 2.6 code, can be removed.
 # This is a workaround for the fact that we must support python2.6 (which has
 # no OrderedDict)
 APPLICATIONS = dict(
@@ -223,7 +218,7 @@ def update_or_create_build_telemetry_config(path):
     if not config.has_section('build'):
         config.add_section('build')
     config.set('build', 'telemetry', 'true')
-    with open(path, 'w') as f:
+    with open(path, 'wb') as f:
         config.write(f)
     return True
 
@@ -303,7 +298,7 @@ class Bootstrapper(object):
         print(CLONE_VCS.format(repo_name, vcs))
 
         while True:
-            dest = input(CLONE_VCS_PROMPT.format(vcs))
+            dest = raw_input(CLONE_VCS_PROMPT.format(vcs))
             dest = dest.strip()
             if not dest:
                 return ''
@@ -648,8 +643,7 @@ def current_firefox_checkout(check_output, env, hg=None):
             try:
                 node = check_output([hg, 'log', '-r', '0', '--template', '{node}'],
                                     cwd=path,
-                                    env=env,
-                                    universal_newlines=True)
+                                    env=env)
                 if node in HG_ROOT_REVISIONS:
                     return ('hg', path)
                 # Else the root revision is different. There could be nested

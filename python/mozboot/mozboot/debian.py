@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import (
@@ -109,8 +109,8 @@ class DebianBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
                             self.which('python3.5')])
 
         if not have_python3:
-            python3_packages = self.check_output(
-                ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
+            python3_packages = self.check_output([
+                'apt-cache', 'pkgnames', 'python3'])
             python3_packages = python3_packages.splitlines()
 
             if 'python3' in python3_packages:
