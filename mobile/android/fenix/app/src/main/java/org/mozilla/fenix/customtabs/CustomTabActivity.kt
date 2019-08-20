@@ -4,8 +4,25 @@
 
 package org.mozilla.fenix.customtabs
 
+import androidx.navigation.NavDestination
+import mozilla.components.browser.session.intent.getSessionId
+import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.CustomTabBrowsingModeManager
+import org.mozilla.fenix.CustomTabThemeManager
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
 
 open class CustomTabActivity : HomeActivity() {
-    override val isCustomTab = true
+    final override fun getSentryBreadcrumbMessage(destination: NavDestination): String {
+        val fragmentName = resources.getResourceEntryName(destination.id)
+        return "Changing to fragment $fragmentName, isCustomTab: true"
+    }
+
+    final override fun getIntentSource(intent: SafeIntent) = Event.OpenedApp.Source.CUSTOM_TAB
+
+    final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
+
+    final override fun createBrowsingModeManager() = CustomTabBrowsingModeManager()
+
+    final override fun createThemeManager() = CustomTabThemeManager()
 }

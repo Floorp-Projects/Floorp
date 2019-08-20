@@ -11,32 +11,33 @@ import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PROTECTED
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.snackbar.Snackbar
-import io.sentry.Sentry
-import io.sentry.event.Breadcrumb
-import io.sentry.event.BreadcrumbBuilder
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.intent.EXTRA_SESSION_ID
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
+import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.SentryBreadcrumbsRecorder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
@@ -45,93 +46,40 @@ import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback {
-    open val isCustomTab = false
-    private var sessionObserver: SessionManager.Observer? = null
 
     lateinit var themeManager: ThemeManager
+    lateinit var browsingModeManager: BrowsingModeManager
+
+    private var sessionObserver: SessionManager.Observer? = null
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
 
-    lateinit var browsingModeManager: BrowsingModeManager
-
-    private val onDestinationChangedListener =
-        NavController.OnDestinationChangedListener { _, dest, _ ->
-            val fragmentName = resources.getResourceEntryName(dest.id)
-            Sentry.getContext().recordBreadcrumb(
-                BreadcrumbBuilder()
-                    .setCategory("DestinationChanged")
-                    .setMessage("Changing to fragment $fragmentName, isCustomTab: $isCustomTab")
-                    .setLevel(Breadcrumb.Level.INFO)
-                    .build()
-            )
-        }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
+    final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         components.publicSuffixList.prefetch()
-        browsingModeManager = createBrowsingModeManager()
-        themeManager = createThemeManager(browsingModeManager.mode)
+        setupThemeAndBrowsingMode()
 
         setContentView(R.layout.activity_home)
 
         setupToolbarAndNavigation()
 
-        if (Settings.getInstance(this).isTelemetryEnabled && isSentryEnabled()) {
-            navHost.navController.addOnDestinationChangedListener(onDestinationChangedListener)
-        }
-
-        intent
-            ?.let { SafeIntent(it) }
-            ?.let {
-                when {
-                    isCustomTab -> Event.OpenedApp.Source.CUSTOM_TAB
-                    it.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
-                    it.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
-                    else -> null
-                }
+        if (Settings.getInstance(this).isTelemetryEnabled) {
+            if (isSentryEnabled()) {
+                lifecycle.addObserver(SentryBreadcrumbsRecorder(navHost.navController, ::getSentryBreadcrumbMessage))
             }
-            ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
 
-        handleOpenedFromExternalSourceIfNecessary(intent)
-    }
-
-    private fun setupToolbarAndNavigation() {
-        // Add ids to this that we don't want to have a toolbar back button
-        val appBarConfiguration = AppBarConfiguration.Builder().build()
-        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
-        setSupportActionBar(navigationToolbar)
-        NavigationUI.setupWithNavController(
-            navigationToolbar,
-            navHost.navController,
-            appBarConfiguration
-        )
-        navigationToolbar.setNavigationOnClickListener {
-            onBackPressed()
+            intent
+                ?.toSafeIntent()
+                ?.let(::getIntentSource)
+                ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
         }
         supportActionBar?.hide()
     }
 
-    override fun onDestroy() {
-        sessionObserver?.let { components.core.sessionManager.unregister(it) }
-        navHost.navController.removeOnDestinationChangedListener(onDestinationChangedListener)
-        super.onDestroy()
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-        intent?.let {
-            if (Crash.isCrashIntent(it)) {
-                openToCrashReporter(it)
-            } else {
-                handleOpenedFromExternalSourceIfNecessary(it)
-            }
-        }
-    }
-
+    @CallSuper
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
@@ -147,27 +95,75 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         }
     }
 
-    override fun onCreateView(
+    /**
+     * Handles intents received when the activity is open.
+     */
+    final override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleCrashIfNecessary(intent)
+        handleOpenedFromExternalSourceIfNecessary(intent)
+    }
+
+    /**
+     * Overrides view inflation to inject a custom [EngineView] from [components].
+     */
+    final override fun onCreateView(
         parent: View?,
         name: String,
         context: Context,
         attrs: AttributeSet
-    ): View? =
-        when (name) {
-            EngineView::class.java.name -> components.core.engine.createView(
-                context,
-                attrs
-            ).asView()
-            else -> super.onCreateView(parent, name, context, attrs)
-        }
+    ): View? = when (name) {
+        EngineView::class.java.name -> components.core.engine.createView(context, attrs).asView()
+        else -> super.onCreateView(parent, name, context, attrs)
+    }
 
-    override fun onBackPressed() {
+    final override fun onBackPressed() {
         supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
             if (it is BackHandler && it.onBackPressed()) {
                 return
             }
         }
         super.onBackPressed()
+    }
+
+    protected open fun getSentryBreadcrumbMessage(destination: NavDestination): String {
+        val fragmentName = resources.getResourceEntryName(destination.id)
+        return "Changing to fragment $fragmentName, isCustomTab: false"
+    }
+
+    @VisibleForTesting(otherwise = PROTECTED)
+    internal open fun getIntentSource(intent: SafeIntent): Event.OpenedApp.Source? {
+        return when {
+            intent.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
+            intent.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
+            else -> null
+        }
+    }
+
+    private fun setupThemeAndBrowsingMode() {
+        browsingModeManager = createBrowsingModeManager()
+        themeManager = createThemeManager()
+        themeManager.setActivityTheme(this)
+        themeManager.applyStatusBarTheme(this)
+    }
+
+    private fun setupToolbarAndNavigation() {
+        // Add ids to this that we don't want to have a toolbar back button
+        val appBarConfiguration = AppBarConfiguration.Builder().build()
+        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
+        setSupportActionBar(navigationToolbar)
+        NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
+        navigationToolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
+
+        handleOpenedFromExternalSourceIfNecessary(intent)
+    }
+
+    private fun handleCrashIfNecessary(intent: Intent?) {
+        if (intent != null && Crash.isCrashIntent(intent)) {
+            openToCrashReporter(intent)
+        }
     }
 
     private fun openToCrashReporter(intent: Intent) {
@@ -196,13 +192,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
 
         this.intent.putExtra(OPEN_TO_BROWSER, false)
-        var customTabSessionId: String? = null
 
-        if (isCustomTab) {
-            customTabSessionId = SafeIntent(intent).getStringExtra(EXTRA_SESSION_ID)
-        }
-
-        openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
+        openToBrowser(BrowserDirection.FromGlobal, getIntentSessionId(intent.toSafeIntent()))
     }
 
     @SuppressWarnings("ComplexMethod")
@@ -247,6 +238,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
         navHost.navController.navigate(directions)
     }
+
+    protected open fun getIntentSessionId(intent: SafeIntent): String? = null
 
     @Suppress("LongParameterList")
     fun openToBrowserAndLoad(
@@ -312,18 +305,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         }
     }
 
-    private val singleSessionObserver = object : Session.Observer {
-        var urlLoading: String? = null
-
-        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-            if (loading) {
-                urlLoading = session.url
-            } else if (urlLoading != null && !session.private) {
-                components.analytics.metrics.track(Event.UriOpened)
-            }
-        }
-    }
-
     fun updateThemeForSession(session: Session) {
         val sessionMode = BrowsingMode.fromBoolean(session.private)
         if (sessionMode != browsingModeManager.mode) {
@@ -331,31 +312,29 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         }
     }
 
-    private fun createBrowsingModeManager(): BrowsingModeManager {
-        return if (isCustomTab) {
-            CustomTabBrowsingModeManager()
-        } else {
-            DefaultBrowsingModeManager(Settings.getInstance(this)) { mode ->
-                themeManager.currentTheme = mode
-            }
+    protected open fun createBrowsingModeManager(): BrowsingModeManager {
+        return DefaultBrowsingModeManager(Settings.getInstance(this)) { mode ->
+            themeManager.currentTheme = mode
         }
     }
 
-    private fun createThemeManager(currentTheme: BrowsingMode): ThemeManager {
-        val themeManager = if (isCustomTab) {
-            CustomTabThemeManager()
-        } else {
-            DefaultThemeManager(currentTheme) {
-                themeManager.setActivityTheme(this)
-                recreate()
-            }
-        }
-        themeManager.setActivityTheme(this)
-        themeManager.applyStatusBarTheme(this)
-        return themeManager
+    protected open fun createThemeManager(): ThemeManager {
+        return DefaultThemeManager(browsingModeManager.mode, this)
     }
 
+    @Suppress("ComplexMethod")
     private fun subscribeToSessions(): SessionManager.Observer {
+        val singleSessionObserver = object : Session.Observer {
+            var urlLoading: String? = null
+
+            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+                if (loading) {
+                    urlLoading = session.url
+                } else if (urlLoading != null && !session.private) {
+                    components.analytics.metrics.track(Event.UriOpened)
+                }
+            }
+        }
 
         return object : SessionManager.Observer {
             override fun onAllSessionsRemoved() {
@@ -381,7 +360,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     }
 
     override fun onTabsShared(tabsSize: Int) {
-        this@HomeActivity.getRootView()?.let {
+        getRootView()?.let {
             FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
                 getString(
                     if (tabsSize == 1) R.string.sync_sent_tab_snackbar else

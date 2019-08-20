@@ -101,13 +101,15 @@ abstract class ThemeManager {
 
 class DefaultThemeManager(
     currentTheme: BrowsingMode,
-    private val onThemeChanged: (BrowsingMode) -> Unit
+    private val activity: Activity
 ) : ThemeManager() {
     override var currentTheme: BrowsingMode = currentTheme
         set(value) {
             if (currentTheme != value) {
                 field = value
-                onThemeChanged(value)
+
+                setActivityTheme(activity)
+                activity.recreate()
             }
         }
 }
