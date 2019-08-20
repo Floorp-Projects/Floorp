@@ -238,10 +238,11 @@ class WebReplayPlayer extends Component {
     } = consoleState;
 
     if (visibleMessages != this.state.visibleMessages) {
-      const messages = sortBy(
-        visibleMessages.map(id => messagesById.get(id)),
-        message => getMessageProgress(message)
-      );
+      let messages = visibleMessages
+        .map(id => messagesById.get(id))
+        .filter(message => message.source == "console-api");
+
+      messages = sortBy(messages, message => getMessageProgress(message));
 
       this.setState({ messages, visibleMessages });
     }
