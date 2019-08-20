@@ -200,7 +200,6 @@ HTMLEditRules::HTMLEditRules()
 void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
   mReturnInEmptyLIKillsList = true;
-  mUtilRange = nullptr;
   mJoinOffset = 0;
 }
 
@@ -243,8 +242,6 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   }
 
   // make a utility range for use by the listenter
-  mUtilRange = new nsRange(HTMLEditorRef().GetDocument());
-
   if (rootElement) {
     nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
         RawRangeBoundary(rootElement, 0),
@@ -312,12 +309,6 @@ nsresult HTMLEditRules::BeforeEdit() {
   // Register with range updater to track this as we perturb the doc
   HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(
       HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
-
-  // Clear out mUtilRange
-  if (mUtilRange) {
-    // Ditto for mUtilRange.
-    mUtilRange->Reset();
-  }
 
   // Remember current inline styles for deletion and normal insertion ops
   bool cacheInlineStyles;
@@ -10141,77 +10132,6 @@ nsresult HTMLEditRules::ConfirmSelectionInBody() {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::UpdateDocChangeRange(nsRange* aRange) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  // first make sure aRange is in the document.  It might not be if
-  // portions of our editting action involved manipulating nodes
-  // prior to placing them in the document (e.g., populating a list item
-  // before placing it in its list)
-  const RangeBoundary& atStart = aRange->StartRef();
-  if (NS_WARN_IF(!atStart.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!HTMLEditorRef().IsDescendantOfRoot(atStart.Container())) {
-    // Just return - we don't need to adjust
-    // TopLevelEditSubActionData::mChangedRange in this case
-    return NS_OK;
-  }
-
-  // compare starts of ranges
-  ErrorResult error;
-  int16_t result = HTMLEditorRef()
-                       .TopLevelEditSubActionDataRef()
-                       .mChangedRange->CompareBoundaryPoints(
-                           Range_Binding::START_TO_START, *aRange, error);
-  if (error.ErrorCodeIs(NS_ERROR_NOT_INITIALIZED)) {
-    // This will happen is TopLevelEditSubActionData::mChangedRange is non-null,
-    // but the range is uninitialized. In this case we'll set the start to
-    // aRange start. The same test won't be needed further down since after
-    // we've set the start the range will be collapsed to that point.
-    result = 1;
-    error.SuppressException();
-  }
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  // Positive result means TopLevelEditSubActionData::mChangedRange start is
-  // after aRange start.
-  if (result > 0) {
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->SetStart(
-        atStart.AsRaw(), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-  }
-
-  // compare ends of ranges
-  result = HTMLEditorRef()
-               .TopLevelEditSubActionDataRef()
-               .mChangedRange->CompareBoundaryPoints(Range_Binding::END_TO_END,
-                                                     *aRange, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  // Negative result means TopLevelEditSubActionData::mChangedRange end is
-  // before aRange end.
-  if (result < 0) {
-    const RangeBoundary& atEnd = aRange->EndRef();
-    if (NS_WARN_IF(!atEnd.IsSet())) {
-      return NS_ERROR_FAILURE;
-    }
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->SetEnd(
-        atEnd.AsRaw(), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-  }
-
-  return NS_OK;
-}
-
 nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
                                                  bool aForPadding) {
   MOZ_ASSERT(IsEditorDataAvailable());
@@ -10260,13 +10180,10 @@ void HTMLEditRules::DidCreateNode(Element& aNewElement) {
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  // assumption that Join keeps the righthand node
-  IgnoredErrorResult ignoredError;
-  mUtilRange->SelectNode(aNewElement, ignoredError);
-  if (NS_WARN_IF(ignoredError.Failed())) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
+          HTMLEditorRef(), aNewElement);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddNodeToChangedRange() failed");
 }
 
 void HTMLEditRules::DidInsertNode(nsIContent& aContent) {
@@ -10280,12 +10197,10 @@ void HTMLEditRules::DidInsertNode(nsIContent& aContent) {
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  IgnoredErrorResult ignoredError;
-  mUtilRange->SelectNode(aContent, ignoredError);
-  if (NS_WARN_IF(ignoredError.Failed())) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
+          HTMLEditorRef(), aContent);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddNodeToChangedRange() failed");
 }
 
 void HTMLEditRules::WillDeleteNode(nsINode& aChild) {
@@ -10299,12 +10214,10 @@ void HTMLEditRules::WillDeleteNode(nsINode& aChild) {
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  IgnoredErrorResult ignoredError;
-  mUtilRange->SelectNode(aChild, ignoredError);
-  if (NS_WARN_IF(ignoredError.Failed())) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
+          HTMLEditorRef(), aChild);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddNodeToChangedRange() failed");
 }
 
 void HTMLEditRules::DidSplitNode(nsINode& aExistingRightNode,
@@ -10319,12 +10232,11 @@ void HTMLEditRules::DidSplitNode(nsINode& aExistingRightNode,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  nsresult rv =
-      mUtilRange->SetStartAndEnd(&aNewLeftNode, 0, &aExistingRightNode, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddRangeToChangedRange(
+          HTMLEditorRef(), EditorRawDOMPoint(&aNewLeftNode, 0),
+          EditorRawDOMPoint(&aExistingRightNode, 0));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddRangeToChangedRange() failed");
 }
 
 void HTMLEditRules::WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
@@ -10351,12 +10263,10 @@ void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  // assumption that Join keeps the righthand node
-  nsresult rv = mUtilRange->CollapseTo(&aRightNode, mJoinOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddPointToChangedRange(
+          HTMLEditorRef(), EditorRawDOMPoint(&aRightNode, mJoinOffset));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddPointToChangedRange() failed");
 }
 
 void HTMLEditRules::DidInsertText(nsINode& aTextNode, int32_t aOffset,
@@ -10371,13 +10281,11 @@ void HTMLEditRules::DidInsertText(nsINode& aTextNode, int32_t aOffset,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  int32_t length = aString.Length();
-  nsresult rv = mUtilRange->SetStartAndEnd(&aTextNode, aOffset, &aTextNode,
-                                           aOffset + length);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddRangeToChangedRange(
+          HTMLEditorRef(), EditorRawDOMPoint(&aTextNode, aOffset),
+          EditorRawDOMPoint(&aTextNode, aOffset + aString.Length()));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddRangeToChangedRange() failed");
 }
 
 void HTMLEditRules::DidDeleteText(nsINode& aTextNode, int32_t aOffset,
@@ -10392,11 +10300,10 @@ void HTMLEditRules::DidDeleteText(nsINode& aTextNode, int32_t aOffset,
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  nsresult rv = mUtilRange->CollapseTo(&aTextNode, aOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddPointToChangedRange(
+          HTMLEditorRef(), EditorRawDOMPoint(&aTextNode, aOffset));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddPointToChangedRange() failed");
 }
 
 void HTMLEditRules::WillDeleteSelection() {
@@ -10410,20 +10317,13 @@ void HTMLEditRules::WillDeleteSelection() {
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
 
-  EditorRawDOMPoint startPoint = EditorBase::GetStartPoint(*SelectionRefPtr());
-  if (NS_WARN_IF(!startPoint.IsSet())) {
-    return;
-  }
-  EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(*SelectionRefPtr());
-  if (NS_WARN_IF(!endPoint.IsSet())) {
-    return;
-  }
-  nsresult rv = mUtilRange->SetStartAndEnd(startPoint.ToRawRangeBoundary(),
-                                           endPoint.ToRawRangeBoundary());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  UpdateDocChangeRange(mUtilRange);
+  // XXX Looks like that this is wrong.  We delete multiple selection ranges
+  //     once, but this adds only first range into the changed range.
+  DebugOnly<nsresult> rv =
+      HTMLEditorRef().TopLevelEditSubActionDataRef().AddRangeToChangedRange(
+          HTMLEditorRef(), EditorBase::GetStartPoint(*SelectionRefPtr()),
+          EditorBase::GetStartPoint(*SelectionRefPtr()));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddRangeToChangedRange() failed");
 }
 
 nsresult HTMLEditRules::RemoveAlignment(nsINode& aNode,

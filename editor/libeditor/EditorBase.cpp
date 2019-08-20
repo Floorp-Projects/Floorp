@@ -5375,4 +5375,85 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
                        true /* is external */, aClipboardType);
 }
 
+/*****************************************************************************
+ * mozilla::EditorBase::TopLevelEditSubActionData
+ *****************************************************************************/
+
+nsresult EditorBase::TopLevelEditSubActionData::AddNodeToChangedRange(
+    const HTMLEditor& aHTMLEditor, nsINode& aNode) {
+  EditorRawDOMPoint startPoint(&aNode);
+  EditorRawDOMPoint endPoint(&aNode);
+  DebugOnly<bool> advanced = endPoint.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced, "Failed to set endPoint to next to aNode");
+  return AddRangeToChangedRange(aHTMLEditor, startPoint, endPoint);
+}
+
+nsresult EditorBase::TopLevelEditSubActionData::AddPointToChangedRange(
+    const HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aPoint) {
+  return AddRangeToChangedRange(aHTMLEditor, aPoint, aPoint);
+}
+
+nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
+    const HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aStart,
+    const EditorRawDOMPoint& aEnd) {
+  if (NS_WARN_IF(!aStart.IsSet()) || NS_WARN_IF(!aEnd.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!aHTMLEditor.IsDescendantOfRoot(aStart.GetContainer()) ||
+      (aStart.GetContainer() != aEnd.GetContainer() &&
+       !aHTMLEditor.IsDescendantOfRoot(aEnd.GetContainer()))) {
+    return NS_OK;
+  }
+
+  // If mChangedRange hasn't been set, we can just set it to `aStart` and
+  // `aEnd`.
+  if (!mChangedRange->IsPositioned()) {
+    nsresult rv = mChangedRange->SetStartAndEnd(aStart.ToRawRangeBoundary(),
+                                                aEnd.ToRawRangeBoundary());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to set mChangedRange to given range");
+    return rv;
+  }
+
+  bool disconnected = false;
+  int16_t relation = mChangedRange->StartRef().IsSet()
+                         ? nsContentUtils::ComparePoints(
+                               mChangedRange->StartRef(),
+                               aStart.ToRawRangeBoundary(), &disconnected)
+                         : 1;
+  if (NS_WARN_IF(disconnected)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If aStart is before start of mChangedRange, reset the start.
+  if (relation > 0) {
+    ErrorResult error;
+    mChangedRange->SetStart(aStart.ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
+  relation = mChangedRange->EndRef().IsSet()
+                 ? nsContentUtils::ComparePoints(mChangedRange->EndRef(),
+                                                 aEnd.ToRawRangeBoundary(),
+                                                 &disconnected)
+                 : 1;
+  if (NS_WARN_IF(disconnected)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If aEnd is after end of mChangedRange, reset the end.
+  if (relation < 0) {
+    ErrorResult error;
+    mChangedRange->SetEnd(aEnd.ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
+  return NS_OK;
+}
+
 }  // namespace mozilla

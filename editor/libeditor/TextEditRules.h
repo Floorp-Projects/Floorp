@@ -68,8 +68,7 @@ class TextEditRules {
   template <typename T>
   using OwningNonNull = OwningNonNull<T>;
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEditRules)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TextEditRules)
+  NS_INLINE_DECL_REFCOUNTING(TextEditRules)
 
   TextEditRules();
 

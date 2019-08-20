@@ -60,25 +60,6 @@ using namespace dom;
  * mozilla::TextEditRules
  ********************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
-    HTMLEditRules* tmp = htmlEditRules;
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mUtilRange)
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
-    HTMLEditRules* tmp = htmlEditRules;
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUtilRange)
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TextEditRules, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TextEditRules, Release)
-
 TextEditRules::TextEditRules()
     : mTextEditor(nullptr),
       mData(nullptr),
