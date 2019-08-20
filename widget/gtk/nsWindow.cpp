@@ -6576,11 +6576,18 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
 }
 
 gint nsWindow::GdkScaleFactor() {
+  // For popup windows with parent window we need to get scale factor of the
+  // parent window. Otherwise the scale factor of the popup is not updated
+  // during it's hidden.
+  GdkWindow* scaledGdkWindow = mGdkWindow;
+  if (mToplevelParentWindow) {
+    scaledGdkWindow = gtk_widget_get_window(GTK_WIDGET(mToplevelParentWindow));
+  }
   // Available as of GTK 3.10+
   static auto sGdkWindowGetScaleFactorPtr =
       (gint(*)(GdkWindow*))dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
-  if (sGdkWindowGetScaleFactorPtr && mGdkWindow)
-    return (*sGdkWindowGetScaleFactorPtr)(mGdkWindow);
+  if (sGdkWindowGetScaleFactorPtr && scaledGdkWindow)
+    return (*sGdkWindowGetScaleFactorPtr)(scaledGdkWindow);
   return ScreenHelperGTK::GetGTKMonitorScaleFactor();
 }
 
