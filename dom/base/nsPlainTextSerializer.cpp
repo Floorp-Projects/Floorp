@@ -668,7 +668,7 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
 
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
-  else if (IsElementBlock(mElement)) {
+  else if (IsCssBlockLevelElement(mElement)) {
     EnsureVerticalSpace(0);
   }
 
@@ -758,7 +758,8 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
   }
 
   if (mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
-    if (DoOutput() && IsInPre() && IsElementBlock(mElement)) {
+    if (DoOutput() && IsElementPreformatted() &&
+        IsCssBlockLevelElement(mElement)) {
       // If we're closing a preformatted block element, output a line break
       // when we find a new container.
       mPreformattedBlockBoundary = true;
@@ -868,7 +869,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     mLineBreakDue = true;
   } else if (aTag == nsGkAtoms::q) {
     Write(NS_LITERAL_STRING("\""));
-  } else if (IsElementBlock(mElement)) {
+  } else if (IsCssBlockLevelElement(mElement)) {
     // All other blocks get 1 vertical space after them
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
@@ -975,7 +976,7 @@ void nsPlainTextSerializer::DoAddText(bool aIsLineBreak,
     // prettyprinting to mimic the html format, and in neither case
     // does the formatting of the html source help us.
     if ((mFlags & nsIDocumentEncoder::OutputPreformatted) ||
-        (mPreFormattedMail && !mWrapColumn) || IsInPre()) {
+        (mPreFormattedMail && !mWrapColumn) || IsElementPreformatted()) {
       EnsureVerticalSpace(mEmptyLines + 1);
     } else if (!mInWhitespace) {
       Write(kSpace);
@@ -1461,13 +1462,14 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormattedMail && !mWrapColumn) ||
-      (IsInPre() && !mPreFormattedMail) ||
+      (IsElementPreformatted() && !mPreFormattedMail && !MayWrap()) ||
       (mSpanLevel > 0 && mEmptyLines >= 0 && IsQuotedLine(str))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_ASSERTION(mCurrentLine.IsEmpty() || (IsInPre() && !mPreFormattedMail),
+    NS_ASSERTION(mCurrentLine.IsEmpty() ||
+                     (IsElementPreformatted() && !mPreFormattedMail),
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();
@@ -1674,7 +1676,7 @@ nsAtom* nsPlainTextSerializer::GetIdForContent(nsIContent* aContent) {
   return localName->IsStatic() ? localName : nullptr;
 }
 
-bool nsPlainTextSerializer::IsInPre() {
+bool nsPlainTextSerializer::IsElementPreformatted() const {
   return !mPreformatStack.empty() && mPreformatStack.top();
 }
 
@@ -1689,7 +1691,7 @@ bool nsPlainTextSerializer::IsElementPreformatted(Element* aElement) {
   return GetIdForContent(aElement) == nsGkAtoms::pre;
 }
 
-bool nsPlainTextSerializer::IsElementBlock(Element* aElement) {
+bool nsPlainTextSerializer::IsCssBlockLevelElement(Element* aElement) {
   RefPtr<ComputedStyle> computedStyle =
       nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
   if (computedStyle) {
@@ -1697,7 +1699,7 @@ bool nsPlainTextSerializer::IsElementBlock(Element* aElement) {
     return displayStyle->IsBlockOutsideStyle();
   }
   // Fall back to looking at the tag, in case there is no style information.
-  return nsContentUtils::IsHTMLBlock(aElement);
+  return nsContentUtils::IsHTMLBlockLevelElement(aElement);
 }
 
 /**
