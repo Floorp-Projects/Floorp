@@ -615,6 +615,10 @@ class EditorBase : public nsIEditor,
     // If we have created a new block element, set to it.
     RefPtr<Element> mNewBlockElement;
 
+    // Set selected range before edit.  Then, RangeUpdater keep modifying
+    // the range while we're changing the DOM tree.
+    RefPtr<RangeItem> mSelectedRange;
+
     // If we tried to delete selection, set to true.
     bool mDidDeleteSelection;
 
@@ -642,9 +646,16 @@ class EditorBase : public nsIEditor,
 
    private:
     void Clear() {
-      mNewBlockElement = nullptr;
-      mDidDeleteSelection = false;
       mDidExplicitlySetInterLine = false;
+      // We don't need to clear other members which are referred only when the
+      // editor is an HTML editor anymore.  Note that if `mSelectedRange` is
+      // non-nullptr, that means that we're in `HTMLEditor`.
+      if (!mSelectedRange) {
+        return;
+      }
+      mNewBlockElement = nullptr;
+      mSelectedRange->Clear();
+      mDidDeleteSelection = false;
       mDidDeleteNonCollapsedRange = false;
       mDidDeleteEmptyParentBlocks = false;
       mRestoreContentEditableCount = false;

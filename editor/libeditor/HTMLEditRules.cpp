@@ -203,7 +203,6 @@ void HTMLEditRules::InitFields() {
   mReturnInEmptyLIKillsList = true;
   mUtilRange = nullptr;
   mJoinOffset = 0;
-  mRangeItem = new RangeItem();
 
   InitStyleCacheArray(mCachedStyles);
 }
@@ -328,20 +327,27 @@ nsresult HTMLEditRules::BeforeEdit() {
   if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
     // If there is composition string, let's remember current composition
     // range.
-    mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(),
-                           HTMLEditorRef().GetCompositionEndPoint());
+    HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
+        HTMLEditorRef().GetCompositionStartPoint(),
+        HTMLEditorRef().GetCompositionEndPoint());
   } else {
     // Get the selection location
     if (!SelectionRefPtr()->RangeCount()) {
       return NS_ERROR_UNEXPECTED;
     }
-    mRangeItem->StoreRange(SelectionRefPtr()->GetRangeAt(0));
+    HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(
+        SelectionRefPtr()->GetRangeAt(0));
   }
-  nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
-  nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
+  nsCOMPtr<nsINode> selStartNode = HTMLEditorRef()
+                                       .TopLevelEditSubActionDataRef()
+                                       .mSelectedRange->mStartContainer;
+  nsCOMPtr<nsINode> selEndNode = HTMLEditorRef()
+                                     .TopLevelEditSubActionDataRef()
+                                     .mSelectedRange->mEndContainer;
 
   // Register with range updater to track this as we perturb the doc
-  HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(mRangeItem);
+  HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(
+      HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
 
   // Clear out mDocChangeRange and mUtilRange
   if (mDocChangeRange) {
@@ -422,7 +428,8 @@ nsresult HTMLEditRules::AfterEdit() {
   // modify the DOM tree nor Selection.
 
   // Free up selectionState range item
-  HTMLEditorRef().RangeUpdaterRef().DropRangeItem(mRangeItem);
+  HTMLEditorRef().RangeUpdaterRef().DropRangeItem(
+      HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
 
   // Reset the contenteditable count to its previous value
   if (HTMLEditorRef()
@@ -572,19 +579,23 @@ nsresult HTMLEditRules::AfterEditInner() {
         }
 
         // also do this for original selection endpoints.
-        if (NS_WARN_IF(!mRangeItem->mStartContainer) ||
-            NS_WARN_IF(!mRangeItem->mEndContainer)) {
+        if (NS_WARN_IF(!HTMLEditorRef()
+                            .TopLevelEditSubActionDataRef()
+                            .mSelectedRange->IsSet())) {
           return NS_ERROR_FAILURE;
         }
-        WSRunObject(&HTMLEditorRef(), mRangeItem->mStartContainer,
-                    mRangeItem->mStartOffset)
+        WSRunObject(&HTMLEditorRef(), HTMLEditorRef()
+                                          .TopLevelEditSubActionDataRef()
+                                          .mSelectedRange->StartRawPoint())
             .AdjustWhitespace();
         // we only need to handle old selection endpoint if it was different
         // from start
-        if (mRangeItem->mStartContainer != mRangeItem->mEndContainer ||
-            mRangeItem->mStartOffset != mRangeItem->mEndOffset) {
-          WSRunObject(&HTMLEditorRef(), mRangeItem->mEndContainer,
-                      mRangeItem->mEndOffset)
+        if (HTMLEditorRef()
+                .TopLevelEditSubActionDataRef()
+                .mSelectedRange->IsCollapsed()) {
+          WSRunObject(&HTMLEditorRef(), HTMLEditorRef()
+                                            .TopLevelEditSubActionDataRef()
+                                            .mSelectedRange->EndRawPoint())
               .AdjustWhitespace();
         }
         break;
@@ -653,7 +664,12 @@ nsresult HTMLEditRules::AfterEditInner() {
   }
 
   rv = HTMLEditorRef().HandleInlineSpellCheck(
-      mRangeItem->mStartContainer, mRangeItem->mStartOffset,
+      HTMLEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mSelectedRange->mStartContainer,
+      HTMLEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mSelectedRange->mStartOffset,
       rangeStartContainer, rangeStartOffset, rangeEndContainer, rangeEndOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

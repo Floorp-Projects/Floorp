@@ -1355,7 +1355,6 @@ class HTMLEditRules : public TextEditRules {
   RefPtr<nsRange> mUtilRange;
   // Need to remember an int across willJoin/didJoin...
   uint32_t mJoinOffset;
-  RefPtr<RangeItem> mRangeItem;
 
   // XXX In strict speaking, mCachedStyles isn't enough to cache inline styles
   //     because inline style can be specified with "style" attribute and/or
