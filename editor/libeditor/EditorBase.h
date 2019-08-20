@@ -619,10 +619,18 @@ class EditorBase : public nsIEditor,
     // `AfterEdit()` or something shouldn't overwrite it in such case.
     bool mDidExplicitlySetInterLine;
 
+    // If we have deleted non-collapsed range set to true, there are only 2
+    // cases for now:
+    //   - non-collapsed range was selected.
+    //   - selection was collapsed in a text node and a Unicode character
+    //     was removed.
+    bool mDidDeleteNonCollapsedRange;
+
    private:
     void Clear() {
       mDidDeleteSelection = false;
       mDidExplicitlySetInterLine = false;
+      mDidDeleteNonCollapsedRange = false;
     }
 
     TopLevelEditSubActionData() = default;
