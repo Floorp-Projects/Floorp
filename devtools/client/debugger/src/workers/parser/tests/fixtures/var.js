@@ -5,8 +5,8 @@ const a = 4,
   b = 5;
 a = 5;
 
-var { foo: { bar } } = {}
-var {baz} = {}
+var { foo: { baw } } = {}
+var {bap} = {}
 var {ll = 3} = {}
 
 
@@ -16,6 +16,6 @@ var { a: _a } = 3
 
 var [oh, {my: god}] = [{},{}]
 
-var [[oh], [{oy, vey: _vey, mitzvot: _mitz = 4}]] = [{},{}]
+var [[oj], [{oy, vey: _vey, mitzvot: _mitz = 4}]] = [{},{}]
 
 var [one, ...stuff] = []

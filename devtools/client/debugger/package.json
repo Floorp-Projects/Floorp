@@ -47,10 +47,10 @@
     "install": "prettier --write package.json"
   },
   "dependencies": {
-    "@babel/core": "^7.0.0-beta.55",
-    "@babel/parser": "^7.0.0-beta.55",
-    "@babel/template": "^7.0.0-beta.55",
-    "@babel/types": "^7.0.0-beta.55",
+    "@babel/core": "^7.0.0",
+    "@babel/parser": "^7.0.0",
+    "@babel/template": "^7.0.0",
+    "@babel/types": "^7.0.0",
     "babel-plugin-transform-imports": "^1.5.0",
     "codemirror": "^5.28.0",
     "devtools-environment": "^0.0.6",
@@ -66,7 +66,7 @@
     "lodash-move": "^1.1.1",
     "lodash.kebabcase": "^4.1.1",
     "md5": "^2.2.1",
-    "parse-script-tags": "^0.1.6",
+    "parse-script-tags": "github:loganfsmyth/parse-script-tags#d771732ca47e1b3554fe67d609fd18cc785c5f26",
     "pretty-fast": "^0.2.3",
     "prop-types": "^15.6.0",
     "react": "16.8.6",
