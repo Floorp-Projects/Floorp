@@ -5402,8 +5402,8 @@
           return;
         }
 
-        SitePermissions.set(
-          event.detail.url,
+        SitePermissions.setForPrincipal(
+          browser.contentPrincipal,
           "autoplay-media",
           SitePermissions.BLOCK,
           SitePermissions.SCOPE_GLOBAL,
