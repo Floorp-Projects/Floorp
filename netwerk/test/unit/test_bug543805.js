@@ -22,24 +22,24 @@ const tests = [
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
+      "%2020%3A19%3A00%20GMT FILE \n" +
       '201: "%20test.blankfile" 22 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
-      '201: "%20test2.blankfile" 33 Tue%2C%2001%20Apr%202008%2000%3A00%3A00 FILE \n' +
+      "%2020%3A19%3A00%20GMT FILE \n" +
+      '201: "%20test2.blankfile" 33 Tue%2C%2001%20Apr%202008%2000%3A00%3A00%20GMT FILE \n' +
       '201: "nodup.file" 44 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
+      "%2020%3A19%3A00%20GMT FILE \n" +
       '201: "test.file" 55 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
-      '201: "test2.file" 66 Tue%2C%2001%20Apr%202008%2000%3A00%3A00 FILE \n',
+      "%2020%3A19%3A00%20GMT FILE \n" +
+      '201: "test2.file" 66 Tue%2C%2001%20Apr%202008%2000%3A00%3A00%20GMT FILE \n',
   ],
 
   // standard ls format
@@ -59,24 +59,24 @@ const tests = [
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
+      "%2020%3A19%3A00%20GMT FILE \n" +
       '201: "%20test.blankfile" 22 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
-      '201: "%20test2.blankfile" 33 Tue%2C%2001%20Apr%202008%2000%3A00%3A00 FILE \n' +
+      "%2020%3A19%3A00%20GMT FILE \n" +
+      '201: "%20test2.blankfile" 33 Tue%2C%2001%20Apr%202008%2000%3A00%3A00%20GMT FILE \n' +
       '201: "nodup.file" 44 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
+      "%2020%3A19%3A00%20GMT FILE \n" +
       '201: "test.file" 55 ' +
       day +
       "%2C%2001%20Jan%20" +
       year +
-      "%2020%3A19%3A00 FILE \n" +
-      '201: "test2.file" 66 Tue%2C%2001%20Apr%202008%2000%3A00%3A00 FILE \n',
+      "%2020%3A19%3A00%20GMT FILE \n" +
+      '201: "test2.file" 66 Tue%2C%2001%20Apr%202008%2000%3A00%3A00%20GMT FILE \n',
   ],
 ];
 

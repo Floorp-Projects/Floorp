@@ -10,8 +10,8 @@ const tests = [
       URL +
       "\n" +
       "200: filename content-length last-modified file-type\n" +
-      '201: "file1" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n' +
-      '201: "%20file2" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n',
+      '201: "file1" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n' +
+      '201: "%20file2" 0 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n',
   ],
   // old Hellsoft unix format
   [
@@ -22,8 +22,8 @@ const tests = [
       URL +
       "\n" +
       "200: filename content-length last-modified file-type\n" +
-      '201: "file1" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n' +
-      '201: "file2" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n',
+      '201: "file1" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n' +
+      '201: "file2" 214059 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n',
   ],
   // new Hellsoft unix format
   [
@@ -34,8 +34,8 @@ const tests = [
       URL +
       "\n" +
       "200: filename content-length last-modified file-type\n" +
-      '201: "file1" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n' +
-      '201: "%20file2" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00 FILE \n',
+      '201: "file1" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n' +
+      '201: "%20file2" 192 Sat%2C%2001%20Jan%202000%2000%3A00%3A00%20GMT FILE \n',
   ],
   // DOS format with correct offsets
   [
@@ -50,12 +50,12 @@ const tests = [
       URL +
       "\n" +
       "200: filename content-length last-modified file-type\n" +
-      '201: "dir1" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n' +
-      '201: "junction1"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n' +
-      '201: "file1" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n' +
-      '201: "%20dir2" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n' +
-      '201: "%20junction2"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n' +
-      '201: "%20file2" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n',
+      '201: "dir1" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT DIRECTORY \n' +
+      '201: "junction1"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT SYMBOLIC-LINK \n' +
+      '201: "file1" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT FILE \n' +
+      '201: "%20dir2" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT DIRECTORY \n' +
+      '201: "%20junction2"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT SYMBOLIC-LINK \n' +
+      '201: "%20file2" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT FILE \n',
   ],
   // DOS format with wrong offsets
   [
@@ -72,14 +72,14 @@ const tests = [
       URL +
       "\n" +
       "200: filename content-length last-modified file-type\n" +
-      '201: "dir1" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n' +
-      '201: "dir2" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n' +
-      '201: "dir3" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 DIRECTORY \n' +
-      '201: "junction1"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n' +
-      '201: "junction2"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n' +
-      '201: "junction3"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00 SYMBOLIC-LINK \n' +
-      '201: "file1" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n' +
-      '201: "file2" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00 FILE \n',
+      '201: "dir1" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT DIRECTORY \n' +
+      '201: "dir2" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT DIRECTORY \n' +
+      '201: "dir3" 0 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT DIRECTORY \n' +
+      '201: "junction1"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT SYMBOLIC-LINK \n' +
+      '201: "junction2"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT SYMBOLIC-LINK \n' +
+      '201: "junction3"  Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT SYMBOLIC-LINK \n' +
+      '201: "file1" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT FILE \n' +
+      '201: "file2" 95077 Sat%2C%2001%20Jan%202000%2001%3A00%3A00%20GMT FILE \n',
   ],
 ];
 
