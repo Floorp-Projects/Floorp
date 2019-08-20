@@ -157,8 +157,7 @@ static int32_t UTCToLocalStandardOffsetSeconds() {
   return local_secs - (utc_secs + SecondsPerDay);
 }
 
-void js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
-    ResetTimeZoneMode mode) {
+void js::DateTimeInfo::internalResetTimeZoneAdjustment(ResetTimeZoneMode mode) {
   // Nothing to do when an update request is already enqueued.
   if (localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
     return;
@@ -175,7 +174,7 @@ void js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
   }
 }
 
-void js::DateTimeInfo::resetTimeZoneAdjustment() {
+void js::DateTimeInfo::updateTimeZoneAdjustment() {
   MOZ_ASSERT(localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid);
 
   bool updateIfChanged =
@@ -539,7 +538,7 @@ void js::FinishDateTimeState() {
 }
 
 void js::ResetTimeZoneInternal(ResetTimeZoneMode mode) {
-  js::DateTimeInfo::updateTimeZoneAdjustment(mode);
+  js::DateTimeInfo::resetTimeZoneAdjustment(mode);
 }
 
 JS_PUBLIC_API void JS::ResetTimeZone() {
