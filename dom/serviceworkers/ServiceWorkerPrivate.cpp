@@ -1216,7 +1216,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadStreamContentLength;
-  nsCString mReferrer;
+  nsString mReferrer;
   ReferrerPolicy mReferrerPolicy;
   nsString mIntegrity;
   const bool mIsNonSubresourceRequest;
@@ -1249,7 +1249,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
         mRequestCredentials(RequestCredentials::Same_origin),
         mContentPolicyType(nsIContentPolicy::TYPE_INVALID),
         mUploadStreamContentLength(-1),
-        mReferrer(kFETCH_CLIENT_REFERRER_STR),
+        mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR)),
         mReferrerPolicy(ReferrerPolicy::_empty),
         mIsNonSubresourceRequest(aIsNonSubresourceRequest) {
     MOZ_ASSERT(aWorkerPrivate);
@@ -1295,16 +1295,12 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-    mReferrer = EmptyCString();
     uint32_t referrerPolicy = 0;
+    mReferrer = EmptyString();
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
       referrerPolicy = referrerInfo->GetReferrerPolicy();
-      nsCOMPtr<nsIURI> computedReferrer = referrerInfo->GetComputedReferrer();
-      if (computedReferrer) {
-        rv = computedReferrer->GetSpec(mReferrer);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      Unused << referrerInfo->GetComputedReferrerSpec(mReferrer);
     }
     switch (referrerPolicy) {
       case nsIHttpChannel::REFERRER_POLICY_UNSET:
@@ -1468,9 +1464,8 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     }
     RefPtr<InternalRequest> internalReq = new InternalRequest(
         mSpec, mFragment, mMethod, internalHeaders.forget(), mCacheMode,
-        mRequestMode, mRequestRedirect, mRequestCredentials,
-        NS_ConvertUTF8toUTF16(mReferrer), mReferrerPolicy, mContentPolicyType,
-        mIntegrity);
+        mRequestMode, mRequestRedirect, mRequestCredentials, mReferrer,
+        mReferrerPolicy, mContentPolicyType, mIntegrity);
     internalReq->SetBody(mUploadStream, mUploadStreamContentLength);
     // For Telemetry, note that this Request object was created by a Fetch
     // event.
@@ -1952,16 +1947,33 @@ nsresult ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult) {
 nsresult ServiceWorkerPrivate::AttachDebugger() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mInner) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   // When the first debugger attaches to a worker, we spawn a worker if needed,
   // and cancel the idle timeout. The idle timeout should not be reset until
   // the last debugger detached from the worker.
   if (!mDebuggerCount) {
-    nsresult rv = SpawnWorkerIfNeeded(AttachEvent);
+    nsresult rv = mInner ? mInner->SpawnWorkerIfNeeded()
+                         : SpawnWorkerIfNeeded(AttachEvent);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    /**
+     * Under parent-intercept mode (i.e. non-null `mInner`), renewing the idle
+     * KeepAliveToken for spawning workers happens asynchronously, rather than
+     * synchronously without parent-intercept (see
+     * `ServiceWorkerPrivate::SpawnWorkerIfNeeded`). The asynchronous renewal is
+     * because the actual spawning of workers under parent-intercept occurs in a
+     * content process, so we will only renew once notified that the worker has
+     * been successfully created
+     * (see `ServiceWorkerPrivateImpl::CreationSucceeded`).
+     *
+     * This means that the DevTools way of starting up a worker by calling
+     * `AttachDebugger` immediately followed by `DetachDebugger` will spawn and
+     * immediately terminate a worker (because `mTokenCount` is possibly 0
+     * due to the idle KeepAliveToken being created asynchronously). So, just
+     * renew the KeepAliveToken right now.
+     */
+    if (mInner) {
+      RenewKeepAliveToken(AttachEvent);
+    }
 
     mIdleWorkerTimer->Cancel();
   }
@@ -1973,10 +1985,6 @@ nsresult ServiceWorkerPrivate::AttachDebugger() {
 
 nsresult ServiceWorkerPrivate::DetachDebugger() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mInner) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   if (!mDebuggerCount) {
     return NS_ERROR_UNEXPECTED;

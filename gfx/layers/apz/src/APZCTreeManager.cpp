@@ -3301,10 +3301,10 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
           HitTestingTreeNode* parent = aNode->GetParent();
           if (!parent) {
             messages.AppendElement(
-                MatrixMessage(LayerToScreenMatrix4x4(), layersId));
+                MatrixMessage(Some(LayerToScreenMatrix4x4()), layersId));
           } else if (layersId != parent->GetLayersId()) {
             messages.AppendElement(
-                MatrixMessage(parent->GetTransformToGecko(), layersId));
+                MatrixMessage(Some(parent->GetTransformToGecko()), layersId));
           }
         },
         [&](HitTestingTreeNode* aNode) {

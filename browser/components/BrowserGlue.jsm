@@ -1760,6 +1760,13 @@ BrowserGlue.prototype = {
       recordIdentityPopupEvents
     );
 
+    Services.telemetry.setEventRecordingEnabled(
+      "security.ui.protectionspopup",
+      Services.prefs.getBoolPref(
+        "security.protectionspopup.recordEventTelemetry"
+      )
+    );
+
     let tpEnabled = Services.prefs.getBoolPref(
       "privacy.trackingprotection.enabled"
     );

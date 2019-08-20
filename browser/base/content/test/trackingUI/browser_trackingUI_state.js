@@ -53,21 +53,9 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(DTSCBN_PREF);
 });
 
-// This is a special version of "hidden" that doesn't check for item
-// visibility and just asserts the display and opacity attributes.
-// That way we can test elements even when their panel is hidden...
-function hidden(sel) {
-  let win = tabbrowser.ownerGlobal;
-  let el = win.document.querySelector(sel);
-  let display = win.getComputedStyle(el).getPropertyValue("display", null);
-  let opacity = win.getComputedStyle(el).getPropertyValue("opacity", null);
-  return display === "none" || opacity === "0";
-}
-
-function clickButton(sel) {
-  let win = tabbrowser.ownerGlobal;
-  let el = win.document.querySelector(sel);
-  el.doCommand();
+function notFound(id) {
+  let doc = tabbrowser.ownerGlobal.document;
+  return doc.getElementById(id).classList.contains("notFound");
 }
 
 function testBenignPage() {
@@ -99,12 +87,12 @@ function testBenignPage() {
     "icon box is visible"
   );
   ok(
-    hidden("#protections-popup-category-cookies"),
-    "Not showing cookie restrictions category"
+    notFound("protections-popup-category-cookies"),
+    "Cookie restrictions category is not found"
   );
   ok(
-    hidden("#protections-popup-category-tracking-protection"),
-    "Not showing trackers category"
+    notFound("protections-popup-category-tracking-protection"),
+    "Trackers category is not found"
   );
 }
 
@@ -139,12 +127,12 @@ function testBenignPageWithException() {
   );
 
   ok(
-    hidden("#protections-popup-category-cookies"),
-    "Not showing cookie restrictions category"
+    notFound("protections-popup-category-cookies"),
+    "Cookie restrictions category is not found"
   );
   ok(
-    hidden("#protections-popup-category-tracking-protection"),
-    "Not showing trackers category"
+    notFound("protections-popup-category-tracking-protection"),
+    "Trackers category is not found"
   );
 }
 
@@ -191,18 +179,18 @@ function testTrackingPage(window) {
   );
 
   ok(
-    !hidden("#protections-popup-category-tracking-protection"),
-    "Showing trackers category"
+    !notFound("protections-popup-category-tracking-protection"),
+    "Trackers category is detected"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
     ok(
-      !hidden("#protections-popup-category-cookies"),
-      "Showing cookie restrictions category"
+      !notFound("protections-popup-category-cookies"),
+      "Cookie restrictions category is detected"
     );
   } else {
     ok(
-      hidden("#protections-popup-category-cookies"),
-      "Not showing cookie restrictions category"
+      notFound("protections-popup-category-cookies"),
+      "Cookie restrictions category is not found"
     );
   }
 }
@@ -238,18 +226,18 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   );
 
   ok(
-    !hidden("#protections-popup-category-tracking-protection"),
-    "Showing trackers category"
+    !notFound("protections-popup-category-tracking-protection"),
+    "Trackers category is detected"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
     ok(
-      !hidden("#protections-popup-category-cookies"),
-      "Showing cookie restrictions category"
+      !notFound("protections-popup-category-cookies"),
+      "Cookie restrictions category is detected"
     );
   } else {
     ok(
-      hidden("#protections-popup-category-cookies"),
-      "Not showing cookie restrictions category"
+      notFound("protections-popup-category-cookies"),
+      "Cookie restrictions category is not found"
     );
   }
 }

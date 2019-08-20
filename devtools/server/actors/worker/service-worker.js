@@ -25,6 +25,7 @@ const ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
       url: this._worker.scriptSpec,
       state: this._worker.state,
       fetch: this._worker.handlesFetchEvents,
+      id: this._worker.id,
     };
   },
 

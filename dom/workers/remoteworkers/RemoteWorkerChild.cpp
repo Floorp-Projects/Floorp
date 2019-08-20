@@ -408,8 +408,13 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     return rv;
   }
 
+  nsString workerPrivateId = EmptyString();
+
   if (mIsServiceWorker) {
     ServiceWorkerData& data = aData.serviceWorkerData().get_ServiceWorkerData();
+
+    MOZ_ASSERT(!data.id().IsEmpty());
+    workerPrivateId = std::move(data.id());
 
     nsCOMPtr<nsIPermissionManager> permissionManager =
         services::GetPermissionManager();
@@ -444,7 +449,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   RefPtr<WorkerPrivate> workerPrivate = WorkerPrivate::Constructor(
       jsapi.cx(), aData.originalScriptURL(), false,
       mIsServiceWorker ? WorkerTypeService : WorkerTypeShared, aData.name(),
-      VoidCString(), &info, error);
+      VoidCString(), &info, error, std::move(workerPrivateId));
 
   if (NS_WARN_IF(error.Failed())) {
     MOZ_ASSERT(!workerPrivate);

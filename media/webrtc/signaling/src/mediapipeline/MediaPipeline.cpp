@@ -1471,7 +1471,7 @@ class MediaPipelineReceiveVideo::PipelineListener
     RefPtr<Image> image;
     if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
       // We assume that only native handles are used with the
-      // WebrtcMediaDataDecoderCodec decoder.
+      // WebrtcMediaDataCodec decoder.
       const ImageBuffer* imageBuffer =
           static_cast<const ImageBuffer*>(&aBuffer);
       image = imageBuffer->GetNativeImage();

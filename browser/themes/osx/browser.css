@@ -318,7 +318,7 @@
   border-top: 1px solid #C7C7C7;
 }
 
-#urlbar-results {
+.urlbarView {
   font-size: 14px;
 }
 

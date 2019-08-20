@@ -51,6 +51,7 @@ UNIFIED_SOURCES += [
     'CacheIRSpewer.cpp',
     'CodeGenerator.cpp',
     'CompileWrappers.cpp',
+    'Disassemble.cpp',
     'EdgeCaseAnalysis.cpp',
     'EffectiveAddressAnalysis.cpp',
     'ExecutableAllocator.cpp',

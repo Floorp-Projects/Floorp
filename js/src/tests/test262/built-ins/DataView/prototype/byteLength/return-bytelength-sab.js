@@ -5,7 +5,6 @@
 
 /*---
 esid: sec-get-dataview.prototype.bytelength
-es6id: 24.2.4.2
 description: >
   Return value from [[ByteLength]] internal slot
 info: |

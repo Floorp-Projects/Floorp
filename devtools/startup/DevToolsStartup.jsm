@@ -1156,7 +1156,7 @@ const JsonView = {
     // Register for messages coming from the child process.
     // This is never removed as there is no particular need to unregister
     // it during shutdown.
-    Services.ppmm.addMessageListener("devtools:jsonview:save", this.onSave);
+    Services.mm.addMessageListener("devtools:jsonview:save", this.onSave);
   },
 
   // Message handlers for events from child processes
@@ -1166,8 +1166,8 @@ const JsonView = {
    * in the parent process.
    */
   onSave: function(message) {
-    const chrome = Services.wm.getMostRecentWindow("navigator:browser");
-    const browser = chrome.gBrowser.selectedBrowser;
+    const browser = message.target;
+    const chrome = browser.ownerGlobal;
     if (message.data === null) {
       // Save original contents
       chrome.saveBrowser(browser);

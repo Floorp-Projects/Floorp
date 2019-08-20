@@ -2,7 +2,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-json.stringify
-es6id: 24.3.2
 description: Proxy of an array is treated as an array
 info: |
   [...]

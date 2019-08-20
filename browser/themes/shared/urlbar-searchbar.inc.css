@@ -6,6 +6,7 @@
 
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
+%define urlbarBreakoutExtend 4px
 
 :root {
   --toolbar-field-focus-border-color: Highlight;
@@ -24,15 +25,19 @@
   --urlbar-icon-padding: 7px;
 }
 
+#urlbar-container,
+#search-container {
+  padding: 3px 5px;
+}
+
 #urlbar,
 #searchbar {
   background-color: -moz-Field;
   color: -moz-FieldText;
-  background-clip: content-box;
+  background-clip: padding-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  margin: 3px 5px;
   min-height: 30px;
   overflow: -moz-hidden-unscrollable;
   text-shadow: none;
@@ -79,6 +84,22 @@
   border-color: var(--toolbar-field-focus-border-color);
 }
 
+#urlbar.megabar:not(.hidden-focus)[focused="true"],
+#urlbar.megabar[open="true"] {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  margin-top: -@urlbarBreakoutExtend@;
+  margin-inline-start: -@urlbarBreakoutExtend@;
+  width: calc(var(--urlbar-width) + 2 * @urlbarBreakoutExtend@);
+  min-height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutExtend@);
+  padding: calc(3px + @urlbarBreakoutExtend@) 0;
+}
+
+#urlbar.megabar[open="true"] {
+  padding-bottom: 0 !important;
+}
+
 #urlbar:not(.hidden-focus):-moz-lwtheme[focused="true"],
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
@@ -94,8 +115,6 @@
 :root[uidensity=compact] #urlbar,
 :root[uidensity=compact] #searchbar {
   min-height: 26px;
-  margin-top: 3px;
-  margin-bottom: 3px;
 }
 
 :root[uidensity=touch] #urlbar,
@@ -103,9 +122,9 @@
   min-height: 32px;
 }
 
-:root[chromehidden~="toolbar"] #urlbar {
+:root[chromehidden~="toolbar"] #urlbar-container {
   /* Remove excess space between the address bar and the menu button in popups. */
-  margin-inline-end: 0;
+  padding-inline-end: 0;
 }
 
 :root[customizing] .urlbar-input-box {

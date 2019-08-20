@@ -70,6 +70,7 @@ describe("TextNode", () => {
     wrapper.simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(1);
+    expect(onDOMNodeMouseOut).toHaveBeenCalledWith(object);
   });
 
   it("displays a button when the node is connected", () => {

@@ -1602,6 +1602,57 @@ security.ui.identitypopup:
       - main
     products:
       - firefox
+
+security.ui.protectionspopup:
+  open:
+    objects: ["protections_popup"]
+    bug_numbers:
+      - 1560327
+    description: >
+      How many times the protections panel was opened.
+    expiry_version: "75"
+    notification_emails:
+      - nhnt11@mozilla.com
+      - jhofmann@mozilla.com
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    products:
+      - firefox
+  click:
+    objects: [
+      "etp_toggle_on",
+      "etp_toggle_off",
+      "sitenotworking_link",
+      "send_report_link",
+      "send_report_submit",
+      "social",
+      "cookies",
+      "trackers",
+      "fingerprinters",
+      "cryptominers",
+      "subview_settings",
+      "settings",
+      "full_report",
+    ]
+    bug_numbers:
+      - 1560327
+    description: >
+      User interaction by click events in the protections panel.
+    expiry_version: "75"
+    notification_emails:
+      - nhnt11@mozilla.com
+      - jhofmann@mozilla.com
+      - chsiang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    products:
+      - firefox
+
 uptake.remotecontent.result:
   uptake:
     description: >

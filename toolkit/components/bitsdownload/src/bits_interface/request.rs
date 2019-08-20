@@ -24,7 +24,7 @@ use nsIBitsRequest_method; // From xpcom_method.rs
 use bits_client::{BitsMonitorClient, Guid};
 use log::{error, info, warn};
 use moz_task::create_thread;
-use nserror::{nsresult, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
+use nserror::{nsresult, NS_ERROR_ABORT, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsACString, nsCString};
 use std::{cell::Cell, fmt, ptr};
 use xpcom::{
@@ -234,7 +234,7 @@ impl BitsRequest {
                 "Cancelling download because OnStartRequest rejected with: {:?}",
                 rv
             );
-            if let Err(rv) = self.cancel(None, None) {
+            if let Err(rv) = self.cancel(NS_ERROR_ABORT, None) {
                 warn!("Failed to cancel download: {:?}", rv);
             }
         }
@@ -410,25 +410,23 @@ impl BitsRequest {
         status: nsresult,
         callback: &nsIBitsCallback,
     ) -> Result<(), BitsTaskError> {
-        self.cancel(Some(status), Some(RefPtr::new(callback)))
+        self.cancel(status, Some(RefPtr::new(callback)))
     }
     xpcom_method!(
         cancel_nsIRequest => Cancel(status: nsresult)
     );
     #[allow(non_snake_case)]
     fn cancel_nsIRequest(&self, status: nsresult) -> Result<(), BitsTaskError> {
-        self.cancel(Some(status), None)
+        self.cancel(status, None)
     }
 
     fn cancel(
         &self,
-        status: Option<nsresult>,
+        status: nsresult,
         callback: Option<RefPtr<nsIBitsCallback>>,
     ) -> Result<(), BitsTaskError> {
-        if let Some(cancel_reason) = status.as_ref() {
-            if cancel_reason.succeeded() {
-                return Err(BitsTaskError::new(InvalidArgument, Action::Cancel, Pretask));
-            }
+        if status.clone().succeeded() {
+            return Err(BitsTaskError::new(InvalidArgument, Action::Cancel, Pretask));
         }
         if self.request_has_completed() {
             return Err(BitsTaskError::new(
@@ -438,6 +436,16 @@ impl BitsRequest {
             ));
         }
 
+        // If the transfer is still in a success state, cancelling it should move it to the failure
+        // state that was passed. But if the transfer already failed, the only reason to call cancel
+        // is to remove the job from BITS. So in that case, we should keep the failure status that
+        // we already have.
+        let maybe_status: Option<nsresult> = if self.download_status_nsresult.get().failed() {
+            None
+        } else {
+            Some(status)
+        };
+
         if self.cancel_action.get() != CancelAction::NotInProgress {
             return Err(BitsTaskError::new(
                 OperationAlreadyInProgress,
@@ -445,7 +453,7 @@ impl BitsRequest {
                 Pretask,
             ));
         }
-        self.cancel_action.set(CancelAction::InProgress(status));
+        self.cancel_action.set(CancelAction::InProgress(maybe_status));
 
         let task: Box<CancelTask> = Box::new(CancelTask::new(
             RefPtr::new(self),
@@ -477,11 +485,12 @@ impl BitsRequest {
             cancelled_successfully
         );
         if cancelled_successfully {
+            // If no status was provided, it is because this cancel action removed the BITS job
+            // after the job had already failed. Keep the original error codes.
             if let Some(status) = maybe_status {
                 self.download_status_nsresult.set(status);
+                self.download_status_error_type.set(Some(BitsStateCancelled));
             }
-            self.download_status_error_type
-                .set(Some(BitsStateCancelled));
         }
 
         let next_stage = if cancelled_successfully && !transfer_ended {

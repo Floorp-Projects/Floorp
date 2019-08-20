@@ -1453,7 +1453,8 @@ bool BrowserParent::QueryDropLinksForVerification() {
 void BrowserParent::SendRealDragEvent(WidgetDragEvent& aEvent,
                                       uint32_t aDragAction,
                                       uint32_t aDropEffect,
-                                      nsIPrincipal* aPrincipal) {
+                                      nsIPrincipal* aPrincipal,
+                                      nsIContentSecurityPolicy* aCsp) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;
   }
@@ -1465,7 +1466,7 @@ void BrowserParent::SendRealDragEvent(WidgetDragEvent& aEvent,
     }
   }
   DebugOnly<bool> ret = PBrowserParent::SendRealDragEvent(
-      aEvent, aDragAction, aDropEffect, aPrincipal);
+      aEvent, aDragAction, aDropEffect, aPrincipal, aCsp);
   NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealDragEvent() failed");
   MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
@@ -2241,12 +2242,12 @@ BrowserParent::GetChildToParentConversionMatrix() {
 }
 
 void BrowserParent::SetChildToParentConversionMatrix(
-    const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix) {
-  mChildToParentConversionMatrix = Some(aMatrix);
+    const Maybe<LayoutDeviceToLayoutDeviceMatrix4x4>& aMatrix) {
+  mChildToParentConversionMatrix = aMatrix;
   if (mIsDestroyed) {
     return;
   }
-  mozilla::Unused << SendChildToParentMatrix(aMatrix.ToUnknownMatrix());
+  mozilla::Unused << SendChildToParentMatrix(ToUnknownMatrix(aMatrix));
 }
 
 LayoutDeviceIntPoint BrowserParent::GetChildProcessOffset() {
@@ -3636,7 +3637,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
     Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
-    nsIPrincipal* aPrincipal) {
+    nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp) {
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
     Unused << Manager()->SendEndDragSession(true, true, LayoutDeviceIntPoint(),
@@ -3648,7 +3649,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
   }
 
   RefPtr<RemoteDragStartData> dragStartData = new RemoteDragStartData(
-      this, std::move(aTransfers), aDragRect, aPrincipal);
+      this, std::move(aTransfers), aDragRect, aPrincipal, aCsp);
 
   if (!aVisualDnDData.isNothing() && aVisualDnDData.ref().IsReadable() &&
       aVisualDnDData.ref().Size<char>() >= aDragRect.height * aStride) {

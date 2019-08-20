@@ -59,21 +59,21 @@ define(function(require, exports, module) {
         {},
         ToolbarButton(
           { className: "btn save", onClick: this.onSave },
-          JSONView.Locale.$STR("jsonViewer.Save")
+          JSONView.Locale["jsonViewer.Save"]
         ),
         ToolbarButton(
           { className: "btn copy", onClick: this.onCopy },
-          JSONView.Locale.$STR("jsonViewer.Copy")
+          JSONView.Locale["jsonViewer.Copy"]
         ),
         ToolbarButton(
           { className: "btn collapse", onClick: this.onCollapse },
-          JSONView.Locale.$STR("jsonViewer.CollapseAll")
+          JSONView.Locale["jsonViewer.CollapseAll"]
         ),
         this.props.dataSize > EXPAND_THRESHOLD
           ? undefined
           : ToolbarButton(
               { className: "btn expand", onClick: this.onExpand },
-              JSONView.Locale.$STR("jsonViewer.ExpandAll")
+              JSONView.Locale["jsonViewer.ExpandAll"]
             ),
         div({ className: "devtools-separator" }),
         SearchBox({

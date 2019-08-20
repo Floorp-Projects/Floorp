@@ -609,7 +609,7 @@ menuitem.bookmark-item {
 %include ../shared/autocomplete.inc.css
 %include ../shared/urlbar-autocomplete.inc.css
 
-#urlbar-results {
+.urlbarView {
   font-size: 1.15em;
 }
 

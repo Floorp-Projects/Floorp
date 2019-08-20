@@ -32,6 +32,7 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+using mozilla::gfx::MaybeMatrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
@@ -665,7 +666,7 @@ parent:
                             Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
-                            nsIPrincipal principal);
+                            nsIPrincipal principal, nsIContentSecurityPolicy csp);
 
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
@@ -726,7 +727,7 @@ child:
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
-    async ChildToParentMatrix(Matrix4x4 aMatrix);
+    async ChildToParentMatrix(MaybeMatrix4x4 aMatrix);
 
     async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
@@ -824,7 +825,8 @@ child:
      * don't need support RealDragEvent with input priority.
      */
     async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
-                        uint32_t aDropEffect, nsIPrincipal aPrincipal);
+                        uint32_t aDropEffect, nsIPrincipal aPrincipal,
+                        nsIContentSecurityPolicy csp);
 
     async PluginEvent(WidgetPluginEvent aEvent);
 
