@@ -602,6 +602,26 @@ class EditorBase : public nsIEditor,
    */
   void ReinitializeSelection(Element& aElement);
 
+ protected:  // May be used by friends.
+  class AutoEditActionDataSetter;
+
+  /**
+   * TopLevelEditSubActionData stores temporary data while we're handling
+   * top-level edit sub-action.
+   */
+  struct MOZ_STACK_CLASS TopLevelEditSubActionData final {
+    friend class AutoEditActionDataSetter;
+
+    // If we tried to delete selection, set to true.
+    bool mDidDeleteSelection;
+
+   private:
+    void Clear() { mDidDeleteSelection = false; }
+
+    TopLevelEditSubActionData() = default;
+    TopLevelEditSubActionData(const TopLevelEditSubActionData& aOther) = delete;
+  };
+
  protected:  // AutoEditActionDataSetter, this shouldn't be accessed by friends.
   /**
    * SettingDataTransfer enum class is used to specify whether DataTransfer
@@ -687,6 +707,7 @@ class EditorBase : public nsIEditor,
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
       mTopLevelEditSubAction = aEditSubAction;
+      TopLevelEditSubActionDataRef().Clear();
       switch (mTopLevelEditSubAction) {
         case EditSubAction::eInsertNode:
         case EditSubAction::eCreateNode:
@@ -754,6 +775,15 @@ class EditorBase : public nsIEditor,
       return mDirectionOfTopLevelEditSubAction;
     }
 
+    const TopLevelEditSubActionData& TopLevelEditSubActionDataRef() const {
+      return mParentData ? mParentData->TopLevelEditSubActionDataRef()
+                         : mTopLevelEditSubActionData;
+    }
+    TopLevelEditSubActionData& TopLevelEditSubActionDataRef() {
+      return mParentData ? mParentData->TopLevelEditSubActionDataRef()
+                         : mTopLevelEditSubActionData;
+    }
+
     SelectionState& SavedSelectionRef() {
       return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
     }
@@ -802,8 +832,19 @@ class EditorBase : public nsIEditor,
     // by TextEditor.
     EditorDOMPoint mSpellCheckRestartPoint;
 
+    // Different from mTopLevelEditSubAction, its data should be stored only
+    // in the most ancestor AutoEditActionDataSetter instance since we don't
+    // want to pay the copying cost and sync cost.
+    TopLevelEditSubActionData mTopLevelEditSubActionData;
+
     EditAction mEditAction;
+
+    // Different from its data, you can refer "current" AutoEditActionDataSetter
+    // instance's mTopLevelEditSubAction member since it's copied from the
+    // parent instance at construction and it's always cleared before this
+    // won't be overwritten and cleared before destruction.
     EditSubAction mTopLevelEditSubAction;
+
     EDirection mDirectionOfTopLevelEditSubAction;
 
     AutoEditActionDataSetter() = delete;
@@ -929,6 +970,15 @@ class EditorBase : public nsIEditor,
   const EditorDOMPoint& GetSpellCheckRestartPoint() const {
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->GetSpellCheckRestartPoint();
+  }
+
+  const TopLevelEditSubActionData& TopLevelEditSubActionDataRef() const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->TopLevelEditSubActionDataRef();
+  }
+  TopLevelEditSubActionData& TopLevelEditSubActionDataRef() {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->TopLevelEditSubActionDataRef();
   }
 
   /**
