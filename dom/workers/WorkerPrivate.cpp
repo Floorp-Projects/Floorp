@@ -876,6 +876,25 @@ class CancelingRunnable final : public Runnable {
 
 } /* anonymous namespace */
 
+nsString ComputeWorkerPrivateId() {
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
+      do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsID uuid;
+  rv = uuidGenerator->GenerateUUIDInPlace(&uuid);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  char buffer[NSID_LENGTH];
+  uuid.ToProvidedString(buffer);
+
+  nsString id;
+  // Remove {} and the null terminator
+  id.AssignASCII(&buffer[1], NSID_LENGTH - 3);
+
+  return id;
+}
+
 class WorkerPrivate::EventTarget final : public nsISerialEventTarget {
   // This mutex protects mWorkerPrivate and must be acquired *before* the
   // WorkerPrivate's mutex whenever they must both be held.
@@ -2097,7 +2116,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                              WorkerType aWorkerType,
                              const nsAString& aWorkerName,
                              const nsACString& aServiceWorkerScope,
-                             WorkerLoadInfo& aLoadInfo)
+                             WorkerLoadInfo& aLoadInfo, nsString&& aId)
     : mMutex("WorkerPrivate Mutex"),
       mCondVar(mMutex, "WorkerPrivate CondVar"),
       mParent(aParent),
@@ -2132,7 +2151,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
       mDebuggerRegistered(false),
       mDebuggerReady(true),
       mIsInAutomation(false),
-      mPerformanceCounter(nullptr) {
+      mPerformanceCounter(nullptr),
+      mId(std::move(aId)) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aParent) {
@@ -2236,7 +2256,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
     JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
     WorkerType aWorkerType, const nsAString& aWorkerName,
     const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
-    ErrorResult& aRv) {
+    ErrorResult& aRv, nsString aId) {
   WorkerPrivate* parent =
       NS_IsMainThread() ? nullptr : GetCurrentThreadWorkerPrivate();
 
@@ -2288,9 +2308,9 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_ASSERT(runtimeService);
 
-  RefPtr<WorkerPrivate> worker =
-      new WorkerPrivate(parent, aScriptURL, aIsChromeWorker, aWorkerType,
-                        aWorkerName, aServiceWorkerScope, *aLoadInfo);
+  RefPtr<WorkerPrivate> worker = new WorkerPrivate(
+      parent, aScriptURL, aIsChromeWorker, aWorkerType, aWorkerName,
+      aServiceWorkerScope, *aLoadInfo, std::move(aId));
 
   // Gecko contexts always have an explicitly-set default locale (set by
   // XPJSRuntime::Initialize for the main thread, set by
@@ -4894,25 +4914,16 @@ RefPtr<GenericPromise> WorkerPrivate::SetServiceWorkerSkipWaitingFlag() {
   return promise;
 }
 
-nsAString& WorkerPrivate::Id() {
+const nsAString& WorkerPrivate::Id() {
   AssertIsOnMainThread();
 
-  if (mID.IsEmpty()) {
-    nsresult rv;
-    nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
-        do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsID uuid;
-    rv = uuidGenerator->GenerateUUIDInPlace(&uuid);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    char buffer[NSID_LENGTH];
-    uuid.ToProvidedString(buffer);
-    // Remove {} and the null terminator
-    mID.AssignASCII(&buffer[1], NSID_LENGTH - 3);
+  if (mId.IsEmpty()) {
+    mId = ComputeWorkerPrivateId();
   }
 
-  return mID;
+  MOZ_ASSERT(!mId.IsEmpty());
+
+  return mId;
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)

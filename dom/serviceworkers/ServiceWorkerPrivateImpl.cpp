@@ -326,6 +326,13 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   URIParams baseScriptURL;
   SerializeURI(uri, baseScriptURL);
 
+  nsString id;
+  rv = mOuter->mInfo->GetId(id);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   PrincipalInfo principalInfo;
   rv = PrincipalToPrincipalInfo(principal, &principalInfo);
 
@@ -358,6 +365,7 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   serviceWorkerData.loadFlags() =
       static_cast<uint32_t>(mOuter->mInfo->GetImportsLoadFlags() |
                             nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
+  serviceWorkerData.id() = std::move(id);
 
   mRemoteWorkerData.originalScriptURL() =
       NS_ConvertUTF8toUTF16(mOuter->mInfo->ScriptSpec());
