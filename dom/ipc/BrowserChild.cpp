@@ -1862,7 +1862,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchMoveEvent(
 
 mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
     const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
-    const uint32_t& aDropEffect, nsIPrincipal* aPrincipal) {
+    const uint32_t& aDropEffect, nsIPrincipal* aPrincipal,
+    nsIContentSecurityPolicy* aCsp) {
   WidgetDragEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
 
@@ -1870,6 +1871,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
   if (dragSession) {
     dragSession->SetDragAction(aDragAction);
     dragSession->SetTriggeringPrincipal(aPrincipal);
+    dragSession->SetCsp(aCsp);
     RefPtr<DataTransfer> initialDataTransfer = dragSession->GetDataTransfer();
     if (initialDataTransfer) {
       initialDataTransfer->SetDropEffectInt(aDropEffect);

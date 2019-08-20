@@ -8,9 +8,11 @@
 #include "nsITransferable.idl"
 
 
+
 %{ C++
 #include "nsSize.h"
 %}
+interface nsIContentSecurityPolicy;
 
 native nsSize (nsSize);
 
@@ -61,6 +63,13 @@ interface nsIDragSession : nsISupports
    * triggered in a browsing context inside it.
    */
   attribute nsIPrincipal triggeringPrincipal;
+
+  /**
+   * the triggering csp.  This may be different than sourceNode's
+   * csp when sourceNode is xul:browser and the drag is
+   * triggered in a browsing context inside it.
+   */
+  attribute nsIContentSecurityPolicy csp; 
 
   /**
    * The data transfer object for the current drag.

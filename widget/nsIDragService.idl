@@ -46,6 +46,7 @@ interface nsIDragService : nsISupports
     *
     * @param  aPrincipal - the triggering principal of the drag, or null if
     *                      it's from browser chrome or OS
+    * @param aCsp - The csp of the triggering Document
     * @param  aTransferables - an array of transferables to be dragged
     * @param  aActionType - specified which of copy/move/link are allowed
     * @param  aContentPolicyType - the contentPolicyType that will be
@@ -55,6 +56,7 @@ interface nsIDragService : nsISupports
   [can_run_script]
   void invokeDragSession (in Node aDOMNode,
                           in nsIPrincipal aPrincipal,
+                          in nsIContentSecurityPolicy aCsp,
                           in nsIArray aTransferables,
                           in unsigned long aActionType,
                           [optional] in nsContentPolicyType aContentPolicyType);
@@ -89,6 +91,7 @@ interface nsIDragService : nsISupports
   [noscript, can_run_script]
   void invokeDragSessionWithImage(in Node aDOMNode,
                                   in nsIPrincipal aPrincipal,
+                                  in nsIContentSecurityPolicy aCsp,
                                   in nsIArray aTransferableArray,
                                   in unsigned long aActionType,
                                   in Node aImage,
@@ -103,6 +106,7 @@ interface nsIDragService : nsISupports
   [noscript, can_run_script]
   void invokeDragSessionWithRemoteImage(in Node aDOMNode,
                                         in nsIPrincipal aPrincipal,
+                                        in nsIContentSecurityPolicy aCsp,
                                         in nsIArray aTransferableArray,
                                         in unsigned long aActionType,
                                         in RemoteDragStartDataPtr aDragStartData,
@@ -119,6 +123,7 @@ interface nsIDragService : nsISupports
   [can_run_script]
   void invokeDragSessionWithSelection(in Selection aSelection,
                                       in nsIPrincipal aPrincipal,
+                                      in nsIContentSecurityPolicy aCsp,
                                       in nsIArray aTransferableArray,
                                       in unsigned long aActionType,
                                       in DragEvent aDragEvent,
