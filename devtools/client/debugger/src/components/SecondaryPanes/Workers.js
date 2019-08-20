@@ -8,8 +8,8 @@ import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 
 import actions from "../../actions";
-import { getThreads } from "../../selectors";
-import { getDisplayName } from "../../utils/workers";
+import { getAllThreads } from "../../selectors";
+import { getDisplayName } from "../../utils/threads";
 import { features } from "../../utils/prefs";
 import Worker from "./Worker";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -55,7 +55,7 @@ export class Workers extends Component<Props> {
 }
 
 const mapStateToProps = state => ({
-  threads: getThreads(state),
+  threads: getAllThreads(state),
 });
 
 export default connect(
