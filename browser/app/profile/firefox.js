@@ -1925,7 +1925,7 @@ pref("identity.fxaccounts.toolbar.accessed", false);
 pref("identity.fxaccounts.service.sendLoginUrl", "https://send.firefox.com/login/");
 pref("identity.fxaccounts.service.monitorLoginUrl", "https://monitor.firefox.com/");
 
-// Check bundled JAR and XPI files for corruption.
+// Check bundled omni JARs for corruption.
 #ifdef RELEASE_OR_BETA
   pref("corroborator.enabled", false);
 #else
