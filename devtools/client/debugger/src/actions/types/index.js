@@ -5,7 +5,7 @@
 // @flow
 
 import typeof SourceMaps from "devtools-source-map";
-import type { ThreadList, Thread, Context, ThreadId } from "../../types";
+import type { WorkerList, MainThread, Context, ThreadId } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -74,11 +74,11 @@ type UpdateTabAction = {|
 type NavigateAction =
   | {|
       +type: "CONNECT",
-      +mainThread: Thread,
+      +mainThread: MainThread,
       +canRewind: boolean,
       +isWebExtension: boolean,
     |}
-  | {| +type: "NAVIGATE", +mainThread: Thread |};
+  | {| +type: "NAVIGATE", +mainThread: MainThread |};
 
 export type FocusItem = TreeNode;
 
@@ -136,14 +136,14 @@ export type QuickOpenAction =
 
 export type DebuggeeAction =
   | {|
-      +type: "INSERT_THREADS",
+      +type: "INSERT_WORKERS",
       +cx: Context,
-      +threads: ThreadList,
+      +workers: WorkerList,
     |}
   | {|
-      +type: "REMOVE_THREADS",
+      +type: "REMOVE_WORKERS",
       +cx: Context,
-      +threads: Array<ThreadId>,
+      +workers: Array<ThreadId>,
     |}
   | {|
       +type: "SELECT_THREAD",

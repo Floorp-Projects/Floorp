@@ -8,33 +8,33 @@ import { differenceBy } from "lodash";
 import type { Action, ThunkArgs } from "./types";
 import { removeSourceActors } from "./source-actors";
 
-import { getContext, getThreads, getSourceActorsForThread } from "../selectors";
+import { getContext, getWorkers, getSourceActorsForThread } from "../selectors";
 
-export function updateThreads() {
+export function updateWorkers() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const cx = getContext(getState());
-    const threads = await client.fetchThreads();
+    const workers = await client.fetchWorkers();
 
-    const currentThreads = getThreads(getState());
+    const currentWorkers = getWorkers(getState());
 
-    const addedThreads = differenceBy(threads, currentThreads, w => w.actor);
-    const removedThreads = differenceBy(currentThreads, threads, w => w.actor);
-    if (removedThreads.length > 0) {
+    const addedWorkers = differenceBy(workers, currentWorkers, w => w.actor);
+    const removedWorkers = differenceBy(currentWorkers, workers, w => w.actor);
+    if (removedWorkers.length > 0) {
       const sourceActors = getSourceActorsForThread(
         getState(),
-        removedThreads.map(w => w.actor)
+        removedWorkers.map(w => w.actor)
       );
       dispatch(removeSourceActors(sourceActors));
       dispatch(
         ({
-          type: "REMOVE_THREADS",
+          type: "REMOVE_WORKERS",
           cx,
-          threads: removedThreads.map(w => w.actor),
+          workers: removedWorkers.map(w => w.actor),
         }: Action)
       );
     }
-    if (addedThreads.length > 0) {
-      dispatch(({ type: "INSERT_THREADS", cx, threads: addedThreads }: Action));
+    if (addedWorkers.length > 0) {
+      dispatch(({ type: "INSERT_WORKERS", cx, workers: addedWorkers }: Action));
     }
   };
 }

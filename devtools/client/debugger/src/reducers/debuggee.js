@@ -12,21 +12,21 @@
 import { sortBy } from "lodash";
 import { createSelector } from "reselect";
 
-import { getDisplayName } from "../utils/threads";
+import { getDisplayName } from "../utils/workers";
 
 import type { Selector, State } from "./types";
-import type { Thread, ThreadList } from "../types";
+import type { MainThread, WorkerList, Thread } from "../types";
 import type { Action } from "../actions/types";
 
 export type DebuggeeState = {
-  threads: ThreadList,
-  mainThread: Thread,
+  workers: WorkerList,
+  mainThread: MainThread,
   isWebExtension: boolean,
 };
 
 export function initialDebuggeeState(): DebuggeeState {
   return {
-    threads: [],
+    workers: [],
     mainThread: { actor: "", url: "", type: -1, name: "" },
     isWebExtension: false,
   };
@@ -43,13 +43,13 @@ export default function debuggee(
         mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") },
         isWebExtension: action.isWebExtension,
       };
-    case "INSERT_THREADS":
-      return insertThreads(state, action.threads);
-    case "REMOVE_THREADS":
-      const { threads } = action;
+    case "INSERT_WORKERS":
+      return insertWorkers(state, action.workers);
+    case "REMOVE_WORKERS":
+      const { workers } = action;
       return {
         ...state,
-        threads: state.threads.filter(w => !threads.includes(w.actor)),
+        workers: state.workers.filter(w => !workers.includes(w.actor)),
       };
     case "NAVIGATE":
       return {
@@ -61,27 +61,27 @@ export default function debuggee(
   }
 }
 
-function insertThreads(state, threads) {
-  const formatedThreads = threads.map(thread => ({
-    ...thread,
-    name: getDisplayName(thread),
+function insertWorkers(state, workers) {
+  const formatedWorkers = workers.map(worker => ({
+    ...worker,
+    name: getDisplayName(worker),
   }));
 
   return {
     ...state,
-    threads: [...state.threads, ...formatedThreads],
+    workers: [...state.workers, ...formatedWorkers],
   };
 }
 
-export const getThreads = (state: OuterState) => state.debuggee.threads;
+export const getWorkers = (state: OuterState) => state.debuggee.workers;
 
-export const getWorkerCount = (state: OuterState) => getThreads(state).length;
+export const getWorkerCount = (state: OuterState) => getWorkers(state).length;
 
 export function getWorkerByThread(state: OuterState, thread: string) {
-  return getThreads(state).find(worker => worker.actor == thread);
+  return getWorkers(state).find(worker => worker.actor == thread);
 }
 
-export function getMainThread(state: OuterState): Thread {
+export function getMainThread(state: OuterState): MainThread {
   return state.debuggee.mainThread;
 }
 
@@ -89,16 +89,16 @@ export function getDebuggeeUrl(state: OuterState): string {
   return getMainThread(state).url;
 }
 
-export const getAllThreads: Selector<Thread[]> = createSelector(
+export const getThreads: Selector<Thread[]> = createSelector(
   getMainThread,
-  getThreads,
-  (mainThread, threads) => [mainThread, ...sortBy(threads, getDisplayName)]
+  getWorkers,
+  (mainThread, workers) => [mainThread, ...sortBy(workers, getDisplayName)]
 );
 
 // checks if a path begins with a thread actor
 // e.g "server1.conn0.child1/workerTarget22/context1/dbg-workers.glitch.me"
 export function startsWithThreadActor(state: State, path: string) {
-  const threadActors = getAllThreads(state).map(t => t.actor);
+  const threadActors = getThreads(state).map(t => t.actor);
 
   const match = path.match(new RegExp(`(${threadActors.join("|")})\/(.*)`));
   return match && match[1];

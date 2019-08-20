@@ -14,7 +14,7 @@ import {
   getActiveSearch,
   getProjectDirectoryRoot,
   getSelectedPrimaryPaneTab,
-  getAllThreads,
+  getThreads,
   getContext,
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
@@ -168,7 +168,7 @@ const mapStateToProps = state => ({
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getDisplayedSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
-  threads: getAllThreads(state),
+  threads: getThreads(state),
   projectRoot: getProjectDirectoryRoot(state),
 });
 

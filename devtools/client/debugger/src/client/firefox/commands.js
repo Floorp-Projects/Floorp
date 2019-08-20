@@ -4,7 +4,7 @@
 
 // @flow
 
-import { prepareSourcePayload, createThread } from "./create";
+import { prepareSourcePayload, createTarget } from "./create";
 import { updateTargets } from "./targets";
 
 import Reps from "devtools-reps";
@@ -405,7 +405,7 @@ function getSourceForActor(actor: ActorId) {
   return sourceActors[actor];
 }
 
-async function fetchThreads(): Promise<Worker[]> {
+async function fetchWorkers(): Promise<Worker[]> {
   const options = {
     breakpoints,
     eventBreakpoints,
@@ -431,7 +431,7 @@ async function fetchThreads(): Promise<Worker[]> {
   }
 
   targets = newTargets;
-  return Object.keys(targets).map(id => createThread(id, targets[id]));
+  return Object.keys(targets).map(id => createTarget(id, targets[id]));
 }
 
 function getMainThread() {
@@ -506,7 +506,7 @@ const clientCommands = {
   pauseOnExceptions,
   fetchSources,
   registerSourceActor,
-  fetchThreads,
+  fetchWorkers,
   getMainThread,
   sendPacket,
   setSkipPausing,

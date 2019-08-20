@@ -423,9 +423,9 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
 }
 
 // Get any workers associated with the debugger.
-async function getThreads(dbg) {
-  await dbg.actions.updateThreads();
-  return dbg.selectors.getThreads();
+async function getWorkers(dbg) {
+  await dbg.actions.updateWorkers();
+  return dbg.selectors.getWorkers();
 }
 
 async function waitForLoadedScopes(dbg) {
