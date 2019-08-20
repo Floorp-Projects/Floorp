@@ -628,8 +628,8 @@ var gXPInstallObserver = {
             "xpinstallPromptMessage.neverAllow.accesskey"
           ),
           callback: () => {
-            SitePermissions.set(
-              browser.currentURI,
+            SitePermissions.setForPrincipal(
+              browser.contentPrincipal,
               "install",
               SitePermissions.BLOCK
             );
