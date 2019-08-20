@@ -63,11 +63,17 @@ add_task(async function() {
   await onContextMenuOpen;
 
   searchContextMenu = toolbox.getTextBoxContextMenu();
-  cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
-  await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
 
+  // Simulating a click on cmdCopy will also close the context menu.
   onContextMenuClose = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+
+  cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
+  await waitForClipboardPromise(
+    () => EventUtils.synthesizeMouseAtCenter(cmdCopy, {}, toolbox.topWindow),
+    TEST_INPUT
+  );
+
+  info("Wait for context menu to close");
   await onContextMenuClose;
 
   info("Reopen context menu and check command properties");
