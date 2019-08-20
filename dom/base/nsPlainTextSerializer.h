@@ -88,6 +88,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void EnsureVerticalSpace(int32_t noOfRows);
   void FlushLine();
   void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
+
+  void MaybeReplaceNbspsForOutput(nsString& aString) const;
+
   void Output(nsString& aString);
   void Write(const nsAString& aString);
 
