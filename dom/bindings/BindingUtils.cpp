@@ -4003,7 +4003,7 @@ void DeprecationWarning(const GlobalObject& aGlobal,
     if (window && window->GetExtantDoc()) {
       window->GetExtantDoc()->WarnOnceAbout(aOperation);
 
-      nsAutoCString fileName;
+      nsAutoString fileName;
       Nullable<uint32_t> lineNumber;
       Nullable<uint32_t> columnNumber;
       uint32_t line = 0;
@@ -4014,8 +4014,7 @@ void DeprecationWarning(const GlobalObject& aGlobal,
         columnNumber.SetValue(column);
       }
 
-      MaybeReportDeprecation(window, aOperation,
-                             NS_ConvertUTF8toUTF16(fileName), lineNumber,
+      MaybeReportDeprecation(window, aOperation, fileName, lineNumber,
                              columnNumber);
     }
 

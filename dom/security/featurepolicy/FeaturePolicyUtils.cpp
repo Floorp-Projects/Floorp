@@ -136,7 +136,7 @@ void FeaturePolicyUtils::ReportViolation(Document* aDocument,
     return;
   }
 
-  nsAutoCString fileName;
+  nsAutoString fileName;
   Nullable<int32_t> lineNumber;
   Nullable<int32_t> columnNumber;
   uint32_t line = 0;
@@ -152,9 +152,9 @@ void FeaturePolicyUtils::ReportViolation(Document* aDocument,
   }
 
   RefPtr<FeaturePolicyViolationReportBody> body =
-      new FeaturePolicyViolationReportBody(
-          window, aFeatureName, NS_ConvertUTF8toUTF16(fileName), lineNumber,
-          columnNumber, NS_LITERAL_STRING("enforce"));
+      new FeaturePolicyViolationReportBody(window, aFeatureName, fileName,
+                                           lineNumber, columnNumber,
+                                           NS_LITERAL_STRING("enforce"));
 
   ReportingUtils::Report(window, nsGkAtoms::featurePolicyViolation,
                          NS_LITERAL_STRING("default"),
