@@ -83,6 +83,19 @@ def test_install_webextension(am):
     assert 'test-webext@quality.mozilla.org' == details['id']
 
 
+def test_install_webextension_id_via_browser_specific_settings(am):
+    # See Bug 1572404
+    addon = os.path.join(here, 'addons', 'apply-css-id-via-browser-specific-settings.xpi')
+    am.install(addon)
+    assert len(am.installed_addons) == 1
+    assert os.path.isfile(am.installed_addons[0])
+    assert ('apply-css-id-via-browser-specific-settings.xpi' ==
+            os.path.basename(am.installed_addons[0]))
+
+    details = am.addon_details(am.installed_addons[0])
+    assert 'test-webext@quality.mozilla.org' == details['id']
+
+
 def test_install_webextension_sans_id(am):
     addon = os.path.join(here, 'addons', 'apply-css-sans-id.xpi')
     am.install(addon)
