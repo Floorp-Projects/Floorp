@@ -65,7 +65,7 @@ define(function(require, exports, module) {
           {
             id: "json",
             className: "json",
-            title: JSONView.Locale.$STR("jsonViewer.tab.JSON"),
+            title: JSONView.Locale["jsonViewer.tab.JSON"],
           },
           JsonPanel({
             data: this.state.json,
@@ -79,7 +79,7 @@ define(function(require, exports, module) {
           {
             id: "rawdata",
             className: "rawdata",
-            title: JSONView.Locale.$STR("jsonViewer.tab.RawData"),
+            title: JSONView.Locale["jsonViewer.tab.RawData"],
           },
           TextPanel({
             isValidJson:
@@ -93,7 +93,7 @@ define(function(require, exports, module) {
           {
             id: "headers",
             className: "headers",
-            title: JSONView.Locale.$STR("jsonViewer.tab.Headers"),
+            title: JSONView.Locale["jsonViewer.tab.Headers"],
           },
           HeadersPanel({
             data: this.props.headers,
