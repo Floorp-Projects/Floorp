@@ -157,12 +157,13 @@ class DateTimeInfo {
   }
 
   /**
-   * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
-   * the operating system.
+   * The offset in seconds from the current UTC time to the current local
+   * standard time (i.e. not including any offset due to DST) as computed by the
+   * operating system.
    */
-  static int32_t localTZA() {
+  static int32_t utcToLocalStandardOffsetSeconds() {
     auto guard = acquireLockWithValidTimeZone();
-    return guard->localTZA_;
+    return guard->utcToLocalStandardOffsetSeconds_;
   }
 
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
@@ -189,6 +190,14 @@ class DateTimeInfo {
     auto guard = acquireLockWithValidTimeZone();
     return guard->internalTimeZoneDisplayName(buf, buflen, utcMilliseconds,
                                               locale);
+  }
+#else
+  /**
+   * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
+   * the operating system.
+   */
+  static int32_t localTZA() {
+    return utcToLocalStandardOffsetSeconds() * msPerSecond;
   }
 #endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
@@ -227,21 +236,17 @@ class DateTimeInfo {
 
   TimeZoneStatus timeZoneStatus_;
 
-  /*
-   * The current local time zone adjustment, cached because retrieving this
-   * dynamically is Slow, and a certain venerable benchmark which shall not
-   * be named depends on it being fast.
+  /**
+   * The offset in seconds from the current UTC time to the current local
+   * standard time (i.e. not including any offset due to DST).
+   *
+   * Cached because retrieving this dynamically is Slow, and a certain venerable
+   * benchmark which shall not be named depends on it being fast.
    *
    * SpiderMonkey occasionally and arbitrarily updates this value from the
    * system time zone to attempt to keep this reasonably up-to-date.  If
    * temporary inaccuracy can't be tolerated, JSAPI clients may call
    * JS::ResetTimeZone to forcibly sync this with the system time zone.
-   */
-  int32_t localTZA_;
-
-  /*
-   * Cached offset in seconds from the current UTC time to the current
-   * local standard time (i.e. not including any offset due to DST).
    */
   int32_t utcToLocalStandardOffsetSeconds_;
 
