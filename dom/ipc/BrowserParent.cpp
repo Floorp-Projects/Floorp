@@ -2242,12 +2242,12 @@ BrowserParent::GetChildToParentConversionMatrix() {
 }
 
 void BrowserParent::SetChildToParentConversionMatrix(
-    const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix) {
-  mChildToParentConversionMatrix = Some(aMatrix);
+    const Maybe<LayoutDeviceToLayoutDeviceMatrix4x4>& aMatrix) {
+  mChildToParentConversionMatrix = aMatrix;
   if (mIsDestroyed) {
     return;
   }
-  mozilla::Unused << SendChildToParentMatrix(aMatrix.ToUnknownMatrix());
+  mozilla::Unused << SendChildToParentMatrix(ToUnknownMatrix(aMatrix));
 }
 
 LayoutDeviceIntPoint BrowserParent::GetChildProcessOffset() {
