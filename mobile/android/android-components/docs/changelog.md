@@ -53,6 +53,9 @@ permalink: /changelog/
 * **browser-session**
   * Removed deprecated `CustomTabConfig` helpers. Use the equivalent methods in **feature-customtabs** instead.
 
+* **support-ktx**
+  * Removed deprecated methods that have equivalents in Android KTX.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)

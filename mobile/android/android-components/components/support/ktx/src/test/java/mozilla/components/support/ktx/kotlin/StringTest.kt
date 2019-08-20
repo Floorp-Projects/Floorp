@@ -4,7 +4,6 @@
 
 package mozilla.components.support.ktx.kotlin
 
-import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -82,31 +81,6 @@ class StringTest {
         assertTrue("geo:1,-1 ".isGeoLocation())
         assertTrue("GEO:1,-1".isGeoLocation())
         assertTrue("Geo:1,-1".isGeoLocation())
-    }
-
-    @Suppress("Deprecation")
-    @Test
-    fun toUri() {
-        assertEquals(
-            Uri.parse("https://www.mozilla.org"),
-            "https://www.mozilla.org".toUri())
-
-        assertEquals(
-            Uri.parse("https://www.mozilla.org/en-US/firefox/new/?redirect_source=firefox-com"),
-            "https://www.mozilla.org/en-US/firefox/new/?redirect_source=firefox-com".toUri())
-
-        assertEquals(
-            Uri.parse(""),
-            "".toUri())
-
-        assertEquals(
-            Uri.parse("https://"),
-            "https://".toUri())
-
-        assertEquals(
-            Uri.parse("file://sdcard/"),
-            "file://sdcard/".toUri()
-        )
     }
 
     @Test
