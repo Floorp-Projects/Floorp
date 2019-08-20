@@ -65,9 +65,11 @@ class CustomTabsIntegration(
         sessionManager,
         toolbar,
         sessionId,
-        customTabToolbarMenu.menuBuilder,
-        START_OF_MENU_ITEMS_INDEX,
-        closeListener = { activity?.finish() })
+        menuBuilder = customTabToolbarMenu.menuBuilder,
+        menuItemIndex = START_OF_MENU_ITEMS_INDEX,
+        window = activity?.window,
+        closeListener = { activity?.finish() }
+    )
 
     override fun start() {
         feature.start()
