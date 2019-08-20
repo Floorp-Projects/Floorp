@@ -2,9 +2,17 @@
 <html class="reftest-wait">
   <head>
     <title>displaystyle</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#the-displaystyle-and-scriptlevel-attributes">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#style-change-mstyle">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#underscripts-and-overscripts-munder-mover-munderover">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#operator-fence-separator-or-accent-mo">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#table-or-matrix-mtable">
+    <link rel="match" href="displaystyle-013-ref.html"/>
+    <meta name="assert" content="Test dynamic change of displaystyle">
     <script type="text/javascript">
       function doTest() {
+        document.body.offsetTop; // Update layout
         document.getElementById("m1").setAttribute("displaystyle", "true");
         document.getElementById("m2").setAttribute("displaystyle", "true");
         document.getElementById("m3").setAttribute("displaystyle", "true");
@@ -13,14 +21,10 @@
         document.getElementById("m6").removeAttribute("displaystyle");
         document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate", doTest);
+      window.addEventListener("load", doTest);
     </script>
+    <link rel="stylesheet" href="/fonts/ahem.css">
     <style>
-      @font-face
-      {
-          font-family: Ahem;
-          src: url(../fonts/Ahem.ttf);
-      }
       math {
           font: 25px Ahem;
       }
@@ -28,7 +32,6 @@
   </head>
   <body>
 
-    <!-- Test dynamic change of displaystyle -->
     <math id="m1">
       <munder><mo movablelimits="true">O</mo><mo>O</mo></munder>
       <mfrac><mn>1</mn><mn>2</mn></mfrac>
