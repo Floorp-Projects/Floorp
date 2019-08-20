@@ -29,10 +29,6 @@ class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
             d['top_srcdir'] = top_srcdir
             self.substs = ReadOnlyDict(d)
 
-            d = dict(self.substs_unicode)
-            d[u'top_srcdir'] = top_srcdir.decode('utf-8')
-            self.substs_unicode = ReadOnlyDict(d)
-
 
 class TestEnvironment(unittest.TestCase):
     def test_auto_substs(self):
