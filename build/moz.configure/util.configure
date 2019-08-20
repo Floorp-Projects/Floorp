@@ -28,22 +28,6 @@ def configure_error(message):
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.util', _import='system_encoding')
 def get_cmd_output(*args, **kwargs):
-    # subprocess on older Pythons can't handle unicode keys or values in
-    # environment dicts. Normalize automagically so callers don't have to
-    # deal with this.
-    if 'env' in kwargs:
-        normalized_env = {}
-        for k, v in kwargs['env'].items():
-            if isinstance(k, unicode):
-                k = k.encode('utf-8', 'strict')
-
-            if isinstance(v, unicode):
-                v = v.encode('utf-8', 'strict')
-
-            normalized_env[k] = v
-
-        kwargs['env'] = normalized_env
-
     log.debug('Executing: `%s`', quote(*args))
     proc = subprocess.Popen(args, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,

@@ -301,7 +301,6 @@ def prepare_configure_options(extra_old_configure_args, all_options, *options):
 @imports('types')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.shellutil', _import='split')
-@imports(_from='mozbuild.util', _import='encode')
 def old_configure(prepare_configure, prepare_configure_options, altered_path):
     cmd = prepare_configure + prepare_configure_options.options
     extra_env = prepare_configure_options.extra_env
@@ -332,8 +331,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
     if altered_path:
         env['PATH'] = altered_path
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            env=encode(env))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     while True:
         line = proc.stdout.readline()
         if not line:

@@ -30,7 +30,6 @@ from mozbuild.configure.util import (
     LineIO,
 )
 from mozbuild.util import (
-    encode,
     exec_,
     memoize,
     memoized_property,
@@ -885,7 +884,18 @@ class ConfigureSandbox(dict):
         def wrap(function):
             def wrapper(*args, **kwargs):
                 if 'env' not in kwargs:
-                    kwargs['env'] = encode(self._environ)
+                    kwargs['env'] = dict(self._environ)
+                # subprocess on older Pythons can't handle unicode keys or
+                # values in environment dicts. Normalize automagically so
+                # callers don't have to deal with this.
+                env = {}
+                for k, v in six.iteritems(kwargs['env']):
+                    if isinstance(k, six.text_type):
+                        k = k.encode(system_encoding)
+                    if isinstance(v, six.text_type):
+                        v = v.encode(system_encoding)
+                    env[k] = v
+                kwargs['env'] = env
                 return function(*args, **kwargs)
             return wrapper
 
