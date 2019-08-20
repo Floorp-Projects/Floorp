@@ -4,6 +4,7 @@
 /*---
 description: Binding as specified via property name and identifier (method)
 esid: sec-runtime-semantics-definemethod
+es6id: 14.3.8
 features: [destructuring-binding]
 flags: [generated]
 info: |

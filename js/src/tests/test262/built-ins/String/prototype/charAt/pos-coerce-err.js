@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-string.prototype.charat
+es6id: 21.1.3.1
 description: Error when attempting to coerce providec "pos" to a Number
 info: |
   [...]

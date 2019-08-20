@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-5-2
 description: Array.prototype.indexOf when fromIndex is floating point number
 ---*/
 

@@ -4,6 +4,7 @@
 /*---
 description: Spread operator following other arguments with a valid iterator (SuperCall)
 esid: sec-super-keyword-runtime-semantics-evaluation
+es6id: 12.3.5.1
 features: [Symbol.iterator]
 flags: [generated]
 info: |

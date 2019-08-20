@@ -4,6 +4,7 @@
 /*---
 description: Multiple Object Spread usage calls getter multiple times (`new` operator)
 esid: sec-new-operator-runtime-semantics-evaluation
+es6id: 12.3.3.1
 features: [object-spread]
 flags: [generated]
 info: |

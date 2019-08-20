@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-array.prototype.findindex
+es6id: 22.1.3.9
 description: >
   The range of elements processed is set before the first call to `predicate`.
 info: |

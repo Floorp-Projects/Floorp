@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype.setuint16
+es6id: 24.2.4.19
 description: >
   DataView.prototype.setUint16.name is "setUint16".
 info: |

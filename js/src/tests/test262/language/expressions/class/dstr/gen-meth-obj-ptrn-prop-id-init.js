@@ -4,6 +4,7 @@
 /*---
 description: Binding as specified via property name, identifier, and initializer (class expression method)
 esid: sec-class-definitions-runtime-semantics-evaluation
+es6id: 14.5.16
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

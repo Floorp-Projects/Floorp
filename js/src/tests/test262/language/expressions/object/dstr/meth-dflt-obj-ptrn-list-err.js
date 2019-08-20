@@ -4,6 +4,7 @@
 /*---
 description: Binding property list evaluation is interrupted by an abrupt completion (method (default parameter))
 esid: sec-runtime-semantics-definemethod
+es6id: 14.3.8
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 info: |

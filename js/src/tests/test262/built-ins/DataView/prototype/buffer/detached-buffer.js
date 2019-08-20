@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-get-dataview.prototype.buffer
+es6id: 24.2.4.1
 description: The getter method does not throw with a detached buffer
 info: |
   24.2.4.1 get DataView.prototype.buffer

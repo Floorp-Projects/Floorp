@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.1.2.10
 esid: sec-number.nan
 description: >
   "NaN" property descriptor and value of Number

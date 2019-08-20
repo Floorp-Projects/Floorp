@@ -4,6 +4,7 @@
 /*---
 description: Error forwarding when IteratorStep returns an abrupt completion (arrow function expression)
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
+es6id: 14.2.16
 features: [Symbol.iterator, destructuring-binding]
 flags: [generated]
 info: |

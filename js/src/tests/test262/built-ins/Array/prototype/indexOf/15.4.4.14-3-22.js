@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-3-22
 description: >
     Array.prototype.indexOf throws TypeError exception when 'length'
     is an object with toString and valueOf methods that don�t return

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-1
 description: >
     Array.prototype.map doesn't consider new elements added to array
     after it is called

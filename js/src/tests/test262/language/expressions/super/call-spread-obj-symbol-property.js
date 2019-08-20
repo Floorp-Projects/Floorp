@@ -4,6 +4,7 @@
 /*---
 description: Spread operation where source object contains Symbol properties (SuperCall)
 esid: sec-super-keyword-runtime-semantics-evaluation
+es6id: 12.3.5.1
 features: [Symbol, object-spread]
 flags: [generated]
 info: |

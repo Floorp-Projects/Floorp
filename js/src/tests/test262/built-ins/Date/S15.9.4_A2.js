@@ -4,6 +4,7 @@
 /*---
 info: The Date constructor has the property "parse"
 esid: sec-date-constructor
+es5id: 15.9.4_A2
 description: Checking existence of the property "parse"
 ---*/
 

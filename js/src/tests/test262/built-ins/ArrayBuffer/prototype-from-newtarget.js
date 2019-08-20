@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-arraybuffer-length
+es6id: 24.1.2.1
 description: >
   The [[Prototype]] internal slot is computed from NewTarget.
 info: |

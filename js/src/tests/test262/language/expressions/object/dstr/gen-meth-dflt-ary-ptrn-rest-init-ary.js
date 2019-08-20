@@ -5,6 +5,7 @@
 /*---
 description: Rest element (nested array pattern) does not support initializer (generator method (default parameter))
 esid: sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+es6id: 14.4.13
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 negative:

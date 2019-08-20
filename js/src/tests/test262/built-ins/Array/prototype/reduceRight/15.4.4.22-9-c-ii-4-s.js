@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-9-c-ii-4-s
 description: >
     Array.prototype.reduceRight - undefined passed as thisValue to
     strict callbackfn

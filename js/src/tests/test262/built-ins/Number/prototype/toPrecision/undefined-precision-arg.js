@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.1.3.5
 esid: sec-number.prototype.toprecision
 description: >
   Return a string containing the the number value of this if precision is

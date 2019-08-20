@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-date.prototype.toisostring
+es5id: 15.9.5.43-0-15
 description: >
     Date.prototype.toISOString - value of year is Infinity
     Date.prototype.toISOString throw the RangeError

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-10-2
 description: >
     Array.prototype.reduce reduces the array in ascending order of
     indices

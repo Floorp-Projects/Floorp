@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-9-b-1
 description: >
     Array.prototype.reduceRight returns initialvalue when Array is
     empty and initialValue is not present

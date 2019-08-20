@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-2-5
 description: >
     Array.prototype.reduceRight applied to Array-like object, 'length'
     is an own data property that overrides an inherited accessor

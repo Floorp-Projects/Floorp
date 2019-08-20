@@ -5,6 +5,7 @@
 info: |
  Set has a property at `Symbol.species`
 esid: sec-get-set-@@species
+es6id: 23.2.2.2
 author: Sam Mikes
 description: Set[Symbol.species] exists per spec
 includes: [propertyHelper.js]

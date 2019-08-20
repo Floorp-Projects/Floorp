@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype.getint16
+es6id: 24.2.4.8
 description: >
   Throws a RangeError if getIndex < 0
 info: |

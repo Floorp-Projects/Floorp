@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-5-24
 description: Array.prototype.map - string primitive can be used as thisArg
 ---*/
 

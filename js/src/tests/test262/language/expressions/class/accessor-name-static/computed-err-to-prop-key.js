@@ -4,6 +4,7 @@
 /*---
 description: Abrupt completion when coercing to property key value (Class expression, static method)
 esid: sec-runtime-semantics-classdefinitionevaluation
+es6id: 14.5.14
 flags: [generated]
 info: |
     [...]

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-2-4
 description: >
     Array.prototype.some - 'length' is an own data property that
     overrides an inherited data property on an array

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-arraybuffer.prototype.slice
+es6id: 24.1.4.3
 description: >
   The `start` index parameter is converted to an integral numeric value.
 info: |

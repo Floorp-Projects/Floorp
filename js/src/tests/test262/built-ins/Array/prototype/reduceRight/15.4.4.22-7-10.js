@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-7-10
 description: Array.prototype.reduceRight - 'initialValue' is present
 ---*/
 

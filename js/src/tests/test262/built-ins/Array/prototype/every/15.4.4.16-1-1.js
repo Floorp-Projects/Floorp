@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-1-1
 description: Array.prototype.every applied to undefined throws a TypeError
 ---*/
 

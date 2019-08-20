@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.filter
+es5id: 15.4.4.20-9-c-i-20
 description: >
     Array.prototype.filter - element to be retrieved is own accessor
     property without a get function that overrides an inherited

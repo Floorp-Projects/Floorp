@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-b-12
 description: >
     Array.prototype.map - deleting own property with prototype
     property causes prototype index property to be visited on an

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-1-14
 description: Array.prototype.reduce applied to Error object
 ---*/
 

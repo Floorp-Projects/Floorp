@@ -1,6 +1,7 @@
 // Copyright (C) 2015 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
+es6id: 23.4.3.3
 esid: sec-weakset.prototype.delete
 description: >
   Return false if value is not a non-null Object.

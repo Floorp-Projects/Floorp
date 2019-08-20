@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.1.3.1
 esid: sec-number.prototype.constructor
 description: >
   Property descriptor and value for Number.prototype.constructor

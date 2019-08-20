@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-3-22
 description: >
     Array.prototype.reduceRight throws TypeError exception when
     'length' is an object with toString and valueOf methods that don�t

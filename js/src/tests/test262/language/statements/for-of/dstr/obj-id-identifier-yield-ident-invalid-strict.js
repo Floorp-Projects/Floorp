@@ -6,6 +6,7 @@
 /*---
 description: yield is not a valid IdentifierReference in an AssignmentProperty within strict mode code. (For..of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+es6id: 13.7.5.11
 features: [destructuring-binding]
 flags: [generated, onlyStrict]
 negative:

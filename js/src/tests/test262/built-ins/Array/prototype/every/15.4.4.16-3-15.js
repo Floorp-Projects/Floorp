@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-3-15
 description: >
     Array.prototype.every - 'length' is a string containing an
     exponential number

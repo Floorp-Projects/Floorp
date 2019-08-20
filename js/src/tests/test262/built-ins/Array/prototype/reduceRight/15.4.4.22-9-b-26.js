@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-9-b-26
 description: >
     Array.prototype.reduceRight - deleting own property with prototype
     property causes prototype index property to be visited on an Array

@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 22.2.2.1
 esid: sec-%typedarray%.from
 description: >
   Throws a TypeError if a custom `this` returns a smaller instance

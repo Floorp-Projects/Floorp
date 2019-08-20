@@ -4,6 +4,7 @@
 /*---
 description: Spread operator applied to the only argument when no iteration occurs (SuperCall)
 esid: sec-super-keyword-runtime-semantics-evaluation
+es6id: 12.3.5.1
 flags: [generated]
 info: |
     SuperCall : super Arguments

@@ -4,6 +4,7 @@
 /*---
 description: The DestructuringAssignmentTarget of an AssignmentElement may be a PropertyReference. (AssignmentExpression)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [destructuring-binding]
 flags: [generated]
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-arraybuffer.prototype.constructor
+es6id: 24.1.4.2
 description: >
   The `ArrayBuffer.prototype.constructor` property descriptor.
 info: |

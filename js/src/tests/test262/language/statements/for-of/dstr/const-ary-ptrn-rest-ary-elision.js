@@ -4,6 +4,7 @@
 /*---
 description: Rest element containing an elision (for-of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+es6id: 13.7.5.11
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

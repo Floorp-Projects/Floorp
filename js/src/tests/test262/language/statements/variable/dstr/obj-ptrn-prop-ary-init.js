@@ -4,6 +4,7 @@
 /*---
 description: Object binding pattern with "nested" array binding pattern using initializer (`var` statement)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [destructuring-binding]
 flags: [generated]
 info: |

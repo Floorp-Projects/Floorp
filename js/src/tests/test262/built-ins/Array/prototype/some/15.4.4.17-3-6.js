@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-3-6
 description: >
     Array.prototype.some - value of 'length' is a number (value is
     positive)

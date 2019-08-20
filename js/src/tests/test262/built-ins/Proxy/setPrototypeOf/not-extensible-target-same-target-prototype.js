@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v
+es6id: 9.5.2
 description: >
   Handler can only return true for non-extensible targets if the given prototype
   is the same as target's prototype

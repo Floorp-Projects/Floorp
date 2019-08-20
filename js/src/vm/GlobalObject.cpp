@@ -500,8 +500,10 @@ JSObject* GlobalObject::getOrCreateThrowTypeError(
   }
   MOZ_ASSERT(lengthResult);
 
-  // The "name" property of %ThrowTypeError% is non-configurable, adjust
-  // the default property attributes accordingly.
+  // Non-standard: Also change "name" to non-configurable. ECMAScript defines
+  // %ThrowTypeError% as an anonymous function, i.e. it shouldn't actually
+  // get an own "name" property. To be consistent with other built-in,
+  // anonymous functions, we don't delete %ThrowTypeError%'s "name" property.
   RootedId nameId(cx, NameToId(cx->names().name));
   ObjectOpResult nameResult;
   if (!NativeDefineProperty(cx, throwTypeError, nameId, nonConfigurableDesc,

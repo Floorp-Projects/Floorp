@@ -4,6 +4,7 @@
 /*---
 description: Abrupt completion when resolving reference value (Object initializer)
 esid: sec-object-initializer-runtime-semantics-evaluation
+es6id: 12.2.6.8
 flags: [generated]
 info: |
     ObjectLiteral :

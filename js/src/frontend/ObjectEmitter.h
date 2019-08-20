@@ -776,6 +776,7 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
   MOZ_MUST_USE bool emitEnd(Kind kind);
 
  private:
+  MOZ_MUST_USE bool emitSetEmptyClassConstructorNameForDefaultCtor();
   MOZ_MUST_USE bool initProtoAndCtor();
 };
 

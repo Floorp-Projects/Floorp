@@ -4,6 +4,7 @@
 /*---
 description: Iterator is closed when not exhausted by pattern evaluation (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [Symbol.iterator, destructuring-binding]
 flags: [generated]
 info: |

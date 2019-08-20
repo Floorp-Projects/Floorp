@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduce
+es5id: 15.4.4.21-9-7
 description: >
     Array.prototype.reduce stops calling callbackfn once the array is
     deleted during the call

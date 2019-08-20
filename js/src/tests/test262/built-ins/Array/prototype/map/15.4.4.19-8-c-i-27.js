@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-c-i-27
 description: >
     Array.prototype.map - This object is the Arguments object which
     implements its own property get method (number of arguments is

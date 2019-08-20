@@ -4,6 +4,7 @@
 /*---
 description: Binding as specified via property name, identifier, and initializer (method (default parameter))
 esid: sec-runtime-semantics-definemethod
+es6id: 14.3.8
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 info: |

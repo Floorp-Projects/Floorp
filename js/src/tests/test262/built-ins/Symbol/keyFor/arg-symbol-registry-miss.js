@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-symbol.keyfor
+es6id: 19.4.2.5
 description: >
     Called with Symbol value that does not exist in the global symbol registry
 info: |

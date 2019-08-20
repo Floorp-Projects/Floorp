@@ -4,6 +4,7 @@
 /*---
 description: Error thrown when accessing the corresponding property of the value object (arrow function expression (default parameter))
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
+es6id: 14.2.16
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 info: |

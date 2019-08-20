@@ -4,6 +4,7 @@
 /*---
 description: Getter manipulates outter object before it's spread operation (Array initializer)
 esid: sec-runtime-semantics-arrayaccumulation
+es6id: 12.2.5.2
 features: [object-spread]
 flags: [generated]
 info: |

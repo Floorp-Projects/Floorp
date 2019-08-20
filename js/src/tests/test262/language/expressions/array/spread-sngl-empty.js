@@ -4,6 +4,7 @@
 /*---
 description: Spread operator applied to the only argument when no iteration occurs (Array initializer)
 esid: sec-runtime-semantics-arrayaccumulation
+es6id: 12.2.5.2
 flags: [generated]
 info: |
     SpreadElement : ...AssignmentExpression

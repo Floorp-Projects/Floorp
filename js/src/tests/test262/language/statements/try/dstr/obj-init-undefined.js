@@ -4,6 +4,7 @@
 /*---
 description: Value specifed for object binding pattern must be object coercible (undefined) (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.foreach
+es5id: 15.4.4.18-7-b-15
 description: >
     Array.prototype.forEach - decreasing length of array with
     prototype property causes prototype index property to be visited

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview-constructor
+es6id: 24.2.2
 description: >
   The name property of DataView is "DataView"
 includes: [propertyHelper.js]

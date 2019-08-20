@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-9-b-15
 description: >
     Array.prototype.reduceRight - decreasing length of array with
     prototype property in step 8 causes prototype index property to be

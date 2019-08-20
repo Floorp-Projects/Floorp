@@ -4,6 +4,7 @@
 /*---
 info: Operator use ToInteger from deleteCount
 esid: sec-array.prototype.splice
+es5id: 15.4.4.12_A2.2_T1
 description: deleteCount is not integer
 ---*/
 

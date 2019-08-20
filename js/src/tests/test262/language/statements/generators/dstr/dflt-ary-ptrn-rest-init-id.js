@@ -5,6 +5,7 @@
 /*---
 description: Rest element (identifier) does not support initializer (generator function declaration (default parameter))
 esid: sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
+es6id: 14.4.12
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 negative:

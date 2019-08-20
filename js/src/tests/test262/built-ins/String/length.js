@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-properties-of-string-instances-length
+es6id: 21.1.4.1
 description: The "length" property of String objects
 info: |
   [...]

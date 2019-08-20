@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.filter
+es5id: 15.4.4.20-2-12
 description: >
     Array.prototype.filter - 'length' is own accessor property without
     a get function that overrides an inherited accessor property

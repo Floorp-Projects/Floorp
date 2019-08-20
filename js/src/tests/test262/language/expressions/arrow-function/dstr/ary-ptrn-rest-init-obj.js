@@ -5,6 +5,7 @@
 /*---
 description: Rest element (nested object pattern) does not support initializer (arrow function expression)
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
+es6id: 14.2.16
 features: [destructuring-binding]
 flags: [generated]
 negative:

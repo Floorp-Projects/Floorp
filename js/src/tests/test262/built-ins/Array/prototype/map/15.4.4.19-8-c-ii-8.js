@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-c-ii-8
 description: >
     Array.prototype.map - element changed by callbackfn on previous
     iterations is observed

@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.1.2.5
 esid: sec-number.issafeinteger
 description: >
   "isSafeInteger" property of Number

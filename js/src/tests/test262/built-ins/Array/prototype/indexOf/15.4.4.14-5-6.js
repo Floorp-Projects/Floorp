@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-5-6
 description: Array.prototype.indexOf - 'fromIndex' isn't passed
 ---*/
 

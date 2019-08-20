@@ -4,6 +4,7 @@
 /*---
 description: Variable-scoped binding is updated following evaluation (IfStatement with a declaration in the second statement position in eval code)
 esid: sec-functiondeclarations-in-ifstatement-statement-clauses
+es6id: B.3.4
 flags: [generated, noStrict]
 includes: [fnGlobalObject.js]
 info: |

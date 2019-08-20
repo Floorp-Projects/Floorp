@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-2-2
 description: Array.prototype.indexOf - 'length' is own data property on an Array
 ---*/
 

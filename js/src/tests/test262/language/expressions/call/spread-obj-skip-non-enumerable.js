@@ -4,6 +4,7 @@
 /*---
 description: Object Spread doesn't copy non-enumerable properties (CallExpression)
 esid: sec-function-calls-runtime-semantics-evaluation
+es6id: 12.3.4.1
 features: [object-spread]
 flags: [generated]
 info: |

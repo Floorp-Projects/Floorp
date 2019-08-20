@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-7-b-1
 description: >
     Array.prototype.every - callbackfn not called for indexes never
     been assigned values

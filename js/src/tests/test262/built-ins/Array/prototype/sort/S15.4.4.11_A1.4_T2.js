@@ -6,6 +6,7 @@ info: |
     If [[Get]] ToString(j) is undefined, return 1.
     If [[]Get] ToString(k) is undefined, return -1
 esid: sec-array.prototype.sort
+es5id: 15.4.4.11_A1.4_T2
 description: If comparefn is not undefined
 ---*/
 

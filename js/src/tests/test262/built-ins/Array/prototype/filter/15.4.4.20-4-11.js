@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.filter
+es5id: 15.4.4.20-4-11
 description: >
     Array.prototype.filter - the exception is not thrown if exception
     was thrown by step 3
