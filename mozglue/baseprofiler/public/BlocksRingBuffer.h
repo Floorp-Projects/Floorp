@@ -492,7 +492,24 @@ class BlocksRingBuffer {
     BlockIterator begin() const {
       return BlockIterator(mRing, BufferRangeStart());
     }
+    // Note that a `BlockIterator` at the `end()` should not be dereferenced, as
+    // there is no actual block there!
     BlockIterator end() const { return BlockIterator(mRing, BufferRangeEnd()); }
+
+    // Get a `BlockIterator` at the given `BlockIndex`, clamped to the stored
+    // range. Note that a `BlockIterator` at the `end()` should not be
+    // dereferenced, as there is no actual block there!
+    BlockIterator At(BlockIndex aBlockIndex) const {
+      if (aBlockIndex < BufferRangeStart()) {
+        // Anything before the range (including null BlockIndex) is clamped at
+        // the beginning.
+        return begin();
+      }
+      // Otherwise we at least expect the index to be valid (pointing exactly at
+      // a live block, or just past the end.)
+      mRing.AssertBlockIndexIsValidOrEnd(aBlockIndex);
+      return BlockIterator(mRing, aBlockIndex);
+    }
 
     // Run `aCallback(EntryReader&)` on each entry from first to last.
     // Callback should not store `EntryReader`, as it may become invalid after
@@ -834,8 +851,8 @@ class BlocksRingBuffer {
   // Slow, so avoid it for internal checks; this is more to check what callers
   // provide us.
   void AssertBlockIndexIsValid(BlockIndex aBlockIndex) const {
-    mMutex.AssertCurrentThreadOwns();
 #ifdef DEBUG
+    mMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
     MOZ_ASSERT(aBlockIndex < mNextWriteIndex);
     // Quick check (default), or slow check (change '1' to '0') below:
@@ -864,6 +881,20 @@ class BlocksRingBuffer {
     }
     MOZ_ASSERT(it.CurrentBlockIndex() == aBlockIndex);
 #  endif
+#endif  // DEBUG
+  }
+
+  // In DEBUG mode, assert that `aBlockIndex` is a valid index for a live block,
+  // or is just past-the-end. (Not just in range, but points exactly at the
+  // start of a block.) Slow, so avoid it for internal checks; this is more to
+  // check what callers provide us.
+  void AssertBlockIndexIsValidOrEnd(BlockIndex aBlockIndex) const {
+#ifdef DEBUG
+    mMutex.AssertCurrentThreadOwns();
+    if (aBlockIndex == mNextWriteIndex) {
+      return;
+    }
+    AssertBlockIndexIsValid(aBlockIndex);
 #endif  // DEBUG
   }
 
