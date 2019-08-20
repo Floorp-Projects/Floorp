@@ -19,8 +19,7 @@
 :host([data-is-new-login]) .meta-info,
 :host([data-is-new-login]) .login-item-title,
 :host(:not([data-is-new-login])) .new-login-title,
-:host(:not([data-editing])) .cancel-button,
-:host(:not([data-editing])) .save-changes-button {
+:host(:not([data-editing])) .form-actions-row {
   display: none;
 }
 
@@ -100,6 +99,10 @@ input[type="url"][readOnly]:hover:active {
 .detail-row {
   display: flex;
   align-items: end;
+}
+
+.detail-row,
+.form-actions-row {
   margin-bottom: 40px;
 }
 
