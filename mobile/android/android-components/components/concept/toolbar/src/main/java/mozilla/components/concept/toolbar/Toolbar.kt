@@ -69,6 +69,11 @@ interface Toolbar {
     fun onBackPressed(): Boolean
 
     /**
+     * Should be called by the host activity when it enters the stop state.
+     */
+    fun onStop()
+
+    /**
      * Registers the given function to be invoked when the user selected a new URL i.e. is done
      * editing.
      *

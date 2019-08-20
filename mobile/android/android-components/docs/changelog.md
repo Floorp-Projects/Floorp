@@ -36,6 +36,9 @@ permalink: /changelog/
 * **browser-toolbar**
   * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
 
+* **feature-toolbar**
+  * Toolbar Menu is now closed on exiting the app.
+
 * **service-firefox-accounts**, `concept-sync`
   * `FxaAccountManager`, if configured with `DeviceCapability.SEND_TAB`, will now automatically refresh device constellation state and poll for device events during initialization and login.
   * `FxaAccountManager.syncNowAsync` can now receive a `debounce` parameter, allowing consumers to specify debounce behaviour of their sync requests.

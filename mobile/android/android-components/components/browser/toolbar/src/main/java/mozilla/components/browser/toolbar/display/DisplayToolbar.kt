@@ -573,6 +573,10 @@ internal class DisplayToolbar(
         }
     }
 
+    fun onStop() {
+        menuView.dismissMenu()
+    }
+
     /**
      * Layout the tracking protection views if they are visible and returns where the [siteSecurityIconView]
      * must be layout (left and right) coordinates.

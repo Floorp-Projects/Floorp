@@ -52,6 +52,7 @@ class ToolbarFeature(
      */
     override fun stop() {
         presenter.stop()
+        toolbar.onStop()
     }
 
     /**
