@@ -472,12 +472,9 @@ fuzzy-if(skiaContent,0-2,0-3) == 339289-1.html 339289-1-ref.html
 == 345267-1b.html 345267-1-ref.html
 == 345267-1c.html 345267-1-ref.html
 == 345267-1d.html 345267-1-ref.html
-!= 345563-sub.xhtml 345563-sup.xhtml
 fuzzy-if(skiaContent,0-4,0-2) == 346774-1a.html 346774-1-ref.html
 fuzzy-if(skiaContent,0-4,0-2) == 346774-1b.html 346774-1-ref.html
 fuzzy-if(skiaContent,0-4,0-2) == 346774-1c.html 346774-1-ref.html
-== 347348-1.xhtml 347348-1-ref.xhtml
-== 347496-1.xhtml 347496-1-ref.xhtml
 == 347912-1.html 347912-1-ref.html
 == 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
@@ -531,11 +528,6 @@ random-if(cocoaWidget) == 350506-1.html 350506-1-ref.html
 == 352980-3d.html 352980-3-ref.html
 == 352980-3e.html 352980-3-ref.html
 == 352980-3f.html 352980-3-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
 == 356774-1.html 356774-1-ref.html
 == 356775-1.html 356775-1-ref.html
 == 359869-1.html 359869-1-ref.html
@@ -651,7 +643,6 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == 370586-1.xhtml 370586-1-ref.xhtml
 == 370629-1.html 370629-1-ref.html
 == 370629-2.html 370629-2-ref.html
-== 370692-1.xhtml 370692-1-ref.xhtml
 pref(layout.css.line-height.normal-as-resolved-value.enabled,false) == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
@@ -675,9 +666,6 @@ random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373381-4.html 373381-4-ref.html
 == 373383-1.html 373383-1-ref.html
 == 373433-1.html 373433-1-ref.html
-== 373533-1.xhtml about:blank
-== 373533-2.xhtml about:blank
-== 373533-3.xhtml about:blank
 == chrome://reftest/content/bugs/374038-1.xul chrome://reftest/content/bugs/374038-1-ref.xul
 == chrome://reftest/content/bugs/374038-2.xul chrome://reftest/content/bugs/374038-2-ref.xul
 random-if(d2d) == chrome://reftest/content/bugs/374719-1.xul chrome://reftest/content/bugs/374719-1-ref.xul
@@ -814,8 +802,6 @@ fuzzy-if(skiaContent,0-1,0-600) == 393649-1.html 393649-1-ref.html
 == 393671-1.html 393671-1-ref.html
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
-fuzzy-if(skiaContent,0-2,0-500) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
@@ -990,7 +976,6 @@ fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361
 == 413840-pushed-line-bullet.html 413840-pushed-line-bullet-ref.html
 == 413840-bullet-first-line.html 413840-bullet-first-line-ref.html
 == 413982.html 413982-ref.html
-== 414123.xhtml 414123-ref.xhtml
 == 414638.html 414638-ref.html
 == 414851-1.html 414851-1-ref.html
 == 416106-1.xhtml 416106-1-ref.xhtml

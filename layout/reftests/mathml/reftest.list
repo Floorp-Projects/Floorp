@@ -1,3 +1,19 @@
+== 162063-mathml.xhtml about:blank
+!= 345563-sub.xhtml 345563-sup.xhtml
+== 347348-1.xhtml 347348-1-ref.xhtml
+== 347496-1.xhtml 347496-1-ref.xhtml
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
+pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
+== 370692-1.xhtml 370692-1-ref.xhtml
+== 373533-1.xhtml about:blank
+== 373533-2.xhtml about:blank
+== 373533-3.xhtml about:blank
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
+fuzzy-if(skiaContent,0-2,0-500) == 393760-2.xml 393760-2-ref.xml
+== 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.html # Bug 1392106
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
