@@ -1,4 +1,4 @@
-== 162063-mathml.xhtml about:blank
+ == 162063-mathml.xhtml about:blank
 != 345563-sub.xhtml 345563-sup.xhtml
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
@@ -23,10 +23,6 @@ fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
 pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
-== displaystyle-1.html displaystyle-1-ref.html
-== displaystyle-2.html displaystyle-2-ref.html
-== displaystyle-3.html displaystyle-3-ref.html
-== displaystyle-4.html displaystyle-4-ref.html
 random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(webrender&&winWidget,114-255,265-304) fuzzy-if(webrender&&OSX,87-87,242-242) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
@@ -128,14 +124,6 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html
-!= mathcolor-1.xml mathcolor-1-ref.xml
-!= mathcolor-2.xml mathcolor-2-ref.xml
-!= mathcolor-3.xml mathcolor-3-ref.xml
-!= mathcolor-4.xml mathcolor-4-ref.xml
-!= mathbackground-1.xml mathbackground-1-ref.xml
-!= mathbackground-2.xml mathbackground-2-ref.xml
-!= mathbackground-3.xml mathbackground-3-ref.xml
-!= mathbackground-4.xml mathbackground-4-ref.xml
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mstyle-3.xhtml mstyle-3-ref.xhtml # Bug 1392106
@@ -158,7 +146,6 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 random-if(gtkWidget) fails-if(geckoview&&webrender) == mpadded-7.html mpadded-7-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
-== math-display.html math-display-ref.html
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html

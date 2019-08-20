@@ -1,5 +1,0 @@
-<!-- test mathbackground on a token element -->
-<math xmlns="http://www.w3.org/1998/Math/MathML">
-  <mtext mathbackground="red">□■□■□■□</mtext>
-</math>
-
