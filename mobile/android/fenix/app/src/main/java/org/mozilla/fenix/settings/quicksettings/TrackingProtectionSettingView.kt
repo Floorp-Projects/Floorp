@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import io.reactivex.Observer
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
@@ -23,7 +24,7 @@ class TrackingProtectionSettingView(
 
     init {
         trackingProtectionSwitch.putCompoundDrawablesRelativeWithIntrinsicBounds(
-            start = container.context.getDrawable(R.drawable.ic_tracking_protection)
+            start = AppCompatResources.getDrawable(container.context, R.drawable.ic_tracking_protection)
         )
     }
 

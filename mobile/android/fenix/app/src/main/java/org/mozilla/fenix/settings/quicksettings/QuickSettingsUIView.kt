@@ -111,7 +111,7 @@ class QuickSettingsUIView(
             drawableTint = R.color.photonGreen50
         } else {
             stringId = R.string.quick_settings_sheet_insecure_connection
-            drawableId = R.drawable.mozac_ic_globe
+            drawableId = R.drawable.mozac_ic_broken_lock
             drawableTint = R.color.photonRed50
         }
 
