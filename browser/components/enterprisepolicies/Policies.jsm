@@ -649,18 +649,13 @@ var Policies = {
             for (let location of param.Install) {
               let uri;
               try {
-                uri = Services.io.newURI(location);
-              } catch (e) {
-                // If it's not a URL, it's probably a file path.
-                // Assume location is a file path
+                // We need to try as a file first because
+                // Windows paths are valid URIs.
                 // This is done for legacy support (old API)
-                try {
-                  let xpiFile = new FileUtils.File(location);
-                  uri = Services.io.newFileURI(xpiFile);
-                } catch (ex) {
-                  log.error(`Invalid extension path location - ${location}`);
-                  return;
-                }
+                let xpiFile = new FileUtils.File(location);
+                uri = Services.io.newFileURI(xpiFile);
+              } catch (e) {
+                uri = Services.io.newURI(location);
               }
               installAddonFromURL(uri.spec);
             }
