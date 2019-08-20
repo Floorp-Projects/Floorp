@@ -45,7 +45,7 @@
                  aria-level="2">&protections.etpOFF.header;</label>
           <label id="protections-popup-tp-switch-breakage-link"
                  class="text-link"
-                 onclick="gProtectionsHandler.showSiteNotWorkingView();">&protections.siteNotWorking.label;</label>
+                 onclick="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');">&protections.siteNotWorking.label;</label>
         </vbox>
         <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"
@@ -63,21 +63,21 @@
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
             <toolbarbutton id="protections-popup-category-tracking-protection"
-                           onclick="gProtectionsHandler.showTrackersSubview(event);"
+                           onclick="gProtectionsHandler.showTrackersSubview(event); gProtectionsHandler.recordClick('trackers');"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon tracking-protection-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection4.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-socialblock"
-                           onclick="gProtectionsHandler.showSocialblockerSubview(event);"
+                           onclick="gProtectionsHandler.showSocialblockerSubview(event); gProtectionsHandler.recordClick('social');"
                            class="protections-popup-category" align="center">
               <image class="protections-popup-category-icon socialblock-icon"/>
               <label flex="1"
               class="protections-popup-category-label">&contentBlocking.socialblock.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cookies"
-                           onclick="gProtectionsHandler.showCookiesSubview(event);"
+                           onclick="gProtectionsHandler.showCookiesSubview(event); gProtectionsHandler.recordClick('cookies');"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon thirdpartycookies-icon"/>
@@ -88,14 +88,14 @@
                      hidden="true"></label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cryptominers"
-                           onclick="gProtectionsHandler.showCryptominersSubview(event);"
+                           onclick="gProtectionsHandler.showCryptominersSubview(event); gProtectionsHandler.recordClick('cryptominers');"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon cryptominers-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.cryptominers.label;</label>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-fingerprinters"
-                           onclick="gProtectionsHandler.showFingerprintersSubview(event);"
+                           onclick="gProtectionsHandler.showFingerprintersSubview(event); gProtectionsHandler.recordClick('fingerprinters');"
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon fingerprinters-icon"/>
@@ -121,14 +121,14 @@
       <vbox id="protections-popup-footer" class="protections-popup-section">
         <toolbarbutton id="protections-popup-settings-button"
                        class="protections-popup-footer-button"
-                       oncommand="gProtectionsHandler.openPreferences();">
+                       oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('settings');">
           <image class="protections-popup-footer-icon protections-popup-settings-icon"/>
           <label class="protections-popup-footer-button-label" flex="1">&protections.settings.label;</label>
         </toolbarbutton>
         <stack id="protections-popup-show-report-stack">
           <toolbarbutton id="protections-popup-show-report-button"
                          class="protections-popup-footer-button"
-                         oncommand="gProtectionsHandler.openProtections(true);">
+                         oncommand="gProtectionsHandler.openProtections(true); gProtectionsHandler.recordClick('full_report');">
             <image class="protections-popup-footer-icon protections-popup-show-report-icon"/>
             <label class="protections-popup-footer-button-label" flex="1">&protections.report.label;</label>
           </toolbarbutton>
@@ -177,7 +177,7 @@
           </label>
           <label id="protections-popup-siteNotWorkingView-siteStillBroken">&protections.siteNotWorkingView.siteStillBroken.label;</label>
           <label id="protections-popup-siteNotWorkingView-sendReport"
-            onclick="gProtectionsHandler.showSendReportView();"
+            onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('send_report_link');"
             class="text-link">&protections.siteNotWorkingView.sendReport.label;</label>
         </vbox>
     </panelview>
@@ -199,7 +199,7 @@
           <button id="protections-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="gProtectionsHandler.openPreferences();"/>
+                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'trackers');"/>
         </vbox>
     </panelview>
 
@@ -216,7 +216,7 @@
           <button id="protections-popup-socialblockView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="gProtectionsHandler.openPreferences();"/>
+                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'social');"/>
         </vbox>
     </panelview>
 
@@ -233,7 +233,7 @@
           <button id="protections-popup-cookiesView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="gProtectionsHandler.openPreferences();"/>
+                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cookies');"/>
         </vbox>
     </panelview>
 
@@ -250,7 +250,7 @@
           <button id="protections-popup-fingerprintersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="gProtectionsHandler.openPreferences();"/>
+                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'fingerprinters');"/>
         </vbox>
     </panelview>
 
@@ -267,7 +267,7 @@
           <button id="protections-popup-cryptominersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
-                  oncommand="gProtectionsHandler.openPreferences();"/>
+                  oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cryptominers');"/>
         </vbox>
     </panelview>
 
@@ -300,7 +300,7 @@
           <button id="protections-popup-sendReportView-submit"
                   default="true"
                   label="&contentBlocking.breakageReportView.sendReport.label;"
-                  oncommand="gProtectionsHandler.onSendReportClicked();"/>
+                  oncommand="gProtectionsHandler.onSendReportClicked(); gProtectionsHandler.recordClick('send_report_submit');"/>
         </vbox>
     </panelview>
   </panelmultiview>

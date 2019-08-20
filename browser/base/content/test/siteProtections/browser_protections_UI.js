@@ -9,10 +9,23 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ContentBlockingAllowList.jsm"
 );
 
+function checkClickTelemetry(objectName, value) {
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  ).parent;
+  let buttonEvents = events.filter(
+    e =>
+      e[1] == "security.ui.protectionspopup" &&
+      e[2] == "click" &&
+      e[3] == objectName &&
+      (!value || e[4] == value)
+  );
+  is(buttonEvents.length, 1, `recorded ${objectName} telemetry event`);
+}
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.protections_panel.enabled", true],
       // Set the auto hide timing to 100ms for blocking the test less.
       ["browser.protections_panel.toast.timeout", 100],
       // Hide protections cards so as not to trigger more async messaging
@@ -22,6 +35,12 @@ add_task(async function setup() {
       ["browser.contentblocking.report.proxy.enabled", false],
     ],
   });
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+  });
 });
 
 add_task(async function testToggleSwitch() {
@@ -30,6 +49,16 @@ add_task(async function testToggleSwitch() {
     "https://example.com"
   );
   await openProtectionsPanel();
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  ).parent;
+  let buttonEvents = events.filter(
+    e =>
+      e[1] == "security.ui.protectionspopup" &&
+      e[2] == "open" &&
+      e[3] == "protections_popup"
+  );
+  is(buttonEvents.length, 1, "recorded telemetry for opening the popup");
 
   // Check the visibility of the "Site not working?" link.
   ok(
@@ -59,6 +88,7 @@ add_task(async function testToggleSwitch() {
   );
 
   await popuphiddenPromise;
+  checkClickTelemetry("etp_toggle_off");
 
   // We need to wait toast's popup shown and popup hidden events. It won't fire
   // the popup shown event if we open the protections panel while the toast is
@@ -106,6 +136,7 @@ add_task(async function testToggleSwitch() {
   );
 
   await browserLoadedPromise;
+  checkClickTelemetry("etp_toggle_on");
 
   ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
@@ -138,6 +169,7 @@ add_task(async function testSettingsButton() {
   let newTab = await newTabPromise;
 
   ok(true, "about:preferences has been opened successfully");
+  checkClickTelemetry("settings");
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
@@ -183,6 +215,8 @@ add_task(async function testShowFullReportButton() {
       return bars.length;
     }, "The graph has been built");
   });
+
+  checkClickTelemetry("full_report");
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
@@ -369,4 +403,36 @@ add_task(async function testTrackingProtectionIcon() {
   // Clean up the TP state.
   ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function testSubViewTelemetry() {
+  let items = [
+    ["protections-popup-category-tracking-protection", "trackers"],
+    ["protections-popup-category-socialblock", "social"],
+    ["protections-popup-category-cookies", "cookies"],
+    ["protections-popup-category-cryptominers", "cryptominers"],
+    ["protections-popup-category-fingerprinters", "fingerprinters"],
+  ].map(item => [document.getElementById(item[0]), item[1]]);
+
+  for (let [item, telemetryId] of items) {
+    await BrowserTestUtils.withNewTab("http://www.example.com", async () => {
+      await openProtectionsPanel();
+      item.classList.remove("notFound"); // Force visible for test
+      let viewShownEvent = BrowserTestUtils.waitForEvent(
+        gProtectionsHandler._protectionsPopupMultiView,
+        "ViewShown"
+      );
+      item.click();
+      let panelView = (await viewShownEvent).originalTarget;
+      checkClickTelemetry(telemetryId);
+      let prefsTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:preferences#privacy"
+      );
+      panelView.querySelector(".panel-footer > button").click();
+      let prefsTab = await prefsTabPromise;
+      BrowserTestUtils.removeTab(prefsTab);
+      checkClickTelemetry("subview_settings", telemetryId);
+    });
+  }
 });

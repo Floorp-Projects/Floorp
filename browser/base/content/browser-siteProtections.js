@@ -1549,6 +1549,15 @@ var gProtectionsHandler = {
     );
   },
 
+  recordClick(object, value = null) {
+    Services.telemetry.recordEvent(
+      "security.ui.protectionspopup",
+      "click",
+      object,
+      value
+    );
+  },
+
   shieldHistogramAdd(value) {
     if (PrivateBrowsingUtils.isWindowPrivate(window)) {
       return;
@@ -1598,6 +1607,14 @@ var gProtectionsHandler = {
       // Insert the info message if needed. This will be shown once and then
       // remain collapsed.
       ToolbarPanelHub.insertProtectionPanelMessage(event);
+
+      if (!event.target.hasAttribute("toast")) {
+        Services.telemetry.recordEvent(
+          "security.ui.protectionspopup",
+          "open",
+          "protections_popup"
+        );
+      }
     }
   },
 
@@ -1965,8 +1982,10 @@ var gProtectionsHandler = {
 
     if (newExceptionState) {
       this.disableForCurrentPage();
+      this.recordClick("etp_toggle_off");
     } else {
       this.enableForCurrentPage();
+      this.recordClick("etp_toggle_on");
     }
 
     delete this._TPSwitchCommanding;
