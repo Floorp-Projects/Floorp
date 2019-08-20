@@ -90,7 +90,11 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   void OutputQuotesAndIndent(bool stripTrailingSpaces = false);
   void Output(nsString& aString);
   void Write(const nsAString& aString);
-  bool IsInPre();
+
+  // @return true, iff the elements' whitespace and newline characters have to
+  //         be preserved according to its style or because it's a `<pre>`
+  //         element.
+  bool IsElementPreformatted() const;
   bool IsInOL();
   bool IsCurrentNodeConverted();
   bool MustSuppressLeaf();
@@ -114,7 +118,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     return !(mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
-  inline bool DoOutput() { return mHeadLevel == 0; }
+  inline bool DoOutput() const { return mHeadLevel == 0; }
 
   inline bool IsQuotedLine(const nsAString& aLine) {
     return !aLine.IsEmpty() && aLine.First() == char16_t('>');
@@ -128,8 +132,13 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   bool IsIgnorableRubyAnnotation(nsAtom* aTag);
 
-  bool IsElementPreformatted(mozilla::dom::Element* aElement);
-  bool IsElementBlock(mozilla::dom::Element* aElement);
+  // @return true, iff the elements' whitespace and newline characters have to
+  //         be preserved according to its style or because it's a `<pre>`
+  //         element.
+  static bool IsElementPreformatted(mozilla::dom::Element* aElement);
+
+  // https://drafts.csswg.org/css-display/#block-level
+  static bool IsCssBlockLevelElement(mozilla::dom::Element* aElement);
 
  private:
   nsString mCurrentLine;
