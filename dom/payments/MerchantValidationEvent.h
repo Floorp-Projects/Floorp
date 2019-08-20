@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MerchantValidationEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -49,21 +50,19 @@ class MerchantValidationEvent : public Event, public PromiseNativeHandler {
 
   void GetValidationURL(nsAString& aValidationURL);
 
-  void SetValidationURL(nsAString& aValidationURL);
-
   void GetMethodName(nsAString& aMethodName);
 
   void SetMethodName(const nsAString& aMethodName);
 
  protected:
-  bool init(const MerchantValidationEventInit& aEventInitDict,
-            ErrorResult& aRv);
+  Result<Ok, nsresult> init(const MerchantValidationEventInit& aEventInitDict,
+                            nsString& errMsg);
   ~MerchantValidationEvent();
 
  private:
   // Indicating whether an Complete()-initiated update is currently in progress.
   bool mWaitForUpdate;
-  nsString mValidationURL;
+  nsCOMPtr<nsIURI> mValidationURL;
   RefPtr<PaymentRequest> mRequest;
   nsString mMethodName;
 };
