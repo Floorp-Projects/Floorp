@@ -48,6 +48,9 @@ const WS_URL = "ws://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
 const WS_HTTP_URL =
   "http://127.0.0.1:8888/browser/devtools/client/netmonitor/test/";
 
+const WS_BASE_URL =
+  "http://mochi.test:8888/browser/devtools/client/netmonitor/test/";
+const WS_PAGE_URL = WS_BASE_URL + "html_ws-test-page.html";
 const API_CALLS_URL = EXAMPLE_URL + "html_api-calls-test-page.html";
 const SIMPLE_URL = EXAMPLE_URL + "html_simple-test-page.html";
 const NAVIGATE_URL = EXAMPLE_URL + "html_navigate-test-page.html";

@@ -64,7 +64,11 @@ class FrameListItem extends Component {
       visibleColumns,
     } = this.props;
 
-    const classList = ["ws-frame-list-item", index % 2 ? "odd" : "even"];
+    const classList = [
+      "ws-frame-list-item",
+      index % 2 ? "odd" : "even",
+      item.type,
+    ];
     if (isSelected) {
       classList.push("selected");
     }
