@@ -221,7 +221,7 @@ Once the configuration is available and an account instance was created, the aut
 
 ```kotlin
 launch {
-    val url = account.beginOAuthFlow(scopes, wantsKeys).await()
+    val url = account.beginOAuthFlow(scopes).await()
     openWebView(url)
 }
 ```
