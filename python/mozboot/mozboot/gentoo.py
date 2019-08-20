@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import
 
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import (
@@ -54,8 +54,7 @@ class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
     @staticmethod
     def _get_distdir():
         # Obtain the path held in the DISTDIR portage variable
-        output = subprocess.check_output(
-            ['emerge', '--info'], universal_newlines=True)
+        output = subprocess.check_output(['emerge', '--info'])
         match = re.search('^DISTDIR="(?P<distdir>.*)"$', output, re.MULTILINE)
         return match.group('distdir')
 
@@ -99,8 +98,7 @@ class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
             output = self.check_output(['emerge', '--pretend', '--fetchonly',
                                         'oracle-jdk-bin'],
                                        env=None,
-                                       stderr=subprocess.STDOUT,
-                                       universal_newlines=True)
+                                       stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             output = e.output
 
