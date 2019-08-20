@@ -415,8 +415,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   },
 
   hasNativeConsoleAPI: function(window) {
-    if (isWorker) {
-      // Can't use XPCNativeWrapper as a way to check for console API in workers
+    if (isWorker || !(window instanceof Ci.nsIDOMWindow)) {
+      // We can only use XPCNativeWrapper on non-worker nsIDOMWindow.
       return true;
     }
 
