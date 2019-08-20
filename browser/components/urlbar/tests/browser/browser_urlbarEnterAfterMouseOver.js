@@ -69,7 +69,7 @@ add_task(async function() {
   let expectedURL = result.url;
 
   Assert.equal(
-    gURLBar.value,
+    gURLBar.untrimmedValue,
     expectedURL,
     "Value in the URL bar should be updated by keyboard selection"
   );

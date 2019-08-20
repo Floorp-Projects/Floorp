@@ -39,13 +39,17 @@ add_task(async function() {
     nextIndex,
     "Should have selected the next item"
   );
-  Assert.equal(gURLBar.value, nextResult.url, "Should have completed the URL");
+  Assert.equal(
+    gURLBar.untrimmedValue,
+    nextResult.url,
+    "Should have completed the URL"
+  );
 
   info("Press backspace");
   EventUtils.synthesizeKey("KEY_Backspace");
   await promiseSearchComplete();
 
-  let editedValue = gURLBar.textValue;
+  let editedValue = gURLBar.value;
   Assert.equal(
     UrlbarTestUtils.getSelectedIndex(window),
     initialIndex,

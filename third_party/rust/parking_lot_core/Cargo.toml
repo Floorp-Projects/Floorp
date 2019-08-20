@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "parking_lot_core"
-version = "0.5.0"
+version = "0.6.2"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "An advanced API for creating custom synchronization primitives."
 keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
@@ -25,14 +25,11 @@ version = "0.3.2"
 optional = true
 
 [dependencies.cfg-if]
-version = "0.1"
+version = "0.1.5"
 
 [dependencies.petgraph]
 version = "0.4.5"
 optional = true
-
-[dependencies.rand]
-version = "0.6"
 
 [dependencies.smallvec]
 version = "0.6"
@@ -51,7 +48,7 @@ version = "0.0.3"
 [target."cfg(target_os = \"redox\")".dependencies.redox_syscall]
 version = "0.1"
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.27"
+version = "0.2.55"
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3"
 features = ["winnt", "ntstatus", "minwindef", "winerror", "winbase", "errhandlingapi", "handleapi"]

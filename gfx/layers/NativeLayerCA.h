@@ -150,6 +150,12 @@ class NativeLayerCA : public NativeLayer {
   void SetSurfaceIsFlipped(bool aIsFlipped);
   bool SurfaceIsFlipped();
 
+  // Set an opaque region on the layer. Internally, this causes the creation
+  // of opaque and transparent sublayers to cover the regions.
+  // The coordinates in aRegion are relative to mPosition.
+  void SetOpaqueRegion(const gfx::IntRegion& aRegion) override;
+  gfx::IntRegion OpaqueRegion() override;
+
  protected:
   friend class NativeLayerRootCA;
 
@@ -157,7 +163,7 @@ class NativeLayerCA : public NativeLayer {
   ~NativeLayerCA() override;
 
   // To be called by NativeLayerRootCA:
-  CALayer* UnderlyingCALayer() { return mCALayer; }
+  CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
 
@@ -169,6 +175,8 @@ class NativeLayerCA : public NativeLayer {
 
   std::vector<SurfaceWithInvalidRegion> RemoveExcessUnusedSurfaces(
       const MutexAutoLock&);
+  void PlaceContentLayers(const MutexAutoLock&, const gfx::IntRegion& aRegion,
+                          bool aOpaque, std::deque<CALayer*>* aLayersToRecycle);
 
   // Controls access to all fields of this class.
   Mutex mMutex;
@@ -240,14 +248,18 @@ class NativeLayerCA : public NativeLayer {
   // mSurfaces.back() is the one we submitted most recently.
   std::deque<SurfaceWithInvalidRegion> mSurfaces;
 
-  gfx::IntRect mRect;
+  gfx::IntPoint mPosition;
+  gfx::IntSize mSize;
+  gfx::IntRegion mOpaqueRegion;  // coordinates relative to mPosition
 
   // Lazily initialized by first call to ApplyChanges.
-  CALayer* mCALayer = nullptr;  // strong
+  CALayer* mWrappingCALayer = nullptr;    // strong
+  std::deque<CALayer*> mContentCALayers;  // strong
 
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
-  bool mMutated = false;
+  bool mMutatedPosition = false;
+  bool mMutatedGeometry = false;
 };
 
 }  // namespace layers

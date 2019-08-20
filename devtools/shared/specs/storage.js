@@ -167,6 +167,23 @@ createStorageSpec({
   methods: storageMethods,
 });
 
+types.addDictType("extensionobject", {
+  name: "nullable:string",
+  value: "nullable:longstring",
+});
+
+types.addDictType("extensionstoreobject", {
+  total: "number",
+  offset: "number",
+  data: "array:nullable:extensionobject",
+});
+
+createStorageSpec({
+  typeName: "extensionStorage",
+  storeObjectType: "extensionstoreobject",
+  methods: {},
+});
+
 types.addDictType("cacheobject", {
   url: "string",
   status: "string",

@@ -184,7 +184,7 @@ const tests = [
     gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await promiseAutocompleteResultPopup("exa", window, true);
-    while (gURLBar.value != "http://example.com/?q=%s") {
+    while (gURLBar.untrimmedValue != "http://example.com/?q=%s") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     let element = UrlbarTestUtils.getSelectedElement(window);
@@ -233,7 +233,7 @@ const tests = [
     gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await promiseAutocompleteResultPopup("exa", window, true);
-    while (gURLBar.value != "http://example.com/?q=%s") {
+    while (gURLBar.untrimmedValue != "http://example.com/?q=%s") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     EventUtils.synthesizeKey("VK_RETURN");
@@ -256,7 +256,7 @@ const tests = [
     info("Type @, Enter on a keywordoffer");
     gURLBar.select();
     await promiseAutocompleteResultPopup("@", window, true);
-    while (gURLBar.value != "@test ") {
+    while (gURLBar.untrimmedValue != "@test ") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     EventUtils.synthesizeKey("VK_RETURN");
@@ -338,7 +338,7 @@ const tests = [
       EventUtils.synthesizeKey("KEY_ArrowDown", {});
     });
     await UrlbarTestUtils.promiseSearchComplete(window);
-    while (gURLBar.value != "http://mochi.test:8888/") {
+    while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     EventUtils.synthesizeKey("VK_RETURN");
@@ -365,7 +365,7 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       EventUtils.synthesizeKey("KEY_ArrowDown", {});
     });
-    while (gURLBar.value != "http://mochi.test:8888/") {
+    while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
     }
     let element = UrlbarTestUtils.getSelectedElement(window);

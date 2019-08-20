@@ -1238,7 +1238,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
             // in the debugger's compartment, and then call the "toString"
             // property from there.
             if (typeof error.unsafeDereference === "function") {
-              errorMessage = error.unsafeDereference().toString();
+              const rawError = error.unsafeDereference();
+              errorMessage = rawError ? rawError.toString() : "";
             }
           }
         }

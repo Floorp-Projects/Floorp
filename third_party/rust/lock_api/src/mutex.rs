@@ -133,20 +133,14 @@ impl<R: RawMutex, T> Mutex<R, T> {
     #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new(val: T) -> Mutex<R, T> {
-        Mutex {
-            data: UnsafeCell::new(val),
-            raw: R::INIT,
-        }
+        Mutex { data: UnsafeCell::new(val), raw: R::INIT }
     }
 
     /// Creates a new mutex in an unlocked state ready for use.
     #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn new(val: T) -> Mutex<R, T> {
-        Mutex {
-            data: UnsafeCell::new(val),
-            raw: R::INIT,
-        }
+        Mutex { data: UnsafeCell::new(val), raw: R::INIT }
     }
 
     /// Consumes this mutex, returning the underlying data.
@@ -158,12 +152,12 @@ impl<R: RawMutex, T> Mutex<R, T> {
 }
 
 impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
+    /// # Safety
+    ///
+    /// The lock must be held when calling this method.
     #[inline]
-    fn guard(&self) -> MutexGuard<'_, R, T> {
-        MutexGuard {
-            mutex: self,
-            marker: PhantomData,
-        }
+    unsafe fn guard(&self) -> MutexGuard<'_, R, T> {
+        MutexGuard { mutex: self, marker: PhantomData }
     }
 
     /// Acquires a mutex, blocking the current thread until it is able to do so.
@@ -178,7 +172,8 @@ impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
     #[inline]
     pub fn lock(&self) -> MutexGuard<'_, R, T> {
         self.raw.lock();
-        self.guard()
+        // SAFETY: The lock is held, as required.
+        unsafe { self.guard() }
     }
 
     /// Attempts to acquire this lock.
@@ -191,7 +186,8 @@ impl<R: RawMutex, T: ?Sized> Mutex<R, T> {
     #[inline]
     pub fn try_lock(&self) -> Option<MutexGuard<'_, R, T>> {
         if self.raw.try_lock() {
-            Some(self.guard())
+            // SAFETY: The lock is held, as required.
+            Some(unsafe { self.guard() })
         } else {
             None
         }
@@ -264,7 +260,8 @@ impl<R: RawMutexTimed, T: ?Sized> Mutex<R, T> {
     #[inline]
     pub fn try_lock_for(&self, timeout: R::Duration) -> Option<MutexGuard<'_, R, T>> {
         if self.raw.try_lock_for(timeout) {
-            Some(self.guard())
+            // SAFETY: The lock is held, as required.
+            Some(unsafe { self.guard() })
         } else {
             None
         }
@@ -278,7 +275,8 @@ impl<R: RawMutexTimed, T: ?Sized> Mutex<R, T> {
     #[inline]
     pub fn try_lock_until(&self, timeout: R::Instant) -> Option<MutexGuard<'_, R, T>> {
         if self.raw.try_lock_until(timeout) {
-            Some(self.guard())
+            // SAFETY: The lock is held, as required.
+            Some(unsafe { self.guard() })
         } else {
             None
         }
@@ -311,9 +309,7 @@ impl<R: RawMutex, T: ?Sized + fmt::Debug> fmt::Debug for Mutex<R, T> {
                     }
                 }
 
-                f.debug_struct("Mutex")
-                    .field("data", &LockedPlaceholder)
-                    .finish()
+                f.debug_struct("Mutex").field("data", &LockedPlaceholder).finish()
             }
         }
     }
@@ -354,11 +350,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
         let raw = &s.mutex.raw;
         let data = f(unsafe { &mut *s.mutex.data.get() });
         mem::forget(s);
-        MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        }
+        MappedMutexGuard { raw, data, marker: PhantomData }
     }
 
     /// Attempts to make  a new `MappedMutexGuard` for a component of the
@@ -381,11 +373,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MutexGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        })
+        Ok(MappedMutexGuard { raw, data, marker: PhantomData })
     }
 
     /// Temporarily unlocks the mutex to execute the given function.
@@ -526,11 +514,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MappedMutexGuard<'a, R, T> {
         let raw = s.raw;
         let data = f(unsafe { &mut *s.data });
         mem::forget(s);
-        MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        }
+        MappedMutexGuard { raw, data, marker: PhantomData }
     }
 
     /// Attempts to make  a new `MappedMutexGuard` for a component of the
@@ -553,11 +537,7 @@ impl<'a, R: RawMutex + 'a, T: ?Sized + 'a> MappedMutexGuard<'a, R, T> {
             None => return Err(s),
         };
         mem::forget(s);
-        Ok(MappedMutexGuard {
-            raw,
-            data,
-            marker: PhantomData,
-        })
+        Ok(MappedMutexGuard { raw, data, marker: PhantomData })
     }
 }
 

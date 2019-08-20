@@ -8,11 +8,15 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormValidationHandler"];
+var EXPORTED_SYMBOLS = ["FormValidationParent"];
 
-var FormValidationHandler = {
-  _panel: null,
-  _anchor: null,
+class FormValidationParent extends JSWindowActorParent {
+  constructor() {
+    super();
+
+    this._panel = null;
+    this._anchor = null;
+  }
 
   /*
    * Public apis
@@ -21,39 +25,41 @@ var FormValidationHandler = {
   uninit() {
     this._panel = null;
     this._anchor = null;
-  },
+  }
 
   hidePopup() {
     this._hidePopup();
-  },
+  }
 
   /*
    * Events
    */
 
-  // Listeners are added in BrowserGlue.jsm
   receiveMessage(aMessage) {
-    let window = aMessage.target.ownerGlobal;
-    let json = aMessage.json;
-    let tabBrowser = window.gBrowser;
     switch (aMessage.name) {
       case "FormValidation:ShowPopup":
+        let browser = this.browsingContext.top.embedderElement;
+        let window = browser.ownerGlobal;
+        let data = aMessage.data;
+        let tabBrowser = window.gBrowser;
+
         // target is the <browser>, make sure we're receiving a message
         // from the foreground tab.
-        if (tabBrowser && aMessage.target != tabBrowser.selectedBrowser) {
+        if (tabBrowser && browser != tabBrowser.selectedBrowser) {
           return;
         }
-        this._showPopup(window, json);
+
+        this._showPopup(window, data);
         break;
       case "FormValidation:HidePopup":
         this._hidePopup();
         break;
     }
-  },
+  }
 
   observe(aSubject, aTopic, aData) {
     this._hidePopup();
-  },
+  }
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
@@ -67,7 +73,7 @@ var FormValidationHandler = {
         this._onPopupHiding(aEvent);
         break;
     }
-  },
+  }
 
   /*
    * Internal
@@ -88,7 +94,7 @@ var FormValidationHandler = {
     this._panel = null;
     this._anchor.hidden = true;
     this._anchor = null;
-  },
+  }
 
   /*
    * Shows the form validation popup at a specified position or updates the
@@ -134,7 +140,7 @@ var FormValidationHandler = {
       // Open the popup
       this._panel.openPopup(this._anchor, aPanelData.position, 0, 0, false);
     }
-  },
+  }
 
   /*
    * Hide the popup if currently displayed. Will fire an event to onPopupHiding
@@ -144,5 +150,5 @@ var FormValidationHandler = {
     if (this._panel) {
       this._panel.hidePopup();
     }
-  },
-};
+  }
+}

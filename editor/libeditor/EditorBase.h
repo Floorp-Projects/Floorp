@@ -12,6 +12,7 @@
 #include "mozilla/Maybe.h"               // for Maybe
 #include "mozilla/OwningNonNull.h"       // for OwningNonNull
 #include "mozilla/PresShell.h"           // for PresShell
+#include "mozilla/TypeInState.h"         // for PropItem, StyleCache
 #include "mozilla/RangeBoundary.h"       // for RawRangeBoundary, RangeBoundary
 #include "mozilla/SelectionState.h"      // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"          // for StyleSheet
@@ -96,6 +97,7 @@ class CreateNodeResultBase;
 typedef CreateNodeResultBase<dom::Element> CreateElementResult;
 
 namespace dom {
+class AbstractRange;
 class DataTransfer;
 class DragEvent;
 class Element;
@@ -602,6 +604,117 @@ class EditorBase : public nsIEditor,
    */
   void ReinitializeSelection(Element& aElement);
 
+ protected:  // May be used by friends.
+  class AutoEditActionDataSetter;
+
+  /**
+   * TopLevelEditSubActionData stores temporary data while we're handling
+   * top-level edit sub-action.
+   */
+  struct MOZ_STACK_CLASS TopLevelEditSubActionData final {
+    friend class AutoEditActionDataSetter;
+
+    // If we have created a new block element, set to it.
+    RefPtr<Element> mNewBlockElement;
+
+    // Set selected range before edit.  Then, RangeUpdater keep modifying
+    // the range while we're changing the DOM tree.
+    RefPtr<RangeItem> mSelectedRange;
+
+    // Computing changed range while we're handling sub actions.
+    RefPtr<nsRange> mChangedRange;
+
+    // XXX In strict speaking, mCachedInlineStyles isn't enough to cache inline
+    //     styles because inline style can be specified with "style" attribute
+    //     and/or CSS in <style> elements or CSS files.  So, we need to look
+    //     for better implementation about this.
+    AutoStyleCacheArray mCachedInlineStyles;
+
+    // If we tried to delete selection, set to true.
+    bool mDidDeleteSelection;
+
+    // If we have explicitly set selection inter line, set to true.
+    // `AfterEdit()` or something shouldn't overwrite it in such case.
+    bool mDidExplicitlySetInterLine;
+
+    // If we have deleted non-collapsed range set to true, there are only 2
+    // cases for now:
+    //   - non-collapsed range was selected.
+    //   - selection was collapsed in a text node and a Unicode character
+    //     was removed.
+    bool mDidDeleteNonCollapsedRange;
+
+    // If we have deleted parent empty blocks, set to true.
+    bool mDidDeleteEmptyParentBlocks;
+
+    // If we're a contenteditable editor, we temporarily increase edit count
+    // of the document between `BeforeEdit()` and `AfterEdit()`.  I.e., if
+    // we increased the count in `BeforeEdit()`, we need to decrease it in
+    // `AfterEdit()`, however, the document may be changed to designMode or
+    // non-editable.  Therefore, we need to store with this whether we need
+    // to restore it.
+    bool mRestoreContentEditableCount;
+
+    /**
+     * Extend mChangedRange to include `aNode`.
+     */
+    nsresult AddNodeToChangedRange(const HTMLEditor& aHTMLEditor,
+                                   nsINode& aNode);
+
+    /**
+     * Extend mChangedRange to include `aPoint`.
+     */
+    nsresult AddPointToChangedRange(const HTMLEditor& aHTMLEditor,
+                                    const EditorRawDOMPoint& aPoint);
+
+    /**
+     * Extend mChangedRange to include `aStart` and `aEnd`.
+     */
+    nsresult AddRangeToChangedRange(const HTMLEditor& aHTMLEditor,
+                                    const EditorRawDOMPoint& aStart,
+                                    const EditorRawDOMPoint& aEnd);
+
+   private:
+    void Clear() {
+      mDidExplicitlySetInterLine = false;
+      // We don't need to clear other members which are referred only when the
+      // editor is an HTML editor anymore.  Note that if `mSelectedRange` is
+      // non-nullptr, that means that we're in `HTMLEditor`.
+      if (!mSelectedRange) {
+        return;
+      }
+      mNewBlockElement = nullptr;
+      mSelectedRange->Clear();
+      mChangedRange->Reset();
+      mCachedInlineStyles.Clear();
+      mDidDeleteSelection = false;
+      mDidDeleteNonCollapsedRange = false;
+      mDidDeleteEmptyParentBlocks = false;
+      mRestoreContentEditableCount = false;
+    }
+
+    TopLevelEditSubActionData() = default;
+    TopLevelEditSubActionData(const TopLevelEditSubActionData& aOther) = delete;
+  };
+
+  struct MOZ_STACK_CLASS EditSubActionData final {
+    uint32_t mJoinedLeftNodeLength;
+
+    // While this is set to false, TopLevelEditSubActionData::mChangedRange
+    // shouldn't be modified since in some cases, modifying it in the setter
+    // itself may be faster.  Note that we should affect this only for current
+    // edit sub action since mutation event listener may edit different range.
+    bool mAdjustChangedRangeFromListener;
+
+   private:
+    void Clear() {
+      mJoinedLeftNodeLength = 0;
+      mAdjustChangedRangeFromListener = true;
+    }
+
+    friend EditorBase;
+  };
+
  protected:  // AutoEditActionDataSetter, this shouldn't be accessed by friends.
   /**
    * SettingDataTransfer enum class is used to specify whether DataTransfer
@@ -687,6 +800,7 @@ class EditorBase : public nsIEditor,
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
       mTopLevelEditSubAction = aEditSubAction;
+      TopLevelEditSubActionDataRef().Clear();
       switch (mTopLevelEditSubAction) {
         case EditSubAction::eInsertNode:
         case EditSubAction::eCreateNode:
@@ -754,6 +868,20 @@ class EditorBase : public nsIEditor,
       return mDirectionOfTopLevelEditSubAction;
     }
 
+    const TopLevelEditSubActionData& TopLevelEditSubActionDataRef() const {
+      return mParentData ? mParentData->TopLevelEditSubActionDataRef()
+                         : mTopLevelEditSubActionData;
+    }
+    TopLevelEditSubActionData& TopLevelEditSubActionDataRef() {
+      return mParentData ? mParentData->TopLevelEditSubActionDataRef()
+                         : mTopLevelEditSubActionData;
+    }
+
+    const EditSubActionData& EditSubActionDataRef() const {
+      return mEditSubActionData;
+    }
+    EditSubActionData& EditSubActionDataRef() { return mEditSubActionData; }
+
     SelectionState& SavedSelectionRef() {
       return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
     }
@@ -802,8 +930,23 @@ class EditorBase : public nsIEditor,
     // by TextEditor.
     EditorDOMPoint mSpellCheckRestartPoint;
 
+    // Different from mTopLevelEditSubAction, its data should be stored only
+    // in the most ancestor AutoEditActionDataSetter instance since we don't
+    // want to pay the copying cost and sync cost.
+    TopLevelEditSubActionData mTopLevelEditSubActionData;
+
+    // Different from mTopLevelEditSubActionData, this stores temporaly data
+    // for current edit sub action.
+    EditSubActionData mEditSubActionData;
+
     EditAction mEditAction;
+
+    // Different from its data, you can refer "current" AutoEditActionDataSetter
+    // instance's mTopLevelEditSubAction member since it's copied from the
+    // parent instance at construction and it's always cleared before this
+    // won't be overwritten and cleared before destruction.
     EditSubAction mTopLevelEditSubAction;
+
     EDirection mDirectionOfTopLevelEditSubAction;
 
     AutoEditActionDataSetter() = delete;
@@ -929,6 +1072,24 @@ class EditorBase : public nsIEditor,
   const EditorDOMPoint& GetSpellCheckRestartPoint() const {
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->GetSpellCheckRestartPoint();
+  }
+
+  const TopLevelEditSubActionData& TopLevelEditSubActionDataRef() const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->TopLevelEditSubActionDataRef();
+  }
+  TopLevelEditSubActionData& TopLevelEditSubActionDataRef() {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->TopLevelEditSubActionDataRef();
+  }
+
+  const EditSubActionData& EditSubActionDataRef() const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->EditSubActionDataRef();
+  }
+  EditSubActionData& EditSubActionDataRef() {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->EditSubActionDataRef();
   }
 
   /**
@@ -1829,11 +1990,9 @@ class EditorBase : public nsIEditor,
     mAllowsTransactionsToChangeSelection = aAllow;
   }
 
-  nsresult HandleInlineSpellCheck(nsINode* previousSelectedNode,
-                                  uint32_t previousSelectedOffset,
-                                  nsINode* aStartContainer,
-                                  uint32_t aStartOffset, nsINode* aEndContainer,
-                                  uint32_t aEndOffset);
+  nsresult HandleInlineSpellCheck(
+      const EditorDOMPoint& aPreviouslySelectedStart,
+      const dom::AbstractRange* aRange = nullptr);
 
   /**
    * Likewise, but gets the editor's root instead, which is different for HTML
@@ -1890,6 +2049,14 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT
   virtual void OnEndHandlingTopLevelEditSubAction();
+
+  /**
+   * OnStartToHandleEditSubAction() and OnEndHandlingEditSubAction() are called
+   * when starting to handle an edit sub action and ending handling an edit
+   * sub action.
+   */
+  void OnStartToHandleEditSubAction() { EditSubActionDataRef().Clear(); }
+  void OnEndHandlingEditSubAction() { EditSubActionDataRef().Clear(); }
 
   /**
    * Routines for managing the preservation of selection across
@@ -2266,15 +2433,15 @@ class EditorBase : public nsIEditor,
   };
 
   /**
-   * AutoTopLevelEditSubActionNotifier notifies editor of start to handle
+   * AutoEditSubActionNotifier notifies editor of start to handle
    * top level edit sub-action and end handling top level edit sub-action.
    */
-  class MOZ_RAII AutoTopLevelEditSubActionNotifier final {
+  class MOZ_RAII AutoEditSubActionNotifier final {
    public:
-    AutoTopLevelEditSubActionNotifier(
+    AutoEditSubActionNotifier(
         EditorBase& aEditorBase, EditSubAction aEditSubAction,
         nsIEditor::EDirection aDirection MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mEditorBase(aEditorBase), mDoNothing(false) {
+        : mEditorBase(aEditorBase), mIsTopLevel(true) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       // The top level edit sub action has already be set if this is nested call
       // XXX Looks like that this is not aware of unexpected nested edit action
@@ -2284,20 +2451,22 @@ class EditorBase : public nsIEditor,
         mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
                                                          aDirection);
       } else {
-        mDoNothing = true;  // nested calls will end up here
+        mIsTopLevel = false;
       }
+      mEditorBase.OnStartToHandleEditSubAction();
     }
 
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    ~AutoTopLevelEditSubActionNotifier() {
-      if (!mDoNothing) {
+    ~AutoEditSubActionNotifier() {
+      mEditorBase.OnEndHandlingEditSubAction();
+      if (mIsTopLevel) {
         MOZ_KnownLive(mEditorBase).OnEndHandlingTopLevelEditSubAction();
       }
     }
 
    protected:
     EditorBase& mEditorBase;
-    bool mDoNothing;
+    bool mIsTopLevel;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 

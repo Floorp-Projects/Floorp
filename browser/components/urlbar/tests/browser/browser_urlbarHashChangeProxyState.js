@@ -16,12 +16,12 @@ add_task(async function() {
 
     let verifyURLBarState = testType => {
       is(
-        gURLBar.textValue,
+        gURLBar.value,
         expectedURL,
         "URL bar visible value should be correct " + testType
       );
       is(
-        gURLBar.value,
+        gURLBar.untrimmedValue,
         expectedURL,
         "URL bar value should be correct " + testType
       );
@@ -122,12 +122,12 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     url,
     "URL bar visible value should be correct when the page loads from about:newtab"
   );
   is(
-    gURLBar.value,
+    gURLBar.untrimmedValue,
     url,
     "URL bar value should be correct when the page loads from about:newtab"
   );

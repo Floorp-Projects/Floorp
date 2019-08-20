@@ -12,6 +12,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/RangeBoundary.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIEditor.h"
@@ -455,6 +456,8 @@ class MOZ_RAII DOMIterator {
   virtual ~DOMIterator() = default;
 
   nsresult Init(nsRange& aRange);
+  nsresult Init(const RawRangeBoundary& aStartRef,
+                const RawRangeBoundary& aEndRef);
 
   void AppendList(
       const BoolDomIterFunctor& functor,

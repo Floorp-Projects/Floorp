@@ -493,10 +493,7 @@ add_task(async function() {
     gInvalidFormPopup.firstElementChild.textContent
   );
 
-  let inputPromise = BrowserTestUtils.waitForEvent(
-    gBrowser.contentDocument.getElementById("i"),
-    "input"
-  );
+  let inputPromise = BrowserTestUtils.waitForContentEvent(browser, "input");
   EventUtils.sendString("f");
   await inputPromise;
 

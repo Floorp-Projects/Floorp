@@ -60,31 +60,6 @@ using namespace dom;
  * mozilla::TextEditRules
  ********************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
-    HTMLEditRules* tmp = htmlEditRules;
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocChangeRange)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mUtilRange)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mNewBlock)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mRangeItem)
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
-    HTMLEditRules* tmp = htmlEditRules;
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocChangeRange)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUtilRange)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNewBlock)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRangeItem)
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TextEditRules, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TextEditRules, Release)
-
 TextEditRules::TextEditRules()
     : mTextEditor(nullptr),
       mData(nullptr),
@@ -293,7 +268,7 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eDeleteSelectedContent:
       MOZ_ASSERT(!mIsHTMLEditRules);
-      return DidDeleteSelection(SetSelectionInterLinePosition::Yes);
+      return DidDeleteSelection();
     case EditSubAction::eInsertElement:
     case EditSubAction::eUndo:
     case EditSubAction::eRedo:
@@ -895,8 +870,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   // If we replaced non-empty value with empty string, we need to delete the
   // text node.
   if (tString.IsEmpty()) {
-    DebugOnly<nsresult> rvIgnored =
-        DidDeleteSelection(SetSelectionInterLinePosition::Yes);
+    DebugOnly<nsresult> rvIgnored = DidDeleteSelection();
     MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_DESTROYED);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "DidDeleteSelection() failed");
@@ -1022,8 +996,7 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
   return NS_OK;
 }
 
-nsresult TextEditRules::DidDeleteSelection(
-    SetSelectionInterLinePosition aSetSelectionInterLinePosition) {
+nsresult TextEditRules::DidDeleteSelection() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   EditorDOMPoint selectionStartPoint(
@@ -1046,7 +1019,10 @@ nsresult TextEditRules::DidDeleteSelection(
     }
   }
 
-  if (aSetSelectionInterLinePosition != SetSelectionInterLinePosition::Yes) {
+  // Note that this may be true only when this is HTMLEditRules.
+  if (TextEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mDidExplicitlySetInterLine) {
     return NS_OK;
   }
   // We prevent the caret from sticking on the left of prior BR

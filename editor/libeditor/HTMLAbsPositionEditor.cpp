@@ -56,7 +56,7 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this,
       aEnabled ? EditSubAction::eSetPositionToAbsolute
                : EditSubAction::eSetPositionToStatic,
@@ -155,7 +155,7 @@ nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this,
       aChange < 0 ? EditSubAction::eDecreaseZIndex
                   : EditSubAction::eIncreaseZIndex,

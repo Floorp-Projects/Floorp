@@ -212,7 +212,7 @@ nsresult HTMLEditor::InsertTableCellsWithTransaction(
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   // We control selection resetting after the insert.
@@ -437,7 +437,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of <br> element in new cell until we're done.
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   switch (aInsertPosition) {
@@ -626,7 +626,7 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   switch (aInsertPosition) {
@@ -893,7 +893,7 @@ nsresult HTMLEditor::DeleteTableCellWithTransaction(
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   ErrorResult error;
@@ -1162,7 +1162,7 @@ nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
   // Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(*this);
@@ -1249,7 +1249,7 @@ nsresult HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
 
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   // Shortcut the case of deleting all columns in table
@@ -1474,7 +1474,7 @@ nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
   AutoPlaceholderBatch treateAsOneTransaction(*this);
 
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   // Shortcut the case of deleting all rows in table
@@ -1584,7 +1584,7 @@ nsresult HTMLEditor::DeleteTableRowWithTransaction(Element& aTableElement,
   }
 
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   // Scan through cells in row to do rowspan adjustments
@@ -2118,7 +2118,7 @@ HTMLEditor::SplitTableCell() {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   // We reset selection
@@ -2370,7 +2370,7 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell created by
   // ReplaceContainerAndCloneAttributesWithTransaction().
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   // Save current selection to restore when done.
@@ -2633,7 +2633,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
 
     // All cell contents are merged. Delete the empty cells we accumulated
     // Prevent rules testing until we're done
-    AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+    AutoEditSubActionNotifier startToHandleEditSubAction(
         *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
     for (uint32_t i = 0, n = deleteList.Length(); i < n; i++) {
@@ -2776,7 +2776,7 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
   }
 
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   // Don't need to merge if cell is empty
@@ -3026,7 +3026,7 @@ nsresult HTMLEditor::NormalizeTableInternal(Element& aTableOrElementInTable) {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   // Prevent auto insertion of BR in new cell until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   // XXX If there is a cell which has bigger or smaller "rowspan" or "colspan"
