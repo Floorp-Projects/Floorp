@@ -1985,10 +1985,6 @@ BrowserGlue.prototype = {
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
 
-    if (Services.prefs.getBoolPref("corroborator.enabled", true)) {
-      Corroborate.init().catch(Cu.reportError);
-    }
-
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService
     );
@@ -2139,6 +2135,12 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       TabUnloader.init();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
+        Corroborate.init().catch(Cu.reportError);
+      }
     });
 
     // Marionette needs to be initialized as very last step
