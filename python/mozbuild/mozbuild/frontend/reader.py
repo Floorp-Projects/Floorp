@@ -112,10 +112,10 @@ class EmptyConfig(object):
     default_substs = {
         # These 2 variables are used semi-frequently and it isn't worth
         # changing all the instances.
-        b'MOZ_APP_NAME': b'empty',
-        b'MOZ_CHILD_PROCESS_NAME': b'empty',
+        'MOZ_APP_NAME': 'empty',
+        'MOZ_CHILD_PROCESS_NAME': 'empty',
         # Needed to prevent js/src's config.status from loading.
-        b'JS_STANDALONE': b'1',
+        'JS_STANDALONE': '1',
     }
 
     def __init__(self, topsrcdir, substs=None):
@@ -123,13 +123,6 @@ class EmptyConfig(object):
         self.topobjdir = ''
 
         self.substs = self.PopulateOnGetDict(EmptyValue, substs or self.default_substs)
-        udict = {}
-        for k, v in self.substs.items():
-            if isinstance(v, str):
-                udict[k.decode('utf-8')] = v.decode('utf-8')
-            else:
-                udict[k] = v
-        self.substs_unicode = self.PopulateOnGetDict(EmptyValue, udict)
         self.defines = self.substs
         self.external_source_dir = None
         self.error_is_fatal = False
