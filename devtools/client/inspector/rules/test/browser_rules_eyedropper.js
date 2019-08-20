@@ -46,7 +46,7 @@ add_task(async function() {
 
   const { testActor, inspector, view, toolbox } = await openRuleView();
 
-  await runTest(testActor, inspector, view);
+  await runTest(testActor, inspector, view, false);
 
   info("Reload the page to restore the initial state");
   await navigateTo(inspector, url);
@@ -54,10 +54,10 @@ add_task(async function() {
   info("Change toolbox host to WINDOW");
   await toolbox.switchHost("window");
 
-  await runTest(testActor, inspector, view);
+  await runTest(testActor, inspector, view, true);
 });
 
-async function runTest(testActor, inspector, view) {
+async function runTest(testActor, inspector, view, isWindowHost) {
   await selectNode("#div2", inspector);
 
   info("Get the background-color property from the rule-view");
@@ -76,6 +76,20 @@ async function runTest(testActor, inspector, view) {
 
   info("Test that pressing escape dismisses the eyedropper");
   await testESC(swatch, inspector, testActor);
+
+  if (isWindowHost) {
+    // The following code is only needed on linux otherwise the test seems to
+    // timeout when clicking again on the swatch. Both the focus and the wait
+    // seem needed to make it pass.
+    // To be fixed in Bug 1571421.
+    info("Ensure the swatch window is focused");
+    const onWindowFocus = BrowserTestUtils.waitForEvent(
+      swatch.ownerGlobal,
+      "focus"
+    );
+    swatch.ownerGlobal.focus();
+    await onWindowFocus;
+  }
 
   info("Open the eyedropper again");
   await openEyedropper(view, swatch);
