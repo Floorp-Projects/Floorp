@@ -216,7 +216,6 @@ def find_program(file, paths=None):
 
 
 @imports('os')
-@imports('subprocess')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='tempfile', _import='mkstemp')
 def try_invoke_compiler(compiler, language, source, flags=None, onerror=None):

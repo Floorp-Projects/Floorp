@@ -9,7 +9,6 @@
 @imports('logging')
 @imports('os')
 @imports('pickle')
-@imports('subprocess')
 @imports('sys')
 @imports(_from='__main__', _import='config_status')
 @imports(_from='__builtin__', _import='OSError')

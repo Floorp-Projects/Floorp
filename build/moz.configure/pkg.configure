@@ -16,7 +16,6 @@ pkg_config = check_prog('PKG_CONFIG', pkg_config, allow_missing=True)
 
 @depends_if(pkg_config)
 @checking('for pkg-config version')
-@imports('subprocess')
 def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, '--version').rstrip())
 
