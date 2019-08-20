@@ -18,6 +18,7 @@ from mozbuild.util import (
     FileAvoidWrite,
     memoized_property,
     ReadOnlyDict,
+    system_encoding,
 )
 from mozbuild.shellutil import quote as shell_quote
 
@@ -252,10 +253,9 @@ class PartialConfigDict(object):
         return existing_files
 
     def _write_file(self, key, value):
-        encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
         filename = mozpath.join(self._datadir, key)
         with FileAvoidWrite(filename) as fh:
-            json.dump(value, fh, indent=4, encoding=encoding)
+            json.dump(value, fh, indent=4, encoding=system_encoding)
         return filename
 
     def _fill_group(self, values):

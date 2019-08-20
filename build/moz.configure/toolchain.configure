@@ -604,10 +604,9 @@ def check_compiler(compiler, language, target):
 @imports('json')
 @imports('os')
 @imports('subprocess')
-@imports('sys')
+@imports(_from='mozbuild.util', _import='system_encoding')
 def get_vc_paths(topsrcdir):
     def vswhere(args):
-        encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
         program_files = (os.environ.get('PROGRAMFILES(X86)') or
                          os.environ.get('PROGRAMFILES'))
         if not program_files:
@@ -618,7 +617,7 @@ def get_vc_paths(topsrcdir):
             return []
         return json.loads(
             subprocess.check_output([vswhere, '-format', 'json'] + args)
-            .decode(encoding, 'replace'))
+            .decode(system_encoding, 'replace'))
 
     for install in vswhere(['-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
         path = install['installationPath']

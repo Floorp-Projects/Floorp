@@ -7,9 +7,9 @@
 
 @imports('codecs')
 @imports('sys')
+@imports(_from='mozbuild.util', _import='system_encoding')
 def encoded_open(path, mode):
-    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-    return codecs.open(path, mode, encoding)
+    return codecs.open(path, mode, system_encoding)
 
 
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
