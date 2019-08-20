@@ -2,4 +2,4 @@
 
 # into
 
-`fun TabReceived.into(): `[`TabReceived`](../../mozilla.components.concept.sync/-device-event/-tab-received/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L162)
+`fun TabReceived.into(): `[`TabReceived`](../../mozilla.components.concept.sync/-device-event/-tab-received/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Types.kt#L168)

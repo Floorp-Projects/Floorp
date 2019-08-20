@@ -2,4 +2,4 @@
 
 # onDevicesUpdate
 
-`abstract fun onDevicesUpdate(constellation: `[`ConstellationState`](../-constellation-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L121)
+`abstract fun onDevicesUpdate(constellation: `[`ConstellationState`](../-constellation-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L105)

@@ -2,4 +2,4 @@
 
 # subscription
 
-`val subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L163)
+`val subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L147)

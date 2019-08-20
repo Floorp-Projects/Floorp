@@ -2,7 +2,7 @@
 
 # ConstellationState
 
-`data class ConstellationState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L115)
+`data class ConstellationState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L99)
 
 Describes current device and other devices in the constellation.
 
