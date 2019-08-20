@@ -988,7 +988,7 @@ struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
   }
 
  private:
-  BrowserParent* mNewTab;
+  RefPtr<BrowserParent> mNewTab;
   nsCString* mURLToLoad;
 };
 
