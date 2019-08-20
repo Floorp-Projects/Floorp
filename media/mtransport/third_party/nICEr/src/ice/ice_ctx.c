@@ -801,8 +801,11 @@ int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const ch
     if (!(ctx->target_for_default_local_address_lookup=RCALLOC(sizeof(nr_transport_addr))))
       ABORT(R_NO_MEMORY);
 
-    if ((r=nr_str_port_to_transport_addr(target_ip, target_port, IPPROTO_UDP, ctx->target_for_default_local_address_lookup)))
+    if ((r=nr_str_port_to_transport_addr(target_ip, target_port, IPPROTO_UDP, ctx->target_for_default_local_address_lookup))) {
+      RFREE(ctx->target_for_default_local_address_lookup);
+      ctx->target_for_default_local_address_lookup=0;
       ABORT(r);
+    }
 
     _status=0;
   abort:
