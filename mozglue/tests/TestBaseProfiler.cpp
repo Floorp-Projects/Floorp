@@ -1070,23 +1070,37 @@ static constexpr size_t NextDepth(size_t aDepth) {
   return (aDepth < MAX_DEPTH) ? (aDepth + 1) : aDepth;
 }
 
+Atomic<bool, Relaxed, recordreplay::Behavior::DontPreserve> sStopFibonacci;
+
 // Compute fibonacci the hard way (recursively: `f(n)=f(n-1)+f(n-2)`), and
 // prevent inlining.
 // The template parameter makes each depth be a separate function, to better
 // distinguish them in the profiler output.
 template <size_t DEPTH = 0>
 MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
+  AUTO_BASE_PROFILER_LABEL_DYNAMIC_STRING("fib", OTHER, std::to_string(DEPTH));
   if (n == 0) {
     return 0;
   }
   if (n == 1) {
     return 1;
   }
+  if (DEPTH < 5 && sStopFibonacci) {
+    return 1'000'000'000;
+  }
+  TimeStamp start = TimeStamp::NowUnfuzzed();
+  static constexpr size_t MAX_MARKER_DEPTH = 10;
   unsigned long long f2 = Fibonacci<NextDepth(DEPTH)>(n - 2);
   if (DEPTH == 0) {
     BASE_PROFILER_ADD_MARKER("Half-way through Fibonacci", OTHER);
   }
   unsigned long long f1 = Fibonacci<NextDepth(DEPTH)>(n - 1);
+  if (DEPTH < MAX_MARKER_DEPTH) {
+    baseprofiler::profiler_add_text_marker(
+        "fib", std::to_string(DEPTH),
+        baseprofiler::ProfilingCategoryPair::OTHER, start,
+        TimeStamp::NowUnfuzzed());
+  }
   return f2 + f1;
 }
 
@@ -1128,14 +1142,53 @@ void TestProfiler() {
     MOZ_RELEASE_ASSERT(baseprofiler::profiler_thread_is_being_profiled());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
 
-    {
+    sStopFibonacci = false;
+
+    std::thread threadFib([]() {
+      AUTO_BASE_PROFILER_REGISTER_THREAD("fibonacci");
+      SleepMilli(5);
       AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call",
                                            OTHER, nullptr);
-      static const unsigned long long fibStart = 40;
+      static const unsigned long long fibStart = 37;
       printf("Fibonacci(%llu)...\n", fibStart);
       AUTO_BASE_PROFILER_LABEL("Label around Fibonacci", OTHER);
       unsigned long long f = Fibonacci(fibStart);
       printf("Fibonacci(%llu) = %llu\n", fibStart, f);
+    });
+
+    std::thread threadCancelFib([]() {
+      AUTO_BASE_PROFILER_REGISTER_THREAD("fibonacci canceller");
+      SleepMilli(5);
+      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "Canceller", OTHER,
+                                           nullptr);
+      static const int waitMaxSeconds = 10;
+      for (int i = 0; i < waitMaxSeconds; ++i) {
+        if (sStopFibonacci) {
+          AUTO_BASE_PROFILER_LABEL_DYNAMIC_STRING("fibCancel", OTHER,
+                                                  std::to_string(i));
+          return;
+        }
+        AUTO_BASE_PROFILER_THREAD_SLEEP;
+        SleepMilli(1000);
+      }
+      AUTO_BASE_PROFILER_LABEL_DYNAMIC_STRING("fibCancel", OTHER,
+                                              "Cancelling!");
+      sStopFibonacci = true;
+    });
+
+    {
+      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(
+          "main thread", "joining fibonacci thread", OTHER, nullptr);
+      AUTO_BASE_PROFILER_THREAD_SLEEP;
+      threadFib.join();
+    }
+
+    {
+      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(
+          "main thread", "joining fibonacci-canceller thread", OTHER, nullptr);
+      sStopFibonacci = true;
+      AUTO_BASE_PROFILER_THREAD_SLEEP;
+      threadCancelFib.join();
     }
 
     printf("Sleep 1s...\n");
