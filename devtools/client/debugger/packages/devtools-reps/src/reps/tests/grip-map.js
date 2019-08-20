@@ -236,6 +236,9 @@ describe("GripMap - Node-keyed entries", () => {
     node.at(2).simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(3);
+    expect(onDOMNodeMouseOut.mock.calls[0][0]).toBe(grips[0]);
+    expect(onDOMNodeMouseOut.mock.calls[1][0]).toBe(grips[1]);
+    expect(onDOMNodeMouseOut.mock.calls[2][0]).toBe(grips[2]);
   });
 
   it("calls the expected function on click", () => {
@@ -292,6 +295,9 @@ describe("GripMap - Node-valued entries", () => {
     node.at(2).simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(3);
+    expect(onDOMNodeMouseOut.mock.calls[0][0]).toBe(grips[0]);
+    expect(onDOMNodeMouseOut.mock.calls[1][0]).toBe(grips[1]);
+    expect(onDOMNodeMouseOut.mock.calls[2][0]).toBe(grips[2]);
   });
 
   it("calls the expected function on click", () => {

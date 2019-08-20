@@ -147,6 +147,7 @@ describe("GripMapEntry - complex", () => {
 
     node.simulate("mouseout");
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(1);
+    expect(onDOMNodeMouseOut.mock.calls[0][0]).toEqual(stub);
 
     node.simulate("mouseover");
     expect(onDOMNodeMouseOver.mock.calls).toHaveLength(1);
@@ -172,6 +173,7 @@ describe("GripMapEntry - complex", () => {
 
     node.simulate("mouseout");
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(2);
+    expect(onDOMNodeMouseOut.mock.calls[1][0]).toEqual(stub);
 
     node.simulate("mouseover");
     expect(onDOMNodeMouseOver.mock.calls).toHaveLength(2);
