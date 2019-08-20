@@ -187,17 +187,13 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
  * mozilla::HTMLEditRules
  ********************************************************/
 
-HTMLEditRules::HTMLEditRules()
-    : mHTMLEditor(nullptr),
-      mInitialized(false),
-      mReturnInEmptyLIKillsList(false) {
+HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
   InitFields();
 }
 
 void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
-  mReturnInEmptyLIKillsList = true;
 }
 
 nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
@@ -222,16 +218,6 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   if (NS_WARN_IF(!mHTMLEditor)) {
     return NS_ERROR_FAILURE;
   }
-
-  // cache any prefs we care about
-  static const char kPrefName[] =
-      "editor.html.typing.returnInEmptyListItemClosesList";
-  nsAutoCString returnInEmptyLIKillsList;
-  Preferences::GetCString(kPrefName, returnInEmptyLIKillsList);
-
-  // only when "false", becomes FALSE.  Otherwise (including empty), TRUE.
-  // XXX Why was this pref designed as a string and not bool?
-  mReturnInEmptyLIKillsList = !returnInEmptyLIKillsList.EqualsLiteral("false");
 
   Element* rootElement = HTMLEditorRef().GetRoot();
   if (NS_WARN_IF(!rootElement && !HTMLEditorRef().GetDocument())) {
@@ -8255,7 +8241,7 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
   // If we are in an empty item, then we want to pop up out of the list, but
   // only if prefs say it's okay and if the parent isn't the active editing
   // host.
-  if (mReturnInEmptyLIKillsList && host != aListItem.GetParentElement() &&
+  if (host != aListItem.GetParentElement() &&
       IsEmptyBlockElement(aListItem, IgnoreSingleBR::eYes)) {
     nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
     // Are we the last list item in the list?
