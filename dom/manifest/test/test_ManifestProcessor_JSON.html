@@ -19,11 +19,15 @@ var invalidJson = ["", ` \t \n ${whiteSpace} `, "{", "{[[}"];
 invalidJson.forEach((testString) => {
   var expected = `Expect to recover from invalid JSON: ${testString}`;
   data.jsonText = testString;
+  data.checkConformance = true;
   var result = processor.process(data);
   SimpleTest.is(result.start_url, docURL.href, expected);
+  SimpleTest.ok(
+    [...result.moz_validation].find(x => x.error && x.type === "json"),
+    "A JSON error message is included");
 });
 
-var validButUnhelpful = ["1", 1, "", "[{}]"];
+var validButUnhelpful = ["1", 1, "[{}]"];
 validButUnhelpful.forEach((testString) => {
   var expected = `Expect to recover from valid JSON: ${testString}`;
   data.jsonText = testString;

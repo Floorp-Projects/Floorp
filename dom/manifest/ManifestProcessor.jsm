@@ -93,7 +93,9 @@ var ManifestProcessor = {
     let rawManifest = {};
     try {
       rawManifest = JSON.parse(jsonText);
-    } catch (e) {}
+    } catch (e) {
+      errors.push({ type: "json", error: e.message });
+    }
     if (rawManifest === null) {
       return null;
     }
