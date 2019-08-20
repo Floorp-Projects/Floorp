@@ -612,6 +612,9 @@ class EditorBase : public nsIEditor,
   struct MOZ_STACK_CLASS TopLevelEditSubActionData final {
     friend class AutoEditActionDataSetter;
 
+    // If we have created a new block element, set to it.
+    RefPtr<Element> mNewBlockElement;
+
     // If we tried to delete selection, set to true.
     bool mDidDeleteSelection;
 
@@ -639,6 +642,7 @@ class EditorBase : public nsIEditor,
 
    private:
     void Clear() {
+      mNewBlockElement = nullptr;
       mDidDeleteSelection = false;
       mDidExplicitlySetInterLine = false;
       mDidDeleteNonCollapsedRange = false;
