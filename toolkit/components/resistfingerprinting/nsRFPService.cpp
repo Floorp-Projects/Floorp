@@ -775,7 +775,9 @@ void nsRFPService::UpdateRFPPref() {
 
   UpdateTimers();
 
-  if (StaticPrefs::privacy_resistFingerprinting()) {
+  bool privacyResistFingerprinting =
+      StaticPrefs::privacy_resistFingerprinting();
+  if (privacyResistFingerprinting) {
     PR_SetEnv("TZ=UTC");
   } else if (sInitialized) {
     // We will not touch the TZ value if 'privacy.resistFingerprinting' is false
@@ -808,15 +810,19 @@ void nsRFPService::UpdateRFPPref() {
     }
   }
 
-  // localtime_r (and other functions) may not call tzset, so do this here after
-  // changing TZ to ensure all <time.h> functions use the new time zone.
+  // If and only if the time zone was changed above, propagate the change to the
+  // <time.h> functions and the JS runtime.
+  if (privacyResistFingerprinting || sInitialized) {
+    // localtime_r (and other functions) may not call tzset, so do this here
+    // after changing TZ to ensure all <time.h> functions use the new time zone.
 #if defined(XP_WIN)
-  _tzset();
+    _tzset();
 #else
-  tzset();
+    tzset();
 #endif
 
-  nsJSUtils::ResetTimeZone();
+    nsJSUtils::ResetTimeZone();
+  }
 }
 
 void nsRFPService::StartShutdown() {
