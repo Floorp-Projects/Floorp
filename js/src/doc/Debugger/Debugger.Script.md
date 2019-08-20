@@ -93,6 +93,10 @@ from its prototype:
 :   True if this instance refers to a `JSScript` for an async function, defined
     with an `async function` expression or statement. False otherwise.
 
+`isFunction`
+:   True if this instance refers to a `JSScript` for a function. False
+    otherwise.
+
 `isModule`
 :   True if this instance refers to a `JSScript` that was parsed and loaded
     as an ECMAScript module. False otherwise.
