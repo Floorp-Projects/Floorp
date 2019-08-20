@@ -303,7 +303,16 @@ static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
   MOZ_RELEASE_ASSERT(--arit == mb.ReaderAt(0));
   MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(0));
 
+  MOZ_RELEASE_ASSERT(arit++ == mb.ReaderAt(0));
+  MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(1));
+
+  MOZ_RELEASE_ASSERT(arit-- == mb.ReaderAt(1));
+  MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(0));
+
   MOZ_RELEASE_ASSERT(arit + 3 == mb.ReaderAt(3));
+  MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(0));
+
+  MOZ_RELEASE_ASSERT(4 + arit == mb.ReaderAt(4));
   MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(0));
 
   // (Can't have assignments inside asserts, hence the split.)
@@ -316,6 +325,10 @@ static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
 
   const bool checkMinusEq = ((arit -= 2) == mb.ReaderAt(1));
   MOZ_RELEASE_ASSERT(checkMinusEq);
+  MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(1));
+
+  // Random access.
+  MOZ_RELEASE_ASSERT(&arit[3] == &*(arit + 3));
   MOZ_RELEASE_ASSERT(arit == mb.ReaderAt(1));
 
   // Iterator difference.
@@ -349,6 +362,45 @@ static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
   // Or assigned.
   it2 = it;
   MOZ_RELEASE_ASSERT(it2.CurrentIndex() == 2);
+
+  // Iterator traits.
+  static_assert(std::is_same<std::iterator_traits<MB::Reader>::difference_type,
+                             MB::Index>::value,
+                "ModuloBuffer::Reader::difference_type should be Index");
+  static_assert(std::is_same<std::iterator_traits<MB::Reader>::value_type,
+                             MB::Byte>::value,
+                "ModuloBuffer::Reader::value_type should be Byte");
+  static_assert(std::is_same<std::iterator_traits<MB::Reader>::pointer,
+                             const MB::Byte*>::value,
+                "ModuloBuffer::Reader::pointer should be const Byte*");
+  static_assert(std::is_same<std::iterator_traits<MB::Reader>::reference,
+                             const MB::Byte&>::value,
+                "ModuloBuffer::Reader::reference should be const Byte&");
+  static_assert(std::is_base_of<
+                    std::input_iterator_tag,
+                    std::iterator_traits<MB::Reader>::iterator_category>::value,
+                "ModuloBuffer::Reader::iterator_category should be derived "
+                "from input_iterator_tag");
+  static_assert(std::is_base_of<
+                    std::forward_iterator_tag,
+                    std::iterator_traits<MB::Reader>::iterator_category>::value,
+                "ModuloBuffer::Reader::iterator_category should be derived "
+                "from forward_iterator_tag");
+  static_assert(std::is_base_of<
+                    std::bidirectional_iterator_tag,
+                    std::iterator_traits<MB::Reader>::iterator_category>::value,
+                "ModuloBuffer::Reader::iterator_category should be derived "
+                "from bidirectional_iterator_tag");
+  static_assert(
+      std::is_same<std::iterator_traits<MB::Reader>::iterator_category,
+                   std::random_access_iterator_tag>::value,
+      "ModuloBuffer::Reader::iterator_category should be "
+      "random_access_iterator_tag");
+
+  // Use as input iterator by std::string constructor (which is only considered
+  // with proper input iterators.)
+  std::string s(mb.ReaderAt(0), mb.ReaderAt(2));
+  MOZ_RELEASE_ASSERT(s == "xy");
 
   // Write 4-byte number at index 2.
   it.WriteObject(int32_t(123));
