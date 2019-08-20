@@ -1499,6 +1499,7 @@ const KeyShortcuts = __webpack_require__(425);
 const { ZoomKeys } = __webpack_require__(426);
 const EventEmitter = __webpack_require__(65);
 const asyncStorage = __webpack_require__(427);
+const asyncStoreHelper = __webpack_require__(516);
 const SourceUtils = __webpack_require__(428);
 const Telemetry = __webpack_require__(429);
 const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(430);
@@ -1509,6 +1510,7 @@ module.exports = {
   PrefsHelper,
   ZoomKeys,
   asyncStorage,
+  asyncStoreHelper,
   EventEmitter,
   SourceUtils,
   Telemetry,
@@ -6152,6 +6154,66 @@ function log(aMsg) {
 }
 
 module.exports = PluralForm;
+
+/***/ }),
+
+/***/ 516:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+
+
+const asyncStorage = __webpack_require__(427);
+
+/*
+ * asyncStoreHelper wraps asyncStorage so that it is easy to define project
+ * specific properties. It is similar to PrefsHelper.
+ *
+ * e.g.
+ *   const asyncStore = asyncStoreHelper("r", {a: "_a"})
+ *   asyncStore.a         // => asyncStorage.getItem("r._a")
+ *   asyncStore.a = 2     // => asyncStorage.setItem("r._a", 2)
+ */
+function asyncStoreHelper(root, mappings) {
+  let store = {};
+
+  function getMappingKey(key) {
+    return Array.isArray(mappings[key]) ? mappings[key][0] : mappings[key];
+  }
+
+  function getMappingDefaultValue(key) {
+    return Array.isArray(mappings[key]) ? mappings[key][1] : null;
+  }
+
+  Object.keys(mappings).map(key => Object.defineProperty(store, key, {
+    async get() {
+      const value = await asyncStorage.getItem(`${root}.${getMappingKey(key)}`);
+      return value || getMappingDefaultValue(key);
+    },
+    set(value) {
+      return asyncStorage.setItem(`${root}.${getMappingKey(key)}`, value);
+    }
+  }));
+
+  store = new Proxy(store, {
+    set: function (target, property, value, receiver) {
+      if (!mappings.hasOwnProperty(property)) {
+        throw new Error(`AsyncStore: ${property} is not defined in mappings`);
+      }
+
+      Reflect.set(...arguments);
+      return true;
+    }
+  });
+
+  return store;
+}
+
+module.exports = asyncStoreHelper;
 
 /***/ }),
 

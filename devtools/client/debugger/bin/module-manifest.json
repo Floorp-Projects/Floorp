@@ -663,7 +663,8 @@
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/convertToJSON.js": 512,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmXScopes.js": 513,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmDwarfExpressions.js": 514,
-      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-source-map/src/utils/assetRootBrowser.js": 515
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-source-map/src/utils/assetRootBrowser.js": 515,
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../devtools-modules/src/async-store-helper.js": 516
     },
     "usedIds": {
       "0": 0,
@@ -1181,7 +1182,8 @@
       "512": 512,
       "513": 513,
       "514": 514,
-      "515": 515
+      "515": 515,
+      "516": 516
     }
   },
   "chunks": {
