@@ -44,6 +44,10 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   bool SetupConfig(const webrtc::VideoCodec* aCodecSettings);
   bool CreateEncoder(const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
+  RefPtr<MediaData> CreateVideoDataFromWebrtcVideoFrame(
+      const webrtc::VideoFrame& aFrame, bool aIsKeyFrame);
+
+  void ProcessEncode(const RefPtr<MediaData>& aInputData);
 
   AbstractThread* OwnerThread() const { return mTaskQueue; }
   bool OnTaskQueue() const { return OwnerThread()->IsCurrentThreadIn(); };
@@ -56,7 +60,9 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
 
   VideoInfo mInfo;
   MediaResult mError = NS_OK;
+  MediaDataEncoder::EncodedData mEncodedFrames;
   webrtc::H264PacketizationMode mMode;
+  uint32_t mMaxFrameRate;
 };
 
 }  // namespace mozilla
