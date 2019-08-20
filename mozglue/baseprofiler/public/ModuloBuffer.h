@@ -8,6 +8,7 @@
 #define ModuloBuffer_h
 
 #include "mozilla/leb128iterator.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/UniquePtr.h"
@@ -104,6 +105,22 @@ class ModuloBuffer {
 
   PowerOfTwo<Length> BufferLength() const {
     return PowerOfTwo<Length>(mMask.MaskValue() + 1);
+  }
+
+  // Size of external resources.
+  // Note: `mBufferDeleter`'s potential external data (for its captures) is not
+  // included, as it's hidden in the `std::function` implementation.
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    if (!mBufferDeleter) {
+      // If we don't have a buffer deleter, assume we don't own the data, so
+      // it's probably on the stack, or should be reported by its owner.
+      return 0;
+    }
+    return aMallocSizeOf(mBuffer);
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   // All ModuloBuffer operations should be done through this iterator, which has
