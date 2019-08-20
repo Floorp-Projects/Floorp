@@ -126,8 +126,10 @@
 }
 
 .expressions-list .tree.object-inspector .node.object-node {
-  display: flex;
-  align-items: center;
+  max-width: calc(113% - var(--breakpoint-expression-right-clear-space));
+  min-width: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .expression-container__close-btn {
