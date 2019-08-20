@@ -479,10 +479,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       loadGroup = doc->GetDocumentLoadGroup();
       cookieSettings = doc->CookieSettings();
 
-      nsAutoCString fileNameString;
-      if (nsJSUtils::GetCallingLocation(cx, fileNameString)) {
-        isTrackingFetch = doc->IsScriptTracking(fileNameString);
-      }
+      isTrackingFetch = doc->IsScriptTracking(cx);
     } else {
       principal = aGlobal->PrincipalOrNull();
       if (NS_WARN_IF(!principal)) {

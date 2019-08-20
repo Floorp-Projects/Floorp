@@ -3904,11 +3904,13 @@ class Document : public nsINode,
   virtual AbstractThread* AbstractMainThreadFor(
       TaskCategory aCategory) override;
 
-  // The URLs passed to these functions should match what
-  // JS::DescribeScriptedCaller() returns, since these APIs are used to
+  // The URLs passed to this function should match what
+  // JS::DescribeScriptedCaller() returns, since this API is used to
   // determine whether some code is being called from a tracking script.
   void NoteScriptTrackingStatus(const nsACString& aURL, bool isTracking);
-  bool IsScriptTracking(const nsACString& aURL) const;
+  // The JSContext passed to this method represents the context that we want to
+  // determine if it belongs to a tracker.
+  bool IsScriptTracking(JSContext* aCx) const;
 
   // For more information on Flash classification, see
   // toolkit/components/url-classifier/flash-block-lists.rst
