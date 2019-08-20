@@ -304,13 +304,13 @@ static const int myanmar_syllable_machine_en_main = 0;
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | myanmar_##syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
 
 static void
-find_syllables (hb_buffer_t *buffer)
+find_syllables_myanmar (hb_buffer_t *buffer)
 {
   unsigned int p, pe, eof, ts, te, act HB_UNUSED;
   int cs;

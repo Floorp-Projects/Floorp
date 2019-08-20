@@ -419,6 +419,10 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
+print ('#include "hb.hh"')
+print ()
+print ('#ifndef HB_NO_OT_SHAPE')
+print ()
 print ('#include "hb-ot-shape-complex-use.hh"')
 print ()
 
@@ -533,6 +537,8 @@ for k,v in sorted(use_positions.items()):
 		tag = k + suf
 		print ("#undef %s" % tag)
 print ()
+print ()
+print ('#endif')
 print ("/* == End of generated table == */")
 
 # Maintain at least 50% occupancy in the table */

@@ -106,32 +106,6 @@ retry:
   return d;
 }
 
-static void hb_graphite2_release_table(const void *data, const void *table_buffer)
-{
-  hb_graphite2_face_data_t *face_data = (hb_graphite2_face_data_t *) data;
-  hb_graphite2_tablelist_t *tlist = face_data->tlist;
-
-  hb_graphite2_tablelist_t *prev = nullptr;
-  hb_graphite2_tablelist_t *curr = tlist;
-  while (curr)
-  {
-    if (hb_blob_get_data(curr->blob, nullptr) == table_buffer)
-    {
-      if (prev == nullptr)
-        face_data->tlist.cmpexch(tlist, curr->next);
-      else
-        prev->next = curr->next;
-      hb_blob_destroy(curr->blob);
-      free(curr);
-      break;
-    }
-    prev = curr;
-    curr = curr->next;
-  }
-}
-
-static gr_face_ops hb_graphite2_face_ops = { sizeof(gr_face_ops), hb_graphite2_get_table, hb_graphite2_release_table };
-
 hb_graphite2_face_data_t *
 _hb_graphite2_shaper_face_data_create (hb_face_t *face)
 {
@@ -150,7 +124,7 @@ _hb_graphite2_shaper_face_data_create (hb_face_t *face)
     return nullptr;
 
   data->face = face;
-  data->grface = gr_make_face_with_ops (data, &hb_graphite2_face_ops, gr_face_preloadAll);
+  data->grface = gr_make_face (data, &hb_graphite2_get_table, gr_face_preloadAll);
 
   if (unlikely (!data->grface)) {
     free (data);

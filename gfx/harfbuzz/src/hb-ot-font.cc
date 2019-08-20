@@ -230,32 +230,24 @@ hb_ot_get_glyph_from_name (hb_font_t *font HB_UNUSED,
 
 static hb_bool_t
 hb_ot_get_font_h_extents (hb_font_t *font,
-			  void *font_data,
+			  void *font_data HB_UNUSED,
 			  hb_font_extents_t *metrics,
 			  void *user_data HB_UNUSED)
 {
-  const hb_ot_face_t *ot_face = (const hb_ot_face_t *) font_data;
-  const OT::hmtx_accelerator_t &hmtx = *ot_face->hmtx;
-  metrics->ascender = font->em_scale_y (hmtx.ascender);
-  metrics->descender = font->em_scale_y (hmtx.descender);
-  metrics->line_gap = font->em_scale_y (hmtx.line_gap);
-  // TODO Hook up variations.
-  return hmtx.has_font_extents;
+  return _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER, &metrics->ascender) &&
+	 _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_HORIZONTAL_DESCENDER, &metrics->descender) &&
+	 _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_HORIZONTAL_LINE_GAP, &metrics->line_gap);
 }
 
 static hb_bool_t
 hb_ot_get_font_v_extents (hb_font_t *font,
-			  void *font_data,
+			  void *font_data HB_UNUSED,
 			  hb_font_extents_t *metrics,
 			  void *user_data HB_UNUSED)
 {
-  const hb_ot_face_t *ot_face = (const hb_ot_face_t *) font_data;
-  const OT::vmtx_accelerator_t &vmtx = *ot_face->vmtx;
-  metrics->ascender = font->em_scale_x (vmtx.ascender);
-  metrics->descender = font->em_scale_x (vmtx.descender);
-  metrics->line_gap = font->em_scale_x (vmtx.line_gap);
-  // TODO Hook up variations.
-  return vmtx.has_font_extents;
+  return _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_VERTICAL_ASCENDER, &metrics->ascender) &&
+	 _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_VERTICAL_DESCENDER, &metrics->descender) &&
+	 _hb_ot_metrics_get_position_common (font, HB_OT_METRICS_TAG_VERTICAL_LINE_GAP, &metrics->line_gap);
 }
 
 #if HB_USE_ATEXIT

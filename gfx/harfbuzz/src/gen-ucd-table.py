@@ -6,8 +6,8 @@ import io, os.path, sys, re
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-if len (sys.argv) != 2:
-	print("usage: ./gen-ucd-table ucd.nounihan.grouped.xml", file=sys.stderr)
+if len (sys.argv) not in (2, 3):
+	print("usage: ./gen-ucd-table ucd.nounihan.grouped.xml [/path/to/hb-common.h]", file=sys.stderr)
 	sys.exit(1)
 
 # https://github.com/harfbuzz/packtab
@@ -17,6 +17,8 @@ import packTab.ucdxml
 logging.info('Loading UCDXML...')
 ucdxml = packTab.ucdxml.load_ucdxml(sys.argv[1])
 ucd = packTab.ucdxml.ucdxml_get_repertoire(ucdxml)
+
+hb_common_h = 'hb-common.h' if len (sys.argv) < 3 else sys.argv[2]
 
 logging.info('Preparing data tables...')
 
@@ -68,7 +70,7 @@ for i,v in enumerate(('Cc', 'Cf', 'Cn', 'Co', 'Cs', 'Ll', 'Lm', 'Lo', 'Lt', 'Lu'
 sc_order = dict()
 sc_array = []
 sc_re = re.compile(r"\b(HB_SCRIPT_[_A-Z]*).*HB_TAG [(]'(.)','(.)','(.)','(.)'[)]")
-for line in open('hb-common.h'):
+for line in open(hb_common_h):
     m = sc_re.search (line)
     if not m: continue
     name = m.group(1)

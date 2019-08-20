@@ -248,7 +248,7 @@ struct SingleSubst
     if (unlikely (!c->extend_min (u.format))) return_trace (false);
     unsigned format = 2;
     unsigned delta = 0;
-    if (glyphs.len ())
+    if (glyphs)
     {
       format = 1;
       auto get_delta = [=] (hb_codepoint_pair_t _) {
@@ -1409,6 +1409,7 @@ struct GSUB_accelerator_t : GSUB::accelerator_t {};
 
 /* Out-of-class implementation for methods recursing */
 
+#ifndef HB_NO_OT_LAYOUT
 /*static*/ inline bool ExtensionSubst::is_reverse () const
 {
   unsigned int type = get_type ();
@@ -1416,14 +1417,12 @@ struct GSUB_accelerator_t : GSUB::accelerator_t {};
     return CastR<ExtensionSubst> (get_subtable<SubTable>()).is_reverse ();
   return SubstLookup::lookup_type_is_reverse (type);
 }
-
 template <typename context_t>
 /*static*/ inline typename context_t::return_t SubstLookup::dispatch_recurse_func (context_t *c, unsigned int lookup_index)
 {
   const SubstLookup &l = c->face->table.GSUB.get_relaxed ()->table->get_lookup (lookup_index);
   return l.dispatch (c);
 }
-
 /*static*/ inline bool SubstLookup::apply_recurse_func (hb_ot_apply_context_t *c, unsigned int lookup_index)
 {
   const SubstLookup &l = c->face->table.GSUB.get_relaxed ()->table->get_lookup (lookup_index);
@@ -1436,6 +1435,8 @@ template <typename context_t>
   c->set_lookup_props (saved_lookup_props);
   return ret;
 }
+#endif
+
 
 } /* namespace OT */
 

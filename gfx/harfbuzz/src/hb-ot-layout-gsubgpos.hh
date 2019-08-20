@@ -483,7 +483,13 @@ struct hb_ot_apply_context_t :
 			iter_input (), iter_context (),
 			font (font_), face (font->face), buffer (buffer_),
 			recurse_func (nullptr),
-			gdef (*face->table.GDEF->table),
+			gdef (
+#ifndef HB_NO_OT_LAYOUT
+			      *face->table.GDEF->table
+#else
+			      Null(GDEF)
+#endif
+			     ),
 			var_store (gdef.get_var_store ()),
 			direction (buffer_->props.direction),
 			lookup_mask (1),

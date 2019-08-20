@@ -13,6 +13,10 @@
  * # Date: 2019-01-28, 22:16:47 GMT
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-shape-complex-vowel-constraints.hh"
 
 static void
@@ -440,4 +444,6 @@ _hb_preprocess_text_vowel_constraints (const hb_ot_shape_plan_t *plan HB_UNUSED,
   }
 }
 
+
+#endif
 /* == End of generated functions == */

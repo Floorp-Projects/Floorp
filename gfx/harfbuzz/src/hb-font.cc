@@ -1300,6 +1300,8 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
 
   1000, /* x_scale */
   1000, /* y_scale */
+  1<<16, /* x_mult */
+  1<<16, /* y_mult */
 
   0, /* x_ppem */
   0, /* y_ppem */
@@ -1330,6 +1332,7 @@ _hb_font_create (hb_face_t *face)
   font->klass = hb_font_funcs_get_empty ();
   font->data.init0 (font);
   font->x_scale = font->y_scale = hb_face_get_upem (face);
+  font->x_mult = font->y_mult = 1 << 16;
 
   return font;
 }
@@ -1601,7 +1604,9 @@ hb_font_set_face (hb_font_t *font,
 
   hb_face_t *old = font->face;
 
+  hb_face_make_immutable (face);
   font->face = hb_face_reference (face);
+  font->mults_changed ();
 
   hb_face_destroy (old);
 }
@@ -1711,6 +1716,7 @@ hb_font_set_scale (hb_font_t *font,
 
   font->x_scale = x_scale;
   font->y_scale = y_scale;
+  font->mults_changed ();
 }
 
 /**
@@ -1855,6 +1861,7 @@ hb_font_set_variations (hb_font_t *font,
 				  normalized, coords_length);
   _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
 }
+
 /**
  * hb_font_set_var_coords_design:
  *
@@ -1874,6 +1881,33 @@ hb_font_set_var_coords_design (hb_font_t *font,
 
   hb_ot_var_normalize_coords (font->face, coords_length, coords, normalized);
   _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
+}
+
+/**
+ * hb_font_set_var_named_instance:
+ * @font: a font.
+ * @instance_index: named instance index.
+ *
+ * Sets design coords of a font from a named instance index.
+ *
+ * Since: 2.6.0
+ */
+void
+hb_font_set_var_named_instance (hb_font_t *font,
+				unsigned instance_index)
+{
+  if (hb_object_is_immutable (font))
+    return;
+
+  unsigned int coords_length = hb_ot_var_named_instance_get_design_coords (font->face, instance_index, nullptr, nullptr);
+
+  float *coords = coords_length ? (float *) calloc (coords_length, sizeof (float)) : nullptr;
+  if (unlikely (coords_length && !coords))
+    return;
+
+  hb_ot_var_named_instance_get_design_coords (font->face, instance_index, &coords_length, coords);
+  hb_font_set_var_coords_design (font, coords, coords_length);
+  free (coords);
 }
 #endif
 
