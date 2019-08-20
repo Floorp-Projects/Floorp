@@ -2024,7 +2024,7 @@ function initializeIntlObject(obj, type, lazyData) {
     internals.lazyData = lazyData;
     internals.internalProps = null;
 
-    assert(UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT) === null,
+    assert(UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT) === undefined,
            "Internal slot already initialized?");
     UnsafeSetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT, internals);
 }

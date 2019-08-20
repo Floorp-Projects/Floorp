@@ -127,10 +127,6 @@ static bool NumberFormat(JSContext* cx, const CallArgs& args, bool construct) {
     return false;
   }
 
-  numberFormat->setFixedSlot(NumberFormatObject::INTERNALS_SLOT, NullValue());
-  numberFormat->setNumberFormatter(nullptr);
-  numberFormat->setFormattedNumber(nullptr);
-
   RootedValue thisValue(cx,
                         construct ? ObjectValue(*numberFormat) : args.thisv());
   HandleValue locales = args.get(0);
