@@ -192,7 +192,6 @@ HTMLEditRules::HTMLEditRules()
       mInitialized(false),
       mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false),
-      mDidEmptyParentBlocksRemoved(false),
       mRestoreContentEditableCount(false),
       mJoinOffset(0) {
   mIsHTMLEditRules = true;
@@ -203,7 +202,6 @@ void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
   mDocChangeRange = nullptr;
   mReturnInEmptyLIKillsList = true;
-  mDidEmptyParentBlocksRemoved = false;
   mRestoreContentEditableCount = false;
   mUtilRange = nullptr;
   mJoinOffset = 0;
@@ -497,7 +495,9 @@ nsresult HTMLEditRules::AfterEditInner() {
         HTMLEditorRef()
             .TopLevelEditSubActionDataRef()
             .mDidDeleteNonCollapsedRange &&
-        !mDidEmptyParentBlocksRemoved) {
+        !HTMLEditorRef()
+             .TopLevelEditSubActionDataRef()
+             .mDidDeleteEmptyParentBlocks) {
       nsresult rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -608,7 +608,9 @@ nsresult HTMLEditRules::AfterEditInner() {
     // we haven't removed new empty blocks.  Note that if empty block parents
     // are removed, Selection should've been adjusted by the method which
     // did it.
-    if (!mDidEmptyParentBlocksRemoved) {
+    if (!HTMLEditorRef()
+             .TopLevelEditSubActionDataRef()
+             .mDidDeleteEmptyParentBlocks) {
       switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
         case EditSubAction::eInsertText:
         case EditSubAction::eInsertTextComingFromIME:
@@ -3172,11 +3174,15 @@ nsresult HTMLEditRules::WillDeleteSelection(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      mDidEmptyParentBlocksRemoved = rv == NS_OK;
+      HTMLEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mDidDeleteEmptyParentBlocks = rv == NS_OK;
     }
     // If we removed parent blocks, Selection should be collapsed at where
     // the most ancestor empty block has been.
-    if (mDidEmptyParentBlocksRemoved) {
+    if (HTMLEditorRef()
+            .TopLevelEditSubActionDataRef()
+            .mDidDeleteEmptyParentBlocks) {
       rv = SelectionRefPtr()->Collapse(startNode, startOffset);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;

@@ -1351,7 +1351,6 @@ class HTMLEditRules : public TextEditRules {
   bool mInitialized;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
-  bool mDidEmptyParentBlocksRemoved;
   bool mRestoreContentEditableCount;
   RefPtr<nsRange> mUtilRange;
   // Need to remember an int across willJoin/didJoin...
