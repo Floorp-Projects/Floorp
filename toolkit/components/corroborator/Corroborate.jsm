@@ -8,6 +8,7 @@ const { AppConstants } = ChromeUtils.import(
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -33,7 +34,10 @@ this.Corroborate = {
     // If an omni jar is missing, we consider that corrupt. Firefox could be running with
     // an omni jar unpacked, but it would never be signed correctly in that case so there
     // isn't a point checking further.
-    if (appOmniJar.exists() && greOmniJar.exists()) {
+    if (
+      (await OS.File.exists(appOmniJar.path)) &&
+      (await OS.File.exists(greOmniJar.path))
+    ) {
       corruptOmnijar = !(
         (await this.verifyJar(appOmniJar)) && (await this.verifyJar(greOmniJar))
       );
