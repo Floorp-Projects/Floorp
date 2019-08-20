@@ -108,7 +108,8 @@ class SearchPanel extends Component {
    * result tree.
    */
   renderValue(props) {
-    const member = props.member;
+    const { member } = props;
+    const { query } = this.props;
 
     // Handle only second level (zero based) that displays
     // the search result. Find the query string inside the
@@ -116,17 +117,51 @@ class SearchPanel extends Component {
     // within a span element with proper class name.
     // level 0 = resource name
     if (member.level === SEARCH_RESULT_LEVEL) {
-      const { query } = this.props;
-      const value = member.object.value;
-      const indexStart = value.indexOf(query);
+      const { object } = member;
+
+      if (object.startIndex && object.startIndex.length > 1) {
+        let indexStart = 0;
+        const allMatches = object.startIndex.map((match, index) => {
+          if (index === 0) {
+            indexStart = match - 50;
+          }
+
+          const highlightedMatch = [
+            span(
+              { key: "match-" + match },
+              object.value.substring(indexStart, match - query.length)
+            ),
+            span(
+              {
+                className: "query-match",
+                key: "match-" + match + "-highlight",
+              },
+              object.value.substring(match - query.length, match)
+            ),
+          ];
+
+          indexStart = match;
+
+          return highlightedMatch;
+        });
+
+        return span({}, allMatches);
+      }
+
+      const indexStart = object.value.indexOf(query);
       const indexEnd = indexStart + query.length;
 
-      return span(
-        {},
-        span({}, value.substring(0, indexStart)),
-        span({ className: "query-match" }, query),
-        span({}, value.substring(indexEnd, value.length))
-      );
+      if (indexStart > 0) {
+        return span(
+          {},
+          span({}, object.value.substring(0, indexStart)),
+          span(
+            { className: "query-match" },
+            object.value.substring(indexStart, indexStart + query.length)
+          ),
+          span({}, object.value.substring(indexEnd, object.value.length))
+        );
+      }
     }
 
     return this.provider.getValue(member.object);
