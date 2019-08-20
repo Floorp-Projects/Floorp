@@ -16,6 +16,11 @@ add_task(async function setup() {
       ["browser.contentblocking.report.monitor.url", ""],
       ["browser.contentblocking.report.monitor.sign_in_url", ""],
       ["browser.contentblocking.report.lockwise.url", ""],
+      ["browser.contentblocking.report.social.url", ""],
+      ["browser.contentblocking.report.cookie.url", ""],
+      ["browser.contentblocking.report.tracker.url", ""],
+      ["browser.contentblocking.report.fingerprinter.url", ""],
+      ["browser.contentblocking.report.cryptominer.url", ""],
     ],
   });
 
@@ -281,6 +286,119 @@ add_task(async function checkTelemetryClickEvents() {
       e[3] == "mtr_signup_button"
   );
   is(events.length, 1, `recorded telemetry for mtr_signup_button`);
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const socialLearnMoreLink = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("social-link");
+    }, "Learn more link for social tab exists");
+
+    socialLearnMoreLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(10);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "trackers_about_link" &&
+      e[4] == "social"
+  );
+  is(events.length, 1, `recorded telemetry for social trackers_about_link`);
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const cookieLearnMoreLink = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("cookie-link");
+    }, "Learn more link for cookie tab exists");
+
+    cookieLearnMoreLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(11);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "trackers_about_link" &&
+      e[4] == "cookie"
+  );
+  is(events.length, 1, `recorded telemetry for cookie trackers_about_link`);
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const trackerLearnMoreLink = await ContentTaskUtils.waitForCondition(() => {
+      return content.document.getElementById("tracker-link");
+    }, "Learn more link for tracker tab exists");
+
+    trackerLearnMoreLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(12);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "trackers_about_link" &&
+      e[4] == "tracker"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for content tracker trackers_about_link`
+  );
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const fingerprinterLearnMoreLink = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("fingerprinter-link");
+      },
+      "Learn more link for fingerprinter tab exists"
+    );
+
+    fingerprinterLearnMoreLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(13);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "trackers_about_link" &&
+      e[4] == "fingerprinter"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for fingerprinter trackers_about_link`
+  );
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    const cryptominerLearnMoreLink = await ContentTaskUtils.waitForCondition(
+      () => {
+        return content.document.getElementById("cryptominer-link");
+      },
+      "Learn more link for cryptominer tab exists"
+    );
+
+    cryptominerLearnMoreLink.click();
+  });
+
+  events = await waitForTelemetryEventCount(14);
+
+  events = events.filter(
+    e =>
+      e[1] == "security.ui.protections" &&
+      e[2] == "click" &&
+      e[3] == "trackers_about_link" &&
+      e[4] == "cryptominer"
+  );
+  is(
+    events.length,
+    1,
+    `recorded telemetry for cryptominer trackers_about_link`
+  );
 
   await BrowserTestUtils.removeTab(tab);
   // We open three extra tabs with the click events.
