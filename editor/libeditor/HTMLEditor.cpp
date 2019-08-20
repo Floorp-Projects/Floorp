@@ -145,10 +145,6 @@ HTMLEditor::HTMLEditor()
 }
 
 HTMLEditor::~HTMLEditor() {
-  if (mRules && mRules->AsHTMLEditRules()) {
-    mRules->AsHTMLEditRules()->EndListeningToEditSubActions();
-  }
-
   mTypeInState = nullptr;
 
   if (mDisabledLinkHandling) {

@@ -700,8 +700,17 @@ class EditorBase : public nsIEditor,
   struct MOZ_STACK_CLASS EditSubActionData final {
     uint32_t mJoinedLeftNodeLength;
 
+    // While this is set to false, TopLevelEditSubActionData::mChangedRange
+    // shouldn't be modified since in some cases, modifying it in the setter
+    // itself may be faster.  Note that we should affect this only for current
+    // edit sub action since mutation event listener may edit different range.
+    bool mAdjustChangedRangeFromListener;
+
    private:
-    void Clear() { mJoinedLeftNodeLength = 0; }
+    void Clear() {
+      mJoinedLeftNodeLength = 0;
+      mAdjustChangedRangeFromListener = true;
+    }
 
     friend EditorBase;
   };

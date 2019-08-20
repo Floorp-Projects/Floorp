@@ -190,7 +190,6 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
 HTMLEditRules::HTMLEditRules()
     : mHTMLEditor(nullptr),
       mInitialized(false),
-      mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false) {
   mIsHTMLEditRules = true;
   InitFields();
@@ -252,15 +251,12 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
         "Failed to insert <br> elements to empty list items and table cells");
   }
 
-  StartToListenToEditSubActions();
-
   mInitialized = true;  // Start to handle edit sub-actions.
 
   return NS_OK;
 }
 
 nsresult HTMLEditRules::DetachEditor() {
-  EndListeningToEditSubActions();
   mHTMLEditor = nullptr;
   return TextEditRules::DetachEditor();
 }
@@ -1461,7 +1457,10 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   // build the "doc changed range" ourselves, and it's
   // must faster to do it once here than to track all
   // the changes one at a time.
-  AutoLockListener lockit(&mListenerEnabled);
+  AutoRestore<bool> disableListener(
+      HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener);
+  HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener =
+      false;
 
   // don't change my selection in subtransactions
   AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
@@ -10168,8 +10167,8 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
 }
 
 void HTMLEditRules::DidCreateNode(Element& aNewElement) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10177,6 +10176,10 @@ void HTMLEditRules::DidCreateNode(Element& aNewElement) {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
@@ -10185,8 +10188,8 @@ void HTMLEditRules::DidCreateNode(Element& aNewElement) {
 }
 
 void HTMLEditRules::DidInsertNode(nsIContent& aContent) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10194,6 +10197,10 @@ void HTMLEditRules::DidInsertNode(nsIContent& aContent) {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
@@ -10202,8 +10209,8 @@ void HTMLEditRules::DidInsertNode(nsIContent& aContent) {
 }
 
 void HTMLEditRules::WillDeleteNode(nsINode& aChild) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10211,6 +10218,10 @@ void HTMLEditRules::WillDeleteNode(nsINode& aChild) {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddNodeToChangedRange(
@@ -10220,8 +10231,8 @@ void HTMLEditRules::WillDeleteNode(nsINode& aChild) {
 
 void HTMLEditRules::DidSplitNode(nsINode& aExistingRightNode,
                                  nsINode& aNewLeftNode) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10229,6 +10240,10 @@ void HTMLEditRules::DidSplitNode(nsINode& aExistingRightNode,
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddRangeToChangedRange(
@@ -10238,8 +10253,8 @@ void HTMLEditRules::DidSplitNode(nsINode& aExistingRightNode,
 }
 
 void HTMLEditRules::WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10247,6 +10262,10 @@ void HTMLEditRules::WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   // remember split point
   HTMLEditorRef().EditSubActionDataRef().mJoinedLeftNodeLength =
@@ -10254,8 +10273,8 @@ void HTMLEditRules::WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
 }
 
 void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10263,6 +10282,10 @@ void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddPointToChangedRange(
@@ -10275,8 +10298,8 @@ void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
 
 void HTMLEditRules::DidInsertText(nsINode& aTextNode, int32_t aOffset,
                                   const nsAString& aString) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10284,6 +10307,10 @@ void HTMLEditRules::DidInsertText(nsINode& aTextNode, int32_t aOffset,
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddRangeToChangedRange(
@@ -10294,8 +10321,8 @@ void HTMLEditRules::DidInsertText(nsINode& aTextNode, int32_t aOffset,
 
 void HTMLEditRules::DidDeleteText(nsINode& aTextNode, int32_t aOffset,
                                   int32_t aLength) {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10303,6 +10330,10 @@ void HTMLEditRules::DidDeleteText(nsINode& aTextNode, int32_t aOffset,
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddPointToChangedRange(
@@ -10311,8 +10342,8 @@ void HTMLEditRules::DidDeleteText(nsINode& aTextNode, int32_t aOffset,
 }
 
 void HTMLEditRules::WillDeleteSelection() {
-  if (!mListenerEnabled) {
-    return;
+  if (!mInitialized || !mHTMLEditor) {
+    return;  // We've been detached from editor, ignore.
   }
 
   if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -10320,6 +10351,10 @@ void HTMLEditRules::WillDeleteSelection() {
   }
 
   AutoSafeEditorData setData(*this, *mHTMLEditor);
+
+  if (!HTMLEditorRef().EditSubActionDataRef().mAdjustChangedRangeFromListener) {
+    return;  // Temporarily disabled by edit sub-action handler.
+  }
 
   // XXX Looks like that this is wrong.  We delete multiple selection ranges
   //     once, but this adds only first range into the changed range.
