@@ -1736,6 +1736,16 @@ class Matrix4x4Typed {
         aUnknown._31, aUnknown._32, aUnknown._33, aUnknown._34,
         aUnknown._41, aUnknown._42, aUnknown._43, aUnknown._44};
   }
+  /**
+   * For convenience, overload FromUnknownMatrix() for Maybe<Matrix>.
+   */
+  static Maybe<Matrix4x4Typed> FromUnknownMatrix(
+      const Maybe<Matrix4x4>& aUnknown) {
+    if (aUnknown.isSome()) {
+      return Some(FromUnknownMatrix(*aUnknown));
+    }
+    return Nothing();
+  }
 };
 
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits> Matrix4x4;
