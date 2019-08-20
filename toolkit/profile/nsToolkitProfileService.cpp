@@ -1254,8 +1254,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
   // Check the -profile command line argument. It accepts a single argument that
   // gives the path to use for the profile.
-  ArgResult ar = CheckArg(*aArgc, aArgv, "profile", &arg,
-                          CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  ArgResult ar = CheckArg(*aArgc, aArgv, "profile", &arg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --profile requires a path\n");
     return NS_ERROR_FAILURE;
@@ -1298,8 +1297,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   // Check the -createprofile command line argument. It accepts a single
   // argument that is either the name for the new profile or the name followed
   // by the path to use.
-  ar = CheckArg(*aArgc, aArgv, "createprofile", &arg,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  ar = CheckArg(*aArgc, aArgv, "createprofile", &arg, CheckArgFlag::RemoveArg);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR,
                "Error: argument --createprofile requires a profile name\n");
@@ -1369,14 +1367,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
 
-  ar = CheckArg(*aArgc, aArgv, "profilemanager", (const char**)nullptr,
-                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR,
-               "Error: argument --profilemanager is invalid when argument "
-               "--osint is specified\n");
-    return NS_ERROR_FAILURE;
-  }
+  ar = CheckArg(*aArgc, aArgv, "profilemanager");
   if (ar == ARG_FOUND) {
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }

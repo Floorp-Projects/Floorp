@@ -34,7 +34,7 @@ template <typename CharT>
 inline Maybe<bool> IsSafeModeRequested(
     int& aArgc, CharT* aArgv[],
     const SafeModeFlag aFlags = SafeModeFlag::Unset) {
-  CheckArgFlag checkArgFlags = CheckArgFlag::CheckOSInt;
+  CheckArgFlag checkArgFlags = CheckArgFlag::None;
   if (aFlags & SafeModeFlag::Unset) {
     checkArgFlags |= CheckArgFlag::RemoveArg;
   }
