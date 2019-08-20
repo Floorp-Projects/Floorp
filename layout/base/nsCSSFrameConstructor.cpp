@@ -3202,6 +3202,18 @@ nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
     SetRootElementFrameAndConstructCanvasAnonContent(newFrame, aState,
                                                      aFrameList);
   }
+
+  nsFrameConstructorSaveState absoluteSaveState;
+  blockFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  if (aStyleDisplay->IsAbsPosContainingBlock(newFrame)) {
+    aState.PushAbsoluteContainingBlock(blockFrame, blockFrame,
+                                       absoluteSaveState);
+  }
+  nsFrameConstructorSaveState floatSaveState;
+  if (blockFrame->IsFloatContainingBlock()) {
+    aState.PushFloatContainingBlock(blockFrame, floatSaveState);
+  }
+
   nsFrameList childList;
   ProcessChildren(aState, content, rubyStyle, rubyFrame, true, childList, false,
                   nullptr);
