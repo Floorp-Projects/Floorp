@@ -749,12 +749,11 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY protections.siteNotWorkingView.siteStillBroken.label "Site still broken after turning off protections?">
 <!ENTITY protections.siteNotWorkingView.sendReport.label "Send a report">
 
-<!ENTITY protections.blocking2.label "Blocked">
-<!ENTITY protections.notBlocking2.label "Allowed">
+<!ENTITY protections.blocking.label "Blocking">
+<!ENTITY protections.notBlocking.label "Not Blocking">
 <!ENTITY protections.notBlocking.why.label "Why?">
 <!ENTITY protections.notBlocking.why.etpOn.tooltip "Blocking these could break elements of some websites. Without trackers, some buttons, forms, and login fields might not work.">
 <!ENTITY protections.notBlocking.why.etpOff.tooltip "Turning off protections will allow all trackers on this site. It may also improve some website functionality.">
-<!ENTITY protections.notFound.label "None Detected">
 <!ENTITY protections.socialMediaTrackers.label "Social Media Trackers">
 <!ENTITY protections.crossSiteTrackingCookies.label "Cross-Site Tracking Cookies">
 <!ENTITY protections.trackingContent.label "Tracking Content">
