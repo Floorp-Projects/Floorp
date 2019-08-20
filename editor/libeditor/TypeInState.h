@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TypeInState_h
-#define TypeInState_h
+#ifndef mozilla_TypeInState_h
+#define mozilla_TypeInState_h
 
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGkAtoms.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -35,9 +36,62 @@ struct PropItem {
   nsAtom* attr;
   nsString value;
 
-  PropItem();
-  PropItem(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue);
-  ~PropItem();
+  PropItem() : tag(nullptr), attr(nullptr) { MOZ_COUNT_CTOR(PropItem); }
+  PropItem(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
+      : tag(aTag),
+        attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr),
+        value(aValue) {
+    MOZ_COUNT_CTOR(PropItem);
+  }
+  ~PropItem() { MOZ_COUNT_DTOR(PropItem); }
+};
+
+struct MOZ_STACK_CLASS StyleCache final {
+  nsAtom* mTag;
+  nsAtom* mAttr;
+  nsString mValue;
+  bool mPresent;
+
+  StyleCache() : mTag(nullptr), mAttr(nullptr), mPresent(false) {}
+  StyleCache(nsAtom* aTag, nsAtom* aAttr)
+      : mTag(aTag), mAttr(aAttr), mPresent(false) {}
+
+  inline void Clear() {
+    mPresent = false;
+    mValue.Truncate();
+  }
+};
+
+class MOZ_STACK_CLASS AutoStyleCacheArray final
+    : public AutoTArray<StyleCache, 19> {
+ public:
+  AutoStyleCacheArray() {
+    AppendElement(StyleCache(nsGkAtoms::b, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::i, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::u, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::face));
+    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::size));
+    AppendElement(StyleCache(nsGkAtoms::font, nsGkAtoms::color));
+    AppendElement(StyleCache(nsGkAtoms::tt, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::em, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::strong, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::dfn, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::code, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::samp, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::var, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::cite, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::abbr, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::acronym, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::backgroundColor, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::sub, nullptr));
+    AppendElement(StyleCache(nsGkAtoms::sup, nullptr));
+  }
+
+  void Clear() {
+    for (auto& styleCache : *this) {
+      styleCache.Clear();
+    }
+  }
 };
 
 class TypeInState final {
@@ -102,4 +156,4 @@ class TypeInState final {
 
 }  // namespace mozilla
 
-#endif  // #ifndef TypeInState_h
+#endif  // #ifndef mozilla_TypeInState_h

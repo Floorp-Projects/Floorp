@@ -43,7 +43,27 @@ struct RangeItem final {
     mEndContainer = aEndPoint.GetContainer();
     mEndOffset = aEndPoint.Offset();
   }
+  void Clear() {
+    mStartContainer = mEndContainer = nullptr;
+    mStartOffset = mEndOffset = 0;
+  }
   already_AddRefed<nsRange> GetRange();
+  bool IsCollapsed() const {
+    return mStartContainer == mEndContainer && mStartOffset == mEndOffset;
+  }
+  bool IsSet() const { return mStartContainer && mEndContainer; }
+  EditorDOMPoint StartPoint() const {
+    return EditorDOMPoint(mStartContainer, mStartOffset);
+  }
+  EditorDOMPoint EndPoint() const {
+    return EditorDOMPoint(mEndContainer, mEndOffset);
+  }
+  EditorRawDOMPoint StartRawPoint() const {
+    return EditorRawDOMPoint(mStartContainer, mStartOffset);
+  }
+  EditorRawDOMPoint EndRawPoint() const {
+    return EditorRawDOMPoint(mEndContainer, mEndOffset);
+  }
 
   NS_INLINE_DECL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(RangeItem)

@@ -2543,9 +2543,45 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnModifyDocumentInternal();
 
+  /**
+   * For saving allocation cost in the constructor of
+   * EditorBase::TopLevelEditSubActionData, we should reuse same RangeItem
+   * instance with all top level edit sub actions.
+   * The instance is always cleared when TopLevelEditSubActionData is
+   * destructed and the class is stack only class so that we don't need
+   * to (and also should not) add the RangeItem into the cycle collection.
+   */
+  already_AddRefed<RangeItem> GetSelectedRangeItemForTopLevelEditSubAction()
+      const {
+    if (!mSelectedRangeForTopLevelEditSubAction) {
+      mSelectedRangeForTopLevelEditSubAction = new RangeItem();
+    }
+    return do_AddRef(mSelectedRangeForTopLevelEditSubAction);
+  }
+
+  /**
+   * For saving allocation cost in the constructor of
+   * EditorBase::TopLevelEditSubActionData, we should reuse same nsRange
+   * instance with all top level edit sub actions.
+   * The instance is always cleared when TopLevelEditSubActionData is
+   * destructed, but AbstractRange::mOwner keeps grabbing the owner document
+   * so that we need to make it in the cycle collection.
+   */
+  already_AddRefed<nsRange> GetChangedRangeForTopLevelEditSubAction() const {
+    if (!mChangedRangeForTopLevelEditSubAction) {
+      mChangedRangeForTopLevelEditSubAction = new nsRange(GetDocument());
+    }
+    return do_AddRef(mChangedRangeForTopLevelEditSubAction);
+  }
+
  protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
+
+  // Used by TopLevelEditSubActionData::mSelectedRange.
+  mutable RefPtr<RangeItem> mSelectedRangeForTopLevelEditSubAction;
+  // Used by TopLevelEditSubActionData::mChangedRange.
+  mutable RefPtr<nsRange> mChangedRangeForTopLevelEditSubAction;
 
   bool mCRInParagraphCreatesParagraph;
 

@@ -6,6 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use crate::raw_mutex::RawMutex;
+use core::num::NonZeroUsize;
 use lock_api::{self, GetThreadId};
 
 /// Implementation of the `GetThreadId` trait for `lock_api::ReentrantMutex`.
@@ -14,11 +15,14 @@ pub struct RawThreadId;
 unsafe impl GetThreadId for RawThreadId {
     const INIT: RawThreadId = RawThreadId;
 
-    fn nonzero_thread_id(&self) -> usize {
+    fn nonzero_thread_id(&self) -> NonZeroUsize {
         // The address of a thread-local variable is guaranteed to be unique to the
         // current thread, and is also guaranteed to be non-zero.
         thread_local!(static KEY: u8 = unsafe { ::std::mem::uninitialized() });
-        KEY.with(|x| x as *const _ as usize)
+        KEY.with(|x| {
+            NonZeroUsize::new(x as *const _ as usize)
+                .expect("thread-local variable address is null")
+        })
     }
 }
 

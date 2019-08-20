@@ -109,13 +109,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
   if (tmp->mMaskTimer) {
     tmp->mMaskTimer->Cancel();
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRules)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedDocumentEncoder)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaskTimer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TextEditor, EditorBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRules)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedDocumentEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaskTimer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -656,7 +654,7 @@ nsresult TextEditor::DeleteSelectionAsSubAction(EDirection aDirection,
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteSelectedContent, aDirection);
   EditSubActionInfo subActionInfo(EditSubAction::eDeleteSelectedContent);
   subActionInfo.collapsedAction = aDirection;
@@ -698,7 +696,7 @@ nsresult TextEditor::DeleteSelectionWithTransaction(
 
   RefPtr<CharacterData> deleteCharData =
       CharacterData::FromNodeOrNull(deleteNode);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteSelectedContent, aDirection);
 
   if (mRules && mRules->AsHTMLEditRules()) {
@@ -917,8 +915,8 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
                                     ? EditSubAction::eInsertTextComingFromIME
                                     : EditSubAction::eInsertText;
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-      *this, editSubAction, nsIEditor::eNext);
+  AutoEditSubActionNotifier startToHandleEditSubAction(*this, editSubAction,
+                                                       nsIEditor::eNext);
 
   nsAutoString resultString;
   // XXX can we trust instring to outlive subActionInfo,
@@ -977,7 +975,7 @@ nsresult TextEditor::InsertLineBreakAsSubAction() {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertLineBreak, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eInsertLineBreak);
@@ -1033,7 +1031,7 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // This should emulates inserting text for better undo/redo behavior.
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext);
 
   if (!aReplaceRange) {
@@ -1084,7 +1082,7 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetText, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eSetText);
@@ -1547,7 +1545,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 
   nsresult rv = NS_OK;
   {
-    AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+    AutoEditSubActionNotifier startToHandleEditSubAction(
         *this, EditSubAction::eUndo, nsIEditor::eNone);
 
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
@@ -1619,7 +1617,7 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
 
   nsresult rv = NS_OK;
   {
-    AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+    AutoEditSubActionNotifier startToHandleEditSubAction(
         *this, EditSubAction::eRedo, nsIEditor::eNone);
 
     RefPtr<TransactionManager> transactionManager(mTransactionManager);
@@ -2001,7 +1999,7 @@ nsresult TextEditor::InsertWithQuotationsAsSubAction(
     quotedStuff.Append(char16_t('\n'));
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eInsertQuotedText);

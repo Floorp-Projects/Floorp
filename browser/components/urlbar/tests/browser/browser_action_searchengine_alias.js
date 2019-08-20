@@ -43,7 +43,7 @@ add_task(async function() {
 
   await promiseAutocompleteResultPopup("moz");
   Assert.equal(
-    gURLBar.textValue,
+    gURLBar.value,
     "moz",
     "Preselected search keyword result shouldn't automatically add a space"
   );

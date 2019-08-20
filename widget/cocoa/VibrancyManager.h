@@ -73,6 +73,8 @@ class VibrancyManager {
 
   bool HasVibrantRegions() { return !mVibrantRegions.IsEmpty(); }
 
+  LayoutDeviceIntRegion GetUnionOfVibrantRegions() const;
+
   /**
    * Return the fill color that should be drawn on top of the cleared window
    * parts. Usually this would be drawn by -[NSVisualEffectView drawRect:].

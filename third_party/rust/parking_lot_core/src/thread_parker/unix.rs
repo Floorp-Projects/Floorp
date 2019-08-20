@@ -34,11 +34,13 @@ pub struct ThreadParker {
     initialized: Cell<bool>,
 }
 
-impl ThreadParker {
-    pub const IS_CHEAP_TO_CONSTRUCT: bool = false;
+impl super::ThreadParkerT for ThreadParker {
+    type UnparkHandle = UnparkHandle;
+
+    const IS_CHEAP_TO_CONSTRUCT: bool = false;
 
     #[inline]
-    pub fn new() -> ThreadParker {
+    fn new() -> ThreadParker {
         ThreadParker {
             should_park: Cell::new(false),
             mutex: UnsafeCell::new(libc::PTHREAD_MUTEX_INITIALIZER),
@@ -47,27 +49,8 @@ impl ThreadParker {
         }
     }
 
-    // Initializes the condvar to use CLOCK_MONOTONIC instead of CLOCK_REALTIME.
-    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
     #[inline]
-    unsafe fn init(&self) {}
-    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
-    #[inline]
-    unsafe fn init(&self) {
-        let mut attr: libc::pthread_condattr_t = mem::uninitialized();
-        let r = libc::pthread_condattr_init(&mut attr);
-        debug_assert_eq!(r, 0);
-        let r = libc::pthread_condattr_setclock(&mut attr, libc::CLOCK_MONOTONIC);
-        debug_assert_eq!(r, 0);
-        let r = libc::pthread_cond_init(self.condvar.get(), &attr);
-        debug_assert_eq!(r, 0);
-        let r = libc::pthread_condattr_destroy(&mut attr);
-        debug_assert_eq!(r, 0);
-    }
-
-    // Prepares the parker. This should be called before adding it to the queue.
-    #[inline]
-    pub unsafe fn prepare_park(&self) {
+    unsafe fn prepare_park(&self) {
         self.should_park.set(true);
         if !self.initialized.get() {
             self.init();
@@ -75,10 +58,8 @@ impl ThreadParker {
         }
     }
 
-    // Checks if the park timed out. This should be called while holding the
-    // queue lock after park_until has returned false.
     #[inline]
-    pub unsafe fn timed_out(&self) -> bool {
+    unsafe fn timed_out(&self) -> bool {
         // We need to grab the mutex here because another thread may be
         // concurrently executing UnparkHandle::unpark, which is done without
         // holding the queue lock.
@@ -90,10 +71,8 @@ impl ThreadParker {
         should_park
     }
 
-    // Parks the thread until it is unparked. This should be called after it has
-    // been added to the queue, after unlocking the queue.
     #[inline]
-    pub unsafe fn park(&self) {
+    unsafe fn park(&self) {
         let r = libc::pthread_mutex_lock(self.mutex.get());
         debug_assert_eq!(r, 0);
         while self.should_park.get() {
@@ -104,11 +83,8 @@ impl ThreadParker {
         debug_assert_eq!(r, 0);
     }
 
-    // Parks the thread until it is unparked or the timeout is reached. This
-    // should be called after it has been added to the queue, after unlocking
-    // the queue. Returns true if we were unparked and false if we timed out.
     #[inline]
-    pub unsafe fn park_until(&self, timeout: Instant) -> bool {
+    unsafe fn park_until(&self, timeout: Instant) -> bool {
         let r = libc::pthread_mutex_lock(self.mutex.get());
         debug_assert_eq!(r, 0);
         while self.should_park.get() {
@@ -140,17 +116,36 @@ impl ThreadParker {
         true
     }
 
-    // Locks the parker to prevent the target thread from exiting. This is
-    // necessary to ensure that thread-local ThreadData objects remain valid.
-    // This should be called while holding the queue lock.
     #[inline]
-    pub unsafe fn unpark_lock(&self) -> UnparkHandle {
+    unsafe fn unpark_lock(&self) -> UnparkHandle {
         let r = libc::pthread_mutex_lock(self.mutex.get());
         debug_assert_eq!(r, 0);
 
         UnparkHandle {
             thread_parker: self,
         }
+    }
+}
+
+impl ThreadParker {
+    /// Initializes the condvar to use CLOCK_MONOTONIC instead of CLOCK_REALTIME.
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+    #[inline]
+    unsafe fn init(&self) {}
+
+    /// Initializes the condvar to use CLOCK_MONOTONIC instead of CLOCK_REALTIME.
+    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
+    #[inline]
+    unsafe fn init(&self) {
+        let mut attr: libc::pthread_condattr_t = mem::uninitialized();
+        let r = libc::pthread_condattr_init(&mut attr);
+        debug_assert_eq!(r, 0);
+        let r = libc::pthread_condattr_setclock(&mut attr, libc::CLOCK_MONOTONIC);
+        debug_assert_eq!(r, 0);
+        let r = libc::pthread_cond_init(self.condvar.get(), &attr);
+        debug_assert_eq!(r, 0);
+        let r = libc::pthread_condattr_destroy(&mut attr);
+        debug_assert_eq!(r, 0);
     }
 }
 
@@ -178,18 +173,13 @@ impl Drop for ThreadParker {
     }
 }
 
-// Handle for a thread that is about to be unparked. We need to mark the thread
-// as unparked while holding the queue lock, but we delay the actual unparking
-// until after the queue lock is released.
 pub struct UnparkHandle {
     thread_parker: *const ThreadParker,
 }
 
-impl UnparkHandle {
-    // Wakes up the parked thread. This should be called after the queue lock is
-    // released to avoid blocking the queue for too long.
+impl super::UnparkHandleT for UnparkHandle {
     #[inline]
-    pub unsafe fn unpark(self) {
+    unsafe fn unpark(self) {
         (*self.thread_parker).should_park.set(false);
 
         // We notify while holding the lock here to avoid races with the target

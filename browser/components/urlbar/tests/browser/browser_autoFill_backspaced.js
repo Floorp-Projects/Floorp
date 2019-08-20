@@ -12,11 +12,7 @@ async function test_autocomplete(data) {
   info(desc);
 
   await promiseAutocompleteResultPopup(typed);
-  Assert.equal(
-    gURLBar.textValue,
-    autofilled,
-    "autofilled value is as expected"
-  );
+  Assert.equal(gURLBar.value, autofilled, "autofilled value is as expected");
   if (onAutoFill) {
     onAutoFill();
   }
@@ -29,7 +25,7 @@ async function test_autocomplete(data) {
 
   await promiseSearchComplete();
 
-  Assert.equal(gURLBar.textValue, modified, "backspaced value is as expected");
+  Assert.equal(gURLBar.value, modified, "backspaced value is as expected");
 
   Assert.greater(
     UrlbarTestUtils.getResultCount(window),

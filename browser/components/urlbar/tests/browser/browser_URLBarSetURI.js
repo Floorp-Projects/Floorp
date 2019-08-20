@@ -32,7 +32,7 @@ var tests = [
     loadTabInWindow(window, function(tab) {
       gURLBar.handleRevert();
       is(
-        gURLBar.textValue,
+        gURLBar.value,
         "example.com",
         "URL bar had user/pass stripped after reverting"
       );
@@ -48,7 +48,7 @@ var tests = [
         openToolbarCustomizationUI(function() {
           closeToolbarCustomizationUI(function() {
             is(
-              win.gURLBar.textValue,
+              win.gURLBar.value,
               "example.com",
               "URL bar had user/pass stripped after customize"
             );
@@ -66,7 +66,7 @@ var tests = [
       BrowserTestUtils.loadURI(tab.linkedBrowser, "http://test1.example.com");
       tab.linkedBrowser.stop();
       is(
-        gURLBar.textValue,
+        gURLBar.value,
         "example.com",
         "URL bar had user/pass stripped after load error"
       );
@@ -86,7 +86,7 @@ function loadTabInWindow(win, callback) {
   BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url).then(() => {
     info("Tab loaded");
     is(
-      win.gURLBar.textValue,
+      win.gURLBar.value,
       "example.com",
       "URL bar had user/pass stripped initially"
     );

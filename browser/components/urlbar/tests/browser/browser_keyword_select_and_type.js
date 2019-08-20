@@ -72,7 +72,7 @@ add_task(async function() {
   await promiseSearchComplete();
 
   Assert.equal(
-    gURLBar.textValue,
+    gURLBar.value,
     "keyword ab",
     "urlbar should have expected input"
   );

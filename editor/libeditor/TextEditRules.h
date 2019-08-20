@@ -56,8 +56,7 @@ class Selection;
 class TextEditRules {
  protected:
   typedef EditorBase::AutoSelectionRestorer AutoSelectionRestorer;
-  typedef EditorBase::AutoTopLevelEditSubActionNotifier
-      AutoTopLevelEditSubActionNotifier;
+  typedef EditorBase::AutoEditSubActionNotifier AutoEditSubActionNotifier;
   typedef EditorBase::AutoTransactionsConserveSelection
       AutoTransactionsConserveSelection;
 
@@ -68,8 +67,7 @@ class TextEditRules {
   template <typename T>
   using OwningNonNull = OwningNonNull<T>;
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEditRules)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TextEditRules)
+  NS_INLINE_DECL_REFCOUNTING(TextEditRules)
 
   TextEditRules();
 
@@ -214,12 +212,7 @@ class TextEditRules {
    * This method may remove empty text node and makes guarantee that caret
    * is never at left of <br> element.
    */
-  enum class SetSelectionInterLinePosition {
-    Yes,
-    No,
-  };
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection(
-      SetSelectionInterLinePosition aSetSelectionInterLinePosition);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 
@@ -417,30 +410,6 @@ class MOZ_STACK_CLASS EditSubActionInfo final {
 
   // EditSubAction::eCreateOrRemoveBlock
   const nsAString* blockType;
-};
-
-/**
- * Stack based helper class for turning on/off the edit listener.
- */
-class MOZ_STACK_CLASS AutoLockListener final {
- public:
-  explicit AutoLockListener(bool* aEnabled)
-      : mEnabled(aEnabled), mOldState(false) {
-    if (mEnabled) {
-      mOldState = *mEnabled;
-      *mEnabled = false;
-    }
-  }
-
-  ~AutoLockListener() {
-    if (mEnabled) {
-      *mEnabled = mOldState;
-    }
-  }
-
- protected:
-  bool* mEnabled;
-  bool mOldState;
 };
 
 }  // namespace mozilla

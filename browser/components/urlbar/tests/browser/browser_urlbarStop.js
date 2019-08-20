@@ -15,25 +15,25 @@ add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, goodURL);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     gURLBar.trimValue(goodURL),
     "location bar reflects loaded page"
   );
 
   await typeAndSubmitAndStop(badURL);
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     gURLBar.trimValue(goodURL),
     "location bar reflects loaded page after stop()"
   );
   gBrowser.removeCurrentTab();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  is(gURLBar.textValue, "", "location bar is empty");
+  is(gURLBar.value, "", "location bar is empty");
 
   await typeAndSubmitAndStop(badURL);
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     gURLBar.trimValue(badURL),
     "location bar reflects stopped page in an empty tab"
   );
@@ -43,7 +43,7 @@ add_task(async function() {
 async function typeAndSubmitAndStop(url) {
   await promiseAutocompleteResultPopup(url, window, true);
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     gURLBar.trimValue(url),
     "location bar reflects loading page"
   );

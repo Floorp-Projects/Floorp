@@ -216,7 +216,7 @@ function checkKeys(testTuples) {
   for (let [key, value, selectedIndex] of testTuples) {
     EventUtils.synthesizeKey(key);
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), selectedIndex);
-    Assert.equal(gURLBar.value, value);
+    Assert.equal(gURLBar.untrimmedValue, value);
   }
 }
 
