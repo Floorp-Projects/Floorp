@@ -571,9 +571,9 @@ class nsContentUtils {
   static bool IsHTMLWhitespaceOrNBSP(char16_t aChar);
 
   /**
-   * Is the HTML local name a block element?
+   * https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
    */
-  static bool IsHTMLBlock(nsIContent* aContent);
+  static bool IsHTMLBlockLevelElement(nsIContent* aContent);
 
   enum ParseHTMLIntegerResultFlags {
     eParseHTMLInteger_NoFlags = 0,
