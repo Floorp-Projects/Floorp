@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Ci } = require("chrome");
 const { workerTargetSpec } = require("devtools/shared/specs/targets/worker");
 const {
   FrontClassWithSpec,
@@ -49,6 +50,18 @@ class WorkerTargetFront extends TargetMixin(
     this._attach = (async () => {
       const response = await super.attach();
 
+      const isServiceWorker = this.type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
+      if (isServiceWorker && this.getTrait("isParentInterceptEnabled")) {
+        // In parentIntercept mode, the worker target actor cannot call the APIs needed
+        // to prevent the worker from shutting down. Instead call attachDebugger on the
+        // registration because the ServiceWorkerRegistration actor lives in the parent
+        // process.
+        // TODO: Cleanup after Bug 1496997 lands (no need to check
+        // isParentInterceptEnabled trait)
+        this.registration = await this._getRegistration();
+        await this.registration.preventShutdown();
+      }
+
       this._url = response.url;
 
       // Immediately call `connect` in other to fetch console and thread actors
@@ -63,6 +76,33 @@ class WorkerTargetFront extends TargetMixin(
       return this.attachConsole();
     })();
     return this._attach;
+  }
+
+  async detach() {
+    let response;
+    try {
+      response = await super.detach();
+    } catch (e) {
+      console.warn(
+        `Error while detaching the worker target front: ${e.message}`
+      );
+    }
+
+    if (this.registration) {
+      await this.registration.allowShutdown();
+      this.registration = null;
+    }
+
+    return response;
+  }
+
+  async _getRegistration() {
+    const {
+      registrations,
+    } = await this.client.mainRoot.listServiceWorkerRegistrations();
+    return registrations.find(registrationFront => {
+      return this.id === registrationFront.activeWorker.id;
+    });
   }
 
   reconfigure() {
