@@ -63,10 +63,10 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
   // nsIDragService
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
-  InvokeDragSession(nsINode* aDOMNode, nsIPrincipal* aPrincipal,
-                    nsIArray* anArrayTransferables, uint32_t aActionType,
-                    nsContentPolicyType aContentPolicyType) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InvokeDragSession(
+      nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIArray* anArrayTransferables,
+      uint32_t aActionType, nsContentPolicyType aContentPolicyType) override;
   NS_IMETHOD StartDragSession() override;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
                                                uint32_t aKeyModifiers) override;

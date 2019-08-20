@@ -143,7 +143,7 @@ static int GmpFrameTypeToWebrtcFrameType(GMPVideoFrameType aIn,
 
 int32_t WebrtcGmpVideoEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
-    uint32_t aMaxPayloadSize) {
+    size_t aMaxPayloadSize) {
   if (!mMPS) {
     mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   }
@@ -438,7 +438,7 @@ void WebrtcGmpVideoEncoder::ReleaseGmp_g(
   aEncoder->Close_g();
 }
 
-int32_t WebrtcGmpVideoEncoder::ReleaseGmp() {
+int32_t WebrtcGmpVideoEncoder::Shutdown() {
   LOGD(("GMP Released:"));
   if (mGMPThread) {
     mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::ReleaseGmp_g,
@@ -449,7 +449,7 @@ int32_t WebrtcGmpVideoEncoder::ReleaseGmp() {
 }
 
 int32_t WebrtcGmpVideoEncoder::SetChannelParameters(uint32_t aPacketLoss,
-                                                    int aRTT) {
+                                                    int64_t aRTT) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 

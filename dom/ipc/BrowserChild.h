@@ -284,7 +284,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvSizeModeChanged(const nsSizeMode& aSizeMode);
 
   mozilla::ipc::IPCResult RecvChildToParentMatrix(
-      const mozilla::gfx::Matrix4x4& aMatrix);
+      const mozilla::Maybe<mozilla::gfx::Matrix4x4>& aMatrix);
 
   mozilla::ipc::IPCResult RecvActivate();
 
@@ -324,7 +324,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvRealDragEvent(const WidgetDragEvent& aEvent,
                                             const uint32_t& aDragAction,
                                             const uint32_t& aDropEffect,
-                                            nsIPrincipal* aPrincipal);
+                                            nsIPrincipal* aPrincipal,
+                                            nsIContentSecurityPolicy* aCsp);
 
   mozilla::ipc::IPCResult RecvRealKeyEvent(
       const mozilla::WidgetKeyboardEvent& aEvent);

@@ -2685,8 +2685,10 @@ main(int argc, char **argv)
             }
             if (cipher > 0) {
                 rv = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
-                if (rv != SECSuccess)
-                    SECU_PrintError(progName, "SSL_CipherPrefSet()");
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName, "SSL_CipherPrefSetDefault()");
+                    exit(9);
+                }
             } else {
                 fprintf(stderr,
                         "Invalid cipher specification (-c arg).\n");

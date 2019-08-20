@@ -18,7 +18,7 @@
  *     {
  *       "source": {
  *         "url": "http://www.example.com/download.txt",
- *         "referrer": "http://www.example.com/referrer.html"
+ *         "referrerInfo": serialized string represents referrerInfo object
  *       },
  *       "target": "/home/user/Downloads/download-2.txt"
  *     }

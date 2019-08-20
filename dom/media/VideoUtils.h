@@ -184,6 +184,7 @@ class AutoSetOnScopeExit {
 enum class MediaThreadType {
   PLAYBACK,          // MediaDecoderStateMachine and MediaFormatReader
   PLATFORM_DECODER,  // MediaDataDecoder
+  PLATFORM_ENCODER,  // MediaDataEncoder
   MSG_CONTROL,
   WEBRTC_DECODER,
   MDSM,

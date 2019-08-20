@@ -27,6 +27,7 @@ struct ServiceWorkerData {
   IPCServiceWorkerRegistrationDescriptor registrationDescriptor;
   nsString cacheName;
   uint32_t loadFlags;
+  nsString id;
 };
 
 union OptionalServiceWorkerData {

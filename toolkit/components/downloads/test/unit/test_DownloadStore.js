@@ -48,18 +48,23 @@ add_task(async function test_save_reload() {
   let [listForLoad, storeForLoad] = await promiseNewListAndStore(
     storeForSave.path
   );
+  let referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    NetUtil.newURI(TEST_REFERRER_URL)
+  );
 
   listForSave.add(await promiseNewDownload(httpUrl("source.txt")));
   listForSave.add(
     await Downloads.createDownload({
-      source: { url: httpUrl("empty.txt"), referrer: TEST_REFERRER_URL },
+      source: { url: httpUrl("empty.txt"), referrerInfo },
       target: getTempFile(TEST_TARGET_FILE_NAME),
     })
   );
 
   // This PDF download should not be serialized because it never succeeds.
   let pdfDownload = await Downloads.createDownload({
-    source: { url: httpUrl("empty.txt"), referrer: TEST_REFERRER_URL },
+    source: { url: httpUrl("empty.txt"), referrerInfo },
     target: getTempFile(TEST_TARGET_FILE_NAME),
     saver: "pdf",
   });
@@ -100,9 +105,19 @@ add_task(async function test_save_reload() {
     // The reloaded downloads have the same properties.
     Assert.equal(itemsForSave[i].source.url, itemsForLoad[i].source.url);
     Assert.equal(
-      itemsForSave[i].source.referrer,
-      itemsForLoad[i].source.referrer
+      !!itemsForSave[i].source.referrerInfo,
+      !!itemsForLoad[i].source.referrerInfo
     );
+    if (
+      itemsForSave[i].source.referrerInfo &&
+      itemsForLoad[i].source.referrerInfo
+    ) {
+      Assert.ok(
+        itemsForSave[i].source.referrerInfo.equals(
+          itemsForLoad[i].source.referrerInfo
+        )
+      );
+    }
     Assert.equal(itemsForSave[i].target.path, itemsForLoad[i].target.path);
     Assert.equal(
       itemsForSave[i].saver.toSerializable(),
@@ -155,7 +170,14 @@ add_task(async function test_load_string_predefined() {
   let filePathLiteral = JSON.stringify(targetPath);
   let sourceUriLiteral = JSON.stringify(httpUrl("source.txt"));
   let emptyUriLiteral = JSON.stringify(httpUrl("empty.txt"));
-  let referrerUriLiteral = JSON.stringify(TEST_REFERRER_URL);
+  let referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    NetUtil.newURI(TEST_REFERRER_URL)
+  );
+  let referrerInfoLiteral = JSON.stringify(
+    E10SUtils.serializeReferrerInfo(referrerInfo)
+  );
 
   let string =
     '{"list":[{"source":' +
@@ -167,8 +189,8 @@ add_task(async function test_load_string_predefined() {
     '{"source":{"url":' +
     emptyUriLiteral +
     "," +
-    '"referrer":' +
-    referrerUriLiteral +
+    '"referrerInfo":' +
+    referrerInfoLiteral +
     "}," +
     '"target":' +
     filePathLiteral +
@@ -188,7 +210,8 @@ add_task(async function test_load_string_predefined() {
   Assert.equal(items[0].target.path, targetPath);
 
   Assert.equal(items[1].source.url, httpUrl("empty.txt"));
-  Assert.equal(items[1].source.referrer, TEST_REFERRER_URL);
+
+  checkEqualReferrerInfos(items[1].source.referrerInfo, referrerInfo);
   Assert.equal(items[1].target.path, targetPath);
 });
 
@@ -283,10 +306,15 @@ add_task(async function test_save_reload_unknownProperties() {
   download2._unknownProperties = { number: 5, object: { test: "string" } };
   listForSave.add(download2);
 
+  let referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    NetUtil.newURI(TEST_REFERRER_URL)
+  );
   let download3 = await Downloads.createDownload({
     source: {
       url: httpUrl("empty.txt"),
-      referrer: TEST_REFERRER_URL,
+      referrerInfo,
       source1: "download3source1",
       source2: "download3source2",
     },

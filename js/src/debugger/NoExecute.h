@@ -20,8 +20,8 @@ namespace js {
 class Debugger;
 class LeaveDebuggeeNoExecute;
 
-// Given a Debugger instance dbg, if it is enabled, prevents all its debuggee
-// compartments from executing scripts. Attempts to run script will throw an
+// Prevents all the debuggeee compartments of a given Debugger from executing
+// scripts. Attempts to run script will throw an
 // instance of Debugger.DebuggeeWouldRun from the topmost locked Debugger's
 // compartment.
 class MOZ_RAII EnterDebuggeeNoExecute {

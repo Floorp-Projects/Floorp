@@ -1,9 +1,7 @@
-commit aeff2b0048c23d1959605086614de76144785064
-Author: Caio Lima <ticaiolima@gmail.com>
-Date:   Tue Jul 30 11:53:56 2019 -0700
+commit 59a1a016b7cf5cf43f66b274c7d1db4ec6066935
+Author: André Bargull <andre.bargull@gmail.com>
+Date:   Thu Aug 15 07:58:40 2019 -0700
 
-    Adding case where PrivateName is used inside computed property. (#2241)
+    Assign "name" property to all anonymous functions (#2299)
     
-    * Adding case where PrivateName is used inside computed property.
-    
-    * Adding proper description to early errors on usage of undeclared private names inside computed property.
+    Implements the changes from <https://github.com/tc39/ecma262/pull/1490>.

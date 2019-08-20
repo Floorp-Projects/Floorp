@@ -274,6 +274,8 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
 
   void GetMozTriggeringPrincipalURISpec(nsAString& aPrincipalURISpec);
 
+  nsIContentSecurityPolicy* GetMozCSP();
+
   mozilla::dom::Element* GetDragTarget() const { return mDragTarget; }
 
   nsresult GetDataAtNoSecurityCheck(const nsAString& aFormat, uint32_t aIndex,

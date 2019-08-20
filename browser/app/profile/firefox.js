@@ -1363,6 +1363,7 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 pref("sidebar.position_start", true);
 
 pref("security.identitypopup.recordEventTelemetry", true);
+pref("security.protectionspopup.recordEventTelemetry", true);
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);

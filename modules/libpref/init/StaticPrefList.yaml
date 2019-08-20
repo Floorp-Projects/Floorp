@@ -5727,6 +5727,11 @@
   value: false
   mirror: always
 
+- name: media.webrtc.platformencoder
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------

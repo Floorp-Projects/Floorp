@@ -1168,8 +1168,10 @@ class TestInfoCommand(MachCommandBase):
                      help='Include test manifests in report.')
     @CommandArgument('--show-tests', action='store_true',
                      help='Include individual tests in report.')
+    @CommandArgument('--show-summary', action='store_true',
+                     help='Include summary in report.')
     @CommandArgument('--filter-values',
-                     help='Comma-separated list of values to filter on; '
+                     help='Comma-separated list of value regular expressions to filter on; '
                           'displayed tests contain all specified values.')
     @CommandArgument('--filter-keys',
                      help='Comma-separated list of test keys to filter on, '
@@ -1181,9 +1183,10 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--output-file',
                      help='Path to report file.')
     def test_report(self, components, flavor, subsuite, paths,
-                    show_manifests, show_tests,
+                    show_manifests, show_tests, show_summary,
                     filter_values, filter_keys, show_components, output_file):
         import mozpack.path as mozpath
+        import re
         from moztest.resolve import TestResolver
 
         def matches_filters(test):
@@ -1195,15 +1198,18 @@ class TestInfoCommand(MachCommandBase):
                 value_found = False
                 for key in test:
                     if not filter_keys or key in filter_keys:
-                        if value in test[key]:
+                        if re.search(value, test[key]):
                             value_found = True
                             break
                 if not value_found:
                     return False
             return True
 
-        if not show_manifests and not show_tests:
+        # Ensure useful report by default
+        if not show_manifests and not show_tests and not show_summary:
             show_manifests = True
+            show_summary = True
+
         by_component = {}
         if components:
             components = components.split(',')
@@ -1218,12 +1224,15 @@ class TestInfoCommand(MachCommandBase):
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=paths, flavor=flavor,
                                             subsuite=subsuite))
+
+        manifest_paths = set()
+        for t in tests:
+            manifest_paths.add(t['manifest'])
+        manifest_count = len(manifest_paths)
+        print("Resolver found {} tests, {} manifests".format(len(tests), manifest_count))
+
         if show_manifests:
             by_component['manifests'] = {}
-            manifest_paths = set()
-            for t in tests:
-                manifest_paths.add(t['manifest'])
-            print("{} tests, {} manifests".format(len(tests), len(manifest_paths)))
             manifest_paths = list(manifest_paths)
             manifest_paths.sort()
             for manifest_path in manifest_paths:
@@ -1259,28 +1268,50 @@ class TestInfoCommand(MachCommandBase):
 
         if show_tests:
             by_component['tests'] = {}
+
+        if show_tests or show_summary:
+            test_count = 0
+            failed_count = 0
+            skipped_count = 0
+            component_set = set()
             for t in tests:
                 reader = self.mozbuild_reader(config_mode='empty')
                 if not matches_filters(t):
                     continue
+                test_count += 1
                 relpath = t.get('srcdir_relpath')
                 for info_path, info in reader.files_info([relpath]).items():
                     bug_component = info.get('BUG_COMPONENT')
                     key = "{}::{}".format(bug_component.product, bug_component.component)
                     if (info_path == relpath) and ((not components) or (key in components)):
+                        component_set.add(key)
                         test_info = {'test': relpath}
                         for test_key in ['skip-if', 'fail-if']:
                             value = t.get(test_key)
                             if value:
                                 test_info[test_key] = value
-                        rkey = key if show_components else 'all'
-                        if rkey in by_component['tests']:
-                            by_component['tests'][rkey].append(test_info)
-                        else:
-                            by_component['tests'][rkey] = [test_info]
+                        if t.get('fail-if'):
+                            failed_count += 1
+                        if t.get('skip-if'):
+                            skipped_count += 1
+                        if show_tests:
+                            rkey = key if show_components else 'all'
+                            if rkey in by_component['tests']:
+                                by_component['tests'][rkey].append(test_info)
+                            else:
+                                by_component['tests'][rkey] = [test_info]
                         break
-            for key in by_component['tests']:
-                by_component['tests'][key].sort()
+            if show_tests:
+                for key in by_component['tests']:
+                    by_component['tests'][key].sort()
+
+        if show_summary:
+            by_component['summary'] = {}
+            by_component['summary']['components'] = len(component_set)
+            by_component['summary']['manifests'] = manifest_count
+            by_component['summary']['tests'] = test_count
+            by_component['summary']['failed tests'] = failed_count
+            by_component['summary']['skipped tests'] = skipped_count
 
         json_report = json.dumps(by_component, indent=2, sort_keys=True)
         if output_file:

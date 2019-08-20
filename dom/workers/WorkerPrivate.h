@@ -90,6 +90,8 @@ class SharedMutex {
   void AssertCurrentThreadOwns() const { mMutex->AssertCurrentThreadOwns(); }
 };
 
+nsString ComputeWorkerPrivateId();
+
 class WorkerPrivate : public RelativeTimeline {
  public:
   struct LocationInfo {
@@ -110,7 +112,7 @@ class WorkerPrivate : public RelativeTimeline {
       JSContext* aCx, const nsAString& aScriptURL, bool aIsChromeWorker,
       WorkerType aWorkerType, const nsAString& aWorkerName,
       const nsACString& aServiceWorkerScope, WorkerLoadInfo* aLoadInfo,
-      ErrorResult& aRv);
+      ErrorResult& aRv, nsString aId = EmptyString());
 
   enum LoadGroupBehavior { InheritLoadGroup, OverrideLoadGroup };
 
@@ -887,14 +889,14 @@ class WorkerPrivate : public RelativeTimeline {
 
   void StartCancelingTimer();
 
-  nsAString& Id();
+  const nsAString& Id();
 
  private:
   WorkerPrivate(WorkerPrivate* aParent, const nsAString& aScriptURL,
                 bool aIsChromeWorker, WorkerType aWorkerType,
                 const nsAString& aWorkerName,
                 const nsACString& aServiceWorkerScope,
-                WorkerLoadInfo& aLoadInfo);
+                WorkerLoadInfo& aLoadInfo, nsString&& aId);
 
   ~WorkerPrivate();
 
@@ -1197,7 +1199,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
 
-  nsString mID;
+  nsString mId;
 };
 
 class AutoSyncLoopHolder {

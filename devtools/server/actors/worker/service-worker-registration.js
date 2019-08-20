@@ -128,6 +128,24 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
     },
 
     start() {
+      if (swm.isParentInterceptEnabled()) {
+        const { activeWorker } = this._registration;
+
+        // TODO: don't return "started" if there's no active worker.
+        if (activeWorker) {
+          // This starts up the Service Worker if it's not already running.
+          // Note that with parent-intercept (i.e. swm.isParentInterceptEnabled /
+          // dom.serviceWorkers.parent_intercept=true), the Service Workers exist
+          // in content processes but are managed from the parent process. This is
+          // why we call `attachDebugger` here (in the parent process) instead of
+          // in a process script.
+          activeWorker.attachDebugger();
+          activeWorker.detachDebugger();
+        }
+
+        return { type: "started" };
+      }
+
       if (!_serviceWorkerProcessScriptLoaded) {
         Services.ppmm.loadProcessScript(
           "resource://devtools/server/actors/worker/service-worker-process.js",
@@ -169,6 +187,21 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
       swm.propagateUnregister(principal, unregisterCallback, scope);
 
       return { type: "unregistered" };
+    },
+
+    push() {
+      if (!swm.isParentInterceptEnabled()) {
+        throw new Error(
+          "ServiceWorkerRegistrationActor.push can only be used " +
+            "in parent-intercept mode"
+        );
+      }
+
+      const { principal, scope } = this._registration;
+      const originAttributes = ChromeUtils.originAttributesToSuffix(
+        principal.originAttributes
+      );
+      swm.sendPushEvent(originAttributes, scope);
     },
 
     getPushSubscription() {
