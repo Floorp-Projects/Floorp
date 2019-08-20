@@ -9,7 +9,7 @@ export * from "../reducers/sources";
 export * from "../reducers/tabs";
 export * from "../reducers/event-listeners";
 export * from "../reducers/pause";
-export * from "../reducers/debuggee";
+export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";

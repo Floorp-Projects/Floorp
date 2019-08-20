@@ -65,7 +65,6 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.map-await-expression", true);
   pref("devtools.debugger.features.xhr-breakpoints", true);
   pref("devtools.debugger.features.original-blackbox", true);
-  pref("devtools.debugger.features.windowless-workers", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.dom-mutation-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);

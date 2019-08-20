@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.workers-list {
+.threads-list {
   padding: 4px 0;
 }
 
-.workers-list * {
+.threads-list * {
   -moz-user-select: none;
   user-select: none;
 }
 
-.workers-list > .worker {
+.threads-list > .thread {
   font-size: inherit;
   color: var(--theme-text-color-strong);
   padding: 2px 6px;
@@ -23,24 +23,24 @@
   align-items: center;
 }
 
-.workers-list > .worker:hover {
+.threads-list > .thread:hover {
   background-color: var(--search-overlays-semitransparent);
 }
 
-.workers-list > .worker.selected {
+.threads-list > .thread.selected {
   background-color: var(--tab-line-selected-color);
 }
 
-.workers-list .icon {
+.threads-list .icon {
   flex: none;
   margin-inline-end: 4px;
 }
 
-.workers-list .img {
+.threads-list .img {
   display: block;
 }
 
-.workers-list .label {
+.threads-list .label {
   display: inline-block;
   flex-grow: 1;
   flex-shrink: 1;
@@ -49,16 +49,16 @@
   text-overflow: ellipsis;
 }
 
-.workers-list .pause-badge {
+.threads-list .pause-badge {
   flex: none;
   margin-inline-start: 4px;
 }
 
-.workers-list > .worker.selected {
+.threads-list > .thread.selected {
   background: var(--theme-selection-background);
   color: var(--theme-selection-color);
 }
 
-.workers-list > .worker.selected .img {
+.threads-list > .thread.selected .img {
   background-color: currentColor;
 }
