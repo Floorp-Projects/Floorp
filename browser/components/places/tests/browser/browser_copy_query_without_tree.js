@@ -43,7 +43,7 @@ add_task(async function copy_toolbar_shortcut() {
 });
 
 add_task(async function copy_mobile_shortcut() {
-  await SpecialPowers.pushPrefEnv({
+  SpecialPowers.pushPrefEnv({
     set: [["browser.bookmarks.showMobileBookmarks", true]],
   });
   await promisePlacesInitComplete();

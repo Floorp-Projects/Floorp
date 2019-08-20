@@ -144,11 +144,6 @@ If you register your Actor to listen for ``nsIObserver`` notifications, implemen
 
 If you register your Actor to listen for content events, implement a ``handleEvent`` method with the above signature to handle the event.
 
-``actorCreated``
-````````````````
-
-This method is called immediately after a child actor is created and initialized. Unlike the actor's constructor, it is possible to do things like access the actor's content window and send messages from this callback.
-
 ``willDestroy``
 ```````````````
 
