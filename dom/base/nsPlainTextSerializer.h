@@ -179,7 +179,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   bool mInWhitespace;
   bool mPreFormattedMail;  // we're dealing with special DOM
                            // used by Thunderbird code.
-  bool mStartedOutput;     // we've produced at least a character
 
   // While handling a new tag, this variable should remind if any line break
   // is due because of a closing tag. Setting it to "TRUE" while closing the
