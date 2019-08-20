@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
 #include "jsutil.h"
@@ -719,7 +720,9 @@ void Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code,
   }
 }
 
-static void TraceOneDataRelocation(JSTracer* trc, InstructionIterator iter) {
+static void TraceOneDataRelocation(JSTracer* trc,
+                                   mozilla::Maybe<AutoWritableJitCode>& awjc,
+                                   JitCode* code, InstructionIterator iter) {
   Register dest;
   Assembler::RelocStyle rs;
   const void* prior = Assembler::GetPtr32Target(iter, &dest, &rs);
@@ -727,9 +730,13 @@ static void TraceOneDataRelocation(JSTracer* trc, InstructionIterator iter) {
 
   // No barrier needed since these are constants.
   TraceManuallyBarrieredGenericPointerEdge(
-      trc, reinterpret_cast<gc::Cell**>(&ptr), "ion-masm-ptr");
+      trc, reinterpret_cast<gc::Cell**>(&ptr), "jit-masm-ptr");
 
   if (ptr != prior) {
+    if (awjc.isNothing()) {
+      awjc.emplace(code);
+    }
+
     MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest,
                                     Assembler::Always, rs, iter);
 
@@ -744,10 +751,11 @@ static void TraceOneDataRelocation(JSTracer* trc, InstructionIterator iter) {
 /* static */
 void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
                                      CompactBufferReader& reader) {
+  mozilla::Maybe<AutoWritableJitCode> awjc;
   while (reader.more()) {
     size_t offset = reader.readUnsigned();
     InstructionIterator iter((Instruction*)(code->raw() + offset));
-    TraceOneDataRelocation(trc, iter);
+    TraceOneDataRelocation(trc, awjc, code, iter);
   }
 }
 

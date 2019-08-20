@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Maybe.h"
+
 #include "gc/Marking.h"
 #include "jit/JitRealm.h"
 #if defined(JS_CODEGEN_X86)
@@ -39,6 +41,8 @@ void AssemblerX86Shared::copyDataRelocationTable(uint8_t* dest) {
 /* static */
 void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
                                               CompactBufferReader& reader) {
+  mozilla::Maybe<AutoWritableJitCode> awjc;
+
   while (reader.more()) {
     size_t offset = reader.readUnsigned();
     MOZ_ASSERT(offset >= sizeof(void*) && offset <= code->instructionsSize());
@@ -60,8 +64,9 @@ void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
                     gc::IsCellPointerValid(value.toGCThing()));
       TraceManuallyBarrieredEdge(trc, &value, "jit-masm-value");
       if (word != value.asRawBits()) {
-        // Only update the code if the Value changed, because the code
-        // is not writable if we're not moving objects.
+        if (awjc.isNothing()) {
+          awjc.emplace(code);
+        }
         X86Encoding::SetPointer(src, value.bitsAsPunboxPointer());
       }
       continue;
@@ -73,6 +78,9 @@ void AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code,
     MOZ_ASSERT(gc::IsCellPointerValid(cell));
     TraceManuallyBarrieredGenericPointerEdge(trc, &cell, "jit-masm-ptr");
     if (cell != data) {
+      if (awjc.isNothing()) {
+        awjc.emplace(code);
+      }
       X86Encoding::SetPointer(src, cell);
     }
   }
