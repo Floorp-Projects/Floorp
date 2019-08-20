@@ -192,7 +192,6 @@ HTMLEditRules::HTMLEditRules()
       mInitialized(false),
       mListenerEnabled(false),
       mReturnInEmptyLIKillsList(false),
-      mRestoreContentEditableCount(false),
       mJoinOffset(0) {
   mIsHTMLEditRules = true;
   InitFields();
@@ -202,7 +201,6 @@ void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
   mDocChangeRange = nullptr;
   mReturnInEmptyLIKillsList = true;
-  mRestoreContentEditableCount = false;
   mUtilRange = nullptr;
   mJoinOffset = 0;
   mNewBlock = nullptr;
@@ -388,7 +386,9 @@ nsresult HTMLEditRules::BeforeEdit() {
   }
   if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
     doc->ChangeContentEditableCount(nullptr, +1);
-    mRestoreContentEditableCount = true;
+    HTMLEditorRef()
+        .TopLevelEditSubActionDataRef()
+        .mRestoreContentEditableCount = true;
   }
 
   // Check that selection is in subtree defined by body node
@@ -426,7 +426,9 @@ nsresult HTMLEditRules::AfterEdit() {
   HTMLEditorRef().RangeUpdaterRef().DropRangeItem(mRangeItem);
 
   // Reset the contenteditable count to its previous value
-  if (mRestoreContentEditableCount) {
+  if (HTMLEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mRestoreContentEditableCount) {
     Document* doc = HTMLEditorRef().GetDocument();
     if (NS_WARN_IF(!doc)) {
       return NS_ERROR_FAILURE;
@@ -434,7 +436,6 @@ nsresult HTMLEditRules::AfterEdit() {
     if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
       doc->ChangeContentEditableCount(nullptr, -1);
     }
-    mRestoreContentEditableCount = false;
   }
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AfterEditInner() failed");

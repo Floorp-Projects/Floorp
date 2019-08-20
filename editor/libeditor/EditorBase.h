@@ -629,12 +629,21 @@ class EditorBase : public nsIEditor,
     // If we have deleted parent empty blocks, set to true.
     bool mDidDeleteEmptyParentBlocks;
 
+    // If we're a contenteditable editor, we temporarily increase edit count
+    // of the document between `BeforeEdit()` and `AfterEdit()`.  I.e., if
+    // we increased the count in `BeforeEdit()`, we need to decrease it in
+    // `AfterEdit()`, however, the document may be changed to designMode or
+    // non-editable.  Therefore, we need to store with this whether we need
+    // to restore it.
+    bool mRestoreContentEditableCount;
+
    private:
     void Clear() {
       mDidDeleteSelection = false;
       mDidExplicitlySetInterLine = false;
       mDidDeleteNonCollapsedRange = false;
       mDidDeleteEmptyParentBlocks = false;
+      mRestoreContentEditableCount = false;
     }
 
     TopLevelEditSubActionData() = default;
