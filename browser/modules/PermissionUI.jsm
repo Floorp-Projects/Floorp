@@ -426,7 +426,7 @@ var PermissionPromptPrototype = {
     } else if (this.permissionKey) {
       // If we're reading a permission which already has a temporary value,
       // see if we can use the temporary value.
-      let { state } = SitePermissions.get(
+      let { state } = SitePermissions.getForPrincipal(
         null,
         this.permissionKey,
         this.browser
@@ -514,7 +514,7 @@ var PermissionPromptPrototype = {
               // Temporarily store BLOCK permissions.
               // We don't consider subframes when storing temporary
               // permissions on a tab, thus storing ALLOW could be exploited.
-              SitePermissions.set(
+              SitePermissions.setForPrincipal(
                 null,
                 this.permissionKey,
                 promptAction.action,
