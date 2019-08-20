@@ -5260,6 +5260,10 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mEditAction = aEditAction;
     }
     mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
+
+    // Parent's mTopLevelEditSubActionData should be referred instead so that
+    // we don't need to set mTopLevelEditSubActionData.mSelectedRange here.
+
     mDirectionOfTopLevelEditSubAction =
         mParentData->mDirectionOfTopLevelEditSubAction;
   } else {
@@ -5269,6 +5273,11 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     }
     mEditAction = aEditAction;
     mDirectionOfTopLevelEditSubAction = eNone;
+    if (mEditorBase.mIsHTMLEditorClass) {
+      mTopLevelEditSubActionData.mSelectedRange =
+          mEditorBase.AsHTMLEditor()
+              ->GetSelectedRangeItemForTopLevelEditSubAction();
+    }
   }
   mEditorBase.mEditActionData = this;
 }
@@ -5278,6 +5287,12 @@ EditorBase::AutoEditActionDataSetter::~AutoEditActionDataSetter() {
     return;
   }
   mEditorBase.mEditActionData = mParentData;
+
+  MOZ_ASSERT(
+      !mTopLevelEditSubActionData.mSelectedRange ||
+          (!mTopLevelEditSubActionData.mSelectedRange->mStartContainer &&
+           !mTopLevelEditSubActionData.mSelectedRange->mEndContainer),
+      "mTopLevelEditSubActionData.mSelectedRange should've been cleared");
 }
 
 void EditorBase::AutoEditActionDataSetter::SetColorData(
