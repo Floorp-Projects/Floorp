@@ -55,7 +55,7 @@ extern void FinishDateTimeState();
 
 enum class ResetTimeZoneMode : bool {
   DontResetIfOffsetUnchanged,
-  ResetEvenIfOffsetUnchaged,
+  ResetEvenIfOffsetUnchanged,
 };
 
 /**
@@ -122,6 +122,15 @@ class DateTimeInfo {
   DateTimeInfo();
   ~DateTimeInfo();
 
+  static auto acquireLockWithValidTimeZone() {
+    auto guard = instance->lock();
+    if (guard->localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
+      guard->resetTimeZoneAdjustment(
+          ResetTimeZoneMode::ResetEvenIfOffsetUnchanged);
+    }
+    return guard;
+  }
+
  public:
   // The spec implicitly assumes DST and time zone adjustment information
   // never change in the course of a function -- sometimes even across
@@ -134,7 +143,7 @@ class DateTimeInfo {
    * keep things interesting.
    */
   static int32_t getDSTOffsetMilliseconds(int64_t utcMilliseconds) {
-    auto guard = instance->lock();
+    auto guard = acquireLockWithValidTimeZone();
     return guard->internalGetDSTOffsetMilliseconds(utcMilliseconds);
   }
 
@@ -143,7 +152,7 @@ class DateTimeInfo {
    * the operating system.
    */
   static int32_t localTZA() {
-    auto guard = instance->lock();
+    auto guard = acquireLockWithValidTimeZone();
     return guard->localTZA_;
   }
 
@@ -156,7 +165,7 @@ class DateTimeInfo {
    */
   static int32_t getOffsetMilliseconds(int64_t milliseconds,
                                        TimeZoneOffset offset) {
-    auto guard = instance->lock();
+    auto guard = acquireLockWithValidTimeZone();
     return guard->internalGetOffsetMilliseconds(milliseconds, offset);
   }
 
@@ -168,7 +177,7 @@ class DateTimeInfo {
    */
   static bool timeZoneDisplayName(char16_t* buf, size_t buflen,
                                   int64_t utcMilliseconds, const char* locale) {
-    auto guard = instance->lock();
+    auto guard = acquireLockWithValidTimeZone();
     return guard->internalTimeZoneDisplayName(buf, buflen, utcMilliseconds,
                                               locale);
   }
@@ -201,6 +210,10 @@ class DateTimeInfo {
 
     void sanityCheck();
   };
+
+  enum class LocalTimeZoneAdjustmentStatus : bool { Valid, NeedsUpdate };
+
+  LocalTimeZoneAdjustmentStatus localTZAStatus_;
 
   /*
    * The current local time zone adjustment, cached because retrieving this
@@ -264,6 +277,8 @@ class DateTimeInfo {
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
   bool internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
+
+  bool resetTimeZoneAdjustment(ResetTimeZoneMode mode);
 
   int64_t toClampedSeconds(int64_t milliseconds);
 
