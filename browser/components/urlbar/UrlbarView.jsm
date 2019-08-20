@@ -461,18 +461,17 @@ class UrlbarView {
           endOffset = startOffset;
         }
 
-        // We need to align with the tracking protection icon if the
-        // 'pageproxystate' is valid since the tracking protection icon would be
-        // at the first position instead of the identity icon in this case.
-        let alignIcon;
-        if (this.input.getAttribute("pageproxystate") === "valid") {
-          alignIcon = this.document.getElementById(
-            "tracking-protection-icon-box"
+        // Align the view's icons with the tracking protection or identity icon,
+        // whichever is visible.
+        let alignRect;
+        for (let id of ["tracking-protection-icon-box", "identity-icon"]) {
+          alignRect = getBoundsWithoutFlushing(
+            this.document.getElementById(id)
           );
-        } else {
-          alignIcon = this.document.getElementById("identity-icon");
+          if (alignRect.width > 0) {
+            break;
+          }
         }
-        let alignRect = getBoundsWithoutFlushing(alignIcon);
         let start = this.window.RTL_UI
           ? documentRect.right - alignRect.right
           : alignRect.left;
