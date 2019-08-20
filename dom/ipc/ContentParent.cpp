@@ -236,7 +236,6 @@
 
 #if defined(XP_MACOSX)
 #  include "nsMacUtilsImpl.h"
-#  include "CoreLocationLocationProvider.h"
 #endif
 
 #if defined(ANDROID) || defined(LINUX)
@@ -4065,16 +4064,6 @@ mozilla::ipc::IPCResult ContentParent::RecvAddGeolocationListener(
   // creation of a new listener.
   RecvRemoveGeolocationListener();
   mGeolocationWatchID = AddGeolocationListener(this, this, aHighAccuracy);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvGetGeoSysPermission(
-    std::function<void(const bool)>&& aCallback) {
-#ifdef MOZ_WIDGET_COCOA
-  aCallback(isMacGeoSystemPermissionEnabled());
-#else
-  aCallback(true);
-#endif
   return IPC_OK();
 }
 
