@@ -233,13 +233,20 @@ nsresult LookupCache::WriteFile() {
 
   nsCOMPtr<nsIFile> psFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = psFile->AppendNative(mTableName + GetPrefixSetSuffix());
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = StoreToFile(psFile);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to store the prefixset");
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Failed to store the prefixset for table %s", mTableName.get()));
+    return rv;
+  }
 
   return NS_OK;
 }
