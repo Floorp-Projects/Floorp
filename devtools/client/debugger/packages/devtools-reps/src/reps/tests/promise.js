@@ -129,6 +129,7 @@ describe("Promise - fulfilled with node", () => {
     node.simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(1);
+    expect(onDOMNodeMouseOut).toHaveBeenCalledWith(grips[0]);
   });
 
   it("no inspect icon when the node is not connected to the DOM tree", () => {

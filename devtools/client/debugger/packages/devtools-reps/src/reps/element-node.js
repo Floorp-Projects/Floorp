@@ -65,7 +65,7 @@ function ElementNode(props) {
 
     if (onDOMNodeMouseOut) {
       Object.assign(baseConfig, {
-        onMouseOut: onDOMNodeMouseOut,
+        onMouseOut: _ => onDOMNodeMouseOut(object),
       });
     }
 
