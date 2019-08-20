@@ -490,25 +490,21 @@ void nsCSPContext::reportInlineViolation(
             : NS_LITERAL_STRING(STYLE_HASH_VIOLATION_OBSERVER_TOPIC);
   }
 
-  // use selfURI as the sourceFile
-  nsAutoCString sourceFile;
-  if (mSelfURI) {
-    mSelfURI->GetSpec(sourceFile);
-  }
-
-  uint32_t lineNumber = aLineNumber;
-  uint32_t columnNumber = aColumnNumber;
+  nsAutoString sourceFile;
+  uint32_t lineNumber;
+  uint32_t columnNumber;
 
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    if (!nsJSUtils::GetCallingLocation(cx, sourceFile, &lineNumber,
-                                       &columnNumber)) {
-      // Get Calling Location resets line/col to 0
-      // so we reset those to the intial arguments
-      // in case it failed
-      lineNumber = aLineNumber;
-      columnNumber = aColumnNumber;
+  if (!cx || !nsJSUtils::GetCallingLocation(cx, sourceFile, &lineNumber,
+                                            &columnNumber)) {
+    // use selfURI as the sourceFile
+    if (mSelfURI) {
+      nsAutoCString cSourceFile;
+      mSelfURI->GetSpec(cSourceFile);
+      sourceFile.Assign(NS_ConvertUTF8toUTF16(cSourceFile));
     }
+    lineNumber = aLineNumber;
+    columnNumber = aColumnNumber;
   }
 
   AsyncReportViolation(aTriggeringElement, aCSPEventListener,
@@ -518,10 +514,10 @@ void nsCSPContext::reportInlineViolation(
                        aViolatedDirective,             // aViolatedDirective
                        aViolatedPolicyIndex,           // aViolatedPolicyIndex
                        observerSubject,                // aObserverSubject
-                       NS_ConvertUTF8toUTF16(sourceFile),  // aSourceFile
-                       aContent,                           // aScriptSample
-                       lineNumber,                         // aLineNum
-                       columnNumber);                      // aColumnNum
+                       sourceFile,                     // aSourceFile
+                       aContent,                       // aScriptSample
+                       lineNumber,                     // aLineNum
+                       columnNumber);                  // aColumnNum
 }
 
 NS_IMETHODIMP
