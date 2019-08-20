@@ -171,6 +171,21 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
       return { type: "unregistered" };
     },
 
+    push() {
+      if (!swm.isParentInterceptEnabled()) {
+        throw new Error(
+          "ServiceWorkerRegistrationActor.push can only be used " +
+            "in parent-intercept mode"
+        );
+      }
+
+      const { principal, scope } = this._registration;
+      const originAttributes = ChromeUtils.originAttributesToSuffix(
+        principal.originAttributes
+      );
+      swm.sendPushEvent(originAttributes, scope);
+    },
+
     getPushSubscription() {
       const registration = this._registration;
       let pushSubscriptionActor = this._pushSubscriptionActor;
