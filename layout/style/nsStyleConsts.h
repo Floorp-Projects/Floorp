@@ -492,10 +492,6 @@ enum class StyleGridTrackBreadth : uint8_t {
   MinContent = 2,
 };
 
-// CSS Grid keywords for <auto-repeat>
-#define NS_STYLE_GRID_REPEAT_AUTO_FILL 0
-#define NS_STYLE_GRID_REPEAT_AUTO_FIT 1
-
 // defaults per MathML spec
 #define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
 #define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
