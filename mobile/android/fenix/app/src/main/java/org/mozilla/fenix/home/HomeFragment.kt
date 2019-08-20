@@ -50,7 +50,6 @@ import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.TOP
 import org.jetbrains.anko.constraint.layout.applyConstraintSet
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -234,22 +233,17 @@ class HomeFragment : Fragment(), AccountObserver {
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
-        val isPrivate = browsingModeManager.mode.isPrivate
-
-        privateBrowsingButton.contentDescription =
-            contentDescriptionForPrivateBrowsingButton(isPrivate)
-
-        privateBrowsingButton.setOnClickListener {
+        PrivateBrowsingButtonView(
+            privateBrowsingButton,
+            browsingModeManager
+        ) { newMode ->
             invokePendingDeleteJobs()
-            val invertedMode = BrowsingMode.fromBoolean(!browsingModeManager.mode.isPrivate)
 
             if (onboarding.userHasBeenOnboarded()) {
                 getManagedEmitter<SessionControlChange>().onNext(
-                    SessionControlChange.ModeChange(Mode.fromBrowsingMode(invertedMode))
+                    SessionControlChange.ModeChange(Mode.fromBrowsingMode(newMode))
                 )
             }
-
-            browsingModeManager.mode = invertedMode
         }
 
         // We need the shadow to be above the components.
