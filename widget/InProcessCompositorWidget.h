@@ -31,7 +31,7 @@ class InProcessCompositorWidget : public CompositorWidget {
   virtual void EndRemoteDrawing() override;
   virtual void EndRemoteDrawingInRegion(
       gfx::DrawTarget* aDrawTarget,
-      LayoutDeviceIntRegion& aInvalidRegion) override;
+      const LayoutDeviceIntRegion& aInvalidRegion) override;
   virtual void CleanupRemoteDrawing() override;
   virtual void CleanupWindowEffects() override;
   virtual bool InitCompositor(layers::Compositor* aCompositor) override;

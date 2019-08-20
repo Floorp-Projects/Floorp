@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThirdPartyUtil.h"
+#include "nsDocShell.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -137,6 +138,43 @@ ThirdPartyUtil::GetURIFromWindow(mozIDOMWindowProxy* aWin, nsIURI** result) {
 
   rv = prin->GetURI(result);
   return rv;
+}
+
+NS_IMETHODIMP
+ThirdPartyUtil::GetContentBlockingAllowListPrincipalFromWindow(
+    mozIDOMWindowProxy* aWin, nsIURI* aURIBeingLoaded, nsIPrincipal** result) {
+  nsPIDOMWindowOuter* outerWindow = nsPIDOMWindowOuter::From(aWin);
+  nsPIDOMWindowInner* innerWindow = outerWindow->GetCurrentInnerWindow();
+  Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+  if (!doc) {
+    return GetPrincipalFromWindow(aWin, result);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal =
+      doc->GetContentBlockingAllowListPrincipal();
+  if (aURIBeingLoaded && principal && principal->GetIsNullPrincipal()) {
+    // If we have an initial principal during navigation, recompute it to get
+    // the real content blocking allow list principal.
+    nsIDocShell* docShell = doc->GetDocShell();
+    OriginAttributes attrs =
+        docShell ? nsDocShell::Cast(docShell)->GetOriginAttributes()
+                 : OriginAttributes();
+    principal =
+        doc->RecomputeContentBlockingAllowListPrincipal(aURIBeingLoaded, attrs);
+  }
+
+  if (!principal || !principal->GetIsContentPrincipal()) {
+    // This is for compatibility with GetURIFromWindow.  Null principals are
+    // explicitly special cased there.  GetURI returns nullptr for
+    // SystemPrincipal and ExpandedPrincipal.
+    LOG(
+        ("ThirdPartyUtil::GetContentBlockingAllowListPrincipalFromWindow can't "
+         "use null principal\n"));
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  principal.forget(result);
+  return NS_OK;
 }
 
 // Determine if aFirstURI is third party with respect to aSecondURI. See docs

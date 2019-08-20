@@ -25,4 +25,8 @@ MOZ_BC_FIELD(OnePermittedSandboxedNavigatorId, uint64_t)
 // context is currently considered to be activated by a gesture.
 MOZ_BC_FIELD(IsActivatedByUserGesture, bool)
 
+// Hold the audio muted state and should be used
+// on top level browsing contexts only.
+MOZ_BC_FIELD(Muted, bool)
+
 #undef MOZ_BC_FIELD

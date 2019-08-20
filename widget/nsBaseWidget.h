@@ -461,8 +461,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return StartRemoteDrawing();
   }
   virtual void EndRemoteDrawing() {}
-  virtual void EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
-                                        LayoutDeviceIntRegion& aInvalidRegion) {
+  virtual void EndRemoteDrawingInRegion(
+      DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
     EndRemoteDrawing();
   }
   virtual void CleanupRemoteDrawing() {}

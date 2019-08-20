@@ -6287,8 +6287,8 @@ already_AddRefed<DrawTarget> nsWindow::StartRemoteDrawingInRegion(
                                                      aBufferMode);
 }
 
-void nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
-                                        LayoutDeviceIntRegion& aInvalidRegion) {
+void nsWindow::EndRemoteDrawingInRegion(
+    DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
   mSurfaceProvider.EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
 }
 

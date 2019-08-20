@@ -158,7 +158,7 @@ int CamerasChild::AddDeviceChangeCallback(DeviceChangeCallback* aCallback) {
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyFailure(void) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = false;
@@ -167,7 +167,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyFailure(void) {
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplySuccess(void) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -177,7 +177,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplySuccess(void) {
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyNumberOfCapabilities(
     const int& numdev) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -262,7 +262,7 @@ bool CamerasChild::DispatchToParent(nsIRunnable* aRunnable,
 
 int CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
                                        const char* deviceUniqueIdUTF8) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   LOG(("NumberOfCapabilities for %s", deviceUniqueIdUTF8));
   nsCString unique_id(deviceUniqueIdUTF8);
   nsCOMPtr<nsIRunnable> runnable =
@@ -275,7 +275,7 @@ int CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
 }
 
 int CamerasChild::NumberOfCaptureDevices(CaptureEngine aCapEngine) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable = mozilla::NewRunnableMethod<CaptureEngine>(
       "camera::PCamerasChild::SendNumberOfCaptureDevices", this,
       &CamerasChild::SendNumberOfCaptureDevices, aCapEngine);
@@ -286,7 +286,7 @@ int CamerasChild::NumberOfCaptureDevices(CaptureEngine aCapEngine) {
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyNumberOfCaptureDevices(
     const int& numdev) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -296,7 +296,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyNumberOfCaptureDevices(
 }
 
 int CamerasChild::EnsureInitialized(CaptureEngine aCapEngine) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable = mozilla::NewRunnableMethod<CaptureEngine>(
       "camera::PCamerasChild::SendEnsureInitialized", this,
       &CamerasChild::SendEnsureInitialized, aCapEngine);
@@ -325,7 +325,7 @@ int CamerasChild::GetCaptureCapability(
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureCapability(
     const VideoCaptureCapability& ipcCapability) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -343,7 +343,7 @@ int CamerasChild::GetCaptureDevice(
     CaptureEngine aCapEngine, unsigned int list_number, char* device_nameUTF8,
     const unsigned int device_nameUTF8Length, char* unique_idUTF8,
     const unsigned int unique_idUTF8Length, bool* scary) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, unsigned int>(
           "camera::PCamerasChild::SendGetCaptureDevice", this,
@@ -364,7 +364,7 @@ int CamerasChild::GetCaptureDevice(
 mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureDevice(
     const nsCString& device_name, const nsCString& device_id,
     const bool& scary) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -379,7 +379,7 @@ int CamerasChild::AllocateCaptureDevice(
     CaptureEngine aCapEngine, const char* unique_idUTF8,
     const unsigned int unique_idUTF8Length, int& aStreamId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, nsCString,
@@ -397,7 +397,7 @@ int CamerasChild::AllocateCaptureDevice(
 
 mozilla::ipc::IPCResult CamerasChild::RecvReplyAllocateCaptureDevice(
     const int& numdev) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
@@ -408,7 +408,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyAllocateCaptureDevice(
 
 int CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
                                        const int capture_id) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, int>(
           "camera::PCamerasChild::SendReleaseCaptureDevice", this,
@@ -442,7 +442,7 @@ void CamerasChild::RemoveCallback(const CaptureEngine aCapEngine,
 int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
                                webrtc::VideoCaptureCapability& webrtcCaps,
                                FrameRelay* cb) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   AddCallback(aCapEngine, capture_id, cb);
   VideoCaptureCapability capCap(
       webrtcCaps.width, webrtcCaps.height, webrtcCaps.maxFPS,
@@ -457,7 +457,7 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
 
 int CamerasChild::FocusOnSelectedSource(CaptureEngine aCapEngine,
                                         const int aCaptureId) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, int>(
           "camera::PCamerasChild::SendFocusOnSelectedSource", this,
@@ -467,7 +467,7 @@ int CamerasChild::FocusOnSelectedSource(CaptureEngine aCapEngine,
 }
 
 int CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id) {
-  LOG((__PRETTY_FUNCTION__));
+  LOG(("%s", __PRETTY_FUNCTION__));
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, int>(
           "camera::PCamerasChild::SendStopCapture", this,

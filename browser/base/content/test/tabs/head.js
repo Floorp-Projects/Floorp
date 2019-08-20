@@ -277,12 +277,26 @@ function checkBrowserRemoteType(
   message = `Ensures that tab runs in the ${expectedRemoteType} content process.`
 ) {
   // Check both parent and child to ensure that they have the correct remoteType.
-  is(browser.remoteType, expectedRemoteType, message);
-  is(
-    browser.messageManager.remoteType,
-    expectedRemoteType,
-    "Parent and child process should agree on the remote type."
-  );
+  if (expectedRemoteType == E10SUtils.WEB_REMOTE_TYPE) {
+    ok(E10SUtils.isWebRemoteType(browser), message);
+    // E10sUtils.isWebRemoteType expects a browser, but we're trying to call this
+    // on a message manager, so fake up an object that looks like what
+    // isWebRemoteType expects.
+    ok(
+      E10SUtils.isWebRemoteType({
+        ownerGlobal: browser.ownerGlobal,
+        remoteType: browser.messageManager.remoteType,
+      }),
+      "Parent and child process should agree on the remote type."
+    );
+  } else {
+    is(browser.remoteType, expectedRemoteType, message);
+    is(
+      browser.messageManager.remoteType,
+      expectedRemoteType,
+      "Parent and child process should agree on the remote type."
+    );
+  }
 }
 
 function test_url_for_process_types(

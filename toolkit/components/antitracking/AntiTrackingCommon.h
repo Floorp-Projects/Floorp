@@ -22,6 +22,8 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 
+class OriginAttributes;
+
 class AntiTrackingCommon final {
  public:
   // Normally we would include PContentParent.h here and use the
@@ -130,10 +132,20 @@ class AntiTrackingCommon final {
       const nsCString& aParentOrigin, const nsCString& aGrantedOrigin,
       int aAllowMode);
 
-  // Check whether a top window URI is on the content blocking allow list.
-  static nsresult IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+  // Check whether a top window principal is on the content blocking allow list.
+  static nsresult IsOnContentBlockingAllowList(nsIPrincipal* aTopWinPrincipal,
                                                bool aIsPrivateBrowsing,
                                                bool& aIsAllowListed);
+
+  // Computes the principal used to check the content blocking allow list for a
+  // top-level document based on the document principal.  This function is used
+  // right after setting up the document principal.
+  static void ComputeContentBlockingAllowListPrincipal(
+      nsIPrincipal* aDocumentPrincipal, nsIPrincipal** aPrincipal);
+
+  static void RecomputeContentBlockingAllowListPrincipal(
+      nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs,
+      nsIPrincipal** aPrincipal);
 
   enum class BlockingDecision {
     eBlock,

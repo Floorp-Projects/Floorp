@@ -2840,11 +2840,24 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   Maybe<CorsPreflightArgs> optionalCorsPreflightArgs;
   GetClientSetCorsPreflightParameters(optionalCorsPreflightArgs);
 
-  // NB: This call forces us to cache mTopWindowURI if we haven't already.
+  // NB: This call forces us to cache mTopWindowURI and
+  // mContentBlockingAllowListPrincipal if we haven't already.
   nsCOMPtr<nsIURI> uri;
   GetTopWindowURI(mURI, getter_AddRefs(uri));
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
+
+  if (mContentBlockingAllowListPrincipal) {
+    PrincipalInfo principalInfo;
+    rv = PrincipalToPrincipalInfo(mContentBlockingAllowListPrincipal,
+                                  &principalInfo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    openArgs.contentBlockingAllowListPrincipal() = principalInfo;
+  } else {
+    openArgs.contentBlockingAllowListPrincipal() = void_t();
+  }
 
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 

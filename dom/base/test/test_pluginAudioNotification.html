@@ -15,70 +15,60 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var expectedNotification = null;
 var iframe = null;
 
-var observer = {
-  observe: function(subject, topic, data) {
-    is(topic, "audio-playback", "audio-playback received");
-    is(data, expectedNotification, "This is the right notification");
-    SimpleTest.executeSoon(runTest);
-  }
-};
+function waitForObserver(expectedNotification) {
+  return new Promise(resolve => {
+    let observe = function(subject, topic, data) {
+      is(topic, "audio-playback", "audio-playback received");
+      is(data, expectedNotification, `${expectedNotification} is the right notification`);
+      SpecialPowers.removeObserver(observe, "audio-playback");
+      resolve();
+    }
 
-var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-                                   .getService(SpecialPowers.Ci.nsIObserverService);
+    SpecialPowers.addObserver(observe, "audio-playback");
+  });
+}
 
 var tests = [
-  function() {
+  async function() {
     iframe = document.querySelector("iframe");
-    observerService.addObserver(observer, "audio-playback");
-    ok(true, "Observer set");
-    runTest();
-  },
-
-  function() {
-    expectedNotification = 'active';
+    let observerPromise = waitForObserver('active');
     iframe.src = "file_pluginAudio.html";
+    await observerPromise;
   },
 
-  function() {
+  async function() {
     info("=== Mute plugin ===");
     ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
+    let observerPromise = waitForObserver('inactive-nonaudible');
     iframe.contentWindow.toggleMuteState(true);
+    await observerPromise;
     ok(iframe.contentWindow.pluginMuted(), "Plugin should be muted");
-    expectedNotification = 'inactive-nonaudible';
   },
 
-  function() {
+  async function() {
     info("=== unmute plugin ==");
     ok(iframe.contentWindow.pluginMuted(), "Plugin should be muted");
+    let observerPromise = waitForObserver('active');
     iframe.contentWindow.toggleMuteState(false);
+    await observerPromise;
     ok(!iframe.contentWindow.pluginMuted(), "Plugin should not be muted");
-    expectedNotification = 'active';
   },
 
-  function() {
+  async function() {
     info("=== stop audio ==");
-    expectedNotification = 'inactive-pause';
+    let observerPromise = waitForObserver('inactive-pause');
     iframe.contentWindow.stopAudio();
+    await observerPromise;
   },
-
-  function() {
-    observerService.removeObserver(observer, "audio-playback");
-    ok(true, "Observer removed");
-    runTest();
-  }
 ];
 
-function runTest() {
-  if (!tests.length) {
-    SimpleTest.finish();
-    return;
+async function runTest() {
+  for (let test of tests) {
+    await test();
   }
-
-  var test = tests.shift();
-  test();
+  SimpleTest.finish();
 }
 
 onload = runTest;
@@ -86,4 +76,3 @@ onload = runTest;
 </script>
 </body>
 </html>
-

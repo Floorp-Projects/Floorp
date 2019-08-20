@@ -21,6 +21,7 @@ class VideoStreamTrack : public MediaStreamTrack {
   VideoStreamTrack(
       nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
+      MediaStreamTrackState aState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
   void Destroy() override;
@@ -39,11 +40,7 @@ class VideoStreamTrack : public MediaStreamTrack {
   void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
 
  protected:
-  already_AddRefed<MediaStreamTrack> CloneInternal() override {
-    return do_AddRef(
-        new VideoStreamTrack(mWindow, Ended() ? nullptr : mInputStream.get(),
-                             mTrackID, mSource, mConstraints));
-  }
+  already_AddRefed<MediaStreamTrack> CloneInternal() override;
 
  private:
   nsTArray<RefPtr<VideoOutput>> mVideoOutputs;

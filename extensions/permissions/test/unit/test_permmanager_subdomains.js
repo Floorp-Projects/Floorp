@@ -21,25 +21,11 @@ function run_test() {
     pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"),
     pm.ALLOW_ACTION
   );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub1Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.ALLOW_ACTION
-  );
 
   // A sub-sub-domain should get the permission.
   let subsubPrincipal = getPrincipalFromURI("http://sub.sub1.example.com");
   Assert.equal(
     pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"),
-    pm.ALLOW_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      subsubPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.ALLOW_ACTION
   );
 
@@ -49,25 +35,11 @@ function run_test() {
     pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"),
     pm.UNKNOWN_ACTION
   );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub2Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.UNKNOWN_ACTION
-  );
 
   // Remove current permissions.
   pm.removeFromPrincipal(sub1Principal, "test/subdomains");
   Assert.equal(
     pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub1Principal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.UNKNOWN_ACTION
   );
 
@@ -78,13 +50,6 @@ function run_test() {
     pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"),
     pm.ALLOW_ACTION
   );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      mainPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.ALLOW_ACTION
-  );
 
   // All sub-domains should have the permission now.
   Assert.equal(
@@ -92,32 +57,11 @@ function run_test() {
     pm.ALLOW_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub1Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.ALLOW_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"),
     pm.ALLOW_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub2Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.ALLOW_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"),
-    pm.ALLOW_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      subsubPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.ALLOW_ACTION
   );
 
@@ -128,21 +72,7 @@ function run_test() {
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      mainPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub1Principal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
@@ -150,21 +80,7 @@ function run_test() {
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub2Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      subsubPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.UNKNOWN_ACTION
   );
 
@@ -176,21 +92,7 @@ function run_test() {
     pm.ALLOW_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      crazyPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.ALLOW_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      mainPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
@@ -198,32 +100,11 @@ function run_test() {
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub1Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"),
     pm.UNKNOWN_ACTION
   );
   Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      sub2Principal.originNoSuffix,
-      "test/subdomains"
-    ),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
     pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"),
-    pm.UNKNOWN_ACTION
-  );
-  Assert.equal(
-    pm.testPermissionOriginNoSuffix(
-      subsubPrincipal.originNoSuffix,
-      "test/subdomains"
-    ),
     pm.UNKNOWN_ACTION
   );
 }

@@ -64,7 +64,7 @@ xpcshell:
             default: default
     max-run-time:
         by-test-platform:
-            android-em-4.*\/debug: 3600
+            android-em-4.*: 5400
             macosx.*: 3600
             windows10-aarch64/.*: 3600
             default: 2700

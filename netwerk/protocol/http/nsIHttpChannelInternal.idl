@@ -306,6 +306,12 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] readonly attribute nsIURI topWindowURI;
 
     /**
+     * The content blocking allow list principal belonging to the document
+     * loaded in the top-level window that's associated with this channel.
+     */
+    [must_use, noscript] readonly attribute nsIPrincipal contentBlockingAllowListPrincipal;
+
+    /**
      * Set top-level window URI to this channel only when the topWindowURI
      * is null and there is no window associated to this channel.
      * Note that the current usage of this method is only for xpcshell test.

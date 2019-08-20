@@ -22,36 +22,27 @@ already_AddRefed<gfx::DrawTarget> CompositorWidget::StartRemoteDrawing() {
 void CompositorWidget::CleanupRemoteDrawing() { mLastBackBuffer = nullptr; }
 
 already_AddRefed<gfx::DrawTarget> CompositorWidget::GetBackBufferDrawTarget(
-    gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
-    const LayoutDeviceIntRect& aClearRect) {
+    gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
+    bool* aOutIsCleared) {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format =
       aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8
           ? gfx::SurfaceFormat::B8G8R8X8
           : gfx::SurfaceFormat::B8G8R8A8;
-  gfx::IntSize size = aRect.ToUnknownRect().Size();
-  gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
+  gfx::IntSize size = aRect.Size();
+  gfx::IntSize clientSize = Max(size, GetClientSize().ToUnknownSize());
 
-  RefPtr<gfx::DrawTarget> target;
+  *aOutIsCleared = false;
   // Re-use back buffer if possible
-  if (mLastBackBuffer &&
-      mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
-      mLastBackBuffer->GetFormat() == format &&
-      size <= mLastBackBuffer->GetSize() &&
-      mLastBackBuffer->GetSize() <= clientSize) {
-    target = mLastBackBuffer;
-    target->SetTransform(gfx::Matrix());
-    if (!aClearRect.IsEmpty()) {
-      gfx::IntRect clearRect =
-          aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
-      target->ClearRect(gfx::Rect(clearRect.X(), clearRect.Y(),
-                                  clearRect.Width(), clearRect.Height()));
-    }
-  } else {
-    target = aScreenTarget->CreateSimilarDrawTarget(size, format);
-    mLastBackBuffer = target;
+  if (!mLastBackBuffer ||
+      mLastBackBuffer->GetBackendType() != aScreenTarget->GetBackendType() ||
+      mLastBackBuffer->GetFormat() != format ||
+      mLastBackBuffer->GetSize() != clientSize) {
+    mLastBackBuffer =
+        aScreenTarget->CreateSimilarDrawTarget(clientSize, format);
+    *aOutIsCleared = true;
   }
-  return target.forget();
+  return do_AddRef(mLastBackBuffer);
 }
 
 already_AddRefed<gfx::SourceSurface> CompositorWidget::EndBackBufferDrawing() {

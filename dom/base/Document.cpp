@@ -3505,6 +3505,9 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
   mIntrinsicStoragePrincipal = aNewStoragePrincipal;
 
+  AntiTrackingCommon::ComputeContentBlockingAllowListPrincipal(
+      aNewPrincipal, getter_AddRefs(mContentBlockingAllowListPrincipal));
+
 #ifdef DEBUG
   // Validate that the docgroup is set correctly by calling its getter and
   // triggering its sanity check.
@@ -15456,7 +15459,8 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       DebugOnly<bool> isOnAllowList = false;
       MOZ_ASSERT_IF(
           NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-              parent->GetDocumentURI(), false, isOnAllowList)),
+              parent->GetContentBlockingAllowListPrincipal(), false,
+              isOnAllowList)),
           !isOnAllowList);
 
       RefPtr<Document> self(this);
@@ -15965,6 +15969,17 @@ bool Document::HasRecentlyStartedForegroundLoads() {
   delete sLoadingForegroundTopLevelContentDocument;
   sLoadingForegroundTopLevelContentDocument = nullptr;
   return false;
+}
+
+already_AddRefed<nsIPrincipal>
+Document::RecomputeContentBlockingAllowListPrincipal(
+    nsIURI* aURIBeingLoaded, const OriginAttributes& aAttrs) {
+  AntiTrackingCommon::RecomputeContentBlockingAllowListPrincipal(
+      aURIBeingLoaded, aAttrs,
+      getter_AddRefs(mContentBlockingAllowListPrincipal));
+
+  nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
+  return copy.forget();
 }
 
 }  // namespace dom

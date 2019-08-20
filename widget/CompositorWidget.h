@@ -162,8 +162,9 @@ class CompositorWidget {
    * after each composition.
    */
   virtual void EndRemoteDrawing() {}
-  virtual void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                                        LayoutDeviceIntRegion& aInvalidRegion) {
+  virtual void EndRemoteDrawingInRegion(
+      gfx::DrawTarget* aDrawTarget,
+      const LayoutDeviceIntRegion& aInvalidRegion) {
     EndRemoteDrawing();
   }
 
@@ -235,8 +236,8 @@ class CompositorWidget {
    * Create a backbuffer for the software compositor.
    */
   virtual already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
-      gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
-      const LayoutDeviceIntRect& aClearRect);
+      gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
+      bool* aOutIsCleared);
 
   /**
    * Ensure end of composition to back buffer.

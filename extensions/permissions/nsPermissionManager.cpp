@@ -770,12 +770,6 @@ nsPermissionManager::PermissionKey::CreateFromURI(nsIURI* aURI,
   return new PermissionKey(origin);
 }
 
-nsPermissionManager::PermissionKey*
-nsPermissionManager::PermissionKey::CreateFromOriginNoSuffix(
-    const nsACString& aOriginNoSuffix) {
-  return new PermissionKey(aOriginNoSuffix);
-}
-
 /**
  * Simple callback used by |AsyncClose| to trigger a treatment once
  * the database is closed.
@@ -2256,24 +2250,6 @@ nsPermissionManager::TestPermission(nsIURI* aURI, const nsACString& aType,
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestPermissionOriginNoSuffix(
-    const nsACString& aOriginNoSuffix, const nsACString& aType,
-    uint32_t* aPermission) {
-  // Our caller isn't providing a type index hint, so we just pass -1 to force
-  // CommonPrepareToTestPermission to compute it for us based on aType.
-  auto preparationResult = CommonPrepareToTestPermission(
-      nullptr, -1, aType, aPermission, nsIPermissionManager::UNKNOWN_ACTION,
-      false, false, true);
-  if (preparationResult.is<nsresult>()) {
-    return preparationResult.as<nsresult>();
-  }
-
-  return CommonTestPermissionInternal(nullptr, nullptr, aOriginNoSuffix,
-                                      preparationResult.as<int32_t>(), aType,
-                                      aPermission, false, true);
-}
-
-NS_IMETHODIMP
 nsPermissionManager::TestPermissionFromWindow(mozIDOMWindow* aWindow,
                                               const nsACString& aType,
                                               uint32_t* aPermission) {
@@ -2364,13 +2340,12 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 }
 
 nsresult nsPermissionManager::CommonTestPermissionInternal(
-    nsIPrincipal* aPrincipal, nsIURI* aURI, const nsACString& aOriginNoSuffix,
-    int32_t aTypeIndex, const nsACString& aType, uint32_t* aPermission,
-    bool aExactHostMatch, bool aIncludingSession) {
-  MOZ_ASSERT(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
-  MOZ_ASSERT_IF(aPrincipal, !aURI && aOriginNoSuffix.IsEmpty());
-  MOZ_ASSERT_IF(aURI, !aPrincipal && aOriginNoSuffix.IsEmpty());
-  NS_ENSURE_ARG_POINTER(aPrincipal || aURI || !aOriginNoSuffix.IsEmpty());
+    nsIPrincipal* aPrincipal, nsIURI* aURI, int32_t aTypeIndex,
+    const nsACString& aType, uint32_t* aPermission, bool aExactHostMatch,
+    bool aIncludingSession) {
+  MOZ_ASSERT(aPrincipal || aURI);
+  MOZ_ASSERT_IF(aPrincipal, !aURI);
+  NS_ENSURE_ARG_POINTER(aPrincipal || aURI);
 
 #ifdef DEBUG
   {
@@ -2379,8 +2354,6 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
       if (aURI) {
         prin = mozilla::BasePrincipal::CreateContentPrincipal(
             aURI, OriginAttributes());
-      } else if (!aOriginNoSuffix.IsEmpty()) {
-        prin = mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
       }
     }
     MOZ_ASSERT(prin);
@@ -2390,8 +2363,7 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
 
   PermissionHashKey* entry =
       aPrincipal ? GetPermissionHashKey(aPrincipal, aTypeIndex, aExactHostMatch)
-                 : GetPermissionHashKey(aURI, aOriginNoSuffix, aTypeIndex,
-                                        aExactHostMatch);
+                 : GetPermissionHashKey(aURI, aTypeIndex, aExactHostMatch);
   if (!entry || (!aIncludingSession &&
                  entry->GetPermission(aTypeIndex).mNonSessionExpireType ==
                      nsIPermissionManager::EXPIRE_SESSION)) {
@@ -2464,12 +2436,9 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 // accepts host on the format "<foo>". This will perform an exact match lookup
 // as the string doesn't contain any dots.
 nsPermissionManager::PermissionHashKey*
-nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
-                                          const nsACString& aOriginNoSuffix,
-                                          uint32_t aType,
+nsPermissionManager::GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
                                           bool aExactHostMatch) {
-  MOZ_ASSERT(aURI || !aOriginNoSuffix.IsEmpty());
-  MOZ_ASSERT_IF(aURI, aOriginNoSuffix.IsEmpty());
+  MOZ_ASSERT(aURI);
 
 #ifdef DEBUG
   {
@@ -2477,9 +2446,6 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
     nsresult rv = NS_OK;
     if (aURI) {
       rv = GetPrincipal(aURI, getter_AddRefs(principal));
-    } else {
-      principal =
-          mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
     }
     MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
                   PermissionAvailable(principal, mTypeArray[aType]));
@@ -2488,8 +2454,7 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
 
   nsresult rv;
   RefPtr<PermissionKey> key =
-      aURI ? PermissionKey::CreateFromURI(aURI, rv)
-           : PermissionKey::CreateFromOriginNoSuffix(aOriginNoSuffix);
+      aURI ? PermissionKey::CreateFromURI(aURI, rv) : nullptr;
   if (!key) {
     return nullptr;
   }
@@ -2514,9 +2479,6 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return nullptr;
         }
-      } else {
-        principal =
-            mozilla::BasePrincipal::CreateContentPrincipal(aOriginNoSuffix);
       }
       RemoveFromPrincipal(principal, mTypeArray[aType]);
     } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
@@ -2534,15 +2496,9 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
     nsCOMPtr<nsIURI> uri;
     if (aURI) {
       uri = GetNextSubDomainURI(aURI);
-    } else {
-      nsresult rv = NS_NewURI(getter_AddRefs(uri), aOriginNoSuffix);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-      uri = GetNextSubDomainURI(uri);
     }
     if (uri) {
-      return GetPermissionHashKey(uri, EmptyCString(), aType, aExactHostMatch);
+      return GetPermissionHashKey(uri, aType, aExactHostMatch);
     }
   }
 
