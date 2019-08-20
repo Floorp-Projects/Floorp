@@ -16,7 +16,7 @@ add_task(async function returnKeypress() {
 
   // Check url bar and selected tab.
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     TEST_VALUE,
     "Urlbar should preserve the value on return keypress"
   );
@@ -42,7 +42,7 @@ add_task(async function altReturnKeypress() {
 
   // Check url bar and selected tab.
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     TEST_VALUE,
     "Urlbar should preserve the value on return keypress"
   );
@@ -69,7 +69,7 @@ add_task(async function altGrReturnKeypress() {
 
   // Check url bar and selected tab.
   is(
-    gURLBar.textValue,
+    gURLBar.value,
     TEST_VALUE,
     "Urlbar should preserve the value on return keypress"
   );

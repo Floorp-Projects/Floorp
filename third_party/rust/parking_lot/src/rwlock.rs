@@ -359,10 +359,7 @@ mod tests {
             let read_guard = lock.read();
 
             let read_result = lock.try_read();
-            assert!(
-                read_result.is_some(),
-                "try_read should succeed while read_guard is in scope"
-            );
+            assert!(read_result.is_some(), "try_read should succeed while read_guard is in scope");
 
             drop(read_guard);
         }
@@ -381,10 +378,7 @@ mod tests {
             let write_guard = lock.write();
 
             let read_result = lock.try_read();
-            assert!(
-                read_result.is_none(),
-                "try_read should fail while write_guard is in scope"
-            );
+            assert!(read_result.is_none(), "try_read should fail while write_guard is in scope");
 
             drop(write_guard);
         }
@@ -397,10 +391,7 @@ mod tests {
             let read_guard = lock.read();
 
             let write_result = lock.try_write();
-            assert!(
-                write_result.is_none(),
-                "try_write should fail while read_guard is in scope"
-            );
+            assert!(write_result.is_none(), "try_write should fail while read_guard is in scope");
 
             drop(read_guard);
         }
@@ -419,10 +410,7 @@ mod tests {
             let write_guard = lock.write();
 
             let write_result = lock.try_write();
-            assert!(
-                write_result.is_none(),
-                "try_write should fail while write_guard is in scope"
-            );
+            assert!(write_result.is_none(), "try_write should fail while write_guard is in scope");
 
             drop(write_guard);
         }

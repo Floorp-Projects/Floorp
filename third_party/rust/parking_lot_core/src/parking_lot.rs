@@ -5,7 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use crate::thread_parker::ThreadParker;
+use crate::thread_parker::{ThreadParker, ThreadParkerT, UnparkHandleT};
 use crate::util::UncheckedOptionExt;
 use crate::word_lock::WordLock;
 use core::{
@@ -13,7 +13,6 @@ use core::{
     ptr,
     sync::atomic::{AtomicPtr, AtomicUsize, Ordering},
 };
-use rand::{rngs::SmallRng, FromEntropy, Rng};
 use smallvec::SmallVec;
 use std::time::{Duration, Instant};
 
@@ -43,8 +42,9 @@ impl HashTable {
 
         let now = Instant::now();
         let mut entries = Vec::with_capacity(new_size);
-        for _ in 0..new_size {
-            entries.push(Bucket::new(now));
+        for i in 0..new_size {
+            // We must ensure the seed is not zero
+            entries.push(Bucket::new(now, i as u32 + 1));
         }
 
         Box::new(HashTable {
@@ -70,12 +70,12 @@ struct Bucket {
 
 impl Bucket {
     #[inline]
-    pub fn new(timeout: Instant) -> Self {
+    pub fn new(timeout: Instant, seed: u32) -> Self {
         Self {
             mutex: WordLock::INIT,
             queue_head: Cell::new(ptr::null()),
             queue_tail: Cell::new(ptr::null()),
-            fair_timeout: UnsafeCell::new(FairTimeout::new(timeout)),
+            fair_timeout: UnsafeCell::new(FairTimeout::new(timeout, seed)),
         }
     }
 }
@@ -84,17 +84,14 @@ struct FairTimeout {
     // Next time at which point be_fair should be set
     timeout: Instant,
 
-    // Random number generator for calculating the next timeout
-    rng: SmallRng,
+    // the PRNG state for calculating the next timeout
+    seed: u32,
 }
 
 impl FairTimeout {
     #[inline]
-    fn new(timeout: Instant) -> FairTimeout {
-        FairTimeout {
-            timeout,
-            rng: SmallRng::from_entropy(),
-        }
+    fn new(timeout: Instant, seed: u32) -> FairTimeout {
+        FairTimeout { timeout, seed }
     }
 
     // Determine whether we should force a fair unlock, and update the timeout
@@ -102,11 +99,21 @@ impl FairTimeout {
     fn should_timeout(&mut self) -> bool {
         let now = Instant::now();
         if now > self.timeout {
-            self.timeout = now + Duration::new(0, self.rng.gen_range(0, 1000000));
+            // Time between 0 and 1ms.
+            let nanos = self.gen_u32() % 1_000_000;
+            self.timeout = now + Duration::new(0, nanos);
             true
         } else {
             false
         }
+    }
+
+    // Pseudorandom number generator from the "Xorshift RNGs" paper by George Marsaglia.
+    fn gen_u32(&mut self) -> u32 {
+        self.seed ^= self.seed << 13;
+        self.seed ^= self.seed >> 17;
+        self.seed ^= self.seed << 5;
+        self.seed
     }
 }
 
@@ -158,10 +165,7 @@ impl ThreadData {
 
 // Invokes the given closure with a reference to the current thread `ThreadData`.
 #[inline(always)]
-fn with_thread_data<F, T>(f: F) -> T
-where
-    F: FnOnce(&ThreadData) -> T,
-{
+fn with_thread_data<T>(f: impl FnOnce(&ThreadData) -> T) -> T {
     // Unlike word_lock::ThreadData, parking_lot::ThreadData is always expensive
     // to construct. Try to use a thread-local version if possible. Otherwise just
     // create a ThreadData on the stack
@@ -195,7 +199,6 @@ fn get_hashtable() -> *mut HashTable {
 
 // Get a pointer to the latest hash table, creating one if it doesn't exist yet.
 #[cold]
-#[inline(never)]
 fn create_hashtable() -> *mut HashTable {
     let new_table = Box::into_raw(HashTable::new(LOAD_FACTOR, ptr::null()));
 
@@ -413,13 +416,8 @@ unsafe fn lock_bucket_pair<'a>(key1: usize, key2: usize) -> (&'a Bucket, &'a Buc
 // Unlock a pair of buckets
 #[inline]
 unsafe fn unlock_bucket_pair(bucket1: &Bucket, bucket2: &Bucket) {
-    if bucket1 as *const _ == bucket2 as *const _ {
-        bucket1.mutex.unlock();
-    } else if bucket1 as *const _ < bucket2 as *const _ {
-        bucket2.mutex.unlock();
-        bucket1.mutex.unlock();
-    } else {
-        bucket1.mutex.unlock();
+    bucket1.mutex.unlock();
+    if !ptr::eq(bucket1, bucket2) {
         bucket2.mutex.unlock();
     }
 }
@@ -546,19 +544,14 @@ pub const DEFAULT_PARK_TOKEN: ParkToken = ParkToken(0);
 /// to call `unpark_one`, `unpark_all`, `unpark_requeue` or `unpark_filter`, but
 /// it is not allowed to call `park` or panic.
 #[inline]
-pub unsafe fn park<V, B, T>(
+pub unsafe fn park(
     key: usize,
-    validate: V,
-    before_sleep: B,
-    timed_out: T,
+    validate: impl FnOnce() -> bool,
+    before_sleep: impl FnOnce(),
+    timed_out: impl FnOnce(usize, bool),
     park_token: ParkToken,
     timeout: Option<Instant>,
-) -> ParkResult
-where
-    V: FnOnce() -> bool,
-    B: FnOnce(),
-    T: FnOnce(usize, bool),
-{
+) -> ParkResult {
     // Grab our thread data, this also ensures that the hash table exists
     with_thread_data(|thread_data| {
         // Lock the bucket for the given key
@@ -587,9 +580,9 @@ where
         // Invoke the pre-sleep callback
         before_sleep();
 
-        // Park our thread and determine whether we were woken up by an unpark or by
-        // our timeout. Note that this isn't precise: we can still be unparked since
-        // we are still in the queue.
+        // Park our thread and determine whether we were woken up by an unpark
+        // or by our timeout. Note that this isn't precise: we can still be
+        // unparked since we are still in the queue.
         let unparked = match timeout {
             Some(timeout) => thread_data.parker.park_until(timeout),
             None => {
@@ -684,10 +677,10 @@ where
 /// The `callback` function is called while the queue is locked and must not
 /// panic or call into any function in `parking_lot`.
 #[inline]
-pub unsafe fn unpark_one<C>(key: usize, callback: C) -> UnparkResult
-where
-    C: FnOnce(UnparkResult) -> UnparkToken,
-{
+pub unsafe fn unpark_one(
+    key: usize,
+    callback: impl FnOnce(UnparkResult) -> UnparkToken,
+) -> UnparkResult {
     // Lock the bucket for the given key
     let bucket = lock_bucket(key);
 
@@ -833,16 +826,12 @@ pub unsafe fn unpark_all(key: usize, unpark_token: UnparkToken) -> usize {
 /// The `validate` and `callback` functions are called while the queue is locked
 /// and must not panic or call into any function in `parking_lot`.
 #[inline]
-pub unsafe fn unpark_requeue<V, C>(
+pub unsafe fn unpark_requeue(
     key_from: usize,
     key_to: usize,
-    validate: V,
-    callback: C,
-) -> UnparkResult
-where
-    V: FnOnce() -> RequeueOp,
-    C: FnOnce(RequeueOp, UnparkResult) -> UnparkToken,
-{
+    validate: impl FnOnce() -> RequeueOp,
+    callback: impl FnOnce(RequeueOp, UnparkResult) -> UnparkToken,
+) -> UnparkResult {
     // Lock the two buckets for the given key
     let (bucket_from, bucket_to) = lock_bucket_pair(key_from, key_to);
 
@@ -966,11 +955,11 @@ where
 /// The `filter` and `callback` functions are called while the queue is locked
 /// and must not panic or call into any function in `parking_lot`.
 #[inline]
-pub unsafe fn unpark_filter<F, C>(key: usize, mut filter: F, callback: C) -> UnparkResult
-where
-    F: FnMut(ParkToken) -> FilterOp,
-    C: FnOnce(UnparkResult) -> UnparkToken,
-{
+pub unsafe fn unpark_filter(
+    key: usize,
+    mut filter: impl FnMut(ParkToken) -> FilterOp,
+    callback: impl FnOnce(UnparkResult) -> UnparkToken,
+) -> UnparkResult {
     // Lock the bucket for the given key
     let bucket = lock_bucket(key);
 
@@ -1088,6 +1077,7 @@ pub mod deadlock {
 #[cfg(feature = "deadlock_detection")]
 mod deadlock_impl {
     use super::{get_hashtable, lock_bucket, with_thread_data, ThreadData, NUM_THREADS};
+    use crate::thread_parker::{ThreadParkerT, UnparkHandleT};
     use crate::word_lock::WordLock;
     use backtrace::Backtrace;
     use petgraph;

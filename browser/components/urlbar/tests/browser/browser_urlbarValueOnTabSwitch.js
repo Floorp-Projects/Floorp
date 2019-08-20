@@ -57,29 +57,29 @@ add_task(async function() {
   async function cycleTabs() {
     await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testURL,
-      "gURLBar.textValue should be testURL after switching back to fullURLTab"
+      "gURLBar.value should be testURL after switching back to fullURLTab"
     );
 
     await BrowserTestUtils.switchTab(gBrowser, partialURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testPartialURL,
-      "gURLBar.textValue should be testPartialURL after switching back to partialURLTab"
+      "gURLBar.value should be testPartialURL after switching back to partialURLTab"
     );
     await BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       "",
-      'gURLBar.textValue should be "" after switching back to deletedURLTab'
+      'gURLBar.value should be "" after switching back to deletedURLTab'
     );
 
     await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testURL,
-      "gURLBar.textValue should be testURL after switching back to fullURLTab"
+      "gURLBar.value should be testURL after switching back to fullURLTab"
     );
   }
 
@@ -97,8 +97,7 @@ add_task(async function() {
       if (removeAll) {
         gURLBar.select();
       } else {
-        gURLBar.selectionStart = gURLBar.selectionEnd =
-          gURLBar.textValue.length;
+        gURLBar.selectionStart = gURLBar.selectionEnd = gURLBar.value.length;
       }
       EventUtils.synthesizeKey("KEY_Backspace");
     });
@@ -107,31 +106,31 @@ add_task(async function() {
   async function prepareDeletedURLTab() {
     await BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testURL,
-      "gURLBar.textValue should be testURL after initial switch to deletedURLTab"
+      "gURLBar.value should be testURL after initial switch to deletedURLTab"
     );
 
     // simulate the user removing the whole url from the location bar
     await urlbarBackspace(true);
-    is(gURLBar.textValue, "", 'gURLBar.textValue should be "" (just set)');
+    is(gURLBar.value, "", 'gURLBar.value should be "" (just set)');
   }
 
   async function prepareFullURLTab() {
     await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testURL,
-      "gURLBar.textValue should be testURL after initial switch to fullURLTab"
+      "gURLBar.value should be testURL after initial switch to fullURLTab"
     );
   }
 
   async function preparePartialURLTab() {
     await BrowserTestUtils.switchTab(gBrowser, partialURLTab);
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testURL,
-      "gURLBar.textValue should be testURL after initial switch to partialURLTab"
+      "gURLBar.value should be testURL after initial switch to partialURLTab"
     );
 
     // simulate the user removing part of the url from the location bar
@@ -142,9 +141,9 @@ add_task(async function() {
     }
 
     is(
-      gURLBar.textValue,
+      gURLBar.value,
       testPartialURL,
-      "gURLBar.textValue should be testPartialURL (just set)"
+      "gURLBar.value should be testPartialURL (just set)"
     );
   }
 

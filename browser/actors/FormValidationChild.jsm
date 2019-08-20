@@ -10,22 +10,17 @@
 
 var EXPORTED_SYMBOLS = ["FormValidationChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { BrowserUtils } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class FormValidationChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
-
+class FormValidationChild extends JSWindowActorChild {
+  constructor() {
+    super();
     this._validationMessage = "";
     this._element = null;
-
-    this.mm.addEventListener("pageshow", this);
+    this._addedPageShowListener = false;
   }
 
   /*
@@ -33,6 +28,15 @@ class FormValidationChild extends ActorChild {
    */
 
   handleEvent(aEvent) {
+    if (!this._addedPageShowListener) {
+      // Listening to ‘pageshow’ event is only relevant
+      // if an invalid form popup was open. So we add
+      // a listener here and not during registration to
+      // avoid a premature instantiation of the actor.
+      this.contentWindow.addEventListener("pageshow", this);
+      this._addedPageShowListener = true;
+    }
+
     switch (aEvent.type) {
       case "MozInvalidForm":
         aEvent.preventDefault();
@@ -61,7 +65,7 @@ class FormValidationChild extends ActorChild {
     for (let element of aInvalidElements) {
       // Insure that this is the FormSubmitObserver associated with the
       // element / window this notification is about.
-      if (this.content != element.ownerGlobal.top.document.defaultView) {
+      if (this.contentWindow != element.ownerGlobal.document.defaultView) {
         return;
       }
 
@@ -174,25 +178,25 @@ class FormValidationChild extends ActorChild {
       } else {
         offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);
       }
-      let zoomFactor = this.content.windowUtils.fullZoom;
+      let zoomFactor = this.contentWindow.windowUtils.fullZoom;
       panelData.offset = Math.round(offset * zoomFactor);
       panelData.position = "after_start";
     }
-    this.mm.sendAsyncMessage("FormValidation:ShowPopup", panelData);
+    this.sendAsyncMessage("FormValidation:ShowPopup", panelData);
   }
 
   _hidePopup() {
-    this.mm.sendAsyncMessage("FormValidation:HidePopup", {});
+    this.sendAsyncMessage("FormValidation:HidePopup", {});
   }
 
   _isRootDocumentEvent(aEvent) {
-    if (this.content == null) {
+    if (this.contentWindow == null) {
       return true;
     }
     let target = aEvent.originalTarget;
     return (
-      target == this.content.document ||
-      (target.ownerDocument && target.ownerDocument == this.content.document)
+      target == this.document ||
+      (target.ownerDocument && target.ownerDocument == this.document)
     );
   }
 }

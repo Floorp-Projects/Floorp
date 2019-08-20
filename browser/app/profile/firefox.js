@@ -78,6 +78,9 @@ pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 
+// Disable extensionStorage storage actor by default
+pref("devtools.storage.extensionStorage.enabled", false);
+
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/language-tools/");
 
@@ -986,7 +989,11 @@ pref("security.certerrors.permanentOverride", true);
 pref("security.certerrors.mitm.priming.enabled", true);
 pref("security.certerrors.mitm.priming.endpoint", "https://mitmdetection.services.mozilla.com/");
 pref("security.certerrors.mitm.auto_enable_enterprise_roots", true);
+#ifdef NIGHTLY_BUILD
+pref("security.aboutcertificate.enabled", true);
+#else
 pref("security.aboutcertificate.enabled", false);
+#endif
 
 // Whether to start the private browsing mode at application startup
 pref("browser.privatebrowsing.autostart", false);
@@ -1918,7 +1925,7 @@ pref("identity.fxaccounts.toolbar.accessed", false);
 pref("identity.fxaccounts.service.sendLoginUrl", "https://send.firefox.com/login/");
 pref("identity.fxaccounts.service.monitorLoginUrl", "https://monitor.firefox.com/");
 
-// Check bundled JAR and XPI files for corruption.
+// Check bundled omni JARs for corruption.
 #ifdef RELEASE_OR_BETA
   pref("corroborator.enabled", false);
 #else

@@ -92,13 +92,9 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
 /***/ 102:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* WEBPACK VAR INJECTION */(function(process) {/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const flag = __webpack_require__(103);
 
 function isBrowser() {
@@ -127,8 +123,7 @@ function isFirefoxPanel() {
 }
 
 function isFirefox() {
-  return (/firefox/i.test(navigator.userAgent)
-  );
+  return /firefox/i.test(navigator.userAgent);
 }
 
 module.exports = {
@@ -154,17 +149,16 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_103__;
 "use strict";
 
 
-var _tree = __webpack_require__(109);
-
-var _tree2 = _interopRequireDefault(_tree);
+var _tree = _interopRequireDefault(__webpack_require__(109));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 module.exports = {
-  Tree: _tree2.default
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+  Tree: _tree.default
+};
 
 /***/ }),
 
@@ -177,42 +171,40 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _react = __webpack_require__(6);
+var _react = _interopRequireDefault(__webpack_require__(6));
 
-var _react2 = _interopRequireDefault(_react);
+var _reactDomFactories = _interopRequireDefault(__webpack_require__(1));
 
-var _reactDomFactories = __webpack_require__(1);
-
-var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
-
-var _propTypes = __webpack_require__(0);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { Component, createFactory } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                       * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const {
+  Component,
+  createFactory
+} = _react.default;
 
-__webpack_require__(110);
+__webpack_require__(110); // depth
 
-// depth
-const AUTO_EXPAND_DEPTH = 0;
 
-// Simplied selector targetting elements that can receive the focus,
+const AUTO_EXPAND_DEPTH = 0; // Simplied selector targetting elements that can receive the focus,
 // full version at https://stackoverflow.com/questions/1599660.
-const FOCUSABLE_SELECTOR = ["a[href]:not([tabindex='-1'])", "button:not([disabled]):not([tabindex='-1'])", "iframe:not([tabindex='-1'])", "input:not([disabled]):not([tabindex='-1'])", "select:not([disabled]):not([tabindex='-1'])", "textarea:not([disabled]):not([tabindex='-1'])", "[tabindex]:not([tabindex='-1'])"].join(", ");
 
+const FOCUSABLE_SELECTOR = ["a[href]:not([tabindex='-1'])", "button:not([disabled]):not([tabindex='-1'])", "iframe:not([tabindex='-1'])", "input:not([disabled]):not([tabindex='-1'])", "select:not([disabled]):not([tabindex='-1'])", "textarea:not([disabled]):not([tabindex='-1'])", "[tabindex]:not([tabindex='-1'])"].join(", ");
 /**
  * An arrow that displays whether its node is expanded (▼) or collapsed
  * (▶). When its node has no children, it is hidden.
  */
+
 class ArrowExpander extends Component {
   static get propTypes() {
     return {
-      expanded: _propTypes2.default.bool
+      expanded: _propTypes.default.bool
     };
   }
 
@@ -221,43 +213,50 @@ class ArrowExpander extends Component {
   }
 
   render() {
-    const { expanded } = this.props;
-
+    const {
+      expanded
+    } = this.props;
     const classNames = ["arrow"];
+
     if (expanded) {
       classNames.push("expanded");
     }
-    return _reactDomFactories2.default.button({
+
+    return _reactDomFactories.default.button({
       className: classNames.join(" ")
     });
   }
+
 }
 
-const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
-const treeLastIndent = _reactDomFactories2.default.span({ className: "tree-indent tree-last-indent" }, "\u200B");
+const treeIndent = _reactDomFactories.default.span({
+  className: "tree-indent"
+}, "\u200B");
+
+const treeLastIndent = _reactDomFactories.default.span({
+  className: "tree-indent tree-last-indent"
+}, "\u200B");
 
 class TreeNode extends Component {
   static get propTypes() {
     return {
-      id: _propTypes2.default.any.isRequired,
-      index: _propTypes2.default.number.isRequired,
-      depth: _propTypes2.default.number.isRequired,
-      focused: _propTypes2.default.bool.isRequired,
-      active: _propTypes2.default.bool.isRequired,
-      expanded: _propTypes2.default.bool.isRequired,
-      item: _propTypes2.default.any.isRequired,
-      isExpandable: _propTypes2.default.bool.isRequired,
-      onClick: _propTypes2.default.func,
-      shouldItemUpdate: _propTypes2.default.func,
-      renderItem: _propTypes2.default.func.isRequired
+      id: _propTypes.default.any.isRequired,
+      index: _propTypes.default.number.isRequired,
+      depth: _propTypes.default.number.isRequired,
+      focused: _propTypes.default.bool.isRequired,
+      active: _propTypes.default.bool.isRequired,
+      expanded: _propTypes.default.bool.isRequired,
+      item: _propTypes.default.any.isRequired,
+      isExpandable: _propTypes.default.bool.isRequired,
+      onClick: _propTypes.default.func,
+      shouldItemUpdate: _propTypes.default.func,
+      renderItem: _propTypes.default.func.isRequired
     };
   }
 
   constructor(props) {
     super(props);
-
-    this.treeNodeRef = _react2.default.createRef();
-
+    this.treeNodeRef = _react.default.createRef();
     this._onKeyDown = this._onKeyDown.bind(this);
   }
 
@@ -267,6 +266,7 @@ class TreeNode extends Component {
     // is active and focus is outside its container, focus on the first
     // focusable element inside.
     const elms = this.getFocusableElements();
+
     if (this.props.active) {
       if (elms.length > 0 && !elms.includes(document.activeElement)) {
         elms[0].focus();
@@ -279,15 +279,15 @@ class TreeNode extends Component {
   shouldComponentUpdate(nextProps) {
     return this.props.item !== nextProps.item || this.props.shouldItemUpdate && this.props.shouldItemUpdate(this.props.item, nextProps.item) || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
   }
-
   /**
    * Get a list of all elements that are focusable with a keyboard inside the
    * tree node.
    */
+
+
   getFocusableElements() {
     return this.treeNodeRef.current ? Array.from(this.treeNodeRef.current.querySelectorAll(FOCUSABLE_SELECTOR)) : [];
   }
-
   /**
    * Wrap and move keyboard focus to first/last focusable element inside the
    * tree node to prevent the focus from escaping the tree node boundaries.
@@ -297,6 +297,8 @@ class TreeNode extends Component {
    * @param  {Boolean} back     direction
    * @return {Boolean}          true there is a newly focused element.
    */
+
+
   _wrapMoveFocus(current, back) {
     const elms = this.getFocusableElements();
     let next;
@@ -319,13 +321,18 @@ class TreeNode extends Component {
   }
 
   _onKeyDown(e) {
-    const { target, key, shiftKey } = e;
+    const {
+      target,
+      key,
+      shiftKey
+    } = e;
 
     if (key !== "Tab") {
       return;
     }
 
     const focusMoved = this._wrapMoveFocus(target, shiftKey);
+
     if (focusMoved) {
       // Focus was moved to the begining/end of the list, so we need to prevent
       // the default focus change that would happen here.
@@ -346,30 +353,31 @@ class TreeNode extends Component {
       renderItem,
       isExpandable
     } = this.props;
-
     const arrow = isExpandable ? ArrowExpanderFactory({
       item,
       expanded
     }) : null;
-
     let ariaExpanded;
+
     if (this.props.isExpandable) {
       ariaExpanded = false;
     }
+
     if (this.props.expanded) {
       ariaExpanded = true;
     }
 
-    const indents = Array.from({ length: depth }, (_, i) => {
+    const indents = Array.from({
+      length: depth
+    }, (_, i) => {
       if (i == depth - 1) {
         return treeLastIndent;
       }
+
       return treeIndent;
     });
-
     const items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
-
-    return _reactDomFactories2.default.div({
+    return _reactDomFactories.default.div({
       id,
       className: `tree-node${focused ? " focused" : ""}${active ? " active" : ""}`,
       onClick: this.props.onClick,
@@ -381,11 +389,11 @@ class TreeNode extends Component {
       "data-expandable": this.props.isExpandable
     }, ...items);
   }
+
 }
 
 const ArrowExpanderFactory = createFactory(ArrowExpander);
 const TreeNodeFactory = createFactory(TreeNode);
-
 /**
  * Create a function that calls the given function `fn` only once per animation
  * frame.
@@ -393,11 +401,13 @@ const TreeNodeFactory = createFactory(TreeNode);
  * @param {Function} fn
  * @returns {Function}
  */
+
 function oncePerAnimationFrame(fn) {
   let animationId = null;
   let argsToPass = null;
   return function (...args) {
     argsToPass = args;
+
     if (animationId !== null) {
       return;
     }
@@ -409,7 +419,6 @@ function oncePerAnimationFrame(fn) {
     });
   };
 }
-
 /**
  * A generic tree component. See propTypes for the public API.
  *
@@ -485,11 +494,12 @@ function oncePerAnimationFrame(fn) {
  *       }
  *     }
  */
+
+
 class Tree extends Component {
   static get propTypes() {
     return {
       // Required props
-
       // A function to get an item's parent, or null if it is a root.
       //
       // Type: getParent(item: Item) -> Maybe<Item>
@@ -498,8 +508,7 @@ class Tree extends Component {
       //
       //     // The parent of this item is stored in its `parent` property.
       //     getParent: item => item.parent
-      getParent: _propTypes2.default.func.isRequired,
-
+      getParent: _propTypes.default.func.isRequired,
       // A function to get an item's children.
       //
       // Type: getChildren(item: Item) -> [Item]
@@ -508,8 +517,7 @@ class Tree extends Component {
       //
       //     // This item's children are stored in its `children` property.
       //     getChildren: item => item.children
-      getChildren: _propTypes2.default.func.isRequired,
-
+      getChildren: _propTypes.default.func.isRequired,
       // A function to check if the tree node for the item should be updated.
       //
       // Type: shouldItemUpdate(prevItem: Item, nextItem: Item) -> Boolean
@@ -519,8 +527,7 @@ class Tree extends Component {
       //     // This item should be updated if it's type is a long string
       //     shouldItemUpdate: (prevItem, nextItem) =>
       //       nextItem.type === "longstring"
-      shouldItemUpdate: _propTypes2.default.func,
-
+      shouldItemUpdate: _propTypes.default.func,
       // A function which takes an item and ArrowExpander component instance and
       // returns a component, or text, or anything else that React considers
       // renderable.
@@ -547,8 +554,7 @@ class Tree extends Component {
       //         dom.span({ className: "my-tree-item-label" }, item.label)
       //       );
       //     },
-      renderItem: _propTypes2.default.func.isRequired,
-
+      renderItem: _propTypes.default.func.isRequired,
       // A function which returns the roots of the tree (forest).
       //
       // Type: getRoots() -> [Item]
@@ -559,8 +565,7 @@ class Tree extends Component {
       //     // return multiple items if you have many top level items in your
       //     // tree.
       //     getRoots: () => [this.props.rootOfMyTree]
-      getRoots: _propTypes2.default.func.isRequired,
-
+      getRoots: _propTypes.default.func.isRequired,
       // A function to get a unique key for the given item. This helps speed up
       // React's rendering a *TON*.
       //
@@ -569,8 +574,7 @@ class Tree extends Component {
       // Example:
       //
       //     getKey: item => `my-tree-item-${item.uniqueId}`
-      getKey: _propTypes2.default.func.isRequired,
-
+      getKey: _propTypes.default.func.isRequired,
       // A function to get whether an item is expanded or not. If an item is not
       // expanded, then it must be collapsed.
       //
@@ -579,34 +583,27 @@ class Tree extends Component {
       // Example:
       //
       //     isExpanded: item => item.expanded,
-      isExpanded: _propTypes2.default.func.isRequired,
-
+      isExpanded: _propTypes.default.func.isRequired,
       // Optional props
-
       // The currently focused item, if any such item exists.
-      focused: _propTypes2.default.any,
-
+      focused: _propTypes.default.any,
       // Handle when a new item is focused.
-      onFocus: _propTypes2.default.func,
-
+      onFocus: _propTypes.default.func,
       // The depth to which we should automatically expand new items.
-      autoExpandDepth: _propTypes2.default.number,
+      autoExpandDepth: _propTypes.default.number,
       // Should auto expand all new items or just the new items under the first
       // root item.
-      autoExpandAll: _propTypes2.default.bool,
-
+      autoExpandAll: _propTypes.default.bool,
       // Auto expand a node only if number of its children
       // are less than autoExpandNodeChildrenLimit
-      autoExpandNodeChildrenLimit: _propTypes2.default.number,
-
+      autoExpandNodeChildrenLimit: _propTypes.default.number,
       // Note: the two properties below are mutually exclusive. Only one of the
       // label properties is necessary.
       // ID of an element whose textual content serves as an accessible label
       // for a tree.
-      labelledby: _propTypes2.default.string,
+      labelledby: _propTypes.default.string,
       // Accessibility label for a tree widget.
-      label: _propTypes2.default.string,
-
+      label: _propTypes.default.string,
       // Optional event handlers for when items are expanded or collapsed.
       // Useful for dispatching redux events and updating application state,
       // maybe lazily loading subtrees from a worker, etc.
@@ -618,21 +615,21 @@ class Tree extends Component {
       // Example:
       //
       //     onExpand: item => dispatchExpandActionToRedux(item)
-      onExpand: _propTypes2.default.func,
-      onCollapse: _propTypes2.default.func,
+      onExpand: _propTypes.default.func,
+      onCollapse: _propTypes.default.func,
       // The currently active (keyboard) item, if any such item exists.
-      active: _propTypes2.default.any,
+      active: _propTypes.default.any,
       // Optional event handler called with the current focused node when the
       // Enter key is pressed. Can be useful to allow further keyboard actions
       // within the tree node.
-      onActivate: _propTypes2.default.func,
-      isExpandable: _propTypes2.default.func,
+      onActivate: _propTypes.default.func,
+      isExpandable: _propTypes.default.func,
       // Additional classes to add to the root element.
-      className: _propTypes2.default.string,
+      className: _propTypes.default.string,
       // style object to be applied to the root element.
-      style: _propTypes2.default.object,
+      style: _propTypes.default.object,
       // Prevents blur when Tree loses focus
-      preventBlur: _propTypes2.default.bool
+      preventBlur: _propTypes.default.bool
     };
   }
 
@@ -645,13 +642,10 @@ class Tree extends Component {
 
   constructor(props) {
     super(props);
-
     this.state = {
       autoExpanded: new Set()
     };
-
-    this.treeRef = _react2.default.createRef();
-
+    this.treeRef = _react.default.createRef();
     this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
     this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
     this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
@@ -659,7 +653,6 @@ class Tree extends Component {
     this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
     this._focusFirstNode = oncePerAnimationFrame(this._focusFirstNode).bind(this);
     this._focusLastNode = oncePerAnimationFrame(this._focusLastNode).bind(this);
-
     this._autoExpand = this._autoExpand.bind(this);
     this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
     this._preventEvent = this._preventEvent.bind(this);
@@ -675,6 +668,7 @@ class Tree extends Component {
 
   componentDidMount() {
     this._autoExpand();
+
     if (this.props.focused) {
       this._scrollNodeIntoView(this.props.focused);
     }
@@ -699,12 +693,12 @@ class Tree extends Component {
 
     if (!autoExpandDepth && !initiallyExpanded) {
       return;
-    }
-
-    // Automatically expand the first autoExpandDepth levels for new items. Do
+    } // Automatically expand the first autoExpandDepth levels for new items. Do
     // not use the usual DFS infrastructure because we don't want to ignore
     // collapsed nodes. Any initially expanded items will be expanded regardless
     // of how deep they are.
+
+
     const autoExpand = (item, currentDepth) => {
       const initial = initiallyExpanded && initiallyExpanded(item);
 
@@ -713,6 +707,7 @@ class Tree extends Component {
       }
 
       const children = this.props.getChildren(item);
+
       if (!initial && autoExpandNodeChildrenLimit && children.length > autoExpandNodeChildrenLimit) {
         return;
       }
@@ -723,6 +718,7 @@ class Tree extends Component {
       }
 
       const length = children.length;
+
       for (let i = 0; i < length; i++) {
         autoExpand(children[i], currentDepth + 1);
       }
@@ -730,6 +726,7 @@ class Tree extends Component {
 
     const roots = this.props.getRoots();
     const length = roots.length;
+
     if (this.props.autoExpandAll) {
       for (let i = 0; i < length; i++) {
         autoExpand(roots[i], 0);
@@ -754,6 +751,7 @@ class Tree extends Component {
       case "ArrowLeft":
       case "ArrowRight":
         this._preventEvent(e);
+
         break;
     }
   }
@@ -761,21 +759,27 @@ class Tree extends Component {
   _preventEvent(e) {
     e.preventDefault();
     e.stopPropagation();
+
     if (e.nativeEvent) {
       if (e.nativeEvent.preventDefault) {
         e.nativeEvent.preventDefault();
       }
+
       if (e.nativeEvent.stopPropagation) {
         e.nativeEvent.stopPropagation();
       }
     }
   }
-
   /**
    * Perform a pre-order depth-first search from item.
    */
+
+
   _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
-    traversal.push({ item, depth: _depth });
+    traversal.push({
+      item,
+      depth: _depth
+    });
 
     if (!this.props.isExpanded(item)) {
       return traversal;
@@ -789,59 +793,64 @@ class Tree extends Component {
 
     const children = this.props.getChildren(item);
     const length = children.length;
+
     for (let i = 0; i < length; i++) {
       this._dfs(children[i], maxDepth, traversal, nextDepth);
     }
 
     return traversal;
   }
-
   /**
    * Perform a pre-order depth-first search over the whole forest.
    */
+
+
   _dfsFromRoots(maxDepth = Infinity) {
     const traversal = [];
-
     const roots = this.props.getRoots();
     const length = roots.length;
+
     for (let i = 0; i < length; i++) {
       this._dfs(roots[i], maxDepth, traversal);
     }
 
     return traversal;
   }
-
   /**
    * Expands current row.
    *
    * @param {Object} item
    * @param {Boolean} expandAllChildren
    */
+
+
   _onExpand(item, expandAllChildren) {
     if (this.props.onExpand) {
       this.props.onExpand(item);
 
       if (expandAllChildren) {
         const children = this._dfs(item);
+
         const length = children.length;
+
         for (let i = 0; i < length; i++) {
           this.props.onExpand(children[i].item);
         }
       }
     }
   }
-
   /**
    * Collapses current row.
    *
    * @param {Object} item
    */
+
+
   _onCollapse(item) {
     if (this.props.onCollapse) {
       this.props.onCollapse(item);
     }
   }
-
   /**
    * Sets the passed in item to be the focused item.
    *
@@ -854,14 +863,20 @@ class Tree extends Component {
    *                 to the top or the bottom of the scrollable container when
    *                 the element is off canvas.
    */
+
+
   _focus(item, options = {}) {
-    const { preventAutoScroll } = options;
+    const {
+      preventAutoScroll
+    } = options;
+
     if (item && !preventAutoScroll) {
       this._scrollNodeIntoView(item, options);
     }
 
     if (this.props.active != undefined) {
       this._activate(undefined);
+
       if (this.treeRef.current !== document.activeElement) {
         this.treeRef.current.focus();
       }
@@ -871,19 +886,19 @@ class Tree extends Component {
       this.props.onFocus(item);
     }
   }
-
   /**
    * Sets the passed in item to be the active item.
    *
    * @param {Object|undefined} item
    *        The item to be activated, or undefined to activate no item.
    */
+
+
   _activate(item) {
     if (this.props.onActivate) {
       this.props.onActivate(item);
     }
   }
-
   /**
    * Sets the passed in item to be the focused item.
    *
@@ -896,13 +911,19 @@ class Tree extends Component {
    *                 to the top or the bottom of the scrollable container when
    *                 the element is off canvas.
    */
+
+
   _scrollNodeIntoView(item, options = {}) {
     if (item !== undefined) {
       const treeElement = this.treeRef.current;
       const element = document.getElementById(this.props.getKey(item));
 
       if (element) {
-        const { top, bottom } = element.getBoundingClientRect();
+        const {
+          top,
+          bottom
+        } = element.getBoundingClientRect();
+
         const closestScrolledParent = node => {
           if (node == null) {
             return null;
@@ -911,27 +932,35 @@ class Tree extends Component {
           if (node.scrollHeight > node.clientHeight) {
             return node;
           }
+
           return closestScrolledParent(node.parentNode);
         };
+
         const scrolledParent = closestScrolledParent(treeElement);
         const scrolledParentRect = scrolledParent ? scrolledParent.getBoundingClientRect() : null;
         const isVisible = !scrolledParent || top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom;
 
         if (!isVisible) {
-          const { alignTo } = options;
+          const {
+            alignTo
+          } = options;
           const scrollToTop = alignTo ? alignTo === "top" : !scrolledParentRect || top < scrolledParentRect.top;
           element.scrollIntoView(scrollToTop);
         }
       }
     }
   }
-
   /**
    * Sets the state to have no focused item.
    */
+
+
   _onBlur(e) {
     if (this.props.active != undefined) {
-      const { relatedTarget } = e;
+      const {
+        relatedTarget
+      } = e;
+
       if (!this.treeRef.current.contains(relatedTarget)) {
         this._activate(undefined);
       }
@@ -939,19 +968,20 @@ class Tree extends Component {
       this._focus(undefined);
     }
   }
-
   /**
    * Handles key down events in the tree's container.
    *
    * @param {Event} e
    */
   // eslint-disable-next-line complexity
+
+
   _onKeyDown(e) {
     if (this.props.focused == null) {
       return;
-    }
+    } // Allow parent nodes to use navigation arrows with modifiers.
 
-    // Allow parent nodes to use navigation arrows with modifiers.
+
     if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
       return;
     }
@@ -961,10 +991,12 @@ class Tree extends Component {
     switch (e.key) {
       case "ArrowUp":
         this._focusPrevNode();
+
         return;
 
       case "ArrowDown":
         this._focusNextNode();
+
         return;
 
       case "ArrowLeft":
@@ -973,6 +1005,7 @@ class Tree extends Component {
         } else {
           this._focusParentNode();
         }
+
         return;
 
       case "ArrowRight":
@@ -981,28 +1014,34 @@ class Tree extends Component {
         } else {
           this._focusNextNode();
         }
+
         return;
 
       case "Home":
         this._focusFirstNode();
+
         return;
 
       case "End":
         this._focusLastNode();
+
         return;
 
       case "Enter":
       case " ":
         if (this.treeRef.current === document.activeElement) {
           this._preventEvent(e);
+
           if (this.props.active !== this.props.focused) {
             this._activate(this.props.focused);
           }
         }
+
         return;
 
       case "Escape":
         this._preventEvent(e);
+
         if (this.props.active != undefined) {
           this._activate(undefined);
         }
@@ -1010,44 +1049,54 @@ class Tree extends Component {
         if (this.treeRef.current !== document.activeElement) {
           this.treeRef.current.focus();
         }
+
     }
   }
-
   /**
    * Sets the previous node relative to the currently focused item, to focused.
    */
+
+
   _focusPrevNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the previous node in the DFS, if it exists. If it
     // doesn't exist, we're at the first node already.
-
     let prev;
 
     const traversal = this._dfsFromRoots();
+
     const length = traversal.length;
+
     for (let i = 0; i < length; i++) {
       const item = traversal[i].item;
+
       if (item === this.props.focused) {
         break;
       }
+
       prev = item;
     }
+
     if (prev === undefined) {
       return;
     }
 
-    this._focus(prev, { alignTo: "top" });
+    this._focus(prev, {
+      alignTo: "top"
+    });
   }
-
   /**
    * Handles the down arrow key which will focus either the next child
    * or sibling row.
    */
+
+
   _focusNextNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the next node in the DFS, if it exists. If it
     // doesn't exist, we're at the last node already.
     const traversal = this._dfsFromRoots();
+
     const length = traversal.length;
     let i = 0;
 
@@ -1055,37 +1104,52 @@ class Tree extends Component {
       if (traversal[i].item === this.props.focused) {
         break;
       }
+
       i++;
     }
 
     if (i + 1 < traversal.length) {
-      this._focus(traversal[i + 1].item, { alignTo: "bottom" });
+      this._focus(traversal[i + 1].item, {
+        alignTo: "bottom"
+      });
     }
   }
-
   /**
    * Handles the left arrow key, going back up to the current rows'
    * parent row.
    */
+
+
   _focusParentNode() {
     const parent = this.props.getParent(this.props.focused);
+
     if (!parent) {
       this._focusPrevNode(this.props.focused);
+
       return;
     }
 
-    this._focus(parent, { alignTo: "top" });
+    this._focus(parent, {
+      alignTo: "top"
+    });
   }
 
   _focusFirstNode() {
     const traversal = this._dfsFromRoots();
-    this._focus(traversal[0].item, { alignTo: "top" });
+
+    this._focus(traversal[0].item, {
+      alignTo: "top"
+    });
   }
 
   _focusLastNode() {
     const traversal = this._dfsFromRoots();
+
     const lastIndex = traversal.length - 1;
-    this._focus(traversal[lastIndex].item, { alignTo: "bottom" });
+
+    this._focus(traversal[lastIndex].item, {
+      alignTo: "bottom"
+    });
   }
 
   _nodeIsExpandable(item) {
@@ -1094,10 +1158,16 @@ class Tree extends Component {
 
   render() {
     const traversal = this._dfsFromRoots();
-    const { active, focused } = this.props;
 
+    const {
+      active,
+      focused
+    } = this.props;
     const nodes = traversal.map((v, i) => {
-      const { item, depth } = traversal[i];
+      const {
+        item,
+        depth
+      } = traversal[i];
       const key = this.props.getKey(item, i);
       return TreeNodeFactory({
         // We make a key unique depending on whether the tree node is in active
@@ -1119,26 +1189,26 @@ class Tree extends Component {
         onClick: e => {
           // We can stop the propagation since click handler on the node can be
           // created in `renderItem`.
-          e.stopPropagation();
-
-          // Since the user just clicked the node, there's no need to check if
+          e.stopPropagation(); // Since the user just clicked the node, there's no need to check if
           // it should be scrolled into view.
-          this._focus(item, { preventAutoScroll: true });
+
+          this._focus(item, {
+            preventAutoScroll: true
+          });
+
           if (this.props.isExpanded(item)) {
             this.props.onCollapse(item, e.altKey);
           } else {
             this.props.onExpand(item, e.altKey);
-          }
+          } // Focus should always remain on the tree container itself.
 
-          // Focus should always remain on the tree container itself.
+
           this.treeRef.current.focus();
         }
       });
     });
-
     const style = Object.assign({}, this.props.style || {});
-
-    return _reactDomFactories2.default.div({
+    return _reactDomFactories.default.div({
       className: `tree ${this.props.className ? this.props.className : ""}`,
       ref: this.treeRef,
       role: "tree",
@@ -1146,15 +1216,19 @@ class Tree extends Component {
       onKeyDown: this._onKeyDown,
       onKeyPress: this._preventArrowKeyScrolling,
       onKeyUp: this._preventArrowKeyScrolling,
-      onFocus: ({ nativeEvent }) => {
+      onFocus: ({
+        nativeEvent
+      }) => {
         if (focused || !nativeEvent || !this.treeRef.current) {
           return;
         }
 
-        const { explicitOriginalTarget } = nativeEvent;
-        // Only set default focus to the first tree node if the focus came
+        const {
+          explicitOriginalTarget
+        } = nativeEvent; // Only set default focus to the first tree node if the focus came
         // from outside the tree (e.g. by tabbing to the tree from other
         // external elements).
+
         if (explicitOriginalTarget !== this.treeRef.current && !this.treeRef.current.contains(explicitOriginalTarget)) {
           this._focus(traversal[0].item);
         }
@@ -1166,9 +1240,11 @@ class Tree extends Component {
       style
     }, nodes);
   }
+
 }
 
-exports.default = Tree;
+var _default = Tree;
+exports.default = _default;
 
 /***/ }),
 
@@ -1309,7 +1385,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_112__;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function networkRequest(url, opts) {
   return fetch(url, {
     cache: opts.loadFromCache ? "default" : "no-cache"
@@ -1321,8 +1396,12 @@ function networkRequest(url, opts) {
           isDwarf: true
         }));
       }
-      return res.text().then(text => ({ content: text }));
+
+      return res.text().then(text => ({
+        content: text
+      }));
     }
+
     return Promise.reject(`request failed with status ${res.status}`);
   });
 }
@@ -1334,18 +1413,18 @@ module.exports = networkRequest;
 /***/ 14:
 /***/ (function(module, exports) {
 
-
-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function WorkerDispatcher() {
   this.msgId = 1;
   this.worker = null;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 WorkerDispatcher.prototype = {
   start(url, win = window) {
     this.worker = new win.Worker(url);
+
     this.worker.onerror = () => {
       console.error(`Error in worker ${url}`);
     };
@@ -1360,8 +1439,11 @@ WorkerDispatcher.prototype = {
     this.worker = null;
   },
 
-  task(method, { queue = false } = {}) {
+  task(method, {
+    queue = false
+  } = {}) {
     const calls = [];
+
     const push = args => {
       return new Promise((resolve, reject) => {
         if (queue && calls.length === 0) {
@@ -1391,7 +1473,9 @@ WorkerDispatcher.prototype = {
         calls: items.map(item => item[0])
       });
 
-      const listener = ({ data: result }) => {
+      const listener = ({
+        data: result
+      }) => {
         if (result.id !== id) {
           return;
         }
@@ -1401,7 +1485,6 @@ WorkerDispatcher.prototype = {
         }
 
         this.worker.removeEventListener("message", listener);
-
         result.results.forEach((resultData, i) => {
           const [, resolve, reject] = items[i];
 
@@ -1422,29 +1505,45 @@ WorkerDispatcher.prototype = {
   invoke(method, ...args) {
     return this.task(method)(...args);
   }
+
 };
 
 function workerHandler(publicInterface) {
   return function (msg) {
-    const { id, method, calls } = msg.data;
-
+    const {
+      id,
+      method,
+      calls
+    } = msg.data;
     Promise.all(calls.map(args => {
       try {
         const response = publicInterface[method].apply(undefined, args);
+
         if (response instanceof Promise) {
-          return response.then(val => ({ response: val }),
-          // Error can't be sent via postMessage, so be sure to
+          return response.then(val => ({
+            response: val
+          }), // Error can't be sent via postMessage, so be sure to
           // convert to string.
-          err => ({ error: err.toString() }));
+          err => ({
+            error: err.toString()
+          }));
         }
-        return { response };
+
+        return {
+          response
+        };
       } catch (error) {
         // Error can't be sent via postMessage, so be sure to convert to
         // string.
-        return { error: error.toString() };
+        return {
+          error: error.toString()
+        };
       }
     })).then(results => {
-      self.postMessage({ id, results });
+      self.postMessage({
+        id,
+        results
+      });
     });
   };
 }
@@ -1487,21 +1586,35 @@ module.exports = g;
 /***/ 183:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  PrefsHelper
+} = __webpack_require__(424);
 
-const { PrefsHelper } = __webpack_require__(424);
 const KeyShortcuts = __webpack_require__(425);
-const { ZoomKeys } = __webpack_require__(426);
+
+const {
+  ZoomKeys
+} = __webpack_require__(426);
+
 const EventEmitter = __webpack_require__(65);
+
 const asyncStorage = __webpack_require__(427);
+
+const asyncStoreHelper = __webpack_require__(516);
+
 const SourceUtils = __webpack_require__(428);
+
 const Telemetry = __webpack_require__(429);
-const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_require__(430);
+
+const {
+  getUnicodeHostname,
+  getUnicodeUrlPath,
+  getUnicodeUrl
+} = __webpack_require__(430);
+
 const PluralForm = __webpack_require__(501);
 
 module.exports = {
@@ -1509,6 +1622,7 @@ module.exports = {
   PrefsHelper,
   ZoomKeys,
   asyncStorage,
+  asyncStoreHelper,
   EventEmitter,
   SourceUtils,
   Telemetry,
@@ -1593,156 +1707,118 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
-var _propTypes = __webpack_require__(0);
+var _react = _interopRequireDefault(__webpack_require__(6));
 
-var _propTypes2 = _interopRequireDefault(_propTypes);
+var _tab = _interopRequireDefault(__webpack_require__(186));
 
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _tab = __webpack_require__(186);
-
-var _tab2 = _interopRequireDefault(_tab);
-
-var _tabList = __webpack_require__(441);
-
-var _tabList2 = _interopRequireDefault(_tabList);
+var _tabList = _interopRequireDefault(__webpack_require__(441));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+class TabList extends _react.default.Component {
+  constructor(props) {
+    super(props);
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+    const childrenCount = _react.default.Children.count(props.children);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var TabList = function (_React$Component) {
-  _inherits(TabList, _React$Component);
-
-  function TabList(props) {
-    _classCallCheck(this, TabList);
-
-    var _this = _possibleConstructorReturn(this, (TabList.__proto__ || Object.getPrototypeOf(TabList)).call(this, props));
-
-    var childrenCount = _react2.default.Children.count(props.children);
-
-    _this.handleKeyPress = _this.handleKeyPress.bind(_this);
-    _this.tabRefs = new Array(childrenCount).fill(0).map(function () {
-      return _react2.default.createRef();
-    });
-    _this.handlers = _this.getHandlers(props.vertical);
-    return _this;
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.tabRefs = new Array(childrenCount).fill(0).map(() => _react.default.createRef());
+    this.handlers = this.getHandlers(props.vertical);
   }
 
-  _createClass(TabList, [{
-    key: 'componentDidUpdate',
-    value: function componentDidUpdate(prevProps) {
-      if (prevProps.activeIndex !== this.props.activeIndex) {
-        this.tabRefs[this.props.activeIndex].current.focus();
-      }
+  componentDidUpdate(prevProps) {
+    if (prevProps.activeIndex !== this.props.activeIndex) {
+      this.tabRefs[this.props.activeIndex].current.focus();
     }
-  }, {
-    key: 'getHandlers',
-    value: function getHandlers(vertical) {
-      if (vertical) {
-        return {
-          ArrowDown: this.next.bind(this),
-          ArrowUp: this.previous.bind(this)
-        };
-      }
+  }
+
+  getHandlers(vertical) {
+    if (vertical) {
       return {
-        ArrowLeft: this.previous.bind(this),
-        ArrowRight: this.next.bind(this)
+        ArrowDown: this.next.bind(this),
+        ArrowUp: this.previous.bind(this)
       };
     }
-  }, {
-    key: 'wrapIndex',
-    value: function wrapIndex(index) {
-      var count = _react2.default.Children.count(this.props.children);
-      return (index + count) % count;
+
+    return {
+      ArrowLeft: this.previous.bind(this),
+      ArrowRight: this.next.bind(this)
+    };
+  }
+
+  wrapIndex(index) {
+    const count = _react.default.Children.count(this.props.children);
+
+    return (index + count) % count;
+  }
+
+  handleKeyPress(event) {
+    const handler = this.handlers[event.key];
+
+    if (handler) {
+      handler();
     }
-  }, {
-    key: 'handleKeyPress',
-    value: function handleKeyPress(event) {
-      var handler = this.handlers[event.key];
-      if (handler) {
-        handler();
+  }
+
+  previous() {
+    const newIndex = this.wrapIndex(this.props.activeIndex - 1);
+    this.props.onActivateTab(newIndex);
+  }
+
+  next() {
+    const newIndex = this.wrapIndex(this.props.activeIndex + 1);
+    this.props.onActivateTab(newIndex);
+  }
+
+  render() {
+    const {
+      accessibleId,
+      activeIndex,
+      children,
+      className,
+      onActivateTab
+    } = this.props;
+    return _react.default.createElement("ul", {
+      className: className,
+      onKeyUp: this.handleKeyPress,
+      role: "tablist"
+    }, _react.default.Children.map(children, (child, index) => {
+      if (child.type !== _tab.default) {
+        throw new Error('Direct children of a <TabList> must be a <Tab>');
       }
-    }
-  }, {
-    key: 'previous',
-    value: function previous() {
-      var newIndex = this.wrapIndex(this.props.activeIndex - 1);
-      this.props.onActivateTab(newIndex);
-    }
-  }, {
-    key: 'next',
-    value: function next() {
-      var newIndex = this.wrapIndex(this.props.activeIndex + 1);
-      this.props.onActivateTab(newIndex);
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      var _this2 = this;
 
-      var _props = this.props,
-          accessibleId = _props.accessibleId,
-          activeIndex = _props.activeIndex,
-          children = _props.children,
-          className = _props.className,
-          onActivateTab = _props.onActivateTab;
+      const active = index === activeIndex;
+      const tabRef = this.tabRefs[index];
+      return _react.default.cloneElement(child, {
+        accessibleId: active ? accessibleId : undefined,
+        active,
+        tabRef,
+        onActivate: () => onActivateTab(index)
+      });
+    }));
+  }
 
-
-      return _react2.default.createElement(
-        'ul',
-        { className: className, onKeyUp: this.handleKeyPress, role: 'tablist' },
-        _react2.default.Children.map(children, function (child, index) {
-          if (child.type !== _tab2.default) {
-            throw new Error('Direct children of a <TabList> must be a <Tab>');
-          }
-
-          var active = index === activeIndex;
-          var tabRef = _this2.tabRefs[index];
-
-          return _react2.default.cloneElement(child, {
-            accessibleId: active ? accessibleId : undefined,
-            active: active,
-            tabRef: tabRef,
-            onActivate: function onActivate() {
-              return onActivateTab(index);
-            }
-          });
-        })
-      );
-    }
-  }]);
-
-  return TabList;
-}(_react2.default.Component);
+}
 
 exports.default = TabList;
-
-
 TabList.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  activeIndex: _propTypes2.default.number,
-  children: _propTypes2.default.node,
-  className: _propTypes2.default.string,
-  onActivateTab: _propTypes2.default.func,
-  vertical: _propTypes2.default.bool
+  accessibleId: _propTypes.default.string,
+  activeIndex: _propTypes.default.number,
+  children: _propTypes.default.node,
+  className: _propTypes.default.string,
+  onActivateTab: _propTypes.default.func,
+  vertical: _propTypes.default.bool
 };
-
 TabList.defaultProps = {
   accessibleId: undefined,
   activeIndex: 0,
   children: null,
-  className: _tabList2.default.container,
-  onActivateTab: function onActivateTab() {},
+  className: _tabList.default.container,
+  onActivateTab: () => {},
   vertical: false
 };
 
@@ -1759,61 +1835,48 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = Tab;
 
-var _propTypes = __webpack_require__(0);
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
-var _propTypes2 = _interopRequireDefault(_propTypes);
+var _react = _interopRequireDefault(__webpack_require__(6));
 
-var _react = __webpack_require__(6);
+var _ref = _interopRequireDefault(__webpack_require__(439));
 
-var _react2 = _interopRequireDefault(_react);
-
-var _ref2 = __webpack_require__(439);
-
-var _ref3 = _interopRequireDefault(_ref2);
-
-var _tab = __webpack_require__(440);
-
-var _tab2 = _interopRequireDefault(_tab);
+var _tab = _interopRequireDefault(__webpack_require__(440));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Tab(_ref) {
-  var accessibleId = _ref.accessibleId,
-      active = _ref.active,
-      children = _ref.children,
-      className = _ref.className,
-      onActivate = _ref.onActivate,
-      tabRef = _ref.tabRef;
-
-  return _react2.default.createElement(
-    'li',
-    {
-      'aria-selected': active,
-      className: className,
-      id: accessibleId,
-      onClick: onActivate,
-      onKeyDown: function onKeyDown() {},
-      ref: tabRef,
-      role: 'tab',
-      tabIndex: active ? 0 : undefined
-    },
-    children
-  );
+function Tab({
+  accessibleId,
+  active,
+  children,
+  className,
+  onActivate,
+  tabRef
+}) {
+  return _react.default.createElement("li", {
+    "aria-selected": active,
+    className: className,
+    id: accessibleId,
+    onClick: onActivate,
+    onKeyDown: () => {},
+    ref: tabRef,
+    role: "tab",
+    tabIndex: active ? 0 : undefined
+  }, children);
 }
 
 Tab.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  active: _propTypes2.default.bool,
-  children: _propTypes2.default.node.isRequired,
-  className: _propTypes2.default.string,
-  onActivate: _propTypes2.default.func,
-  tabRef: _ref3.default
+  accessibleId: _propTypes.default.string,
+  active: _propTypes.default.bool,
+  children: _propTypes.default.node.isRequired,
+  className: _propTypes.default.string,
+  onActivate: _propTypes.default.func,
+  tabRef: _ref.default
 };
-
 Tab.defaultProps = {
   accessibleId: undefined,
   active: false,
-  className: _tab2.default.container,
+  className: _tab.default.container,
   onActivate: undefined,
   tabRef: undefined
 };
@@ -1831,43 +1894,34 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = TabPanels;
 
-var _propTypes = __webpack_require__(0);
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
+var _react = _interopRequireDefault(__webpack_require__(6));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function TabPanels(_ref) {
-  var accessibleId = _ref.accessibleId,
-      activeIndex = _ref.activeIndex,
-      children = _ref.children,
-      className = _ref.className,
-      hasFocusableContent = _ref.hasFocusableContent;
-
-  return _react2.default.createElement(
-    'div',
-    {
-      'aria-labelledby': accessibleId,
-      role: 'tabpanel',
-      className: className,
-      tabIndex: hasFocusableContent ? undefined : 0
-    },
-    _react2.default.Children.toArray(children)[activeIndex]
-  );
+function TabPanels({
+  accessibleId,
+  activeIndex,
+  children,
+  className,
+  hasFocusableContent
+}) {
+  return _react.default.createElement("div", {
+    "aria-labelledby": accessibleId,
+    role: "tabpanel",
+    className: className,
+    tabIndex: hasFocusableContent ? undefined : 0
+  }, _react.default.Children.toArray(children)[activeIndex]);
 }
 
 TabPanels.propTypes = {
-  accessibleId: _propTypes2.default.string,
-  activeIndex: _propTypes2.default.number,
-  children: _propTypes2.default.node.isRequired,
-  className: _propTypes2.default.string,
-  hasFocusableContent: _propTypes2.default.bool.isRequired
+  accessibleId: _propTypes.default.string,
+  activeIndex: _propTypes.default.number,
+  children: _propTypes.default.node.isRequired,
+  className: _propTypes.default.string,
+  hasFocusableContent: _propTypes.default.bool.isRequired
 };
-
 TabPanels.defaultProps = {
   accessibleId: undefined,
   activeIndex: 0,
@@ -2120,64 +2174,36 @@ module.exports = __webpack_require__(414);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.vendored = undefined;
+exports.vendored = void 0;
 
-var _devtoolsComponents = __webpack_require__(108);
+var devtoolsComponents = _interopRequireWildcard(__webpack_require__(108));
 
-var devtoolsComponents = _interopRequireWildcard(_devtoolsComponents);
+var devtoolsConfig = _interopRequireWildcard(__webpack_require__(415));
 
-var _devtoolsConfig = __webpack_require__(415);
+var devtoolsContextmenu = _interopRequireWildcard(__webpack_require__(420));
 
-var devtoolsConfig = _interopRequireWildcard(_devtoolsConfig);
+var devtoolsEnvironment = _interopRequireWildcard(__webpack_require__(102));
 
-var _devtoolsContextmenu = __webpack_require__(420);
+var devtoolsModules = _interopRequireWildcard(__webpack_require__(183));
 
-var devtoolsContextmenu = _interopRequireWildcard(_devtoolsContextmenu);
+var devtoolsUtils = _interopRequireWildcard(__webpack_require__(7));
 
-var _devtoolsEnvironment = __webpack_require__(102);
+var fuzzaldrinPlus = _interopRequireWildcard(__webpack_require__(432));
 
-var devtoolsEnvironment = _interopRequireWildcard(_devtoolsEnvironment);
+var transition = _interopRequireWildcard(__webpack_require__(435));
 
-var _devtoolsModules = __webpack_require__(183);
+var reactAriaComponentsTabs = _interopRequireWildcard(__webpack_require__(438));
 
-var devtoolsModules = _interopRequireWildcard(_devtoolsModules);
+var _classnames = _interopRequireDefault(__webpack_require__(67));
 
-var _devtoolsUtils = __webpack_require__(7);
+var _devtoolsSplitter = _interopRequireDefault(__webpack_require__(445));
 
-var devtoolsUtils = _interopRequireWildcard(_devtoolsUtils);
-
-var _fuzzaldrinPlus = __webpack_require__(432);
-
-var fuzzaldrinPlus = _interopRequireWildcard(_fuzzaldrinPlus);
-
-var _Transition = __webpack_require__(435);
-
-var transition = _interopRequireWildcard(_Transition);
-
-var _tabs = __webpack_require__(438);
-
-var reactAriaComponentsTabs = _interopRequireWildcard(_tabs);
-
-var _classnames = __webpack_require__(67);
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-var _devtoolsSplitter = __webpack_require__(445);
-
-var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
-
-var _lodashMove = __webpack_require__(449);
-
-var _lodashMove2 = _interopRequireDefault(_lodashMove);
+var _lodashMove = _interopRequireDefault(__webpack_require__(449));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
-// We cannot directly export literals containing special characters
-// (eg. "my-module/Test") which is why they are nested in "vendored".
-// The keys of the vendored object should match the module names
-// !!! Should remain synchronized with .babel/transform-mc.js !!!
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2193,39 +2219,37 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  *
  * Both are fine, but cannot be mixed for the same module.
  */
-
 // Modules imported with destructuring
-const vendored = exports.vendored = {
-  classnames: _classnames2.default,
+// $FlowIgnore
+// Modules imported without destructuring
+// We cannot directly export literals containing special characters
+// (eg. "my-module/Test") which is why they are nested in "vendored".
+// The keys of the vendored object should match the module names
+// !!! Should remain synchronized with .babel/transform-mc.js !!!
+const vendored = {
+  classnames: _classnames.default,
   "devtools-components": devtoolsComponents,
   "devtools-config": devtoolsConfig,
   "devtools-contextmenu": devtoolsContextmenu,
   "devtools-environment": devtoolsEnvironment,
   "devtools-modules": devtoolsModules,
-  "devtools-splitter": _devtoolsSplitter2.default,
+  "devtools-splitter": _devtoolsSplitter.default,
   "devtools-utils": devtoolsUtils,
   "fuzzaldrin-plus": fuzzaldrinPlus,
-  "lodash-move": _lodashMove2.default,
+  "lodash-move": _lodashMove.default,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition
 };
-
-// Modules imported without destructuring
-
-// $FlowIgnore
+exports.vendored = vendored;
 
 /***/ }),
 
 /***/ 415:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 const feature = __webpack_require__(416);
 
 module.exports = feature;
@@ -2235,15 +2259,16 @@ module.exports = feature;
 /***/ 416:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  get: pick,
+  set: put
+} = __webpack_require__(417);
 
-const { get: pick, set: put } = __webpack_require__(417);
 const fs = __webpack_require__(418);
+
 const path = __webpack_require__(419);
 
 let config;
@@ -2251,6 +2276,7 @@ let config;
  * Gets a config value for a given key
  * e.g "chrome.webSocketPort"
  */
+
 function getValue(key) {
   return pick(config, key);
 }
@@ -2270,7 +2296,9 @@ function getConfig() {
 function updateLocalConfig(relativePath) {
   const localConfigPath = path.resolve(relativePath, "../configs/local.json");
   const output = JSON.stringify(config, null, 2);
-  fs.writeFileSync(localConfigPath, output, { flag: "w" });
+  fs.writeFileSync(localConfigPath, output, {
+    flag: "w"
+  });
   return output;
 }
 
@@ -2533,14 +2561,11 @@ var substr = 'ab'.substr(-1) === 'b'
 /***/ 420:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 const Menu = __webpack_require__(490);
+
 const MenuItem = __webpack_require__(491);
 
 function inToolbox() {
@@ -2559,6 +2584,7 @@ if (!inToolbox()) {
 function createPopup(doc) {
   let popup = doc.createElement("menupopup");
   popup.className = "landing-popup";
+
   if (popup.openPopupAtScreen) {
     return popup;
   }
@@ -2569,6 +2595,7 @@ function createPopup(doc) {
   }
 
   let mask = document.querySelector("#contextmenu-mask");
+
   if (!mask) {
     mask = doc.createElement("div");
     mask.id = "contextmenu-mask";
@@ -2645,20 +2672,26 @@ function createSubMenu(subItems) {
     });
     return subMenu;
   }
+
   return null;
 }
 
 function showSubMenu(subMenu, menuItemNode, popup) {
   if (subMenu) {
     let subMenuNode = menuItemNode.querySelector("menupopup");
-    let { top } = menuItemNode.getBoundingClientRect();
-    let { left, width } = popup.getBoundingClientRect();
+    let {
+      top
+    } = menuItemNode.getBoundingClientRect();
+    let {
+      left,
+      width
+    } = popup.getBoundingClientRect();
     subMenuNode.style.setProperty("left", `${left + width - 1}px`);
     subMenuNode.style.setProperty("top", `${top}px`);
-
     let subMenuItemNodes = menuItemNode.querySelector("menupopup:not(.landing-popup)").childNodes;
     subMenuItemNodes.forEach((subMenuItemNode, j) => {
       let subMenuItem = subMenu.items.filter(item => item.visible === undefined || item.visible === true)[j];
+
       if (!subMenuItem.disabled && subMenuItem.visible) {
         subMenuItemNode.onclick = () => {
           subMenuItem.click();
@@ -2684,10 +2717,7 @@ module.exports = {
 /***/ }),
 
 /***/ 422:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
+/***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2702,8 +2732,8 @@ module.exports = {
  * and use the native web API (although building with webpack/babel, it may replace this
  * with it's own version if we want to target environments that do not have `Promise`.
  */
-
 let p = typeof window != "undefined" ? window.Promise : Promise;
+
 p.defer = function defer() {
   var resolve, reject;
   var promise = new Promise(function () {
@@ -2724,16 +2754,12 @@ module.exports = p;
 /***/ 424:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 const Services = __webpack_require__(37);
-const EventEmitter = __webpack_require__(65);
 
+const EventEmitter = __webpack_require__(65);
 /**
  * Shortcuts for lazily accessing and setting various preferences.
  * Usage:
@@ -2760,9 +2786,10 @@ const EventEmitter = __webpack_require__(65);
  * @param object prefsBlueprint
  *        An object containing { accessorName: [prefType, prefName, prefDefault] } keys.
  */
+
+
 function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
   EventEmitter.decorate(this);
-
   let cache = new Map();
 
   for (let accessorName in prefsBlueprint) {
@@ -2771,10 +2798,11 @@ function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
   }
 
   let observer = makeObserver(this, cache, prefsRoot, prefsBlueprint);
+
   this.registerObserver = () => observer.register();
+
   this.unregisterObserver = () => observer.unregister();
 }
-
 /**
  * Helper method for getting a pref value.
  *
@@ -2784,16 +2812,19 @@ function PrefsHelper(prefsRoot = "", prefsBlueprint = {}) {
  * @param string prefName
  * @return any
  */
+
+
 function get(cache, prefType, prefsRoot, prefName) {
   let cachedPref = cache.get(prefName);
+
   if (cachedPref !== undefined) {
     return cachedPref;
   }
+
   let value = Services.prefs["get" + prefType + "Pref"]([prefsRoot, prefName].join("."));
   cache.set(prefName, value);
   return value;
 }
-
 /**
  * Helper method for setting a pref value.
  *
@@ -2803,11 +2834,12 @@ function get(cache, prefType, prefsRoot, prefName) {
  * @param string prefName
  * @param any value
  */
+
+
 function set(cache, prefType, prefsRoot, prefName, value) {
   Services.prefs["set" + prefType + "Pref"]([prefsRoot, prefName].join("."), value);
   cache.set(prefName, value);
 }
-
 /**
  * Maps a property name to a pref, defining lazy getters and setters.
  * Supported types are "Bool", "Char", "Int", "Float" (sugar around "Char"
@@ -2823,10 +2855,16 @@ function set(cache, prefType, prefsRoot, prefName, value) {
  * @param string prefDefault
  * @param array serializer [optional]
  */
-function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault, serializer = { in: e => e, out: e => e }) {
+
+
+function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefault, serializer = {
+  in: e => e,
+  out: e => e
+}) {
   if (prefName in self) {
     throw new Error(`Can't use ${prefName} because it overrides a property` + "on the instance.");
   }
+
   if (prefType == "Json") {
     map(self, cache, accessorName, "String", prefsRoot, prefName, prefDefault, {
       in: JSON.parse,
@@ -2834,6 +2872,7 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefau
     });
     return;
   }
+
   if (prefType == "Float") {
     map(self, cache, accessorName, "Char", prefsRoot, prefName, prefDefault, {
       in: Number.parseFloat,
@@ -2850,13 +2889,13 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefau
         if (typeof prefDefault !== 'undefined') {
           return prefDefault;
         }
+
         throw e;
       }
     },
     set: e => set(cache, prefType, prefsRoot, prefName, serializer.out(e))
   });
 }
-
 /**
  * Finds the accessor for the provided pref, based on the blueprint object
  * used in the constructor.
@@ -2865,16 +2904,19 @@ function map(self, cache, accessorName, prefType, prefsRoot, prefName, prefDefau
  * @param object prefsBlueprint
  * @return string
  */
+
+
 function accessorNameForPref(somePrefName, prefsBlueprint) {
   for (let accessorName in prefsBlueprint) {
     let [, prefName] = prefsBlueprint[accessorName];
+
     if (somePrefName == prefName) {
       return accessorName;
     }
   }
+
   return "";
 }
-
 /**
  * Creates a pref observer for `self`.
  *
@@ -2884,10 +2926,13 @@ function accessorNameForPref(somePrefName, prefsBlueprint) {
  * @param object prefsBlueprint
  * @return object
  */
+
+
 function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
   return {
     register: function () {
       this._branch = Services.prefs.getBranch(prefsRoot + ".");
+
       this._branch.addObserver("", this);
     },
     unregister: function () {
@@ -2897,9 +2942,11 @@ function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
       // If this particular pref isn't handled by the blueprint object,
       // even though it's in the specified branch, ignore it.
       let accessorName = accessorNameForPref(prefName, prefsBlueprint);
+
       if (!(accessorName in self)) {
         return;
       }
+
       cache.delete(prefName);
       self.emit("pref-changed", accessorName, self[accessorName]);
     }
@@ -2913,18 +2960,17 @@ exports.PrefsHelper = PrefsHelper;
 /***/ 425:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const {
+  appinfo
+} = __webpack_require__(37);
 
-const { appinfo } = __webpack_require__(37);
 const EventEmitter = __webpack_require__(65);
-const isOSX = appinfo.OS === "Darwin";
 
-// List of electron keys mapped to DOM API (DOM_VK_*) key code
+const isOSX = appinfo.OS === "Darwin"; // List of electron keys mapped to DOM API (DOM_VK_*) key code
+
 const ElectronKeysMapping = {
   "F1": "DOM_VK_F1",
   "F2": "DOM_VK_F2",
@@ -2972,7 +3018,6 @@ const ElectronKeysMapping = {
   "VolumeMute": "DOM_VK_VOLUME_MUTE",
   "PrintScreen": "DOM_VK_PRINTSCREEN"
 };
-
 /**
  * Helper to listen for keyboard events decribed in .properties file.
  *
@@ -2989,14 +3034,17 @@ const ElectronKeysMapping = {
  *        Optional DOM Element on which we should listen events from.
  *        If omitted, we listen for all events fired on `window`.
  */
-function KeyShortcuts({ window, target }) {
+
+function KeyShortcuts({
+  window,
+  target
+}) {
   this.window = window;
   this.target = target || window;
   this.keys = new Map();
   this.eventEmitter = new EventEmitter();
   this.target.addEventListener("keydown", this);
 }
-
 /*
  * Parse an electron-like key string and return a normalized object which
  * allow efficient match on DOM key event. The normalized object matches DOM
@@ -3008,10 +3056,11 @@ function KeyShortcuts({ window, target }) {
  *        The shortcut string to parse, following this document:
  *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
  */
+
+
 KeyShortcuts.parseElectronKey = function (window, str) {
   let modifiers = str.split("+");
   let key = modifiers.pop();
-
   let shortcut = {
     ctrl: false,
     meta: false,
@@ -3022,6 +3071,7 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     // Set for non-character keys
     keyCode: undefined
   };
+
   for (let mod of modifiers) {
     if (mod === "Alt") {
       shortcut.alt = true;
@@ -3041,10 +3091,10 @@ KeyShortcuts.parseElectronKey = function (window, str) {
       console.error("Unsupported modifier:", mod, "from key:", str);
       return null;
     }
-  }
-
-  // Plus is a special case. It's a character key and shouldn't be matched
+  } // Plus is a special case. It's a character key and shouldn't be matched
   // against a keycode as it is only accessible via Shift/Capslock
+
+
   if (key === "Plus") {
     key = "+";
   }
@@ -3055,8 +3105,8 @@ KeyShortcuts.parseElectronKey = function (window, str) {
   } else if (key in ElectronKeysMapping) {
     // Maps the others manually to DOM API DOM_VK_*
     key = ElectronKeysMapping[key];
-    shortcut.keyCode = window.KeyboardEvent[key];
-    // Used only to stringify the shortcut
+    shortcut.keyCode = window.KeyboardEvent[key]; // Used only to stringify the shortcut
+
     shortcut.keyCodeString = key;
     shortcut.key = key;
   } else {
@@ -3069,24 +3119,31 @@ KeyShortcuts.parseElectronKey = function (window, str) {
 
 KeyShortcuts.stringify = function (shortcut) {
   let list = [];
+
   if (shortcut.alt) {
     list.push("Alt");
   }
+
   if (shortcut.ctrl) {
     list.push("Ctrl");
   }
+
   if (shortcut.meta) {
     list.push("Cmd");
   }
+
   if (shortcut.shift) {
     list.push("Shift");
   }
+
   let key;
+
   if (shortcut.key) {
     key = shortcut.key.toUpperCase();
   } else {
     key = shortcut.keyCodeString;
   }
+
   list.push(key);
   return list.join("+");
 };
@@ -3101,29 +3158,32 @@ KeyShortcuts.prototype = {
     if (shortcut.meta != event.metaKey) {
       return false;
     }
+
     if (shortcut.ctrl != event.ctrlKey) {
       return false;
     }
+
     if (shortcut.alt != event.altKey) {
       return false;
-    }
-    // Shift is a special modifier, it may implicitely be required if the
+    } // Shift is a special modifier, it may implicitely be required if the
     // expected key is a special character accessible via shift.
+
+
     if (shortcut.shift != event.shiftKey && event.key && event.key.match(/[a-zA-Z]/)) {
       return false;
     }
+
     if (shortcut.keyCode) {
       return event.keyCode == shortcut.keyCode;
     } else if (event.key in ElectronKeysMapping) {
       return ElectronKeysMapping[event.key] === shortcut.key;
-    }
+    } // get the key from the keyCode if key is not provided.
 
-    // get the key from the keyCode if key is not provided.
-    let key = event.key || String.fromCharCode(event.keyCode);
 
-    // For character keys, we match if the final character is the expected one.
+    let key = event.key || String.fromCharCode(event.keyCode); // For character keys, we match if the final character is the expected one.
     // But for digits we also accept indirect match to please azerty keyboard,
     // which requires Shift to be pressed to get digits.
+
     return key.toLowerCase() == shortcut.key || shortcut.key.match(/^[0-9]$/) && event.keyCode == shortcut.key.charCodeAt(0);
   },
 
@@ -3139,20 +3199,24 @@ KeyShortcuts.prototype = {
     if (typeof listener !== "function") {
       throw new Error("KeyShortcuts.on() expects a function as " + "second argument");
     }
+
     if (!this.keys.has(key)) {
-      let shortcut = KeyShortcuts.parseElectronKey(this.window, key);
-      // The key string is wrong and we were unable to compute the key shortcut
+      let shortcut = KeyShortcuts.parseElectronKey(this.window, key); // The key string is wrong and we were unable to compute the key shortcut
+
       if (!shortcut) {
         return;
       }
+
       this.keys.set(key, shortcut);
     }
+
     this.eventEmitter.on(key, listener);
   },
 
   off(key, listener) {
     this.eventEmitter.off(key, listener);
   }
+
 };
 module.exports = KeyShortcuts;
 
@@ -3165,8 +3229,6 @@ module.exports = KeyShortcuts;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
 
 /**
  * Empty shim for "devtools/client/shared/zoom-keys" module
@@ -3226,7 +3288,6 @@ exports.register = function (window) {};
  */
 
 
-
 const DBNAME = "devtools-async-storage";
 const DBVERSION = 1;
 const STORENAME = "keyvaluepairs";
@@ -3239,13 +3300,16 @@ function withStore(type, onsuccess, onerror) {
     onsuccess(store);
   } else {
     const openreq = indexedDB.open(DBNAME, DBVERSION);
+
     openreq.onerror = function withStoreOnError() {
       onerror();
     };
+
     openreq.onupgradeneeded = function withStoreOnUpgradeNeeded() {
       // First time setup: create an empty object store
       openreq.result.createObjectStore(STORENAME);
     };
+
     openreq.onsuccess = function withStoreOnSuccess() {
       db = openreq.result;
       const transaction = db.transaction(STORENAME, type);
@@ -3261,12 +3325,16 @@ function getItem(itemKey) {
     withStore("readonly", store => {
       store.transaction.oncomplete = function onComplete() {
         let value = req.result;
+
         if (value === undefined) {
           value = null;
         }
+
         resolve(value);
       };
+
       req = store.get(itemKey);
+
       req.onerror = function getItemOnError() {
         reject("Error in asyncStorage.getItem(): ", req.error.name);
       };
@@ -3279,6 +3347,7 @@ function setItem(itemKey, value) {
     withStore("readwrite", store => {
       store.transaction.oncomplete = resolve;
       const req = store.put(value, itemKey);
+
       req.onerror = function setItemOnError() {
         reject("Error in asyncStorage.setItem(): ", req.error.name);
       };
@@ -3291,6 +3360,7 @@ function removeItem(itemKey) {
     withStore("readwrite", store => {
       store.transaction.oncomplete = resolve;
       const req = store.delete(itemKey);
+
       req.onerror = function removeItemOnError() {
         reject("Error in asyncStorage.removeItem(): ", req.error.name);
       };
@@ -3303,6 +3373,7 @@ function clear() {
     withStore("readwrite", store => {
       store.transaction.oncomplete = resolve;
       const req = store.clear();
+
       req.onerror = function clearOnError() {
         reject("Error in asyncStorage.clear(): ", req.error.name);
       };
@@ -3317,7 +3388,9 @@ function length() {
       store.transaction.oncomplete = function onComplete() {
         resolve(req.result);
       };
+
       req = store.count();
+
       req.onerror = function lengthOnError() {
         reject("Error in asyncStorage.length(): ", req.error.name);
       };
@@ -3338,24 +3411,29 @@ function key(n) {
         const cursor = req.result;
         resolve(cursor ? cursor.key : null);
       };
+
       let advanced = false;
       req = store.openCursor();
+
       req.onsuccess = function keyOnSuccess() {
         const cursor = req.result;
+
         if (!cursor) {
           // this means there weren"t enough keys
           return;
         }
+
         if (n === 0 || advanced) {
           // Either 1) we have the first key, return it if that's what they
           // wanted, or 2) we"ve got the nth key.
           return;
-        }
+        } // Otherwise, ask the cursor to skip ahead n records
 
-        // Otherwise, ask the cursor to skip ahead n records
+
         advanced = true;
         cursor.advance(n);
       };
+
       req.onerror = function keyOnError() {
         reject("Error in asyncStorage.key(): ", req.error.name);
       };
@@ -3373,19 +3451,14 @@ exports.key = key;
 /***/ }),
 
 /***/ 428:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
+/***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 // TODO : Localize this (was l10n.getStr("frame.unknownSource"))
-const UNKNOWN_SOURCE_STRING = "(unknown)";
+const UNKNOWN_SOURCE_STRING = "(unknown)"; // Character codes used in various parsing helper functions.
 
-// Character codes used in various parsing helper functions.
 const CHAR_CODE_A = "a".charCodeAt(0);
 const CHAR_CODE_B = "b".charCodeAt(0);
 const CHAR_CODE_C = "c".charCodeAt(0);
@@ -3409,13 +3482,11 @@ const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_DASH = "-".charCodeAt(0);
 const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
 const CHAR_CODE_SLASH = "/".charCodeAt(0);
-const CHAR_CODE_CAP_S = "S".charCodeAt(0);
+const CHAR_CODE_CAP_S = "S".charCodeAt(0); // The cache used in the `parseURL` function.
 
-// The cache used in the `parseURL` function.
-const gURLStore = new Map();
-// The cache used in the `getSourceNames` function.
+const gURLStore = new Map(); // The cache used in the `getSourceNames` function.
+
 const gSourceNamesStore = new Map();
-
 /**
 * Takes a string and returns an object containing all the properties
 * available on an URL instance, with additional properties (fileName),
@@ -3434,10 +3505,10 @@ function parseURL(location) {
   }
 
   try {
-    url = new URL(location);
-    // The callers were generally written to expect a URL from
+    url = new URL(location); // The callers were generally written to expect a URL from
     // sdk/url, which is subtly different.  So, work around some
     // important differences here.
+
     url = {
       href: url.href,
       protocol: url.protocol,
@@ -3450,14 +3521,12 @@ function parseURL(location) {
       username: url.username,
       password: url.password,
       origin: url.origin
-    };
-
-    // Definitions:
+    }; // Definitions:
     // Example: https://foo.com:8888/file.js
     // `hostname`: "foo.com"
     // `host`: "foo.com:8888"
-    let isChrome = isChromeScheme(location);
 
+    let isChrome = isChromeScheme(location);
     url.fileName = url.pathname ? url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/" : "/";
 
     if (isChrome) {
@@ -3472,7 +3541,6 @@ function parseURL(location) {
     return null;
   }
 }
-
 /**
 * Parse a source into a short and long name as well as a host name.
 *
@@ -3489,6 +3557,8 @@ function parseURL(location) {
 *           - {String?} host: If available, the host name for the source.
 *             - "http://page.com/test.js#go?q=query" -> "page.com"
 */
+
+
 function getSourceNames(source) {
   let data = gSourceNamesStore.get(source);
 
@@ -3497,25 +3567,31 @@ function getSourceNames(source) {
   }
 
   let short, long, host;
-  const sourceStr = source ? String(source) : "";
+  const sourceStr = source ? String(source) : ""; // If `data:...` uri
 
-  // If `data:...` uri
   if (isDataScheme(sourceStr)) {
     let commaIndex = sourceStr.indexOf(",");
+
     if (commaIndex > -1) {
       // The `short` name for a data URI becomes `data:` followed by the actual
       // encoded content, omitting the MIME type, and charset.
       short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
-      let result = { short, long: sourceStr };
+      let result = {
+        short,
+        long: sourceStr
+      };
       gSourceNamesStore.set(source, result);
       return result;
     }
-  }
-
-  // If Scratchpad URI, like "Scratchpad/1"; no modifications,
+  } // If Scratchpad URI, like "Scratchpad/1"; no modifications,
   // and short/long are the same.
+
+
   if (isScratchpadScheme(sourceStr)) {
-    let result = { short: sourceStr, long: sourceStr };
+    let result = {
+      short: sourceStr,
+      long: sourceStr
+    };
     gSourceNamesStore.set(source, result);
     return result;
   }
@@ -3528,19 +3604,20 @@ function getSourceNames(source) {
     short = sourceStr.slice(0, 100);
   } else {
     host = parsedUrl.host;
-
     long = parsedUrl.href;
+
     if (parsedUrl.hash) {
       long = long.replace(parsedUrl.hash, "");
     }
+
     if (parsedUrl.search) {
       long = long.replace(parsedUrl.search, "");
     }
 
-    short = parsedUrl.fileName;
-    // If `short` is just a slash, and we actually have a path,
+    short = parsedUrl.fileName; // If `short` is just a slash, and we actually have a path,
     // strip the slash and parse again to get a more useful short name.
     // e.g. "http://foo.com/bar/" -> "bar", rather than "/"
+
     if (short === "/" && parsedUrl.pathname !== "/") {
       short = parseURL(long.replace(/\/$/, "")).fileName;
     }
@@ -3550,27 +3627,32 @@ function getSourceNames(source) {
     if (!long) {
       long = UNKNOWN_SOURCE_STRING;
     }
+
     short = long.slice(0, 100);
   }
 
-  let result = { short, long, host };
+  let result = {
+    short,
+    long,
+    host
+  };
   gSourceNamesStore.set(source, result);
   return result;
-}
-
-// For the functions below, we assume that we will never access the location
+} // For the functions below, we assume that we will never access the location
 // argument out of bounds, which is indeed the vast majority of cases.
 //
 // They are written this way because they are hot. Each frame is checked for
 // being content or chrome when processing the profile.
 
+
 function isColonSlashSlash(location, i = 0) {
   return location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_SLASH && location.charCodeAt(++i) === CHAR_CODE_SLASH;
 }
-
 /**
 * Checks for a Scratchpad URI, like "Scratchpad/1"
 */
+
+
 function isScratchpadScheme(location, i = 0) {
   return location.charCodeAt(i) === CHAR_CODE_CAP_S && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_P && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_D && location.charCodeAt(++i) === CHAR_CODE_SLASH;
 }
@@ -3589,29 +3671,34 @@ function isContentScheme(location, i = 0) {
         if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
           ++i;
         }
+
         return isColonSlashSlash(location, i);
       }
-      return false;
 
+      return false;
     // "file://"
+
     case CHAR_CODE_F:
       if (location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
-      return false;
 
+      return false;
     // "app://"
+
     case CHAR_CODE_A:
       if (location.charCodeAt(++i) == CHAR_CODE_P && location.charCodeAt(++i) == CHAR_CODE_P) {
         return isColonSlashSlash(location, i);
       }
-      return false;
 
+      return false;
     // "blob:"
+
     case CHAR_CODE_B:
       if (location.charCodeAt(++i) == CHAR_CODE_L && location.charCodeAt(++i) == CHAR_CODE_O && location.charCodeAt(++i) == CHAR_CODE_B && location.charCodeAt(++i) == CHAR_CODE_COLON) {
         return isContentScheme(location, i + 1);
       }
+
       return false;
 
     default:
@@ -3628,20 +3715,23 @@ function isChromeScheme(location, i = 0) {
       if (location.charCodeAt(++i) === CHAR_CODE_H && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
-      return false;
 
+      return false;
     // "resource://"
+
     case CHAR_CODE_R:
       if (location.charCodeAt(++i) === CHAR_CODE_E && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
-      return false;
 
+      return false;
     // "jar:file://"
+
     case CHAR_CODE_J:
       if (location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_R && location.charCodeAt(++i) === CHAR_CODE_COLON && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_L && location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
+
       return false;
 
     default:
@@ -3650,12 +3740,10 @@ function isChromeScheme(location, i = 0) {
 }
 
 function isWASM(location, i = 0) {
-  return (
-    // "wasm-function["
+  return (// "wasm-function["
     location.charCodeAt(i) === CHAR_CODE_W && location.charCodeAt(++i) === CHAR_CODE_A && location.charCodeAt(++i) === CHAR_CODE_S && location.charCodeAt(++i) === CHAR_CODE_M && location.charCodeAt(++i) === CHAR_CODE_DASH && location.charCodeAt(++i) === CHAR_CODE_F && location.charCodeAt(++i) === CHAR_CODE_U && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_C && location.charCodeAt(++i) === CHAR_CODE_T && location.charCodeAt(++i) === CHAR_CODE_I && location.charCodeAt(++i) === CHAR_CODE_O && location.charCodeAt(++i) === CHAR_CODE_N && location.charCodeAt(++i) === CHAR_CODE_L_SQUARE_BRACKET
   );
 }
-
 /**
 * A utility method to get the file name from a sourcemapped location
 * The sourcemap location can be in any form. This method returns a
@@ -3663,6 +3751,8 @@ function isWASM(location, i = 0) {
 * @param source
 * @returns String
 */
+
+
 function getSourceMappedFile(source) {
   // If sourcemapped source is a OSX path, return
   // the characters after last "/".
@@ -3673,6 +3763,7 @@ function getSourceMappedFile(source) {
   } else if (source.lastIndexOf("\\") >= 0) {
     source = source.slice(source.lastIndexOf("\\") + 1);
   }
+
   return source;
 }
 
@@ -3690,10 +3781,7 @@ module.exports = {
 /***/ }),
 
 /***/ 429:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
+/***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3703,7 +3791,6 @@ module.exports = {
  * This is a stub of the DevTools telemetry module and will be replaced by the
  * full version of the file by Webpack for running inside Firefox.
  */
-
 class Telemetry {
   /**
    * Time since the system wide epoch. This is not a monotonic timer but
@@ -3712,7 +3799,6 @@ class Telemetry {
   get msSystemNow() {
     return 0;
   }
-
   /**
    * Starts a timer associated with a telemetry histogram. The timer can be
    * directly associated with a histogram, or with a pair of a histogram and
@@ -3731,10 +3817,11 @@ class Telemetry {
    *          timer already exists, it can't be started again, and the existing
    *          one will be cleared in order to avoid measurements errors.
    */
+
+
   start(histogramId, obj) {
     return true;
   }
-
   /**
    * Starts a timer associated with a keyed telemetry histogram. The timer can
    * be directly associated with a histogram and its key. Similarly to
@@ -3757,10 +3844,11 @@ class Telemetry {
    *          timer already exists, it can't be started again, and the existing
    *          one will be cleared in order to avoid measurements errors.
    */
+
+
   startKeyed(histogramId, key, obj) {
     return true;
   }
-
   /**
    * Stops the timer associated with the given histogram (and object),
    * calculates the time delta between start and finish, and adds the value
@@ -3780,10 +3868,11 @@ class Telemetry {
    *          True if the timer was succesfully stopped and the data was added
    *          to the histogram, False otherwise.
    */
+
+
   finish(histogramId, obj, canceledOkay) {
     return true;
   }
-
   /**
    * Stops the timer associated with the given keyed histogram (and object),
    * calculates the time delta between start and finish, and adds the value
@@ -3805,34 +3894,37 @@ class Telemetry {
    *          True if the timer was succesfully stopped and the data was added
    *          to the histogram, False otherwise.
    */
+
+
   finishKeyed(histogramId, key, obj, cancelledOkay) {
     return true;
   }
-
   /**
    * Log a value to a histogram.
    *
    * @param  {String} histogramId
    *         Histogram in which the data is to be stored.
    */
+
+
   getHistogramById(histogramId) {
     return {
       add: () => {}
     };
   }
-
   /**
    * Get a keyed histogram.
    *
    * @param  {String} histogramId
    *         Histogram in which the data is to be stored.
    */
+
+
   getKeyedHistogramById(histogramId) {
     return {
       add: () => {}
     };
   }
-
   /**
    * Log a value to a scalar.
    *
@@ -3841,8 +3933,9 @@ class Telemetry {
    * @param  value
    *         Value to store.
    */
-  scalarSet(scalarId, value) {}
 
+
+  scalarSet(scalarId, value) {}
   /**
    * Log a value to a count scalar.
    *
@@ -3851,8 +3944,9 @@ class Telemetry {
    * @param  value
    *         Value to store.
    */
-  scalarAdd(scalarId, value) {}
 
+
+  scalarAdd(scalarId, value) {}
   /**
    * Log a value to a keyed count scalar.
    *
@@ -3863,8 +3957,9 @@ class Telemetry {
    * @param  value
    *         Value to store.
    */
-  keyedScalarAdd(scalarId, key, value) {}
 
+
+  keyedScalarAdd(scalarId, key, value) {}
   /**
    * Event telemetry is disabled by default. Use this method to enable it for
    * a particular category.
@@ -3872,10 +3967,11 @@ class Telemetry {
    * @param {Boolean} enabled
    *        Enabled: true or false.
    */
+
+
   setEventRecordingEnabled(enabled) {
     return enabled;
   }
-
   /**
    * Telemetry events often need to make use of a number of properties from
    * completely different codepaths. To make this possible we create a
@@ -3907,8 +4003,9 @@ class Telemetry {
    *          "width"
    *        ]
    */
-  preparePendingEvent(obj, method, object, value, expected = []) {}
 
+
+  preparePendingEvent(obj, method, object, value, expected = []) {}
   /**
    * Adds an expected property for either a current or future pending event.
    * This means that if preparePendingEvent() is called before or after sending
@@ -3932,8 +4029,9 @@ class Telemetry {
    * @param {String} pendingPropValue
    *        The pending property value
    */
-  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {}
 
+
+  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {}
   /**
    * Adds expected properties for either a current or future pending event.
    * This means that if preparePendingEvent() is called before or after sending
@@ -3956,8 +4054,9 @@ class Telemetry {
    *        An object containing key, value pairs that should be added to the
    *        event as properties.
    */
-  addEventProperties(obj, method, object, value, pendingObject) {}
 
+
+  addEventProperties(obj, method, object, value, pendingObject) {}
   /**
    * A private method that is not to be used externally. This method is used to
    * prepare a pending telemetry event for sending and then send it via
@@ -3977,8 +4076,9 @@ class Telemetry {
    *        The telemetry event value (a user defined value, providing context
    *        for the event) e.g. "console"
    */
-  _sendPendingEvent(obj, method, object, value) {}
 
+
+  _sendPendingEvent(obj, method, object, value) {}
   /**
    * Send a telemetry event.
    *
@@ -3999,8 +4099,9 @@ class Telemetry {
    *          width: "1024"
    *        }
    */
-  recordEvent(method, object, value, extra) {}
 
+
+  recordEvent(method, object, value, extra) {}
   /**
    * Sends telemetry pings to indicate that a tool has been opened.
    *
@@ -4014,15 +4115,19 @@ class Telemetry {
    *        that multiple events or pings for the same histogram may be run
    *        concurrently, as long as they are associated with different objects.
    */
-  toolOpened(id, sessionId, obj) {}
 
+
+  toolOpened(id, sessionId, obj) {}
   /**
    * Sends telemetry pings to indicate that a tool has been closed.
    *
    * @param {String} id
    *        The ID of the tool opened.
    */
+
+
   toolClosed(id, sessionId, obj) {}
+
 }
 
 module.exports = Telemetry;
@@ -4036,7 +4141,6 @@ module.exports = Telemetry;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 // This file is a chrome-API-free version of the module
 // devtools/client/shared/unicode-url.js in the mozilla-central repository, so
 // that it can be used in Chrome-API-free applications, such as the Launchpad.
@@ -4048,9 +4152,7 @@ module.exports = Telemetry;
 // devtools/client/shared/unicode-url.js in the mozilla-central repository.
 
 
-
 const punycode = __webpack_require__(62);
-
 /**
  * Gets a readble Unicode hostname from a hostname.
  *
@@ -4068,13 +4170,15 @@ const punycode = __webpack_require__(62);
  *                  passed to this function if the `hostname` itself is
  *                  a readable ASCII hostname or a Unicode hostname.
  */
+
+
 function getUnicodeHostname(hostname) {
   try {
     return punycode.toUnicode(hostname);
   } catch (err) {}
+
   return hostname;
 }
-
 /**
  * Gets a readble Unicode URL pathname from a URL pathname.
  *
@@ -4094,13 +4198,15 @@ function getUnicodeHostname(hostname) {
  *                  passed to this function if the `urlPath` itself is a readable
  *                  ASCII url or a Unicode url.
  */
+
+
 function getUnicodeUrlPath(urlPath) {
   try {
     return decodeURIComponent(urlPath);
   } catch (err) {}
+
   return urlPath;
 }
-
 /**
  * Gets a readable Unicode URL from a URL.
  *
@@ -4126,17 +4232,25 @@ function getUnicodeUrlPath(urlPath) {
  * @return {string} The readable URL. It may be the same as the `url` passed to
  *                  this function if the `url` itself is readable.
  */
+
+
 function getUnicodeUrl(url) {
   try {
-    const { protocol, hostname } = new URL(url);
+    const {
+      protocol,
+      hostname
+    } = new URL(url);
+
     if (protocol === "data:") {
       // Never convert a data: URI.
       return url;
     }
+
     const readableHostname = getUnicodeHostname(hostname);
     url = decodeURIComponent(url);
     return url.replace(hostname, readableHostname);
   } catch (err) {}
+
   return url;
 }
 
@@ -5391,42 +5505,38 @@ var classNamesShape = exports.classNamesShape = _propTypes2.default.oneOfType([_
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _tabList = __webpack_require__(185);
-
-Object.defineProperty(exports, 'TabList', {
+Object.defineProperty(exports, "TabList", {
   enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabList).default;
+  get: function () {
+    return _tabList.default;
+  }
+});
+Object.defineProperty(exports, "TabPanels", {
+  enumerable: true,
+  get: function () {
+    return _tabPanels.default;
+  }
+});
+Object.defineProperty(exports, "Tab", {
+  enumerable: true,
+  get: function () {
+    return _tab.default;
+  }
+});
+Object.defineProperty(exports, "Tabs", {
+  enumerable: true,
+  get: function () {
+    return _tabs.default;
   }
 });
 
-var _tabPanels = __webpack_require__(187);
+var _tabList = _interopRequireDefault(__webpack_require__(185));
 
-Object.defineProperty(exports, 'TabPanels', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabPanels).default;
-  }
-});
+var _tabPanels = _interopRequireDefault(__webpack_require__(187));
 
-var _tab = __webpack_require__(186);
+var _tab = _interopRequireDefault(__webpack_require__(186));
 
-Object.defineProperty(exports, 'Tab', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tab).default;
-  }
-});
-
-var _tabs = __webpack_require__(442);
-
-Object.defineProperty(exports, 'Tabs', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_tabs).default;
-  }
-});
+var _tabs = _interopRequireDefault(__webpack_require__(442));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5441,14 +5551,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _propTypes = __webpack_require__(0);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = _propTypes2.default.object;
+var _default = _propTypes.default.object;
+exports.default = _default;
 
 /***/ }),
 
@@ -5475,98 +5585,74 @@ exports.default = _propTypes2.default.object;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _propTypes = _interopRequireDefault(__webpack_require__(0));
 
-var _propTypes = __webpack_require__(0);
+var _react = _interopRequireDefault(__webpack_require__(6));
 
-var _propTypes2 = _interopRequireDefault(_propTypes);
+var _uniqueId = _interopRequireDefault(__webpack_require__(443));
 
-var _react = __webpack_require__(6);
+var _tabList = _interopRequireDefault(__webpack_require__(185));
 
-var _react2 = _interopRequireDefault(_react);
-
-var _uniqueId = __webpack_require__(443);
-
-var _uniqueId2 = _interopRequireDefault(_uniqueId);
-
-var _tabList = __webpack_require__(185);
-
-var _tabList2 = _interopRequireDefault(_tabList);
-
-var _tabPanels = __webpack_require__(187);
-
-var _tabPanels2 = _interopRequireDefault(_tabPanels);
+var _tabPanels = _interopRequireDefault(__webpack_require__(187));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Tabs = function (_React$Component) {
-  _inherits(Tabs, _React$Component);
-
-  function Tabs() {
-    _classCallCheck(this, Tabs);
-
-    var _this = _possibleConstructorReturn(this, (Tabs.__proto__ || Object.getPrototypeOf(Tabs)).call(this));
-
-    _this.accessibleId = (0, _uniqueId2.default)();
-    return _this;
+class Tabs extends _react.default.Component {
+  constructor() {
+    super();
+    this.accessibleId = (0, _uniqueId.default)();
   }
 
-  _createClass(Tabs, [{
-    key: 'render',
-    value: function render() {
-      var _props = this.props,
-          activeIndex = _props.activeIndex,
-          children = _props.children,
-          className = _props.className,
-          onActivateTab = _props.onActivateTab;
+  render() {
+    const {
+      activeIndex,
+      children,
+      className,
+      onActivateTab
+    } = this.props;
+    const accessibleId = this.accessibleId;
+    return _react.default.createElement("div", {
+      className: className
+    }, _react.default.Children.map(children, child => {
+      if (!child) {
+        return child;
+      }
 
-      var accessibleId = this.accessibleId;
+      switch (child.type) {
+        case _tabList.default:
+          return _react.default.cloneElement(child, {
+            accessibleId,
+            activeIndex,
+            onActivateTab
+          });
 
-      return _react2.default.createElement(
-        'div',
-        { className: className },
-        _react2.default.Children.map(children, function (child) {
-          if (!child) {
-            return child;
-          }
+        case _tabPanels.default:
+          return _react.default.cloneElement(child, {
+            accessibleId,
+            activeIndex
+          });
 
-          switch (child.type) {
-            case _tabList2.default:
-              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex, onActivateTab: onActivateTab });
-            case _tabPanels2.default:
-              return _react2.default.cloneElement(child, { accessibleId: accessibleId, activeIndex: activeIndex });
-            default:
-              return child;
-          }
-        })
-      );
-    }
-  }]);
+        default:
+          return child;
+      }
+    }));
+  }
 
-  return Tabs;
-}(_react2.default.Component);
+}
 
 exports.default = Tabs;
-
-
 Tabs.propTypes = {
-  activeIndex: _propTypes2.default.number.isRequired,
-  children: _propTypes2.default.node,
-  className: _propTypes2.default.string,
-  onActivateTab: _propTypes2.default.func
+  activeIndex: _propTypes.default.number.isRequired,
+  children: _propTypes.default.node,
+  className: _propTypes.default.string,
+  onActivateTab: _propTypes.default.func
 };
-
 Tabs.defaultProps = {
   children: null,
   className: undefined,
-  onActivateTab: function onActivateTab() {}
+  onActivateTab: () => {}
 };
 
 /***/ }),
@@ -5581,11 +5667,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = uniqueId;
-var counter = 0;
+let counter = 0;
 
 function uniqueId() {
   counter += 1;
-  return "$rac$" + counter;
+  return `$rac$${counter}`;
 }
 
 /***/ }),
@@ -5596,7 +5682,6 @@ function uniqueId() {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const SplitBox = __webpack_require__(446);
 
 module.exports = SplitBox;
@@ -5609,20 +5694,26 @@ module.exports = SplitBox;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const React = __webpack_require__(6);
+
 const ReactDOM = __webpack_require__(112);
+
 const Draggable = React.createFactory(__webpack_require__(447));
-const { Component } = React;
+const {
+  Component
+} = React;
+
 const PropTypes = __webpack_require__(0);
+
 const dom = __webpack_require__(1);
 
 __webpack_require__(448);
-
 /**
  * This component represents a Splitter. The splitter supports vertical
  * as well as horizontal mode.
  */
+
+
 class SplitBox extends Component {
   static get propTypes() {
     return {
@@ -5671,14 +5762,12 @@ class SplitBox extends Component {
 
   constructor(props) {
     super(props);
-
     this.state = {
       vert: props.vert,
       // We use integers for these properties
       width: parseInt(props.initialWidth || props.initialSize, 10),
       height: parseInt(props.initialHeight || props.initialSize, 10)
     };
-
     this.onStartMove = this.onStartMove.bind(this);
     this.onStopMove = this.onStopMove.bind(this);
     this.onMove = this.onMove.bind(this);
@@ -5687,32 +5776,33 @@ class SplitBox extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.vert !== nextProps.vert) {
-      this.setState({ vert: nextProps.vert });
+      this.setState({
+        vert: nextProps.vert
+      });
     }
+
     if (this.props.initialSize !== nextProps.initialSize || this.props.initialWidth !== nextProps.initialWidth || this.props.initialHeight !== nextProps.initialHeight) {
       this.setState({
         width: parseInt(nextProps.initialWidth || nextProps.initialSize, 10),
         height: parseInt(nextProps.initialHeight || nextProps.initialSize, 10)
       });
     }
-  }
-
-  // Dragging Events
+  } // Dragging Events
 
   /**
    * Set 'resizing' cursor on entire document during splitter dragging.
    * This avoids cursor-flickering that happens when the mouse leaves
    * the splitter bar area (happens frequently).
    */
+
+
   onStartMove() {
     const splitBox = ReactDOM.findDOMNode(this);
     const doc = splitBox.ownerDocument;
     const defaultCursor = doc.documentElement.style.cursor;
     doc.documentElement.style.cursor = this.state.vert ? "ew-resize" : "ns-resize";
-
     splitBox.classList.add("dragging");
     document.dispatchEvent(new CustomEvent("drag:start"));
-
     this.setState({
       defaultCursor: defaultCursor
     });
@@ -5722,7 +5812,6 @@ class SplitBox extends Component {
     const splitBox = ReactDOM.findDOMNode(this);
     const doc = splitBox.ownerDocument;
     doc.documentElement.style.cursor = this.state.defaultCursor;
-
     splitBox.classList.remove("dragging");
     document.dispatchEvent(new CustomEvent("drag:end"));
 
@@ -5730,13 +5819,17 @@ class SplitBox extends Component {
       this.props.onResizeEnd(this.state.vert ? this.state.width : this.state.height);
     }
   }
-
   /**
    * Adjust size of the controlled panel. Depending on the current
    * orientation we either remember the width or height of
    * the splitter box.
    */
-  onMove({ movementX, movementY }) {
+
+
+  onMove({
+    movementX,
+    movementY
+  }) {
     const node = ReactDOM.findDOMNode(this);
     const doc = node.ownerDocument;
 
@@ -5749,6 +5842,7 @@ class SplitBox extends Component {
 
     if (this.state.vert) {
       const isRtl = doc.dir === "rtl";
+
       if (isRtl) {
         // In RTL we need to reverse the movement again -- but only for vertical
         // splitters
@@ -5763,9 +5857,9 @@ class SplitBox extends Component {
         height: state.height + movementY
       }));
     }
-  }
+  } // Rendering
 
-  // Rendering
+
   preparePanelStyles() {
     const vert = this.state.vert;
     const {
@@ -5775,13 +5869,11 @@ class SplitBox extends Component {
       endPanelControl,
       endPanelCollapsed
     } = this.props;
-    let leftPanelStyle, rightPanelStyle;
+    let leftPanelStyle, rightPanelStyle; // Set proper size for panels depending on the current state.
 
-    // Set proper size for panels depending on the current state.
     if (vert) {
       const startWidth = endPanelControl ? null : this.state.width,
             endWidth = endPanelControl ? this.state.width : null;
-
       leftPanelStyle = {
         maxWidth: endPanelControl ? null : maxSize,
         minWidth: endPanelControl ? null : minSize,
@@ -5795,7 +5887,6 @@ class SplitBox extends Component {
     } else {
       const startHeight = endPanelControl ? null : this.state.height,
             endHeight = endPanelControl ? this.state.height : null;
-
       leftPanelStyle = {
         maxHeight: endPanelControl ? null : maxSize,
         minHeight: endPanelControl ? null : minSize,
@@ -5808,7 +5899,10 @@ class SplitBox extends Component {
       };
     }
 
-    return { leftPanelStyle, rightPanelStyle };
+    return {
+      leftPanelStyle,
+      rightPanelStyle
+    };
   }
 
   render() {
@@ -5821,23 +5915,23 @@ class SplitBox extends Component {
       splitterSize,
       endPanelCollapsed
     } = this.props;
+    const style = Object.assign({}, this.props.style); // Calculate class names list.
 
-    const style = Object.assign({}, this.props.style);
-
-    // Calculate class names list.
     let classNames = ["split-box"];
     classNames.push(vert ? "vert" : "horz");
+
     if (this.props.className) {
       classNames = classNames.concat(this.props.className.split(" "));
     }
 
-    const { leftPanelStyle, rightPanelStyle } = this.preparePanelStyles();
+    const {
+      leftPanelStyle,
+      rightPanelStyle
+    } = this.preparePanelStyles(); // Calculate splitter size
 
-    // Calculate splitter size
     const splitterStyle = {
       flex: `0 0 ${splitterSize}px`
     };
-
     return dom.div({
       className: classNames.join(" "),
       style: style
@@ -5855,6 +5949,7 @@ class SplitBox extends Component {
       style: rightPanelStyle
     }, endPanel) : null);
   }
+
 }
 
 module.exports = SplitBox;
@@ -5867,11 +5962,16 @@ module.exports = SplitBox;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const React = __webpack_require__(6);
+
 const ReactDOM = __webpack_require__(112);
-const { Component } = React;
+
+const {
+  Component
+} = React;
+
 const PropTypes = __webpack_require__(0);
+
 const dom = __webpack_require__(1);
 
 class Draggable extends Component {
@@ -5901,15 +6001,14 @@ class Draggable extends Component {
   }
 
   onMove(ev) {
-    ev.preventDefault();
+    ev.preventDefault(); // When the target is outside of the document, its tagName is undefined
 
-    // When the target is outside of the document, its tagName is undefined
     if (!ev.target.tagName) {
       return;
-    }
-
-    // We pass the whole event because we don't know which properties
+    } // We pass the whole event because we don't know which properties
     // the callee needs.
+
+
     this.props.onMove(ev);
   }
 
@@ -5928,6 +6027,7 @@ class Draggable extends Component {
       onMouseDown: this.startDragging
     });
   }
+
 }
 
 module.exports = Draggable;
@@ -5994,60 +6094,35 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_491__;
 /***/ }),
 
 /***/ 501:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
+/***/ (function(module, exports) {
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 // These are the available plural functions that give the appropriate index
 // based on the plural rule number specified. The first element is the number
 // of plural forms and the second is the function to figure out the index.
-const gFunctions = [
-// 0: Chinese
-[1, n => 0],
-// 1: English
-[2, n => n != 1 ? 1 : 0],
-// 2: French
-[2, n => n > 1 ? 1 : 0],
-// 3: Latvian
-[3, n => n % 10 == 1 && n % 100 != 11 ? 1 : n % 10 == 0 ? 0 : 2],
-// 4: Scottish Gaelic
-[4, n => n == 1 || n == 11 ? 0 : n == 2 || n == 12 ? 1 : n > 0 && n < 20 ? 2 : 3],
-// 5: Romanian
-[3, n => n == 1 ? 0 : n == 0 || n % 100 > 0 && n % 100 < 20 ? 1 : 2],
-// 6: Lithuanian
-[3, n => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 2 : 1],
-// 7: Russian
-[3, n => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2],
-// 8: Slovak
-[3, n => n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2],
-// 9: Polish
-[3, n => n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2],
-// 10: Slovenian
-[4, n => n % 100 == 1 ? 0 : n % 100 == 2 ? 1 : n % 100 == 3 || n % 100 == 4 ? 2 : 3],
-// 11: Irish Gaeilge
-[5, n => n == 1 ? 0 : n == 2 ? 1 : n >= 3 && n <= 6 ? 2 : n >= 7 && n <= 10 ? 3 : 4],
-// 12: Arabic
-[6, n => n == 0 ? 5 : n == 1 ? 0 : n == 2 ? 1 : n % 100 >= 3 && n % 100 <= 10 ? 2 : n % 100 >= 11 && n % 100 <= 99 ? 3 : 4],
-// 13: Maltese
-[4, n => n == 1 ? 0 : n == 0 || n % 100 > 0 && n % 100 <= 10 ? 1 : n % 100 > 10 && n % 100 < 20 ? 2 : 3],
-// 14: Unused
-[3, n => n % 10 == 1 ? 0 : n % 10 == 2 ? 1 : 2],
-// 15: Icelandic, Macedonian
-[2, n => n % 10 == 1 && n % 100 != 11 ? 0 : 1],
-// 16: Breton
-[5, n => n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91 ? 0 : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92 ? 1 : (n % 10 == 3 || n % 10 == 4 || n % 10 == 9) && n % 100 != 13 && n % 100 != 14 && n % 100 != 19 && n % 100 != 73 && n % 100 != 74 && n % 100 != 79 && n % 100 != 93 && n % 100 != 94 && n % 100 != 99 ? 2 : n % 1000000 == 0 && n != 0 ? 3 : 4],
-// 17: Shuar
-[2, n => n != 0 ? 1 : 0],
-// 18: Welsh
-[6, n => n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n == 3 ? 3 : n == 6 ? 4 : 5],
-// 19: Bosnian, Croatian, Serbian
+const gFunctions = [// 0: Chinese
+[1, n => 0], // 1: English
+[2, n => n != 1 ? 1 : 0], // 2: French
+[2, n => n > 1 ? 1 : 0], // 3: Latvian
+[3, n => n % 10 == 1 && n % 100 != 11 ? 1 : n % 10 == 0 ? 0 : 2], // 4: Scottish Gaelic
+[4, n => n == 1 || n == 11 ? 0 : n == 2 || n == 12 ? 1 : n > 0 && n < 20 ? 2 : 3], // 5: Romanian
+[3, n => n == 1 ? 0 : n == 0 || n % 100 > 0 && n % 100 < 20 ? 1 : 2], // 6: Lithuanian
+[3, n => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && (n % 100 < 10 || n % 100 >= 20) ? 2 : 1], // 7: Russian
+[3, n => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2], // 8: Slovak
+[3, n => n == 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2], // 9: Polish
+[3, n => n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2], // 10: Slovenian
+[4, n => n % 100 == 1 ? 0 : n % 100 == 2 ? 1 : n % 100 == 3 || n % 100 == 4 ? 2 : 3], // 11: Irish Gaeilge
+[5, n => n == 1 ? 0 : n == 2 ? 1 : n >= 3 && n <= 6 ? 2 : n >= 7 && n <= 10 ? 3 : 4], // 12: Arabic
+[6, n => n == 0 ? 5 : n == 1 ? 0 : n == 2 ? 1 : n % 100 >= 3 && n % 100 <= 10 ? 2 : n % 100 >= 11 && n % 100 <= 99 ? 3 : 4], // 13: Maltese
+[4, n => n == 1 ? 0 : n == 0 || n % 100 > 0 && n % 100 <= 10 ? 1 : n % 100 > 10 && n % 100 < 20 ? 2 : 3], // 14: Unused
+[3, n => n % 10 == 1 ? 0 : n % 10 == 2 ? 1 : 2], // 15: Icelandic, Macedonian
+[2, n => n % 10 == 1 && n % 100 != 11 ? 0 : 1], // 16: Breton
+[5, n => n % 10 == 1 && n % 100 != 11 && n % 100 != 71 && n % 100 != 91 ? 0 : n % 10 == 2 && n % 100 != 12 && n % 100 != 72 && n % 100 != 92 ? 1 : (n % 10 == 3 || n % 10 == 4 || n % 10 == 9) && n % 100 != 13 && n % 100 != 14 && n % 100 != 19 && n % 100 != 73 && n % 100 != 74 && n % 100 != 79 && n % 100 != 93 && n % 100 != 94 && n % 100 != 99 ? 2 : n % 1000000 == 0 && n != 0 ? 3 : 4], // 17: Shuar
+[2, n => n != 0 ? 1 : 0], // 18: Welsh
+[6, n => n == 0 ? 0 : n == 1 ? 1 : n == 2 ? 2 : n == 3 ? 3 : n == 6 ? 4 : 5], // 19: Bosnian, Croatian, Serbian
 [3, n => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2]];
-
 const PluralForm = {
   /**
    * Get the correct plural form of a word based on the number
@@ -6063,12 +6138,10 @@ const PluralForm = {
     // creates getPluralForm function. The function it creates is based on the
     // value of pluralRule specified in the intl stringbundle.
     // See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
-
     // Delete the getters to be overwritten
     delete this.numForms;
-    delete this.get;
+    delete this.get; // Make the plural form get function and set it as the default get
 
-    // Make the plural form get function and set it as the default get
     [this.get, this.numForms] = this.makeGetter(this.ruleNum);
     return this.get;
   },
@@ -6086,27 +6159,23 @@ const PluralForm = {
     if (aRuleNum < 0 || aRuleNum >= gFunctions.length || isNaN(aRuleNum)) {
       log(["Invalid rule number: ", aRuleNum, " -- defaulting to 0"]);
       aRuleNum = 0;
-    }
+    } // Get the desired pluralRule function
 
-    // Get the desired pluralRule function
-    let [numForms, pluralFunc] = gFunctions[aRuleNum];
 
-    // Return functions that give 1) the number of forms and 2) gets the right
+    let [numForms, pluralFunc] = gFunctions[aRuleNum]; // Return functions that give 1) the number of forms and 2) gets the right
     // plural form
+
     return [function (aNum, aWords) {
       // Figure out which index to use for the semi-colon separated words
       let index = pluralFunc(aNum ? Number(aNum) : 0);
-      let words = aWords ? aWords.split(/;/) : [""];
+      let words = aWords ? aWords.split(/;/) : [""]; // Explicitly check bounds to avoid strict warnings
 
-      // Explicitly check bounds to avoid strict warnings
-      let ret = index < words.length ? words[index] : undefined;
+      let ret = index < words.length ? words[index] : undefined; // Check for array out of bounds or empty strings
 
-      // Check for array out of bounds or empty strings
       if (ret == undefined || ret == "") {
         // Display a message in the error console
-        log(["Index #", index, " of '", aWords, "' for value ", aNum, " is invalid -- plural rule #", aRuleNum, ";"]);
+        log(["Index #", index, " of '", aWords, "' for value ", aNum, " is invalid -- plural rule #", aRuleNum, ";"]); // Default to the first entry (which might be empty, but not undefined)
 
-        // Default to the first entry (which might be empty, but not undefined)
         ret = words[0];
       }
 
@@ -6138,20 +6207,81 @@ const PluralForm = {
       return 1;
     }
   }
-};
 
+};
 /**
  * Private helper function to log errors to the error console and command line
  *
  * @param aMsg
  *        Error message to log or an array of strings to concat
  */
+
 function log(aMsg) {
   let msg = "plural-form.js: " + (aMsg.join ? aMsg.join("") : aMsg);
   console.log(msg + "\n");
 }
 
 module.exports = PluralForm;
+
+/***/ }),
+
+/***/ 516:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+
+const asyncStorage = __webpack_require__(427);
+/*
+ * asyncStoreHelper wraps asyncStorage so that it is easy to define project
+ * specific properties. It is similar to PrefsHelper.
+ *
+ * e.g.
+ *   const asyncStore = asyncStoreHelper("r", {a: "_a"})
+ *   asyncStore.a         // => asyncStorage.getItem("r._a")
+ *   asyncStore.a = 2     // => asyncStorage.setItem("r._a", 2)
+ */
+
+
+function asyncStoreHelper(root, mappings) {
+  let store = {};
+
+  function getMappingKey(key) {
+    return Array.isArray(mappings[key]) ? mappings[key][0] : mappings[key];
+  }
+
+  function getMappingDefaultValue(key) {
+    return Array.isArray(mappings[key]) ? mappings[key][1] : null;
+  }
+
+  Object.keys(mappings).map(key => Object.defineProperty(store, key, {
+    async get() {
+      const value = await asyncStorage.getItem(`${root}.${getMappingKey(key)}`);
+      return value || getMappingDefaultValue(key);
+    },
+
+    set(value) {
+      return asyncStorage.setItem(`${root}.${getMappingKey(key)}`, value);
+    }
+
+  }));
+  store = new Proxy(store, {
+    set: function (target, property, value, receiver) {
+      if (!mappings.hasOwnProperty(property)) {
+        throw new Error(`AsyncStore: ${property} is not defined in mappings`);
+      }
+
+      Reflect.set(...arguments);
+      return true;
+    }
+  });
+  return store;
+}
+
+module.exports = asyncStoreHelper;
 
 /***/ }),
 
@@ -6705,18 +6835,14 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
 /***/ 65:
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 var EventEmitter = function EventEmitter() {};
+
 module.exports = EventEmitter;
 
 const promise = __webpack_require__(422);
-
 /**
  * Decorate an object with event emitter functionality.
  *
@@ -6724,6 +6850,8 @@ const promise = __webpack_require__(422);
  *        Bind all public methods of EventEmitter to
  *        the aObjectToDecorate object.
  */
+
+
 EventEmitter.decorate = function EventEmitter_decorate(aObjectToDecorate) {
   let emitter = new EventEmitter();
   aObjectToDecorate.on = emitter.on.bind(emitter);
@@ -6743,9 +6871,11 @@ EventEmitter.prototype = {
    */
   on: function EventEmitter_on(aEvent, aListener) {
     if (!this._eventEmitterListeners) this._eventEmitterListeners = new Map();
+
     if (!this._eventEmitterListeners.has(aEvent)) {
       this._eventEmitterListeners.set(aEvent, []);
     }
+
     this._eventEmitterListeners.get(aEvent).push(aListener);
   },
 
@@ -6768,15 +6898,16 @@ EventEmitter.prototype = {
 
     let handler = (aEvent, aFirstArg, ...aRest) => {
       this.off(aEvent, handler);
+
       if (aListener) {
         aListener.apply(null, [aEvent, aFirstArg, ...aRest]);
       }
+
       deferred.resolve(aFirstArg);
     };
 
     handler._originalListener = aListener;
     this.on(aEvent, handler);
-
     return deferred.promise;
   },
 
@@ -6791,7 +6922,9 @@ EventEmitter.prototype = {
    */
   off: function EventEmitter_off(aEvent, aListener) {
     if (!this._eventEmitterListeners) return;
+
     let listeners = this._eventEmitterListeners.get(aEvent);
+
     if (listeners) {
       this._eventEmitterListeners.set(aEvent, listeners.filter(l => {
         return l !== aListener && l._originalListener !== aListener;
@@ -6809,22 +6942,23 @@ EventEmitter.prototype = {
     }
 
     let originalListeners = this._eventEmitterListeners.get(aEvent);
+
     for (let listener of this._eventEmitterListeners.get(aEvent)) {
       // If the object was destroyed during event emission, stop
       // emitting.
       if (!this._eventEmitterListeners) {
         break;
-      }
-
-      // If listeners were removed during emission, make sure the
+      } // If listeners were removed during emission, make sure the
       // event handler we're going to fire wasn't removed.
+
+
       if (originalListeners === this._eventEmitterListeners.get(aEvent) || this._eventEmitterListeners.get(aEvent).some(l => l === listener)) {
         try {
           listener.apply(null, arguments);
         } catch (ex) {
           // Prevent a bad listener from interfering with the others.
-          let msg = ex + ": " + ex.stack;
-          //console.error(msg);
+          let msg = ex + ": " + ex.stack; //console.error(msg);
+
           console.log(msg);
         }
       }
@@ -7234,8 +7368,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const networkRequest = __webpack_require__(13);
+
 const workerUtils = __webpack_require__(14);
 
 module.exports = {

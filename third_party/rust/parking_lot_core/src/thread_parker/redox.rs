@@ -25,43 +25,37 @@ pub struct ThreadParker {
     futex: AtomicI32,
 }
 
-impl ThreadParker {
-    pub const IS_CHEAP_TO_CONSTRUCT: bool = true;
+impl super::ThreadParkerT for ThreadParker {
+    type UnparkHandle = UnparkHandle;
+
+    const IS_CHEAP_TO_CONSTRUCT: bool = true;
 
     #[inline]
-    pub fn new() -> ThreadParker {
+    fn new() -> ThreadParker {
         ThreadParker {
             futex: AtomicI32::new(UNPARKED),
         }
     }
 
-    // Prepares the parker. This should be called before adding it to the queue.
     #[inline]
-    pub fn prepare_park(&self) {
+    unsafe fn prepare_park(&self) {
         self.futex.store(PARKED, Ordering::Relaxed);
     }
 
-    // Checks if the park timed out. This should be called while holding the
-    // queue lock after park_until has returned false.
     #[inline]
-    pub fn timed_out(&self) -> bool {
+    unsafe fn timed_out(&self) -> bool {
         self.futex.load(Ordering::Relaxed) != UNPARKED
     }
 
-    // Parks the thread until it is unparked. This should be called after it has
-    // been added to the queue, after unlocking the queue.
     #[inline]
-    pub fn park(&self) {
+    unsafe fn park(&self) {
         while self.futex.load(Ordering::Acquire) != UNPARKED {
             self.futex_wait(None);
         }
     }
 
-    // Parks the thread until it is unparked or the timeout is reached. This
-    // should be called after it has been added to the queue, after unlocking
-    // the queue. Returns true if we were unparked and false if we timed out.
     #[inline]
-    pub fn park_until(&self, timeout: Instant) -> bool {
+    unsafe fn park_until(&self, timeout: Instant) -> bool {
         while self.futex.load(Ordering::Acquire) != UNPARKED {
             let now = Instant::now();
             if timeout <= now {
@@ -82,6 +76,16 @@ impl ThreadParker {
         true
     }
 
+    #[inline]
+    unsafe fn unpark_lock(&self) -> UnparkHandle {
+        // We don't need to lock anything, just clear the state
+        self.futex.store(UNPARKED, Ordering::Release);
+
+        UnparkHandle { futex: self.ptr() }
+    }
+}
+
+impl ThreadParker {
     #[inline]
     fn futex_wait(&self, ts: Option<TimeSpec>) {
         let ts_ptr = ts
@@ -105,38 +109,22 @@ impl ThreadParker {
         }
     }
 
-    // Locks the parker to prevent the target thread from exiting. This is
-    // necessary to ensure that thread-local ThreadData objects remain valid.
-    // This should be called while holding the queue lock.
-    #[inline]
-    pub fn unpark_lock(&self) -> UnparkHandle {
-        // We don't need to lock anything, just clear the state
-        self.futex.store(UNPARKED, Ordering::Release);
-
-        UnparkHandle { futex: self.ptr() }
-    }
-
     #[inline]
     fn ptr(&self) -> *mut i32 {
         &self.futex as *const AtomicI32 as *mut i32
     }
 }
 
-// Handle for a thread that is about to be unparked. We need to mark the thread
-// as unparked while holding the queue lock, but we delay the actual unparking
-// until after the queue lock is released.
 pub struct UnparkHandle {
     futex: *mut i32,
 }
 
-impl UnparkHandle {
-    // Wakes up the parked thread. This should be called after the queue lock is
-    // released to avoid blocking the queue for too long.
+impl super::UnparkHandleT for UnparkHandle {
     #[inline]
-    pub fn unpark(self) {
+    unsafe fn unpark(self) {
         // The thread data may have been freed at this point, but it doesn't
         // matter since the syscall will just return EFAULT in that case.
-        let r = unsafe { futex(self.futex, FUTEX_WAKE, PARKED, 0, ptr::null_mut()) };
+        let r = futex(self.futex, FUTEX_WAKE, PARKED, 0, ptr::null_mut());
         match r {
             Ok(num_woken) => debug_assert!(num_woken == 0 || num_woken == 1),
             Err(Error { errno }) => debug_assert_eq!(errno, EFAULT),

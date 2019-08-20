@@ -51,6 +51,7 @@
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"  // for TransactionManager
+#include "mozilla/dom/AbstractRange.h"   // for AbstractRange
 #include "mozilla/dom/CharacterData.h"   // for CharacterData
 #include "mozilla/dom/DataTransfer.h"    // for DataTransfer
 #include "mozilla/dom/Element.h"         // for Element, nsINode::AsElement
@@ -1353,7 +1354,7 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   //     we need to redesign RangeUpdaterRef() as avoiding using indices.
   Unused << aPointToInsert.Offset();
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateNode, nsIEditor::eNext);
 
   RefPtr<Element> newElement;
@@ -1430,7 +1431,7 @@ nsresult EditorBase::InsertNodeWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   RefPtr<InsertNodeTransaction> transaction =
@@ -1565,7 +1566,7 @@ already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSplitNode, nsIEditor::eNext);
 
   // XXX Unfortunately, storing offset of the split point in
@@ -1635,7 +1636,7 @@ nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious);
 
   // Remember some values; later used for saved selection updating.
@@ -1707,7 +1708,7 @@ EditorBase::DeleteNode(nsINode* aNode) {
 nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
@@ -2907,7 +2908,7 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aTextNode) {
 
   const uint32_t length = aTextNode.Length();
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetText, nsIEditor::eNext);
 
   // Let listeners know what's up
@@ -2976,7 +2977,7 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
     return NS_ERROR_FAILURE;
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteText, nsIEditor::ePrevious);
 
   // Let listeners know what's up
@@ -4059,7 +4060,7 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
     return NS_OK;
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreatePaddingBRElementForEmptyEditor,
       nsIEditor::eNone);
 
@@ -4623,21 +4624,22 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   return NS_OK;
 }
 
-nsresult EditorBase::HandleInlineSpellCheck(nsINode* previousSelectedNode,
-                                            uint32_t previousSelectedOffset,
-                                            nsINode* aStartContainer,
-                                            uint32_t aStartOffset,
-                                            nsINode* aEndContainer,
-                                            uint32_t aEndOffset) {
+nsresult EditorBase::HandleInlineSpellCheck(
+    const EditorDOMPoint& aPreviouslySelectedStart,
+    const AbstractRange* aRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!mInlineSpellChecker) {
     return NS_OK;
   }
   return mInlineSpellChecker->SpellCheckAfterEditorChange(
-      GetTopLevelEditSubAction(), *SelectionRefPtr(), previousSelectedNode,
-      previousSelectedOffset, aStartContainer, aStartOffset, aEndContainer,
-      aEndOffset);
+      GetTopLevelEditSubAction(), *SelectionRefPtr(),
+      aPreviouslySelectedStart.GetContainer(),
+      aPreviouslySelectedStart.Offset(),
+      aRange ? aRange->GetStartContainer() : nullptr,
+      aRange ? aRange->StartOffset() : 0,
+      aRange ? aRange->GetEndContainer() : nullptr,
+      aRange ? aRange->EndOffset() : 0);
 }
 
 Element* EditorBase::FindSelectionRoot(nsINode* aNode) const {
@@ -5260,6 +5262,11 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mEditAction = aEditAction;
     }
     mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
+
+    // Parent's mTopLevelEditSubActionData should be referred instead so that
+    // we don't need to set mTopLevelEditSubActionData.mSelectedRange nor
+    // mTopLevelEditActionData.mChangedRange here.
+
     mDirectionOfTopLevelEditSubAction =
         mParentData->mDirectionOfTopLevelEditSubAction;
   } else {
@@ -5269,6 +5276,13 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     }
     mEditAction = aEditAction;
     mDirectionOfTopLevelEditSubAction = eNone;
+    if (mEditorBase.mIsHTMLEditorClass) {
+      mTopLevelEditSubActionData.mSelectedRange =
+          mEditorBase.AsHTMLEditor()
+              ->GetSelectedRangeItemForTopLevelEditSubAction();
+      mTopLevelEditSubActionData.mChangedRange =
+          mEditorBase.AsHTMLEditor()->GetChangedRangeForTopLevelEditSubAction();
+    }
   }
   mEditorBase.mEditActionData = this;
 }
@@ -5278,6 +5292,12 @@ EditorBase::AutoEditActionDataSetter::~AutoEditActionDataSetter() {
     return;
   }
   mEditorBase.mEditActionData = mParentData;
+
+  MOZ_ASSERT(
+      !mTopLevelEditSubActionData.mSelectedRange ||
+          (!mTopLevelEditSubActionData.mSelectedRange->mStartContainer &&
+           !mTopLevelEditSubActionData.mSelectedRange->mEndContainer),
+      "mTopLevelEditSubActionData.mSelectedRange should've been cleared");
 }
 
 void EditorBase::AutoEditActionDataSetter::SetColorData(
@@ -5353,6 +5373,87 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
                            ? ePaste
                            : ePasteNoFormatting,
                        true /* is external */, aClipboardType);
+}
+
+/*****************************************************************************
+ * mozilla::EditorBase::TopLevelEditSubActionData
+ *****************************************************************************/
+
+nsresult EditorBase::TopLevelEditSubActionData::AddNodeToChangedRange(
+    const HTMLEditor& aHTMLEditor, nsINode& aNode) {
+  EditorRawDOMPoint startPoint(&aNode);
+  EditorRawDOMPoint endPoint(&aNode);
+  DebugOnly<bool> advanced = endPoint.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced, "Failed to set endPoint to next to aNode");
+  return AddRangeToChangedRange(aHTMLEditor, startPoint, endPoint);
+}
+
+nsresult EditorBase::TopLevelEditSubActionData::AddPointToChangedRange(
+    const HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aPoint) {
+  return AddRangeToChangedRange(aHTMLEditor, aPoint, aPoint);
+}
+
+nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
+    const HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aStart,
+    const EditorRawDOMPoint& aEnd) {
+  if (NS_WARN_IF(!aStart.IsSet()) || NS_WARN_IF(!aEnd.IsSet())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!aHTMLEditor.IsDescendantOfRoot(aStart.GetContainer()) ||
+      (aStart.GetContainer() != aEnd.GetContainer() &&
+       !aHTMLEditor.IsDescendantOfRoot(aEnd.GetContainer()))) {
+    return NS_OK;
+  }
+
+  // If mChangedRange hasn't been set, we can just set it to `aStart` and
+  // `aEnd`.
+  if (!mChangedRange->IsPositioned()) {
+    nsresult rv = mChangedRange->SetStartAndEnd(aStart.ToRawRangeBoundary(),
+                                                aEnd.ToRawRangeBoundary());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to set mChangedRange to given range");
+    return rv;
+  }
+
+  bool disconnected = false;
+  int16_t relation = mChangedRange->StartRef().IsSet()
+                         ? nsContentUtils::ComparePoints(
+                               mChangedRange->StartRef(),
+                               aStart.ToRawRangeBoundary(), &disconnected)
+                         : 1;
+  if (NS_WARN_IF(disconnected)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If aStart is before start of mChangedRange, reset the start.
+  if (relation > 0) {
+    ErrorResult error;
+    mChangedRange->SetStart(aStart.ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
+  relation = mChangedRange->EndRef().IsSet()
+                 ? nsContentUtils::ComparePoints(mChangedRange->EndRef(),
+                                                 aEnd.ToRawRangeBoundary(),
+                                                 &disconnected)
+                 : 1;
+  if (NS_WARN_IF(disconnected)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If aEnd is after end of mChangedRange, reset the end.
+  if (relation < 0) {
+    ErrorResult error;
+    mChangedRange->SetEnd(aEnd.ToRawRangeBoundary(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
+  return NS_OK;
 }
 
 }  // namespace mozilla

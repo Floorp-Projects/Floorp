@@ -13,7 +13,7 @@ add_task(async function basic() {
       "Clicking the history dropmarker should initiate an empty search instead of searching for the loaded URL"
     );
     is(
-      gURLBar.value,
+      gURLBar.untrimmedValue,
       "http://example.com/",
       "Clicking the history dropmarker should not change the input value"
     );

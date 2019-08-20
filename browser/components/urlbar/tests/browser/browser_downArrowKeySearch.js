@@ -17,15 +17,15 @@ add_task(async function init() {
 add_task(async function url() {
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     gURLBar.focus();
-    gURLBar.selectionEnd = gURLBar.value.length;
-    gURLBar.selectionStart = gURLBar.value.length;
+    gURLBar.selectionEnd = gURLBar.untrimmedValue.length;
+    gURLBar.selectionStart = gURLBar.untrimmedValue.length;
     EventUtils.synthesizeKey("KEY_ArrowDown");
     await UrlbarTestUtils.promiseSearchComplete(window);
     Assert.equal(UrlbarTestUtils.getSelectedIndex(window), 0);
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
     Assert.ok(details.autofill);
     Assert.equal(details.url, "http://example.com/");
-    Assert.equal(gURLBar.textValue, "example.com/");
+    Assert.equal(gURLBar.value, "example.com/");
     await UrlbarTestUtils.promisePopupClose(window);
   });
 });
@@ -40,7 +40,7 @@ add_task(async function userTyping() {
   Assert.equal(details.type, UrlbarUtils.RESULT_TYPE.SEARCH);
   Assert.ok(details.searchParams);
   Assert.equal(details.searchParams.query, "foo");
-  Assert.equal(gURLBar.textValue, "foo");
+  Assert.equal(gURLBar.value, "foo");
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
@@ -52,5 +52,5 @@ add_task(async function empty() {
   Assert.equal(UrlbarTestUtils.getSelectedIndex(window), -1);
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(details.url, "http://example.com/");
-  Assert.equal(gURLBar.textValue, "");
+  Assert.equal(gURLBar.value, "");
 });

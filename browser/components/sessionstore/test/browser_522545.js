@@ -395,7 +395,7 @@ function test() {
         "We should have reset the load state when the tab loaded"
       );
       is(
-        gURLBar.textValue,
+        gURLBar.value,
         gURLBar.trimValue("http://example.com/"),
         "Address bar's value set after loading URI"
       );

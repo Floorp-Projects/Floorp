@@ -36,7 +36,7 @@ add_task(async function() {
 
     await checkCaretMoves(
       "KEY_ArrowDown",
-      gURLBar.textValue.length,
+      gURLBar.value.length,
       "Caret should have moved to the end"
     );
     await checkPopupOpens("KEY_ArrowDown");

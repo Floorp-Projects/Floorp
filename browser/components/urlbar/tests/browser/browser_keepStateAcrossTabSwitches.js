@@ -27,10 +27,10 @@ add_task(async function() {
   gURLBar.select();
   EventUtils.sendKey("return");
   await errorPageLoaded;
-  is(gURLBar.textValue, input, "Text is still in URL bar");
+  is(gURLBar.value, input, "Text is still in URL bar");
   await BrowserTestUtils.switchTab(gBrowser, tab.previousElementSibling);
   await BrowserTestUtils.switchTab(gBrowser, tab);
-  is(gURLBar.textValue, input, "Text is still in URL bar after tab switch");
+  is(gURLBar.value, input, "Text is still in URL bar after tab switch");
   BrowserTestUtils.removeTab(tab);
 });
 
@@ -59,11 +59,11 @@ add_task(async function() {
   gURLBar.select();
   EventUtils.sendKey("return");
   await errorPageLoaded;
-  is(gURLBar.textValue, input, "Text is still in URL bar");
+  is(gURLBar.value, input, "Text is still in URL bar");
   is(tab.linkedBrowser.userTypedValue, input, "Text still stored on browser");
   await BrowserTestUtils.switchTab(gBrowser, tab.previousElementSibling);
   await BrowserTestUtils.switchTab(gBrowser, tab);
-  is(gURLBar.textValue, input, "Text is still in URL bar after tab switch");
+  is(gURLBar.value, input, "Text is still in URL bar after tab switch");
   is(tab.linkedBrowser.userTypedValue, input, "Text still stored on browser");
   BrowserTestUtils.removeTab(tab);
 });

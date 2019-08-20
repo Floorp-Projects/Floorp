@@ -145,10 +145,6 @@ HTMLEditor::HTMLEditor()
 }
 
 HTMLEditor::~HTMLEditor() {
-  if (mRules && mRules->AsHTMLEditRules()) {
-    mRules->AsHTMLEditRules()->EndListeningToEditSubActions();
-  }
-
   mTypeInState = nullptr;
 
   if (mDisabledLinkHandling) {
@@ -167,6 +163,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEditor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTypeInState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mComposerCommandsUpdater)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChangedRangeForTopLevelEditSubAction)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets)
 
   tmp->HideAnonymousEditingUIs();
@@ -175,6 +172,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTypeInState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mComposerCommandsUpdater)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChangedRangeForTopLevelEditSubAction)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopLeftHandle)
@@ -1010,7 +1008,7 @@ nsresult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertParagraphSeparator, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
@@ -1132,7 +1130,7 @@ nsresult HTMLEditor::InsertBrElementAtSelectionWithTransaction() {
   // XXX Why do we use EditSubAction::eInsertText here?  Looks like
   //     EditSubAction::eInsertLineBreak or EditSubAction::eInsertNode
   //     is better.
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext);
 
   if (!SelectionRefPtr()->IsCollapsed()) {
@@ -1182,7 +1180,7 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // don't do any post processing, rules get confused
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eReplaceHeadWithHTMLSource, nsIEditor::eNone);
 
   CommitComposition();
@@ -1533,7 +1531,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
   CommitComposition();
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertElement, nsIEditor::eNext);
 
   // hand off to the rules system, see if it has anything to say about this
@@ -2089,7 +2087,7 @@ nsresult HTMLEditor::MakeOrChangeListAsAction(const nsAString& aListType,
   bool cancel, handled;
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateOrChangeList, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeList);
@@ -2201,7 +2199,7 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
   RefPtr<TextEditRules> rules(mRules);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eRemoveList, nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(EditSubAction::eRemoveList);
@@ -2235,7 +2233,7 @@ nsresult HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName) {
   bool cancel, handled;
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateOrChangeDefinitionList, nsIEditor::eNext);
 
   nsDependentAtomString tagName(&aTagName);
@@ -2272,7 +2270,7 @@ nsresult HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName) {
   bool cancel, handled;
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateOrRemoveBlock, nsIEditor::eNext);
 
   nsDependentAtomString tagName(&aTagName);
@@ -2411,8 +2409,8 @@ nsresult HTMLEditor::IndentOrOutdentAsSubAction(
   RefPtr<TextEditRules> rules(mRules);
 
   bool cancel, handled;
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-      *this, aIndentOrOutdent, nsIEditor::eNext);
+  AutoEditSubActionNotifier startToHandleEditSubAction(*this, aIndentOrOutdent,
+                                                       nsIEditor::eNext);
 
   EditSubActionInfo subActionInfo(aIndentOrOutdent);
   nsresult rv = rules->WillDoAction(subActionInfo, &cancel, &handled);
@@ -2517,7 +2515,7 @@ nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
   RefPtr<TextEditRules> rules(mRules);
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetOrClearAlignment, nsIEditor::eNext);
 
   bool cancel, handled;
@@ -3377,7 +3375,7 @@ nsresult HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::eNext);
 
   while (nsCOMPtr<nsINode> child = aElement.GetLastChild()) {
@@ -4516,7 +4514,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
   bool isCollapsed = SelectionRefPtr()->IsCollapsed();
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertElement, nsIEditor::eNext);
   AutoSelectionRestorer restoreSelectionLater(*this);
   AutoTransactionsConserveSelection dontChangeMySelection(*this);

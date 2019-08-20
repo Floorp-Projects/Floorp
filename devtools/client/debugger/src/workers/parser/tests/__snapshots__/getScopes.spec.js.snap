@@ -13476,7 +13476,7 @@ Array [
     },
     "scopeKind": "",
     "start": Object {
-      "column": 21,
+      "column": 14,
       "line": 12,
       "sourceId": "scopes/ts-sample/originalSource-1",
     },
@@ -14699,7 +14699,7 @@ Array [
     },
     "scopeKind": "",
     "start": Object {
-      "column": 21,
+      "column": 14,
       "line": 12,
       "sourceId": "scopes/tsx-sample/originalSource-1",
     },

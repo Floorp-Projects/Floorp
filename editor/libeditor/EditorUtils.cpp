@@ -40,6 +40,11 @@ DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
 nsresult DOMIterator::Init(nsRange& aRange) { return mIter->Init(&aRange); }
 
+nsresult DOMIterator::Init(const RawRangeBoundary& aStartRef,
+                           const RawRangeBoundary& aEndRef) {
+  return mIter->Init(aStartRef, aEndRef);
+}
+
 DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
     : mIter(&mPostOrderIter) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;

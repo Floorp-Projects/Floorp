@@ -247,7 +247,7 @@ class UrlbarController {
     if (
       end != start ||
       (isArrowUp && start > 0) ||
-      (isArrowDown && end < this.input.textValue.length)
+      (isArrowDown && end < this.input.value.length)
     ) {
       return true;
     }
@@ -350,7 +350,7 @@ class UrlbarController {
           if (executeAction) {
             this.userSelectionBehavior = "arrow";
             this.engagementEvent.start(event);
-            this.input.startQuery({ searchString: this.input.textValue });
+            this.input.startQuery({ searchString: this.input.value });
           }
         }
         event.preventDefault();

@@ -25,10 +25,7 @@ pub trait AtomicElisionExt {
 // Indicates whether the target architecture supports lock elision
 #[inline]
 pub fn have_elision() -> bool {
-    cfg!(all(
-        feature = "nightly",
-        any(target_arch = "x86", target_arch = "x86_64"),
-    ))
+    cfg!(all(feature = "nightly", any(target_arch = "x86", target_arch = "x86_64"),))
 }
 
 // This implementation is never actually called because it is guarded by
@@ -62,11 +59,7 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{eax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current {
-                Ok(prev)
-            } else {
-                Err(prev)
-            }
+            if prev == current { Ok(prev) } else { Err(prev) }
         }
     }
     #[cfg(target_pointer_width = "64")]
@@ -79,11 +72,7 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{rax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current {
-                Ok(prev)
-            } else {
-                Err(prev)
-            }
+            if prev == current { Ok(prev) } else { Err(prev) }
         }
     }
 
