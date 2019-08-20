@@ -11,6 +11,7 @@ const { LongStringActor } = require("devtools/server/actors/string");
 const {
   addDebugServiceWorkersListener,
   canDebugServiceWorkers,
+  isParentInterceptEnabled,
   removeDebugServiceWorkersListener,
 } = require("devtools/shared/service-workers-debug-helper");
 
@@ -52,6 +53,7 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   getDescription: function() {
     return Object.assign({}, getSystemInfo(), {
       canDebugServiceWorkers: canDebugServiceWorkers(),
+      isParentInterceptEnabled: isParentInterceptEnabled(),
     });
   },
 

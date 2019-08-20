@@ -18,6 +18,9 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
   },
 
   methods: {
+    push: {
+      request: {},
+    },
     start: {
       request: {},
     },

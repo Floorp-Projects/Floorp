@@ -60,8 +60,13 @@ function canDebugServiceWorkers() {
   return isNewSWImplementation || !multiE10s;
 }
 
+function isParentInterceptEnabled() {
+  return swm.isParentInterceptEnabled();
+}
+
 module.exports = {
   addDebugServiceWorkersListener,
   canDebugServiceWorkers,
+  isParentInterceptEnabled,
   removeDebugServiceWorkersListener,
 };

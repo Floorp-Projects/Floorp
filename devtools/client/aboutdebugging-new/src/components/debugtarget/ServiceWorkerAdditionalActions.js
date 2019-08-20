@@ -70,7 +70,9 @@ class ServiceWorkerAdditionalActions extends PureComponent {
 
   push() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.pushServiceWorker(target.id));
+    dispatch(
+      Actions.pushServiceWorker(target.id, target.details.registrationFront)
+    );
   }
 
   start() {
