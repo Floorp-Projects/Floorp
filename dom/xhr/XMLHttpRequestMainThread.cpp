@@ -2426,12 +2426,8 @@ void XMLHttpRequestMainThread::MaybeLowerChannelPriority() {
   }
 
   JSContext* cx = jsapi.cx();
-  nsAutoCString fileNameString;
-  if (!nsJSUtils::GetCallingLocation(cx, fileNameString)) {
-    return;
-  }
 
-  if (!doc->IsScriptTracking(fileNameString)) {
+  if (!doc->IsScriptTracking(cx)) {
     return;
   }
 
