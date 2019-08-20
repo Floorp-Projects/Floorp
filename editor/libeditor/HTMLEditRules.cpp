@@ -199,7 +199,6 @@ HTMLEditRules::HTMLEditRules()
 
 void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
-  mDocChangeRange = nullptr;
   mReturnInEmptyLIKillsList = true;
   mUtilRange = nullptr;
   mJoinOffset = 0;
@@ -238,28 +237,18 @@ nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   // XXX Why was this pref designed as a string and not bool?
   mReturnInEmptyLIKillsList = !returnInEmptyLIKillsList.EqualsLiteral("false");
 
+  Element* rootElement = HTMLEditorRef().GetRoot();
+  if (NS_WARN_IF(!rootElement && !HTMLEditorRef().GetDocument())) {
+    return NS_ERROR_FAILURE;
+  }
+
   // make a utility range for use by the listenter
-  nsCOMPtr<nsINode> node = HTMLEditorRef().GetRoot();
-  if (!node) {
-    node = HTMLEditorRef().GetDocument();
-    if (NS_WARN_IF(!node)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
+  mUtilRange = new nsRange(HTMLEditorRef().GetDocument());
 
-  mUtilRange = new nsRange(node);
-
-  if (!mDocChangeRange) {
-    mDocChangeRange = new nsRange(node);
-  }
-
-  if (node->IsElement()) {
-    ErrorResult error;
-    mDocChangeRange->SelectNode(*node, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
+  if (rootElement) {
+    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
+        RawRangeBoundary(rootElement, 0),
+        RawRangeBoundary(rootElement, rootElement->GetChildCount()));
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -324,11 +313,7 @@ nsresult HTMLEditRules::BeforeEdit() {
   HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(
       HTMLEditorRef().TopLevelEditSubActionDataRef().mSelectedRange);
 
-  // Clear out mDocChangeRange and mUtilRange
-  if (mDocChangeRange) {
-    // Clear out our accounting of what changed
-    mDocChangeRange->Reset();
-  }
+  // Clear out mUtilRange
   if (mUtilRange) {
     // Ditto for mUtilRange.
     mUtilRange->Reset();
@@ -439,21 +424,9 @@ nsresult HTMLEditRules::AfterEditInner() {
       break;
   }
 
-  nsCOMPtr<nsINode> rangeStartContainer, rangeEndContainer;
-  uint32_t rangeStartOffset = 0, rangeEndOffset = 0;
-  // do we have a real range to act on?
-  bool bDamagedRange = false;
-  if (mDocChangeRange) {
-    rangeStartContainer = mDocChangeRange->GetStartContainer();
-    rangeEndContainer = mDocChangeRange->GetEndContainer();
-    rangeStartOffset = mDocChangeRange->StartOffset();
-    rangeEndOffset = mDocChangeRange->EndOffset();
-    if (rangeStartContainer && rangeEndContainer) {
-      bDamagedRange = true;
-    }
-  }
-
-  if (bDamagedRange &&
+  if (HTMLEditorRef()
+          .TopLevelEditSubActionDataRef()
+          .mChangedRange->IsPositioned() &&
       HTMLEditorRef().GetTopLevelEditSubAction() != EditSubAction::eUndo &&
       HTMLEditorRef().GetTopLevelEditSubAction() != EditSubAction::eRedo) {
     // don't let any txns in here move the selection around behind our back.
@@ -461,7 +434,8 @@ nsresult HTMLEditRules::AfterEditInner() {
     AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
 
     // expand the "changed doc range" as needed
-    PromoteRange(*mDocChangeRange, HTMLEditorRef().GetTopLevelEditSubAction());
+    PromoteRange(*HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange,
+                 HTMLEditorRef().GetTopLevelEditSubAction());
 
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
@@ -487,7 +461,15 @@ nsresult HTMLEditRules::AfterEditInner() {
     }
 
     // add in any needed <br>s, and remove any unneeded ones.
-    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
+    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
+        HTMLEditorRef()
+            .TopLevelEditSubActionDataRef()
+            .mChangedRange->StartRef()
+            .AsRaw(),
+        HTMLEditorRef()
+            .TopLevelEditSubActionDataRef()
+            .mChangedRange->EndRef()
+            .AsRaw());
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -501,9 +483,11 @@ nsresult HTMLEditRules::AfterEditInner() {
       case EditSubAction::eInsertTextComingFromIME:
         break;
       default: {
-        RefPtr<nsRange> docChangeRange = mDocChangeRange;
         nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                          .CollapseAdjacentTextNodes(docChangeRange);
+                          .CollapseAdjacentTextNodes(
+                              MOZ_KnownLive(HTMLEditorRef()
+                                                .TopLevelEditSubActionDataRef()
+                                                .mChangedRange));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -643,11 +627,8 @@ nsresult HTMLEditRules::AfterEditInner() {
   rv = HTMLEditorRef().HandleInlineSpellCheck(
       HTMLEditorRef()
           .TopLevelEditSubActionDataRef()
-          .mSelectedRange->mStartContainer,
-      HTMLEditorRef()
-          .TopLevelEditSubActionDataRef()
-          .mSelectedRange->mStartOffset,
-      rangeStartContainer, rangeStartOffset, rangeEndContainer, rangeEndOffset);
+          .mSelectedRange->StartPoint(),
+      HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1467,12 +1448,11 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
       // Mutation event listener has changed the DOM tree...
       return NS_OK;
     }
-    if (!mDocChangeRange) {
-      mDocChangeRange = new nsRange(compositionStartPoint.GetContainer());
-    }
-    rv = mDocChangeRange->SetStartAndEnd(
-        compositionStartPoint.ToRawRangeBoundary(),
-        compositionEndPoint.ToRawRangeBoundary());
+    rv = HTMLEditorRef()
+             .TopLevelEditSubActionDataRef()
+             .mChangedRange->SetStartAndEnd(
+                 compositionStartPoint.ToRawRangeBoundary(),
+                 compositionEndPoint.ToRawRangeBoundary());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1675,20 +1655,19 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
 
   // manually update the doc changed range so that AfterEdit will clean up
   // the correct portion of the document.
-  if (!mDocChangeRange) {
-    mDocChangeRange = new nsRange(pointToInsert.GetContainer());
-  }
-
   if (currentPoint.IsSet()) {
-    rv = mDocChangeRange->SetStartAndEnd(pointToInsert.ToRawRangeBoundary(),
-                                         currentPoint.ToRawRangeBoundary());
+    rv = HTMLEditorRef()
+             .TopLevelEditSubActionDataRef()
+             .mChangedRange->SetStartAndEnd(pointToInsert.ToRawRangeBoundary(),
+                                            currentPoint.ToRawRangeBoundary());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  rv = mDocChangeRange->CollapseTo(pointToInsert);
+  rv = HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(
+      pointToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9295,15 +9274,15 @@ nsresult HTMLEditRules::ReapplyCachedStyles() {
   return NS_OK;
 }
 
-nsresult
-HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() {
+nsresult HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInRange(
+    const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // Gather list of empty nodes
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   EmptyEditableFunctor functor(&HTMLEditorRef());
   DOMIterator iter;
-  if (NS_WARN_IF(NS_FAILED(iter.Init(*mDocChangeRange)))) {
+  if (NS_WARN_IF(NS_FAILED(iter.Init(aStartRef, aEndRef)))) {
     return NS_ERROR_FAILURE;
   }
   iter.AppendList(functor, nodeArray);
@@ -9715,11 +9694,11 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // Some general notes on the algorithm used here: the goal is to examine all
-  // the nodes in mDocChangeRange, and remove the empty ones.  We do this by
-  // using a content iterator to traverse all the nodes in the range, and
-  // placing the empty nodes into an array.  After finishing the iteration, we
-  // delete the empty nodes in the array.  (They cannot be deleted as we find
-  // them because that would invalidate the iterator.)
+  // the nodes in TopLevelEditSubActionData::mChangedRange, and remove the empty
+  // ones.  We do this by using a content iterator to traverse all the nodes
+  // in the range, and placing the empty nodes into an array.  After finishing
+  // the iteration, we delete the empty nodes in the array.  (They cannot be
+  // deleted as we find them because that would invalidate the iterator.)
   //
   // Since checking to see if a node is empty can be costly for nodes with many
   // descendants, there are some optimizations made.  I rely on the fact that
@@ -9741,7 +9720,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
   // all the _examined_ children empty, but still not have an empty parent.
 
   PostContentIterator postOrderIter;
-  nsresult rv = postOrderIter.Init(mDocChangeRange);
+  nsresult rv = postOrderIter.Init(
+      HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10173,57 +10153,62 @@ nsresult HTMLEditRules::UpdateDocChangeRange(nsRange* aRange) {
     return NS_ERROR_FAILURE;
   }
   if (!HTMLEditorRef().IsDescendantOfRoot(atStart.Container())) {
-    // just return - we don't need to adjust mDocChangeRange in this case
+    // Just return - we don't need to adjust
+    // TopLevelEditSubActionData::mChangedRange in this case
     return NS_OK;
   }
 
-  if (!mDocChangeRange) {
-    // clone aRange.
-    mDocChangeRange = aRange->CloneRange();
-  } else {
-    // compare starts of ranges
-    ErrorResult error;
-    int16_t result = mDocChangeRange->CompareBoundaryPoints(
-        Range_Binding::START_TO_START, *aRange, error);
-    if (error.ErrorCodeIs(NS_ERROR_NOT_INITIALIZED)) {
-      // This will happen is mDocChangeRange is non-null, but the range is
-      // uninitialized. In this case we'll set the start to aRange start.
-      // The same test won't be needed further down since after we've set
-      // the start the range will be collapsed to that point.
-      result = 1;
-      error.SuppressException();
-    }
+  // compare starts of ranges
+  ErrorResult error;
+  int16_t result = HTMLEditorRef()
+                       .TopLevelEditSubActionDataRef()
+                       .mChangedRange->CompareBoundaryPoints(
+                           Range_Binding::START_TO_START, *aRange, error);
+  if (error.ErrorCodeIs(NS_ERROR_NOT_INITIALIZED)) {
+    // This will happen is TopLevelEditSubActionData::mChangedRange is non-null,
+    // but the range is uninitialized. In this case we'll set the start to
+    // aRange start. The same test won't be needed further down since after
+    // we've set the start the range will be collapsed to that point.
+    result = 1;
+    error.SuppressException();
+  }
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Positive result means TopLevelEditSubActionData::mChangedRange start is
+  // after aRange start.
+  if (result > 0) {
+    HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->SetStart(
+        atStart.AsRaw(), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
-    }
-
-    // Positive result means mDocChangeRange start is after aRange start.
-    if (result > 0) {
-      mDocChangeRange->SetStart(atStart.AsRaw(), error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    }
-
-    // compare ends of ranges
-    result = mDocChangeRange->CompareBoundaryPoints(Range_Binding::END_TO_END,
-                                                    *aRange, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    // Negative result means mDocChangeRange end is before aRange end.
-    if (result < 0) {
-      const RangeBoundary& atEnd = aRange->EndRef();
-      if (NS_WARN_IF(!atEnd.IsSet())) {
-        return NS_ERROR_FAILURE;
-      }
-      mDocChangeRange->SetEnd(atEnd.AsRaw(), error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
     }
   }
+
+  // compare ends of ranges
+  result = HTMLEditorRef()
+               .TopLevelEditSubActionDataRef()
+               .mChangedRange->CompareBoundaryPoints(Range_Binding::END_TO_END,
+                                                     *aRange, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Negative result means TopLevelEditSubActionData::mChangedRange end is
+  // before aRange end.
+  if (result < 0) {
+    const RangeBoundary& atEnd = aRange->EndRef();
+    if (NS_WARN_IF(!atEnd.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+    HTMLEditorRef().TopLevelEditSubActionDataRef().mChangedRange->SetEnd(
+        atEnd.AsRaw(), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+  }
+
   return NS_OK;
 }
 

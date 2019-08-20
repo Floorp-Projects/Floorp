@@ -1136,11 +1136,13 @@ class HTMLEditRules : public TextEditRules {
   void ClearCachedStyles();
 
   /**
-   * InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() inserts
-   * <br> element into empty list item or table cell elements.
+   * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
+   * <br> element into empty list item or table cell elements between
+   * aStartRef and aEndRef.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
+  InsertBRElementToEmptyListItemsAndTableCellsInRange(
+      const RawRangeBoundary& aStartRef, const RawRangeBoundary& aEndRef);
 
   /**
    * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
@@ -1187,13 +1189,13 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * RemoveEmptyNodesInChangedRange() removes all empty nodes in
-   * mDocChangeRange.  However, if mail-cite node has only a <br> element,
-   * the node will be removed but <br> element is moved to where the
-   * mail-cite node was.
-   * XXX This method is expensive if mDocChangeRange is too wide and may
-   *     remove unexpected empty element, e.g., it was created by JS, but
-   *     we haven't touched it.  Cannot we remove this method and make
-   *     guarantee that empty nodes won't be created?
+   * TopLevelEditSubActionData::mChangedRange.  However, if mail-cite node has
+   * only a <br> element, the node will be removed but <br> element is moved
+   * to where the mail-cite node was.
+   * XXX This method is expensive if TopLevelEditSubActionData::mChangedRange
+   *     is too wide and may remove unexpected empty element, e.g., it was
+   *     created by JS, but we haven't touched it.  Cannot we remove this
+   *     method and make guarantee that empty nodes won't be created?
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
@@ -1322,7 +1324,6 @@ class HTMLEditRules : public TextEditRules {
 
  protected:
   HTMLEditor* mHTMLEditor;
-  RefPtr<nsRange> mDocChangeRange;
   bool mInitialized;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
