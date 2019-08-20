@@ -589,9 +589,8 @@ void AtomsTable::mergeAtomsAddedWhileSweeping(Partition& part) {
   js_delete(newAtoms);
 }
 
-bool AtomsTable::traceWeakIncrementally(JSTracer* trc,
-                                        SweepIterator& atomsToSweep,
-                                        SliceBudget& budget) {
+bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
+                                    SliceBudget& budget) {
   // Sweep the table incrementally until we run out of work or budget.
   while (!atomsToSweep.empty()) {
     budget.step();
@@ -601,7 +600,10 @@ bool AtomsTable::traceWeakIncrementally(JSTracer* trc,
 
     JSAtom* atom = atomsToSweep.front();
     MOZ_DIAGNOSTIC_ASSERT(atom);
-    if (!TraceWeakEdge(trc, &atom, "maybeAtomsToSweep")) {
+    // TODO: Bug 1574981 - investigate talos regression in
+    // AtomsTable::sweepIncrementally
+    if (IsAboutToBeFinalizedUnbarriered(&atom)) {
+      MOZ_ASSERT(!atom->isPinned());
       atomsToSweep.removeFront();
     } else {
       MOZ_ASSERT(atom == atomsToSweep.front());

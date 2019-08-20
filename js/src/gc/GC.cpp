@@ -6153,9 +6153,7 @@ IncrementalProgress GCRuntime::sweepAtomsTable(JSFreeOp* fop,
     return Finished;
   }
 
-  SweepingTracer trc(rt);
-  if (!rt->atomsForSweeping()->traceWeakIncrementally(&trc, maybeAtoms.ref(),
-                                                      budget)) {
+  if (!rt->atomsForSweeping()->sweepIncrementally(maybeAtoms.ref(), budget)) {
     return NotFinished;
   }
 
