@@ -134,7 +134,7 @@ class DateTimeInfo {
   static auto acquireLockWithValidTimeZone() {
     auto guard = instance->lock();
     if (guard->localTZAStatus_ != LocalTimeZoneAdjustmentStatus::Valid) {
-      guard->resetTimeZoneAdjustment();
+      guard->updateTimeZoneAdjustment();
     }
     return guard;
   }
@@ -197,9 +197,9 @@ class DateTimeInfo {
   friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
   friend void js::ResyncICUDefaultTimeZone();
 
-  static void updateTimeZoneAdjustment(ResetTimeZoneMode mode) {
+  static void resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
     auto guard = instance->lock();
-    guard->internalUpdateTimeZoneAdjustment(mode);
+    guard->internalResetTimeZoneAdjustment(mode);
   }
 
   static void resyncICUDefaultTimeZone() {
@@ -304,9 +304,9 @@ class DateTimeInfo {
 
   static constexpr int64_t RangeExpansionAmount = 30 * SecondsPerDay;
 
-  void internalUpdateTimeZoneAdjustment(ResetTimeZoneMode mode);
+  void internalResetTimeZoneAdjustment(ResetTimeZoneMode mode);
 
-  void resetTimeZoneAdjustment();
+  void updateTimeZoneAdjustment();
 
   void internalResyncICUDefaultTimeZone();
 
