@@ -35,7 +35,7 @@ const threadFront = {
 describe("navigation", () => {
   it("connect sets the debuggeeUrl", async () => {
     const { dispatch, getState } = createStore({
-      fetchWorkers: () => Promise.resolve([]),
+      fetchThreads: () => Promise.resolve([]),
       getMainThread: () => "FakeThread",
     });
     await dispatch(

@@ -11,7 +11,7 @@ import { showMenu } from "devtools-contextmenu";
 
 import SourceIcon from "../shared/SourceIcon";
 import AccessibleImage from "../shared/AccessibleImage";
-import { getDisplayName, isWorker } from "../../utils/workers";
+import { getDisplayName, isWorker } from "../../utils/threads";
 
 import {
   getGeneratedSourceByURL,
@@ -36,13 +36,7 @@ import { features } from "../../utils/prefs";
 import { downloadFile } from "../../utils/utils";
 
 import type { TreeNode } from "../../utils/sources-tree/types";
-import type {
-  Source,
-  Context,
-  MainThread,
-  Thread,
-  SourceContent,
-} from "../../types";
+import type { Source, Context, Thread, SourceContent } from "../../types";
 
 type Props = {
   autoExpand: ?boolean,
@@ -57,7 +51,7 @@ type Props = {
   focused: boolean,
   expanded: boolean,
   threads: Thread[],
-  mainThread: MainThread,
+  mainThread: Thread,
   hasMatchingGeneratedSource: boolean,
   hasSiblingOfSameName: boolean,
   hasPrettySource: boolean,
