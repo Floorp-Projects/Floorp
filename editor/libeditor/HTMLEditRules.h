@@ -530,8 +530,9 @@ class HTMLEditRules : public TextEditRules {
   /**
    * Called before changing an element to absolute positioned.
    * This method only prepares the operation since DidAbsolutePosition() will
-   * change it actually later.  mNewBlock is set to the target element and
-   * if necessary, some ancestor nodes of selection may be split.
+   * change it actually later.  mNewBlockElement of TopLevelEditSubActionData
+   * is set to the target element and if necessary, some ancestor nodes of
+   * selection may be split.
    *
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
@@ -1354,7 +1355,6 @@ class HTMLEditRules : public TextEditRules {
   RefPtr<nsRange> mUtilRange;
   // Need to remember an int across willJoin/didJoin...
   uint32_t mJoinOffset;
-  RefPtr<Element> mNewBlock;
   RefPtr<RangeItem> mRangeItem;
 
   // XXX In strict speaking, mCachedStyles isn't enough to cache inline styles
