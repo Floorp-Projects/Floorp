@@ -16,7 +16,6 @@
 @imports(_from='__builtin__', _import='object')
 @imports(_from='mozbuild.configure', _import='ConfigureSandbox')
 @imports(_from='mozbuild.configure.util', _import='ConfigureOutputHandler')
-@imports(_from='mozbuild.util', _import='encode')
 def js_subconfigure(build_env, prepare_configure_options, mozconfig,
                     old_configure, old_configure_assignments, cache_file):
 
