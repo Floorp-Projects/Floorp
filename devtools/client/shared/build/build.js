@@ -11,7 +11,7 @@ const _path = require("path");
 
 const defaultPlugins = [
   "transform-flow-strip-types",
-  "transform-class-properties",
+  "proposal-class-properties",
   "transform-react-jsx",
 ];
 

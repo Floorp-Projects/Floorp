@@ -15,30 +15,28 @@ const EXCLUDED_FILES = {
   "devtools-launchpad": "devtools/shared/flags",
 };
 
-const mappings = Object.assign(
-  {
-    "./source-editor": "devtools/client/shared/sourceeditor/editor",
-    "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
-    "./test-flag": "devtools/shared/flags",
-    "./fronts-device": "devtools/shared/fronts/device",
-    immutable: "devtools/client/shared/vendor/immutable",
-    lodash: "devtools/client/shared/vendor/lodash",
-    react: "devtools/client/shared/vendor/react",
-    "react-dom": "devtools/client/shared/vendor/react-dom",
-    "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
-    "react-redux": "devtools/client/shared/vendor/react-redux",
-    redux: "devtools/client/shared/vendor/redux",
-    reselect: "devtools/client/shared/vendor/reselect",
-    "prop-types": "devtools/client/shared/vendor/react-prop-types",
-    "devtools-services": "Services",
-    "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
-    "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
-    "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
-    "framework-actions": "devtools/client/framework/actions/index",
-    "inspector-shared-utils": "devtools/client/inspector/shared/utils",
-  },
-  EXCLUDED_FILES
-);
+const mappings = {
+  "./source-editor": "devtools/client/shared/sourceeditor/editor",
+  "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
+  "./test-flag": "devtools/shared/flags",
+  "./fronts-device": "devtools/shared/fronts/device",
+  immutable: "devtools/client/shared/vendor/immutable",
+  lodash: "devtools/client/shared/vendor/lodash",
+  react: "devtools/client/shared/vendor/react",
+  "react-dom": "devtools/client/shared/vendor/react-dom",
+  "react-dom-factories": "devtools/client/shared/vendor/react-dom-factories",
+  "react-redux": "devtools/client/shared/vendor/react-redux",
+  redux: "devtools/client/shared/vendor/redux",
+  reselect: "devtools/client/shared/vendor/reselect",
+  "prop-types": "devtools/client/shared/vendor/react-prop-types",
+  "devtools-services": "Services",
+  "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
+  "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
+  "whatwg-url": "devtools/client/shared/vendor/whatwg-url",
+  "framework-actions": "devtools/client/framework/actions/index",
+  "inspector-shared-utils": "devtools/client/inspector/shared/utils",
+  ...EXCLUDED_FILES,
+};
 
 const mappingValues = Object.values(mappings);
 
@@ -153,7 +151,7 @@ function transformMC({ types: t }) {
           return;
         }
 
-        // Handle require() to loadash submodules
+        // Handle require() to lodash submodules
         // e.g. require("lodash/escapeRegExp")
         //   -> require("devtools/client/shared/vendor/lodash").escapeRegExp
         if (value.startsWith("lodash/")) {
@@ -265,11 +263,9 @@ Babel.registerPlugin("transform-mc", transformMC);
 module.exports = function(filePath) {
   return [
     "transform-flow-strip-types",
-    "syntax-trailing-function-commas",
-    "transform-class-properties",
-    "transform-es2015-modules-commonjs",
+    "proposal-class-properties",
+    "transform-modules-commonjs",
     "transform-react-jsx",
-    "syntax-object-rest-spread",
     ["transform-mc", { mappings, vendors: VENDORS, filePath }],
   ];
 };
