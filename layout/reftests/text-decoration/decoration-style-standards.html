@@ -27,7 +27,9 @@
           text-decoration-style: -moz-none;">
   Here is specified the decoration style as -moz-none.
 </p>
-<p style="text-decoration-style: dotted;
+<!-- "text-decoration-skip-ink: none" is hackaround for bug 1575338 -->
+<p style="text-decoration-skip-ink: none;
+          text-decoration-style: dotted;
           text-decoration: underline line-through overline;">
   Here has solid decoration lines even if its style is specified as dotted
   before text-decoration.
