@@ -1271,6 +1271,61 @@ void TestBlocksRingBufferSerialization() {
     MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
   });
 
+  // 2nd BlocksRingBuffer to contain the 1st one. It has be be more than twice
+  // the size.
+  constexpr uint32_t MBSize2 = MBSize * 4;
+  uint8_t buffer2[MBSize2 * 3];
+  for (size_t i = 0; i < MBSize2 * 3; ++i) {
+    buffer2[i] = uint8_t('B' + i);
+  }
+  BlocksRingBuffer rb2(&buffer2[MBSize2], MakePowerOfTwo32<MBSize2>());
+  rb2.PutObject(rb);
+
+  // 3rd BlocksRingBuffer deserialized from the 2nd one.
+  uint8_t buffer3[MBSize * 3];
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer3[i] = uint8_t('C' + i);
+  }
+  BlocksRingBuffer rb3(&buffer3[MBSize], MakePowerOfTwo32<MBSize>());
+  rb2.ReadEach(
+      [&](BlocksRingBuffer::EntryReader& aER) { aER.ReadIntoObject(rb3); });
+
+  // And a 4th heap-allocated one.
+  UniquePtr<BlocksRingBuffer> rb4up;
+  rb2.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    rb4up = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
+  });
+  MOZ_RELEASE_ASSERT(!!rb4up);
+
+  // Clear 1st and 2nd BlocksRingBuffers, to ensure we have made a deep copy
+  // into the 3rd&4th ones.
+  rb.Clear();
+  rb2.Clear();
+
+  // And now the 3rd one should have the same contents as the 1st one had.
+  rb3.ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
+  });
+
+  // And 4th.
+  rb4up->ReadEach([&](BlocksRingBuffer::EntryReader& aER) {
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v0);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v1);
+    MOZ_RELEASE_ASSERT(aER.ReadObject<V>() == v2);
+  });
+
+  // In fact, the 3rd and 4th ones should have the same state, because they were
+  // created the same way.
+  MOZ_RELEASE_ASSERT(rb3.GetState().mRangeStart ==
+                     rb4up->GetState().mRangeStart);
+  MOZ_RELEASE_ASSERT(rb3.GetState().mRangeEnd == rb4up->GetState().mRangeEnd);
+  MOZ_RELEASE_ASSERT(rb3.GetState().mPushedBlockCount ==
+                     rb4up->GetState().mPushedBlockCount);
+  MOZ_RELEASE_ASSERT(rb3.GetState().mClearedBlockCount ==
+                     rb4up->GetState().mClearedBlockCount);
+
   // Check that only the provided stack-based sub-buffer was modified.
   uint32_t changed = 0;
   for (size_t i = MBSize; i < MBSize * 2; ++i) {
@@ -1279,12 +1334,26 @@ void TestBlocksRingBufferSerialization() {
   // Expect at least 75% changes.
   MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
 
-  // Everything around the sub-buffer should be unchanged.
+  // Everything around the sub-buffers should be unchanged.
   for (size_t i = 0; i < MBSize; ++i) {
     MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
   }
   for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
     MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+
+  for (size_t i = 0; i < MBSize2; ++i) {
+    MOZ_RELEASE_ASSERT(buffer2[i] == uint8_t('B' + i));
+  }
+  for (size_t i = MBSize2 * 2; i < MBSize2 * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer2[i] == uint8_t('B' + i));
+  }
+
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer3[i] == uint8_t('C' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer3[i] == uint8_t('C' + i));
   }
 
   printf("TestBlocksRingBufferSerialization done\n");
