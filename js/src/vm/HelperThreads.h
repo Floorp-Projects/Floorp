@@ -548,7 +548,6 @@ bool StartOffThreadIonCompile(jit::IonBuilder* builder,
 bool StartOffThreadIonFree(jit::IonBuilder* builder,
                            const AutoLockHelperThreadState& lock);
 
-struct AllCompilations {};
 struct ZonesInState {
   JSRuntime* runtime;
   JS::shadow::Zone::GCState state;
@@ -559,39 +558,37 @@ struct CompilationsUsingNursery {
 
 using CompilationSelector =
     mozilla::Variant<JSScript*, JS::Realm*, Zone*, ZonesInState, JSRuntime*,
-                     CompilationsUsingNursery, AllCompilations>;
+                     CompilationsUsingNursery>;
 
 /*
  * Cancel scheduled or in progress Ion compilations.
  */
-void CancelOffThreadIonCompile(const CompilationSelector& selector,
-                               bool discardLazyLinkList);
+void CancelOffThreadIonCompile(const CompilationSelector& selector);
 
 inline void CancelOffThreadIonCompile(JSScript* script) {
-  CancelOffThreadIonCompile(CompilationSelector(script), true);
+  CancelOffThreadIonCompile(CompilationSelector(script));
 }
 
 inline void CancelOffThreadIonCompile(JS::Realm* realm) {
-  CancelOffThreadIonCompile(CompilationSelector(realm), true);
+  CancelOffThreadIonCompile(CompilationSelector(realm));
 }
 
 inline void CancelOffThreadIonCompile(Zone* zone) {
-  CancelOffThreadIonCompile(CompilationSelector(zone), true);
+  CancelOffThreadIonCompile(CompilationSelector(zone));
 }
 
 inline void CancelOffThreadIonCompile(JSRuntime* runtime,
                                       JS::shadow::Zone::GCState state) {
-  CancelOffThreadIonCompile(CompilationSelector(ZonesInState{runtime, state}),
-                            true);
+  CancelOffThreadIonCompile(CompilationSelector(ZonesInState{runtime, state}));
 }
 
 inline void CancelOffThreadIonCompile(JSRuntime* runtime) {
-  CancelOffThreadIonCompile(CompilationSelector(runtime), true);
+  CancelOffThreadIonCompile(CompilationSelector(runtime));
 }
 
 inline void CancelOffThreadIonCompilesUsingNurseryPointers(JSRuntime* runtime) {
   CancelOffThreadIonCompile(
-      CompilationSelector(CompilationsUsingNursery{runtime}), true);
+      CompilationSelector(CompilationsUsingNursery{runtime}));
 }
 
 #ifdef DEBUG
