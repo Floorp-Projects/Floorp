@@ -93,7 +93,7 @@ function newSource(threadFront: ThreadFront, { source }: SourcePacket) {
 }
 
 function workerListChanged() {
-  actions.updateThreads();
+  actions.updateWorkers();
 }
 
 const clientEvents = {

@@ -21,7 +21,7 @@ import {
   getSelectedFrame,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-  getThreads,
+  getWorkers,
   getCurrentThread,
   getThreadContext,
   getSourceFromId,
@@ -50,7 +50,7 @@ import "./SecondaryPanes.css";
 import type {
   Expression,
   Frame,
-  ThreadList,
+  WorkerList,
   ThreadContext,
   Source,
 } from "../../types";
@@ -95,7 +95,7 @@ type Props = {
   mapScopesEnabled: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
-  workers: ThreadList,
+  workers: WorkerList,
   source: ?Source,
   toggleShortcutsModal: () => void,
   toggleAllBreakpoints: typeof actions.toggleAllBreakpoints,
@@ -531,7 +531,7 @@ const mapStateToProps = state => {
     mapScopesEnabled: isMapScopesEnabled(state),
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
-    workers: getThreads(state),
+    workers: getWorkers(state),
     source:
       selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
   };

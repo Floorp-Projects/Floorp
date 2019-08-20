@@ -10,7 +10,7 @@ import classnames from "classnames";
 
 import actions from "../../actions";
 import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
-import { getDisplayName, isWorker } from "../../utils/threads";
+import { getDisplayName, isWorker } from "../../utils/workers";
 import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Context, Thread } from "../../types";

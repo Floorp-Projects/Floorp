@@ -92,7 +92,7 @@
     "findAllElements": false,
     "getIsPaused": false,
     "getThreadContext": false,
-    "getThreads": false,
+    "getWorkers": false,
     "openNewTabAndToolbox": false,
     "selectLocation": false,
     "stepOver": false,

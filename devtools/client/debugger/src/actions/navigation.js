@@ -7,7 +7,7 @@
 import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
-import { updateThreads } from "./debuggee";
+import { updateWorkers } from "./debuggee";
 
 import { clearWasmStates } from "../utils/wasm";
 import { getMainThread } from "../selectors";
@@ -52,7 +52,7 @@ export function connect(
   isWebExtension: boolean
 ) {
   return async function({ dispatch }: ThunkArgs) {
-    await dispatch(updateThreads());
+    await dispatch(updateWorkers());
     dispatch(
       ({
         type: "CONNECT",
