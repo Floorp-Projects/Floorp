@@ -35,7 +35,6 @@ this.specialpowers = class extends ExtensionAPI {
 
     ChromeUtils.registerWindowActor("SpecialPowers", {
       allFrames: true,
-      includeChrome: true,
       child: {
         moduleURI: "resource://specialpowers/SpecialPowersChild.jsm",
         events: {

@@ -47,6 +47,7 @@ FINAL_TARGET_FILES.content.tests.SimpleTest += [
     '../../docshell/test/chrome/docshell_helpers.js',
     '../modules/StructuredLog.jsm',
     'tests/SimpleTest/AsyncUtilsContent.js',
+    'tests/SimpleTest/ChromePowers.js',
     'tests/SimpleTest/EventUtils.js',
     'tests/SimpleTest/ExtensionTestUtils.js',
     'tests/SimpleTest/iframe-between-tests.html',

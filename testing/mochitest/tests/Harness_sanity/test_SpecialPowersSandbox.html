@@ -37,11 +37,8 @@ async function interceptDiagnostics(func) {
 }
 
 add_task(async function() {
-  const frameSrc = "https://example.com/tests/testing/mochitest/tests/Harness_sanity/file_spawn.html";
-  const subframeSrc = "https://example.org/tests/testing/mochitest/tests/Harness_sanity/file_spawn.html";
-
   let frame = document.getElementById("iframe");
-  frame.src = frameSrc;
+  frame.src = "https://example.com/tests/testing/mochitest/tests/Harness_sanity/file_spawn.html";
 
   await new Promise(resolve => {
     frame.addEventListener("load", resolve, {once: true});
@@ -62,29 +59,11 @@ add_task(async function() {
   // just need to make sure that the general functionality works as expected.
   let tests = {
     "SpecialPowers.spawn": () => {
-      return SpecialPowers.spawn(frame, [], async () => {
+      return SpecialPowers.spawn(frame, [], () => {
         Assert.equal(1, 2, "Thing");
         Assert.equal(1, 1, "Hmm");
         Assert.ok(true, "Yay.");
         Assert.ok(false, "Boo!.");
-      });
-    },
-    "SpecialPowers.spawn-subframe": () => {
-      return SpecialPowers.spawn(frame, [subframeSrc], async src => {
-        let frame = this.content.document.createElement("iframe");
-        frame.src = src;
-        this.content.document.body.appendChild(frame);
-
-        await new Promise(resolve => {
-          frame.addEventListener("load", resolve, { once: true });
-        });
-
-        await SpecialPowers.spawn(frame, [], () => {
-          Assert.equal(1, 2, "Thing");
-          Assert.equal(1, 1, "Hmm");
-          Assert.ok(true, "Yay.");
-          Assert.ok(false, "Boo!.");
-        });
       });
     },
     "SpecialPowers.loadChromeScript": async () => {

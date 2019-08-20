@@ -457,12 +457,11 @@ function Tester(aTests, structuredLogger, aCallback) {
     this.cpowEventUtils
   );
 
-  // Make sure our SpecialPowers actor is instantiated, in case it was
-  // registered after our DOMWindowCreated event was fired (which it
-  // most likely was).
-  window.getWindowGlobalChild().getActor("SpecialPowers");
-
   var simpleTestScope = {};
+  this._scriptLoader.loadSubScript(
+    "chrome://mochikit/content/tests/SimpleTest/ChromePowers.js",
+    simpleTestScope
+  );
   this._scriptLoader.loadSubScript(
     "chrome://mochikit/content/tests/SimpleTest/SimpleTest.js",
     simpleTestScope
@@ -476,9 +475,6 @@ function Tester(aTests, structuredLogger, aCallback) {
     simpleTestScope
   );
   this.SimpleTest = simpleTestScope.SimpleTest;
-
-  window.SpecialPowers.SimpleTest = this.SimpleTest;
-  window.SpecialPowers.setAsDefaultAssertHandler();
 
   var extensionUtilsScope = {
     registerCleanupFunction: fn => {

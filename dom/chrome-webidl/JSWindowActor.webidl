@@ -73,11 +73,11 @@ callback interface MozObserverCallback {
 };
 
 /**
- * WebIDL callback interface calling the `willDestroy`, `didDestroy`, and
- * `actorCreated` methods on JSWindowActors.
+ * WebIDL callback interface calling the `willDestroy` and `didDestroy`
+ * method on JSWindowActors.
  */
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
-callback MozJSWindowActorCallback = void();
+callback MozActorDestroyCallback = void();
 
 /**
  * The willDestroy method, if present, will be called at the last opportunity
@@ -85,16 +85,13 @@ callback MozJSWindowActorCallback = void();
  * up and send final messages.
  * The didDestroy method, if present, will be called after the actor is no
  * longer able to receive any more messages.
- * The actorCreated method, if present, will be called immediately after the
- * actor has been created and initialized.
  *
  * NOTE: Messages may be received between willDestroy and didDestroy, but they
  * may not be sent.
  */
-dictionary MozJSWindowActorCallbacks {
-  [ChromeOnly] MozJSWindowActorCallback willDestroy;
-  [ChromeOnly] MozJSWindowActorCallback didDestroy;
-  [ChromeOnly] MozJSWindowActorCallback actorCreated;
+dictionary MozActorDestroyCallbacks {
+  [ChromeOnly] MozActorDestroyCallback willDestroy;
+  [ChromeOnly] MozActorDestroyCallback didDestroy;
 };
 
 /**
