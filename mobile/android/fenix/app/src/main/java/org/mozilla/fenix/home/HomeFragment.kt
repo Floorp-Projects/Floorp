@@ -518,12 +518,19 @@ class HomeFragment : Fragment(), AccountObserver {
         homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
     }
 
+    private fun hideOnboardingIfNeeded() {
+        if (!onboarding.userHasBeenOnboarded()) {
+            onboarding.finish()
+            emitModeChanges()
+        }
+    }
+
     private fun setupHomeMenu() {
         homeMenu = HomeMenu(requireContext()) {
             when (it) {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteJobs()
-                    onboarding.finish()
+                    hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
                         HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
@@ -531,7 +538,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
                 HomeMenu.Item.Library -> {
                     invokePendingDeleteJobs()
-                    onboarding.finish()
+                    hideOnboardingIfNeeded()
                     nav(
                         R.id.homeFragment,
                         HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
@@ -539,10 +546,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
                 HomeMenu.Item.Help -> {
                     invokePendingDeleteJobs()
-                    if (!onboarding.userHasBeenOnboarded()) {
-                        onboarding.finish()
-                        emitModeChanges()
-                    }
+                    hideOnboardingIfNeeded()
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
