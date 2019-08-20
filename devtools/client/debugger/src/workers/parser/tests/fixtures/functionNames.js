@@ -22,8 +22,8 @@ var {foo = function(){}} = {};
 ({bar: foo = function(){}} = {});
 
 function fn([foo = function(){}]){}
-function fn({foo = function(){}} = {}){}
-function fn({bar: foo = function(){}} = {}){}
+function f2({foo = function(){}} = {}){}
+function f3({bar: foo = function(){}} = {}){}
 
 class Cls {
   foo = function() {};

@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -78,7 +78,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -468,10 +468,10 @@
       "../../@babel/types/lib/validators/isSpecifierDefault.js": 317,
       "../../@babel/types/lib/validators/isValidES3Identifier.js": 318,
       "../../@babel/types/lib/validators/isVar.js": 319,
-      "../../parse-script-tags/index.js": 320,
+      "../../parse-script-tags/dist/index.js": 320,
       "../../parse-script-tags/node_modules/babylon/lib/index.js": 321,
-      "../../parse-script-tags/customParse.js": 322,
-      "../../parse-script-tags/parseScriptFragment.js": 323,
+      "../../parse-script-tags/dist/customParse.js": 322,
+      "../../parse-script-tags/dist/parseScriptFragment.js": 323,
       "../../@babel/parser/lib/index.js": 324,
       "../../@babel/generator/lib/source-map.js": 325,
       "../../@babel/generator/lib/printer.js": 326,
@@ -664,7 +664,9 @@
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmXScopes.js": 513,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-wasm-dwarf/src/wasmDwarfExpressions.js": 514,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-source-map/src/utils/assetRootBrowser.js": 515,
-      "../../babel-loader/lib/index.js?ignore=src/lib!../../devtools-modules/src/async-store-helper.js": 516
+      "../../babel-loader/lib/index.js?ignore=src/lib!../../devtools-modules/src/async-store-helper.js": 516,
+      "../../@babel/types/lib/validators/isPlaceholderType.js": 517,
+      "../../@babel/types/lib/definitions/placeholders.js": 518
     },
     "usedIds": {
       "0": 0,
@@ -1183,7 +1185,9 @@
       "513": 513,
       "514": 514,
       "515": 515,
-      "516": 516
+      "516": 516,
+      "517": 517,
+      "518": 518
     }
   },
   "chunks": {
