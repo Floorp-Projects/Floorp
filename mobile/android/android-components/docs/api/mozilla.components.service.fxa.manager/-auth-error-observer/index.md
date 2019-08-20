@@ -2,7 +2,7 @@
 
 # AuthErrorObserver
 
-`interface AuthErrorObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L62)
+`interface AuthErrorObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L63)
 
 ### Functions
 

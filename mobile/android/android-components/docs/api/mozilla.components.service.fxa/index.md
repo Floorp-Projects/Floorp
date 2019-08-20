@@ -31,6 +31,7 @@
 | Name | Summary |
 |---|---|
 | [mozilla.appservices.fxaclient.AccessTokenInfo](mozilla.appservices.fxaclient.-access-token-info/index.md) |  |
+| [mozilla.appservices.fxaclient.AccountEvent](mozilla.appservices.fxaclient.-account-event/index.md) |  |
 | [mozilla.appservices.fxaclient.AccountEvent.TabReceived](mozilla.appservices.fxaclient.-account-event.-tab-received/index.md) |  |
 | [mozilla.appservices.fxaclient.Device](mozilla.appservices.fxaclient.-device/index.md) |  |
 | [mozilla.appservices.fxaclient.Device.Capability](mozilla.appservices.fxaclient.-device.-capability/index.md) |  |

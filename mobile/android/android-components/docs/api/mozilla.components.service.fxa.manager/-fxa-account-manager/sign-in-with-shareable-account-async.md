@@ -2,7 +2,7 @@
 
 # signInWithShareableAccountAsync
 
-`fun signInWithShareableAccountAsync(fromAccount: `[`ShareableAccount`](../../mozilla.components.service.fxa.sharing/-shareable-account/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L267)
+`fun signInWithShareableAccountAsync(fromAccount: `[`ShareableAccount`](../../mozilla.components.service.fxa.sharing/-shareable-account/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/FxaAccountManager.kt#L268)
 
 Uses a provided [fromAccount](sign-in-with-shareable-account-async.md#mozilla.components.service.fxa.manager.FxaAccountManager$signInWithShareableAccountAsync(mozilla.components.service.fxa.sharing.ShareableAccount)/fromAccount) to sign-in into a corresponding FxA account without any required
 user input. Once sign-in completes, any registered [AccountObserver.onAuthenticated](../../mozilla.components.concept.sync/-account-observer/on-authenticated.md) listeners

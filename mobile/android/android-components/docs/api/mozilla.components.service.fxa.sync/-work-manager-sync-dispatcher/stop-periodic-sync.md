@@ -2,7 +2,7 @@
 
 # stopPeriodicSync
 
-`fun stopPeriodicSync(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/WorkManagerSyncManager.kt#L180)
+`fun stopPeriodicSync(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/WorkManagerSyncManager.kt#L181)
 
 Overrides [SyncDispatcher.stopPeriodicSync](../-sync-dispatcher/stop-periodic-sync.md)
 

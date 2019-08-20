@@ -2,7 +2,7 @@
 
 # DevicePushSubscription
 
-`data class DevicePushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L139)
+`data class DevicePushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L123)
 
 Describes an Autopush-compatible push channel subscription.
 

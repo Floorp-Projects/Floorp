@@ -2,13 +2,13 @@
 
 # pollForEventsAsync
 
-`fun pollForEventsAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceEvent`](../../mozilla.components.concept.sync/-device-event/index.md)`>?>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L90)
+`fun pollForEventsAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L119)
 
 Overrides [DeviceConstellation.pollForEventsAsync](../../mozilla.components.concept.sync/-device-constellation/poll-for-events-async.md)
 
-Poll for events targeted at the current [Device](../../mozilla.components.concept.sync/-device/index.md). It's expected that if a [DeviceEvent](../../mozilla.components.concept.sync/-device-event/index.md) was
-returned after a poll, it will not be returned in consequent polls.
+Polls for any pending [DeviceEvent](../../mozilla.components.concept.sync/-device-event/index.md) events.
+In case of new events, registered [DeviceEventsObserver](../../mozilla.components.concept.sync/-device-events-observer/index.md) observers will be notified.
 
 **Return**
-A list of [DeviceEvent](../../mozilla.components.concept.sync/-device-event/index.md) instances that are currently pending for this [Device](../../mozilla.components.concept.sync/-device/index.md), or `null` on failure.
+A [Deferred](#) that will be resolved with a success flag once operation is complete.
 
