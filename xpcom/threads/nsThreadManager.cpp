@@ -32,7 +32,6 @@
 using namespace mozilla;
 
 static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
-static MOZ_THREAD_LOCAL(PRThread*) gTlsCurrentVirtualThread;
 
 bool NS_IsMainThreadTLSInitialized() { return sTLSIsMainThread.initialized(); }
 
@@ -48,18 +47,6 @@ void NS_SetMainThread() {
   }
   sTLSIsMainThread.set(true);
   MOZ_ASSERT(NS_IsMainThread());
-}
-
-void NS_SetMainThread(PRThread* aVirtualThread) {
-  MOZ_ASSERT(!gTlsCurrentVirtualThread.get());
-  gTlsCurrentVirtualThread.set(aVirtualThread);
-  NS_SetMainThread();
-}
-
-void NS_UnsetMainThread() {
-  sTLSIsMainThread.set(false);
-  MOZ_ASSERT(!NS_IsMainThread());
-  gTlsCurrentVirtualThread.set(nullptr);
 }
 
 #ifdef DEBUG
@@ -200,10 +187,6 @@ nsresult nsThreadManager::Init() {
   // situations where we get initialized twice.
   if (mInitialized) {
     return NS_OK;
-  }
-
-  if (!gTlsCurrentVirtualThread.init()) {
-    return NS_ERROR_UNEXPECTED;
   }
 
   if (PR_NewThreadPrivateIndex(&mCurThreadIndex, ReleaseThread) == PR_FAILURE) {
@@ -598,20 +581,3 @@ nsThreadManager::IdleDispatchToMainThread(nsIRunnable* aEvent,
   return NS_DispatchToThreadQueue(event.forget(), mMainThread,
                                   EventQueuePriority::Idle);
 }
-
-namespace mozilla {
-
-PRThread* GetCurrentVirtualThread() {
-  // We call GetCurrentVirtualThread very early in startup, before the TLS is
-  // initialized. Make sure we don't assert in that case.
-  if (gTlsCurrentVirtualThread.initialized()) {
-    if (gTlsCurrentVirtualThread.get()) {
-      return gTlsCurrentVirtualThread.get();
-    }
-  }
-  return PR_GetCurrentThread();
-}
-
-PRThread* GetCurrentPhysicalThread() { return PR_GetCurrentThread(); }
-
-}  // namespace mozilla

@@ -212,7 +212,6 @@ class nsThread : public nsIThreadInternal,
 
   mozilla::CycleCollectedJSContext* mScriptObserver;
 
-  PRThread* mThread;
   void* mStackBase = nullptr;
   uint32_t mStackSize;
   uint32_t mThreadId;

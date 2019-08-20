@@ -544,7 +544,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
   // Can be run on either thread
   void AssertWorkerThread() const {
     MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
-    MOZ_RELEASE_ASSERT(mWorkerThread == GetCurrentVirtualThread(),
+    MOZ_RELEASE_ASSERT(mWorkerThread == PR_GetCurrentThread(),
                        "not on worker thread!");
   }
 
@@ -562,7 +562,7 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
     // If we aren't a same-thread channel, our "link" thread is _not_ our
     // worker thread!
     MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
-    MOZ_RELEASE_ASSERT(mWorkerThread != GetCurrentVirtualThread(),
+    MOZ_RELEASE_ASSERT(mWorkerThread != PR_GetCurrentThread(),
                        "on worker thread but should not be!");
   }
 
