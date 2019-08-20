@@ -41,7 +41,6 @@ def unwrap_rustup(prog, name):
     # "+stable" file. We'll examine the error output to try and distinguish
     # between failing rustup and failing rustc.
     @depends(prog, dependable(name))
-    @imports('subprocess')
     @imports(_from='__builtin__', _import='open')
     @imports('os')
     def unwrap(prog, name):
@@ -232,7 +231,6 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
              rust_supported_targets, arm_target, when=rust_compiler)
     @checking('for rust %s triplet' % host_or_target_str)
     @imports('os')
-    @imports('subprocess')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     @imports(_from='mozbuild.shellutil', _import='quote')
     @imports(_from='tempfile', _import='mkstemp')
