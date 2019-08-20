@@ -1313,8 +1313,11 @@ run()
             }
             if (cipher > 0) {
                 rv = SSL_CipherPrefSet(s, cipher, SSL_ALLOWED);
-                if (rv != SECSuccess)
+                if (rv != SECSuccess) {
                     SECU_PrintError(progName, "SSL_CipherPrefSet()");
+                    error = 1;
+                    goto done;
+                }
             } else {
                 Usage();
             }
