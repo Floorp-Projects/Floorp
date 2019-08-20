@@ -181,10 +181,10 @@ class TenuredCell : public Cell {
   inline bool isInsideZone(JS::Zone* zone) const;
 
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
-    return JS::shadow::Zone::asShadowZone(zone());
+    return JS::shadow::Zone::from(zone());
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
-    return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
+    return JS::shadow::Zone::from(zoneFromAnyThread());
   }
 
   template <class T>
@@ -292,7 +292,7 @@ inline JS::TraceKind Cell::getTraceKind() const {
 }
 
 /* static */ MOZ_ALWAYS_INLINE bool Cell::needWriteBarrierPre(JS::Zone* zone) {
-  return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
+  return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
 }
 
 /* static */ MOZ_ALWAYS_INLINE TenuredCell* TenuredCell::fromPointer(

@@ -269,13 +269,13 @@ class JSObject : public js::gc::Cell {
 
   MOZ_ALWAYS_INLINE JS::Zone* zone() const { return group_->zone(); }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
-    return JS::shadow::Zone::asShadowZone(zone());
+    return JS::shadow::Zone::from(zone());
   }
   MOZ_ALWAYS_INLINE JS::Zone* zoneFromAnyThread() const {
     return group_->zoneFromAnyThread();
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
-    return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
+    return JS::shadow::Zone::from(zoneFromAnyThread());
   }
   static MOZ_ALWAYS_INLINE void readBarrier(JSObject* obj);
   static MOZ_ALWAYS_INLINE void writeBarrierPre(JSObject* obj);
