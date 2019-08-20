@@ -1534,6 +1534,7 @@ security.ui.protections:
   click:
     bug_numbers:
       - 1557050
+      - 1572825
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -1545,6 +1546,7 @@ security.ui.protections:
       "mtr_report_link",
       "mtr_about_link",
       "mtr_signup_button",
+      "trackers_about_link",
     ]
     expiry_version: "75"
     record_in_processes: ["content"]
