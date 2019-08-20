@@ -110,9 +110,6 @@ class HTMLEditRules : public TextEditRules {
   void DidDeleteText(nsINode& aTextNode, int32_t aOffset, int32_t aLength);
   void WillDeleteSelection();
 
-  void StartToListenToEditSubActions() { mListenerEnabled = true; }
-  void EndListeningToEditSubActions() { mListenerEnabled = false; }
-
  protected:
   virtual ~HTMLEditRules() = default;
 
@@ -1324,7 +1321,6 @@ class HTMLEditRules : public TextEditRules {
  protected:
   HTMLEditor* mHTMLEditor;
   bool mInitialized;
-  bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
 };
 
