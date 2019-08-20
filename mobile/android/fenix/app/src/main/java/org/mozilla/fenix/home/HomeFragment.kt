@@ -81,6 +81,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
+import org.mozilla.fenix.utils.FragmentPreDrawManager
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -182,26 +183,21 @@ class HomeFragment : Fragment(), AccountObserver {
         val activity = activity as HomeActivity
         activity.themeManager.applyStatusBarTheme(activity)
 
-        postponeEnterTransition()
-        TransitionPreDrawListener(
-            fragment = this,
-            viewTreeObserver = sessionControlComponent.view.viewTreeObserver,
-            restoreLayoutState = {
-                val homeViewModel: HomeScreenViewModel by activityViewModels()
-                homeViewModel.layoutManagerState?.also { parcelable ->
-                    sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
-                }
-                homeLayout?.progress = homeViewModel.motionLayoutProgress
-                homeViewModel.layoutManagerState = null
-            }
-        )
-
         return view
     }
 
     @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        FragmentPreDrawManager(this).execute {
+            val homeViewModel: HomeScreenViewModel by activityViewModels()
+            homeViewModel.layoutManagerState?.also { parcelable ->
+                sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+            }
+            homeLayout?.progress = homeViewModel.motionLayoutProgress
+            homeViewModel.layoutManagerState = null
+        }
 
         setupHomeMenu()
 
