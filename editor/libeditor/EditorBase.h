@@ -615,8 +615,15 @@ class EditorBase : public nsIEditor,
     // If we tried to delete selection, set to true.
     bool mDidDeleteSelection;
 
+    // If we have explicitly set selection inter line, set to true.
+    // `AfterEdit()` or something shouldn't overwrite it in such case.
+    bool mDidExplicitlySetInterLine;
+
    private:
-    void Clear() { mDidDeleteSelection = false; }
+    void Clear() {
+      mDidDeleteSelection = false;
+      mDidExplicitlySetInterLine = false;
+    }
 
     TopLevelEditSubActionData() = default;
     TopLevelEditSubActionData(const TopLevelEditSubActionData& aOther) = delete;
