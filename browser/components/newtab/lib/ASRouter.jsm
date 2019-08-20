@@ -94,10 +94,10 @@ const TRAILHEAD_CONFIG = {
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
   EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 3]],
-  // Per bug 1571817, for those who meet the targeting criteria of extended
-  // triplets, 99% users (control group) will see the extended triplets, and
-  // the rest 1% (holdback group) won't.
-  EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS: [["control", 99], ["holdback", 1]],
+  // Per bug 1574003, for those who meet the targeting criteria of extended
+  // triplets, 95% users (control group) will see the extended triplets, and
+  // the rest 5% (holdback group) won't.
+  EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS: [["control", 95], ["holdback", 5]],
   EXTENDED_TRIPLETS_EXPERIMENT_PREF: "trailhead.extendedTriplets.experiment",
 };
 
