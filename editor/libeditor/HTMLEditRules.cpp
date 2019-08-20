@@ -191,8 +191,7 @@ HTMLEditRules::HTMLEditRules()
     : mHTMLEditor(nullptr),
       mInitialized(false),
       mListenerEnabled(false),
-      mReturnInEmptyLIKillsList(false),
-      mJoinOffset(0) {
+      mReturnInEmptyLIKillsList(false) {
   mIsHTMLEditRules = true;
   InitFields();
 }
@@ -200,7 +199,6 @@ HTMLEditRules::HTMLEditRules()
 void HTMLEditRules::InitFields() {
   mHTMLEditor = nullptr;
   mReturnInEmptyLIKillsList = true;
-  mJoinOffset = 0;
 }
 
 nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
@@ -10248,8 +10246,11 @@ void HTMLEditRules::WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
     return;
   }
 
+  AutoSafeEditorData setData(*this, *mHTMLEditor);
+
   // remember split point
-  mJoinOffset = aLeftNode.Length();
+  HTMLEditorRef().EditSubActionDataRef().mJoinedLeftNodeLength =
+      aLeftNode.Length();
 }
 
 void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
@@ -10265,7 +10266,10 @@ void HTMLEditRules::DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode) {
 
   DebugOnly<nsresult> rv =
       HTMLEditorRef().TopLevelEditSubActionDataRef().AddPointToChangedRange(
-          HTMLEditorRef(), EditorRawDOMPoint(&aRightNode, mJoinOffset));
+          HTMLEditorRef(),
+          EditorRawDOMPoint(
+              &aRightNode,
+              HTMLEditorRef().EditSubActionDataRef().mJoinedLeftNodeLength));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddPointToChangedRange() failed");
 }
 
