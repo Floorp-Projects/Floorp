@@ -71,7 +71,7 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
     async function(fieldValues) {
       is(fieldValues.username, "notifyu1", "Checking submitted username");
       is(fieldValues.password, "pass2", "Checking submitted password");
-      let notif = await getCaptureDoorhangerThatMayOpen("password-change");
+      let notif = getCaptureDoorhanger("password-change");
       ok(notif, "checking for a change popup");
 
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
@@ -115,7 +115,7 @@ add_task(
       async function(fieldValues) {
         is(fieldValues.username, "notifyu1", "Checking submitted username");
         is(fieldValues.password, "pass2", "Checking submitted password");
-        let notif = await getCaptureDoorhangerThatMayOpen("password-change");
+        let notif = getCaptureDoorhanger("password-change");
         ok(notif, "checking for a change popup");
 
         await checkDoorhangerUsernamePassword("notifyu1", "pass2");
@@ -178,7 +178,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   ) {
     is(fieldValues.username, "notifyu1", "Checking submitted username");
     is(fieldValues.password, "notifyp1", "Checking submitted password");
-    let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+    let notif = getCaptureDoorhanger("password-save");
     ok(notif, "got notification popup");
 
     is(

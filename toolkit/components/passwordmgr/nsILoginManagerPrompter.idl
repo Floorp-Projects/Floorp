@@ -71,15 +71,11 @@ interface nsILoginManagerPrompter : nsISupports {
    * @param dismissed
    *        A boolean value indicating whether the save logins doorhanger should
    *        be dismissed automatically when shown.
-   * @param autoSavedLoginGuid
-   *        A string guid value for the old login to be removed if the changes
-   *        match it to a different login
    */
   void promptToChangePassword(in nsILoginInfo aOldLogin,
                               in nsILoginInfo aNewLogin,
                               [optional] in boolean dismissed,
-                              [optional] in boolean notifySaved,
-                              [optional] in AString autoSavedLoginGuid);
+                              [optional] in boolean notifySaved);
 
   /**
    * Ask the user if they want to change the password for one of
