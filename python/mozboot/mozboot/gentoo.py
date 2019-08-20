@@ -54,7 +54,8 @@ class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
     @staticmethod
     def _get_distdir():
         # Obtain the path held in the DISTDIR portage variable
-        output = subprocess.check_output(['emerge', '--info'])
+        output = subprocess.check_output(
+            ['emerge', '--info'], universal_newlines=True)
         match = re.search('^DISTDIR="(?P<distdir>.*)"$', output, re.MULTILINE)
         return match.group('distdir')
 
@@ -98,7 +99,8 @@ class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
             output = self.check_output(['emerge', '--pretend', '--fetchonly',
                                         'oracle-jdk-bin'],
                                        env=None,
-                                       stderr=subprocess.STDOUT)
+                                       stderr=subprocess.STDOUT,
+                                       universal_newlines=True)
         except subprocess.CalledProcessError as e:
             output = e.output
 

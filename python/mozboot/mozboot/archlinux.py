@@ -18,6 +18,12 @@ from mozboot.linux_common import (
     StyloInstall,
 )
 
+# NOTE: This script is intended to be run with a vanilla Python install.  We
+# have to rely on the standard library instead of Python 2+3 helpers like
+# the six module.
+if sys.version_info < (3,):
+    input = raw_input
+
 
 class ArchlinuxBootstrapper(NodeInstall, StyloInstall, SccacheInstall,
                             ClangStaticAnalysisInstall, BaseBootstrapper):
@@ -190,7 +196,7 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall, SccacheInstall,
                   'This is potentially unsecure so I recommend that you carefully '
                   'read each package description and check the sources.'
                   'These packages will be built in ' + path + '.')
-            choice = raw_input('Do you want to continue? (yes/no) [no]')
+            choice = input('Do you want to continue? (yes/no) [no]')
             if choice != 'yes':
                 sys.exit(1)
 
