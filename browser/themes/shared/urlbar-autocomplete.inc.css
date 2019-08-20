@@ -223,7 +223,7 @@
 .urlbarView-row[type=remotetab][selected] > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView-row[type=remotetab]:hover > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView-row[type=remotetab]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-url,
-.urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-action,
+.urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-title:not(:empty) ~ .urlbarView-action,
 .urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-title-separator,
 .urlbarView[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
