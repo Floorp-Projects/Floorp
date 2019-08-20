@@ -26,6 +26,11 @@ function getTooltipContent(doc) {
 
 add_task(async function() {
   const [host, , doc] = await createHost("window", TEST_URI);
+
+  // Creating a window host is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
+
   const zoom = 1.5;
   await pushPref("devtools.toolbox.zoomValue", zoom.toString(10));
 

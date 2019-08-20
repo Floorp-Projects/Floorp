@@ -54,6 +54,10 @@ add_task(async function() {
   info("Change toolbox host to WINDOW");
   await toolbox.switchHost("window");
 
+  // Switching hosts is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
+
   await runTest(testActor, inspector, view, true);
 });
 

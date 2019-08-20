@@ -23,9 +23,19 @@ add_task(async function() {
   await runTests(inspector);
 
   await toolbox.switchHost("window");
+
+  // Switching hosts is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
+
   await runTests(inspector);
 
   await toolbox.switchHost("bottom");
+
+  // Switching hosts is not correctly waiting when DevTools run in content frame
+  // See Bug 1571421.
+  await wait(1000);
+
   await runTests(inspector);
 
   await toolbox.destroy();

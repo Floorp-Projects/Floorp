@@ -278,6 +278,11 @@ add_task(async function() {
     info("Moving toolbox to the right...");
 
     await monitor.toolbox.switchHost("right");
+
+    // Switching hosts is not correctly waiting when DevTools run in content frame
+    // See Bug 1571421.
+    await wait(1000);
+
     info("Testing prefs reload for a right host.");
     storeFirstPrefValues();
 
@@ -303,6 +308,11 @@ add_task(async function() {
     info("Moving toolbox into a window...");
 
     await monitor.toolbox.switchHost("window");
+
+    // Switching hosts is not correctly waiting when DevTools run in content frame
+    // See Bug 1571421.
+    await wait(1000);
+
     info("Testing prefs reload for a window host.");
     storeFirstPrefValues();
 
