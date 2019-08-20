@@ -73,7 +73,7 @@ export function createPause(
   };
 }
 
-export function createTarget(actor: string, target: Target): Worker {
+export function createThread(actor: string, target: Target): Worker {
   return {
     actor,
     url: target.url || "",
