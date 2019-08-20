@@ -23,7 +23,9 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.search.SearchEngineSource
@@ -189,7 +191,11 @@ class AwesomeBarView(
                 view.addProviders(bookmarksStorageSuggestionProvider, historyStorageProvider)
             }
 
-            view.addProviders(clipboardSuggestionProvider, sessionProvider)
+            view.addProviders(clipboardSuggestionProvider)
+
+            if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
+                view.addProviders(sessionProvider)
+            }
         }
 
         view.onInputChanged(state.query)
