@@ -65,7 +65,7 @@
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file extension">
         <vbox id="identity-popup-permissions-content" flex="1" role="group"
               aria-labelledby="identity-popup-permissions-headline">
-          <hbox>
+          <hbox align="center">
             <label id="identity-popup-permissions-headline"
                    value="&identity.permissions2;"/>
             <image id="identity-popup-permissions-granted-indicator"/>
