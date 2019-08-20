@@ -41,6 +41,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tabs_menu_share_tabs"
             android:src="@drawable/ic_hollow_share"/>
 
         <ImageButton
@@ -48,6 +49,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tabs_menu_close_all_tabs"
             android:src="@drawable/ic_delete"/>
 
         <ImageButton
