@@ -641,6 +641,26 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     limit = Preferences::GetInt(prefName, 10);
   }
 
+  // If there's no limit, or we're within the limit, let it go.
+  if (limit == 0 || duration.ToSeconds() < limit / 2.0) {
+    return true;
+  }
+
+  self->mSlowScriptActualWait += duration;
+
+  // In order to guard against time changes or laptops going to sleep, we
+  // don't trigger the slow script warning until (limit/2) seconds have
+  // elapsed twice.
+  if (!self->mSlowScriptSecondHalf) {
+    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+    self->mSlowScriptSecondHalf = true;
+    return true;
+  }
+
+  //
+  // This has gone on long enough! Time to take action. ;-)
+  //
+
   // Get the DOM window associated with the running script. If the script is
   // running in a non-DOM scope, we have to just let it keep running.
   RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
@@ -664,26 +684,6 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     NS_WARNING("No active window");
     return true;
   }
-
-  // If there's no limit, or we're within the limit, let it go.
-  if (limit == 0 || duration.ToSeconds() < limit / 2.0) {
-    return true;
-  }
-
-  self->mSlowScriptActualWait += duration;
-
-  // In order to guard against time changes or laptops going to sleep, we
-  // don't trigger the slow script warning until (limit/2) seconds have
-  // elapsed twice.
-  if (!self->mSlowScriptSecondHalf) {
-    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
-    self->mSlowScriptSecondHalf = true;
-    return true;
-  }
-
-  //
-  // This has gone on long enough! Time to take action. ;-)
-  //
 
   if (win->IsDying()) {
     // The window is being torn down. When that happens we try to prevent
