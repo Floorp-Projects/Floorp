@@ -458,7 +458,7 @@ pub mod platform {
     }
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+#[cfg(not(any(unix, target_os = "windows")))]
 pub mod platform {
     use std::path::PathBuf;
 
