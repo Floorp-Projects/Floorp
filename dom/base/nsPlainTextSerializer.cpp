@@ -1090,6 +1090,7 @@ void nsPlainTextSerializer::FlushLine() {
       OutputQuotesAndIndent();  // XXX: Should we always do this? Bug?
     }
 
+    MaybeReplaceNbspsForOutput(mCurrentLine);
     Output(mCurrentLine);
     mAtFirstColumn = mAtFirstColumn && mCurrentLine.IsEmpty();
     mCurrentLine.Truncate();
@@ -1097,18 +1098,16 @@ void nsPlainTextSerializer::FlushLine() {
   }
 }
 
-/**
- * Prints the text to output to our current output device (the string
- * mOutputString). The only logic here is to replace non breaking spaces with a
- * normal space since most (all?) receivers of the result won't understand the
- * nbsp and even be confused by it.
- */
-void nsPlainTextSerializer::Output(nsString& aString) {
+void nsPlainTextSerializer::MaybeReplaceNbspsForOutput(
+    nsString& aString) const {
   if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
     // First, replace all nbsp characters with spaces,
     // which the unicode encoder won't do for us.
     aString.ReplaceChar(kNBSP, kSPACE);
   }
+}
+
+void nsPlainTextSerializer::Output(nsString& aString) {
   mOutputString->Append(aString);
 }
 
@@ -1351,6 +1350,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftlinebreak, bool aBreakBySpace) {
   }
 
   mCurrentLine.Append(mLineBreak);
+  MaybeReplaceNbspsForOutput(mCurrentLine);
   Output(mCurrentLine);
   mCurrentLine.Truncate();
   mCurrentLineWidth = 0;
@@ -1546,6 +1546,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         OutputQuotesAndIndent();
       }
 
+      MaybeReplaceNbspsForOutput(mCurrentLine);
       Output(mCurrentLine);
       if (outputLineBreak) {
         Output(mLineBreak);
