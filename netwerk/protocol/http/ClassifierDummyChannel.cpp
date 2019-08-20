@@ -77,11 +77,12 @@ NS_INTERFACE_MAP_BEGIN(ClassifierDummyChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(ClassifierDummyChannel)
 NS_INTERFACE_MAP_END
 
-ClassifierDummyChannel::ClassifierDummyChannel(nsIURI* aURI,
-                                               nsIURI* aTopWindowURI,
-                                               nsresult aTopWindowURIResult,
-                                               nsILoadInfo* aLoadInfo)
+ClassifierDummyChannel::ClassifierDummyChannel(
+    nsIURI* aURI, nsIURI* aTopWindowURI,
+    nsIPrincipal* aContentBlockingAllowListPrincipal,
+    nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo)
     : mTopWindowURI(aTopWindowURI),
+      mContentBlockingAllowListPrincipal(aContentBlockingAllowListPrincipal),
       mTopWindowURIResult(aTopWindowURIResult),
       mClassificationFlags(0) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -97,6 +98,9 @@ ClassifierDummyChannel::~ClassifierDummyChannel() {
                                     mURI.forget());
   NS_ReleaseOnMainThreadSystemGroup("ClassifierDummyChannel::mTopWindowURI",
                                     mTopWindowURI.forget());
+  NS_ReleaseOnMainThreadSystemGroup(
+      "ClassifierDummyChannel::mContentBlockingAllowListPrincipal",
+      mContentBlockingAllowListPrincipal.forget());
 }
 
 uint32_t ClassifierDummyChannel::ClassificationFlags() const {
@@ -553,6 +557,14 @@ ClassifierDummyChannel::GetTopWindowURI(nsIURI** aTopWindowURI) {
   nsCOMPtr<nsIURI> topWindowURI = mTopWindowURI;
   topWindowURI.forget(aTopWindowURI);
   return mTopWindowURIResult;
+}
+
+NS_IMETHODIMP
+ClassifierDummyChannel::GetContentBlockingAllowListPrincipal(
+    nsIPrincipal** aPrincipal) {
+  nsCOMPtr<nsIPrincipal> copy = mContentBlockingAllowListPrincipal;
+  copy.forget(aPrincipal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

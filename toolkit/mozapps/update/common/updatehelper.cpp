@@ -10,7 +10,6 @@
 
 #  include <stdio.h>
 #  include "mozilla/UniquePtr.h"
-#  include "nsWindowsHelpers.h"
 #  include "pathhash.h"
 #  include "shlobj.h"
 #  include "uachelper.h"
@@ -237,17 +236,10 @@ LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR* argv) {
  *
  * @param  updateDirPath   The path of the update directory
  * @param  errorCode       Error code to set
- * @param  userToken       Impersonation token to use
  *
  * @return TRUE if successful
  */
-BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode,
-                        nsAutoHandle& userToken) {
-  ImpersonationScope impersonated(userToken);
-  if (userToken && !impersonated) {
-    return FALSE;
-  }
-
+BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode) {
   // The temp file is not removed on failure since there is client code that
   // will remove it.
   WCHAR tmpUpdateStatusFilePath[MAX_PATH + 1] = {L'\0'};

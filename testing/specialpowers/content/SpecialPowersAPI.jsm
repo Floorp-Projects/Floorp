@@ -489,6 +489,13 @@ class SpecialPowersAPI extends JSWindowActorChild {
     return bindDOMWindowUtils(aWindow);
   }
 
+  async toggleMuteState(aMuted, aWindow) {
+    let actor = aWindow
+      ? aWindow.getWindowGlobalChild().getActor("SpecialPowers")
+      : this;
+    return actor.sendQuery("SPToggleMuteAudio", { mute: aMuted });
+  }
+
   /*
    * A method to get a DOMParser that can't parse XUL.
    */

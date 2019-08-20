@@ -449,6 +449,15 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     throw new Error(`Unexpected preference type: ${type}`);
   }
 
+  _toggleMuteAudio(aMuted) {
+    let browser = this.browsingContext.top.embedderElement;
+    if (aMuted) {
+      browser.mute();
+    } else {
+      browser.unmute();
+    }
+  }
+
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
@@ -459,6 +468,8 @@ class SpecialPowersAPIParent extends JSWindowActorParent {
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
     switch (aMessage.name) {
+      case "SPToggleMuteAudio":
+        return this._toggleMuteAudio(aMessage.data.mute);
       case "PushPrefEnv":
         return this.pushPrefEnv(aMessage.data);
 

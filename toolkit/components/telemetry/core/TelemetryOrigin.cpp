@@ -257,28 +257,59 @@ void TelemetryOrigin::InitializeGlobalState() {
              "TelemetryOrigin::InitializeGlobalState "
              "may only be called once");
 
-  // The contents and order of this array matters.
+  // The contents and order of the arrays that follow matter.
   // Both ensure a consistent app-encoding.
-  gOriginHashesList = MakeUnique<OriginHashesList>(OriginHashesList{
-#define ORIGIN(origin, hash) MakeTuple(origin, hash),
+  static const char sOriginStrings[] = {
+#define ORIGIN(origin, hash) origin "\0"
 #include "TelemetryOriginData.inc"
 #undef ORIGIN
-  });
+  };
+  static const char sHashStrings[] = {
+#define ORIGIN(origin, hash) hash "\0"
+#include "TelemetryOriginData.inc"
+#undef ORIGIN
+  };
+
+  struct OriginHashLengths {
+    uint8_t originLength;
+    uint8_t hashLength;
+  };
+  static const OriginHashLengths sOriginHashLengths[] = {
+#define ORIGIN(origin, hash) {sizeof(origin), sizeof(hash)},
+#include "TelemetryOriginData.inc"
+#undef ORIGIN
+  };
+
+  static const size_t kNumOrigins = MOZ_ARRAY_LENGTH(sOriginHashLengths);
+
+  gOriginHashesList = MakeUnique<OriginHashesList>(kNumOrigins);
 
   gPrioDatasPerMetric =
-      ceil(static_cast<double>(gOriginHashesList->Length() + kNumMetaOrigins) /
+      ceil(static_cast<double>(kNumOrigins + kNumMetaOrigins) /
            PrioEncoder::gNumBooleans);
 
-  gOriginToIndexMap = MakeUnique<OriginToIndexMap>(gOriginHashesList->Length() +
-                                                   kNumMetaOrigins);
-  gHashToIndexMap = MakeUnique<HashToIndexMap>(gOriginHashesList->Length());
-  for (size_t i = 0; i < gOriginHashesList->Length(); ++i) {
-    const char* origin = Get<0>((*gOriginHashesList)[i]);
-    const char* hash = Get<1>((*gOriginHashesList)[i]);
+  gOriginToIndexMap =
+      MakeUnique<OriginToIndexMap>(kNumOrigins + kNumMetaOrigins);
+  gHashToIndexMap = MakeUnique<HashToIndexMap>(kNumOrigins);
+  size_t originOffset = 0;
+  size_t hashOffset = 0;
+  for (size_t i = 0; i < kNumOrigins; ++i) {
+    const char* origin = &sOriginStrings[originOffset];
+    const char* hash = &sHashStrings[hashOffset];
     MOZ_ASSERT(!kUnknownOrigin.Equals(origin),
                "Unknown origin literal is reserved in Origin Telemetry");
-    gOriginToIndexMap->Put(nsDependentCString(origin), i);
-    gHashToIndexMap->Put(nsDependentCString(hash), i);
+
+    gOriginHashesList->AppendElement(MakeTuple(origin, hash));
+
+    const size_t originLength = sOriginHashLengths[i].originLength;
+    const size_t hashLength = sOriginHashLengths[i].hashLength;
+
+    originOffset += originLength;
+    hashOffset += hashLength;
+
+    // -1 to leave off the null terminators.
+    gOriginToIndexMap->Put(nsDependentCString(origin, originLength - 1), i);
+    gHashToIndexMap->Put(nsDependentCString(hash, hashLength - 1), i);
   }
 
   // Add the meta-origin for tracking recordings to untracked origins.

@@ -61,7 +61,6 @@ jobs:
             symbol: H
         run:
             using: hazard
-            mozconfig: "browser/config/mozconfigs/linux64/hazards"
             command: >
                 cd /builds/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace

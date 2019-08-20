@@ -2959,8 +2959,11 @@ bool SourceMediaStream::HasPendingAudioTrack() {
 void MediaInputPort::Init() {
   LOG(LogLevel::Debug, ("%p: Adding MediaInputPort %p (from %p to %p)",
                         mSource->GraphImpl(), this, mSource, mDest));
-  mSource->AddConsumer(this);
-  mDest->AddInput(this);
+  // Only connect the port if it wasn't disconnected on allocation.
+  if (mSource) {
+    mSource->AddConsumer(this);
+    mDest->AddInput(this);
+  }
   // mPortCount decremented via MediaInputPort::Destroy's message
   ++mDest->GraphImpl()->mPortCount;
 }
@@ -3104,7 +3107,6 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
     RefPtr<MediaInputPort> mPort;
   };
 
-  MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
   MOZ_ASSERT(aTrackID == TRACK_ANY || IsTrackIDExplicit(aTrackID),
              "Only TRACK_ANY and explicit ID are allowed for source track");
   MOZ_ASSERT(
@@ -3113,8 +3115,18 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
   MOZ_ASSERT(
       aTrackID != TRACK_ANY || aDestTrackID == TRACK_ANY,
       "Generic MediaInputPort cannot produce a single destination track");
-  RefPtr<MediaInputPort> port = new MediaInputPort(
-      aStream, aTrackID, this, aDestTrackID, aInputNumber, aOutputNumber);
+  RefPtr<MediaInputPort> port;
+  if (aStream->IsDestroyed()) {
+    // Create a port that's disconnected, which is what it'd be after its source
+    // stream is Destroy()ed normally. Disconnect() is idempotent so destroying
+    // this later is fine.
+    port = new MediaInputPort(nullptr, aTrackID, nullptr, aDestTrackID,
+                              aInputNumber, aOutputNumber);
+  } else {
+    MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
+    port = new MediaInputPort(aStream, aTrackID, this, aDestTrackID,
+                              aInputNumber, aOutputNumber);
+  }
   if (aBlockedTracks) {
     for (TrackID trackID : *aBlockedTracks) {
       port->BlockSourceTrackIdImpl(trackID, BlockingMode::CREATION);

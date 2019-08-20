@@ -66,8 +66,8 @@ class WinCompositorWidget : public CompositorWidget,
   bool NeedsToDeferEndRemoteDrawing() override;
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
-      gfx::DrawTarget* aScreenTarget, const LayoutDeviceIntRect& aRect,
-      const LayoutDeviceIntRect& aClearRect) override;
+      gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
+      bool* aOutIsCleared) override;
   already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
   bool InitCompositor(layers::Compositor* aCompositor) override;
   uintptr_t GetWidgetKey() override;

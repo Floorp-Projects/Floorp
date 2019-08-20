@@ -9,15 +9,9 @@ async function run_test() {
   if (!setupTestCommon()) {
     return;
   }
-  // The service cannot safely write update.status for this failure because the
-  // check is done before validating the installed updater.
-  const STATE_AFTER_RUNUPDATE_BASE = STATE_FAILED_INVALID_WORKING_DIR_PATH_ERROR;
-  const STATE_AFTER_RUNUPDATE_SERVICE = AppConstants.EARLY_BETA_OR_EARLIER
-    ? STATE_PENDING_SVC
-    : STATE_FAILED_SERVICE_INVALID_WORKING_DIR_PATH_ERROR;
   const STATE_AFTER_RUNUPDATE = gIsServiceTest
-    ? STATE_AFTER_RUNUPDATE_SERVICE
-    : STATE_AFTER_RUNUPDATE_BASE;
+    ? STATE_FAILED_SERVICE_INVALID_WORKING_DIR_PATH_ERROR
+    : STATE_FAILED_INVALID_WORKING_DIR_PATH_ERROR;
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
@@ -29,17 +23,13 @@ async function run_test() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   await waitForUpdateXMLFiles();
   if (gIsServiceTest) {
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
-    } else {
-      checkUpdateManager(
-        STATE_NONE,
-        false,
-        STATE_FAILED,
-        SERVICE_INVALID_WORKING_DIR_PATH_ERROR,
-        1
-      );
-    }
+    checkUpdateManager(
+      STATE_NONE,
+      false,
+      STATE_FAILED,
+      SERVICE_INVALID_WORKING_DIR_PATH_ERROR,
+      1
+    );
   } else {
     checkUpdateManager(
       STATE_NONE,

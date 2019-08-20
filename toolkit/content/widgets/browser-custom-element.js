@@ -304,6 +304,8 @@
 
       this._contentStoragePrincipal = null;
 
+      this._contentBlockingAllowListPrincipal = null;
+
       this._csp = null;
 
       this._referrerInfo = null;
@@ -762,6 +764,12 @@
         : this.contentDocument.effectiveStoragePrincipal;
     }
 
+    get contentBlockingAllowListPrincipal() {
+      return this.isRemoteBrowser
+        ? this._contentBlockingAllowListPrincipal
+        : this.contentDocument.contentBlockingAllowListPrincipal;
+    }
+
     get csp() {
       return this.isRemoteBrowser ? this._csp : this.contentDocument.csp;
     }
@@ -1161,12 +1169,14 @@
       if (!transientState) {
         this._audioMuted = true;
       }
-      this.frameLoader.browsingContext.notifyMediaMutedChanged(true);
+      let context = this.frameLoader.browsingContext;
+      context.notifyMediaMutedChanged(true);
     }
 
     unmute() {
       this._audioMuted = false;
-      this.frameLoader.browsingContext.notifyMediaMutedChanged(false);
+      let context = this.frameLoader.browsingContext;
+      context.notifyMediaMutedChanged(false);
     }
 
     pauseMedia(disposable) {
@@ -1177,15 +1187,21 @@
         suspendedReason = "lostAudioFocusTransiently";
       }
 
-      this.messageManager.sendAsyncMessage("AudioPlayback", {
-        type: suspendedReason,
-      });
+      this.sendMessageToActor(
+        "AudioPlayback",
+        { type: suspendedReason },
+        "AudioPlayback",
+        true
+      );
     }
 
     stopMedia() {
-      this.messageManager.sendAsyncMessage("AudioPlayback", {
-        type: "mediaControlStopped",
-      });
+      this.sendMessageToActor(
+        "AudioPlayback",
+        { type: "mediaControlStopped" },
+        "AudioPlayback",
+        true
+      );
     }
 
     resumeMedia() {
@@ -1343,16 +1359,6 @@
         );
         this.messageManager.addMessageListener("Autoscroll:Start", this);
         this.messageManager.addMessageListener("Autoscroll:Cancel", this);
-        this.messageManager.addMessageListener("AudioPlayback:Start", this);
-        this.messageManager.addMessageListener("AudioPlayback:Stop", this);
-        this.messageManager.addMessageListener(
-          "AudioPlayback:ActiveMediaBlockStart",
-          this
-        );
-        this.messageManager.addMessageListener(
-          "AudioPlayback:ActiveMediaBlockStop",
-          this
-        );
         this.messageManager.addMessageListener(
           "UnselectedTabHover:Toggle",
           this
@@ -1460,18 +1466,6 @@
         case "Autoscroll:Cancel":
           this._autoScrollPopup.hidePopup();
           break;
-        case "AudioPlayback:Start":
-          this.audioPlaybackStarted();
-          break;
-        case "AudioPlayback:Stop":
-          this.audioPlaybackStopped();
-          break;
-        case "AudioPlayback:ActiveMediaBlockStart":
-          this.activeMediaBlockStarted();
-          break;
-        case "AudioPlayback:ActiveMediaBlockStop":
-          this.activeMediaBlockStopped();
-          break;
         case "UnselectedTabHover:Toggle":
           this._shouldSendUnselectedTabHover = data.enable
             ? ++this._unselectedTabHoverMessageListenerCount > 0
@@ -1567,6 +1561,7 @@
       aTitle,
       aContentPrincipal,
       aContentStoragePrincipal,
+      aContentBlockingAllowListPrincipal,
       aCSP,
       aReferrerInfo,
       aIsSynthetic,
@@ -1592,6 +1587,7 @@
         this._imageDocument = null;
         this._contentPrincipal = aContentPrincipal;
         this._contentStoragePrincipal = aContentStoragePrincipal;
+        this._contentBlockingAllowListPrincipal = aContentBlockingAllowListPrincipal;
         this._csp = aCSP;
         this._referrerInfo = aReferrerInfo;
         this._isSyntheticDocument = aIsSynthetic;
@@ -1937,6 +1933,8 @@
             "_mayEnableCharacterEncodingMenu",
             "_charsetAutodetected",
             "_contentPrincipal",
+            "_contentStoragePrincipal",
+            "_contentBlockingAllowListPrincipal",
             "_imageDocument",
             "_fullZoom",
             "_textZoom",

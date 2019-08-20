@@ -5,6 +5,19 @@
 // This test file verifies various scenarios related to the data migration
 // from the JSONFile backend to the IDB backend.
 
+AddonTestUtils.init(this);
+
+// Create appInfo before importing any other jsm file, to prevent
+// Services.appinfo to be cached before an appInfo.version is
+// actually defined (which prevent failures to be triggered when
+// the test run in a non nightly build).
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
+
 const { getTrimmedString } = ChromeUtils.import(
   "resource://gre/modules/ExtensionTelemetry.jsm"
 );
@@ -24,14 +37,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
-
-AddonTestUtils.init(this);
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "1",
-  "42"
-);
 
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 

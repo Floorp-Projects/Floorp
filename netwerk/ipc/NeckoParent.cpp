@@ -905,14 +905,16 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetExtensionFD(
 }
 
 PClassifierDummyChannelParent* NeckoParent::AllocPClassifierDummyChannelParent(
-    nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-    const Maybe<LoadInfoArgs>& aLoadInfo) {
+    nsIURI* aURI, nsIURI* aTopWindowURI,
+    nsIPrincipal* aContentBlockingAllowListPrincipal,
+    const nsresult& aTopWindowURIResult, const Maybe<LoadInfoArgs>& aLoadInfo) {
   RefPtr<ClassifierDummyChannelParent> c = new ClassifierDummyChannelParent();
   return c.forget().take();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPClassifierDummyChannelConstructor(
     PClassifierDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
+    nsIPrincipal* aContentBlockingAllowListPrincipal,
     const nsresult& aTopWindowURIResult, const Maybe<LoadInfoArgs>& aLoadInfo) {
   ClassifierDummyChannelParent* p =
       static_cast<ClassifierDummyChannelParent*>(aActor);
@@ -927,7 +929,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvPClassifierDummyChannelConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  p->Init(aURI, aTopWindowURI, aTopWindowURIResult, loadInfo);
+  p->Init(aURI, aTopWindowURI, aContentBlockingAllowListPrincipal,
+          aTopWindowURIResult, loadInfo);
   return IPC_OK();
 }
 
