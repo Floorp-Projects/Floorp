@@ -1952,16 +1952,33 @@ nsresult ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult) {
 nsresult ServiceWorkerPrivate::AttachDebugger() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mInner) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   // When the first debugger attaches to a worker, we spawn a worker if needed,
   // and cancel the idle timeout. The idle timeout should not be reset until
   // the last debugger detached from the worker.
   if (!mDebuggerCount) {
-    nsresult rv = SpawnWorkerIfNeeded(AttachEvent);
+    nsresult rv = mInner ? mInner->SpawnWorkerIfNeeded()
+                         : SpawnWorkerIfNeeded(AttachEvent);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    /**
+     * Under parent-intercept mode (i.e. non-null `mInner`), renewing the idle
+     * KeepAliveToken for spawning workers happens asynchronously, rather than
+     * synchronously without parent-intercept (see
+     * `ServiceWorkerPrivate::SpawnWorkerIfNeeded`). The asynchronous renewal is
+     * because the actual spawning of workers under parent-intercept occurs in a
+     * content process, so we will only renew once notified that the worker has
+     * been successfully created
+     * (see `ServiceWorkerPrivateImpl::CreationSucceeded`).
+     *
+     * This means that the DevTools way of starting up a worker by calling
+     * `AttachDebugger` immediately followed by `DetachDebugger` will spawn and
+     * immediately terminate a worker (because `mTokenCount` is possibly 0
+     * due to the idle KeepAliveToken being created asynchronously). So, just
+     * renew the KeepAliveToken right now.
+     */
+    if (mInner) {
+      RenewKeepAliveToken(AttachEvent);
+    }
 
     mIdleWorkerTimer->Cancel();
   }
@@ -1973,10 +1990,6 @@ nsresult ServiceWorkerPrivate::AttachDebugger() {
 
 nsresult ServiceWorkerPrivate::DetachDebugger() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mInner) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   if (!mDebuggerCount) {
     return NS_ERROR_UNEXPECTED;
