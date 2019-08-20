@@ -1216,7 +1216,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
   nsContentPolicyType mContentPolicyType;
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadStreamContentLength;
-  nsCString mReferrer;
+  nsString mReferrer;
   ReferrerPolicy mReferrerPolicy;
   nsString mIntegrity;
   const bool mIsNonSubresourceRequest;
@@ -1249,7 +1249,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
         mRequestCredentials(RequestCredentials::Same_origin),
         mContentPolicyType(nsIContentPolicy::TYPE_INVALID),
         mUploadStreamContentLength(-1),
-        mReferrer(kFETCH_CLIENT_REFERRER_STR),
+        mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR)),
         mReferrerPolicy(ReferrerPolicy::_empty),
         mIsNonSubresourceRequest(aIsNonSubresourceRequest) {
     MOZ_ASSERT(aWorkerPrivate);
@@ -1295,16 +1295,12 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-    mReferrer = EmptyCString();
     uint32_t referrerPolicy = 0;
+    mReferrer = EmptyString();
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
       referrerPolicy = referrerInfo->GetReferrerPolicy();
-      nsCOMPtr<nsIURI> computedReferrer = referrerInfo->GetComputedReferrer();
-      if (computedReferrer) {
-        rv = computedReferrer->GetSpec(mReferrer);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      Unused << referrerInfo->GetComputedReferrerSpec(mReferrer);
     }
     switch (referrerPolicy) {
       case nsIHttpChannel::REFERRER_POLICY_UNSET:
@@ -1468,9 +1464,8 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     }
     RefPtr<InternalRequest> internalReq = new InternalRequest(
         mSpec, mFragment, mMethod, internalHeaders.forget(), mCacheMode,
-        mRequestMode, mRequestRedirect, mRequestCredentials,
-        NS_ConvertUTF8toUTF16(mReferrer), mReferrerPolicy, mContentPolicyType,
-        mIntegrity);
+        mRequestMode, mRequestRedirect, mRequestCredentials, mReferrer,
+        mReferrerPolicy, mContentPolicyType, mIntegrity);
     internalReq->SetBody(mUploadStream, mUploadStreamContentLength);
     // For Telemetry, note that this Request object was created by a Fetch
     // event.

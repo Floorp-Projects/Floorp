@@ -216,7 +216,7 @@ add_task(async function test_basic() {
   }
 
   // Check additional properties on the finished download.
-  Assert.ok(download.source.referrer === null);
+  Assert.equal(download.source.referrerInfo, null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -373,6 +373,14 @@ add_task(async function test_windows_zoneInformation() {
 
   const httpSourceUrl = httpUrl("source.txt");
   const dataSourceUrl = "data:text/html," + TEST_DATA_SHORT;
+
+  function createReferrerInfo(
+    aReferrer,
+    aRefererPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET
+  ) {
+    return new ReferrerInfo(aRefererPolicy, true, NetUtil.newURI(aReferrer));
+  }
+
   const tests = [
     {
       expectedZoneId:
@@ -389,7 +397,12 @@ add_task(async function test_windows_zoneInformation() {
         "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=about:internet\r\n",
     },
     {
-      options: { referrer: TEST_REFERRER_URL },
+      options: {
+        referrerInfo: createReferrerInfo(
+          TEST_REFERRER_URL,
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL
+        ),
+      },
       expectedZoneId:
         "[ZoneTransfer]\r\nZoneId=3\r\n" +
         "ReferrerUrl=" +
@@ -400,12 +413,14 @@ add_task(async function test_windows_zoneInformation() {
         "\r\n",
     },
     {
-      options: { referrer: dataSourceUrl },
+      options: { referrerInfo: createReferrerInfo(dataSourceUrl) },
       expectedZoneId:
         "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=" + httpSourceUrl + "\r\n",
     },
     {
-      options: { referrer: "http://example.com/a\rb\nc" },
+      options: {
+        referrerInfo: createReferrerInfo("http://example.com/a\rb\nc"),
+      },
       expectedZoneId:
         "[ZoneTransfer]\r\nZoneId=3\r\n" +
         "ReferrerUrl=http://example.com/abc\r\n" +
@@ -414,7 +429,9 @@ add_task(async function test_windows_zoneInformation() {
         "\r\n",
     },
     {
-      options: { referrer: "ftp://user:pass@example.com/" },
+      options: {
+        referrerInfo: createReferrerInfo("ftp://user:pass@example.com/"),
+      },
       expectedZoneId:
         "[ZoneTransfer]\r\nZoneId=3\r\n" +
         "ReferrerUrl=ftp://example.com/\r\n" +
@@ -427,7 +444,10 @@ add_task(async function test_windows_zoneInformation() {
       expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n",
     },
     {
-      options: { referrer: TEST_REFERRER_URL, isPrivate: true },
+      options: {
+        referrerInfo: createReferrerInfo(TEST_REFERRER_URL),
+        isPrivate: true,
+      },
       expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n",
     },
   ];
@@ -493,51 +513,57 @@ add_task(async function test_referrer() {
     Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
   });
   let download;
+  let referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+    true,
+    NetUtil.newURI(TEST_REFERRER_URL)
+  );
+
   if (!gUseLegacySaver) {
     let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
     let targetPath = targetFile.path;
 
     download = await Downloads.createDownload({
-      source: { url: sourceUrl, referrer: TEST_REFERRER_URL },
+      source: { url: sourceUrl, referrerInfo },
       target: targetPath,
     });
 
-    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
+    Assert.ok(download.source.referrerInfo.equals(referrerInfo));
     await download.start();
 
     download = await Downloads.createDownload({
-      source: { url: sourceUrl, referrer: TEST_REFERRER_URL, isPrivate: true },
+      source: { url: sourceUrl, referrerInfo, isPrivate: true },
       target: targetPath,
     });
-    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
+    Assert.ok(download.source.referrerInfo.equals(referrerInfo));
     await download.start();
 
     // Test the download still works for non-HTTP channel with referrer.
     download = await Downloads.createDownload({
-      source: { url: dataSourceUrl, referrer: TEST_REFERRER_URL },
+      source: { url: dataSourceUrl, referrerInfo },
       target: targetPath,
     });
-    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
+    Assert.ok(download.source.referrerInfo.equals(referrerInfo));
     await download.start();
   } else {
     download = await promiseStartLegacyDownload(sourceUrl, {
-      referrer: TEST_REFERRER_URL,
+      referrerInfo,
     });
     await promiseDownloadStopped(download);
-    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
+    checkEqualReferrerInfos(download.source.referrerInfo, referrerInfo);
 
     download = await promiseStartLegacyDownload(sourceUrl, {
-      referrer: TEST_REFERRER_URL,
+      referrerInfo,
       isPrivate: true,
     });
     await promiseDownloadStopped(download);
-    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
+    checkEqualReferrerInfos(download.source.referrerInfo, referrerInfo);
 
     download = await promiseStartLegacyDownload(dataSourceUrl, {
-      referrer: TEST_REFERRER_URL,
+      referrerInfo,
     });
     await promiseDownloadStopped(download);
-    Assert.equal(download.source.referrer, null);
+    Assert.equal(download.source.referrerInfo, null);
   }
 
   cleanup();

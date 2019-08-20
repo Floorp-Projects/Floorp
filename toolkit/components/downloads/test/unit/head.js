@@ -61,6 +61,12 @@ ChromeUtils.defineModuleGetter(
   "Services",
   "resource://gre/modules/Services.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
+);
+
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
@@ -108,6 +114,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "gMIMEService",
   "@mozilla.org/mime;1",
   "nsIMIMEService"
+);
+
+const ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
 );
 
 const TEST_TARGET_FILE_NAME = "test-download.txt";
@@ -294,7 +306,7 @@ function promiseNewDownload(aSourceUrl) {
  *        {
  *          isPrivate: Boolean indicating whether the download originated from a
  *                     private window.
- *          referrer: String containing the referrer for the download source.
+ *          referrerInfo: referrerInfo for the download source.
  *          targetFile: nsIFile for the target, or null to use a temporary file.
  *          outPersist: Receives a reference to the created nsIWebBrowserPersist
  *                      instance.
@@ -384,10 +396,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           .catch(do_report_unexpected_exception);
 
         let isPrivate = aOptions && aOptions.isPrivate;
-        let referrer =
-          aOptions && aOptions.referrer
-            ? NetUtil.newURI(aOptions.referrer)
-            : null;
+        let referrerInfo = aOptions ? aOptions.referrerInfo : null;
         // Initialize the components so they reference each other.  This will cause
         // the Download object to be created and added to the public downloads.
         transfer.init(
@@ -401,15 +410,6 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
           isPrivate
         );
         persist.progressListener = transfer;
-
-        let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
-          Ci.nsIReferrerInfo
-        );
-        referrerInfo.init(
-          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
-          true,
-          referrer
-        );
 
         // Start the actual download process.
         persist.savePrivacyAwareURI(
@@ -734,6 +734,28 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
  */
 function isValidDate(aDate) {
   return aDate && aDate.getTime && !isNaN(aDate.getTime());
+}
+
+/**
+ * Check actual ReferrerInfo is the same as expected.
+ * Because the actual download's referrer info's computedReferrer is computed
+ * from referrerPolicy and originalReferrer and is non-null, and the expected
+ * referrer info was constructed in isolation and therefore the computedReferrer
+ * is null, it isn't possible to use equals here. */
+function checkEqualReferrerInfos(aActualInfo, aExpectedInfo) {
+  Assert.equal(
+    !!aExpectedInfo.originalReferrer,
+    !!aActualInfo.originalReferrer
+  );
+  if (aExpectedInfo.originalReferrer && aActualInfo.originalReferrer) {
+    Assert.equal(
+      aExpectedInfo.originalReferrer.spec,
+      aActualInfo.originalReferrer.spec
+    );
+  }
+
+  Assert.equal(aExpectedInfo.sendReferrer, aActualInfo.sendReferrer);
+  Assert.equal(aExpectedInfo.referrerPolicy, aActualInfo.referrerPolicy);
 }
 
 /**

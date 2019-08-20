@@ -681,7 +681,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_pauseResume":
         return this.download.hasPartialData && !this.download.error;
       case "downloadsCmd_openReferrer":
-        return !!this.download.source.referrer;
+        return (
+          !!this.download.source.referrerInfo &&
+          !!this.download.source.referrerInfo.originalReferrer
+        );
       case "downloadsCmd_confirmBlock":
       case "downloadsCmd_chooseUnblock":
       case "downloadsCmd_chooseOpen":
@@ -738,7 +741,9 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   downloadsCmd_openReferrer() {
-    this.element.ownerGlobal.openURL(this.download.source.referrer);
+    this.element.ownerGlobal.openURL(
+      this.download.source.referrerInfo.originalReferrer
+    );
   },
 
   downloadsCmd_pauseResume() {
