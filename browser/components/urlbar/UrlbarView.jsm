@@ -40,7 +40,7 @@ class UrlbarView {
     }
 
     this._mainContainer = this.panel.querySelector(".urlbarView-body-inner");
-    this._rows = this.panel.querySelector("#urlbarView-results");
+    this._rows = this.panel.querySelector(".urlbarView-results");
 
     this._rows.addEventListener("mousedown", this);
     this._rows.addEventListener("mouseup", this);
@@ -281,6 +281,9 @@ class UrlbarView {
     this.input.inputField.setAttribute("aria-expanded", "false");
     this.input.dropmarker.removeAttribute("open");
 
+    this.input.removeAttribute("open");
+    this.input.endLayoutBreakout();
+
     this._rows.textContent = "";
 
     this.window.removeEventListener("resize", this);
@@ -411,10 +414,6 @@ class UrlbarView {
 
   // Private methods below.
 
-  _getBoundsWithoutFlushing(element) {
-    return this.window.windowUtils.getBoundsWithoutFlushing(element);
-  }
-
   _createElement(name) {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
   }
@@ -427,19 +426,17 @@ class UrlbarView {
 
     this.panel.removeAttribute("actionoverride");
 
-    let inputRect = this._getBoundsWithoutFlushing(this.input.textbox);
+    if (!this.input.megabar) {
+      let getBoundsWithoutFlushing = element =>
+        this.window.windowUtils.getBoundsWithoutFlushing(element);
+      let px = number => number.toFixed(2) + "px";
+      let inputRect = getBoundsWithoutFlushing(this.input.textbox);
 
-    let px = number => number.toFixed(2) + "px";
-    let width;
-    if (this.input.megabar) {
-      // Make the panel span the width of the textbox.
-      width = inputRect.width;
-    } else {
       // Make the panel span the width of the window.
-      let documentRect = this._getBoundsWithoutFlushing(
+      let documentRect = getBoundsWithoutFlushing(
         this.document.documentElement
       );
-      width = documentRect.right - documentRect.left;
+      let width = documentRect.right - documentRect.left;
 
       // Keep the popup items' site icons aligned with the input's identity
       // icon if it's not too far from the edge of the window.  We define
@@ -475,7 +472,7 @@ class UrlbarView {
         } else {
           alignIcon = this.document.getElementById("identity-icon");
         }
-        let alignRect = this._getBoundsWithoutFlushing(alignIcon);
+        let alignRect = getBoundsWithoutFlushing(alignIcon);
         let start = this.window.RTL_UI
           ? documentRect.right - alignRect.right
           : alignRect.left;
@@ -486,21 +483,21 @@ class UrlbarView {
         this.panel.style.removeProperty("--item-padding-start");
         this.panel.style.removeProperty("--item-padding-end");
       }
+
+      // Align the panel with the parent toolbar.
+      this.panel.style.top = px(
+        getBoundsWithoutFlushing(this.input.textbox.closest("toolbar")).bottom
+      );
+
+      this._mainContainer.style.maxWidth = px(width);
     }
-
-    this.panel.style.width = px(width);
-    this._mainContainer.style.maxWidth = px(width);
-
-    // Align the panel with the input or the input's parent toolbar, depending
-    // on megabar status.
-    let alignmentRect = this.input.megabar
-      ? this._getBoundsWithoutFlushing(this.input.textbox)
-      : this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
-    this.panel.style.top = px(alignmentRect.bottom);
 
     this.panel.removeAttribute("hidden");
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
+
+    this.input.setAttribute("open", "true");
+    this.input.startLayoutBreakout();
 
     this.window.addEventListener("mousedown", this);
     this.panel.addEventListener("mousedown", this);

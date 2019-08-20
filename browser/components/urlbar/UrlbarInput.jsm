@@ -54,33 +54,12 @@ class UrlbarInput {
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
     this.window.addEventListener("unload", this);
-
-    // Create the panel to contain results.
-    // In the future this may be moved to the view, so it can customize
-    // the container element.
-    let MozXULElement = this.window.MozXULElement;
-    this.textbox.after(
-      MozXULElement.parseXULToFragment(`
-        <vbox id="urlbar-results"
-              role="group"
-              tooltip="aHTMLTooltip"
-              hidden="true">
-          <html:div class="urlbarView-body-outer">
-            <html:div class="urlbarView-body-inner">
-              <html:div id="urlbarView-results"
-                        role="listbox"/>
-            </html:div>
-          </html:div>
-          <hbox class="search-one-offs"
-                compact="true"
-                includecurrentengine="true"
-                disabletab="true"/>
-        </vbox>
-      `)
-    );
-    this.panel = this.document.getElementById("urlbar-results");
+    this.panel = this.textbox.querySelector(".urlbarView");
 
     this.megabar = UrlbarPrefs.get("megabar");
+    if (this.megabar) {
+      this.textbox.classList.add("megabar");
+    }
 
     this.controller =
       options.controller ||
@@ -228,7 +207,7 @@ class UrlbarInput {
     }
     this.dropmarker.removeEventListener("mousedown", this);
 
-    this.view.panel.remove();
+    this.endLayoutBreakout(true);
 
     // When uninit is called due to exiting the browser's customize mode,
     // this.inputField.controllers is not the original list of controllers, and
@@ -852,6 +831,65 @@ class UrlbarInput {
     );
   }
 
+  startLayoutBreakout() {
+    if (
+      this._layoutBreakoutPlaceholder ||
+      !this.megabar ||
+      !(
+        (this.focused && !this.textbox.classList.contains("hidden-focus")) ||
+        this.view.isOpen
+      )
+    ) {
+      return;
+    }
+
+    let getBoundsWithoutFlushing = element =>
+      this.window.windowUtils.getBoundsWithoutFlushing(element);
+    let px = number => number.toFixed(2) + "px";
+
+    let inputRect = getBoundsWithoutFlushing(this.textbox);
+    if (inputRect.width == 0) {
+      this.window.requestAnimationFrame(() => {
+        this.startLayoutBreakout();
+      });
+      return;
+    }
+
+    this.textbox.style.setProperty("--urlbar-width", px(inputRect.width));
+
+    let toolbarHeight = getBoundsWithoutFlushing(
+      this.textbox.closest("toolbar")
+    ).height;
+    this.textbox.style.setProperty(
+      "--urlbar-toolbar-height",
+      px(toolbarHeight)
+    );
+
+    this._layoutBreakoutPlaceholder = this.document.createXULElement(
+      this.textbox.nodeName
+    );
+    this._layoutBreakoutPlaceholder.setAttribute(
+      "flex",
+      this.textbox.getAttribute("flex")
+    );
+    this._layoutBreakoutPlaceholder.style.height = px(inputRect.height);
+    this.textbox.before(this._layoutBreakoutPlaceholder);
+  }
+
+  endLayoutBreakout(force) {
+    if (
+      !force &&
+      (this.isOpen ||
+        (this.focused && !this.textbox.classList.contains("hidden-focus")))
+    ) {
+      return;
+    }
+    if (this._layoutBreakoutPlaceholder) {
+      this._layoutBreakoutPlaceholder.remove();
+      this._layoutBreakoutPlaceholder = null;
+    }
+  }
+
   // Private methods below.
 
   _setOpenViewOnFocus() {
@@ -1461,6 +1499,8 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
+    this.endLayoutBreakout();
+
     this.formatValue();
     this._resetSearchState();
 
@@ -1509,6 +1549,8 @@ class UrlbarInput {
 
   _on_focus(event) {
     this.setAttribute("focused", "true");
+    this.startLayoutBreakout();
+
     this._updateUrlTooltip();
     this.formatValue();
 
