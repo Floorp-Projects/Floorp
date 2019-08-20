@@ -3724,7 +3724,7 @@ nsresult nsContentUtils::ReportToConsoleByWindowID(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsAutoCString spec;
+  nsAutoString spec;
   if (!aLineNumber && aLocationMode == eUSE_CALLING_LOCATION) {
     JSContext* cx = GetCurrentJSContext();
     if (cx) {
@@ -3737,11 +3737,10 @@ nsresult nsContentUtils::ReportToConsoleByWindowID(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!spec.IsEmpty()) {
-    rv =
-        errorObject->InitWithWindowID(aErrorText,
-                                      NS_ConvertUTF8toUTF16(spec),  // file name
-                                      aSourceLine, aLineNumber, aColumnNumber,
-                                      aErrorFlags, aCategory, aInnerWindowID);
+    rv = errorObject->InitWithWindowID(aErrorText,
+                                       spec,  // file name
+                                       aSourceLine, aLineNumber, aColumnNumber,
+                                       aErrorFlags, aCategory, aInnerWindowID);
   } else {
     rv = errorObject->InitWithSourceURI(aErrorText, aURI, aSourceLine,
                                         aLineNumber, aColumnNumber, aErrorFlags,
