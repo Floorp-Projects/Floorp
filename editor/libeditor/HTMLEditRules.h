@@ -1326,8 +1326,6 @@ class HTMLEditRules : public TextEditRules {
   bool mInitialized;
   bool mListenerEnabled;
   bool mReturnInEmptyLIKillsList;
-  // Need to remember an int across willJoin/didJoin...
-  uint32_t mJoinOffset;
 };
 
 }  // namespace mozilla

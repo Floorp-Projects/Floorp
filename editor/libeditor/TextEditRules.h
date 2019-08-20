@@ -56,8 +56,7 @@ class Selection;
 class TextEditRules {
  protected:
   typedef EditorBase::AutoSelectionRestorer AutoSelectionRestorer;
-  typedef EditorBase::AutoTopLevelEditSubActionNotifier
-      AutoTopLevelEditSubActionNotifier;
+  typedef EditorBase::AutoEditSubActionNotifier AutoEditSubActionNotifier;
   typedef EditorBase::AutoTransactionsConserveSelection
       AutoTransactionsConserveSelection;
 

@@ -103,7 +103,7 @@ nsresult HTMLEditor::LoadHTML(const nsAString& aInputString) {
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertHTMLSource, nsIEditor::eNext);
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
@@ -202,7 +202,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   // force IME commit; set up rules sniffing and batching
   CommitComposition();
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::ePasteHTMLContent, nsIEditor::eNext);
 
   // create a dom document fragment that represents the structure to paste
@@ -1739,7 +1739,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // <blockquote type="cite"> element after removing selection.
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertQuotation, nsIEditor::eNext);
 
   // Adjust Selection and clear cached style before inserting <blockquote>.
@@ -1985,7 +1985,7 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
     *aNodeInserted = nullptr;
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertQuotation, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
@@ -2168,7 +2168,7 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsPlaintextEditor());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertQuotation, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel

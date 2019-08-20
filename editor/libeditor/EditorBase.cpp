@@ -1354,7 +1354,7 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   //     we need to redesign RangeUpdaterRef() as avoiding using indices.
   Unused << aPointToInsert.Offset();
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreateNode, nsIEditor::eNext);
 
   RefPtr<Element> newElement;
@@ -1431,7 +1431,7 @@ nsresult EditorBase::InsertNodeWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext);
 
   RefPtr<InsertNodeTransaction> transaction =
@@ -1566,7 +1566,7 @@ already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSplitNode, nsIEditor::eNext);
 
   // XXX Unfortunately, storing offset of the split point in
@@ -1636,7 +1636,7 @@ nsresult EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious);
 
   // Remember some values; later used for saved selection updating.
@@ -1708,7 +1708,7 @@ EditorBase::DeleteNode(nsINode* aNode) {
 nsresult EditorBase::DeleteNodeWithTransaction(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteNode, nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
@@ -2908,7 +2908,7 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aTextNode) {
 
   const uint32_t length = aTextNode.Length();
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetText, nsIEditor::eNext);
 
   // Let listeners know what's up
@@ -2977,7 +2977,7 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
     return NS_ERROR_FAILURE;
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteText, nsIEditor::ePrevious);
 
   // Let listeners know what's up
@@ -4060,7 +4060,7 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
     return NS_OK;
   }
 
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+  AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreatePaddingBRElementForEmptyEditor,
       nsIEditor::eNone);
 
