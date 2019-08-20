@@ -347,14 +347,15 @@ class HomeFragment : Fragment(), AccountObserver {
             }
             is TabAction.CloseAll -> {
                 if (pendingSessionDeletion?.deletionJob == null) removeAllTabsWithUndo(
-                    sessionManager.filteredSessions(action.private)
+                    sessionManager.filteredSessions(action.private),
+                    action.private
                 ) else {
                     pendingSessionDeletion?.deletionJob?.let {
                         viewLifecycleOwner.lifecycleScope.launch {
                             it.invoke()
                         }.invokeOnCompletion {
                             pendingSessionDeletion = null
-                            removeAllTabsWithUndo(sessionManager.filteredSessions(action.private))
+                            removeAllTabsWithUndo(sessionManager.filteredSessions(action.private), action.private)
                         }
                     }
                 }
@@ -581,7 +582,7 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
-    private fun removeAllTabsWithUndo(listOfSessionsToDelete: List<Session>) {
+    private fun removeAllTabsWithUndo(listOfSessionsToDelete: List<Session>, private: Boolean) {
         val sessionManager = requireComponents.core.sessionManager
 
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
@@ -593,9 +594,15 @@ class HomeFragment : Fragment(), AccountObserver {
         }
         deleteAllSessionsJob = deleteOperation
 
+        val snackbarMessage = if (private) {
+            getString(R.string.snackbar_private_tabs_deleted)
+        } else {
+            getString(R.string.snackbar_tab_deleted)
+        }
+
         viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!,
-            getString(R.string.snackbar_tabs_deleted),
+            snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
                 deleteAllSessionsJob = null
                 emitSessionChanges()

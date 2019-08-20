@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.content.Context
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.tab_header.view.*
@@ -46,6 +47,18 @@ class TabHeaderViewHolder(
                 }
             }
 
+            share_tabs_button.run {
+                setOnClickListener {
+                    actionEmitter.onNext(TabAction.ShareTabs)
+                }
+            }
+
+            close_tabs_button.run {
+                setOnClickListener {
+                    actionEmitter.onNext(TabAction.CloseAll(true))
+                }
+            }
+
             tabs_overflow_button.run {
                 setOnClickListener {
                     tabsMenu.menuBuilder
@@ -63,7 +76,9 @@ class TabHeaderViewHolder(
         val headerTextResourceId =
             if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
         view.header_text.text = view.context.getString(headerTextResourceId)
-        view.tabs_overflow_button.visibility = if (hasTabs) View.VISIBLE else View.GONE
+        view.share_tabs_button.isVisible = isPrivate && hasTabs
+        view.close_tabs_button.isVisible = isPrivate && hasTabs
+        view.tabs_overflow_button.isVisible = !isPrivate && hasTabs
     }
 
     class TabHeaderMenu(

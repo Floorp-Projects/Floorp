@@ -10,13 +10,6 @@
         android:layout_margin="16dp"
         android:orientation="vertical">
     <TextView
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="?primaryText"
-            android:text="@string/private_browsing_title"
-            android:layout_marginBottom="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    <TextView
             android:id="@+id/private_session_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

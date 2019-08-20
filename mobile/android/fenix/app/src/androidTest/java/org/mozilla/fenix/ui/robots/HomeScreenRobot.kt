@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -65,6 +66,12 @@ class HomeScreenRobot {
     fun verifyPrivacyNoticeButton() = assertPrivacyNoticeButton()
     fun verifyStartBrowsingButton() = assertStartBrowsingButton()
 
+    // Private mode elements
+    fun verifyPrivateSessionHeader() = assertPrivateSessionHeader()
+    fun verifyPrivateSessionMessage(visible: Boolean = true) = assertPrivateSessionMessage(visible)
+    fun verifyShareTabsButton(visible: Boolean = true) = assertShareTabsButton(visible)
+    fun verifyCloseTabsButton(visible: Boolean = true) = assertCloseTabsButton(visible)
+
     private fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
         appView.scrollTextIntoView(text)
@@ -96,6 +103,15 @@ class HomeScreenRobot {
 
         fun dismissOnboarding() {
             openThreeDotMenu { }.openSettings { }.goBack { }
+        }
+
+        fun addNewTab() {
+            openSearch { }.openBrowser { }.openHomeScreen { }
+        }
+
+        fun turnOnPrivateMode() {
+            onView(ViewMatchers.withResourceName("privateBrowsingButton"))
+                .perform(click())
         }
     }
 }
@@ -262,3 +278,29 @@ private fun assertPrivacyNoticeButton() =
 private fun assertStartBrowsingButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Start browsing")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+// Private mode elements
+private fun assertPrivateSessionHeader() =
+    onView(CoreMatchers.allOf(ViewMatchers.withText("Private session")))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+const val PRIVATE_SESSION_MESSAGE = "Firefox Preview clears your search and browsing history " +
+        "when you quit the app or close all private tabs. While this doesn’t make you anonymous to websites or " +
+        "your internet service provider, it makes it easier to keep what you do online private from anyone else " +
+        "who uses this device.\n\nCommon myths about private browsing"
+
+private fun assertPrivateSessionMessage(visible: Boolean) =
+    onView(CoreMatchers.allOf(ViewMatchers.withText(PRIVATE_SESSION_MESSAGE)))
+        .check(
+            if (visible) matches(withEffectiveVisibility(Visibility.VISIBLE)) else doesNotExist()
+        )
+
+private fun assertShareTabsButton(visible: Boolean) =
+    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("share_tabs_button")))
+        .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
+
+private fun assertCloseTabsButton(visible: Boolean) =
+    onView(CoreMatchers.allOf(ViewMatchers.withResourceName("close_tabs_button")))
+        .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
+
+private fun visibleOrGone(visibility: Boolean) = if (visibility) Visibility.VISIBLE else Visibility.GONE

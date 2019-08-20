@@ -37,6 +37,20 @@
             android:src="@drawable/ic_new"/>
 
         <ImageButton
+            android:id="@+id/share_tabs_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_hollow_share"/>
+
+        <ImageButton
+            android:id="@+id/close_tabs_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_delete"/>
+
+        <ImageButton
             android:id="@+id/tabs_overflow_button"
             android:layout_width="48dp"
             android:layout_height="48dp"

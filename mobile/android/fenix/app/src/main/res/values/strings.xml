@@ -572,6 +572,8 @@
     <string name="snackbar_tab_deleted">Tab deleted</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Tabs deleted</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Private tabs deleted</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
