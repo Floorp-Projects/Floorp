@@ -7,6 +7,8 @@ package org.mozilla.fenix.collections
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isGone
+import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -42,8 +44,7 @@ class CollectionCreationTabListAdapter(
                     } else if (checkChanged.shouldBeUnchecked) {
                         holder.itemView.tab_selected_checkbox.isChecked = false
                     }
-                    holder.itemView.tab_selected_checkbox.visibility =
-                        if (checkChanged.shouldHideCheckBox) View.GONE else View.VISIBLE
+                    holder.itemView.tab_selected_checkbox.isGone = checkChanged.shouldHideCheckBox
                 }
             }
         }
@@ -120,7 +121,6 @@ data class CheckChanged(val shouldBeChecked: Boolean, val shouldBeUnchecked: Boo
 
 class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-    private var tab: Tab? = null
     private val checkbox = view.tab_selected_checkbox!!
 
     init {
@@ -130,10 +130,9 @@ class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     }
 
     fun bind(tab: Tab, isSelected: Boolean, shouldHideCheckBox: Boolean) {
-        this.tab = tab
         itemView.hostname.text = tab.hostname
         itemView.tab_title.text = tab.title
-        checkbox.visibility = if (shouldHideCheckBox) View.INVISIBLE else View.VISIBLE
+        checkbox.isInvisible = shouldHideCheckBox
         itemView.isClickable = !shouldHideCheckBox
         if (checkbox.isChecked != isSelected) {
             checkbox.isChecked = isSelected

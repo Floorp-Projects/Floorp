@@ -4,26 +4,47 @@
 
 package org.mozilla.fenix.collections
 
-import android.view.View
 import androidx.lifecycle.ViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 
 class CreateCollectionViewModel : ViewModel() {
-    var selectedTabs = mutableSetOf<Tab>()
-    var tabs = listOf<Tab>()
-    var saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
-    var tabCollections = listOf<TabCollection>()
-    var selectedTabCollection: TabCollection? = null
-    var snackbarAnchorView: View? = null
+    var state = CollectionCreationState()
+        private set
+
     var previousFragmentId: Int? = null
 
-    fun getStepForTabsAndCollectionSize(): SaveCollectionStep =
-        if (tabs.size > 1) SaveCollectionStep.SelectTabs else tabCollections.getStepForCollectionsSize()
+    fun updateCollection(
+        tabs: List<Tab>,
+        saveCollectionStep: SaveCollectionStep,
+        selectedTabCollection: TabCollection,
+        cachedTabCollections: List<TabCollection>
+    ) {
+        state = CollectionCreationState(
+            tabs = tabs,
+            selectedTabs = if (tabs.size == 1) setOf(tabs.first()) else emptySet(),
+            tabCollections = cachedTabCollections.reversed(),
+            selectedTabCollection = selectedTabCollection,
+            saveCollectionStep = saveCollectionStep
+        )
+    }
+
+    fun saveTabToCollection(
+        tabs: List<Tab>,
+        selectedTab: Tab?,
+        cachedTabCollections: List<TabCollection>
+    ) {
+        val tabCollections = cachedTabCollections.reversed()
+        state = CollectionCreationState(
+            tabs = tabs,
+            selectedTabs = selectedTab?.let { setOf(it) } ?: emptySet(),
+            tabCollections = tabCollections,
+            selectedTabCollection = null,
+            saveCollectionStep = when {
+                tabs.size > 1 -> SaveCollectionStep.SelectTabs
+                tabCollections.isNotEmpty() -> SaveCollectionStep.SelectCollection
+                else -> SaveCollectionStep.NameCollection
+            }
+        )
+    }
 }
-
-fun List<TabCollection>.getStepForCollectionsSize(): SaveCollectionStep =
-    if (isEmpty()) SaveCollectionStep.NameCollection else SaveCollectionStep.SelectCollection
-
-fun List<TabCollection>.getBackStepForCollectionsSize(): SaveCollectionStep =
-    if (isEmpty()) SaveCollectionStep.SelectTabs else SaveCollectionStep.SelectCollection

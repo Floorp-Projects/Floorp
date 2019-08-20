@@ -50,15 +50,7 @@ class CreateCollectionFragment : DialogFragment() {
                 this,
                 CollectionCreationViewModel::class.java
             ) {
-                CollectionCreationViewModel(
-                    CollectionCreationState(
-                        viewModel.tabs,
-                        viewModel.selectedTabs,
-                        viewModel.saveCollectionStep,
-                        viewModel.tabCollections,
-                        viewModel.selectedTabCollection
-                    )
-                )
+                CollectionCreationViewModel(viewModel.state)
             }
         )
         return view
@@ -87,7 +79,11 @@ class CreateCollectionFragment : DialogFragment() {
                     getManagedEmitter<CollectionCreationChange>()
                         .onNext(
                             CollectionCreationChange.StepChanged(
-                                viewModel.tabCollections.getStepForCollectionsSize()
+                                if (viewModel.state.tabCollections.isEmpty()) {
+                                    SaveCollectionStep.NameCollection
+                                } else {
+                                    SaveCollectionStep.SelectCollection
+                                }
                             )
                         )
                 }
@@ -161,41 +157,38 @@ class CreateCollectionFragment : DialogFragment() {
     }
 
     private fun handleBackPress(backPressFrom: SaveCollectionStep) {
-        when (backPressFrom) {
-            SaveCollectionStep.SelectTabs -> dismiss()
-            SaveCollectionStep.SelectCollection -> {
-                if (viewModel.tabs.size <= 1) dismiss() else {
-                    getManagedEmitter<CollectionCreationChange>().onNext(
-                        CollectionCreationChange.StepChanged(SaveCollectionStep.SelectTabs)
-                    )
-                }
+        val newStep = stepBack(backPressFrom)
+        if (newStep != null) {
+            getManagedEmitter<CollectionCreationChange>().onNext(CollectionCreationChange.StepChanged(newStep))
+        } else {
+            dismiss()
+        }
+    }
+
+    private fun stepBack(backFromStep: SaveCollectionStep): SaveCollectionStep? {
+        val state = viewModel.state
+        return when (backFromStep) {
+            SaveCollectionStep.SelectTabs, SaveCollectionStep.RenameCollection -> null
+            SaveCollectionStep.SelectCollection -> if (state.tabs.size <= 1) {
+                stepBack(SaveCollectionStep.SelectTabs)
+            } else {
+                SaveCollectionStep.SelectTabs
             }
-            SaveCollectionStep.NameCollection -> {
-                if (viewModel.tabCollections.isEmpty() && viewModel.tabs.size == 1) {
-                    dismiss()
-                } else {
-                    getManagedEmitter<CollectionCreationChange>()
-                        .onNext(
-                            CollectionCreationChange.StepChanged(
-                                viewModel.tabCollections.getBackStepForCollectionsSize()
-                            )
-                        )
-                }
-            }
-            SaveCollectionStep.RenameCollection -> {
-                dismiss()
+            SaveCollectionStep.NameCollection -> if (state.tabCollections.isEmpty()) {
+                stepBack(SaveCollectionStep.SelectCollection)
+            } else {
+                SaveCollectionStep.SelectCollection
             }
         }
     }
 
     private fun closeTabsIfNecessary(tabs: List<Tab>) {
         // Only close the tabs if the user is not on the BrowserFragment
-        if (viewModel.previousFragmentId == R.id.browserFragment) { return }
-
-        tabs.forEach {
-            requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
-                requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
-            }
+        if (viewModel.previousFragmentId == R.id.browserFragment) {
+            val components = requireComponents
+            tabs.asSequence()
+                .mapNotNull { tab -> components.core.sessionManager.findSessionById(tab.sessionId) }
+                .forEach { session -> components.useCases.tabsUseCases.removeTab(session) }
         }
     }
 }

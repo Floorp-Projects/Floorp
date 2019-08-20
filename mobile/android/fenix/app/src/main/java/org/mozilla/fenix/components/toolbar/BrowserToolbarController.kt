@@ -20,7 +20,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.collections.CreateCollectionViewModel
-import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -123,14 +122,12 @@ class DefaultBrowserToolbarController(
                 context.components.analytics.metrics
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
 
-                currentSession?.toTab(context)?.let {
-                    viewModel.tabs = listOf(it)
-                    val selectedSet = mutableSetOf(it)
-                    viewModel.selectedTabs = selectedSet
-                    viewModel.tabCollections =
-                        context.components.core.tabCollectionStorage.cachedTabCollections.reversed()
-                    viewModel.saveCollectionStep = viewModel.tabCollections.getStepForCollectionsSize()
-                    viewModel.snackbarAnchorView = nestedScrollQuickActionView
+                currentSession?.toTab(context)?.let { currentSessionAsTab ->
+                    viewModel.saveTabToCollection(
+                        tabs = listOf(currentSessionAsTab),
+                        selectedTab = currentSessionAsTab,
+                        cachedTabCollections = context.components.core.tabCollectionStorage.cachedTabCollections
+                    )
                     viewModel.previousFragmentId = R.id.browserFragment
 
                     val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()

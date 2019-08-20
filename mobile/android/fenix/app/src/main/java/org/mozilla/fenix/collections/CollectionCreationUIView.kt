@@ -76,22 +76,17 @@ class CollectionCreationUIView(
         }
 
         view.name_collection_edittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
-        view.name_collection_edittext.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE && v.text.toString().isNotBlank()) {
+        view.name_collection_edittext.setOnEditorActionListener { view, actionId, _ ->
+            val text = view.text.toString()
+            if (actionId == EditorInfo.IME_ACTION_DONE && text.isNotBlank()) {
                 when (step) {
-                    is SaveCollectionStep.NameCollection -> {
-                        actionEmitter.onNext(
-                            CollectionCreationAction.SaveCollectionName(
-                                selectedTabs.toList(),
-                                v.text.toString()
-                            )
-                        )
-                    }
-                    is SaveCollectionStep.RenameCollection -> {
-                        selectedCollection?.let {
-                            actionEmitter.onNext(CollectionCreationAction.RenameCollection(it, v.text.toString()))
-                        }
-                    }
+                    SaveCollectionStep.NameCollection ->
+                        CollectionCreationAction.SaveCollectionName(selectedTabs.toList(), text)
+                    SaveCollectionStep.RenameCollection ->
+                        selectedCollection?.let { CollectionCreationAction.RenameCollection(it, text) }
+                    else -> null
+                }?.let { action ->
+                    actionEmitter.onNext(action)
                 }
             }
             false
@@ -116,7 +111,7 @@ class CollectionCreationUIView(
         selectedCollection = it.selectedTabCollection
 
         when (it.saveCollectionStep) {
-            is SaveCollectionStep.SelectTabs -> {
+            SaveCollectionStep.SelectTabs -> {
                 view.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
 
                 view.tab_list.isClickable = true
@@ -194,7 +189,7 @@ class CollectionCreationUIView(
                     View.VISIBLE
                 }
             }
-            is SaveCollectionStep.SelectCollection -> {
+            SaveCollectionStep.SelectCollection -> {
                 view.tab_list.isClickable = false
 
                 save_button.visibility = View.GONE
@@ -224,7 +219,7 @@ class CollectionCreationUIView(
                 back_button.text =
                     view.context.getString(R.string.create_collection_select_collection)
             }
-            is SaveCollectionStep.NameCollection -> {
+            SaveCollectionStep.NameCollection -> {
                 view.tab_list.isClickable = false
 
                 collectionCreationTabListAdapter.updateData(it.selectedTabs.toList(), it.selectedTabs, true)
@@ -264,7 +259,7 @@ class CollectionCreationUIView(
                 back_button.text =
                     view.context.getString(R.string.create_collection_name_collection)
             }
-            is SaveCollectionStep.RenameCollection -> {
+            SaveCollectionStep.RenameCollection -> {
                 view.tab_list.isClickable = false
 
                 it.selectedTabCollection?.let { tabCollection ->
@@ -322,24 +317,11 @@ class CollectionCreationUIView(
     }
 
     fun onKey(keyCode: Int, event: KeyEvent?): Boolean {
-        if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-            when (step) {
-                SaveCollectionStep.SelectTabs -> {
-                    actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.SelectTabs))
-                }
-                SaveCollectionStep.SelectCollection -> {
-                    actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.SelectCollection))
-                }
-                SaveCollectionStep.NameCollection -> {
-                    actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.NameCollection))
-                }
-                SaveCollectionStep.RenameCollection -> {
-                    actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.RenameCollection))
-                }
-            }
-            return true
+        return if (event?.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+            actionEmitter.onNext(CollectionCreationAction.BackPressed(step))
+            true
         } else {
-            return false
+            false
         }
     }
 

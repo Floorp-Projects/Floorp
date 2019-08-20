@@ -35,10 +35,8 @@ class SaveCollectionListAdapter(
         val collection = tabCollections[position]
         holder.bind(collection)
         holder.itemView.setOnClickListener {
-            collection.apply {
-                val action = CollectionCreationAction.SelectCollection(this, selectedTabs.toList())
-                actionEmitter.onNext(action)
-            }
+            val action = CollectionCreationAction.SelectCollection(collection, selectedTabs.toList())
+            actionEmitter.onNext(action)
         }
     }
 
