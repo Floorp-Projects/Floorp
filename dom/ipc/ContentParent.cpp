@@ -4701,8 +4701,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     return IPC_FAIL(this, "Forbidden aChromeFlags passed");
   }
 
-  BrowserParent* thisBrowserParent = BrowserParent::GetFrom(aThisTab);
-  BrowserHost* thisBrowserHost =
+  RefPtr<BrowserParent> thisBrowserParent = BrowserParent::GetFrom(aThisTab);
+  RefPtr<BrowserHost> thisBrowserHost =
       thisBrowserParent ? thisBrowserParent->GetBrowserHost() : nullptr;
   MOZ_ASSERT(!thisBrowserParent == !thisBrowserHost);
 
@@ -4842,8 +4842,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   MOZ_ASSERT(aNewRemoteTab);
-  BrowserHost* newBrowserHost = BrowserHost::GetFrom(aNewRemoteTab.get());
-  BrowserParent* newBrowserParent = newBrowserHost->GetActor();
+  RefPtr<BrowserHost> newBrowserHost = BrowserHost::GetFrom(aNewRemoteTab.get());
+  RefPtr<BrowserParent> newBrowserParent = newBrowserHost->GetActor();
 
   // At this point, it's possible the inserted frameloader hasn't gone through
   // layout yet. To ensure that the dimensions that we send down when telling
@@ -4923,7 +4923,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     aResolve(cwi);
   });
 
-  BrowserParent* newTab = BrowserParent::GetFrom(aNewTab);
+  RefPtr<BrowserParent> newTab = BrowserParent::GetFrom(aNewTab);
   MOZ_ASSERT(newTab);
 
   auto destroyNewTabOnError = MakeScopeExit([&] {
