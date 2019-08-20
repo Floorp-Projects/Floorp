@@ -1,6 +1,6 @@
 /* import-globals-from antitracking_head.js */
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 AntiTracking.runTestInNormalAndPrivateMode(
   "SharedWorkers",
