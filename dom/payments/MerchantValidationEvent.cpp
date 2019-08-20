@@ -9,13 +9,15 @@
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/ResultExtensions.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MerchantValidationEvent, Event, mRequest)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MerchantValidationEvent, Event,
+                                   mValidationURL, mRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MerchantValidationEvent, Event)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -43,7 +45,21 @@ already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
   RefPtr<MerchantValidationEvent> e = new MerchantValidationEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  if (!e->init(aEventInitDict, aRv)) {
+  nsString errMsg;
+  Result<Ok, nsresult> rv = e->init(aEventInitDict, errMsg);
+  if (rv.isErr()) {
+    auto err = rv.unwrapErr();
+    switch (err) {
+      case NS_ERROR_TYPE_ERR:
+        aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(errMsg);
+        break;
+      case NS_ERROR_MALFORMED_URI:
+        aRv.ThrowTypeError<MSG_INVALID_URL>(aEventInitDict.mValidationURL);
+        break;
+      default:
+        aRv.Throw(err);
+        break;
+    }
     return nullptr;
   }
   e->SetTrusted(trusted);
@@ -51,46 +67,26 @@ already_AddRefed<MerchantValidationEvent> MerchantValidationEvent::Constructor(
   return e.forget();
 }
 
-bool MerchantValidationEvent::init(
-    const MerchantValidationEventInit& aEventInitDict, ErrorResult& aRv) {
+Result<Ok, nsresult> MerchantValidationEvent::init(
+    const MerchantValidationEventInit& aEventInitDict, nsString& errMsg) {
   // Check methodName is valid
   if (!aEventInitDict.mMethodName.IsEmpty()) {
-    nsString errMsg;
-    auto rv = PaymentRequest::IsValidPaymentMethodIdentifier(
+    nsresult rv = PaymentRequest::IsValidPaymentMethodIdentifier(
         aEventInitDict.mMethodName, errMsg);
     if (NS_FAILED(rv)) {
-      aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(errMsg);
-      return false;
+      return Err(rv);
     }
   }
   SetMethodName(aEventInitDict.mMethodName);
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetParentObject());
   auto doc = window->GetExtantDoc();
   if (!doc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return false;
+    return Err(NS_ERROR_UNEXPECTED);
   }
-  auto principal = doc->NodePrincipal();
 
-  nsCOMPtr<nsIURI> baseURI;
-  principal->GetURI(getter_AddRefs(baseURI));
-
-  nsresult rv;
-  nsCOMPtr<nsIURI> validationUri;
-  rv = NS_NewURI(getter_AddRefs(validationUri), aEventInitDict.mValidationURL,
-                 nullptr, baseURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(aEventInitDict.mValidationURL);
-    return false;
-  }
-  nsAutoCString utf8href;
-  rv = validationUri->GetSpec(utf8href);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_BAD_URI);
-    return false;
-  }
-  CopyUTF8toUTF16(utf8href, mValidationURL);
-  return true;
+  MOZ_TRY_VAR(mValidationURL,
+              doc->ResolveWithBaseURI(aEventInitDict.mValidationURL));
+  return Ok();
 }
 
 MerchantValidationEvent::MerchantValidationEvent(EventTarget* aOwner)
@@ -161,11 +157,11 @@ void MerchantValidationEvent::SetRequest(PaymentRequest* aRequest) {
 }
 
 void MerchantValidationEvent::GetValidationURL(nsAString& aValidationURL) {
-  aValidationURL.Assign(mValidationURL);
-}
-
-void MerchantValidationEvent::SetValidationURL(nsAString& aValidationURL) {
-  mValidationURL.Assign(aValidationURL);
+  nsAutoCString utf8href;
+  nsresult rv = mValidationURL->GetSpec(utf8href);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+  aValidationURL.Assign(NS_ConvertUTF8toUTF16(utf8href));
 }
 
 void MerchantValidationEvent::GetMethodName(nsAString& aMethodName) {
@@ -176,7 +172,7 @@ void MerchantValidationEvent::SetMethodName(const nsAString& aMethodName) {
   mMethodName.Assign(aMethodName);
 }
 
-MerchantValidationEvent::~MerchantValidationEvent() {}
+MerchantValidationEvent::~MerchantValidationEvent() = default;
 
 JSObject* MerchantValidationEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
