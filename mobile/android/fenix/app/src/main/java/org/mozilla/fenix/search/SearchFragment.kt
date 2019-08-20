@@ -98,10 +98,14 @@ class SearchFragment : Fragment(), BackHandler {
             )
         }
 
-        searchInteractor = SearchInteractor(
+        val searchController = DefaultSearchController(
             activity as HomeActivity,
-            findNavController(),
-            searchStore
+            searchStore,
+            findNavController()
+        )
+
+        searchInteractor = SearchInteractor(
+            searchController
         )
 
         awesomeBarView = AwesomeBarView(view.search_layout, searchInteractor)

@@ -42,7 +42,12 @@ class SearchInteractorTest {
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
 
-        val interactor = SearchInteractor(context, mockk(), store)
+        val searchController: SearchController = DefaultSearchController(
+            context,
+            store,
+            mockk()
+        )
+        val interactor = SearchInteractor(searchController)
 
         interactor.onUrlCommitted("test")
 
@@ -63,7 +68,12 @@ class SearchInteractorTest {
 
         every { store.state } returns mockk(relaxed = true)
 
-        val interactor = SearchInteractor(mockk(), navController, store)
+        val searchController: SearchController = DefaultSearchController(
+            mockk(),
+            store,
+            navController
+        )
+        val interactor = SearchInteractor(searchController)
 
         interactor.onEditingCanceled()
 
@@ -78,7 +88,12 @@ class SearchInteractorTest {
 
         every { store.state } returns mockk(relaxed = true)
 
-        val interactor = SearchInteractor(mockk(), mockk(), store)
+        val searchController: SearchController = DefaultSearchController(
+            mockk(),
+            store,
+            mockk()
+        )
+        val interactor = SearchInteractor(searchController)
 
         interactor.onTextChanged("test")
 
@@ -98,7 +113,12 @@ class SearchInteractorTest {
         every { state.session } returns null
         every { state.showShortcutEnginePicker } returns true
 
-        val interactor = SearchInteractor(context, mockk(), store)
+        val searchController: SearchController = DefaultSearchController(
+            context,
+            store,
+            mockk()
+        )
+        val interactor = SearchInteractor(searchController)
 
         interactor.onUrlTapped("test")
 
@@ -128,16 +148,24 @@ class SearchInteractorTest {
         every { state.searchEngineSource } returns searchEngine
         every { state.showShortcutEnginePicker } returns true
 
-        val interactor = SearchInteractor(context, mockk(), store)
+        val searchController: SearchController = DefaultSearchController(
+            context,
+            store,
+            mockk()
+        )
+
+        val interactor = SearchInteractor(searchController)
 
         interactor.onSearchTermsTapped("test")
-        verify { context.openToBrowserAndLoad(
-            searchTermOrURL = "test",
-            newTab = true,
-            from = BrowserDirection.FromSearch,
-            engine = searchEngine.searchEngine,
-            forceSearch = true
-        ) }
+        verify {
+            context.openToBrowserAndLoad(
+                searchTermOrURL = "test",
+                newTab = true,
+                from = BrowserDirection.FromSearch,
+                engine = searchEngine.searchEngine,
+                forceSearch = true
+            )
+        }
     }
 
     @Test
@@ -151,7 +179,12 @@ class SearchInteractorTest {
 
         every { store.state } returns state
 
-        val interactor = SearchInteractor(context, mockk(), store)
+        val searchController: SearchController = DefaultSearchController(
+            context,
+            store,
+            mockk()
+        )
+        val interactor = SearchInteractor(searchController)
         val searchEngine: SearchEngine = mockk(relaxed = true)
 
         interactor.onSearchShortcutEngineSelected(searchEngine)
@@ -166,7 +199,12 @@ class SearchInteractorTest {
 
         every { store.state } returns mockk(relaxed = true)
 
-        val interactor = SearchInteractor(mockk(), navController, store)
+        val searchController: SearchController = DefaultSearchController(
+            mockk(),
+            store,
+            navController
+        )
+        val interactor = SearchInteractor(searchController)
 
         every { navController.navigate(any() as NavDirections) } just Runs
 
@@ -180,19 +218,31 @@ class SearchInteractorTest {
     @Test
     fun onExistingSessionSelected() {
         val navController: NavController = mockk(relaxed = true)
-        every { navController.currentDestination } returns NavDestination("").apply { id = R.id.searchFragment }
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.searchFragment
+        }
         val context: Context = mockk(relaxed = true)
         val applicationContext: FenixApplication = mockk(relaxed = true)
         every { context.applicationContext } returns applicationContext
         val store: SearchStore = mockk()
         every { store.state } returns mockk(relaxed = true)
-        val interactor = SearchInteractor(context, navController, store)
+
+        val searchController: SearchController = DefaultSearchController(
+            context,
+            store,
+            navController
+        )
+        val interactor = SearchInteractor(searchController)
         val session = Session("http://mozilla.org", false)
 
         interactor.onExistingSessionSelected(session)
 
         verify {
-            navController.navigate(SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null))
+            navController.navigate(
+                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(
+                    null
+                )
+            )
         }
     }
 }
