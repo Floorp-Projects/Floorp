@@ -1689,6 +1689,14 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
   RefPtr<ContentCompositorBridgeParent> cpcp;
   RefPtr<WebRenderBridgeParent> childWrBridge;
 
+  // Before adopting the child, save the old compositor's root content
+  // controller. We may need this to clear old layer transforms associated
+  // with the child.
+  // This is outside the lock because GetGeckoContentControllerForRoot()
+  // does its own locking.
+  RefPtr<GeckoContentController> oldRootController =
+      GetGeckoContentControllerForRoot(child);
+
   {  // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     // If child is already belong to this CompositorBridgeParent,
@@ -1739,13 +1747,24 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
   }
 
   if (oldApzUpdater) {
-    // We don't support moving a child from an APZ-enabled compositor to a
+    // We don't fully support moving a child from an APZ-enabled compositor to a
     // APZ-disabled compositor. The mOptions assertion above should already
     // ensure this, since APZ-ness is one of the things in mOptions. Note
     // however it is possible for mApzUpdater to be non-null here with
     // oldApzUpdater null, because the child may not have been previously
     // composited.
     MOZ_ASSERT(mApzUpdater);
+
+    // As this nonetheless can happen (if e.g. a WebExtension moves a tab
+    // into a popup window), try to handle it gracefully by clearing the
+    // old layer transforms associated with the child. (Since the new compositor
+    // is APZ-disabled, there will be nothing to update the transforms going
+    // forward.)
+    if (!mApzUpdater && oldRootController) {
+      nsTArray<MatrixMessage> clear;
+      clear.AppendElement(MatrixMessage(Nothing(), child));
+      oldRootController->NotifyLayerTransforms(clear);
+    }
   }
   if (mApzUpdater) {
     if (parent) {
