@@ -8922,7 +8922,8 @@ static bool ZoneMallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ZoneMaxMallocGetter(JSContext* cx, unsigned argc, Value* vp) {
+static bool ZoneMallocTriggerBytesGetter(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(double(cx->zone()->gcMallocThreshold.gcTriggerBytes()));
   return true;
@@ -8994,8 +8995,8 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
   } zoneGetters[] = {{"gcBytes", ZoneGCBytesGetter},
                      {"gcTriggerBytes", ZoneGCTriggerBytesGetter},
                      {"gcAllocTrigger", ZoneGCAllocTriggerGetter},
-                     {"mallocBytesRemaining", ZoneMallocBytesGetter},
-                     {"maxMalloc", ZoneMaxMallocGetter},
+                     {"mallocBytes", ZoneMallocBytesGetter},
+                     {"mallocTriggerBytes", ZoneMallocTriggerBytesGetter},
                      {"delayBytes", ZoneGCDelayBytesGetter},
                      {"gcNumber", ZoneGCNumberGetter}};
 
