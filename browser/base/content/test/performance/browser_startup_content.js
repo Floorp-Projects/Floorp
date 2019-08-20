@@ -20,6 +20,9 @@ const kDumpAllStacks = false;
 const whitelist = {
   modules: new Set([
     "chrome://mochikit/content/ShutdownLeaksCollector.jsm",
+    "resource://specialpowers/SpecialPowersChild.jsm",
+    "resource://specialpowers/SpecialPowersAPI.jsm",
+    "resource://specialpowers/WrapPrivileged.jsm",
 
     "resource://gre/modules/ContentProcessSingleton.jsm",
 
@@ -91,9 +94,6 @@ const intermittently_loaded_whitelist = {
   modules: new Set([
     "resource://gre/modules/nsAsyncShutdown.jsm",
     "resource://gre/modules/sessionstore/Utils.jsm",
-
-    "resource://specialpowers/SpecialPowersChild.jsm",
-    "resource://specialpowers/WrapPrivileged.jsm",
 
     // Webcompat about:config front-end. This is presently nightly-only and
     // part of a system add-on which may not load early enough for the test.

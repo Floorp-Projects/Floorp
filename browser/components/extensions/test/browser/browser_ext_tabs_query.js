@@ -316,13 +316,13 @@ add_task(async function() {
 
   const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(RESOLUTION_PREF);
+    SpecialPowers.clearUserPref(RESOLUTION_PREF);
   });
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
   for (let resolution of [2, 1]) {
-    Services.prefs.setCharPref(RESOLUTION_PREF, String(resolution));
+    SpecialPowers.setCharPref(RESOLUTION_PREF, String(resolution));
     is(
       window.devicePixelRatio,
       resolution,
@@ -342,7 +342,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   BrowserTestUtils.removeTab(tab3);
-  Services.prefs.clearUserPref(RESOLUTION_PREF);
+  SpecialPowers.clearUserPref(RESOLUTION_PREF);
 });
 
 add_task(async function testQueryPermissions() {

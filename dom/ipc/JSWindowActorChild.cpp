@@ -35,8 +35,6 @@ void JSWindowActorChild::Init(const nsAString& aName,
   MOZ_ASSERT(!mManager, "Cannot Init() a JSWindowActorChild twice!");
   SetName(aName);
   mManager = aManager;
-
-  InvokeCallback(CallbackFunction::ActorCreated);
 }
 
 namespace {
