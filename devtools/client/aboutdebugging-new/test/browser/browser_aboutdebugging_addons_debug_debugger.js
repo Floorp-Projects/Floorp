@@ -47,8 +47,8 @@ add_task(async () => {
 
   info("Check the state of redux");
   ok(
-    panelWin.dbg.store.getState().debuggee.isWebExtension,
-    "isWebExtension flag in debuggee is true"
+    panelWin.dbg.store.getState().threads.isWebExtension,
+    "isWebExtension flag in threads is true"
   );
 
   info("Check whether the element displays correctly");

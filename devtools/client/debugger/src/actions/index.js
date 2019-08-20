@@ -18,7 +18,7 @@ import * as sourceTree from "./source-tree";
 import * as sources from "./sources";
 import * as sourcesActors from "./source-actors";
 import * as tabs from "./tabs";
-import * as debuggee from "./debuggee";
+import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 
@@ -37,7 +37,7 @@ export default {
   ...projectTextSearch,
   ...quickOpen,
   ...sourceTree,
-  ...debuggee,
+  ...threads,
   ...toolbox,
   ...preview,
 };

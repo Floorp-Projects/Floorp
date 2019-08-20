@@ -21,8 +21,8 @@ import type {
   Script,
   SourceId,
   SourceActor,
-  Worker,
   Range,
+  Thread,
 } from "../../types";
 
 import type {
@@ -405,7 +405,7 @@ function getSourceForActor(actor: ActorId) {
   return sourceActors[actor];
 }
 
-async function fetchThreads(): Promise<Worker[]> {
+async function fetchThreads(): Promise<Thread[]> {
   const options = {
     breakpoints,
     eventBreakpoints,
