@@ -13,6 +13,12 @@ const Message = createFactory(
   require("devtools/client/webconsole/components/Output/Message")
 );
 
+const { PluralForm } = require("devtools/shared/plural-form");
+const { l10n } = require("devtools/client/webconsole/utils/messages");
+const messageCountTooltip = l10n.getStr(
+  "webconsole.warningGroup.messageCount.tooltip"
+);
+
 WarningGroup.displayName = "WarningGroup";
 
 WarningGroup.propTypes = {
@@ -41,7 +47,7 @@ function WarningGroup(props) {
     dom.span(
       {
         className: "warning-group-badge",
-        title: `${badge} messages`,
+        title: PluralForm.get(badge, messageCountTooltip).replace("#1", badge),
       },
       badge
     ),
