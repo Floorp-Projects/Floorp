@@ -958,7 +958,7 @@ LoginManagerPrompter.prototype = {
    *
    * @param {nsILoginInfo} login
    *        Login to save or change. For changes, this login should contain the
-   *        new password and/or username
+   *        new password.
    * @param {string} type
    *        This is "password-save" or "password-change" depending on the
    *        original notification type. This is used for telemetry and tests.
@@ -968,23 +968,17 @@ LoginManagerPrompter.prototype = {
    *        Whether to indicate to the user that the login was already saved.
    * @param {string} [options.messageStringID = undefined]
    *        An optional string ID to override the default message.
-   * @param {string} [options.autoSavedLoginGuid = ""]
-   *        A string guid value for the old login to be removed if the changes
-   *        match it to an different login
    */
   _showLoginCaptureDoorhanger(
     login,
     type,
     showOptions = {},
-    { notifySaved = false, messageStringID, autoSavedLoginGuid = "" } = {}
+    { notifySaved = false, messageStringID } = {}
   ) {
     let { browser } = this._getNotifyWindow();
     if (!browser) {
       return;
     }
-    this.log(
-      `_showLoginCaptureDoorhanger, got autoSavedLoginGuid: ${autoSavedLoginGuid}`
-    );
 
     let saveMsgNames = {
       prompt: login.username === "" ? "saveLoginMsgNoUser" : "saveLoginMsg",
@@ -1050,9 +1044,6 @@ LoginManagerPrompter.prototype = {
     };
 
     let updateButtonLabel = () => {
-      if (!currentNotification) {
-        Cu.reportError("updateButtonLabel, no currentNotification");
-      }
       let foundLogins = LoginHelper.searchLoginsWithObject({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
@@ -1060,11 +1051,7 @@ LoginManagerPrompter.prototype = {
         schemeUpgrades: LoginHelper.schemeUpgrades,
       });
 
-      let logins = this._filterUpdatableLogins(
-        login,
-        foundLogins,
-        autoSavedLoginGuid
-      );
+      let logins = this._filterUpdatableLogins(login, foundLogins);
       let msgNames = logins.length == 0 ? saveMsgNames : changeMsgNames;
 
       // Update the label based on whether this will be a new login or not.
@@ -1152,11 +1139,7 @@ LoginManagerPrompter.prototype = {
         schemeUpgrades: LoginHelper.schemeUpgrades,
       });
 
-      let logins = this._filterUpdatableLogins(
-        login,
-        foundLogins,
-        autoSavedLoginGuid
-      );
+      let logins = this._filterUpdatableLogins(login, foundLogins);
       let resolveBy = ["scheme", "timePasswordChanged"];
       logins = LoginHelper.dedupeLogins(
         logins,
@@ -1164,28 +1147,8 @@ LoginManagerPrompter.prototype = {
         resolveBy,
         login.origin
       );
-      // sort exact username matches to the top
-      logins.sort(l => (l.username == login.username ? -1 : 1));
 
-      this.log(`persistData: Matched ${logins.length} logins`);
-
-      let loginToRemove;
-      let loginToUpdate = logins.shift();
-
-      if (logins.length && logins[0].guid == autoSavedLoginGuid) {
-        loginToRemove = logins.shift();
-      }
-      if (logins.length) {
-        this.log(
-          "multiple logins, loginToRemove:",
-          loginToRemove && loginToRemove.guid
-        );
-        Cu.reportError("Unexpected match of multiple logins.");
-        return;
-      }
-
-      if (!loginToUpdate) {
-        // Create a new login, don't update an original.
+      if (logins.length == 0) {
         // The original login we have been provided with might have its own
         // metadata, but we don't want it propagated to the newly created one.
         Services.logins.addLogin(
@@ -1199,21 +1162,18 @@ LoginManagerPrompter.prototype = {
             login.passwordField
           )
         );
-      } else if (
-        loginToUpdate.password == login.password &&
-        loginToUpdate.username == login.username
-      ) {
-        // We only want to touch the login's use count and last used time.
-        this.log("persistData: Touch matched login", loginToUpdate.guid);
-        this._updateLogin(loginToUpdate);
+      } else if (logins.length == 1) {
+        if (
+          logins[0].password == login.password &&
+          logins[0].username == login.username
+        ) {
+          // We only want to touch the login's use count and last used time.
+          this._updateLogin(logins[0]);
+        } else {
+          this._updateLogin(logins[0], login);
+        }
       } else {
-        this.log("persistData: Update matched login", loginToUpdate.guid);
-        this._updateLogin(loginToUpdate, login);
-      }
-
-      if (loginToRemove) {
-        this.log("persistData: removing login", loginToRemove.guid);
-        Services.logins.removeLogin(loginToRemove);
+        Cu.reportError("Unexpected match of multiple logins.");
       }
     };
 
@@ -1454,21 +1414,15 @@ LoginManagerPrompter.prototype = {
    *                       The old login we may want to update.
    * @param {nsILoginInfo} aNewLogin
    *                       The new login from the page form.
-   * @param {boolean} [dismissed = false]
-   *                  If the prompt should be automatically dismissed on being shown.
-   * @param {boolean} [notifySaved = false]
-   *                  Whether the notification should indicate that a login has been saved
-   * @param {string} [autoSavedLoginGuid = ""]
-   *                 A guid value for the old login to be removed if the changes match it
-   *                 to a different login
+   * @param dismissed
+   *        A boolean indicating if the prompt should be automatically
+   *        dismissed on being shown.
+   * @param notifySaved
+   *        A boolean value indicating whether the notification should indicate that
+   *        a login has been saved
    */
-  promptToChangePassword(
-    aOldLogin,
-    aNewLogin,
-    dismissed = false,
-    notifySaved = false,
-    autoSavedLoginGuid = ""
-  ) {
+  promptToChangePassword(aOldLogin, aNewLogin, dismissed, notifySaved) {
+    this.log("promptToChangePassword");
     let notifyObj = this._getPopupNote();
 
     if (notifyObj) {
@@ -1477,8 +1431,7 @@ LoginManagerPrompter.prototype = {
         aOldLogin,
         aNewLogin,
         dismissed,
-        notifySaved,
-        autoSavedLoginGuid
+        notifySaved
       );
     } else {
       this._showChangeLoginDialog(aOldLogin, aNewLogin);
@@ -1508,8 +1461,7 @@ LoginManagerPrompter.prototype = {
     aOldLogin,
     aNewLogin,
     dismissed = false,
-    notifySaved = false,
-    autoSavedLoginGuid = ""
+    notifySaved = false
   ) {
     let login = aOldLogin.clone();
     login.origin = aNewLogin.origin;
@@ -1539,7 +1491,6 @@ LoginManagerPrompter.prototype = {
       {
         notifySaved,
         messageStringID,
-        autoSavedLoginGuid,
       }
     );
 
@@ -1931,26 +1882,21 @@ LoginManagerPrompter.prototype = {
    * to match a submitted login, instead of creating a new one.
    *
    * Given a login and a loginList, it filters the login list
-   * to find every login with either:
-   * - the same username as aLogin
-   * - the same password as aLogin and an empty username
-   *   so the user can add a username.
-   * - the same guid as the given login when it has an empty username
+   * to find every login with either the same username as aLogin
+   * or with the same password as aLogin and an empty username
+   * so the user can add a username.
    *
    * @param {nsILoginInfo} aLogin
    *                       login to use as filter.
    * @param {nsILoginInfo[]} aLoginList
    *                         Array of logins to filter.
-   * @param {String} includeGUID
-   *                 guid value for login that not be filtered out
    * @returns {nsILoginInfo[]} the filtered array of logins.
    */
-  _filterUpdatableLogins(aLogin, aLoginList, includeGUID) {
+  _filterUpdatableLogins(aLogin, aLoginList) {
     return aLoginList.filter(
       l =>
         l.username == aLogin.username ||
-        (l.password == aLogin.password && !l.username) ||
-        (includeGUID && includeGUID == l.guid)
+        (l.password == aLogin.password && !l.username)
     );
   },
 }; // end of LoginManagerPrompter implementation

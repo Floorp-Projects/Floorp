@@ -7,77 +7,31 @@ add_task(async function test_save_change() {
     {
       username: "username",
       password: "password",
-      expectOutcome: [
-        {
-          username: "username",
-          password: "password",
-        },
-      ],
     },
     {
       username: "",
       password: "password",
-      expectOutcome: [
-        {
-          username: "",
-          password: "password",
-        },
-      ],
     },
     {
       username: "username",
       oldPassword: "password",
       password: "newPassword",
-      expectOutcome: [
-        {
-          username: "username",
-          password: "newPassword",
-        },
-      ],
     },
     {
       username: "",
       oldPassword: "password",
       password: "newPassword",
-      expectOutcome: [
-        {
-          username: "",
-          password: "newPassword",
-        },
-      ],
-    },
-    {
-      oldUsername: "",
-      username: "username",
-      oldPassword: "password",
-      password: "newPassword",
-      expectOutcome: [
-        {
-          username: "",
-          password: "password",
-        },
-        {
-          username: "username",
-          password: "newPassword",
-        },
-      ],
     },
   ];
 
-  for (let {
-    oldUsername,
-    username,
-    oldPassword,
-    password,
-    expectOutcome,
-  } of testCases) {
+  for (let { username, oldPassword, password } of testCases) {
     // Add a login for the origin of the form if testing a change notification.
     if (oldPassword) {
       Services.logins.addLogin(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
-          username: typeof oldUsername !== "undefined" ? oldUsername : username,
+          username,
           password: oldPassword,
         })
       );
@@ -108,7 +62,6 @@ add_task(async function test_save_change() {
           doc.getElementById("form-basic").submit();
         });
         await promiseShown;
-        let notif = PopupNotifications.getNotification("password", browser);
         let notificationElement = PopupNotifications.panel.childNodes[0];
         // Style flush to make sure binding is attached
         notificationElement.querySelector("#password-notification-password")
@@ -129,24 +82,22 @@ add_task(async function test_save_change() {
         // Simulate the action on the notification to request the login to be
         // saved, and wait for the data to be updated or saved based on the type
         // of operation we expect.
-        let expectedNotification;
-        if (oldPassword !== undefined && oldUsername !== undefined) {
-          expectedNotification = "addLogin";
-        } else if (oldPassword !== undefined) {
-          expectedNotification = "modifyLogin";
-        } else {
-          expectedNotification = "addLogin";
-        }
+        let expectedNotification = oldPassword ? "modifyLogin" : "addLogin";
         let promiseLogin = TestUtils.topicObserved(
           "passwordmgr-storage-changed",
           (_, data) => data == expectedNotification
         );
         notificationElement.button.doCommand();
-        await promiseLogin;
-        await cleanupDoorhanger(notif); // clean slate for the next test
+        let [result] = await promiseLogin;
 
         // Check that the values in the database match the expected values.
-        verifyLogins(expectOutcome);
+        let login = oldPassword
+          ? result
+              .QueryInterface(Ci.nsIArray)
+              .queryElementAt(1, Ci.nsILoginInfo)
+          : result.QueryInterface(Ci.nsILoginInfo);
+        Assert.equal(login.username, username);
+        Assert.equal(login.password, password);
       }
     );
 

@@ -47,7 +47,6 @@ add_task(async function test_doorhanger_dismissal_un() {
       let notif = getCaptureDoorhanger("password-save");
       ok(notif, "got notification popup");
       ok(notif.dismissed, "notification popup was automatically dismissed");
-      await cleanupDoorhanger(notif);
     }
   );
 });
@@ -83,7 +82,6 @@ add_task(async function test_doorhanger_dismissal_pw() {
       let notif = getCaptureDoorhanger("password-save");
       ok(notif, "got notification popup");
       ok(notif.dismissed, "notification popup was automatically dismissed");
-      await cleanupDoorhanger(notif);
     }
   );
 });
@@ -109,13 +107,12 @@ add_task(async function test_doorhanger_shown_on_un_with_invalid_ccnumber() {
       });
       await processedPromise;
 
-      let notif = await getCaptureDoorhangerThatMayOpen("password-save");
+      let notif = getCaptureDoorhanger("password-save");
       ok(notif, "got notification popup");
       ok(
         !notif.dismissed,
         "notification popup was not automatically dismissed"
       );
-      await cleanupDoorhanger(notif);
     }
   );
 });
@@ -156,7 +153,6 @@ add_task(async function test_doorhanger_dismissal_on_change() {
       let notif = getCaptureDoorhanger("password-save");
       ok(notif, "got notification popup");
       ok(notif.dismissed, "notification popup was automatically dismissed");
-      await cleanupDoorhanger(notif);
     }
   );
 });
