@@ -51,6 +51,7 @@
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"  // for TransactionManager
+#include "mozilla/dom/AbstractRange.h"   // for AbstractRange
 #include "mozilla/dom/CharacterData.h"   // for CharacterData
 #include "mozilla/dom/DataTransfer.h"    // for DataTransfer
 #include "mozilla/dom/Element.h"         // for Element, nsINode::AsElement
@@ -4623,21 +4624,22 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
   return NS_OK;
 }
 
-nsresult EditorBase::HandleInlineSpellCheck(nsINode* previousSelectedNode,
-                                            uint32_t previousSelectedOffset,
-                                            nsINode* aStartContainer,
-                                            uint32_t aStartOffset,
-                                            nsINode* aEndContainer,
-                                            uint32_t aEndOffset) {
+nsresult EditorBase::HandleInlineSpellCheck(
+    const EditorDOMPoint& aPreviouslySelectedStart,
+    const AbstractRange* aRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (!mInlineSpellChecker) {
     return NS_OK;
   }
   return mInlineSpellChecker->SpellCheckAfterEditorChange(
-      GetTopLevelEditSubAction(), *SelectionRefPtr(), previousSelectedNode,
-      previousSelectedOffset, aStartContainer, aStartOffset, aEndContainer,
-      aEndOffset);
+      GetTopLevelEditSubAction(), *SelectionRefPtr(),
+      aPreviouslySelectedStart.GetContainer(),
+      aPreviouslySelectedStart.Offset(),
+      aRange ? aRange->GetStartContainer() : nullptr,
+      aRange ? aRange->StartOffset() : 0,
+      aRange ? aRange->GetEndContainer() : nullptr,
+      aRange ? aRange->EndOffset() : 0);
 }
 
 Element* EditorBase::FindSelectionRoot(nsINode* aNode) const {
@@ -5262,7 +5264,8 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
 
     // Parent's mTopLevelEditSubActionData should be referred instead so that
-    // we don't need to set mTopLevelEditSubActionData.mSelectedRange here.
+    // we don't need to set mTopLevelEditSubActionData.mSelectedRange nor
+    // mTopLevelEditActionData.mChangedRange here.
 
     mDirectionOfTopLevelEditSubAction =
         mParentData->mDirectionOfTopLevelEditSubAction;
@@ -5277,6 +5280,8 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mTopLevelEditSubActionData.mSelectedRange =
           mEditorBase.AsHTMLEditor()
               ->GetSelectedRangeItemForTopLevelEditSubAction();
+      mTopLevelEditSubActionData.mChangedRange =
+          mEditorBase.AsHTMLEditor()->GetChangedRangeForTopLevelEditSubAction();
     }
   }
   mEditorBase.mEditActionData = this;
