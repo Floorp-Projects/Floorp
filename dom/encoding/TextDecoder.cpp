@@ -88,7 +88,11 @@ void TextDecoder::Decode(Span<const uint8_t> aInput, const bool aStream,
   // If the internal streaming flag of the decoder object is not set,
   // then reset the encoding algorithm state to the default values
   if (!aStream) {
-    mDecoder->Encoding()->NewDecoderWithBOMRemovalInto(*mDecoder);
+    if (mIgnoreBOM) {
+      mDecoder->Encoding()->NewDecoderWithoutBOMHandlingInto(*mDecoder);
+    } else {
+      mDecoder->Encoding()->NewDecoderWithBOMRemovalInto(*mDecoder);
+    }
   }
 }
 
