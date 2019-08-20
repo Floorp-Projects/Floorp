@@ -603,7 +603,6 @@ def check_compiler(compiler, language, target):
 @imports(_from='__builtin__', _import='open')
 @imports('json')
 @imports('os')
-@imports('subprocess')
 @imports(_from='mozbuild.util', _import='system_encoding')
 def get_vc_paths(topsrcdir):
     def vswhere(args):
@@ -616,7 +615,7 @@ def get_vc_paths(topsrcdir):
         if not os.path.exists(vswhere):
             return []
         return json.loads(
-            subprocess.check_output([vswhere, '-format', 'json'] + args)
+            check_cmd_output(vswhere, '-format', 'json', *args)
             .decode(system_encoding, 'replace'))
 
     for install in vswhere(['-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
