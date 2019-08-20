@@ -4169,8 +4169,6 @@ module.exports = {
 /***/ 513:
 /***/ (function(module, exports, __webpack_require__) {
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -4349,10 +4347,6 @@ function filterScopes(items, pc, lastItem, index) {
 
 class XScope {
   constructor(xScopeData, sourceMapContext) {
-    _defineProperty(this, "xScope", void 0);
-
-    _defineProperty(this, "sourceMapContext", void 0);
-
     this.xScope = xScopeData;
     this.sourceMapContext = sourceMapContext;
   }
@@ -4416,8 +4410,6 @@ module.exports = {
 /***/ 514:
 /***/ (function(module, exports) {
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -4427,8 +4419,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 /* eslint-disable no-inline-comments */
 class Value {
   constructor(val) {
-    _defineProperty(this, "val", void 0);
-
     this.val = val;
   }
 
