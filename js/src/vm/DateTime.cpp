@@ -159,6 +159,27 @@ static int32_t UTCToLocalStandardOffsetSeconds() {
 
 bool js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
     ResetTimeZoneMode mode) {
+  // Nothing to do when an update request is already enqueued.
+  if (localTZAStatus_ == LocalTimeZoneAdjustmentStatus::NeedsUpdate) {
+    return true;
+  }
+
+  // Mark the state as needing an update, but defer the actual update until it's
+  // actually needed to delay any system calls to the last possible moment. This
+  // is beneficial when this method is called during start-up, because it avoids
+  // main-thread I/O blocking the process.
+  if (mode == ResetTimeZoneMode::ResetEvenIfOffsetUnchanged) {
+    localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
+    return true;
+  }
+
+  // In all other cases simply check if we need to perform an update.
+  return resetTimeZoneAdjustment(mode);
+}
+
+bool js::DateTimeInfo::resetTimeZoneAdjustment(ResetTimeZoneMode mode) {
+  localTZAStatus_ = LocalTimeZoneAdjustmentStatus::Valid;
+
   /*
    * The difference between local standard time and UTC will never change for
    * a given time zone.
@@ -195,8 +216,7 @@ bool js::DateTimeInfo::internalUpdateTimeZoneAdjustment(
 }
 
 js::DateTimeInfo::DateTimeInfo() {
-  internalUpdateTimeZoneAdjustment(
-      ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
+  localTZAStatus_ = LocalTimeZoneAdjustmentStatus::NeedsUpdate;
 }
 
 js::DateTimeInfo::~DateTimeInfo() = default;
@@ -543,7 +563,7 @@ void js::ResetTimeZoneInternal(ResetTimeZoneMode mode) {
 }
 
 JS_PUBLIC_API void JS::ResetTimeZone() {
-  js::ResetTimeZoneInternal(js::ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);
+  js::ResetTimeZoneInternal(js::ResetTimeZoneMode::ResetEvenIfOffsetUnchanged);
 }
 
 #if defined(XP_WIN)

@@ -225,6 +225,8 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
     return false;
   }
 
+  // As a hack, we clear our timezone cache every time we create a new runtime.
+  // Also see the comment in JS::Realm::init().
   js::ResetTimeZoneInternal(ResetTimeZoneMode::DontResetIfOffsetUnchanged);
 
   if (!parentRuntime) {
