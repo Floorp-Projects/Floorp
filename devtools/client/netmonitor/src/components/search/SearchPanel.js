@@ -58,6 +58,12 @@ class SearchPanel extends Component {
     this.provider = SearchProvider;
   }
 
+  componentDidMount() {
+    if (this.searchboxRef) {
+      this.searchboxRef.current.focus();
+    }
+  }
+
   /**
    * Custom TreeView label rendering. The search result
    * value isn't rendered in separate column, but in the

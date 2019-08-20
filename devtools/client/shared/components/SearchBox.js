@@ -76,7 +76,7 @@ class SearchBox extends PureComponent {
     });
     this.shortcuts.on(this.props.keyShortcut, event => {
       event.preventDefault();
-      this.inputRef.current.focus();
+      this.focus();
     });
   }
 
@@ -88,6 +88,12 @@ class SearchBox extends PureComponent {
     // Clean up an existing timeout.
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
+    }
+  }
+
+  focus() {
+    if (this.inputRef) {
+      this.inputRef.current.focus();
     }
   }
 
