@@ -160,6 +160,7 @@ describe("ElementNode - Node", () => {
     renderedComponent.simulate("mouseout");
 
     expect(onDOMNodeMouseOut.mock.calls).toHaveLength(1);
+    expect(onDOMNodeMouseOut.mock.calls[0][0]).toEqual(stub);
   });
 
   it("calls the expected function when mouseover is fired on Rep", () => {
