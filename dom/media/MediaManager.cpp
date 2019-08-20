@@ -4072,7 +4072,7 @@ void SourceListener::Activate(RefPtr<MediaDevice> aAudioDevice,
   MOZ_ASSERT(!mStopped, "Cannot activate stopped source listener");
   MOZ_ASSERT(!Activated(), "Already activated");
 
-  mMainThreadCheck = GetCurrentVirtualThread();
+  mMainThreadCheck = PR_GetCurrentThread();
   if (aAudioDevice) {
     bool offWhileDisabled =
         aAudioDevice->GetMediaSource() == MediaSourceEnum::Microphone &&

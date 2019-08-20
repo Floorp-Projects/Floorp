@@ -418,7 +418,6 @@ void nsThread::ThreadFunc(void* aArg) {
   MOZ_ASSERT(self->mEvents);
 
   self->mThread = PR_GetCurrentThread();
-  self->mVirtualThread = GetCurrentVirtualThread();
   self->mEventTarget->SetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
@@ -594,7 +593,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
           new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
-      mThread(nullptr),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -617,7 +615,6 @@ nsThread::nsThread()
       mEventTarget(nullptr),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
-      mThread(nullptr),
       mStackSize(0),
       mNestedEventLoopDepth(0),
       mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
@@ -692,7 +689,6 @@ nsresult nsThread::Init(const nsACString& aName) {
 
 nsresult nsThread::InitCurrentThread() {
   mThread = PR_GetCurrentThread();
-  mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
   InitCommon();
 
@@ -736,13 +732,13 @@ nsThread::IsOnCurrentThread(bool* aResult) {
   if (mEventTarget) {
     return mEventTarget->IsOnCurrentThread(aResult);
   }
-  *aResult = GetCurrentVirtualThread() == mVirtualThread;
+  *aResult = PR_GetCurrentThread() == mThread;
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
 nsThread::IsOnCurrentThreadInfallible() {
-  // Rely on mVirtualThread being correct.
+  // Rely on mThread being correct.
   MOZ_CRASH("IsOnCurrentThreadInfallible should never be called on nsIThread");
 }
 
@@ -859,7 +855,6 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
   // Now, it should be safe to join without fear of dead-locking.
 
   PR_JoinThread(mThread);
-  mThread = nullptr;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
