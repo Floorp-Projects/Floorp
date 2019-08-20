@@ -231,8 +231,10 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   MOZ_ASSERT(zone->runtimeFromAnyThread() == trc->runtime());
 
-  // It shouldn't be possible to trace into zones used by helper threads.
-  MOZ_ASSERT(!zone->usedByHelperThread());
+  // It shouldn't be possible to trace into zones used by helper threads, except
+  // for use of ClearEdgesTracer by GCManagedDeletePolicy on a helper thread.
+  MOZ_ASSERT_IF(!IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges),
+                !zone->usedByHelperThread());
 
   MOZ_ASSERT(thing->isAligned());
   MOZ_ASSERT(
