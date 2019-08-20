@@ -566,18 +566,6 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
-    {
-      // bug 1543090
-      path: "GreD:omni.ja",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1543090
-      path: "XCurProcD:omni.ja",
-      condition: WIN,
-      stat: 2,
-    },
   ],
 
   // Things that are expected to be completely out of the startup path
