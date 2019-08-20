@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-date.prototype.toisostring
+es5id: 15.9.5.43-0-7
 description: >
     Date.prototype.toISOString - TypeError is thrown when this is any
     primitive values

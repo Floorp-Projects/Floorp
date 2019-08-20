@@ -4,6 +4,7 @@
 /*---
 description: No iteration occurs for an "empty" array binding pattern (arrow function expression)
 esid: sec-arrow-function-definitions-runtime-semantics-evaluation
+es6id: 14.2.16
 features: [generators, destructuring-binding]
 flags: [generated]
 info: |

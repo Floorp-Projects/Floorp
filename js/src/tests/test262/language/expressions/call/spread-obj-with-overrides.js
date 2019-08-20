@@ -4,6 +4,7 @@
 /*---
 description: Object Spread properties being overriden (CallExpression)
 esid: sec-function-calls-runtime-semantics-evaluation
+es6id: 12.3.4.1
 features: [Symbol, object-spread]
 flags: [generated]
 info: |

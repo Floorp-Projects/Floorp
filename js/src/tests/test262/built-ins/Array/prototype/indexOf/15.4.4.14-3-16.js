@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-3-16
 description: >
     Array.prototype.indexOf - 'length' is a string containing a hex
     number

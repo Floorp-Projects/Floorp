@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-8-c-6
 description: >
     Array.prototype.reduceRight - side effects produced by step 3 are
     visible when an exception occurs

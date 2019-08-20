@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-c-i-3
 description: >
     Array.prototype.map - element to be retrieved is own data property
     that overrides an inherited data property on an Array-like object

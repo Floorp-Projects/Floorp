@@ -4,6 +4,7 @@
 /*---
 info: If length is zero, return the empty string
 esid: sec-array.prototype.join
+es5id: 15.4.4.5_A1.1_T1
 description: Checking this use new Array() and []
 ---*/
 

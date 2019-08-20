@@ -4,6 +4,7 @@
 /*---
 description: Variable binding is initialized to `undefined` in outer scope (IfStatement without an else clause in eval code)
 esid: sec-functiondeclarations-in-ifstatement-statement-clauses
+es6id: B.3.4
 flags: [generated, noStrict]
 info: |
     The following rules for IfStatement augment those in 13.6:

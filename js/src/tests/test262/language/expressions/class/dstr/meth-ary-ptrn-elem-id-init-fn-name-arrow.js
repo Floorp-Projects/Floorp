@@ -4,6 +4,7 @@
 /*---
 description: SingleNameBinding does assign name to arrow functions (class expression method)
 esid: sec-class-definitions-runtime-semantics-evaluation
+es6id: 14.5.16
 features: [destructuring-binding]
 flags: [generated]
 info: |

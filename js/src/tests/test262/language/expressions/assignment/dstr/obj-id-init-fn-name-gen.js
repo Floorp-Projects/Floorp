@@ -4,6 +4,7 @@
 /*---
 description: Assignment of function `name` attribute (GeneratorExpression) (AssignmentExpression)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [generators, destructuring-binding]
 flags: [generated]
 includes: [propertyHelper.js]

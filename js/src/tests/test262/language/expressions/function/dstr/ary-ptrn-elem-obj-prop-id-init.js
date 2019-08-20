@@ -4,6 +4,7 @@
 /*---
 description: BindingElement with object binding pattern and initializer is used (function expression)
 esid: sec-function-definitions-runtime-semantics-evaluation
+es6id: 14.1.20
 features: [destructuring-binding]
 flags: [generated]
 info: |

@@ -4,6 +4,7 @@
 /*---
 description: Abrupt completion when evaluating expression (Class declaration, instance method)
 esid: sec-runtime-semantics-classdefinitionevaluation
+es6id: 14.5.14
 flags: [generated]
 info: |
     [...]

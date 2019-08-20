@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-7-b-14
 description: >
     Array.prototype.some - decreasing length of array causes index
     property not to be visited

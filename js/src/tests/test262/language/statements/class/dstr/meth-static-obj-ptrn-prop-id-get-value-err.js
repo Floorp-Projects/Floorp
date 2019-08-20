@@ -4,6 +4,7 @@
 /*---
 description: Error thrown when accessing the corresponding property of the value object (static class expression method)
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
+es6id: 14.5.15
 features: [destructuring-binding]
 flags: [generated]
 info: |

@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-string.prototype.charcodeat
+es6id: 21.1.3.2
 description: Coercion of "pos" string value into number
 info: |
   [...]

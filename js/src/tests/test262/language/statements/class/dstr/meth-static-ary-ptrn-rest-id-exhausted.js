@@ -4,6 +4,7 @@
 /*---
 description: RestElement applied to an exhausted iterator (static class expression method)
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
+es6id: 14.5.15
 features: [Symbol.iterator, destructuring-binding]
 flags: [generated]
 info: |

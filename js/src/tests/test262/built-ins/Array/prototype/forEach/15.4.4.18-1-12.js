@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.foreach
+es5id: 15.4.4.18-1-12
 description: Array.prototype.forEach applied to RegExp object
 ---*/
 

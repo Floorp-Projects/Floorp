@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 18.2.3
 esid: sec-isnan-number
 description: >
   Use non-object value returned from @@toPrimitive method

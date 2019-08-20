@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-10-1
 description: >
     Array.prototype.indexOf returns -1 for elements not present in
     array

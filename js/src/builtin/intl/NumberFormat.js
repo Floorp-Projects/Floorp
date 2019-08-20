@@ -678,26 +678,23 @@ function numberFormatLocaleData() {
 }
 
 /**
- * Create function to be cached and returned by Intl.NumberFormat.prototype.format.
+ * Function to be bound and returned by Intl.NumberFormat.prototype.format.
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.4.
  */
-function createNumberFormatFormat(nf) {
-    // This function is not inlined in $Intl_NumberFormat_format_get to avoid
-    // creating a call-object on each call to $Intl_NumberFormat_format_get.
-    return function(value) {
-        // Step 1 (implicit).
+function numberFormatFormatToBind(value) {
+    // Step 1.
+    var nf = this;
 
-        // Step 2.
-        assert(IsObject(nf), "InitializeNumberFormat called with non-object");
-        assert(GuardToNumberFormat(nf) !== null, "InitializeNumberFormat called with non-NumberFormat");
+    // Step 2.
+    assert(IsObject(nf), "InitializeNumberFormat called with non-object");
+    assert(GuardToNumberFormat(nf) !== null, "InitializeNumberFormat called with non-NumberFormat");
 
-        // Steps 3-4.
-        var x = ToNumeric(value);
+    // Steps 3-4.
+    var x = ToNumeric(value);
 
-        // Step 5.
-        return intl_FormatNumber(nf, x, /* formatToParts = */ false);
-    };
+    // Step 5.
+    return intl_FormatNumber(nf, x, /* formatToParts = */ false);
 }
 
 /**
@@ -722,8 +719,11 @@ function $Intl_NumberFormat_format_get() {
 
     // Step 4.
     if (internals.boundFormat === undefined) {
-        // Steps 4.a-c.
-        internals.boundFormat = createNumberFormatFormat(nf);
+        // Steps 4.a-b.
+        var F = callFunction(FunctionBind, numberFormatFormatToBind, nf);
+
+        // Step 4.c.
+        internals.boundFormat = F;
     }
 
     // Step 5.

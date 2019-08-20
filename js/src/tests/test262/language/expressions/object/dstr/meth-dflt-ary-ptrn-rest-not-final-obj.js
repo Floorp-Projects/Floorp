@@ -5,6 +5,7 @@
 /*---
 description: Rest element (object binding pattern) may not be followed by any element (method (default parameter))
 esid: sec-runtime-semantics-definemethod
+es6id: 14.3.8
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 negative:

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-c-i-19
 description: >
     Array.prototype.map - element to be retrieved is own accessor
     property without a get function that overrides an inherited

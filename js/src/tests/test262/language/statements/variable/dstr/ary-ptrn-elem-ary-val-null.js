@@ -4,6 +4,7 @@
 /*---
 description: Nested array destructuring with a null value (`var` statement)
 esid: sec-variable-statement-runtime-semantics-evaluation
+es6id: 13.3.2.4
 features: [destructuring-binding]
 flags: [generated]
 info: |

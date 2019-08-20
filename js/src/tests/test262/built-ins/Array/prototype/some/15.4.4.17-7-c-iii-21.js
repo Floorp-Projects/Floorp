@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-7-c-iii-21
 description: Array.prototype.some - return value of callbackfn is a Date object
 ---*/
 

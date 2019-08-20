@@ -4,6 +4,7 @@
 /*---
 description: SingleNameBinding assigns name to "anonymous" generator functions (function declaration (default parameter))
 esid: sec-function-definitions-runtime-semantics-instantiatefunctionobject
+es6id: 14.1.19
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-2-18
 description: >
     Array.prototype.some applied to String object which implements its
     own property get method

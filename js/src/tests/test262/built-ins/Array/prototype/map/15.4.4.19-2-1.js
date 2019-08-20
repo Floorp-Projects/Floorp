@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-2-1
 description: >
     Array.prototype.map - applied to Array-like object when 'length'
     is an own data property

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-4-6
 description: Array.prototype.map throws TypeError if callbackfn is string
 ---*/
 

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-8-b-iii-1-28
 description: >
     Array.prototype.reduceRight applied to String object, which
     implements its own property get method

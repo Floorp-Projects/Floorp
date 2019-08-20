@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-date.prototype.settime
+es6id: 20.3.4.27
 description: >
   Date.prototype.setTime.name is "setTime".
 info: |

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-get-regexp.prototype.source
+es6id: 21.2.5.10
 description: >
   get RegExp.prototype.source.name is "get source".
 info: |

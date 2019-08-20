@@ -4,6 +4,7 @@
 /*---
 description: Getter manipulates outter object before it's spread operation (CallExpression)
 esid: sec-function-calls-runtime-semantics-evaluation
+es6id: 12.3.4.1
 features: [object-spread]
 flags: [generated]
 info: |

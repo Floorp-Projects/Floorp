@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-2-8
 description: >
     Array.prototype.map - applied to Array-like object, 'length' is an
     own accessor property that overrides an inherited data property

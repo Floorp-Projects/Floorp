@@ -3,6 +3,7 @@
 /*---
 description: Math.LN10 is a numeric value
 esid: sec-math.ln10
+es6id: 20.2.1.2
 info: |
     The Number value for the natural logarithm of 10, which is approximately
     2.302585092994046.

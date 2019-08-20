@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-date.prototype.getminutes
+es6id: 20.3.4.7
 description: Behavior when "this" value is not an Object
 info: |
   1. Let t be ? thisTimeValue(this value).

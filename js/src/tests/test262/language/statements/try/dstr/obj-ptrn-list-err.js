@@ -4,6 +4,7 @@
 /*---
 description: Binding property list evaluation is interrupted by an abrupt completion (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

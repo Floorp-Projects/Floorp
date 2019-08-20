@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.some
+es5id: 15.4.4.17-2-1
 description: >
     Array.prototype.some - 'length' is own data property on an
     Array-like object

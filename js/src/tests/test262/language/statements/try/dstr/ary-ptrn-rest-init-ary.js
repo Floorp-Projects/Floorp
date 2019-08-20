@@ -5,6 +5,7 @@
 /*---
 description: Rest element (nested array pattern) does not support initializer (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 negative:

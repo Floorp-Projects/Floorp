@@ -4,6 +4,7 @@
 /*---
 description: Nested object destructuring with a value of `undefined` (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

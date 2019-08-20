@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-1-6
 description: Array.prototype.map - applied to Number object
 ---*/
 

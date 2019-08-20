@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.reduceright
+es5id: 15.4.4.22-8-b-2
 description: >
     Array.prototype.reduceRight - modifications to length don't change
     number of iterations in step 9

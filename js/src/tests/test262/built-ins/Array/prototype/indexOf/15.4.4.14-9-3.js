@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.indexof
+es5id: 15.4.4.14-9-3
 description: Array.prototype.indexOf must return correct index(string)
 ---*/
 

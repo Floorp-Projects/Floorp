@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-properties-of-the-dataview-constructor
+es6id: 24.2.3
 description: >
   The prototype of DataView is Function.prototype
 info: |

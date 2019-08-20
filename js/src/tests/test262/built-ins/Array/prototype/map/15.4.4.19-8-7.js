@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-7
 description: Array.prototype.map successful to delete the object in callbackfn
 ---*/
 

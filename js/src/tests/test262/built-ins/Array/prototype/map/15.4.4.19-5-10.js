@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-5-10
 description: Array.prototype.map - Array object can be used as thisArg
 ---*/
 

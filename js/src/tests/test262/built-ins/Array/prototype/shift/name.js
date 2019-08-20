@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.shift
+es6id: 22.1.3.21
 description: >
   Array.prototype.shift.name is "shift".
 info: |

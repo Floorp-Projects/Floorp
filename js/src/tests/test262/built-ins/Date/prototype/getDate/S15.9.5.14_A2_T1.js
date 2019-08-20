@@ -4,6 +4,7 @@
 /*---
 info: The "length" property of the "getDate" is 0
 esid: sec-date.prototype.getdate
+es5id: 15.9.5.14_A2_T1
 description: The "length" property of the "getDate" is 0
 ---*/
 

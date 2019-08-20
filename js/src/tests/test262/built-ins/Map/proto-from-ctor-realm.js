@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-map-iterable
+es6id: 23.1.1.1
 description: Default [[Prototype]] value derived from realm of the newTarget
 info: |
     [...]

@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-6
 description: >
     Array.prototype.map visits deleted element in array after the call
     when same index is also present in prototype

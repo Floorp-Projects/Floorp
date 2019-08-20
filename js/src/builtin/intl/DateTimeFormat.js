@@ -788,26 +788,23 @@ function dateTimeFormatLocaleData() {
 }
 
 /**
- * Create function to be cached and returned by Intl.DateTimeFormat.prototype.format.
+ * Function to be bound and returned by Intl.DateTimeFormat.prototype.format.
  *
  * Spec: ECMAScript Internationalization API Specification, 12.1.5.
  */
-function createDateTimeFormatFormat(dtf) {
-    // This function is not inlined in $Intl_DateTimeFormat_format_get to avoid
-    // creating a call-object on each call to $Intl_DateTimeFormat_format_get.
-    return function(date) {
-        // Step 1 (implicit).
+function dateTimeFormatFormatToBind(date) {
+    // Step 1.
+    var dtf = this;
 
-        // Step 2.
-        assert(IsObject(dtf), "dateTimeFormatFormatToBind called with non-Object");
-        assert(GuardToDateTimeFormat(dtf) !== null, "dateTimeFormatFormatToBind called with non-DateTimeFormat");
+    // Step 2.
+    assert(IsObject(dtf), "dateTimeFormatFormatToBind called with non-Object");
+    assert(GuardToDateTimeFormat(dtf) !== null, "dateTimeFormatFormatToBind called with non-DateTimeFormat");
 
-        // Steps 3-4.
-        var x = (date === undefined) ? std_Date_now() : ToNumber(date);
+    // Steps 3-4.
+    var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
-        // Step 5.
-        return intl_FormatDateTime(dtf, x, /* formatToParts = */ false);
-    };
+    // Step 5.
+    return intl_FormatDateTime(dtf, x, /* formatToParts = */ false);
 }
 
 /**
@@ -832,8 +829,11 @@ function $Intl_DateTimeFormat_format_get() {
 
     // Step 4.
     if (internals.boundFormat === undefined) {
-        // Steps 4.a-c.
-        internals.boundFormat = createDateTimeFormatFormat(dtf);
+        // Steps 4.a-b.
+        var F = callFunction(FunctionBind, dateTimeFormatFormatToBind, dtf);
+
+        // Step 4.c.
+        internals.boundFormat = F;
     }
 
     // Step 5.

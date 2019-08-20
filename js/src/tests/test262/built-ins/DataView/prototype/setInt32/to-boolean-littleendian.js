@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-dataview.prototype.setint32
+es6id: 24.2.4.17
 description: >
   Boolean littleEndian argument coerced in ToBoolean
 info: |

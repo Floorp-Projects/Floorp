@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.every
+es5id: 15.4.4.16-7-2
 description: >
     Array.prototype.every considers new value of elements in array
     after the call

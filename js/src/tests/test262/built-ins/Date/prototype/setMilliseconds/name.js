@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-date.prototype.setmilliseconds
+es6id: 20.3.4.23
 description: >
   Date.prototype.setMilliseconds.name is "setMilliseconds".
 info: |

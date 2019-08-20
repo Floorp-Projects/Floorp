@@ -4,6 +4,7 @@
 /*---
 description: Value specifed for object binding pattern must be object coercible (null) (class expression method (default parameter))
 esid: sec-runtime-semantics-bindingclassdeclarationevaluation
+es6id: 14.5.15
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 info: |

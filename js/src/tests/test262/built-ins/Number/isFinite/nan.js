@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+es6id: 20.1.2.2
 esid: sec-number.isfinite
 description: >
   Return false if argument is NaN

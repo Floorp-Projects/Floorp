@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-get-regexp-@@species
+es6id: 21.2.4.2
 description: Return value of @@species accessor method
 info: |
     1. Return the this value.

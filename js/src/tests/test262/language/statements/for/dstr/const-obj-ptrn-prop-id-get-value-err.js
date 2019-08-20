@@ -4,6 +4,7 @@
 /*---
 description: Error thrown when accessing the corresponding property of the value object (for statement)
 esid: sec-for-statement-runtime-semantics-labelledevaluation
+es6id: 13.7.4.7
 features: [destructuring-binding]
 flags: [generated]
 info: |

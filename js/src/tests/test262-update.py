@@ -39,8 +39,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Segmenter",
     "WeakRef",
     "FinalizationGroup",
-    "optional-chaining",
-    "top-level-await",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",

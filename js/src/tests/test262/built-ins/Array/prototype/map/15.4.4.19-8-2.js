@@ -3,6 +3,7 @@
 
 /*---
 esid: sec-array.prototype.map
+es5id: 15.4.4.19-8-2
 description: >
     Array.prototype.map considers new value of elements in array after
     it is called

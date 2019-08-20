@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-date.prototype.gettimezoneoffset
+es6id: 20.3.4.11
 description: >
   Behavior when "this" value is an Object without a [[DateValue]] internal slot
 info: |

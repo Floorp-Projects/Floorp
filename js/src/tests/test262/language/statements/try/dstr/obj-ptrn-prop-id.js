@@ -4,6 +4,7 @@
 /*---
 description: Binding as specified via property name and identifier (try statement)
 esid: sec-runtime-semantics-catchclauseevaluation
+es6id: 13.15.7
 features: [destructuring-binding]
 flags: [generated]
 info: |
