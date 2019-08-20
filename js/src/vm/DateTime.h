@@ -238,7 +238,8 @@ class DateTimeInfo {
 
   /**
    * The offset in seconds from the current UTC time to the current local
-   * standard time (i.e. not including any offset due to DST).
+   * standard time (i.e. not including any offset due to DST) as computed by the
+   * operating system.
    *
    * Cached because retrieving this dynamically is Slow, and a certain venerable
    * benchmark which shall not be named depends on it being fast.
@@ -247,6 +248,27 @@ class DateTimeInfo {
    * system time zone to attempt to keep this reasonably up-to-date.  If
    * temporary inaccuracy can't be tolerated, JSAPI clients may call
    * JS::ResetTimeZone to forcibly sync this with the system time zone.
+   *
+   * In most cases this value is consistent with the raw time zone offset as
+   * returned by the ICU default time zone (`icu::TimeZone::getRawOffset()`),
+   * but it is possible to create cases where the operating system default time
+   * zone differs from the ICU default time zone. For example ICU doesn't
+   * support the full range of TZ environment variable settings, which can
+   * result in <ctime> returning a different time zone than what's returned by
+   * ICU. One example is "TZ=WGT3WGST,M3.5.0/-2,M10.5.0/-1", where <ctime>
+   * returns -3 hours as the local offset, but ICU flat out rejects the TZ value
+   * and instead infers the default time zone via "/etc/localtime" (on Unix).
+   * This offset can also differ from ICU when the operating system and ICU use
+   * different tzdata versions and the time zone rules of the current system
+   * time zone have changed. Or, on Windows, when the Windows default time zone
+   * can't be mapped to a IANA time zone, see for example
+   * <https://unicode-org.atlassian.net/browse/ICU-13845>.
+   *
+   * When ICU is exclusively used for time zone computations, that means when
+   * |ENABLE_INTL_API && !MOZ_SYSTEM_ICU| is true, this field is only used to
+   * detect system default time zone changes. It must not be used to convert
+   * between local and UTC time, because, as outlined above, this could lead to
+   * different results when compared to ICU.
    */
   int32_t utcToLocalStandardOffsetSeconds_;
 
