@@ -138,6 +138,10 @@ function findMatches(resource, query, data) {
   const resourceValue = getValue(data.key, resource);
   const resourceType = getType(resourceValue);
 
+  if (resource.hasOwnProperty("name") && resource.hasOwnProperty("value")) {
+    return searchInProperties(query, resource, data);
+  }
+
   switch (resourceType) {
     case "string":
       return searchInText(query, resourceValue, data);
@@ -148,6 +152,25 @@ function findMatches(resource, query, data) {
     default:
       return [];
   }
+}
+
+function searchInProperties(query, obj, data) {
+  const match = {
+    ...data,
+  };
+
+  if (obj.name.includes(query)) {
+    match.label = obj.name;
+  }
+
+  if (obj.name.includes(query) || obj.value.includes(query)) {
+    match.value = obj.value;
+    match.startIndex = obj.value.indexOf(query);
+
+    return match;
+  }
+
+  return [];
 }
 
 /**
@@ -175,27 +198,39 @@ function getValue(path, obj) {
  * @param query
  * @param text
  * @param data
- * @returns {*}
+ * @returns {Array}
  */
 function searchInText(query, text, data) {
-  const { type, label } = data;
+  const { type } = data;
   const lines = text.split(/\r\n|\r|\n/);
   const matches = [];
 
   // iterate through each line
-  lines.forEach((curr, i, arr) => {
+  lines.forEach((curr, i) => {
     const regexQuery = RegExp(query, "gmi");
+    const lineMatches = [];
     let singleMatch;
 
     while ((singleMatch = regexQuery.exec(lines[i])) !== null) {
       const startIndex = regexQuery.lastIndex;
-      matches.push({
-        type,
-        label,
-        line: i,
-        value: getTruncatedValue(lines[i], query, startIndex),
-        startIndex,
-      });
+      lineMatches.push(startIndex);
+    }
+
+    if (lineMatches.length !== 0) {
+      const line = i + 1 + "";
+      const match = {
+        ...data,
+        label: type !== "url" ? line : "Url",
+        line,
+        startIndex: lineMatches,
+      };
+
+      match.value =
+        lineMatches.length === 1
+          ? getTruncatedValue(lines[i], query, lineMatches[0])
+          : lines[i];
+
+      matches.push(match);
     }
   });
 
@@ -212,12 +247,11 @@ function searchInText(query, text, data) {
  */
 function searchInArray(query, arr, data) {
   const { type, key, label } = data;
-
   const matches = arr
     .filter(match => JSON.stringify(match).includes(query))
     .map((match, i) =>
       findMatches(match, query, {
-        label,
+        label: match.hasOwnProperty("name") ? match.name : label,
         key: key + ".[" + i + "]",
         type,
       })
@@ -227,8 +261,8 @@ function searchInArray(query, arr, data) {
 }
 
 /**
- * Return query match and up to 100 characters on left and right.
- * (100) + [matched query] + (100)
+ * Return query match and up to 50 characters on left and right.
+ * (50) + [matched query] + (50)
  * @param value
  * @param query
  * @param startIndex
@@ -238,14 +272,14 @@ function getTruncatedValue(value, query, startIndex) {
   const valueSize = value.length;
   const indexEnd = startIndex + query.length;
 
-  if (valueSize < 200 + query.length) {
+  if (valueSize < 100 + query.length) {
     return value;
   }
 
-  const start = value.substring(startIndex, startIndex - 100);
-  const end = value.substring(indexEnd, indexEnd + 100);
+  const start = value.substring(startIndex, startIndex - 50);
+  const end = value.substring(indexEnd, indexEnd + 50);
 
-  return start + query + end;
+  return start + end;
 }
 
 /**
@@ -257,44 +291,31 @@ function getTruncatedValue(value, query, startIndex) {
  * @returns {*}
  */
 function searchInObject(query, obj, data) {
-  const { type, label } = data;
+  const { type } = data;
   const matches = data.hasOwnProperty("collector") ? data.collector : [];
 
   for (const objectKey in obj) {
-    if (obj.hasOwnProperty(objectKey)) {
-      if (typeof obj[objectKey] === "object") {
-        searchInObject(obj[objectKey], query, {
-          collector: matches,
-          type,
-          label: objectKey,
-        });
-      }
+    const objectKeyType = getType(obj[objectKey]);
 
-      let location;
-
-      if (objectKey) {
-        if (objectKey.includes(query)) {
-          location = "name";
-        } else if (
-          typeof obj[objectKey] === "string" &&
-          obj[objectKey].includes(query)
-        ) {
-          location = "value";
-        }
-      }
-
-      if (!location) {
-        continue;
-      }
-
+    // if the value is an object, send to search in object
+    if (objectKeyType === "object" && Object.keys(obj[objectKey].length > 1)) {
+      searchInObject(query, obj[objectKey], {
+        ...data,
+        collector: matches,
+      });
+    } else if (
+      (objectKeyType === "string" && obj[objectKey].includes(query)) ||
+      objectKey.includes(query)
+    ) {
       const match = {
+        ...data,
         type,
-        label: objectKey,
       };
 
-      const value = location === "name" ? objectKey : obj[objectKey];
+      const value = obj[objectKey];
       const startIndex = value.indexOf(query);
 
+      match.label = objectKey;
       match.startIndex = startIndex;
       match.value = getTruncatedValue(value, query, startIndex);
 
