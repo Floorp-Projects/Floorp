@@ -129,7 +129,7 @@ class CustomTabConfigHelperTest {
         builder.enableUrlBarHiding()
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
-        assertFalse(customTabConfig.disableUrlbarHiding)
+        assertTrue(customTabConfig.enableUrlbarHiding)
     }
 
     @Test
