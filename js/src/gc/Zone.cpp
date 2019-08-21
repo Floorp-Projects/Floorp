@@ -31,32 +31,32 @@ Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
 ZoneAllocator::ZoneAllocator(JSRuntime* rt)
     : JS::shadow::Zone(rt, &rt->gc.marker),
-      zoneSize(&rt->gc.heapSize),
-      gcMallocBytes(nullptr),
-      gcJitBytes(nullptr),
-      gcJitThreshold(jit::MaxCodeBytesPerProcess * 0.8) {
+      gcHeapSize(&rt->gc.heapSize),
+      mallocHeapSize(nullptr),
+      jitHeapSize(nullptr),
+      jitHeapThreshold(jit::MaxCodeBytesPerProcess * 0.8) {
   AutoLockGC lock(rt);
   updateGCThresholds(rt->gc, GC_NORMAL, lock);
 }
 
 ZoneAllocator::~ZoneAllocator() {
 #ifdef DEBUG
-  gcMallocTracker.checkEmptyOnDestroy();
-  MOZ_ASSERT(zoneSize.gcBytes() == 0);
-  MOZ_ASSERT(gcMallocBytes.gcBytes() == 0);
-  MOZ_ASSERT(gcJitBytes.gcBytes() == 0);
+  mallocTracker.checkEmptyOnDestroy();
+  MOZ_ASSERT(gcHeapSize.bytes() == 0);
+  MOZ_ASSERT(mallocHeapSize.bytes() == 0);
+  MOZ_ASSERT(jitHeapSize.bytes() == 0);
 #endif
 }
 
 void ZoneAllocator::fixupAfterMovingGC() {
 #ifdef DEBUG
-  gcMallocTracker.fixupAfterMovingGC();
+  mallocTracker.fixupAfterMovingGC();
 #endif
 }
 
 void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
-  zoneSize.updateOnGCStart();
-  gcMallocBytes.updateOnGCStart();
+  gcHeapSize.updateOnGCStart();
+  mallocHeapSize.updateOnGCStart();
 }
 
 void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
@@ -64,11 +64,11 @@ void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
                                            const js::AutoLockGC& lock) {
   // This is called repeatedly during a GC to update thresholds as memory is
   // freed.
-  threshold.updateAfterGC(zoneSize.retainedBytes(), invocationKind, gc.tunables,
-                          gc.schedulingState, lock);
-  gcMallocThreshold.updateAfterGC(gcMallocBytes.retainedBytes(),
-                                  gc.tunables.mallocThresholdBase(),
-                                  gc.tunables.mallocGrowthFactor(), lock);
+  gcHeapThreshold.updateAfterGC(gcHeapSize.retainedBytes(), invocationKind,
+                                gc.tunables, gc.schedulingState, lock);
+  mallocHeapThreshold.updateAfterGC(mallocHeapSize.retainedBytes(),
+                                    gc.tunables.mallocThresholdBase(),
+                                    gc.tunables.mallocGrowthFactor(), lock);
 }
 
 void ZoneAllocPolicy::decMemory(size_t nbytes) {

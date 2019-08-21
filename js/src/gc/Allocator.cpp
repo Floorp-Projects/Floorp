@@ -373,7 +373,7 @@ bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
   // the world and do a full, non-incremental GC right now, if possible.
   Zone* zone = cx->zone();
   if (isIncrementalGCInProgress() &&
-      zone->zoneSize.gcBytes() > zone->threshold.gcTriggerBytes()) {
+      zone->gcHeapSize.bytes() > zone->gcHeapThreshold.bytes()) {
     PrepareZoneForGC(cx->zone());
     gc(GC_NORMAL, JS::GCReason::INCREMENTAL_TOO_SLOW);
   }
@@ -595,11 +595,11 @@ Arena* GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind,
 
   // Fail the allocation if we are over our heap size limits.
   if ((checkThresholds != ShouldCheckThresholds::DontCheckThresholds) &&
-      (heapSize.gcBytes() >= tunables.gcMaxBytes()))
+      (heapSize.bytes() >= tunables.gcMaxBytes()))
     return nullptr;
 
   Arena* arena = chunk->allocateArena(rt, zone, thingKind, lock);
-  zone->zoneSize.addGCArena();
+  zone->gcHeapSize.addGCArena();
 
   // Trigger an incremental slice if needed.
   if (checkThresholds != ShouldCheckThresholds::DontCheckThresholds) {

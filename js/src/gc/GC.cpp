@@ -957,7 +957,7 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->allocated());
   MOZ_ASSERT(!arena->onDelayedMarkingList());
 
-  arena->zone->zoneSize.removeGCArena();
+  arena->zone->gcHeapSize.removeGCArena();
   arena->release(lock);
   arena->chunk()->releaseArena(rt, arena, lock);
 }
@@ -1797,7 +1797,7 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       MOZ_ASSERT(tunables.gcMaxNurseryBytes() < UINT32_MAX);
       return uint32_t(tunables.gcMaxNurseryBytes());
     case JSGC_BYTES:
-      return uint32_t(heapSize.gcBytes());
+      return uint32_t(heapSize.bytes());
     case JSGC_NURSERY_BYTES:
       return nursery().capacity();
     case JSGC_NUMBER:
@@ -2054,15 +2054,15 @@ extern JS_FRIEND_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
   cx->runtime()->gc.removeRoot(vp);
 }
 
-float ZoneThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
+float HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   float eagerTriggerFactor = highFrequencyGC
                                  ? HighFrequencyEagerAllocTriggerFactor
                                  : LowFrequencyEagerAllocTriggerFactor;
-  return eagerTriggerFactor * gcTriggerBytes();
+  return eagerTriggerFactor * bytes();
 }
 
 /* static */
-float ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
+float GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     size_t lastBytes, const GCSchedulingTunables& tunables,
     const GCSchedulingState& state) {
   if (!tunables.isDynamicHeapGrowthEnabled()) {
@@ -2114,7 +2114,7 @@ float ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
 }
 
 /* static */
-size_t ZoneHeapThreshold::computeZoneTriggerBytes(
+size_t GCHeapThreshold::computeZoneTriggerBytes(
     float growthFactor, size_t lastBytes, JSGCInvocationKind gckind,
     const GCSchedulingTunables& tunables, const AutoLockGC& lock) {
   size_t baseMin = gckind == GC_SHRINK
@@ -2127,30 +2127,28 @@ size_t ZoneHeapThreshold::computeZoneTriggerBytes(
   return size_t(Min(triggerMax, trigger));
 }
 
-void ZoneHeapThreshold::updateAfterGC(size_t lastBytes,
-                                      JSGCInvocationKind gckind,
-                                      const GCSchedulingTunables& tunables,
-                                      const GCSchedulingState& state,
-                                      const AutoLockGC& lock) {
+void GCHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
+                                    const GCSchedulingTunables& tunables,
+                                    const GCSchedulingState& state,
+                                    const AutoLockGC& lock) {
   float growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-  gcTriggerBytes_ =
+  bytes_ =
       computeZoneTriggerBytes(growthFactor, lastBytes, gckind, tunables, lock);
 }
 
 /* static */
-size_t ZoneMallocThreshold::computeZoneTriggerBytes(float growthFactor,
+size_t MallocHeapThreshold::computeZoneTriggerBytes(float growthFactor,
                                                     size_t lastBytes,
                                                     size_t baseBytes,
                                                     const AutoLockGC& lock) {
   return size_t(float(Max(lastBytes, baseBytes)) * growthFactor);
 }
 
-void ZoneMallocThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,
+void MallocHeapThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,
                                         float growthFactor,
                                         const AutoLockGC& lock) {
-  gcTriggerBytes_ =
-      computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
+  bytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
 }
 
 /* Compacting GC */
@@ -3046,7 +3044,7 @@ void GCRuntime::clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
     // everything to new arenas, as that will already have allocated a similar
     // number of arenas. This only happens for collections triggered by GC zeal.
     bool allArenasRelocated = ShouldRelocateAllArenas(reason);
-    arena->zone->zoneSize.removeBytes(ArenaSize, !allArenasRelocated);
+    arena->zone->gcHeapSize.removeBytes(ArenaSize, !allArenasRelocated);
 
     // Release the arena but don't return it to the chunk yet.
     arena->release(lock);
@@ -3413,8 +3411,8 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
   size_t usedBytes =
-      zone->zoneSize.gcBytes();  // This already includes |nbytes|.
-  size_t thresholdBytes = zone->threshold.gcTriggerBytes();
+      zone->gcHeapSize.bytes();  // This already includes |nbytes|.
+  size_t thresholdBytes = zone->gcHeapThreshold.bytes();
   if (usedBytes < thresholdBytes) {
     return;
   }
@@ -3459,25 +3457,25 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
 
 void js::gc::MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
                                       const HeapSize& heap,
-                                      const ZoneThreshold& threshold,
+                                      const HeapThreshold& threshold,
                                       JS::GCReason reason) {
   rt->gc.maybeMallocTriggerZoneGC(Zone::from(zoneAlloc), heap, threshold,
                                   reason);
 }
 
 void GCRuntime::maybeMallocTriggerZoneGC(Zone* zone) {
-  if (maybeMallocTriggerZoneGC(zone, zone->gcMallocBytes,
-                               zone->gcMallocThreshold,
+  if (maybeMallocTriggerZoneGC(zone, zone->mallocHeapSize,
+                               zone->mallocHeapThreshold,
                                JS::GCReason::TOO_MUCH_MALLOC)) {
     return;
   }
 
-  maybeMallocTriggerZoneGC(zone, zone->gcJitBytes, zone->gcJitThreshold,
+  maybeMallocTriggerZoneGC(zone, zone->jitHeapSize, zone->jitHeapThreshold,
                            JS::GCReason::TOO_MUCH_JIT_CODE);
 }
 
 bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
-                                         const ZoneThreshold& threshold,
+                                         const HeapThreshold& threshold,
                                          JS::GCReason reason) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.
@@ -3490,8 +3488,8 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
     return false;
   }
 
-  size_t usedBytes = heap.gcBytes();
-  size_t thresholdBytes = threshold.gcTriggerBytes();
+  size_t usedBytes = heap.bytes();
+  size_t thresholdBytes = threshold.bytes();
   if (usedBytes < thresholdBytes) {
     return false;
   }
@@ -3576,8 +3574,9 @@ void GCRuntime::maybeGC() {
 
   bool scheduledZones = false;
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-    if (checkEagerAllocTrigger(zone->zoneSize, zone->threshold) ||
-        checkEagerAllocTrigger(zone->gcMallocBytes, zone->gcMallocThreshold)) {
+    if (checkEagerAllocTrigger(zone->gcHeapSize, zone->gcHeapThreshold) ||
+        checkEagerAllocTrigger(zone->mallocHeapSize,
+                               zone->mallocHeapThreshold)) {
       zone->scheduleGC();
       scheduledZones = true;
     }
@@ -3589,10 +3588,10 @@ void GCRuntime::maybeGC() {
 }
 
 bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
-                                       const ZoneThreshold& threshold) {
+                                       const HeapThreshold& threshold) {
   float thresholdBytes =
       threshold.eagerAllocTrigger(schedulingState.inHighFrequencyGCMode());
-  float usedBytes = size.gcBytes();
+  float usedBytes = size.bytes();
   if (usedBytes <= 1024 * 1024 || usedBytes < thresholdBytes) {
     return false;
   }
@@ -7370,8 +7369,8 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       continue;
     }
 
-    if (zone->zoneSize.gcBytes() >=
-        zone->threshold.nonIncrementalTriggerBytes(tunables)) {
+    if (zone->gcHeapSize.bytes() >=
+        zone->gcHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
       CheckZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
@@ -7380,8 +7379,8 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       }
     }
 
-    if (zone->gcMallocBytes.gcBytes() >=
-        zone->gcMallocThreshold.nonIncrementalTriggerBytes(tunables)) {
+    if (zone->mallocHeapSize.bytes() >=
+        zone->mallocHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
       CheckZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::MallocBytesTrigger);
@@ -7390,8 +7389,8 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       }
     }
 
-    if (zone->gcJitBytes.gcBytes() >=
-        zone->gcJitThreshold.nonIncrementalTriggerBytes(tunables)) {
+    if (zone->jitHeapSize.bytes() >=
+        zone->jitHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
       CheckZoneIsScheduled(zone, reason, "JIT code bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::JitCodeBytesTrigger);
@@ -7435,11 +7434,11 @@ static void ScheduleZones(GCRuntime* gc) {
 
     // This is a heuristic to reduce the total number of collections.
     bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
-    if (zone->zoneSize.gcBytes() >=
-            zone->threshold.eagerAllocTrigger(inHighFrequencyMode) ||
-        zone->gcMallocBytes.gcBytes() >=
-            zone->gcMallocThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
-        zone->gcJitBytes.gcBytes() >= zone->gcJitThreshold.gcTriggerBytes()) {
+    if (zone->gcHeapSize.bytes() >=
+            zone->gcHeapThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
+        zone->mallocHeapSize.bytes() >=
+            zone->mallocHeapThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
+        zone->jitHeapSize.bytes() >= zone->jitHeapThreshold.bytes()) {
       zone->scheduleGC();
     }
   }
@@ -8257,7 +8256,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
                                      targetZoneIsCollecting);
   target->zone()->addTenuredAllocsSinceMinorGC(
       source->zone()->getAndResetTenuredAllocsSinceMinorGC());
-  target->zone()->zoneSize.adopt(source->zone()->zoneSize);
+  target->zone()->gcHeapSize.adopt(source->zone()->gcHeapSize);
   target->zone()->adoptUniqueIds(source->zone());
   target->zone()->adoptMallocBytes(source->zone());
 
@@ -8861,7 +8860,7 @@ namespace MemInfo {
 
 static bool GCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->runtime()->gc.heapSize.gcBytes()));
+  args.rval().setNumber(double(cx->runtime()->gc.heapSize.bytes()));
   return true;
 }
 
@@ -8904,13 +8903,13 @@ static bool GCSliceCountGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ZoneGCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->zoneSize.gcBytes()));
+  args.rval().setNumber(double(cx->zone()->gcHeapSize.bytes()));
   return true;
 }
 
 static bool ZoneGCTriggerBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->threshold.gcTriggerBytes()));
+  args.rval().setNumber(double(cx->zone()->gcHeapThreshold.bytes()));
   return true;
 }
 
@@ -8919,20 +8918,20 @@ static bool ZoneGCAllocTriggerGetter(JSContext* cx, unsigned argc, Value* vp) {
   bool highFrequency =
       cx->runtime()->gc.schedulingState.inHighFrequencyGCMode();
   args.rval().setNumber(
-      double(cx->zone()->threshold.eagerAllocTrigger(highFrequency)));
+      double(cx->zone()->gcHeapThreshold.eagerAllocTrigger(highFrequency)));
   return true;
 }
 
 static bool ZoneMallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->gcMallocBytes.gcBytes()));
+  args.rval().setNumber(double(cx->zone()->mallocHeapSize.bytes()));
   return true;
 }
 
 static bool ZoneMallocTriggerBytesGetter(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->gcMallocThreshold.gcTriggerBytes()));
+  args.rval().setNumber(double(cx->zone()->mallocHeapThreshold.bytes()));
   return true;
 }
 

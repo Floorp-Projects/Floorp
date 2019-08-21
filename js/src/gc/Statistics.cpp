@@ -990,7 +990,7 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   nonincrementalReason_ = gc::AbortReason::None;
 
   GCRuntime& gc = runtime->gc;
-  preTotalHeapBytes = gc.heapSize.gcBytes();
+  preTotalHeapBytes = gc.heapSize.bytes();
 
   preCollectedHeapBytes = 0;
 
@@ -1005,7 +1005,7 @@ void Statistics::beginGC(JSGCInvocationKind kind,
 void Statistics::measureInitialHeapSize() {
   MOZ_ASSERT(preCollectedHeapBytes == 0);
   for (GCZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
-    preCollectedHeapBytes += zone->zoneSize.gcBytes();
+    preCollectedHeapBytes += zone->gcHeapSize.bytes();
   }
 }
 
@@ -1013,11 +1013,11 @@ void Statistics::adoptHeapSizeDuringIncrementalGC(Zone* mergedZone) {
   // A zone is being merged into a zone that's currently being collected so we
   // need to adjust our record of the total size of heap for collected zones.
   MOZ_ASSERT(runtime->gc.isIncrementalGCInProgress());
-  preCollectedHeapBytes += mergedZone->zoneSize.gcBytes();
+  preCollectedHeapBytes += mergedZone->gcHeapSize.bytes();
 }
 
 void Statistics::endGC() {
-  postTotalHeapBytes = runtime->gc.heapSize.gcBytes();
+  postTotalHeapBytes = runtime->gc.heapSize.bytes();
 
   sendGCTelemetry();
 
@@ -1091,7 +1091,7 @@ void Statistics::sendGCTelemetry() {
   size_t bytesSurvived = 0;
   for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
     if (zone->wasCollected()) {
-      bytesSurvived += zone->zoneSize.retainedBytes();
+      bytesSurvived += zone->gcHeapSize.retainedBytes();
     }
   }
 

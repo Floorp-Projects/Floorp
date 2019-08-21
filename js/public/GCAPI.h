@@ -145,8 +145,8 @@ typedef enum JSGCParamKey {
    *                    collections.
    *
    * The RHS of the equation above is calculated and sets
-   * zone->threshold.gcTriggerBytes(). When usage.gcBytes() surpasses
-   * threshold.gcTriggerBytes() for a zone, the zone may be scheduled for a GC.
+   * zone->gcHeapThreshold.bytes(). When gcHeapSize.bytes() exeeds
+   * gcHeapThreshold.bytes() for a zone, the zone may be scheduled for a GC.
    */
 
   /**
