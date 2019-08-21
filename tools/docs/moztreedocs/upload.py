@@ -77,20 +77,25 @@ def get_s3_keys(s3, bucket):
 def s3_set_redirects(redirects):
 
     s3, bucket = create_aws_session()
+
     configuration = {
         'IndexDocument': {"Suffix": "index.html"},
         'RoutingRules': []
     }
 
     for path, redirect in redirects.items():
-        configuration['RoutingRules'].append({
+        rule = {
             'Condition': {
                 "KeyPrefixEquals": path
             },
             'Redirect': {
                 "ReplaceKeyPrefixWith": redirect
-            }
-        })
+            },
+        }
+        if os.environ.get('MOZ_SCM_LEVEL') == '3':
+            rule['Redirect']['HostName'] = 'firefox-source-docs.mozilla.org'
+
+        configuration['RoutingRules'].append(rule)
 
     s3.put_bucket_website(
         Bucket=bucket,
