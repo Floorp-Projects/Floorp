@@ -41,20 +41,15 @@ capture.Format = {
  *
  * @param {Node} node
  *     The node to take a screenshot of.
- * @param {Array.<Node>=} highlights
- *     Optional array of nodes, around which a border will be marked to
- *     highlight them in the screenshot.
  *
  * @return {HTMLCanvasElement}
  *     The canvas element where the element has been painted on.
  */
-capture.element = function(node, highlights = []) {
+capture.element = function(node) {
   let win = node.ownerGlobal;
   let rect = node.getBoundingClientRect();
 
-  return capture.canvas(win, rect.left, rect.top, rect.width, rect.height, {
-    highlights,
-  });
+  return capture.canvas(win, rect.left, rect.top, rect.width, rect.height);
 };
 
 /**
@@ -64,21 +59,17 @@ capture.element = function(node, highlights = []) {
  * @param {DOMWindow} win
  *     The DOM window providing the document element to capture,
  *     and the offsets for the viewport.
- * @param {Array.<Node>=} highlights
- *     Optional array of nodes, around which a border will be marked to
- *     highlight them in the screenshot.
  *
  * @return {HTMLCanvasElement}
  *     The canvas element where the viewport has been painted on.
  */
-capture.viewport = function(win, highlights = []) {
+capture.viewport = function(win) {
   return capture.canvas(
     win,
     win.pageXOffset,
     win.pageYOffset,
     win.innerWidth,
-    win.innerHeight,
-    { highlights }
+    win.innerHeight
   );
 };
 
@@ -96,9 +87,6 @@ capture.viewport = function(win, highlights = []) {
  *     The width dimension of the rectangle to paint.
  * @param {number} height
  *     The height dimension of the rectangle to paint.
- * @param {Array.<Node>=} highlights
- *     Optional array of nodes, around which a border will be marked to
- *     highlight them in the screenshot.
  * @param {HTMLCanvasElement=} canvas
  *     Optional canvas to reuse for the screenshot.
  * @param {number=} flags
@@ -115,7 +103,7 @@ capture.canvas = function(
   top,
   width,
   height,
-  { highlights = [], canvas = null, flags = null } = {}
+  { canvas = null, flags = null } = {}
 ) {
   const scale = win.devicePixelRatio;
 
@@ -159,31 +147,8 @@ capture.canvas = function(
 
   ctx.scale(scale, scale);
   ctx.drawWindow(win, left, top, width, height, BG_COLOUR, flags);
-  if (highlights.length) {
-    ctx = capture.highlight_(ctx, highlights, top, left);
-  }
 
   return canvas;
-};
-
-capture.highlight_ = function(context, highlights, top = 0, left = 0) {
-  if (typeof highlights == "undefined") {
-    throw new InvalidArgumentError("Missing highlights");
-  }
-
-  context.lineWidth = "2";
-  context.strokeStyle = "red";
-  context.save();
-
-  for (let el of highlights) {
-    let rect = el.getBoundingClientRect();
-    let oy = -top;
-    let ox = -left;
-
-    context.strokeRect(rect.left + ox, rect.top + oy, rect.width, rect.height);
-  }
-
-  return context;
 };
 
 /**
