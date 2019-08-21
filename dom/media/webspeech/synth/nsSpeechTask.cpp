@@ -203,8 +203,6 @@ void nsSpeechTask::ForceError(float aElapsedTime, uint32_t aCharIndex) {
 
 NS_IMETHODIMP
 nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex) {
-  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchError"));
-
   if (!mPreCanceled) {
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
@@ -214,6 +212,8 @@ nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex) {
 
 nsresult nsSpeechTask::DispatchErrorImpl(float aElapsedTime,
                                          uint32_t aCharIndex) {
+  LOG(LogLevel::Debug, ("nsSpeechTask::DispatchErrorImpl"));
+
   MOZ_ASSERT(mUtterance);
   if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
