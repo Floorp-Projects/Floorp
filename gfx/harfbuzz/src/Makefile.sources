@@ -10,6 +10,7 @@ HB_BASE_sources = \
 	hb-aat-layout-kerx-table.hh \
 	hb-aat-layout-lcar-table.hh \
 	hb-aat-layout-morx-table.hh \
+	hb-aat-layout-opbd-table.hh \
 	hb-aat-layout-trak-table.hh \
 	hb-aat-layout.cc \
 	hb-aat-layout.hh \
@@ -88,6 +89,10 @@ HB_BASE_sources = \
 	hb-ot-math-table.hh \
 	hb-ot-math.cc \
 	hb-ot-maxp-table.hh \
+	hb-ot-meta-table.hh \
+	hb-ot-meta.cc \
+	hb-ot-metrics.cc \
+	hb-ot-metrics.hh \
 	hb-ot-name-language-static.hh \
 	hb-ot-name-language.hh \
 	hb-ot-name-table.hh \
@@ -191,6 +196,8 @@ HB_BASE_headers = \
 	hb-ot-font.h \
 	hb-ot-layout.h \
 	hb-ot-math.h \
+	hb-ot-meta.h \
+	hb-ot-metrics.h \
 	hb-ot-name.h \
 	hb-ot-shape.h \
 	hb-ot-var.h \
@@ -221,6 +228,9 @@ HB_CORETEXT_headers = hb-coretext.h
 
 HB_DIRECTWRITE_sources = hb-directwrite.cc
 HB_DIRECTWRITE_headers = hb-directwrite.h
+
+HB_GDI_sources = hb-gdi.cc
+HB_GDI_headers = hb-gdi.h
 
 HB_UNISCRIBE_sources = hb-uniscribe.cc
 HB_UNISCRIBE_headers = hb-uniscribe.h

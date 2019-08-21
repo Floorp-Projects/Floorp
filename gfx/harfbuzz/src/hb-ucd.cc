@@ -15,6 +15,7 @@
  */
 
 #include "hb.hh"
+#include "hb-unicode.hh"
 #include "hb-machinery.hh"
 
 #include "hb-ucd-table.hh"
@@ -234,10 +235,6 @@ void free_static_ucd_funcs ()
   static_ucd_funcs.free_instance ();
 }
 #endif
-
-extern "C" HB_INTERNAL
-hb_unicode_funcs_t *
-hb_ucd_get_unicode_funcs ();
 
 hb_unicode_funcs_t *
 hb_ucd_get_unicode_funcs ()

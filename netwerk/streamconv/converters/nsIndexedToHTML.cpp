@@ -25,6 +25,7 @@
 #include "nsDirIndexParser.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsString.h"
+#include "nsContentUtils.h"
 #include <algorithm>
 #include "nsIChannel.h"
 #include "mozilla/Unused.h"
@@ -653,6 +654,24 @@ nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInput,
   return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
 }
 
+static nsresult FormatTime(const nsDateFormatSelector aDateFormatSelector,
+                           const nsTimeFormatSelector aTimeFormatSelector,
+                           const PRTime aPrTime, nsAString& aStringOut) {
+  // FormatPRExplodedTime will use GMT based formatted string (e.g. GMT+1)
+  // instead of local time zone name (e.g. CEST).
+  // To avoid this case when ResistFingerprinting is disabled, use
+  // |FormatPRTime| to show exact time zone name.
+  if (!nsContentUtils::ShouldResistFingerprinting()) {
+    return mozilla::DateTimeFormat::FormatPRTime(
+        aDateFormatSelector, aTimeFormatSelector, aPrTime, aStringOut);
+  }
+
+  PRExplodedTime prExplodedTime;
+  PR_ExplodeTime(aPrTime, PR_GMTParameters, &prExplodedTime);
+  return mozilla::DateTimeFormat::FormatPRExplodedTime(
+      aDateFormatSelector, aTimeFormatSelector, &prExplodedTime, aStringOut);
+}
+
 NS_IMETHODIMP
 nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
                                   nsIDirIndex* aIndex) {
@@ -799,12 +818,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
     pushBuffer.AppendInt(static_cast<int64_t>(t));
     pushBuffer.AppendLiteral("\">");
     nsAutoString formatted;
-    mozilla::DateTimeFormat::FormatPRTime(kDateFormatShort, kTimeFormatNone, t,
-                                          formatted);
+    FormatTime(kDateFormatShort, kTimeFormatNone, t, formatted);
     AppendNonAsciiToNCR(formatted, pushBuffer);
     pushBuffer.AppendLiteral("</td>\n <td>");
-    mozilla::DateTimeFormat::FormatPRTime(kDateFormatNone, kTimeFormatSeconds,
-                                          t, formatted);
+    FormatTime(kDateFormatNone, kTimeFormatSeconds, t, formatted);
     // use NCR to show date in any doc charset
     AppendNonAsciiToNCR(formatted, pushBuffer);
   }

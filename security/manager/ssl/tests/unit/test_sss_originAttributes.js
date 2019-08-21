@@ -30,27 +30,13 @@ Services.prefs.setBoolPref(
   true
 );
 
-let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-  Ci.nsIX509CertDB
-);
-addCertFromFile(certdb, "test_pinning_dynamic/pinningroot.pem", "CTu,CTu,CTu");
-
 let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
-let host = "a.pinning2.example.com";
+let host = "a.pinning.example.com";
 let uri = Services.io.newURI("https://" + host);
-
-// This test re-uses certificates from pinning tests because that's easier and
-// simpler than recreating new certificates, hence the slightly longer than
-// necessary domain name.
-let secInfo = new FakeTransportSecurityInfo(
-  constructCertFromFile(
-    "test_pinning_dynamic/a.pinning2.example.com-pinningroot.pem"
-  )
-);
 
 // Check if originAttributes1 and originAttributes2 are isolated with respect
 // to HSTS/HPKP storage.
-function doTest(originAttributes1, originAttributes2, shouldShare) {
+function doTest(secInfo, originAttributes1, originAttributes2, shouldShare) {
   sss.clearAll();
   for (let type of [
     Ci.nsISiteSecurityService.HEADER_HSTS,
@@ -139,7 +125,7 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
   );
 }
 
-function testInvalidOriginAttributes(originAttributes) {
+function testInvalidOriginAttributes(secInfo, originAttributes) {
   for (let type of [
     Ci.nsISiteSecurityService.HEADER_HSTS,
     Ci.nsISiteSecurityService.HEADER_HPKP,
@@ -188,27 +174,49 @@ function testInvalidOriginAttributes(originAttributes) {
   );
 }
 
-function run_test() {
+function add_tests() {
   sss.clearAll();
-  let originAttributesList = [];
-  for (let userContextId of [0, 1, 2]) {
-    for (let firstPartyDomain of ["", "foo.com", "bar.com"]) {
-      originAttributesList.push({ userContextId, firstPartyDomain });
-    }
-  }
-  for (let attrs1 of originAttributesList) {
-    for (let attrs2 of originAttributesList) {
-      // SSS storage is not isolated by userContext
-      doTest(
-        attrs1,
-        attrs2,
-        attrs1.firstPartyDomain == attrs2.firstPartyDomain
-      );
-    }
-  }
 
-  testInvalidOriginAttributes(undefined);
-  testInvalidOriginAttributes(null);
-  testInvalidOriginAttributes(1);
-  testInvalidOriginAttributes("foo");
+  let secInfo = null;
+  add_connection_test(
+    "a.pinning.example.com",
+    PRErrorCodeSuccess,
+    undefined,
+    aSecInfo => {
+      secInfo = aSecInfo;
+    }
+  );
+
+  add_task(function() {
+    let originAttributesList = [];
+    for (let userContextId of [0, 1, 2]) {
+      for (let firstPartyDomain of ["", "foo.com", "bar.com"]) {
+        originAttributesList.push({ userContextId, firstPartyDomain });
+      }
+    }
+    for (let attrs1 of originAttributesList) {
+      for (let attrs2 of originAttributesList) {
+        // SSS storage is not isolated by userContext
+        doTest(
+          secInfo,
+          attrs1,
+          attrs2,
+          attrs1.firstPartyDomain == attrs2.firstPartyDomain
+        );
+      }
+    }
+
+    testInvalidOriginAttributes(secInfo, undefined);
+    testInvalidOriginAttributes(secInfo, null);
+    testInvalidOriginAttributes(secInfo, 1);
+    testInvalidOriginAttributes(secInfo, "foo");
+  });
+}
+
+function run_test() {
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
+
+  add_tests();
+
+  run_next_test();
 }

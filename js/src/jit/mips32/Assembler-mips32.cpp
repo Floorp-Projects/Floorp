@@ -7,6 +7,7 @@
 #include "jit/mips32/Assembler-mips32.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 using mozilla::DebugOnly;
 
@@ -148,14 +149,19 @@ void Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code,
   }
 }
 
-static void TraceOneDataRelocation(JSTracer* trc, Instruction* inst) {
+static void TraceOneDataRelocation(JSTracer* trc,
+                                   mozilla::Maybe<AutoWritableJitCode>& awjc,
+                                   JitCode* code, Instruction* inst) {
   void* ptr = (void*)Assembler::ExtractLuiOriValue(inst, inst->next());
   void* prior = ptr;
 
   // No barrier needed since these are constants.
   TraceManuallyBarrieredGenericPointerEdge(
-      trc, reinterpret_cast<gc::Cell**>(&ptr), "ion-masm-ptr");
+      trc, reinterpret_cast<gc::Cell**>(&ptr), "jit-masm-ptr");
   if (ptr != prior) {
+    if (awjc.isNothing()) {
+      awjc.emplace(code);
+    }
     AssemblerMIPSShared::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
     AutoFlushICache::flush(uintptr_t(inst), 8);
   }
@@ -164,10 +170,11 @@ static void TraceOneDataRelocation(JSTracer* trc, Instruction* inst) {
 /* static */
 void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
                                      CompactBufferReader& reader) {
+  mozilla::Maybe<AutoWritableJitCode> awjc;
   while (reader.more()) {
     size_t offset = reader.readUnsigned();
     Instruction* inst = (Instruction*)(code->raw() + offset);
-    TraceOneDataRelocation(trc, inst);
+    TraceOneDataRelocation(trc, awjc, code, inst);
   }
 }
 

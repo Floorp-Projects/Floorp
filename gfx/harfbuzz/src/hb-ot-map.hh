@@ -154,8 +154,8 @@ struct hb_ot_map_t
 
   HB_INTERNAL void collect_lookups (unsigned int table_index, hb_set_t *lookups) const;
   template <typename Proxy>
-  HB_INTERNAL inline void apply (const Proxy &proxy,
-				 const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
+  HB_INTERNAL void apply (const Proxy &proxy,
+			  const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
   HB_INTERNAL void substitute (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
   HB_INTERNAL void position (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
 

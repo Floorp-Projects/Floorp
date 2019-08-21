@@ -235,9 +235,9 @@ struct sbix
       const PNGHeader &png = *blob->as<PNGHeader>();
 
       extents->x_bearing = x_offset;
-      extents->y_bearing = y_offset;
+      extents->y_bearing = png.IHDR.height + y_offset;
       extents->width     = png.IHDR.width;
-      extents->height    = png.IHDR.height;
+      extents->height    = -png.IHDR.height;
 
       /* Convert to font units. */
       if (strike_ppem)

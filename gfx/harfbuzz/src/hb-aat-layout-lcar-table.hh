@@ -55,17 +55,21 @@ struct lcar
     if (caret_count)
     {
       hb_array_t<const HBINT16> arr = array.sub_array (start_offset, caret_count);
-      unsigned int count = arr.length;
-      for (unsigned int i = 0; i < count; ++i)
-	switch (format)
+      switch (format)
+      {
+      case 0:
+	for (unsigned int i = 0; i < arr.length; ++i)
+	  caret_array[i] = font->em_scale_dir (arr[i], direction);
+	break;
+      case 1:
+	for (unsigned int i = 0; i < arr.length; ++i)
 	{
-	case 0: caret_array[i] = font->em_scale_dir (arr[i], direction); break;
-	case 1:
 	  hb_position_t x, y;
 	  font->get_glyph_contour_point_for_origin (glyph, arr[i], direction, &x, &y);
 	  caret_array[i] = HB_DIRECTION_IS_HORIZONTAL (direction) ? x : y;
-	  break;
 	}
+	break;
+      }
     }
     return array.len;
   }

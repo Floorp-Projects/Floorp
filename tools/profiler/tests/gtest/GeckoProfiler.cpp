@@ -16,7 +16,9 @@
 #include "ProfilerMarkerPayload.h"
 
 #include "js/Initialization.h"
+#include "js/Printf.h"
 #include "jsapi.h"
+#include "mozilla/BlocksRingBufferGeckoExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -30,6 +32,52 @@
 // (which is just an RAII wrapper for profiler_init() and profiler_shutdown()).
 
 using namespace mozilla;
+
+TEST(BaseProfiler, BlocksRingBuffer)
+{
+  constexpr uint32_t MBSize = 256;
+  uint8_t buffer[MBSize * 3];
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer[i] = uint8_t('A' + i);
+  }
+  BlocksRingBuffer rb(&buffer[MBSize], MakePowerOfTwo32<MBSize>());
+
+  {
+    nsCString cs(NS_LITERAL_CSTRING("nsCString"));
+    nsString s(NS_LITERAL_STRING("nsString"));
+    nsAutoCString acs(NS_LITERAL_CSTRING("nsAutoCString"));
+    nsAutoString as(NS_LITERAL_STRING("nsAutoString"));
+    nsAutoCStringN<8> acs8(NS_LITERAL_CSTRING("nsAutoCStringN"));
+    nsAutoStringN<8> as8(NS_LITERAL_STRING("nsAutoStringN"));
+    JS::UniqueChars jsuc = JS_smprintf("%s", "JS::UniqueChars");
+
+    rb.PutObjects(cs, s, acs, as, acs8, as8, jsuc);
+  }
+
+  rb.ReadEach([](BlocksRingBuffer::EntryReader& aER) {
+    ASSERT_EQ(aER.ReadObject<nsCString>(), NS_LITERAL_CSTRING("nsCString"));
+    ASSERT_EQ(aER.ReadObject<nsString>(), NS_LITERAL_STRING("nsString"));
+    ASSERT_EQ(aER.ReadObject<nsAutoCString>(),
+              NS_LITERAL_CSTRING("nsAutoCString"));
+    ASSERT_EQ(aER.ReadObject<nsAutoString>(),
+              NS_LITERAL_STRING("nsAutoString"));
+    ASSERT_EQ(aER.ReadObject<nsAutoCStringN<8>>(),
+              NS_LITERAL_CSTRING("nsAutoCStringN"));
+    ASSERT_EQ(aER.ReadObject<nsAutoStringN<8>>(),
+              NS_LITERAL_STRING("nsAutoStringN"));
+    auto jsuc2 = aER.ReadObject<JS::UniqueChars>();
+    ASSERT_TRUE(!!jsuc2);
+    ASSERT_TRUE(strcmp(jsuc2.get(), "JS::UniqueChars") == 0);
+  });
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    ASSERT_EQ(buffer[i], uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    ASSERT_EQ(buffer[i], uint8_t('A' + i));
+  }
+}
 
 typedef Vector<const char*> StrVec;
 

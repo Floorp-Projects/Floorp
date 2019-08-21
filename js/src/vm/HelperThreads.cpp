@@ -259,7 +259,6 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
     JSRuntime* operator()(Zone* zone) { return zone->runtimeFromMainThread(); }
     JSRuntime* operator()(ZonesInState zbs) { return zbs.runtime; }
     JSRuntime* operator()(JSRuntime* runtime) { return runtime; }
-    JSRuntime* operator()(AllCompilations all) { return nullptr; }
     JSRuntime* operator()(CompilationsUsingNursery cun) { return cun.runtime; }
   };
 
@@ -273,7 +272,6 @@ static bool JitDataStructuresExist(const CompilationSelector& selector) {
     bool operator()(Zone* zone) { return !!zone->jitZone(); }
     bool operator()(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
     bool operator()(JSRuntime* runtime) { return runtime->hasJitRuntime(); }
-    bool operator()(AllCompilations all) { return true; }
     bool operator()(CompilationsUsingNursery cun) {
       return cun.runtime->hasJitRuntime();
     }
@@ -297,7 +295,6 @@ static bool IonBuilderMatches(const CompilationSelector& selector,
     bool operator()(JSRuntime* runtime) {
       return runtime == builder_->script()->runtimeFromAnyThread();
     }
-    bool operator()(AllCompilations all) { return true; }
     bool operator()(ZonesInState zbs) {
       return zbs.runtime == builder_->script()->runtimeFromAnyThread() &&
              zbs.state == builder_->script()->zoneFromAnyThread()->gcState();
@@ -312,7 +309,6 @@ static bool IonBuilderMatches(const CompilationSelector& selector,
 }
 
 static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
-                                            bool discardLazyLinkList,
                                             AutoLockHelperThreadState& lock) {
   if (!HelperThreadState().threads) {
     return;
@@ -364,29 +360,25 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
   }
 
   /* Cancel lazy linking for pending builders (attached to the ionScript). */
-  if (discardLazyLinkList) {
-    MOZ_ASSERT(!selector.is<AllCompilations>());
-    JSRuntime* runtime = GetSelectorRuntime(selector);
-    jit::IonBuilder* builder =
-        runtime->jitRuntime()->ionLazyLinkList(runtime).getFirst();
-    while (builder) {
-      jit::IonBuilder* next = builder->getNext();
-      if (IonBuilderMatches(selector, builder)) {
-        jit::FinishOffThreadBuilder(runtime, builder, lock);
-      }
-      builder = next;
+  JSRuntime* runtime = GetSelectorRuntime(selector);
+  jit::IonBuilder* builder =
+      runtime->jitRuntime()->ionLazyLinkList(runtime).getFirst();
+  while (builder) {
+    jit::IonBuilder* next = builder->getNext();
+    if (IonBuilderMatches(selector, builder)) {
+      jit::FinishOffThreadBuilder(runtime, builder, lock);
     }
+    builder = next;
   }
 }
 
-void js::CancelOffThreadIonCompile(const CompilationSelector& selector,
-                                   bool discardLazyLinkList) {
+void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
   if (!JitDataStructuresExist(selector)) {
     return;
   }
 
   AutoLockHelperThreadState lock;
-  CancelOffThreadIonCompileLocked(selector, discardLazyLinkList, lock);
+  CancelOffThreadIonCompileLocked(selector, lock);
 }
 
 #ifdef DEBUG
@@ -1299,8 +1291,6 @@ void GlobalHelperThreadState::waitForAllThreads() {
 
 void GlobalHelperThreadState::waitForAllThreadsLocked(
     AutoLockHelperThreadState& lock) {
-  CancelOffThreadIonCompileLocked(CompilationSelector(AllCompilations()), false,
-                                  lock);
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
   while (hasActiveThreads(lock)) {

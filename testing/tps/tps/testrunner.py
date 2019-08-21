@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import json
+import yaml
 import os
 import re
 import tempfile
@@ -226,10 +227,13 @@ class TPSTestRunner(object):
         f = open(testpath, 'r')
         testcontent = f.read()
         f.close()
+        # We use yaml to parse the tests because it is a superset of json
+        # but tolerates things like property names not being quoted, trailing
+        # commas, etc.
         try:
-            test = json.loads(testcontent)
+            test = yaml.safe_load(testcontent)
         except Exception:
-            test = json.loads(testcontent[testcontent.find('{'):testcontent.find('}') + 1])
+            test = yaml.safe_load(testcontent[testcontent.find('{'):testcontent.find('}') + 1])
 
         self.preferences['tps.seconds_since_epoch'] = int(time.time())
 

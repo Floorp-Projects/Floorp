@@ -75,7 +75,7 @@ release_table_data (void *user_data)
 }
 
 static hb_blob_t *
-reference_table  (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
+_hb_cg_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
 {
   CGFontRef cg_font = reinterpret_cast<CGFontRef> (user_data);
   CFDataRef cf_data = CGFontCopyTableForTag (cg_font, tag);
@@ -299,7 +299,7 @@ _hb_coretext_shaper_face_data_destroy (hb_coretext_face_data_t *data)
 hb_face_t *
 hb_coretext_face_create (CGFontRef cg_font)
 {
-  return hb_face_create_for_tables (reference_table, CGFontRetain (cg_font), _hb_cg_font_release);
+  return hb_face_create_for_tables (_hb_cg_reference_table, CGFontRetain (cg_font), _hb_cg_font_release);
 }
 
 /*

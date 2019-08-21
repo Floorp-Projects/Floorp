@@ -37,8 +37,6 @@ function getValue(dbg, index) {
 // Test basic windowless worker functionality: the main thread and worker can be
 // separately controlled from the same debugger.
 add_task(async function() {
-  await pushPref("devtools.debugger.features.windowless-workers", true);
-
   const dbg = await initDebugger("doc-windowless-workers.html");
   const mainThread = dbg.toolbox.threadFront.actor;
 

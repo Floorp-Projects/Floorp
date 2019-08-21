@@ -480,7 +480,7 @@ struct hb_reduce_t
 
   template <typename Iter,
 	    hb_requires (hb_is_iterator (Iter)),
-	    typename AccuT = decltype (hb_declval (Redu) (hb_declval (InitT), hb_declval (typename Iter::item_t)))>
+	    typename AccuT = hb_decay<decltype (hb_declval (Redu) (hb_declval (InitT), hb_declval (typename Iter::item_t)))>>
   AccuT
   operator () (Iter it)
   {

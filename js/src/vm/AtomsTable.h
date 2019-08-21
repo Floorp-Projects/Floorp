@@ -193,8 +193,7 @@ class AtomsTable {
   bool startIncrementalSweep();
 
   // Sweep some atoms incrementally and return whether we finished.
-  bool traceWeakIncrementally(JSTracer* trc, SweepIterator& atomsToSweep,
-                              SliceBudget& budget);
+  bool sweepIncrementally(SweepIterator& atomsToSweep, SliceBudget& budget);
 
 #ifdef DEBUG
   bool mainThreadHasAllLocks() const { return allPartitionsLocked; }

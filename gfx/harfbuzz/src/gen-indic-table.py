@@ -98,6 +98,10 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
+print ('#include "hb.hh"')
+print ()
+print ('#ifndef HB_NO_OT_SHAPE')
+print ()
 print ('#include "hb-ot-shape-complex-indic.hh"')
 print ()
 
@@ -245,12 +249,14 @@ print ("}")
 print ()
 print ("#undef _")
 for i in range (2):
-	print()
+	print
 	vv = sorted (values[i].keys ())
 	for v in vv:
 		print ("#undef %s_%s" %
 			(what_short[i], short[i][v]))
 print ()
+print ()
+print ('#endif')
 print ("/* == End of generated table == */")
 
 # Maintain at least 30% occupancy in the table */

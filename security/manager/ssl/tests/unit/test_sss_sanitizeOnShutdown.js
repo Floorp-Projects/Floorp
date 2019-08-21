@@ -26,7 +26,9 @@ add_task(async function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
-  let secInfo = new FakeTransportSecurityInfo();
+  let secInfo = Cc[
+    "@mozilla.org/security/transportsecurityinfo;1"
+  ].createInstance(Ci.nsITransportSecurityInfo);
   let header = "max-age=50000";
   SSService.processHeader(
     Ci.nsISiteSecurityService.HEADER_HSTS,

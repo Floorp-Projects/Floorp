@@ -560,12 +560,6 @@ menuitem.bookmark-item {
   }
 }
 
-#urlbar-input:-moz-lwtheme::placeholder,
-.searchbar-textbox:-moz-lwtheme > moz-input-box > html|*.textbox-input::placeholder {
-  opacity: 1.0;
-  color: #777;
-}
-
 /* ::::: URL Bar Zoom Reset Button ::::: */
 @keyframes urlbar-zoom-reset-pulse {
   0% {

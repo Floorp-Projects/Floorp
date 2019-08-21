@@ -158,7 +158,7 @@ typedef enum { /*< flags >*/
  * hb_ot_math_glyph_part_t:
  * @glyph: The glyph index of the variant part
  * @start_connector_length: The length of the connector on the starting side of the variant part
- * @end_connection_length: The length of the connector on the ending side of the variant part
+ * @end_connector_length: The length of the connector on the ending side of the variant part
  * @full_advance: The total advance of the part
  * @flags: #hb_ot_math_glyph_part_flags_t flags for the part
  * 

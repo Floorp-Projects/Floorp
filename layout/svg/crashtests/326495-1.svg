@@ -6,7 +6,7 @@
   <script>
   function init()
   {
-    document.getElementsByTagName("rect")[0].style.display = "-moz-inline-stack";
+    document.getElementsByTagName("rect")[0].style.display = "-moz-inline-box";
   }
   
   window.addEventListener("load", init, false);

@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [2.5.3],
+        [2.6.0],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -361,6 +361,28 @@ AM_CONDITIONAL(HAVE_UNISCRIBE, $have_uniscribe)
 
 dnl ===========================================================================
 
+AC_ARG_WITH(gdi,
+	[AS_HELP_STRING([--with-gdi=@<:@yes/no/auto@:>@],
+			[Provide GDI integration helpers @<:@default=no@:>@])],,
+	[with_gdi=no])
+have_gdi=false
+if test "x$with_gdi" = "xyes" -o "x$with_gdi" = "xauto"; then
+	AC_CHECK_HEADERS(windows.h, have_gdi=true)
+fi
+if test "x$with_gdi" = "xyes" -a "x$have_gdi" != "xtrue"; then
+	AC_MSG_ERROR([gdi support requested but not found])
+fi
+if $have_gdi; then
+	GDI_CFLAGS=
+	GDI_LIBS="-lgdi32"
+	AC_SUBST(GDI_CFLAGS)
+	AC_SUBST(GDI_LIBS)
+	AC_DEFINE(HAVE_GDI, 1, [Have GDI library])
+fi
+AM_CONDITIONAL(HAVE_GDI, $have_gdi)
+
+dnl ===========================================================================
+
 AC_ARG_WITH(directwrite,
 	[AS_HELP_STRING([--with-directwrite=@<:@yes/no/auto@:>@],
 			[Use the DirectWrite library (experimental) @<:@default=no@:>@])],,
@@ -376,7 +398,7 @@ if test "x$with_directwrite" = "xyes" -a "x$have_directwrite" != "xtrue"; then
 fi
 if $have_directwrite; then
 	DIRECTWRITE_CXXFLAGS=
-	DIRECTWRITE_LIBS="-ldwrite"
+	DIRECTWRITE_LIBS=
 	AC_SUBST(DIRECTWRITE_CXXFLAGS)
 	AC_SUBST(DIRECTWRITE_LIBS)
 	AC_DEFINE(HAVE_DIRECTWRITE, 1, [Have DirectWrite library])
@@ -510,6 +532,7 @@ Additional shapers (the more the merrier):
 Platform shapers (not normally needed):
 	CoreText:		${have_coretext}
 	DirectWrite:		${have_directwrite}
+	GDI:			${have_gdi}
 	Uniscribe:		${have_uniscribe}
 
 Other features:
