@@ -23,10 +23,19 @@ class WebConsoleConnectionProxy {
    * @param RemoteTarget target
    *        The target that the console will connect to.
    */
-  constructor(webConsoleUI, target) {
+  constructor(webConsoleUI, target, isBrowserConsole, fissionSupport) {
     this.webConsoleUI = webConsoleUI;
     this.target = target;
-    this.fissionSupport = this.webConsoleUI.fissionSupport;
+    this.isBrowserConsole = isBrowserConsole;
+    this.fissionSupport = fissionSupport;
+
+    /**
+     * The DebuggerClient object.
+     *
+     * @see DebuggerClient
+     * @type object
+     */
+    this.client = target.client;
 
     this._connecter = null;
 
@@ -59,7 +68,6 @@ class WebConsoleConnectionProxy {
     this.target.on("navigate", this._onTabNavigated);
 
     const connection = (async () => {
-      this.client = this.target.client;
       this.webConsoleClient = await this.target.getFront("console");
       this._addWebConsoleClientEventListeners();
       await this._attachConsole();
@@ -376,6 +384,7 @@ class WebConsoleConnectionProxy {
 
     this.client = null;
     this.webConsoleClient = null;
+    this.target = null;
     this.webConsoleUI = null;
   }
 }

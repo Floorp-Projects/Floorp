@@ -18,7 +18,7 @@ add_task(async function() {
   info("open the debugger");
   await openDebugger();
 
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
   // firstCall calls secondCall, which has a debugger statement, so we'll be paused.

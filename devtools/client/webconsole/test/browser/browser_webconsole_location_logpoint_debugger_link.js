@@ -25,7 +25,7 @@ add_task(async function() {
   info("Open the Debugger panel");
   await openDebugger();
 
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
   await selectSource(dbg, "test-location-debugger-link-logpoint-1.js");
 
@@ -111,7 +111,7 @@ add_task(async function() {
   info("Open the Debugger panel");
   await openDebugger();
 
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
   info("Add a logpoint to the first file");

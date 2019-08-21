@@ -23,7 +23,7 @@ const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
 
   // Loading the inspector panel at first, to make it possible to listen for
   // new node selections
