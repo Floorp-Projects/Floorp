@@ -38,17 +38,17 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
 JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 
 void JSWindowActor::StartDestroy() {
-  DestroyCallback(DestroyCallbackFunction::WillDestroy);
+  InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSWindowActor::AfterDestroy() {
-  DestroyCallback(DestroyCallbackFunction::DidDestroy);
+  InvokeCallback(CallbackFunction::DidDestroy);
 }
 
-void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
+void JSWindowActor::InvokeCallback(CallbackFunction callback) {
   AutoEntryScript aes(GetParentObject(), "JSWindowActor destroy callback");
   JSContext* cx = aes.cx();
-  MozActorDestroyCallbacks callbacksHolder;
+  MozJSWindowActorCallbacks callbacksHolder;
   NS_ENSURE_TRUE_VOID(GetWrapper());
   JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*GetWrapper()));
   if (NS_WARN_IF(!callbacksHolder.Init(cx, val))) {
@@ -56,13 +56,17 @@ void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
   }
 
   // Destroy callback is optional.
-  if (callback == DestroyCallbackFunction::WillDestroy) {
+  if (callback == CallbackFunction::WillDestroy) {
     if (callbacksHolder.mWillDestroy.WasPassed()) {
       callbacksHolder.mWillDestroy.Value()->Call(this);
     }
-  } else {
+  } else if (callback == CallbackFunction::DidDestroy) {
     if (callbacksHolder.mDidDestroy.WasPassed()) {
       callbacksHolder.mDidDestroy.Value()->Call(this);
+    }
+  } else {
+    if (callbacksHolder.mActorCreated.WasPassed()) {
+      callbacksHolder.mActorCreated.Value()->Call(this);
     }
   }
 }
