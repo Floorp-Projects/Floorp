@@ -26,6 +26,8 @@ add_task(async function test_autocomplete_popup_item_hidden() {
         () => !popup.popupOpen,
         "Popup should get closed"
       );
+
+      await TestUtils.waitForTick();
       popup.closePopup();
       await onPopupClosed;
     }
