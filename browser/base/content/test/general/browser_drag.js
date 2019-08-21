@@ -21,13 +21,13 @@ function test() {
   ];
   // set the valid attribute so dropping is allowed
   var oldstate = gURLBar.getAttribute("pageproxystate");
-  gURLBar.setAttribute("pageproxystate", "valid");
+  gURLBar.setPageProxyState("valid");
   var dt = EventUtils.synthesizeDragStart(
     document.getElementById("identity-box"),
     expected
   );
   is(dt, null, "drag on proxy icon");
-  gURLBar.setAttribute("pageproxystate", oldstate);
+  gURLBar.setPageProxyState(oldstate);
   // Now, the identity information panel is opened by the proxy icon click.
   // We need to close it for next tests.
   EventUtils.synthesizeKey("VK_ESCAPE", {}, window);

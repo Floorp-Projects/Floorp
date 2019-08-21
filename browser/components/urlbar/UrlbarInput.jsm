@@ -132,6 +132,8 @@ class UrlbarInput {
 
     this.inputField = this.querySelector("#urlbar-input");
     this.dropmarker = this.querySelector(".urlbar-history-dropmarker");
+    this._inputContainer = this.querySelector("#urlbar-input-container");
+    this._identityBox = this.querySelector("#identity-box");
 
     XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
       return new UrlbarValueFormatter(this);
@@ -888,6 +890,12 @@ class UrlbarInput {
       this._layoutBreakoutPlaceholder.remove();
       this._layoutBreakoutPlaceholder = null;
     }
+  }
+
+  setPageProxyState(state) {
+    this.setAttribute("pageproxystate", state);
+    this._inputContainer.setAttribute("pageproxystate", state);
+    this._identityBox.setAttribute("pageproxystate", state);
   }
 
   // Private methods below.
