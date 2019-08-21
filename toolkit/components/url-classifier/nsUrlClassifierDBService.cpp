@@ -865,12 +865,8 @@ nsUrlClassifierDBServiceWorker::ResetDatabase() {
 
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ReloadDatabase() {
-  nsTArray<nsCString> tables;
-  nsresult rv = mClassifier->ActiveTables(tables);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // This will null out mClassifier
-  rv = CloseDb();
+  nsresult rv = CloseDb();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create new mClassifier and load prefixset and completions from disk.
