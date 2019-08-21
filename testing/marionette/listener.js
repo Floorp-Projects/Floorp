@@ -1636,9 +1636,6 @@ function switchToFrame(msg) {
  * @param {boolean=} full
  *     True to take a screenshot of the entire document element. Is only
  *     considered if <var>id</var> is not defined. Defaults to true.
- * @param {Array.<UUID>=} highlights
- *     Draw a border around the elements found by their web element
- *     references.
  * @param {boolean=} scroll
  *     When <var>id</var> is given, scroll it into view before taking the
  *     screenshot.  Defaults to true.
@@ -1650,15 +1647,8 @@ function switchToFrame(msg) {
  * @return {string}
  *     Base64 encoded string or a SHA-256 hash of the screenshot.
  */
-function takeScreenshot(
-  format,
-  { id, full = true, highlights = [], scroll = true } = {}
-) {
+function takeScreenshot(format, { id, full = true, scroll = true } = {}) {
   let win = curContainer.frame;
-
-  let highlightEls = highlights
-    .map(ref => WebElement.fromUUID(ref, "content"))
-    .map(webEl => seenEls.get(webEl, win));
 
   let canvas;
 
@@ -1675,11 +1665,11 @@ function takeScreenshot(
       el = win.document.documentElement;
     }
 
-    canvas = capture.element(el, highlightEls);
+    canvas = capture.element(el);
 
     // viewport
   } else {
-    canvas = capture.viewport(win, highlightEls);
+    canvas = capture.viewport(win);
   }
 
   switch (format) {

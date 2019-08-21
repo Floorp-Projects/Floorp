@@ -1794,8 +1794,7 @@ class Marionette(object):
         """
         return self._send_message("WebDriver:GetCookies")
 
-    def save_screenshot(self, fh, element=None, highlights=None,
-                        full=True, scroll=True):
+    def save_screenshot(self, fh, element=None, full=True, scroll=True):
         """Takes a screenhot of a web element or the current frame and
         saves it in the filehandle.
 
@@ -1804,11 +1803,10 @@ class Marionette(object):
 
         The rest of the parameters are defined like in screenshot()
         """
-        data = self.screenshot(element, highlights, "binary", full, scroll)
+        data = self.screenshot(element, "binary", full, scroll)
         fh.write(data)
 
-    def screenshot(self, element=None, highlights=None, format="base64",
-                   full=True, scroll=True):
+    def screenshot(self, element=None, format="base64", full=True, scroll=True):
         """Takes a screenshot of a web element or the current frame.
 
         The screen capture is returned as a lossless PNG image encoded
@@ -1819,10 +1817,6 @@ class Marionette(object):
 
         :param element: The element to take a screenshot of.  If None, will
             take a screenshot of the current frame.
-
-        :param highlights: A list of
-            :class:`~marionette_driver.marionette.HTMLElement` objects to draw
-            a red box around in the returned screenshot.
 
         :param format: if "base64" (the default), returns the screenshot
             as a base64-string. If "binary", the data is decoded and
@@ -1840,12 +1834,8 @@ class Marionette(object):
 
         if element:
             element = element.id
-        lights = None
-        if highlights:
-            lights = [highlight.id for highlight in highlights]
 
         body = {"id": element,
-                "highlights": lights,
                 "full": full,
                 "hash": False,
                 "scroll": scroll}
