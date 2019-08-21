@@ -11,7 +11,7 @@ import {
 } from "./helpers/breakpoints.js";
 
 import { mockCommandClient } from "./helpers/mockCommandClient";
-
+import { generatedToOriginalId } from "devtools-source-map";
 import { asyncStore } from "../../utils/prefs";
 
 function loadInitialState(opts = {}) {
@@ -376,7 +376,12 @@ describe("adding sources", () => {
   it("corresponding breakpoints are added to the original source", async () => {
     const sourceURL = makeSourceURL("bar.js");
     const store = createStore(mockClient({ "5": [2] }), loadInitialState(), {
-      getOriginalURLs: async () => [sourceURL],
+      getOriginalURLs: async source => [
+        {
+          id: generatedToOriginalId(source.id, sourceURL),
+          url: sourceURL,
+        },
+      ],
       getOriginalSourceText: async () => ({ source: "" }),
       getGeneratedLocation: async (location, _source) => ({
         line: location.line,

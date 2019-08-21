@@ -1432,7 +1432,15 @@ const {
 
 async function getOriginalURLs(generatedSource) {
   const map = await fetchSourceMap(generatedSource);
-  return map && map.sources;
+
+  if (!map || !map.sources) {
+    return null;
+  }
+
+  return map.sources.map(url => ({
+    id: generatedToOriginalId(generatedSource.id, url),
+    url
+  }));
 }
 
 const COMPUTED_SPANS = new WeakSet();
