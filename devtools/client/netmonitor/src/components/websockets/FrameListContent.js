@@ -48,6 +48,7 @@ class FrameListContent extends Component {
       selectedFrame: PropTypes.object,
       selectFrame: PropTypes.func.isRequired,
       columns: PropTypes.object.isRequired,
+      channelId: PropTypes.number,
     };
   }
 
@@ -63,10 +64,22 @@ class FrameListContent extends Component {
     };
     this.pinnedToBottom = false;
     this.initIntersectionObserver = false;
+    this.intersectionObserver = null;
   }
 
-  componentDidUpdate() {
+  componentDidMount() {
     const { startPanelContainer } = this.props;
+    const scrollAnchor = this.refs.scrollAnchor;
+
+    if (scrollAnchor) {
+      // Always scroll to anchor when FrameListContent component first mounts.
+      scrollAnchor.scrollIntoView();
+    }
+    this.setupScrollToBottom(startPanelContainer, scrollAnchor);
+  }
+
+  componentDidUpdate(prevProps) {
+    const { startPanelContainer, channelId } = this.props;
     const scrollAnchor = this.refs.scrollAnchor;
 
     // When frames are cleared, the previous scrollAnchor would be destroyed, so we need to reset this boolean.
@@ -74,10 +87,27 @@ class FrameListContent extends Component {
       this.initIntersectionObserver = false;
     }
 
+    // If a new WebSocket connection is selected, scroll to anchor.
+    if (channelId !== prevProps.channelId && scrollAnchor) {
+      scrollAnchor.scrollIntoView();
+    }
+
+    this.setupScrollToBottom(startPanelContainer, scrollAnchor);
+  }
+
+  componentWillUnmount() {
+    // Reset observables and boolean values.
+    const scrollAnchor = this.refs.scrollAnchor;
+    this.intersectionObserver.unobserve(scrollAnchor);
+    this.initIntersectionObserver = false;
+    this.pinnedToBottom = false;
+  }
+
+  setupScrollToBottom(startPanelContainer, scrollAnchor) {
     if (startPanelContainer && scrollAnchor) {
       // Initialize intersection observer.
       if (!this.initIntersectionObserver) {
-        const observer = new IntersectionObserver(
+        this.intersectionObserver = new IntersectionObserver(
           () => {
             // When scrollAnchor first comes into view, this.pinnedToBottom is set to true.
             // When the anchor goes out of view, this callback function triggers again and toggles this.pinnedToBottom.
@@ -89,7 +119,7 @@ class FrameListContent extends Component {
             threshold: 0.1,
           }
         );
-        observer.observe(scrollAnchor);
+        this.intersectionObserver.observe(scrollAnchor);
         this.initIntersectionObserver = true;
       }
 

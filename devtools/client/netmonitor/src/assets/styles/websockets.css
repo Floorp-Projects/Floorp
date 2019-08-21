@@ -145,3 +145,7 @@
 #messages-panel .truncation-checkbox {
   margin-right: 5px;
 }
+
+#messages-panel .truncated-message {
+  font-variant-numeric: tabular-nums;
+}
