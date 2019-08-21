@@ -5,6 +5,11 @@ module.exports = {
     "spidermonkey-js"
   ],
 
+  "overrides": [{
+    "files": ["*.js"],
+    "processor": "spidermonkey-js/processor",
+  }],
+
   "rules": {
     // We should fix those at some point, but we use this to detect NaNs.
     "no-self-compare": "off",
