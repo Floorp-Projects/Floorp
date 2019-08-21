@@ -3006,8 +3006,6 @@ GeckoDriver.prototype.deleteSession = function() {
  * @param {string=} id
  *     Optional web element reference to take a screenshot of.
  *     If undefined, a screenshot will be taken of the document element.
- * @param {Array.<string>=} highlights
- *     List of web elements to highlight. Defaults to an empty list.
  * @param {boolean=} full
  *     True to take a screenshot of the entire document element. Is only
  *     considered if <var>id</var> is not defined. Defaults to true.
@@ -3024,10 +3022,9 @@ GeckoDriver.prototype.deleteSession = function() {
 GeckoDriver.prototype.takeScreenshot = function(cmd) {
   let win = assert.open(this.getCurrentWindow());
 
-  let { id, highlights, full, hash, scroll } = cmd.parameters;
+  let { id, full, hash, scroll } = cmd.parameters;
   let format = hash ? capture.Format.Hash : capture.Format.Base64;
 
-  highlights = highlights || [];
   full = typeof full == "undefined" ? true : full;
   scroll = typeof scroll == "undefined" ? true : scroll;
 
@@ -3036,10 +3033,6 @@ GeckoDriver.prototype.takeScreenshot = function(cmd) {
 
   switch (this.context) {
     case Context.Chrome:
-      let highlightEls = highlights
-        .map(ref => WebElement.fromUUID(ref, Context.Chrome))
-        .map(webEl => this.curBrowser.seenEls.get(webEl));
-
       let canvas;
 
       // element or full document element
@@ -3052,11 +3045,11 @@ GeckoDriver.prototype.takeScreenshot = function(cmd) {
           node = win.document.documentElement;
         }
 
-        canvas = capture.element(node, highlightEls);
+        canvas = capture.element(node);
 
         // viewport
       } else {
-        canvas = capture.viewport(win, highlightEls);
+        canvas = capture.viewport(win);
       }
 
       switch (format) {
@@ -3072,7 +3065,6 @@ GeckoDriver.prototype.takeScreenshot = function(cmd) {
       return this.listener.takeScreenshot(format, {
         id,
         full,
-        highlights,
         scroll,
       });
   }
