@@ -41,7 +41,7 @@
 #include "ReferrerInfo.h"
 
 using namespace mozilla;
-using mozilla::net::ReferrerPolicy;
+using mozilla::dom::ReferrerPolicy;
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 

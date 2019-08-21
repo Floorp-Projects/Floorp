@@ -1369,9 +1369,9 @@ void WorkerPrivate::UpdateReferrerInfoFromHeader(
     return;
   }
 
-  net::ReferrerPolicy policy =
+  ReferrerPolicy policy =
       nsContentUtils::GetReferrerPolicyFromHeader(headerValue);
-  if (policy == net::RP_Unset) {
+  if (policy == ReferrerPolicy::_empty) {
     return;
   }
 

@@ -3114,7 +3114,7 @@ nsresult nsPluginHost::NewPluginURLStream(
       // errors about malformed requests if we include it in POSTs. See
       // bug 724465.
       nsCOMPtr<nsIURI> referer;
-      net::ReferrerPolicy referrerPolicy = net::RP_Unset;
+      dom::ReferrerPolicy referrerPolicy = dom::ReferrerPolicy::_empty;
 
       nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(element);
       if (olc) olc->GetSrcURI(getter_AddRefs(referer));
@@ -3127,7 +3127,7 @@ nsresult nsPluginHost::NewPluginURLStream(
         referrerPolicy = doc->GetReferrerPolicy();
       }
       nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          new mozilla::dom::ReferrerInfo(referer, referrerPolicy);
+          new dom::ReferrerInfo(referer, referrerPolicy);
       rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       NS_ENSURE_SUCCESS(rv, rv);
     }

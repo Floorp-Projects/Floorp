@@ -118,11 +118,11 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   nsAutoString referrer;
   aRequest->GetReferrer(referrer);
 
-  net::ReferrerPolicy policy = aRequest->GetReferrerPolicy();
+  ReferrerPolicy policy = aRequest->ReferrerPolicy_();
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   if (referrer.IsEmpty()) {
     // This is the case request’s referrer is "no-referrer"
-    referrerInfo = new ReferrerInfo(nullptr, net::RP_No_Referrer);
+    referrerInfo = new ReferrerInfo(nullptr, ReferrerPolicy::No_referrer);
   } else if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
     referrerInfo = ReferrerInfo::CreateForFetch(aPrincipal, aDoc);
     // In the first step, we should use referrer info from requetInit

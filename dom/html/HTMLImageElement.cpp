@@ -46,7 +46,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsLayoutUtils.h"
 
@@ -423,7 +422,7 @@ void HTMLImageElement::AfterMaybeChangeAttr(
   } else if (aName == nsGkAtoms::referrerpolicy &&
              aNamespaceID == kNameSpaceID_None && aNotify) {
     ReferrerPolicy referrerPolicy = GetImageReferrerPolicy();
-    if (!InResponsiveMode() && referrerPolicy != RP_Unset &&
+    if (!InResponsiveMode() && referrerPolicy != ReferrerPolicy::_empty &&
         aValueMaybeChanged &&
         referrerPolicy != ReferrerPolicyFromAttr(aOldValue)) {
       // XXX: Bug 1076583 - We still use the older synchronous algorithm

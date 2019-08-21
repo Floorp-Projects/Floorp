@@ -49,6 +49,7 @@ class imgRequest final : public nsIStreamListener,
   typedef mozilla::image::Image Image;
   typedef mozilla::image::ImageCacheKey ImageCacheKey;
   typedef mozilla::image::ProgressTracker ProgressTracker;
+  typedef mozilla::dom::ReferrerPolicy ReferrerPolicy;
 
  public:
   imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey);

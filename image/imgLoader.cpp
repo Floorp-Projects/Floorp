@@ -725,14 +725,14 @@ static bool ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
   // XXX: this will return false if an image has different referrer attributes,
   // i.e. we currently don't use the cached image but reload the image with
   // the new referrer policy bug 1174921
-  uint32_t referrerPolicy = RP_Unset;
+  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
   if (aReferrerInfo) {
-    referrerPolicy = aReferrerInfo->GetReferrerPolicy();
+    referrerPolicy = aReferrerInfo->ReferrerPolicy();
   }
 
-  uint32_t requestReferrerPolicy = RP_Unset;
+  ReferrerPolicy requestReferrerPolicy = ReferrerPolicy::_empty;
   if (request->GetReferrerInfo()) {
-    requestReferrerPolicy = request->GetReferrerInfo()->GetReferrerPolicy();
+    requestReferrerPolicy = request->GetReferrerInfo()->ReferrerPolicy();
   }
 
   if (referrerPolicy != requestReferrerPolicy) {

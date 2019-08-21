@@ -21,7 +21,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Document.h"
 #include "nsStyleUtil.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 namespace mozilla {
 namespace dom {
@@ -483,7 +482,7 @@ already_AddRefed<URLExtraData> FontFace::GetURLExtraData() const {
   // We pass RP_Unset when creating ReferrerInfo object here because it's not
   // going to result to change referer policy in a resource request.
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new mozilla::dom::ReferrerInfo(docURI, net::RP_Unset);
+      new ReferrerInfo(docURI, ReferrerPolicy::_empty);
 
   RefPtr<URLExtraData> url = new URLExtraData(base, referrerInfo, principal);
   return url.forget();

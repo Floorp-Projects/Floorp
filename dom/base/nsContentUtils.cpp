@@ -7882,20 +7882,20 @@ bool nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType) {
 }
 
 // static
-net::ReferrerPolicy nsContentUtils::GetReferrerPolicyFromHeader(
+ReferrerPolicy nsContentUtils::GetReferrerPolicyFromHeader(
     const nsAString& aHeader) {
   // Multiple headers could be concatenated into one comma-separated
   // list of policies. Need to tokenize the multiple headers.
   nsCharSeparatedTokenizer tokenizer(aHeader, ',');
   nsAutoString token;
-  net::ReferrerPolicy referrerPolicy = mozilla::net::RP_Unset;
+  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
   while (tokenizer.hasMoreTokens()) {
     token = tokenizer.nextToken();
     if (token.IsEmpty()) {
       continue;
     }
-    net::ReferrerPolicy policy = net::ReferrerPolicyFromString(token);
-    if (policy != net::RP_Unset) {
+    ReferrerPolicy policy = net::ReferrerPolicyFromString(token);
+    if (policy != ReferrerPolicy::_empty) {
       referrerPolicy = policy;
     }
   }
@@ -7903,11 +7903,11 @@ net::ReferrerPolicy nsContentUtils::GetReferrerPolicyFromHeader(
 }
 
 // static
-net::ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
+ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
     nsIChannel* aChannel) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (!httpChannel) {
-    return net::RP_Unset;
+    return ReferrerPolicy::_empty;
   }
 
   nsresult rv;
@@ -7915,7 +7915,7 @@ net::ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
   rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
                                       headerValue);
   if (NS_FAILED(rv) || headerValue.IsEmpty()) {
-    return net::RP_Unset;
+    return ReferrerPolicy::_empty;
   }
 
   return GetReferrerPolicyFromHeader(NS_ConvertUTF8toUTF16(headerValue));

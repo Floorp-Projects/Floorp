@@ -72,34 +72,6 @@ interface nsIHttpChannel : nsIChannel
     void setReferrerInfoWithoutClone(in nsIReferrerInfo aReferrerInfo);
 
     /**
-     * Referrer policies. See ReferrerPolicy.h for more details.
-     */
-
-    /*   The undefined state, or no referrer policy, usually causing a fallback
-         to a referrer policy definded elsewhere */
-    const unsigned long REFERRER_POLICY_UNSET                      = 0;
-
-    /*   default state, doesn't send referrer from https->http          */
-    const unsigned long REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE = 1;
-    /*   sends no referrer                                              */
-    const unsigned long REFERRER_POLICY_NO_REFERRER                = 2;
-    /*   only sends the origin of the referring URL                     */
-    const unsigned long REFERRER_POLICY_ORIGIN                     = 3;
-    /*   same as default, but reduced to ORIGIN when cross-origin.      */
-    const unsigned long REFERRER_POLICY_ORIGIN_WHEN_XORIGIN        = 4;
-    /*   always sends the referrer, even on downgrade.                  */
-    const unsigned long REFERRER_POLICY_UNSAFE_URL                 = 5;
-    /*   send referrer when same-origin, no referrer when cross-origin  */
-    const unsigned long REFERRER_POLICY_SAME_ORIGIN                = 6;
-    /*   send origin when request from https->https or http->http(s)
-         No referrer when request from https->http. */
-    const unsigned long REFERRER_POLICY_STRICT_ORIGIN              = 7;
-    /*   send referrer when same-origin,
-         Send origin when cross-origin from https->https or http->http(s)
-         No referrer when request from https->http. */
-    const unsigned long REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN = 8;
-
-    /**
      * Returns the network protocol used to fetch the resource as identified
      * by the ALPN Protocol ID.
      *

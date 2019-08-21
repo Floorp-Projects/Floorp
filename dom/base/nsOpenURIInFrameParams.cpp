@@ -8,7 +8,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsOpenURIInFrameParams)
   NS_INTERFACE_MAP_ENTRY(nsIOpenURIInFrameParams)

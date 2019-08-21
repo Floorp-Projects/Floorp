@@ -20,7 +20,6 @@
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
 
-#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Logging.h"
 #include "nsIReferrerInfo.h"
 

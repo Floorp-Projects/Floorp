@@ -19,7 +19,6 @@
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIConsoleReportCollector;
 class nsICookieSettings;

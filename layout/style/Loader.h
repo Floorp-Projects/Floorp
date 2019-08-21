@@ -27,7 +27,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;
@@ -87,7 +86,7 @@ class MOZ_RAII LoaderReusableStyleSheets {
 };
 
 class Loader final {
-  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+  typedef mozilla::dom::ReferrerPolicy ReferrerPolicy;
 
  public:
   typedef nsIStyleSheetLinkingElement::Completed Completed;

@@ -185,7 +185,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
-  net::ReferrerPolicy GetImageReferrerPolicy() override {
+  ReferrerPolicy GetImageReferrerPolicy() override {
     return GetReferrerPolicyAsEnum();
   }
 

@@ -14,6 +14,7 @@
 #include "mozilla/css/SheetParsingMode.h"
 #include "ReferrerInfo.h"
 #include "nsCSSValue.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::css;

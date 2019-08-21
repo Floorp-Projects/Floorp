@@ -244,11 +244,11 @@ partial interface Document {
   readonly attribute URI? documentURIObject;
 
   /**
-   * Current referrer policy - one of the REFERRER_POLICY_* constants
-   * from nsIHttpChannel.
+   * Current referrer policy - one of the referrer policy value from
+   * ReferrerPolicy.webidl.
    */
   [ChromeOnly]
-  readonly attribute unsigned long referrerPolicy;
+  readonly attribute ReferrerPolicy referrerPolicy;
 
     /**
    * Current referrer info, which holds all referrer related information
