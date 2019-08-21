@@ -95,12 +95,29 @@ function createBlocklistHandler({ lastupdate }) {
   };
 }
 
+async function assertTelemetryOnBlocklistUpdateError({
+  serverBlocklistHandler,
+  expectedConsoleMessage,
+  expectedTelemetryEvents,
+}) {
+  blocklistHandler = serverBlocklistHandler;
+  let onceConsoleMessageLogged = promiseConsoleMessage(expectedConsoleMessage);
+  await Blocklist.notify();
+  await onceConsoleMessageLogged;
+
+  TelemetryTestUtils.assertEvents(expectedTelemetryEvents, {
+    category: "addonsManager",
+    method: "blocklistUpdateError",
+  });
+}
+
 add_task(async function test_setup() {
   Services.prefs.setCharPref(
     PREF_BLOCKLIST_URL,
     "http://example.com/blocklist.xml"
   );
 
+  // Ensure the telemetry event category is enabled.
   await AddonTestUtils.promiseStartupManager();
   // Ensure that the telemetry event definition is loaded.
   await TelemetryController.testSetup();
@@ -202,4 +219,111 @@ add_task(async function test_lastModified_xml_on_empty_lastupdate_attribute() {
     "Missing Date",
     "Expect the telemetry scalar to be unchanged"
   );
+});
+
+add_task(async function test_blocklist_telemetry_event() {
+  Services.telemetry.clearEvents();
+
+  info("Verify telemetry event recorded on unexpected HTTP status code");
+  await assertTelemetryOnBlocklistUpdateError({
+    serverBlocklistHandler: (request, response) => {
+      response.setStatusLine(
+        request.httpVersion,
+        501,
+        "unexpected status code"
+      );
+      response.write("");
+    },
+    expectedConsoleMessage: /^Blocklist::onXMLLoad: there was an error/,
+    expectedTelemetryEvents: [
+      {
+        category: "addonsManager",
+        method: "blocklistUpdateError",
+        object: "xml",
+        value: "UNEXPECTED_STATUS_CODE",
+        extra: { status_code: "501" },
+      },
+    ],
+  });
+
+  info("Verify telemetry event recorded on XML parse error");
+  await assertTelemetryOnBlocklistUpdateError({
+    serverBlocklistHandler: (request, response) => {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write("");
+    },
+    expectedConsoleMessage: /^Blocklist::onXMLLoad: there was an error during load, we got invalid XML/,
+    expectedTelemetryEvents: [
+      {
+        category: "addonsManager",
+        method: "blocklistUpdateError",
+        object: "xml",
+        value: "INVALID_XML_ERROR",
+      },
+    ],
+  });
+
+  info("Verify telemetry event recorded on XHR load error");
+  Services.prefs.setCharPref(
+    PREF_BLOCKLIST_URL,
+    // Use the wrong schema to trigger a XHR load error.
+    "https://example.com/blocklist.xml"
+  );
+  await assertTelemetryOnBlocklistUpdateError({
+    expectedConsoleMessage: /^Blocklist:onError/,
+    expectedTelemetryEvents: [
+      {
+        category: "addonsManager",
+        method: "blocklistUpdateError",
+        object: "xml",
+        value: "DOWNLOAD_ERROR",
+        extra: { status_code: "0" },
+      },
+    ],
+  });
+
+  info(
+    "Verify telemetry event recorded on errors creating the blocklist server url error"
+  );
+  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "an invalid url");
+  await assertTelemetryOnBlocklistUpdateError({
+    expectedConsoleMessage: /^Blocklist::notify: There was an error creating the blocklist URI/,
+    expectedTelemetryEvents: [
+      {
+        category: "addonsManager",
+        method: "blocklistUpdateError",
+        object: "xml",
+        value: "INVALID_BLOCKLIST_URL",
+      },
+    ],
+  });
+
+  info(
+    "Verify telemetry event recorded on missing blocklist server url preference"
+  );
+
+  // Replace the BlocklistXML._getBlocklistServerURL method to trigger a
+  // "missing blocklist url pref" scenario (clearing the pref is not enough because
+  // the url from the default pref value just takes its place).
+  const { BlocklistXML } = ChromeUtils.import(
+    "resource://gre/modules/Blocklist.jsm",
+    null
+  );
+  const _getBlocklistServerURL = BlocklistXML._getBlocklistServerURL;
+  BlocklistXML._getBlocklistServerURL = () => {
+    BlocklistXML._getBlocklistServerURL = _getBlocklistServerURL;
+    throw new Error("Fake missing blocklist url pref");
+  };
+
+  await assertTelemetryOnBlocklistUpdateError({
+    expectedConsoleMessage: /^Blocklist::notify: The extensions.blocklist.url preference is missing!/,
+    expectedTelemetryEvents: [
+      {
+        category: "addonsManager",
+        method: "blocklistUpdateError",
+        object: "xml",
+        value: "MISSING_BLOCKLIST_SERVER_URL",
+      },
+    ],
+  });
 });
