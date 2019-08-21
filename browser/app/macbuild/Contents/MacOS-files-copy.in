@@ -1,0 +1,11 @@
+# Specifies files that should be copied (via deep copy, resolving symlinks)
+# from dist/bin to the .app/Contents/MacOS directory. Linking is preferred to
+# reduce disk I/O during builds, so just include dylibs which need to be in the
+# same directory as returned by dladddr(3).
+#
+# Some of these dylibs load other dylibs which are assumed to be siblings in
+# the same directory obtained from dladdr(3). With macOS 10.15, dladdr returns
+# absolute resolved paths which breaks this assumption if symlinks are used
+# because the symlink targets are in different directories. Hence the need for
+# them to be copied to the same directory.
+/*.dylib
