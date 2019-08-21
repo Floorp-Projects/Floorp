@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
       const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
       const allow_nonzero_unitless_lengths = !SpecialPowers.getBoolPref('mathml.nonzero_unitless_lengths.disabled');
+      const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -63,6 +64,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mstyle mathsize="small"></mstyle></math>
         <math><mstyle mathsize="normal"></mstyle></math>
         <math><mstyle mathsize="big"></mstyle></math>
+        <math><mspace width="veryverythinmathspace"/></math>
+        <math><mspace width="verythinmathspace"/></math>
+        <math><mspace width="thinmathspace"/></math>
+        <math><mspace width="mediummathspace"/></math>
+        <math><mspace width="thickmathspace"/></math>
+        <math><mspace width="verythickmathspace"/></math>
+        <math><mspace width="veryverythickmathspace"/></math>
         <math><mo minsize="17">+</mo></math>
       */
         LengthParsingError : {
@@ -78,6 +86,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                      allow_mathsize_names,
                      allow_mathsize_names,
                      allow_mathsize_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
+                     allow_mathspace_names,
                      allow_nonzero_unitless_lengths,
                     ],
             args: [["2..0px"],
@@ -92,6 +107,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                    ["small"],
                    ["normal"],
                    ["big"],
+                   ["veryverythinmathspace"],
+                   ["verythinmathspace"],
+                   ["thinmathspace"],
+                   ["mediummathspace"],
+                   ["thickmathspace"],
+                   ["verythickmathspace"],
+                   ["veryverythickmathspace"],
                    ["17"]
                   ]
         },
@@ -201,6 +223,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mstyle mathsize="small"></mstyle></math>
     <math><mstyle mathsize="normal"></mstyle></math>
     <math><mstyle mathsize="big"></mstyle></math>
+    <math><mspace width="veryverythinmathspace"/></math>
+    <math><mspace width="verythinmathspace"/></math>
+    <math><mspace width="thinmathspace"/></math>
+    <math><mspace width="mediummathspace"/></math>
+    <math><mspace width="thickmathspace"/></math>
+    <math><mspace width="verythickmathspace"/></math>
+    <math><mspace width="veryverythickmathspace"/></math>
     
     <!-- MMultiscriptsErrors -->
     <math><mmultiscripts></mmultiscripts></math>

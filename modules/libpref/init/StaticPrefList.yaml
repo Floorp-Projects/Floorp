@@ -4891,6 +4891,13 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Whether to disable legacy names "thickmathspace", "mediummathspace",
+# "thickmathspace" etc for length attributes.
+- name: mathml.mathspace_names.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable legacy names "thin", "thick" and "medium" for the
 # linethickness attribute of the mfrac element.
 - name: mathml.mfrac_linethickness_names.disabled
