@@ -89,7 +89,7 @@ WebConsolePanel.prototype = {
     return this;
   },
 
-  get target() {
+  get currentTarget() {
     return this._toolbox.target;
   },
 
