@@ -102,23 +102,18 @@ static void SimpleParseKeyValuePairs(
 
 #if defined(XP_WIN)
 namespace {
-static nsresult GetFolderDiskInfo(const char* aSpecialDirName,
-                                  FolderDiskInfo& info) {
+static nsresult GetFolderDiskInfo(nsIFile* file, FolderDiskInfo& info) {
   info.model.Truncate();
   info.revision.Truncate();
   info.isSSD = false;
 
-  nsCOMPtr<nsIFile> profDir;
-  nsresult rv =
-      NS_GetSpecialDirectory(aSpecialDirName, getter_AddRefs(profDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoString profDirPath;
-  rv = profDir->GetPath(profDirPath);
+  nsAutoString filePath;
+  nsresult rv = file->GetPath(filePath);
   NS_ENSURE_SUCCESS(rv, rv);
   wchar_t volumeMountPoint[MAX_PATH] = {L'\\', L'\\', L'.', L'\\'};
   const size_t PREFIX_LEN = 4;
   if (!::GetVolumePathNameW(
-          profDirPath.get(), volumeMountPoint + PREFIX_LEN,
+          filePath.get(), volumeMountPoint + PREFIX_LEN,
           mozilla::ArrayLength(volumeMountPoint) - PREFIX_LEN)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -205,16 +200,17 @@ static nsresult GetFolderDiskInfo(const char* aSpecialDirName,
   return NS_OK;
 }
 
-static nsresult CollectDiskInfo(DiskInfo& info) {
-  nsresult rv = GetFolderDiskInfo(NS_GRE_DIR, info.binary);
+static nsresult CollectDiskInfo(nsIFile* greDir, nsIFile* winDir,
+                                nsIFile* profDir, DiskInfo& info) {
+  nsresult rv = GetFolderDiskInfo(greDir, info.binary);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = GetFolderDiskInfo(NS_WIN_WINDOWS_DIR, info.system);
+  rv = GetFolderDiskInfo(winDir, info.system);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return GetFolderDiskInfo(NS_APP_USER_PROFILE_50_DIR, info.profile);
+  return GetFolderDiskInfo(profDir, info.profile);
 }
 
 nsresult GetInstallYear(uint32_t& aYear) {
@@ -1130,15 +1126,32 @@ nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
 
   if (!mDiskInfoPromise) {
     RefPtr<mozilla::LazyIdleThread> lazyIOThread = GetHelperThread();
+    nsCOMPtr<nsIFile> greDir;
+    nsCOMPtr<nsIFile> winDir;
+    nsCOMPtr<nsIFile> profDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(winDir));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(profDir));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-    mDiskInfoPromise = InvokeAsync(lazyIOThread, __func__, []() {
-      DiskInfo info;
-      nsresult rv = CollectDiskInfo(info);
-      if (NS_SUCCEEDED(rv)) {
-        return DiskInfoPromise::CreateAndResolve(info, __func__);
-      }
-      return DiskInfoPromise::CreateAndReject(rv, __func__);
-    });
+    mDiskInfoPromise =
+        InvokeAsync(lazyIOThread, __func__, [greDir, winDir, profDir]() {
+          DiskInfo info;
+          nsresult rv = CollectDiskInfo(greDir, winDir, profDir, info);
+          if (NS_SUCCEEDED(rv)) {
+            return DiskInfoPromise::CreateAndResolve(info, __func__);
+          }
+          return DiskInfoPromise::CreateAndReject(rv, __func__);
+        });
   }
 
   // Chain the new promise to the extant mozpromise.
