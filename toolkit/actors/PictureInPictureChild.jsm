@@ -914,15 +914,16 @@ class PictureInPictureChild extends ActorChild {
     // This way, we sidestep the AutoplayPolicy blocking stuff.
     playerVideo.muted = true;
 
+    // Strip any inline styles off of the video, and try to get rid of any surrounding
+    // whitespace.
+    playerVideo.setAttribute("style", "");
+    doc.body.style.overflow = "hidden";
+    doc.body.style.margin = "0";
+
     // Force the player video to assume maximum height and width of the
     // containing window
     playerVideo.style.height = "100vh";
     playerVideo.style.width = "100vw";
-
-    // And now try to get rid of as much surrounding whitespace as possible.
-    playerVideo.style.margin = "0";
-    doc.body.style.overflow = "hidden";
-    doc.body.style.margin = "0";
 
     doc.body.appendChild(playerVideo);
 
