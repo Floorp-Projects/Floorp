@@ -218,7 +218,10 @@ add_task(async function testCategorySections() {
       await waitForClass(itemToTest, "notFound", false);
       await waitForClass(itemToTest, "blocked", true);
       if (enabledPref == TPC_PREF) {
-        Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ALLOW);
+        Services.prefs.setIntPref(
+          TPC_PREF,
+          Ci.nsICookieService.BEHAVIOR_ACCEPT
+        );
       } else {
         Services.prefs.setBoolPref(enabledPref, false);
       }
