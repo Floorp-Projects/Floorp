@@ -2046,8 +2046,7 @@ nsresult WSRunObject::Scrub() {
 }
 
 bool WSRunScanner::IsBlockNode(nsINode* aNode) {
-  return aNode && aNode->IsElement() &&
-         HTMLEditor::NodeIsBlockStatic(aNode->AsElement());
+  return aNode && aNode->IsElement() && HTMLEditor::NodeIsBlockStatic(*aNode);
 }
 
 }  // namespace mozilla

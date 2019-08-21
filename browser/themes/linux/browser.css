@@ -210,10 +210,7 @@ menuitem.bookmark-item {
 }
 
 .urlbar-display {
-  margin-top: 0;
-  margin-bottom: 0;
   margin-inline-start: 0;
-  color: GrayText;
 }
 
 #search-container {

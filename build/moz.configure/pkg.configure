@@ -16,7 +16,6 @@ pkg_config = check_prog('PKG_CONFIG', pkg_config, allow_missing=True)
 
 @depends_if(pkg_config)
 @checking('for pkg-config version')
-@imports('subprocess')
 def pkg_config_version(pkg_config):
     return Version(check_cmd_output(pkg_config, '--version').rstrip())
 
@@ -59,26 +58,23 @@ def pkg_check_modules(var, package_desc, when=always,
                 min_version)
 
     @depends(pkg_config, package_desc, allow_missing, when=when_and_compile_environment)
-    @imports('subprocess')
     @imports('sys')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
     def package(pkg_config, package_desc, allow_missing):
         # package_desc may start as a depends function, so we can't use
         # @checking here.
         log.info("checking for %s... " % package_desc)
-        with log.queue_debug():
-            try:
-                subprocess.check_output([pkg_config, '--errors-to-stdout',
-                                         '--print-errors', package_desc])
-                log.info("yes")
-                return True
-            except subprocess.CalledProcessError as e:
-                log.info("no")
-                log_writer = log.warning if allow_missing else log.error
-                with LineIO(lambda l: log_writer(l), 'replace') as o:
-                    o.write(e.output)
-                if not allow_missing:
-                    sys.exit(1)
+        retcode, stdout, stderr = get_cmd_output(
+            pkg_config, '--errors-to-stdout', '--print-errors', package_desc)
+        if retcode == 0:
+            log.info("yes")
+            return True
+        log.info("no")
+        log_writer = log.warning if allow_missing else log.error
+        with LineIO(lambda l: log_writer(l)) as o:
+            o.write(stdout)
+        if not allow_missing:
+            sys.exit(1)
 
     @depends(pkg_config, package_desc, when=package)
     @checking('%s_CFLAGS' % var, callback=lambda t: ' '.join(t))

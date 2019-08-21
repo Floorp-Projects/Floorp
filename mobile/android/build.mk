@@ -9,8 +9,18 @@ installer:
 
 package:
 	# Setting MOZ_GECKOVIEW_JAR makes the installer generate a separate GeckoView JAR
+ifdef MOZ_ANDROID_WITH_FENNEC
 	@$(MAKE) MOZ_GECKOVIEW_JAR=1 -C mobile/android/installer stage-package
 	@$(MAKE) -C mobile/android/installer
+else
+	@$(MAKE) MOZ_GECKOVIEW_JAR=1 -C mobile/android/installer
+endif # MOZ_ANDROID_WITH_FENNEC
+
+stage-package:
+	$(MAKE) MOZ_GECKOVIEW_JAR=1 -C mobile/android/installer stage-package
+ifdef MOZ_ANDROID_WITH_FENNEC
+	$(MAKE) -C mobile/android/installer stage-package
+endif # MOZ_ANDROID_WITH_FENNEC
 
 ifeq ($(OS_TARGET),Android)
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)

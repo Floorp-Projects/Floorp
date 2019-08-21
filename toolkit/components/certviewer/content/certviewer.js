@@ -68,7 +68,7 @@ const getElementByPathOrFalse = (obj, pathString) => {
   return result ? result : false;
 };
 
-const adjustCertInformation = cert => {
+export const adjustCertInformation = cert => {
   let certItems = [];
   let tabName = cert.subject ? cert.subject.cn || "" : "";
 
@@ -322,9 +322,8 @@ const adjustCertInformation = cert => {
           items.push(createEntryItem("Location", entry.location));
           items.push(createEntryItem("Method", entry.method));
         });
-        items.filter(elem => elem != null);
       }
-      return items;
+      return items.filter(elem => elem != null);
     },
     certItems,
     "Authority Info (AIA)",
@@ -352,9 +351,8 @@ const adjustCertInformation = cert => {
             });
           }
         });
-        items.filter(elem => elem != null);
       }
-      return items;
+      return items.filter(elem => elem != null);
     },
     certItems,
     "Certificate Policies",
@@ -370,9 +368,8 @@ const adjustCertInformation = cert => {
             items.push(createEntryItem(key, entry[key]));
           }
         });
-        items.filter(elem => elem != null);
       }
-      return items;
+      return items.filter(elem => elem != null);
     },
     certItems,
     "Embedded SCTs",

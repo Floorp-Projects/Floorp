@@ -358,6 +358,19 @@
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
+.urlbar-display {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.urlbar-display:not(:-moz-lwtheme) {
+  color: GrayText;
+}
+
+.urlbar-display:-moz-lwtheme {
+  opacity: 0.5;
+}
+
 #urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");

@@ -1520,7 +1520,6 @@ void nsChildView::PaintWindowInContentLayer() {
 }
 
 void nsChildView::HandleMainThreadCATransaction() {
-  MaybeScheduleUnsuspendAsyncCATransactions();
   WillPaintWindow();
 
   if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
@@ -1538,9 +1537,13 @@ void nsChildView::HandleMainThreadCATransaction() {
   // Apply the changes from mContentLayer to its underlying CALayer. Now is a
   // good time to call this because we know we're currently inside a main thread
   // CATransaction.
-  auto compositingState = mCompositingState.Lock();
-  mNativeLayerRoot->ApplyChanges();
-  compositingState->mNativeLayerChangesPending = false;
+  {
+    auto compositingState = mCompositingState.Lock();
+    mNativeLayerRoot->ApplyChanges();
+    compositingState->mNativeLayerChangesPending = false;
+  }
+
+  MaybeScheduleUnsuspendAsyncCATransactions();
 }
 
 #pragma mark -
@@ -3163,6 +3166,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mCumulativeRotation = 0.0;
 
     mNeedsGLUpdate = NO;
+    mIsUpdatingLayer = NO;
 
     [self setFocusRingType:NSFocusRingTypeNone];
 
@@ -3757,7 +3761,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)markLayerForDisplay {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup() && !mIsUpdatingLayer) {
     // This call will cause updateRootCALayer to be called during the upcoming
     // main thread CoreAnimation transaction. It will also trigger a transaction
     // if no transaction is currently pending.
@@ -3774,7 +3778,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)updateRootCALayer {
   if (NS_IsMainThread() && mGeckoChild) {
+    MOZ_RELEASE_ASSERT(!mIsUpdatingLayer, "Re-entrant layer display?");
+    mIsUpdatingLayer = YES;
     mGeckoChild->HandleMainThreadCATransaction();
+    mIsUpdatingLayer = NO;
   }
 }
 

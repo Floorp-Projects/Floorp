@@ -293,12 +293,6 @@
   max-width: 20em;
 }
 
-.urlbar-display {
-  margin-top: 0;
-  margin-bottom: 0;
-  color: GrayText;
-}
-
 #pageAction-urlbar-shareURL,
 #pageAction-panel-shareURL {
   list-style-image: url("chrome://browser/skin/share.svg");

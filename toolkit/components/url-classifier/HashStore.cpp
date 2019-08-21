@@ -333,7 +333,10 @@ nsresult HashStore::Open(uint32_t aVersion) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ReadHeader();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Failed to read header for %s", mTableName.get()));
+    return NS_ERROR_FILE_CORRUPTED;
+  }
 
   rv = SanityCheck(aVersion);
   NS_ENSURE_SUCCESS(rv, rv);
