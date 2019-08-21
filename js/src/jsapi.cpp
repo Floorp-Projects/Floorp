@@ -3538,10 +3538,9 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
-  hasIntroductionInfo = rhs.hasIntroductionInfo;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
   fieldsEnabledOption = rhs.fieldsEnabledOption;
-};
+}
 
 void JS::ReadOnlyCompileOptions::copyPODOptions(
     const ReadOnlyCompileOptions& rhs) {

@@ -3437,8 +3437,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   setIntroductionOffset(options.introductionOffset);
   parameterListEnd_ = parameterListEnd.isSome() ? parameterListEnd.value() : 0;
 
-  if (options.hasIntroductionInfo) {
-    MOZ_ASSERT(options.introductionType != nullptr);
+  if (options.hasIntroductionInfo()) {
     const char* filename =
         options.filename() ? options.filename() : "<unknown>";
     char* formatted = FormatIntroducedFilename(
@@ -3447,15 +3446,14 @@ bool ScriptSource::initFromOptions(JSContext* cx,
       return false;
     }
     filename_.reset(formatted);
-  } else if (options.filename()) {
-    if (!setFilename(cx, options.filename())) {
-      return false;
-    }
-  }
 
-  if (options.introducerFilename()) {
+    MOZ_ASSERT(options.introducerFilename());
     introducerFilename_ = DuplicateString(cx, options.introducerFilename());
     if (!introducerFilename_) {
+      return false;
+    }
+  } else if (options.filename()) {
+    if (!setFilename(cx, options.filename())) {
       return false;
     }
   }
