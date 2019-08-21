@@ -89,7 +89,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 accountManager.authenticatedAccount()?.let {
                     accountManager.syncNowAsync(startup = true)
-                    it.deviceConstellation().refreshDeviceStateAsync().await()
+                    it.deviceConstellation().pollForEventsAsync().await()
                 }
             }
         }

@@ -161,11 +161,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
             requireComponents.backgroundServices.accountManager.syncNowAsync().await()
-            // Poll for device events.
+            // Poll for device events & update devices.
             accountManager.authenticatedAccount()
-                ?.deviceConstellation()
-                ?.refreshDeviceStateAsync()
-                ?.await()
+                ?.deviceConstellation()?.run {
+                    refreshDevicesAsync().await()
+                    pollForEventsAsync().await()
+                }
         }
     }
 
