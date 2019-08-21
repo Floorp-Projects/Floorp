@@ -1494,6 +1494,7 @@ nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
     case FlushType::Event:
       return mObservers[0];
     case FlushType::Style:
+    case FlushType::Frames:
       return mObservers[1];
     case FlushType::Layout:
       return mObservers[2];
@@ -1994,6 +1995,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
           // a layout flush).
           presShell->NotifyFontFaceSetOnRefresh();
           mNeedToRecomputeVisibility = true;
+
+          // Record the telemetry for the # of flushes that occurred between
+          // ticks.
+          presShell->PingFlushPerTickTelemetry(FlushType::Style);
         }
       }
     } else if (i == 2) {
@@ -2019,6 +2024,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
         // ready promise if it needs to.
         presShell->NotifyFontFaceSetOnRefresh();
         mNeedToRecomputeVisibility = true;
+
+        // Record the telemetry for the # of flushes that occured between
+        // ticks.
+        presShell->PingFlushPerTickTelemetry(FlushType::Layout);
       }
     }
 

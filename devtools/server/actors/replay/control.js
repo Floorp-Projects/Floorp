@@ -949,6 +949,7 @@ async function queuePauseData(point, trackCached, shouldSkipCallback) {
       // When the logpoint's text is resolved at this point then the pause data
       // will be fetched as well.
       if (
+        point.position &&
         gLogpoints.some(({ position }) =>
           positionSubsumes(position, point.position)
         )
@@ -1475,6 +1476,14 @@ function handleResumeManifestResponse({
   for (const point of debuggerStatements) {
     const checkpoint = getSavedCheckpoint(point.checkpoint);
     getCheckpointInfo(checkpoint).debuggerStatements.push(point);
+  }
+
+  // In repaint stress mode, the child process creates a checkpoint before every
+  // paint. By gathering the pause data at these checkpoints, we will perform a
+  // repaint at all of these checkpoints, ensuring that all the normal paints
+  // can be repainted.
+  if (RecordReplayControl.inRepaintStressMode()) {
+    queuePauseData(point);
   }
 }
 
