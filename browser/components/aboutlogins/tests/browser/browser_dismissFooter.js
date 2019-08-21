@@ -42,9 +42,11 @@ add_task(async function test_open_links() {
 
     await ContentTask.spawn(browser, selector, async buttonClass => {
       let footer = Cu.waiveXrays(
-        content.document.querySelector("login-footer")
+        content.document
+          .querySelector("login-item")
+          .shadowRoot.querySelector("login-footer")
       );
-      ok(ContentTaskUtils.is_visible(footer), "Footer is visible");
+      ok(!footer.hidden, "Footer is visible");
       let button = footer.shadowRoot.querySelector(buttonClass);
 
       button.click();
@@ -62,7 +64,11 @@ add_task(async function dismissFooter() {
   let browser = gBrowser.selectedBrowser;
 
   await ContentTask.spawn(browser, null, async () => {
-    let footer = Cu.waiveXrays(content.document.querySelector("login-footer"));
+    let footer = Cu.waiveXrays(
+      content.document
+        .querySelector("login-item")
+        .shadowRoot.querySelector("login-footer")
+    );
     let dismissButton = footer.shadowRoot.querySelector(".close");
 
     dismissButton.click();
