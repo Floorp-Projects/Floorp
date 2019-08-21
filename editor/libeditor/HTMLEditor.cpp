@@ -295,7 +295,20 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
 
   // Clean up after our anonymous content -- we don't want these nodes to
   // stay around (which they would, since the frames have an owning reference).
-  HideAnonymousEditingUIs();
+  PresShell* presShell = GetPresShell();
+  if (presShell && presShell->IsDestroying()) {
+    // Just destroying PresShell now.
+    // We have to keep UI elements of anonymous content until PresShell
+    // is destroyed.
+    RefPtr<HTMLEditor> self = this;
+    nsContentUtils::AddScriptRunner(
+        NS_NewRunnableFunction("HTMLEditor::PreDestroy", [self]() {
+          self->HideAnonymousEditingUIs();
+        }));
+  } else {
+    // PresShell is alive or already gone.
+    HideAnonymousEditingUIs();
+  }
 
   EditorBase::PreDestroy(aDestroyingFrames);
 }
