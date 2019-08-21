@@ -214,6 +214,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
     WriteParam(aMsg, aParam.mRelayProtocol);
     WriteParam(aMsg, aParam.mPort);
     WriteParam(aMsg, aParam.mProtocol);
+    WriteParam(aMsg, aParam.mProxied);
     WriteRTCStats(aMsg, aParam);
   }
 
@@ -226,6 +227,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
         !ReadParam(aMsg, aIter, &(aResult->mRelayProtocol)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPort)) ||
         !ReadParam(aMsg, aIter, &(aResult->mProtocol)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mProxied)) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
     }

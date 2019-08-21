@@ -123,6 +123,8 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
     r = nr_socket_getaddr(cand->isock->sock, &addr);
     if (r) return false;
 
+    out->is_proxied = addr.is_proxied;
+
     if (!ToNrIceAddr(addr, &out->local_addr)) return false;
   }
 

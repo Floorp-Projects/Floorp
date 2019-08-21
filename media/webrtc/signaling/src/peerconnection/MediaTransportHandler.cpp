@@ -1153,6 +1153,8 @@ static void ToRTCIceCandidateStats(
       cand.mRelayProtocol.Construct(
           NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
     }
+    cand.mProxied.Construct(NS_ConvertASCIItoUTF16(
+        candidate.is_proxied ? "proxied" : "non-proxied"));
     report->mIceCandidateStats.Value().AppendElement(cand, fallible);
     if (candidate.trickled) {
       report->mTrickledIceCandidateStats.Value().AppendElement(cand, fallible);
