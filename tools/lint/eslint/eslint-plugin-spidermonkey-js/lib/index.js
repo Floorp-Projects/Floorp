@@ -12,6 +12,6 @@
 // ------------------------------------------------------------------------------
 module.exports = {
   processors: {
-    ".js": require("../lib/processors/self-hosted"),
+    processor: require("../lib/processors/self-hosted"),
   },
 };
