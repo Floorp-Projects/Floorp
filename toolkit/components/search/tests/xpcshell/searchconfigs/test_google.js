@@ -44,7 +44,7 @@ const test = new SearchConfigTest({
     },
     {
       excluded: [{ regions: ["us"] }],
-      included: [],
+      included: [{}],
       domain: "google.com",
       codes: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
         ? "client=firefox-b-e"
