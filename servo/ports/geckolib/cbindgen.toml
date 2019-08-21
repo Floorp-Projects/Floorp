@@ -672,6 +672,10 @@ renaming_overrides_prefixing = true
 """
 
 "GenericGridTemplateComponent" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
   StyleGenericGridTemplateComponent() {}
  public:
   inline Maybe<size_t> RepeatAutoIndex() const;
