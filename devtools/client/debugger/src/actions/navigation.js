@@ -7,7 +7,7 @@
 import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
-import { updateThreads } from "./debuggee";
+import { updateThreads } from "./threads";
 
 import { clearWasmStates } from "../utils/wasm";
 import { getMainThread } from "../selectors";

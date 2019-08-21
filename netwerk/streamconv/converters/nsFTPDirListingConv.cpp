@@ -294,7 +294,7 @@ char* nsFTPDirListingConv::DigestBufferLines(char* aBuffer,
     // the application/http-index-format specs
     // viewers of such a format can then reformat this into the
     // current locale (or anything else they choose)
-    PR_FormatTimeUSEnglish(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S",
+    PR_FormatTimeUSEnglish(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT",
                            &result.fe_time);
 
     nsAutoCString escaped;

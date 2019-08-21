@@ -700,12 +700,6 @@ void JitCode::traceChildren(JSTracer* trc) {
     MacroAssembler::TraceJumpRelocations(trc, this, reader);
   }
   if (dataRelocTableBytes_) {
-    // If we're moving objects, we need writable JIT code.
-    bool movingObjects =
-        JS::RuntimeHeapIsMinorCollecting() || zone()->isGCCompacting();
-    MaybeAutoWritableJitCode awjc(this,
-                                  movingObjects ? Reprotect : DontReprotect);
-
     uint8_t* start = code_ + dataRelocTableOffset();
     CompactBufferReader reader(start, start + dataRelocTableBytes_);
     MacroAssembler::TraceDataRelocations(trc, this, reader);

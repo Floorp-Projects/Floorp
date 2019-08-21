@@ -8,10 +8,12 @@
 #define ModuloBuffer_h
 
 #include "mozilla/leb128iterator.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PowerOfTwo.h"
 #include "mozilla/UniquePtr.h"
 
+#include <iterator>
 #include <limits>
 #include <type_traits>
 
@@ -106,6 +108,22 @@ class ModuloBuffer {
     return PowerOfTwo<Length>(mMask.MaskValue() + 1);
   }
 
+  // Size of external resources.
+  // Note: `mBufferDeleter`'s potential external data (for its captures) is not
+  // included, as it's hidden in the `std::function` implementation.
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+    if (!mBufferDeleter) {
+      // If we don't have a buffer deleter, assume we don't own the data, so
+      // it's probably on the stack, or should be reported by its owner.
+      return 0;
+    }
+    return aMallocSizeOf(mBuffer);
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   // All ModuloBuffer operations should be done through this iterator, which has
   // an effectively infinite range. The underlying wrapping-around is hidden.
   // Use `ReaderAt(Index)` or `WriterAt(Index)` to create it.
@@ -122,8 +140,7 @@ class ModuloBuffer {
   class Iterator {
     // Alias to const- or mutable-`ModuloBuffer` depending on `IsBufferConst`.
     using ConstOrMutableBuffer =
-        typename std::conditional<IsBufferConst, const ModuloBuffer,
-                                  ModuloBuffer>::type;
+        std::conditional_t<IsBufferConst, const ModuloBuffer, ModuloBuffer>;
 
     // Implementation note about the strange enable-if's below:
     //   `template <bool NotIBC = !IsBufferConst> enable_if_t<NotIBC>`
@@ -171,6 +188,14 @@ class ModuloBuffer {
     // C++ is fun!
 
    public:
+    // These definitions are expected by std functions, to recognize this as an
+    // iterator. See https://en.cppreference.com/w/cpp/iterator/iterator_traits
+    using difference_type = Index;
+    using value_type = Byte;
+    using pointer = std::conditional_t<IsBufferConst, const Byte*, Byte*>;
+    using reference = std::conditional_t<IsBufferConst, const Byte&, Byte&>;
+    using iterator_category = std::random_access_iterator_tag;
+
     // Can always copy/assign from the same kind of iterator.
     Iterator(const Iterator& aRhs) = default;
     Iterator& operator=(const Iterator& aRhs) = default;
@@ -230,9 +255,19 @@ class ModuloBuffer {
       ++mIndex;
       return *this;
     }
+    Iterator operator++(int) {
+      Iterator here(*mModuloBuffer, mIndex);
+      ++mIndex;
+      return here;
+    }
     Iterator& operator--() {
       --mIndex;
       return *this;
+    }
+    Iterator operator--(int) {
+      Iterator here(*mModuloBuffer, mIndex);
+      --mIndex;
+      return here;
     }
     Iterator& operator+=(Length aLength) {
       mIndex += aLength;
@@ -240,6 +275,9 @@ class ModuloBuffer {
     }
     Iterator operator+(Length aLength) const {
       return Iterator(*mModuloBuffer, mIndex + aLength);
+    }
+    friend Iterator operator+(Length aLength, const Iterator& aIt) {
+      return aIt + aLength;
     }
     Iterator& operator-=(Length aLength) {
       mIndex -= aLength;
@@ -257,9 +295,12 @@ class ModuloBuffer {
     }
 
     // Dereference a single byte (read-only if `IsBufferConst` is true).
-    std::conditional_t<IsBufferConst, const Byte&, Byte&> operator*() const {
+    reference operator*() const {
       return mModuloBuffer->mBuffer[OffsetInBuffer()];
     }
+
+    // Random-access dereference.
+    reference operator[](Length aLength) const { return *(*this + aLength); }
 
     // Write data (if `IsBufferConst` is false) but don't move iterator.
     template <bool NotIsBufferConst = !IsBufferConst>

@@ -130,7 +130,7 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
 void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
                       gint* aHeight, AtkCoordType aCoordType) {
   AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  *aX = *aY = *aWidth = *aHeight = 0;
+  *aX = *aY = *aWidth = *aHeight = -1;
 
   if (accWrap) {
     if (accWrap->IsDefunct()) {

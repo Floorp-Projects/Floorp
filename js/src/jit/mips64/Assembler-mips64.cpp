@@ -7,6 +7,7 @@
 #include "jit/mips64/Assembler-mips64.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 using mozilla::DebugOnly;
 
@@ -112,7 +113,9 @@ void Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code,
   }
 }
 
-static void TraceOneDataRelocation(JSTracer* trc, Instruction* inst) {
+static void TraceOneDataRelocation(JSTracer* trc,
+                                   mozilla::Maybe<AutoWritableJitCode>& awjc,
+                                   JitCode* code, Instruction* inst) {
   void* ptr = (void*)Assembler::ExtractLoad64Value(inst);
   void* prior = ptr;
 
@@ -124,16 +127,19 @@ static void TraceOneDataRelocation(JSTracer* trc, Instruction* inst) {
   if (word >> JSVAL_TAG_SHIFT) {
     // This relocation is a Value with a non-zero tag.
     Value v = Value::fromRawBits(word);
-    TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
+    TraceManuallyBarrieredEdge(trc, &v, "jit-masm-value");
     ptr = (void*)v.bitsAsPunboxPointer();
   } else {
     // This relocation is a raw pointer or a Value with a zero tag.
     // No barrier needed since these are constants.
     TraceManuallyBarrieredGenericPointerEdge(
-        trc, reinterpret_cast<gc::Cell**>(&ptr), "ion-masm-ptr");
+        trc, reinterpret_cast<gc::Cell**>(&ptr), "jit-masm-ptr");
   }
 
   if (ptr != prior) {
+    if (awjc.isNothing()) {
+      awjc.emplace(code);
+    }
     Assembler::UpdateLoad64Value(inst, uint64_t(ptr));
     AutoFlushICache::flush(uintptr_t(inst), 6 * sizeof(uint32_t));
   }
@@ -142,10 +148,11 @@ static void TraceOneDataRelocation(JSTracer* trc, Instruction* inst) {
 /* static */
 void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
                                      CompactBufferReader& reader) {
+  mozilla::Maybe<AutoWritableJitCode> awjc;
   while (reader.more()) {
     size_t offset = reader.readUnsigned();
     Instruction* inst = (Instruction*)(code->raw() + offset);
-    TraceOneDataRelocation(trc, inst);
+    TraceOneDataRelocation(trc, awjc, code, inst);
   }
 }
 

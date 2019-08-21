@@ -85,7 +85,7 @@ struct VORG
     this->vertYOrigins.len = it.len ();
 
     + it
-    | hb_apply ([c] (const VertOriginMetric& _) { c->copy (_);})
+    | hb_apply ([c] (const VertOriginMetric& _) { c->copy (_); })
     ;
   }
 

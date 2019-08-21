@@ -17,19 +17,19 @@ export function updateThreads() {
 
     const currentThreads = getThreads(getState());
 
-    const addedThreads = differenceBy(threads, currentThreads, w => w.actor);
-    const removedThreads = differenceBy(currentThreads, threads, w => w.actor);
+    const addedThreads = differenceBy(threads, currentThreads, t => t.actor);
+    const removedThreads = differenceBy(currentThreads, threads, t => t.actor);
     if (removedThreads.length > 0) {
       const sourceActors = getSourceActorsForThread(
         getState(),
-        removedThreads.map(w => w.actor)
+        removedThreads.map(t => t.actor)
       );
       dispatch(removeSourceActors(sourceActors));
       dispatch(
         ({
           type: "REMOVE_THREADS",
           cx,
-          threads: removedThreads.map(w => w.actor),
+          threads: removedThreads.map(t => t.actor),
         }: Action)
       );
     }

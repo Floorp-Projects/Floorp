@@ -80,8 +80,8 @@ template <typename T> using hb_type_identity = typename hb_type_identity_t<T>::t
 
 struct
 {
-  template <typename T>
-  T* operator () (T& arg) const
+  template <typename T> constexpr T*
+  operator () (T& arg) const
   {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -171,29 +171,29 @@ using hb_is_cr_convertible = hb_bool_constant<
 /* std::move and std::forward */
 
 template <typename T>
-static hb_remove_reference<T>&& hb_move (T&& t) { return (hb_remove_reference<T>&&) (t); }
+static constexpr hb_remove_reference<T>&& hb_move (T&& t) { return (hb_remove_reference<T>&&) (t); }
 
 template <typename T>
-static T&& hb_forward (hb_remove_reference<T>& t) { return (T&&) t; }
+static constexpr T&& hb_forward (hb_remove_reference<T>& t) { return (T&&) t; }
 template <typename T>
-static T&& hb_forward (hb_remove_reference<T>&& t) { return (T&&) t; }
+static constexpr T&& hb_forward (hb_remove_reference<T>&& t) { return (T&&) t; }
 
 struct
 {
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (T&& v) const HB_AUTO_RETURN (hb_forward<T> (v))
 
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (T *v) const HB_AUTO_RETURN (*v)
 }
 HB_FUNCOBJ (hb_deref);
 
 struct
 {
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (T&& v) const HB_AUTO_RETURN (hb_forward<T> (v))
 
-  template <typename T> auto
+  template <typename T> constexpr auto
   operator () (T& v) const HB_AUTO_RETURN (hb_addressof (v))
 }
 HB_FUNCOBJ (hb_ref);

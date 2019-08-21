@@ -168,6 +168,17 @@ _hb_next_syllable (hb_buffer_t *buffer, unsigned int start)
   return start;
 }
 
+static inline void
+_hb_clear_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		     hb_font_t *font HB_UNUSED,
+		     hb_buffer_t *buffer)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    info[i].syllable() = 0;
+}
+
 
 /* unicode_props */
 
@@ -549,6 +560,17 @@ static inline void
 _hb_glyph_info_clear_substituted (hb_glyph_info_t *info)
 {
   info->glyph_props() &= ~(HB_OT_LAYOUT_GLYPH_PROPS_SUBSTITUTED);
+}
+
+static inline void
+_hb_clear_substitution_flags (const hb_ot_shape_plan_t *plan HB_UNUSED,
+			      hb_font_t *font HB_UNUSED,
+			      hb_buffer_t *buffer)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    _hb_glyph_info_clear_substituted (&info[i]);
 }
 
 

@@ -771,6 +771,7 @@ PopupNotifications.prototype = {
           for (let elt of this.panel.children) {
             elt.notification.timeShown = this.window.performance.now();
           }
+          break;
         }
       // fall through
       case "TabSelect":

@@ -49,8 +49,7 @@ bool nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
     return false;
   }
 
-  aFilename.Assign(filename.get());
-  return true;
+  return aFilename.Assign(filename.get(), fallible);
 }
 
 bool nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
@@ -60,8 +59,7 @@ bool nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
     return false;
   }
 
-  aFilename.Assign(NS_ConvertUTF8toUTF16(filename.get()));
-  return true;
+  return aFilename.Assign(NS_ConvertUTF8toUTF16(filename.get()), fallible);
 }
 
 uint64_t nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext) {

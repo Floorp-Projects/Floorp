@@ -940,7 +940,6 @@ fuzzy-if(winWidget,0-123,0-1900) == 409659-1d.html 409659-1-ref.html  # Bug 1128
 == 410621-1.html 410621-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 411059-1.html 411059-1-ref.html # Bug 1392106
 fuzzy-if(webrender&&winWidget,127-129,652-770) == 411334-1.xml 411334-1-ref.xml
-== 411367-1.html 411367-1-ref.html
 == 411367-2.html 411367-2-ref.html
 == 411367-3.html 411367-3-ref.html
 == 411585-1.html 411585-1-ref.html
@@ -1777,7 +1776,6 @@ fuzzy-if(OSX,0-1,0-364) fuzzy-if(skiaContent,0-1,0-320) == 846144-1.html 846144-
 == 860242-1.html 860242-1-ref.html
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
-== 875060-1.html 875060-1-ref.html
 == 883987-1a.html 883987-1-ref.html
 fails == 883987-1b.html 883987-1-ref.html # bug 1446971
 fails == 883987-1c.html 883987-1-ref.html # bug 1446971
