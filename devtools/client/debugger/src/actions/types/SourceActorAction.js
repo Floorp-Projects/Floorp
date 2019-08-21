@@ -4,6 +4,7 @@
 
 // @flow
 
+import type { Context } from "../../types";
 import { type PromiseAction } from "../utils/middleware/promise";
 import type {
   SourceActorId,
@@ -17,6 +18,11 @@ export type SourceActorsInsertAction = {|
 export type SourceActorsRemoveAction = {|
   type: "REMOVE_SOURCE_ACTORS",
   items: Array<SourceActor>,
+|};
+export type SourceActorClearMapAction = {|
+  +type: "CLEAR_SOURCE_ACTOR_MAP_URL",
+  +cx: Context,
+  +id: SourceActorId,
 |};
 
 export type SourceActorBreakpointColumnsAction = PromiseAction<
@@ -40,4 +46,5 @@ export type SourceActorAction =
   | SourceActorsInsertAction
   | SourceActorsRemoveAction
   | SourceActorBreakpointColumnsAction
-  | SourceActorBreakableLinesAction;
+  | SourceActorBreakableLinesAction
+  | SourceActorClearMapAction;
