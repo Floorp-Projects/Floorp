@@ -790,20 +790,6 @@ nsresult ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
   return NS_OK;
 }
 
-void ImageLoader::FlushUseCounters() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  for (auto iter = mRegisteredImages.Iter(); !iter.Done(); iter.Next()) {
-    if (imgRequestProxy* request = iter.Data()) {
-      nsCOMPtr<imgIContainer> container;
-      request->GetImage(getter_AddRefs(container));
-      if (container) {
-        static_cast<image::Image*>(container.get())->ReportUseCounters();
-      }
-    }
-  }
-}
-
 bool ImageLoader::ImageReflowCallback::ReflowFinished() {
   // Check that the frame is still valid. If it isn't, then onload was
   // unblocked when the frame was removed from the FrameSet in

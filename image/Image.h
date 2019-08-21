@@ -225,8 +225,6 @@ class Image : public imgIContainer {
   virtual void SetHasError() = 0;
 
   virtual nsIURI* GetURI() const = 0;
-
-  virtual void ReportUseCounters() {}
 };
 
 class ImageResource : public Image {

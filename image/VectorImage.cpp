@@ -1509,12 +1509,6 @@ void VectorImage::PropagateUseCounters(Document* aParentDocument) {
   }
 }
 
-void VectorImage::ReportUseCounters() {
-  if (Document* doc = mSVGDocumentWrapper->GetDocument()) {
-    doc->ReportUseCounters();
-  }
-}
-
 nsIntSize VectorImage::OptimalImageSizeForDest(const gfxSize& aDest,
                                                uint32_t aWhichFrame,
                                                SamplingFilter aSamplingFilter,
