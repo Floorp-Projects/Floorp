@@ -29,11 +29,14 @@ add_task(async function() {
   info("Sellecting the body node");
   await selectNode("body", inspector);
 
-  info("Adding a DOM mutation breakpoint to body");
+  info("Adding DOM mutation breakpoints to body");
   const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  const breakOnMenuItem = allMenuItems.find(item => item.id === "node-menu-mutation-breakpoint-attribute");
-  breakOnMenuItem.click();
+  const attributeMenuItem = allMenuItems.find(item => item.id === "node-menu-mutation-breakpoint-attribute");
+  attributeMenuItem.click();
+
+  const subtreeMenuItem = allMenuItems.find(item => item.id === "node-menu-mutation-breakpoint-subtree");
+  subtreeMenuItem.click();
 
   info("Switches over to the debugger pane");
   await toolbox.selectTool("jsdebugger");
@@ -41,12 +44,12 @@ add_task(async function() {
   const dbg = createDebuggerContext(toolbox);
 
   info("Confirms that one DOM mutation breakpoint exists");
-  const mutationItem = await waitForElementWithSelector(dbg, ".dom-mutation-list li");
+  const mutationItem = await waitForElement(dbg, "domMutationItem");
   ok(mutationItem, "A DOM mutation breakpoint exists");
 
   mutationItem.scrollIntoView();
 
-  info("Enabling and disabling the DOM mutation breakpoint works ");
+  info("Enabling and disabling the DOM mutation breakpoint works");
   const checkbox = mutationItem.querySelector("input");
   checkbox.click();
   await waitFor(() => !checkbox.checked);
@@ -55,8 +58,19 @@ add_task(async function() {
 
   info("Changing attribute to trigger debugger pause");
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.document.querySelector("button").click();
+    content.document.querySelector("#attribute").click();
   });
   await waitForPaused(dbg);
   await resume(dbg);
+
+  info("Changing subtree to trigger debugger pause");
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    content.document.querySelector("#subtree").click();
+  });
+  await waitForPaused(dbg);
+  await resume(dbg);
+
+  info("Removing a breakpoint works")
+  dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();
+  await waitForAllElements(dbg, "domMutationItem", 1);
 });
