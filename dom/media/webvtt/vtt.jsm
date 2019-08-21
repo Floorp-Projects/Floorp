@@ -872,16 +872,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       return false;
     }
 
-    // Check if this box overlaps any other boxes in boxes.
-    overlapsAny(boxes) {
-      for (let i = 0; i < boxes.length; i++) {
-        if (this.overlaps(boxes[i])) {
-          return true;
-        }
-      }
-      return false;
-    }
-
     // Check if this box is within another box.
     within(container) {
       return (this.top >= container.top - this.fuzz) &&
