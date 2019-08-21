@@ -981,10 +981,14 @@ nsContextMenu.prototype = {
   initPasswordManagerItems() {
     let loginFillInfo =
       gContextMenuContentData && gContextMenuContentData.loginFillInfo;
+    let documentURI = gContextMenuContentData.documentURIObject;
 
     // If we could not find a password field we
     // don't want to show the form fill option.
-    let showFill = loginFillInfo && loginFillInfo.passwordField.found;
+    let showFill =
+      loginFillInfo &&
+      loginFillInfo.passwordField.found &&
+      !documentURI.schemeIs("about");
 
     // Disable the fill option if the user hasn't unlocked with their master password
     // or if the password field or target field are disabled.
@@ -1020,7 +1024,6 @@ nsContextMenu.prototype = {
       return;
     }
 
-    let documentURI = gContextMenuContentData.documentURIObject;
     let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
     let fragment = LoginManagerContextMenu.addLoginsToMenu(
       this.targetIdentifier,
