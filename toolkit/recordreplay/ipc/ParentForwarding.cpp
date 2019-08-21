@@ -152,13 +152,6 @@ static bool HandleMessageInMiddleman(ipc::Side aSide,
 // Return whether a message should be sent to the recording child, even if it
 // is not currently active.
 static bool AlwaysForwardMessage(const IPC::Message& aMessage) {
-  // Always forward messages in repaint stress mode, as the active child is
-  // almost always a replaying child and lost messages make it hard to load
-  // pages completely.
-  if (InRepaintStressMode()) {
-    return true;
-  }
-
   IPC::Message::msgid_t type = aMessage.type();
 
   // Forward close messages so that the tab shuts down properly even if it is
