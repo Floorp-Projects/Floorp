@@ -1846,7 +1846,7 @@ void internal_DynamicScalarToIPC(
     const StaticMutexAutoLock& lock,
     const nsTArray<DynamicScalarInfo>& aDynamicScalarInfos,
     nsTArray<DynamicScalarDefinition>& aIPCDefs) {
-  for (auto info : aDynamicScalarInfos) {
+  for (auto& info : aDynamicScalarInfos) {
     DynamicScalarDefinition stubDefinition;
     stubDefinition.type = info.kind;
     stubDefinition.dataset = info.dataset;
@@ -1891,7 +1891,7 @@ void internal_RegisterScalars(const StaticMutexAutoLock& lock,
     gDynamicStoreNames = new nsTArray<RefPtr<nsAtom>>();
   }
 
-  for (auto scalarInfo : scalarInfos) {
+  for (auto& scalarInfo : scalarInfos) {
     // Allow expiring scalars that were already registered.
     CharPtrEntryType* existingKey =
         gScalarNameIDMap.GetEntry(scalarInfo.name());
@@ -3660,7 +3660,7 @@ void TelemetryScalar::AddDynamicScalarDefinitions(
   nsTArray<DynamicScalarInfo> dynamicStubs;
 
   // Populate the definitions array before acquiring the lock.
-  for (auto def : aDefs) {
+  for (auto& def : aDefs) {
     bool recordOnRelease = def.dataset == nsITelemetry::DATASET_ALL_CHANNELS;
     dynamicStubs.AppendElement(DynamicScalarInfo{def.type,
                                                  recordOnRelease,
