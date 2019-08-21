@@ -11,7 +11,7 @@ import cases from "jest-in-case";
 const prettier = require("prettier");
 
 function format(code) {
-  return prettier.format(code, { semi: false, parser: "babylon" });
+  return prettier.format(code, { semi: false, parser: "babel" });
 }
 
 function excludedTest({ name, expression, bindings = [] }) {
