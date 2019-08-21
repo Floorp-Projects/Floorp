@@ -4399,7 +4399,7 @@ NS_IMETHODIMP HttpBaseChannel::GetCrossOriginOpenerPolicy(
     // The return value will be true if we find any whitespace. If there is
     // whitespace, then it must be followed by "unsafe-allow-outgoing" otherwise
     // this is a malformed header value.
-    bool unsafeAllowOutgoing =
+    unsafeAllowOutgoing =
         t.ReadUntil(Tokenizer::Token::Whitespace(), samenessString);
     if (unsafeAllowOutgoing) {
       t.SkipWhites();
