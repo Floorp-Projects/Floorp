@@ -1571,9 +1571,10 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
         # not on as ASAN will catch the crashes for us
+        # mingw-clang cross-compile toolchain has bugs with stack protector
+        mingw_clang = c_compiler.type == 'clang' and target.os == 'WINNT'
         if compiler_is_gccish and not asan:
-            # mingw-clang cross-compile toolchain has bugs with stack protector
-            if target.os != 'WINNT' or c_compiler == 'gcc':
+            if not mingw_clang:
                 flags.append("-fstack-protector-strong")
                 ldflags.append("-fstack-protector-strong")
                 js_flags.append("-fstack-protector-strong")
@@ -1582,7 +1583,7 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
         # mingw-clang build requires it to be explicitly enabled
-        if target.os == 'WINNT' and c_compiler.type == 'clang':
+        if mingw_clang:
             ldflags.append("-Wl,--dynamicbase")
             js_ldflags.append("-Wl,--dynamicbase")
 
