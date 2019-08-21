@@ -2182,7 +2182,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   // We need to examine the content both before the br we just added and also
   // just after it.  If we don't have another br or block boundary adjacent,
   // then we will need a 2nd br added to achieve blank line that user expects.
-  if (IsInlineNode(*citeNode)) {
+  if (HTMLEditor::NodeIsInlineStatic(*citeNode)) {
     // Use DOM point which we tried to collapse to.
     EditorDOMPoint pointToCreateNewBrNode(atBrNode.GetContainer(),
                                           atBrNode.Offset());
@@ -4295,7 +4295,7 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
     // if curNode isn't a list item, we must wrap it in one
     nsCOMPtr<Element> listItem;
     if (!HTMLEditUtils::IsListItem(curNode)) {
-      if (IsInlineNode(curNode) && prevListItem) {
+      if (HTMLEditor::NodeIsInlineStatic(curNode) && prevListItem) {
         // this is a continuation of some inline nodes that belong together in
         // the same list item.  use prevListItem
         rv = MOZ_KnownLive(HTMLEditorRef())
@@ -4328,7 +4328,7 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
             return NS_ERROR_FAILURE;
           }
         }
-        if (IsInlineNode(curNode)) {
+        if (HTMLEditor::NodeIsInlineStatic(curNode)) {
           prevListItem = listItem;
         } else {
           prevListItem = nullptr;
@@ -6397,7 +6397,7 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // If the editing host is an inline element, bail out early.
-  if (IsInlineNode(aEditingHostElement)) {
+  if (HTMLEditor::NodeIsInlineStatic(aEditingHostElement)) {
     return NS_OK;
   }
 
@@ -7351,7 +7351,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       // XXX Why do we run this loop even when aTouchContent is "no"?
-      if (aTouchContent == TouchContent::yes && IsInlineNode(node) &&
+      if (aTouchContent == TouchContent::yes &&
+          HTMLEditor::NodeIsInlineStatic(node) &&
           HTMLEditorRef().IsContainer(node) && !EditorBase::IsTextNode(node)) {
         nsTArray<OwningNonNull<nsINode>> arrayOfInlines;
         nsresult rv = BustUpInlinesAtBRs(MOZ_KnownLive(*node->AsContent()),
@@ -7697,7 +7698,7 @@ nsIContent* HTMLEditRules::GetHighestInlineParent(nsINode& aNode) const {
   // Looks for the highest inline parent in the editing host.
   nsIContent* content = aNode.AsContent();
   for (nsIContent* parent = content->GetParent();
-       parent && parent != host && IsInlineNode(*parent);
+       parent && parent != host && HTMLEditor::NodeIsInlineStatic(*parent);
        parent = parent->GetParent()) {
     content = parent;
   }
@@ -8654,7 +8655,7 @@ nsresult HTMLEditRules::RemoveBlockStyle(
       continue;
     }
 
-    if (IsInlineNode(curNode)) {
+    if (HTMLEditor::NodeIsInlineStatic(curNode)) {
       if (curBlock) {
         // If so, is this node a descendant?
         if (EditorUtils::IsDescendantOf(*curNode, *curBlock)) {
@@ -8882,7 +8883,7 @@ nsresult HTMLEditRules::ApplyBlockStyle(
       continue;
     }
 
-    if (IsInlineNode(curNode)) {
+    if (HTMLEditor::NodeIsInlineStatic(curNode)) {
       // If curNode is inline, pull it into curBlock.  Note: it's assumed that
       // consecutive inline nodes in aNodeArray are actually members of the
       // same block parent.  This happens to be true now as a side effect of
@@ -9865,7 +9866,8 @@ nsresult HTMLEditRules::SelectionEndpointInNode(nsINode* aNode, bool* aResult) {
 bool HTMLEditRules::IsEmptyInline(nsINode& aNode) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (IsInlineNode(aNode) && HTMLEditorRef().IsContainer(&aNode)) {
+  if (HTMLEditor::NodeIsInlineStatic(aNode) &&
+      HTMLEditorRef().IsContainer(&aNode)) {
     bool isEmpty = true;
     HTMLEditorRef().IsEmptyNode(&aNode, &isEmpty);
     return isEmpty;
