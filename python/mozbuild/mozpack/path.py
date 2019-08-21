@@ -93,6 +93,13 @@ def basedir(path, bases):
 
 
 re_cache = {}
+# Python versions < 3.7 return r'\/' for re.escape('/').
+if re.escape('/') == '/':
+    MATCH_STAR_STAR_RE = re.compile(r'(^|/)\\\*\\\*/')
+    MATCH_STAR_STAR_END_RE = re.compile(r'(^|/)\\\*\\\*$')
+else:
+    MATCH_STAR_STAR_RE = re.compile(r'(^|\\\/)\\\*\\\*\\\/')
+    MATCH_STAR_STAR_END_RE = re.compile(r'(^|\\\/)\\\*\\\*$')
 
 
 def match(path, pattern):
@@ -121,8 +128,8 @@ def match(path, pattern):
         return True
     if pattern not in re_cache:
         p = re.escape(pattern)
-        p = re.sub(r'(^|\\\/)\\\*\\\*\\\/', r'\1(?:.+/)?', p)
-        p = re.sub(r'(^|\\\/)\\\*\\\*$', r'(?:\1.+)?', p)
+        p = MATCH_STAR_STAR_RE.sub(r'\1(?:.+/)?', p)
+        p = MATCH_STAR_STAR_END_RE.sub(r'(?:\1.+)?', p)
         p = p.replace(r'\*', '[^/]*') + '(?:/.*)?$'
         re_cache[pattern] = re.compile(p)
     return re_cache[pattern].match(path) is not None
