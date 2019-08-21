@@ -11,8 +11,8 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mozilla.fenix.BrowsingMode
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.R
 
 class PrivateBrowsingButtonViewTest {

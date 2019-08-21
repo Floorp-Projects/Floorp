@@ -11,7 +11,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.components
 

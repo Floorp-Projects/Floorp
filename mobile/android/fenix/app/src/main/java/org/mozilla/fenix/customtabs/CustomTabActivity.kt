@@ -7,8 +7,8 @@ package org.mozilla.fenix.customtabs
 import androidx.navigation.NavDestination
 import mozilla.components.browser.session.intent.getSessionId
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.CustomTabBrowsingModeManager
-import org.mozilla.fenix.CustomTabThemeManager
+import org.mozilla.fenix.browser.browsingmode.CustomTabBrowsingModeManager
+import org.mozilla.fenix.theme.CustomTabThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
 
@@ -22,7 +22,8 @@ open class CustomTabActivity : HomeActivity() {
 
     final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
 
-    final override fun createBrowsingModeManager() = CustomTabBrowsingModeManager()
+    final override fun createBrowsingModeManager() =
+        CustomTabBrowsingModeManager()
 
     final override fun createThemeManager() = CustomTabThemeManager()
 }

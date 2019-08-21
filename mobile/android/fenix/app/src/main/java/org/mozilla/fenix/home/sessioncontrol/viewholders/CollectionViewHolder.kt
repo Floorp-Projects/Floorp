@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.collection_home_list_row.view.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.components.description
 import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.ext.increaseTapArea

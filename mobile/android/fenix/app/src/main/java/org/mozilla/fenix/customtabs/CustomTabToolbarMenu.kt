@@ -14,7 +14,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 
 class CustomTabToolbarMenu(

@@ -6,8 +6,8 @@ package org.mozilla.fenix.home
 
 import android.view.View
 import androidx.annotation.StringRes
-import org.mozilla.fenix.BrowsingMode
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.R
 
 /**

@@ -14,7 +14,7 @@ import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
 import mozilla.components.browser.session.Session
 import mozilla.components.service.fxa.sharing.ShareableAccount
-import org.mozilla.fenix.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory

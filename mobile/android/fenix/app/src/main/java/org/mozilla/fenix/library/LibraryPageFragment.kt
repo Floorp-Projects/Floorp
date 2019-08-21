@@ -6,7 +6,7 @@ package org.mozilla.fenix.library
 
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import org.mozilla.fenix.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components

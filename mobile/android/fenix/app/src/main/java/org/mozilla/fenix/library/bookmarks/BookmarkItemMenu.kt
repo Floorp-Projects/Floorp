@@ -10,7 +10,7 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.library.LibraryItemMenu
 
 class BookmarkItemMenu(

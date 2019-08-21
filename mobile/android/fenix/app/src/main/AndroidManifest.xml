@@ -140,7 +140,7 @@
 
         <service android:name=".downloads.DownloadService" />
         <receiver
-            android:name=".SearchWidgetProvider">
+            android:name=".widget.SearchWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -10,7 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter

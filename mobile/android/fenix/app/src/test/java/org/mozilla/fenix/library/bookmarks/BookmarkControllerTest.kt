@@ -21,7 +21,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter
