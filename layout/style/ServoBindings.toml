@@ -522,6 +522,7 @@ cbindgen-types = [
     { gecko = "StyleGenericGridTemplateComponent", servo = "values::generics::grid::GridTemplateComponent" },
     { gecko = "StyleTextEmphasisStyle", servo = "values::computed::text::TextEmphasisStyle" },
     { gecko = "StyleVariantAlternatesList", servo = "values::specified::font::VariantAlternatesList" },
+    { gecko = "StyleSVGPaintOrder", servo = "values::specified::svg::SVGPaintOrder" },
 ]
 
 mapped-generic-types = [

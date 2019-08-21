@@ -779,16 +779,6 @@ enum class StyleWhiteSpace : uint8_t {
 #define NS_STYLE_MASK_TYPE_LUMINANCE 0
 #define NS_STYLE_MASK_TYPE_ALPHA 1
 
-// paint-order
-#define NS_STYLE_PAINT_ORDER_NORMAL 0
-#define NS_STYLE_PAINT_ORDER_FILL 1
-#define NS_STYLE_PAINT_ORDER_STROKE 2
-#define NS_STYLE_PAINT_ORDER_MARKERS 3
-#define NS_STYLE_PAINT_ORDER_LAST_VALUE NS_STYLE_PAINT_ORDER_MARKERS
-// NS_STYLE_PAINT_ORDER_BITWIDTH is the number of bits required to store
-// a single paint-order component value.
-#define NS_STYLE_PAINT_ORDER_BITWIDTH 2
-
 // shape-rendering
 #define NS_STYLE_SHAPE_RENDERING_AUTO 0
 #define NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED 1

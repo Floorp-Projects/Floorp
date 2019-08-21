@@ -169,6 +169,8 @@ include = [
   "GridTemplateComponent",
   "TextEmphasisStyle",
   "VariantAlternatesList",
+  "PaintOrder",
+  "SVGPaintOrder",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true

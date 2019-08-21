@@ -63,8 +63,6 @@ class nsStyleUtil {
                                     int32_t aMaskedValue, int32_t aFirstMask,
                                     int32_t aLastMask, nsAString& aResult);
 
-  static void AppendPaintOrderValue(uint8_t aValue, nsAString& aResult);
-
   static void AppendCSSNumber(float aNumber, nsAString& aResult) {
     aResult.AppendFloat(aNumber);
   }

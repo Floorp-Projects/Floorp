@@ -687,6 +687,9 @@ StyleGridTemplateComponent::GetRepeatAutoValue() const {
   return &TrackListValues()[*index].AsTrackRepeat();
 }
 
+constexpr const auto kPaintOrderShift = StylePAINT_ORDER_SHIFT;
+constexpr const auto kPaintOrderMask = StylePAINT_ORDER_MASK;
+
 }  // namespace mozilla
 
 #endif
