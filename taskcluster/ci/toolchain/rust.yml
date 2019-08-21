@@ -86,7 +86,7 @@ linux64-rust-1.37:
         symbol: TL(rust)
     run:
         arguments: [
-            '--channel', 'beta-2019-07-23',
+            '--channel', '1.37.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -100,7 +100,7 @@ linux64-rust-nightly:
         symbol: TL(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2019-05-27',
+            '--channel', 'nightly-2019-06-28',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -157,10 +157,22 @@ linux64-rust-macos-1.35:
 linux64-rust-macos-1.36:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos)
+        symbol: TL(rust-macos-1.36)
     run:
         arguments: [
             '--channel', '1.36.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+
+linux64-rust-macos-1.37:
+    description: "rust repack with macos-cross support"
+    treeherder:
+        symbol: TL(rust-macos)
+    run:
+        arguments: [
+            '--channel', '1.37.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -173,19 +185,19 @@ linux64-rust-nightly-macos:
         symbol: TL(rust-nightly-macos)
     run:
         arguments: [
-            '--channel', 'nightly-2019-05-27',
+            '--channel', 'nightly-2019-06-28',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
         ]
 
-linux64-rust-android-1.36:
+linux64-rust-android-1.37:
     description: "rust repack with android-cross support"
     treeherder:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.36.0',
+            '--channel', '1.37.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -219,12 +231,12 @@ win64-rust-1.34:
             '--target', 'aarch64-pc-windows-msvc',
         ]
 
-win64-rust-1.36:
+win64-rust-1.37:
     treeherder:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.36.0',
+            '--channel', '1.37.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -238,7 +250,7 @@ win64-rust-nightly:
         symbol: TW64(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2019-05-27',
+            '--channel', 'nightly-2019-06-28',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -257,12 +269,12 @@ mingw32-rust-1.31:
             '--target', 'x86_64-unknown-linux-gnu',
         ]
 
-mingw32-rust-1.36:
+mingw32-rust-1.37:
     treeherder:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.36.0',
+            '--channel', '1.37.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
