@@ -15,12 +15,16 @@
 
 #include "util/Windows.h"
 
-class js::Thread::Id::PlatformData {
-  friend class js::Thread;
-  friend js::Thread::Id js::ThisThread::GetId();
+namespace js {
+
+class Thread::Id::PlatformData {
+  friend class Thread;
+  friend Thread::Id ThisThread::GetId();
 
   HANDLE handle;
   unsigned id;
 };
+
+}  // namespace js
 
 #endif  // threading_windows_PlatformData_h
