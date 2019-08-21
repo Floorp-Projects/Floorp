@@ -76,8 +76,6 @@ class RaptorResultsHandler():
         self.supporting_data.append(supporting_data)
 
     def _get_expected_perfherder(self, output):
-        expected_perfherder = 1
-
         def is_resource_test():
             if self.config.get('power_test', None) or \
                self.config.get('cpu_test', None) or \
@@ -85,21 +83,35 @@ class RaptorResultsHandler():
                 return True
             return False
 
-        if not is_resource_test() and \
-           (output.summarized_supporting_data or output.summarized_results):
+        # if results exists, determine if any test is of type 'scenario'
+        is_scenario = False
+        if (output.summarized_results or output.summarized_supporting_data):
             data = output.summarized_supporting_data
             if not data:
                 data = [output.summarized_results]
-
             for next_data_set in data:
                 data_type = next_data_set['suites'][0]['type']
                 if data_type == 'scenario':
-                    return None
+                    is_scenario = True
+                    break
 
-        if self.config.get('memory_test', None):
-            expected_perfherder += 1
-        if self.config.get('cpu_test', None):
-            expected_perfherder += 1
+        if is_scenario and not is_resource_test():
+            # skip perfherder check when a scenario test-type is run without
+            # a resource flag
+            return None
+
+        expected_perfherder = 1
+        if is_resource_test():
+            # when resource tests are run, no perfherder data is output
+            # for the regular raptor tests (i.e. speedometer) so we
+            # expect one per resource-type, starting with 0
+            expected_perfherder = 0
+            if self.config.get('power_test', None):
+                expected_perfherder += 1
+            if self.config.get('memory_test', None):
+                expected_perfherder += 1
+            if self.config.get('cpu_test', None):
+                expected_perfherder += 1
 
         return expected_perfherder
 
@@ -152,7 +164,6 @@ class RaptorResultsHandler():
             output.summarize_supporting_data()
             res, out_sup_perfdata = output.output_supporting_data(test_names)
         res, out_perfdata = output.output(test_names)
-
         if not self.config['gecko_profile']:
             # res will remain True if no problems are encountered
             # during schema validation and perferder_data counting

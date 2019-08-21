@@ -156,6 +156,38 @@ raptor-scn-power-idle-fennec:
             - --power-test
             - --host HOST_IP
 
+raptor-scn-cpu-memory-idle-fennec:
+    description: "Raptor idle-browser cpu/memory on Fennec"
+    try-name: raptor-scn-power-idle-fennec
+    treeherder-symbol: Rap-fennec(idl-cm)
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
+            - --cpu-test
+            - --memory-test
+
+raptor-scn-cpu-memory-power-idle-fennec:
+    description: "Raptor idle-browser cpu/memory/power on Fennec"
+    try-name: raptor-scn-cpu-memory-power-idle-fennec
+    treeherder-symbol: Rap-fennec(idl-cmp)
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --host HOST_IP
+
 raptor-scn-power-idle-bg-fennec:
     description: "Raptor idle-browser (backgrounded) power-use measurement on Fennec"
     try-name: raptor-scn-power-idle-bg-fennec
@@ -167,6 +199,38 @@ raptor-scn-power-idle-bg-fennec:
             - --test=raptor-scn-power-idle-bg
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
+            - --power-test
+            - --host HOST_IP
+
+raptor-scn-cpu-memory-idle-bg-fennec:
+    description: "Raptor idle-browser (backgrounded) cpu/memory on Fennec"
+    try-name: raptor-scn-cpu-memory-idle-bg-fennec
+    treeherder-symbol: Rap-fennec(idlbg-cm)
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
+            - --cpu-test
+            - --memory-test
+
+raptor-scn-cpu-memory-power-idle-bg-fennec:
+    description: "Raptor idle-browser (backgrounded) cpu/memory/power on Fennec"
+    try-name: raptor-scn-cpu-memory-power-idle-bg-fennec
+    treeherder-symbol: Rap-fennec(idlbg-cmp)
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=fennec
+            - --binary=org.mozilla.fennec_aurora
+            - --cpu-test
+            - --memory-test
             - --power-test
             - --host HOST_IP
 

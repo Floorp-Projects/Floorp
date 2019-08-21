@@ -21,7 +21,14 @@ def get_app_cpu_usage(raptor):
     parameters we use are only available in Android 8 or
     greater, otherwise we fall back to using dumpsys
     '''
-    if raptor.device.version >= 8:
+
+    # Get the android version
+    android_version = raptor.device.shell_output(
+        "getprop ro.build.version.release"
+    ).strip()
+    major_android_version = int(android_version.split('.')[0])
+
+    if major_android_version >= 8:
         cpuinfo = raptor.device.shell_output("top -O %CPU -n 1").split("\n")
         raptor.device._verbose = verbose
         for line in cpuinfo:
@@ -30,9 +37,18 @@ def get_app_cpu_usage(raptor):
             if data[-1] == app_name:
                 cpu_usage = float(data[3])
     else:
-        cpuinfo = raptor.device.shell_output("dumpsys cpuinfo | grep %s" % app_name).split("\n")
+        cpuinfo = raptor.device.shell_output("dumpsys cpuinfo").split("\n")
+
+        # Gather the app-specific entries
+        appcpuinfo = []
         for line in cpuinfo:
-            # 34% 14781/org.mozilla.geckoview_example: 26% user + 7.5% kernel
+            if app_name not in line:
+                continue
+            appcpuinfo.append(line)
+
+        # Parse the app-specific entries which look like:
+        # 34% 14781/org.mozilla.geckoview_example: 26% user + 7.5% kernel
+        for line in appcpuinfo:
             data = line.split()
             cpu_usage = float(data[0].strip('%'))
 

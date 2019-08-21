@@ -181,6 +181,16 @@ def verify_options(parser, args):
             parser.error("Power test is only supported when running Raptor on Firefox Android "
                          "browsers when host is specified!")
 
+    if args.cpu_test:
+        if args.app not in ["fennec", "geckoview", "refbrow", "fenix"]:
+            parser.error("CPU test is only supported when running Raptor on Firefox Android "
+                         "browsers!")
+
+    if args.memory_test:
+        if args.app not in ["fennec", "geckoview", "refbrow", "fenix"]:
+            parser.error("Memory test is only supported when running Raptor on Firefox Android "
+                         "browsers!")
+
     # if --enable-webrender specified, must be on desktop firefox or geckoview-based browser.
     if args.enable_webrender:
         if args.app not in ["firefox", "geckoview", "refbrow", "fenix"]:
