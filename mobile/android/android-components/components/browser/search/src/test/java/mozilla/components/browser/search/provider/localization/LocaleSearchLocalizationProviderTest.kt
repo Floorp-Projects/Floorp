@@ -5,9 +5,9 @@
 package mozilla.components.browser.search.provider.localization
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,10 +32,11 @@ class LocaleSearchLocalizationProviderTest {
     @Test
     fun `default in test is en-US`() {
         val provider = LocaleSearchLocalizationProvider()
+        val localization = runBlocking { provider.determineRegion() }
 
-        assertEquals("en", provider.language)
-        assertEquals("US", provider.country)
-        assertNull(provider.region)
+        assertEquals("en", localization.language)
+        assertEquals("US", localization.country)
+        assertEquals("US", localization.region)
     }
 
     @Test
@@ -43,9 +44,10 @@ class LocaleSearchLocalizationProviderTest {
         Locale.setDefault(Locale("de", "DE"))
 
         val provider = LocaleSearchLocalizationProvider()
+        val localization = runBlocking { provider.determineRegion() }
 
-        assertEquals("de", provider.language)
-        assertEquals("DE", provider.country)
-        assertNull(provider.region)
+        assertEquals("de", localization.language)
+        assertEquals("DE", localization.country)
+        assertEquals("DE", localization.region)
     }
 }

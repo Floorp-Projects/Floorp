@@ -15,6 +15,10 @@ permalink: /changelog/
 * **support-test-appservices**
   * 🆕 New component for synchronizing Application Services' unit testing dependencies used in Android Components.
 
+* **service-location**
+  * Added `RegionSearchLocalizationProvider` - A `SearchLocalizationProvider` implementation that uses a `MozillaLocationService` instance to do a region lookup via GeoIP.
+  * ⚠️ **This is a breaking change**: An implementation of `SearchLocalizationProvider` now returns a `SearchLocalization` data class instead of multiple properties.
+
 # 9.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v8.0.0...v9.0.0)
