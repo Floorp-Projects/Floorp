@@ -4693,12 +4693,12 @@ pub extern "C" fn Servo_DeclarationBlock_SetIntValue(
     value: i32,
 ) {
     use style::properties::longhands::_moz_script_level::SpecifiedValue as MozScriptLevel;
-    use style::properties::longhands::_x_span::computed_value::T as Span;
     use style::properties::PropertyDeclaration;
+    use style::values::specified::Integer;
 
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
-        XSpan => Span(value),
+        XSpan => Integer::new(value),
         // Gecko uses Integer values to signal that it is relative
         MozScriptLevel => MozScriptLevel::Relative(value),
     };

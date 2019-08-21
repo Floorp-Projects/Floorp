@@ -1416,19 +1416,20 @@ uint8_t nsStylePosition::UsedJustifySelf(ComputedStyle* aParent) const {
 //
 
 nsStyleTable::nsStyleTable(const Document& aDocument)
-    : mLayoutStrategy(NS_STYLE_TABLE_LAYOUT_AUTO), mSpan(1) {
+    : mLayoutStrategy(NS_STYLE_TABLE_LAYOUT_AUTO), mXSpan(1) {
   MOZ_COUNT_CTOR(nsStyleTable);
 }
 
 nsStyleTable::~nsStyleTable() { MOZ_COUNT_DTOR(nsStyleTable); }
 
 nsStyleTable::nsStyleTable(const nsStyleTable& aSource)
-    : mLayoutStrategy(aSource.mLayoutStrategy), mSpan(aSource.mSpan) {
+    : mLayoutStrategy(aSource.mLayoutStrategy), mXSpan(aSource.mXSpan) {
   MOZ_COUNT_CTOR(nsStyleTable);
 }
 
 nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aNewData) const {
-  if (mSpan != aNewData.mSpan || mLayoutStrategy != aNewData.mLayoutStrategy) {
+  if (mXSpan != aNewData.mXSpan ||
+      mLayoutStrategy != aNewData.mLayoutStrategy) {
     return nsChangeHint_ReconstructFrame;
   }
   return nsChangeHint(0);
