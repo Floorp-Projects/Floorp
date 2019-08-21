@@ -91,6 +91,9 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
 	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > '$(dist_dest)/$(LPROJ)/InfoPlist.strings'
 	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ '$(dist_dest)/Contents/Resources'
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ '$(dist_dest)/Contents/MacOS'
+	# MacOS-files-copy.in is a list of files that should be copies rather
+	# than symlinks and placed in .app/Contents/MacOS.
+	rsync -aL --include-from='$(srcdir)/macbuild/Contents/MacOS-files-copy.in' --exclude '*' $(DIST)/bin/ '$(dist_dest)/Contents/MacOS'
 	$(RM) '$(dist_dest)/Contents/MacOS/$(MOZ_APP_NAME)'
 	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) '$(dist_dest)/Contents/MacOS'
 	cp -RL $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/firefox.icns '$(dist_dest)/Contents/Resources/firefox.icns'
