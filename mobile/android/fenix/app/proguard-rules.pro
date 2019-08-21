@@ -37,9 +37,23 @@
 
 -keep class kotlinx.coroutines.internal.MainDispatcherFactory {}
 -keep class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+
+
+####################################################################################################
+# Force removal of slow Dispatchers.Main ServiceLoader
+#
+# Please remove these rules when Android Gradle Plugin 3.6+ & coroutines 1.3.0+ are both in use
+####################################################################################################
+# Ensure the custom, fast service loader implementation is removed.
+-assumevalues class kotlinx.coroutines.internal.MainDispatcherLoader {
+  boolean FAST_SERVICE_LOADER_ENABLED return false;
+}
+-checkdiscard class kotlinx.coroutines.internal.FastServiceLoader
 
 ####################################################################################################
 # Mozilla Application Services

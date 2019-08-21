@@ -4,8 +4,8 @@
 
 object Versions {
     const val kotlin = "1.3.30"
-    const val coroutines = "1.2.1"
-    const val android_gradle_plugin = "3.4.1"
+    const val coroutines = "1.3.0-RC2"
+    const val android_gradle_plugin = "3.5.0"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
     const val rxBindings = "3.0.0-alpha2"
