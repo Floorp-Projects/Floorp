@@ -1470,7 +1470,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormattedMail && !mWrapColumn) ||
-      (IsElementPreformatted() && !mPreFormattedMail && !MayWrap()) ||
+      (IsElementPreformatted() && !mPreFormattedMail) ||
       (mSpanLevel > 0 && mEmptyLines >= 0 && IsQuotedLine(str))) {
     // No intelligent wrapping.
 
