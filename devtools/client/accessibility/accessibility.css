@@ -62,6 +62,10 @@ body {
   width: var(--accessibility-horizontal-indent);
 }
 
+.accessible .tree .node .theme-twisty:not(.open):dir(rtl) {
+  transform: rotate(-90deg);
+}
+
 .accessible .tree .node.focused .theme-twisty,
 .treeTable .treeRow.selected .theme-twisty {
   fill: var(--theme-selection-color);
@@ -520,6 +524,8 @@ body {
   white-space: nowrap;
   overflow: auto;
   display: block;
+  /* Force the properties list to always be displayed in LTR (bug 1575002) */
+  direction: ltr;
 }
 
 .split-box.horz .accessible .tree {
