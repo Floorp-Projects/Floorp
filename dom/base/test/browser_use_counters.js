@@ -197,21 +197,12 @@ var check_use_counter_iframe = async function(
   await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(
     opts
   ) {
-    let wu = content.window.windowUtils;
-
     let iframe = content.document.getElementById("content");
     iframe.src = opts.file;
 
     return new Promise(resolve => {
       let listener = event => {
         event.target.removeEventListener("load", listener, true);
-
-        // We flush the main document first, then the iframe's document to
-        // ensure any propagation that might happen from content->parent should
-        // have already happened when counters are reported to telemetry.
-        wu.forceUseCounterFlush(content.document);
-        wu.forceUseCounterFlush(iframe.contentDocument);
-
         resolve();
       };
       iframe.addEventListener("load", listener, true);
@@ -219,12 +210,9 @@ var check_use_counter_iframe = async function(
   });
 
   // Tear down the page.
+  let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);
   gBrowser.removeTab(newTab);
-
-  // The histograms only get recorded when the document actually gets
-  // destroyed, which might not have happened yet due to GC/CC effects, etc.
-  // Try to force document destruction.
-  await waitForDestroyedDocuments();
+  await tabClosed;
 
   // Grab histograms again and compare.
   let [
@@ -290,16 +278,6 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
       return new Promise(resolve => {
         let listener = event => {
           img.removeEventListener("load", listener, true);
-
-          // Flush for the image.  It matters what order we do these in, so that
-          // the image can propagate its use counters to the document prior to the
-          // document reporting its use counters.
-          let wu = content.window.windowUtils;
-          wu.forceUseCounterFlush(img);
-
-          // Flush for the main window.
-          wu.forceUseCounterFlush(content.document);
-
           resolve();
         };
         img.addEventListener("load", listener, true);
@@ -308,12 +286,9 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
   );
 
   // Tear down the page.
+  let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);
   gBrowser.removeTab(newTab);
-
-  // The histograms only get recorded when the document actually gets
-  // destroyed, which might not have happened yet due to GC/CC effects, etc.
-  // Try to force document destruction.
-  await waitForDestroyedDocuments();
+  await tabClosed;
 
   // Grab histograms again and compare.
   let [
@@ -372,10 +347,6 @@ var check_use_counter_direct = async function(
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("load", listener, true);
-
-        let wu = content.window.windowUtils;
-        wu.forceUseCounterFlush(content.document);
-
         setTimeout(resolve, 0);
       };
       addEventListener("load", listener, true);
@@ -383,12 +354,9 @@ var check_use_counter_direct = async function(
   });
 
   // Tear down the page.
+  let tabClosed = BrowserTestUtils.waitForTabClosing(newTab);
   gBrowser.removeTab(newTab);
-
-  // The histograms only get recorded when the document actually gets
-  // destroyed, which might not have happened yet due to GC/CC effects, etc.
-  // Try to force document destruction.
-  await waitForDestroyedDocuments();
+  await tabClosed;
 
   // Grab histograms again and compare.
   let [
