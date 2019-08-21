@@ -2946,11 +2946,7 @@
 
 - name: gfx.core-animation.enabled
   type: bool
-#if defined(XP_MACOSX)
-  value: true
-#else
   value: false
-#endif
   mirror: once
 
 #if defined(MOZ_WIDGET_ANDROID)
