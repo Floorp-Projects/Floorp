@@ -11,6 +11,7 @@
       "workaround-issue38586.patch",
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
+      "r355141-arm64-cfg.patch",
       "r357725-asan-vs2019.patch",
       "loosen-msvc-detection.patch",
       "revert-r355311.patch"
