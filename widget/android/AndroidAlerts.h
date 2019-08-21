@@ -27,6 +27,9 @@ class AndroidAlerts : public nsIAlertsService {
   static void NotifyListener(const nsAString& aName, const char* aTopic,
                              const char16_t* aCookie);
 
+  static nsDataHashtable<nsStringHashKey, java::WebNotification::GlobalRef>
+      mNotificationsMap;
+
  protected:
   virtual ~AndroidAlerts() { sListenerMap = nullptr; }
 
