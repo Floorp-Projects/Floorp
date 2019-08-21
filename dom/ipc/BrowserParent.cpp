@@ -2561,6 +2561,35 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvOnSecurityChange(
+    const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, const uint32_t aState,
+    const Maybe<WebProgressSecurityChangeData>& aSecurityChangeData) {
+  nsCOMPtr<nsIBrowser> browser;
+  nsCOMPtr<nsIWebProgress> manager;
+  nsCOMPtr<nsIWebProgressListener> managerAsListener;
+  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
+                              getter_AddRefs(managerAsListener))) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                   getter_AddRefs(webProgress),
+                                   getter_AddRefs(request));
+
+  if (aWebProgressData && aWebProgressData->isTopLevel()) {
+    Unused << browser->UpdateSecurityUIForSecurityChange(
+        aSecurityChangeData->securityInfo(), aState,
+        aSecurityChangeData->isSecureContext());
+  }
+
+  Unused << managerAsListener->OnSecurityChange(webProgress, request, aState);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvOnContentBlockingEvent(
     const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const uint32_t& aEvent) {
