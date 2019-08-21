@@ -93,6 +93,7 @@ class ToolbarView(
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
                     interactor.onEditingCanceled()
+                    // We need to return false to not show display mode
                     return false
                 }
                 override fun onTextChanged(text: String) {

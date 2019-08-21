@@ -38,14 +38,21 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.SentryBreadcrumbsRecorder
+import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
+import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
+import org.mozilla.fenix.library.history.HistoryFragmentDirections
+import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
@@ -193,16 +200,48 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         load(searchTermOrURL, newTab, engine, forceSearch)
     }
 
+    @Suppress("ComplexMethod")
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
 
-        with(navHost.navController) {
-            if (currentDestination?.id == R.id.browserFragment || popBackStack(R.id.browserFragment, false)) return
+        if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
+        @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
+        val directions = when (from) {
+            BrowserDirection.FromGlobal -> {
+                NavGraphDirections.actionGlobalBrowser(customTabSessionId)
+            }
+            BrowserDirection.FromHome -> {
+                HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
+            }
+            BrowserDirection.FromSearch -> {
+                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(
+                    customTabSessionId
+                )
+            }
+            BrowserDirection.FromSettings -> {
+                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(
+                    customTabSessionId
+                )
+            }
+            BrowserDirection.FromBookmarks -> {
+                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(
+                    customTabSessionId
+                )
+            }
+            BrowserDirection.FromHistory -> {
+                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(
+                    customTabSessionId
+                )
+            }
+            BrowserDirection.FromExceptions -> {
+                ExceptionsFragmentDirections.actionExceptionsFragmentToBrowserFragment(
+                    customTabSessionId
+                )
+            }
         }
 
-        @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
-        navHost.navController.nav(fragmentId, NavGraphDirections.actionGlobalBrowser(customTabSessionId))
+        navHost.navController.nav(fragmentId, directions)
     }
 
     private fun load(

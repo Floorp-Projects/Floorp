@@ -11,9 +11,10 @@ import android.os.Build.VERSION.SDK_INT
 import android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
 import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.ext.alreadyOnDestination
 
 /**
  * Deep links in the form of `fenix://host` open different parts of the app.
@@ -34,17 +35,19 @@ class DeepLinkIntentProcessor(
     private fun handleDeepLink(deepLink: Uri, navController: NavController) {
         handleDeepLinkSideEffects(deepLink)
 
-        val directions = when (deepLink.host) {
-            "home", "enable_private_browsing" -> NavGraphDirections.actionGlobalHomeFragment()
-            "settings" -> NavGraphDirections.actionGlobalSettingsFragment()
-            "turn_on_sync" -> NavGraphDirections.actionGlobalTurnOnSync()
-            "settings_search_engine" -> NavGraphDirections.actionGlobalSearchEngineFragment()
-            "settings_accessibility" -> NavGraphDirections.actionGlobalAccessibilityFragment()
-            "settings_delete_browsing_data" -> NavGraphDirections.actionGlobalDeleteBrowsingDataFragment()
+        val globalDirections = when (deepLink.host) {
+            "home", "enable_private_browsing" -> GlobalDirections.Home
+            "settings" -> GlobalDirections.Settings
+            "turn_on_sync" -> GlobalDirections.Sync
+            "settings_search_engine" -> GlobalDirections.SearchEngine
+            "settings_accessibility" -> GlobalDirections.Accessibility
+            "settings_delete_browsing_data" -> GlobalDirections.DeleteData
             else -> return
         }
 
-        navController.navigate(directions)
+        if (!navController.alreadyOnDestination(globalDirections.destinationId)) {
+            navController.navigate(globalDirections.navDirections)
+        }
     }
 
     /**

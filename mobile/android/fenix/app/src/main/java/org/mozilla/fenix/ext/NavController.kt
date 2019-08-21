@@ -51,6 +51,10 @@ fun NavController.nav(
     }
 }
 
+fun NavController.alreadyOnDestination(@IdRes destId: Int?): Boolean {
+    return destId?.let { currentDestination?.id == it || popBackStack(it, false) } ?: false
+}
+
 fun recordIdException(actual: Int?, expected: Int?) {
     if (!BuildConfig.SENTRY_TOKEN.isNullOrEmpty()) {
         Sentry.capture("Fragment id $actual did not match expected $expected")
