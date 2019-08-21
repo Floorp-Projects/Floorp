@@ -222,7 +222,7 @@ class WebConsoleUI {
   }
 
   logWarningAboutReplacedAPI() {
-    return this.hud.target.logWarningInPage(
+    return this.hud.currentTarget.logWarningInPage(
       l10n.getStr("ConsoleAPIDisabled"),
       "ConsoleAPIDisabled"
     );
@@ -257,14 +257,11 @@ class WebConsoleUI {
    *         A promise object that is resolved/reject based on the proxies connections.
    */
   async _initConnection() {
-    this.proxy = new WebConsoleConnectionProxy(this, this.hud.target);
+    this.proxy = new WebConsoleConnectionProxy(this, this.hud.currentTarget);
 
-    if (
-      this.fissionSupport &&
-      this.hud.target.chrome &&
-      !this.hud.target.isAddon
-    ) {
-      const { mainRoot } = this.hud.target.client;
+    const target = this.hud.currentTarget;
+    if (this.fissionSupport && target.chrome && !target.isAddon) {
+      const { mainRoot } = target.client;
       const { processes } = await mainRoot.listProcesses();
 
       this.additionalProxies = [];
@@ -273,7 +270,7 @@ class WebConsoleUI {
 
         // Don't create a proxy for the "main" target,
         // as we already created it in this.proxy.
-        if (targetFront === this.hud.target) {
+        if (targetFront === target) {
           continue;
         }
 
