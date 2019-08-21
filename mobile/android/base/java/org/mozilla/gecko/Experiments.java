@@ -22,6 +22,9 @@ import java.util.List;
 public class Experiments {
     private static final String LOGTAG = "GeckoExperiments";
 
+    // Enable the Enhanced Search Experiment.
+    public static final String ENHANCED_SEARCH = "enhanced-search";
+
     // Show a system notification linking to a "What's New" page on app update.
     public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
 
