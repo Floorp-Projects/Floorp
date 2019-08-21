@@ -187,7 +187,7 @@ class Classifier {
    * successful or not.
    */
   nsresult ApplyUpdatesBackground(TableUpdateArray& aUpdates,
-                                  nsACString& aFailedTableName);
+                                  nsTArray<nsCString>& aFailedTableNames);
 
   /**
    * The "foreground" part of ApplyUpdates. The in-use data (in-memory and
@@ -200,7 +200,7 @@ class Classifier {
    * |aBackgroundRv| will be returned to forward the background update result.
    */
   nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
-                                  const nsACString& aFailedTableName);
+                                  const nsTArray<nsCString>& aFailedTableNames);
 
   // Used by worker thread and update thread to abort current operation.
   bool ShouldAbort() const;
