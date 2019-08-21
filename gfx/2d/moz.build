@@ -102,7 +102,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
         'JobScheduler_posix.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
     EXPORTS.mozilla.gfx += [
         'UnscaledFontFreeType.h',
     ]
@@ -111,7 +111,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
         'UnscaledFontFreeType.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     SOURCES += [
         'ScaledFontFontconfig.cpp',
     ]
@@ -240,12 +240,12 @@ FINAL_LIBRARY = 'xul'
 for var in ('USE_CAIRO', 'MOZ2D_HAS_MOZ_CAIRO'):
     DEFINES[var] = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
     DEFINES['MOZ_ENABLE_FREETYPE'] = True
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']

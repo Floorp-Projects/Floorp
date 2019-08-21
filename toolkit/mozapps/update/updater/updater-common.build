@@ -47,7 +47,7 @@ USE_LIBS += [
     'xz-embedded',
 ]
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     have_progressui = 1
     srcs += [
         'progressui_gtk.cpp',
@@ -100,7 +100,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 elif CONFIG['OS_ARCH'] == 'WINNT':
     WIN32_EXE_LDFLAGS += ['-municode']
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['TK_CFLAGS']
     OS_LIBS += CONFIG['TK_LIBS']
 

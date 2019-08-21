@@ -230,8 +230,8 @@ def full_toolkit(value):
 
 @depends(full_toolkit)
 def toolkit(toolkit):
-    if toolkit == 'cairo-gtk3-wayland':
-        widget_toolkit = 'gtk3'
+    if toolkit.startswith('cairo-gtk3'):
+        widget_toolkit = 'gtk'
     else:
         widget_toolkit = toolkit.replace('cairo-', '')
     return widget_toolkit
@@ -241,8 +241,6 @@ add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', toolkit)
 
 @depends(toolkit)
 def toolkit_define(toolkit):
-    if toolkit == 'gtk3':
-        toolkit = 'gtk'
     if toolkit != 'windows':
         return 'MOZ_WIDGET_%s' % toolkit.upper()
 
@@ -250,7 +248,7 @@ set_define(toolkit_define, True)
 
 @depends(toolkit)
 def toolkit_gtk(toolkit):
-    return toolkit == 'gtk3'
+    return toolkit == 'gtk'
 
 set_config('MOZ_X11', True, when=toolkit_gtk)
 set_define('MOZ_X11', True, when=toolkit_gtk)
@@ -314,7 +312,7 @@ set_define(gl_provider_define, True)
 # ==============================================================
 @depends(toolkit)
 def pdf_printing(toolkit):
-    if toolkit in ('windows', 'gtk3', 'android'):
+    if toolkit in ('windows', 'gtk', 'android'):
         return True
 
 @depends(pdf_printing)
@@ -336,7 +334,7 @@ option(env='MOZ_INSTRUMENT_EVENT_LOOP',
 
 @depends('MOZ_INSTRUMENT_EVENT_LOOP', toolkit)
 def instrument_event_loop(value, toolkit):
-    if value or (toolkit in ('windows', 'gtk3', 'cocoa', 'android') and
+    if value or (toolkit in ('windows', 'gtk', 'cocoa', 'android') and
                  value.origin == 'default'):
         return True
 
@@ -351,7 +349,7 @@ option(env='USE_FC_FREETYPE',
 
 @depends('USE_FC_FREETYPE', toolkit)
 def fc_freetype(value, toolkit):
-    if value or (toolkit == 'gtk3' and
+    if value or (toolkit == 'gtk' and
                  value.origin == 'default'):
         return True
 
@@ -761,7 +759,7 @@ set_define('NS_PRINT_PREVIEW', printing)
 # ==============================================================
 @depends(toolkit)
 def no_speechd_on_non_gtk(toolkit):
-    if toolkit != 'gtk3':
+    if toolkit != 'gtk':
         return False
 
 imply_option('--enable-synth-speechd', no_speechd_on_non_gtk,
@@ -1751,7 +1749,7 @@ with only_when(compile_environment & target_is_windows):
 
 @depends(toolkit)
 def has_remote(toolkit):
-    if 'gtk' in toolkit or toolkit == 'windows':
+    if toolkit in ('gtk', 'windows'):
         return True
 
 set_config('MOZ_HAS_REMOTE', has_remote)

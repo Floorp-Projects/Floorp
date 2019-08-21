@@ -65,5 +65,5 @@ dep1_cert.inputs += ['dep1.der']
 dep2_cert.inputs += ['dep2.der']
 xpcshell_cert.inputs += ['xpcshellCertificate.der']
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     FINAL_TARGET_FILES.icons += ['updater.png']

@@ -86,7 +86,7 @@ else:
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += ['-Wno-error=shadow']
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',
@@ -144,6 +144,6 @@ if CONFIG['MOZ_ENABLE_DBUS']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['TK_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

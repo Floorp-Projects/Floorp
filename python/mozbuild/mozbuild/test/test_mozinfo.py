@@ -60,21 +60,21 @@ class TestBuildDict(unittest.TestCase, Base):
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='i386',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual('linux', d['os'])
         self.assertEqual('x86', d['processor'])
-        self.assertEqual('gtk3', d['toolkit'])
+        self.assertEqual('gtk', d['toolkit'])
         self.assertEqual(32, d['bits'])
 
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='x86_64',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual('linux', d['os'])
         self.assertEqual('x86_64', d['processor'])
-        self.assertEqual('gtk3', d['toolkit'])
+        self.assertEqual('gtk', d['toolkit'])
         self.assertEqual(64, d['bits'])
 
     def test_mac(self):
@@ -134,14 +134,14 @@ class TestBuildDict(unittest.TestCase, Base):
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='arm',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual('arm', d['processor'])
 
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='armv7',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual('arm', d['processor'])
 
@@ -167,14 +167,14 @@ class TestBuildDict(unittest.TestCase, Base):
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='i386',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual(False, d['debug'])
 
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='i386',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
             MOZ_DEBUG='1',
         )))
         self.assertEqual(True, d['debug'])
@@ -186,14 +186,14 @@ class TestBuildDict(unittest.TestCase, Base):
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='i386',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
         )))
         self.assertEqual(False, d['crashreporter'])
 
         d = build_dict(self._config(dict(
             OS_TARGET='Linux',
             TARGET_CPU='i386',
-            MOZ_WIDGET_TOOLKIT='gtk3',
+            MOZ_WIDGET_TOOLKIT='gtk',
             MOZ_CRASHREPORTER='1',
         )))
         self.assertEqual(True, d['crashreporter'])

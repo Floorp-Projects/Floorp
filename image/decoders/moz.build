@@ -8,7 +8,7 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 # The Icon Channel stuff really shouldn't live in decoders/icon, but we'll
 # fix that another time.
-if 'gtk' in toolkit:
+if toolkit == 'gtk':
     DIRS += ['icon/gtk', 'icon']
 
 if CONFIG['OS_ARCH'] == 'WINNT':

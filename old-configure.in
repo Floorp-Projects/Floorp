@@ -1785,7 +1785,7 @@ gtk*)
 esac
 
 if test "$COMPILE_ENVIRONMENT"; then
-  if test "$MOZ_WIDGET_TOOLKIT" = gtk3; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk; then
     PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0 $GDK_PACKAGES)
     MOZ_GTK3_CFLAGS="-I${_topsrcdir}/widget/gtk/compat-gtk3 $MOZ_GTK3_CFLAGS"
     TK_CFLAGS=$MOZ_GTK3_CFLAGS

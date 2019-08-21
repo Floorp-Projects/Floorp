@@ -36,7 +36,7 @@ var TabsInTitlebar;
         case "cocoa":
           isSupported = true;
           break;
-        case "gtk3":
+        case "gtk":
           isSupported = window.matchMedia("(-moz-gtk-csd-available)").matches;
           break;
       }

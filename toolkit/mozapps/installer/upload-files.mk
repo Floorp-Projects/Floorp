@@ -12,7 +12,7 @@ ifndef MOZ_PKG_FORMAT
             ifeq (SunOS,$(OS_ARCH))
                 MOZ_PKG_FORMAT  = BZ2
             else
-                ifeq (gtk3,$(MOZ_WIDGET_TOOLKIT))
+                ifeq (gtk,$(MOZ_WIDGET_TOOLKIT))
                     MOZ_PKG_FORMAT  = BZ2
                 else
                     ifeq (android,$(MOZ_WIDGET_TOOLKIT))

@@ -12,7 +12,7 @@ if toolkit == 'windows':
     DIRS += ['windows']
 elif toolkit == 'cocoa':
     DIRS += ['mac']
-elif 'gtk' in toolkit:
+elif toolkit == 'gtk':
     DIRS += ['gtk']
 elif toolkit == 'android':
     DIRS += ['android']

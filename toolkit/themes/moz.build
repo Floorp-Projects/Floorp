@@ -20,7 +20,7 @@ app = CONFIG['MOZ_BUILD_APP']
 
 if toolkit == 'cocoa':
     DIRS += ['osx']
-elif toolkit == 'gtk3':
+elif toolkit == 'gtk':
     DIRS += ['linux']
 elif app == 'mobile/android':
     DIRS += ['mobile']

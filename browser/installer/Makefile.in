@@ -33,11 +33,8 @@ ifdef MOZ_LAYOUT_DEBUGGER
 DEFINES += -DMOZ_LAYOUT_DEBUGGER=1
 endif
 
-ifneq (,$(filter gtk%,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 DEFINES += -DMOZ_GTK=1
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
-DEFINES += -DMOZ_GTK3=1
-endif
 endif
 
 ifdef MOZ_SYSTEM_NSPR

@@ -466,7 +466,7 @@ function BuildConditionSandbox(aURL) {
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
-    sandbox.gtkWidget = xr.widgetToolkit == "gtk3";
+    sandbox.gtkWidget = xr.widgetToolkit == "gtk";
     sandbox.qtWidget = xr.widgetToolkit == "qt";
     sandbox.winWidget = xr.widgetToolkit == "windows";
 
@@ -477,7 +477,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.geckoview = (sandbox.Android && g.browserIsRemote);
 
     // Scrollbars that are semi-transparent. See bug 1169666.
-    sandbox.transparentScrollbars = xr.widgetToolkit == "gtk3";
+    sandbox.transparentScrollbars = xr.widgetToolkit == "gtk";
 
     if (sandbox.Android) {
         var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);

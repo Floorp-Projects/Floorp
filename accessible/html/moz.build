@@ -25,7 +25,7 @@ LOCAL_INCLUDES += [
     '/layout/xul',
 ]
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
         '/accessible/atk',
     ]
