@@ -2061,6 +2061,35 @@
 #endif
   mirror: always
 
+# Should we abort LocalStorage requests when a sync message from parent is
+# detected?
+#
+# LocalStorage is a synchronous API involving sync IPC from the child to the
+# parent. Accessibility interfaces currently also involve different forms of
+# synchronous parent-to-child communication. (See bug 1516136 comment 11 and
+# comment 15.) Although LocalStorage NextGen no longer needs to consult the
+# main thread, thereby eliminating the possibility of deadlock, the browser is
+# very complex and so we have retained a fail-safe mechanism that will cause
+# blocking LocalStorage operations to abort on synchronous IPC from the parent
+# to the child.
+#
+# We are disabling this fail-safe mechanism because it is fundamentally visible
+# to content when activated. When we abort the synchronous LocalStorage
+# operation we throw an error which has the potential to break web content.
+# This is not a hypothetical. In bug 1574569 content broke due to accessibility
+# path aborting the LS call, but the LS call didn't need to abort because it
+# was not at risk of deadlock.
+#
+# But we are retaining the preference in the event that regressions occur
+# anywhere in the code-base that could cause a cascade that would result in
+# deadlock. (There have been logic bugs in components that resulted in
+# PBackground synchronously blocking in a way that could result in deadlock.)
+# This allows us to re-enable the fail-safe with only a pref flip.
+- name: dom.storage.abort_on_sync_parent_to_child_messages
+  type: bool
+  value: false
+  mirror: always
+
 # LocalStorage data limit as determined by summing up the lengths of all string
 # keys and values. This is consistent with the legacy implementation and other
 # browser engines. This value should really only ever change in unit testing
