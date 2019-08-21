@@ -471,27 +471,51 @@ class gfxTextRun : public gfxShapedText {
     mozilla::gfx::ShapedTextFlags
         mOrientation;  // gfxTextRunFactory::TEXT_ORIENT_* value
     FontMatchType mMatchType;
+    bool mIsCJK;  // Whether the text was a CJK script run (used to decide if
+                  // text-decoration-skip-ink should not be applied)
 
     // Set up the properties (but NOT offset) of the GlyphRun.
     void SetProperties(gfxFont* aFont,
-                       mozilla::gfx::ShapedTextFlags aOrientation,
+                       mozilla::gfx::ShapedTextFlags aOrientation, bool aIsCJK,
                        FontMatchType aMatchType) {
       mFont = aFont;
       mOrientation = aOrientation;
+      mIsCJK = aIsCJK;
       mMatchType = aMatchType;
     }
 
     // Return whether the GlyphRun matches the given properties;
     // the given FontMatchType will be added to the run if not present.
     bool Matches(gfxFont* aFont, mozilla::gfx::ShapedTextFlags aOrientation,
-                 FontMatchType aMatchType) {
-      if (mFont == aFont && mOrientation == aOrientation) {
+                 bool aIsCJK, FontMatchType aMatchType) {
+      if (mFont == aFont && mOrientation == aOrientation && mIsCJK == aIsCJK) {
         mMatchType |= aMatchType;
         return true;
       }
       return false;
     }
   };
+
+  // Script run codes that we will mark as CJK to suppress skip-ink behavior.
+  static inline bool IsCJKScript(Script aScript) {
+    switch (aScript) {
+      case Script::BOPOMOFO:
+      case Script::HAN:
+      case Script::HANGUL:
+      case Script::HIRAGANA:
+      case Script::KATAKANA:
+      case Script::KATAKANA_OR_HIRAGANA:
+      case Script::SIMPLIFIED_HAN:
+      case Script::TRADITIONAL_HAN:
+      case Script::JAPANESE:
+      case Script::KOREAN:
+      case Script::HAN_WITH_BOPOMOFO:
+      case Script::JAMO:
+        return true;
+      default:
+        return false;
+    }
+  }
 
   class MOZ_STACK_CLASS GlyphRunIterator {
    public:
@@ -551,7 +575,7 @@ class gfxTextRun : public gfxShapedText {
    */
   void AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
                    uint32_t aUTF16Offset, bool aForceNewRun,
-                   mozilla::gfx::ShapedTextFlags aOrientation);
+                   mozilla::gfx::ShapedTextFlags aOrientation, bool aIsCJK);
   void ResetGlyphRuns() {
     if (mHasGlyphRunArray) {
       MOZ_ASSERT(mGlyphRunArray.Length() > 1);
@@ -635,6 +659,13 @@ class gfxTextRun : public gfxShapedText {
       return &mSingleGlyphRun;
     }
   }
+
+  const GlyphRun* TrailingGlyphRun() const {
+    uint32_t count;
+    const GlyphRun* runs = GetGlyphRuns(&count);
+    return count ? runs + count - 1 : nullptr;
+  }
+
   // Returns the index of the GlyphRun containing the given offset.
   // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
   uint32_t FindFirstGlyphRunContaining(uint32_t aOffset) const;
