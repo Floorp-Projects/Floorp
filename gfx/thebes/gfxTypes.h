@@ -90,6 +90,7 @@ enum class gfxAlphaType {
  */
 struct FontMatchType {
   enum class Kind : uint8_t {
+    kUnspecified = 0,
     kFontGroup = 1,
     kPrefsFallback = 1 << 1,
     kSystemFallback = 1 << 2,
