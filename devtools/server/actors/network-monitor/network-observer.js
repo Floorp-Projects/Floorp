@@ -616,11 +616,9 @@ NetworkObserver.prototype = {
     event.fromServiceWorker = fromServiceWorker;
     event.isThirdPartyTrackingResource = channel.isThirdPartyTrackingResource();
     const referrerInfo = channel.referrerInfo;
-    event.referrerPolicy = Services.netUtils.getReferrerPolicyString(
-      referrerInfo
-        ? referrerInfo.referrerPolicy
-        : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET
-    );
+    event.referrerPolicy = referrerInfo
+      ? referrerInfo.getReferrerPolicyString()
+      : "";
     httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {

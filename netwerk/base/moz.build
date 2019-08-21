@@ -172,7 +172,6 @@ EXPORTS.mozilla.net += [
     'Predictor.h',
     'PrivateBrowsingChannel.h',
     'RedirectChannelRegistrar.h',
-    'ReferrerPolicy.h',
     'RequestContextService.h',
     'SimpleChannelParent.h',
     'SSLTokensCache.h',

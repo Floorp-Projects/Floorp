@@ -702,8 +702,8 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
 
   // Link header is working like a <link> node, so referrerPolicy attr should
   // have higher priority than referrer policy from document.
-  net::ReferrerPolicy policy =
-      net::AttributeReferrerPolicyFromString(aReferrerPolicy);
+  ReferrerPolicy policy =
+      ReferrerInfo::ReferrerPolicyAttributeFromString(aReferrerPolicy);
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument, policy);
 

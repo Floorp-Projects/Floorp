@@ -1370,7 +1370,7 @@ void WorkerPrivate::UpdateReferrerInfoFromHeader(
   }
 
   ReferrerPolicy policy =
-      nsContentUtils::GetReferrerPolicyFromHeader(headerValue);
+      ReferrerInfo::ReferrerPolicyFromHeaderString(headerValue);
   if (policy == ReferrerPolicy::_empty) {
     return;
   }
