@@ -229,7 +229,6 @@ EXTRA_JS_MODULES += [
     'Troubleshoot.jsm',
     'UpdateUtils.jsm',
     'WebChannel.jsm',
-    'WebProgressChild.jsm',
     'ZipUtils.jsm',
 ]
 

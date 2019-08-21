@@ -103,7 +103,6 @@ function tunnelToInnerBrowser(outer, inner) {
 
     onLocationChange: (webProgress, request, location, flags) => {
       if (webProgress && webProgress.isTopLevel) {
-        inner._securityUI = outer._securityUI;
         inner._documentURI = outer._documentURI;
         inner._documentContentType = outer._documentContentType;
         inner._contentTitle = outer._contentTitle;
@@ -116,6 +115,10 @@ function tunnelToInnerBrowser(outer, inner) {
           outer._remoteWebNavigationImpl._currentURI;
       }
     },
+
+    // We do not need an onSecurityChange handler since the remote security UI
+    // has been copied from the inner (remote) browser to the outer (non-remote)
+    // browser and they share it.
 
     QueryInterface: ChromeUtils.generateQI([
       Ci.nsISupportsWeakReference,
@@ -464,8 +467,6 @@ MessageManagerTunnel.prototype = {
     "Link:AddFeed",
     "Link:AddSearch",
     "PageStyle:StyleSheets",
-    // Messages sent to RemoteWebProgress.jsm
-    "Content:SecurityChange",
     // Messages sent to browser.js
     "DOMTitleChanged",
     "ImageDocumentLoaded",
