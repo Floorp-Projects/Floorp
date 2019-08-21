@@ -9,10 +9,15 @@
   </head>
 
   <body>
-    <button title="Hello" onclick="changeAttribute()">Click me!</button>
+    <button title="Hello" id="attribute" onclick="changeAttribute()">Click me!</button>
+    <button id="subtree" onclick="changeSubtree()">Click me!</button>
     <script>
       function changeAttribute() {
         document.body.setAttribute("title", "Goodbye");
+      }
+
+      function changeSubtree() {
+        document.body.appendChild(document.createElement("div"));
       }
     </script>
   </body>
