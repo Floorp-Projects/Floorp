@@ -18,6 +18,7 @@ function searchInResource(resource, query) {
         key: "url",
         label: "Url",
         type: "url",
+        panel: "headers",
       })
     );
   }
@@ -28,6 +29,7 @@ function searchInResource(resource, query) {
         key: "responseHeaders.headers",
         label: "Response Headers",
         type: "responseHeaders",
+        panel: "headers",
       })
     );
   }
@@ -38,6 +40,7 @@ function searchInResource(resource, query) {
         key: "requestHeaders.headers",
         label: "Request Headers",
         type: "requestHeaders",
+        panel: "headers",
       })
     );
   }
@@ -54,6 +57,7 @@ function searchInResource(resource, query) {
         key,
         label: "Response Cookies",
         type: "responseCookies",
+        panel: "cookies",
       })
     );
   }
@@ -70,6 +74,7 @@ function searchInResource(resource, query) {
         key,
         label: "Request Cookies",
         type: "requestCookies",
+        panel: "cookies",
       })
     );
   }
@@ -80,6 +85,7 @@ function searchInResource(resource, query) {
         key: "securityInfo",
         label: "Security Information",
         type: "securityInfo",
+        panel: "security",
       })
     );
   }
@@ -90,6 +96,7 @@ function searchInResource(resource, query) {
         key: "responseContent.content.text",
         label: "Response Content",
         type: "responseContent",
+        panel: "response",
       })
     );
   }
@@ -100,6 +107,7 @@ function searchInResource(resource, query) {
         key: "requestPostData.postData.text",
         label: "Request Post Data",
         type: "requestPostData",
+        panel: "headers",
       })
     );
   }
@@ -246,14 +254,14 @@ function searchInText(query, text, data) {
  * @returns {*}
  */
 function searchInArray(query, arr, data) {
-  const { type, key, label } = data;
+  const { key, label } = data;
   const matches = arr
     .filter(match => JSON.stringify(match).includes(query))
     .map((match, i) =>
       findMatches(match, query, {
+        ...data,
         label: match.hasOwnProperty("name") ? match.name : label,
         key: key + ".[" + i + "]",
-        type,
       })
     );
 
@@ -291,7 +299,6 @@ function getTruncatedValue(value, query, startIndex) {
  * @returns {*}
  */
 function searchInObject(query, obj, data) {
-  const { type } = data;
   const matches = data.hasOwnProperty("collector") ? data.collector : [];
 
   for (const objectKey in obj) {
@@ -309,7 +316,6 @@ function searchInObject(query, obj, data) {
     ) {
       const match = {
         ...data,
-        type,
       };
 
       const value = obj[objectKey];
