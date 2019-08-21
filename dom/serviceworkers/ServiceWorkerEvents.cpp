@@ -876,7 +876,7 @@ namespace {
 class WaitUntilHandler final : public PromiseNativeHandler {
   WorkerPrivate* mWorkerPrivate;
   const nsCString mScope;
-  nsCString mSourceSpec;
+  nsString mSourceSpec;
   uint32_t mLine;
   uint32_t mColumn;
   nsString mRejectValue;
@@ -905,7 +905,7 @@ class WaitUntilHandler final : public PromiseNativeHandler {
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsCString spec;
+    nsString spec;
     uint32_t line = 0;
     uint32_t column = 0;
     nsContentUtils::ExtractErrorValues(aCx, aValue, spec, &line, &column,
@@ -946,9 +946,8 @@ class WaitUntilHandler final : public PromiseNativeHandler {
     // because there is no documeny yet, and the navigation is no longer
     // being intercepted.
 
-    swm->ReportToAllClients(mScope, message, NS_ConvertUTF8toUTF16(mSourceSpec),
-                            EmptyString(), mLine, mColumn,
-                            nsIScriptError::errorFlag);
+    swm->ReportToAllClients(mScope, message, mSourceSpec, EmptyString(), mLine,
+                            mColumn, nsIScriptError::errorFlag);
   }
 };
 
