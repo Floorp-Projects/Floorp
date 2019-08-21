@@ -44,7 +44,8 @@ class DefaultBookmarkController(
     private val context: Context,
     private val navController: NavController,
     private val snackbarPresenter: FenixSnackbarPresenter,
-    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit
+    private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
+    private val invokePendingDeletion: () -> Unit
 ) : BookmarkController {
 
     private val activity: HomeActivity = context as HomeActivity
@@ -77,7 +78,8 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkSharing(item: BookmarkNode) {
-        navigate(BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
+        navigate(
+            BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
                 url = item.url!!,
                 title = item.title
             )
@@ -93,10 +95,12 @@ class DefaultBookmarkController(
     }
 
     override fun handleBackPressed() {
+        invokePendingDeletion.invoke()
         navController.popBackStack()
     }
 
     override fun handleSigningIn() {
+        invokePendingDeletion.invoke()
         services.launchPairingSignIn(context, navController)
     }
 
@@ -106,6 +110,7 @@ class DefaultBookmarkController(
         from: BrowserDirection,
         mode: BrowsingMode
     ) {
+        invokePendingDeletion.invoke()
         with(activity) {
             browsingModeManager.mode = mode
             openToBrowserAndLoad(searchTermOrURL, newTab, from)
@@ -113,6 +118,7 @@ class DefaultBookmarkController(
     }
 
     private fun navigate(directions: NavDirections) {
+        invokePendingDeletion.invoke()
         navController.nav(R.id.bookmarkFragment, directions)
     }
 }

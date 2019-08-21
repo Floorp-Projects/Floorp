@@ -38,6 +38,7 @@ class BookmarkControllerTest {
     private val navController: NavController = mockk(relaxed = true)
     private val snackbarPresenter: FenixSnackbarPresenter = mockk(relaxed = true)
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
+    private val invokePendingDeletion: () -> Unit = mockk(relaxed = true)
 
     private val homeActivity: HomeActivity = mockk(relaxed = true)
     private val services: Services = mockk(relaxed = true)
@@ -63,13 +64,16 @@ class BookmarkControllerTest {
         )
 
         every { homeActivity.components.services } returns services
-        every { navController.currentDestination } returns NavDestination("").apply { id = R.id.bookmarkFragment }
+        every { navController.currentDestination } returns NavDestination("").apply {
+            id = R.id.bookmarkFragment
+        }
 
         controller = DefaultBookmarkController(
             context = homeActivity,
             navController = navController,
             snackbarPresenter = snackbarPresenter,
-            deleteBookmarkNodes = deleteBookmarkNodes
+            deleteBookmarkNodes = deleteBookmarkNodes,
+            invokePendingDeletion = invokePendingDeletion
         )
     }
 
@@ -78,6 +82,7 @@ class BookmarkControllerTest {
         controller.handleBookmarkTapped(item)
 
         verifyOrder {
+            invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
             homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
         }
@@ -88,6 +93,7 @@ class BookmarkControllerTest {
         controller.handleBookmarkExpand(tree)
 
         verify {
+            invokePendingDeletion.invoke()
             navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid))
         }
     }
@@ -106,6 +112,7 @@ class BookmarkControllerTest {
         controller.handleBookmarkEdit(item)
 
         verify {
+            invokePendingDeletion.invoke()
             navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(item.guid))
         }
     }
@@ -141,6 +148,7 @@ class BookmarkControllerTest {
         controller.handleBookmarkSharing(item)
 
         verify {
+            invokePendingDeletion.invoke()
             navController.navigate(
                 BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
                     item.url,
@@ -155,6 +163,7 @@ class BookmarkControllerTest {
         controller.handleOpeningBookmark(item, BrowsingMode.Normal)
 
         verifyOrder {
+            invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
             homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
         }
@@ -165,6 +174,7 @@ class BookmarkControllerTest {
         controller.handleOpeningBookmark(item, BrowsingMode.Private)
 
         verifyOrder {
+            invokePendingDeletion.invoke()
             homeActivity.browsingModeManager.mode = BrowsingMode.Private
             homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
         }
@@ -202,6 +212,7 @@ class BookmarkControllerTest {
         controller.handleBackPressed()
 
         verify {
+            invokePendingDeletion.invoke()
             navController.popBackStack()
         }
     }
@@ -211,6 +222,7 @@ class BookmarkControllerTest {
         controller.handleSigningIn()
 
         verify {
+            invokePendingDeletion.invoke()
             services.launchPairingSignIn(homeActivity, navController)
         }
     }

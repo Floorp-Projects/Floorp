@@ -19,6 +19,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -91,7 +92,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
                 context = context!!,
                 navController = findNavController(),
                 snackbarPresenter = FenixSnackbarPresenter(view),
-                deleteBookmarkNodes = ::deleteMulti
+                deleteBookmarkNodes = ::deleteMulti,
+                invokePendingDeletion = ::invokePendingDeletion
             ),
             metrics = metrics!!
         )
@@ -185,12 +187,12 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.libraryClose -> {
+                invokePendingDeletion()
                 close()
                 true
             }
             R.id.add_bookmark_folder -> {
-                nav(
-                    R.id.bookmarkFragment,
+                navigate(
                     BookmarkFragmentDirections
                         .actionBookmarkFragmentToBookmarkAddFolderFragment()
                 )
@@ -199,23 +201,23 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
             R.id.open_bookmarks_in_new_tabs_multi_select -> {
                 openItemsInNewTab { node -> node.url }
 
-                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 metrics?.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
                 openItemsInNewTab(private = true) { node -> node.url }
 
-                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 metrics?.track(Event.OpenedBookmarksInPrivateTabs)
                 true
             }
             R.id.edit_bookmark_multi_select -> {
                 val bookmark = bookmarkStore.state.mode.selectedItems.first()
-                nav(
-                    R.id.bookmarkFragment,
-                    BookmarkFragmentDirections
-                        .actionBookmarkFragmentToBookmarkEditFragment(bookmark.guid)
+                navigate(
+                    BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(
+                        bookmark.guid
+                    )
                 )
                 true
             }
@@ -225,6 +227,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun navigate(directions: NavDirections) {
+        invokePendingDeletion()
+        nav(R.id.bookmarkFragment, directions)
     }
 
     override fun onBackPressed(): Boolean = bookmarkView.onBackPressed()
