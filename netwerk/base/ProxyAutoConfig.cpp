@@ -562,7 +562,7 @@ static const JSFunctionSpec PACGlobalFunctions[] = {
 class JSContextWrapper {
  public:
   static JSContextWrapper* Create(uint32_t aExtraHeapSize) {
-    JSContext* cx = JS_NewContext(sContextHeapSize + aExtraHeapSize);
+    JSContext* cx = JS_NewContext(JS::DefaultHeapMaxBytes + aExtraHeapSize);
     if (NS_WARN_IF(!cx)) return nullptr;
 
     JSContextWrapper* entry = new JSContextWrapper(cx);
@@ -593,8 +593,6 @@ class JSContextWrapper {
   bool IsOK() { return mOK; }
 
  private:
-  static const uint32_t sContextHeapSize = 4 << 20;  // 4 MB
-
   JSContext* mContext;
   JS::PersistentRooted<JSObject*> mGlobal;
   bool mOK;
