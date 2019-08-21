@@ -299,7 +299,7 @@ class Raptor(Perftest):
         while not self.control_server._finished:
             if self.config['enable_control_server_wait']:
                 response = self.control_server_wait_get()
-                if response == 'webext_status/__raptor_shutdownBrowser':
+                if response == 'webext_shutdownBrowser':
                     if self.config['memory_test']:
                         generate_android_memory_profile(self, test['name'])
                     self.control_server_wait_continue()
@@ -340,7 +340,7 @@ class Raptor(Perftest):
         self.control_server.start()
 
         if self.config['enable_control_server_wait']:
-            self.control_server_wait_set('webext_status/__raptor_shutdownBrowser')
+            self.control_server_wait_set('webext_shutdownBrowser')
 
     def get_playback_config(self, test):
         platform = self.config['platform']
