@@ -7,7 +7,6 @@
 #ifndef threading_posix_PlatformData_h
 #define threading_posix_PlatformData_h
 
-#include <new>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
