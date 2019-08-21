@@ -3202,8 +3202,6 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
     smallCapsFont = this;
   }
 
-  bool isCJK = gfxTextRun::IsCJKScript(aScript);
-
   enum RunCaseAction { kNoChange, kUppercaseReduce, kUppercase };
 
   RunCaseAction runAction = kNoChange;
@@ -3264,7 +3262,7 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
         case kNoChange:
           // just use the current font and the existing string
           aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart, true,
-                                aOrientation, isCJK);
+                                aOrientation);
           if (!f->SplitAndInitTextRun(aDrawTarget, aTextRun, aText + runStart,
                                       aOffset + runStart, runLength, aScript,
                                       aOrientation)) {
@@ -3301,7 +3299,7 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
             RefPtr<gfxTextRun> tempRun(gfxTextRun::Create(
                 &params, convertedString.Length(), aTextRun->GetFontGroup(),
                 gfx::ShapedTextFlags(), nsTextFrameUtils::Flags()));
-            tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation, isCJK);
+            tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation);
             if (!f->SplitAndInitTextRun(
                     aDrawTarget, tempRun.get(), convertedString.BeginReading(),
                     0, convertedString.Length(), aScript, aOrientation)) {
@@ -3319,7 +3317,7 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
             }
           } else {
             aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart, true,
-                                  aOrientation, isCJK);
+                                  aOrientation);
             if (!f->SplitAndInitTextRun(
                     aDrawTarget, aTextRun, convertedString.BeginReading(),
                     aOffset + runStart, runLength, aScript, aOrientation)) {
