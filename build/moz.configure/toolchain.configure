@@ -1545,8 +1545,9 @@ option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
 # possible security flags will be omitted by --disable-hardening, as many are
 # compiler-default options we do not explicitly enable.)
 @depends('--enable-hardening', '--enable-address-sanitizer',
-         '--enable-optimize', c_compiler, target)
-def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target):
+         '--enable-debug', '--enable-optimize', c_compiler, target)
+def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
+                              target):
     compiler_is_gccish = c_compiler.type in ('gcc', 'clang')
 
     flags = []
@@ -1579,6 +1580,18 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
                 ldflags.append("-fstack-protector-strong")
                 js_flags.append("-fstack-protector-strong")
                 js_ldflags.append("-fstack-protector-strong")
+
+        # ftrivial-auto-var-init ------------------------------
+        # Initialize local variables with a 0xAA pattern in clang debug builds.
+        # Linux32 fails some xpcshell tests with -ftrivial-auto-var-init
+        linux32 = target.kernel == 'Linux' and target.cpu == 'x86'
+        if (c_compiler.type == 'clang' or c_compiler.type == 'clang-cl') and \
+            c_compiler.version >= '8' and debug and not linux32:
+            if c_compiler.type == 'clang-cl':
+                flags.append('-Xclang')
+                js_flags.append('-Xclang')
+            flags.append('-ftrivial-auto-var-init=pattern')
+            js_flags.append('-ftrivial-auto-var-init=pattern')
 
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
