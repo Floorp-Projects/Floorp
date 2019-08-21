@@ -246,6 +246,7 @@ UNIFIED_SOURCES += [
     'proxy/Wrapper.cpp',
     'threading/Mutex.cpp',
     'threading/ProtectedData.cpp',
+    'threading/Thread.cpp',
     'util/AllocPolicy.cpp',
     'util/CompleteFile.cpp',
     'util/NativeStack.cpp',
