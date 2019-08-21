@@ -14,15 +14,16 @@ import {
   getContext,
 } from "../../selectors";
 
-import { isFulfilled } from "../../utils/async-value";
 import {
   isPretty,
   getFilename,
   isOriginal,
   shouldBlackbox,
 } from "../../utils/source";
-import { getGeneratedSource } from "../../reducers/sources";
-import { shouldShowPrettyPrint } from "../../utils/editor";
+import {
+  getGeneratedSource,
+  canPrettyPrintSource,
+} from "../../reducers/sources";
 
 import { PaneToggleButton } from "../shared/Button";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -42,6 +43,7 @@ type Props = {
   mappedSource: Source,
   endPanelCollapsed: boolean,
   horizontal: boolean,
+  canPrettyPrint: boolean,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
   toggleBlackBox: typeof actions.toggleBlackBox,
   jumpToMappedLocation: typeof actions.jumpToMappedLocation,
@@ -84,7 +86,12 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   prettyPrintButton() {
-    const { cx, selectedSource, togglePrettyPrint } = this.props;
+    const {
+      cx,
+      selectedSource,
+      canPrettyPrint,
+      togglePrettyPrint,
+    } = this.props;
 
     if (!selectedSource) {
       return;
@@ -98,16 +105,7 @@ class SourceFooter extends PureComponent<Props, State> {
       );
     }
 
-    const sourceContent =
-      selectedSource.content && isFulfilled(selectedSource.content)
-        ? selectedSource.content.value
-        : null;
-    if (
-      !shouldShowPrettyPrint(
-        selectedSource,
-        sourceContent || { type: "text", value: "", contentType: undefined }
-      )
-    ) {
+    if (!canPrettyPrint) {
       return;
     }
 
@@ -280,6 +278,9 @@ const mapStateToProps = state => {
       selectedSource ? selectedSource.id : null
     ),
     endPanelCollapsed: getPaneCollapse(state, "end"),
+    canPrettyPrint: selectedSource
+      ? canPrettyPrintSource(state, selectedSource.id)
+      : false,
   };
 };
 
