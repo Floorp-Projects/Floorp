@@ -10,7 +10,10 @@ const gElements = {
   loginIntro: document.querySelector("login-intro"),
   loginItem: document.querySelector("login-item"),
   loginFilter: document.querySelector("login-filter"),
-  loginFooter: document.querySelector("login-footer"),
+  // loginFooter is nested inside of loginItem
+  get loginFooter() {
+    return this.loginItem.shadowRoot.querySelector("login-footer");
+  },
 };
 
 let numberOfLogins = 0;
