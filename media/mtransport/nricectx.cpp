@@ -1066,6 +1066,10 @@ int nr_socket_local_create(void* obj, nr_transport_addr* addr,
   if (r) {
     ABORT(r);
   }
+  // TODO(bug 1569183): This will start out false, and may become true once the
+  // socket class figures out whether a proxy needs to be used (this may be as
+  // late as when it establishes a connection).
+  addr->is_proxied = sock->IsProxied();
 
   r = nr_socket_create_int(static_cast<void*>(sock), sock->vtbl(), sockp);
   if (r) ABORT(r);

@@ -86,6 +86,8 @@ class NrSocketProxy : public NrSocketBase, public WebrtcProxyChannelCallback {
   int listen(int aBacklog) override;
   int accept(nr_transport_addr* aAddr, nr_socket** aSocket) override;
 
+  bool IsProxied() const override { return true; }
+
   // WebrtcProxyChannelCallback
   void OnClose(nsresult aReason) override;
   void OnConnected() override;

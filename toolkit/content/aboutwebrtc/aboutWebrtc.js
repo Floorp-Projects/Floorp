@@ -911,7 +911,12 @@ ICEStats.prototype = {
       type = `${c.candidateType}-${c.relayProtocol}`;
     }
 
-    return `${c.address}:${c.port}/${c.protocol}(${type})`;
+    var proxied = "";
+    if (c.type == "local-candidate") {
+      proxied = `[${c.proxied}]`;
+    }
+
+    return `${c.address}:${c.port}/${c.protocol}(${type}) ${proxied}`;
   },
 };
 

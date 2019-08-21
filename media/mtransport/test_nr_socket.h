@@ -225,6 +225,7 @@ class TestNrSocket : public NrSocketBase {
 
   int listen(int backlog) override;
   int accept(nr_transport_addr* addrp, nr_socket** sockp) override;
+  bool IsProxied() const override;
   int async_wait(int how, NR_async_cb cb, void* cb_arg, char* function,
                  int line) override;
   int cancel(int how) override;

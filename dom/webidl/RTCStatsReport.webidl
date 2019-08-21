@@ -136,6 +136,8 @@ dictionary RTCIceCandidateStats : RTCStats {
   // we need to keep the field as ChromeOnly. Bug 1225723
   [ChromeOnly]
   DOMString transportId;
+  [ChromeOnly]
+  DOMString proxied;
 };
 
 // This is the internal representation of the report in this implementation

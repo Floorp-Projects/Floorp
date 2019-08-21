@@ -216,6 +216,7 @@ const statsExpectedByType = {
     ],
     optional: [
       "relayProtocol",
+      "proxied",
     ],
     unimplemented: [
       "networkType",
@@ -244,6 +245,7 @@ const statsExpectedByType = {
     ],
     optional: [
       "relayProtocol",
+      "proxied",
     ],
     unimplemented: [
       "networkType",
@@ -774,6 +776,12 @@ var pedanticChecks = report => {
         is(stat.relayProtocol, undefined,
           `relayProtocol is undefined for candidates that are not relay and ` +
           `local. value=${stat.relayProtocol}`);
+      }
+
+      // proxied
+      if (stat.proxied) {
+        ok(stat.proxied == "proxied" || stat.proxied == "non-proxied",
+           `${stat.type} has proxied. value=${stat.proxied}`);
       }
     }
 

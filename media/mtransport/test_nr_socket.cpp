@@ -282,6 +282,17 @@ int TestNrSocket::accept(nr_transport_addr* addrp, nr_socket** sockp) {
   return 0;
 }
 
+bool TestNrSocket::IsProxied() const {
+  if (internal_socket_->my_addr().protocol == IPPROTO_UDP ||
+      port_mappings_.empty()) {
+    // UDP and the no-nat case
+    return internal_socket_->IsProxied();
+  }
+  // This is TCP only
+  MOZ_ASSERT(port_mappings_.size() == 1);
+  return port_mappings_.front()->external_socket_->IsProxied();
+}
+
 void TestNrSocket::process_delayed_cb(NR_SOCKET s, int how, void* cb_arg) {
   DeferredPacket* op = static_cast<DeferredPacket*>(cb_arg);
   op->socket_->timer_handle_ = nullptr;
