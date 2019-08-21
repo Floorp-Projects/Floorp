@@ -178,10 +178,14 @@ class AndroidXPCShellRunner(MozbuildObject):
             kwargs["symbolsPath"] = os.path.join(self.distdir, 'crashreporter-symbols')
 
         if not kwargs["localAPK"]:
-            for file_name in os.listdir(os.path.join(kwargs["objdir"], "dist")):
-                if file_name.endswith(".apk") and file_name.startswith("fennec"):
-                    kwargs["localAPK"] = os.path.join(kwargs["objdir"], "dist", file_name)
-                    print ("using APK: %s" % kwargs["localAPK"])
+            for root, _, paths in os.walk(os.path.join(kwargs["objdir"], "gradle")):
+                for file_name in paths:
+                    if (file_name.endswith(".apk") and
+                        file_name.startswith("geckoview-withGeckoBinaries")):
+                        kwargs["localAPK"] = os.path.join(root, file_name)
+                        print("using APK: %s" % kwargs["localAPK"])
+                        break
+                if kwargs["localAPK"]:
                     break
             else:
                 raise Exception("APK not found in objdir. You must specify an APK.")
