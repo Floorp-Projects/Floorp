@@ -85,6 +85,11 @@ class PageAction {
     this.label.value = await this.getStrings(
       recommendation.content.notification_text
     );
+
+    this.button.setAttribute(
+      "tooltiptext",
+      await this.getStrings(recommendation.content.notification_text)
+    );
     this.button.setAttribute(
       "data-cfr-icon",
       CATEGORY_ICONS[recommendation.content.category]
