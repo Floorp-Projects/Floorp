@@ -1099,6 +1099,7 @@
     ${If} ${Errors}
       ClearErrors
       WriteIniStr "$0" "TASKBAR" "Migrated" "true"
+      WriteINIStr "$0" "TASKBAR" "Pinned" "true"
       ${If} ${AtLeastWin7}
         ; If we didn't run the stub installer, AddTaskbarSC will be empty.
         ; We determine whether to pin based on whether we're the default
@@ -1119,6 +1120,24 @@
           ${EndIf}
         ${ElseIf} $AddTaskbarSC == "1"
           ${PinToTaskBar}
+        ${EndIf}
+      ${EndIf}
+    ${ElseIf} ${AtLeastWin10}
+      ${GetInstallerRegistryPref} "Software\Mozilla\${AppName}" \
+        "installer.taskbarpin.win10.enabled" $2
+      ${If} $2 == "true"
+        ; On Windows 10, we may have previously tried to make a taskbar pin
+        ; and failed because the API we tried to use was blocked by the OS.
+        ; We have an option that works in more cases now, so we're going to try
+        ; again, but also record that we've done so by writing "Pinned" into the
+        ; shortcuts log, so that we don't continue to do this repeatedly.
+        ClearErrors
+        ReadINIStr $1 "$0" "TASKBAR" "Pinned"
+        ${If} ${Errors}
+          WriteINIStr "$0" "TASKBAR" "Pinned" "true"
+          ${If} $AddTaskbarSC != "0"
+            ${PinToTaskBar}
+          ${EndIf}
         ${EndIf}
       ${EndIf}
     ${EndIf}
