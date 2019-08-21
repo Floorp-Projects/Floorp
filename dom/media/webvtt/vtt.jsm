@@ -1066,8 +1066,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       }
 
       styleBox.applyStyles({
-        top: getPercentagePosition(box.top, fullDimension),
-        left: getPercentagePosition(box.left, fullDimension),
+        top: getPercentagePosition(box.top, containerBox.height),
+        left: getPercentagePosition(box.left, containerBox.width),
       });
     }
 
