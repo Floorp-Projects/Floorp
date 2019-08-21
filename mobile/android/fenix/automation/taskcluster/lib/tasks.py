@@ -46,11 +46,11 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, variant, is_staging, version_name):
+    def craft_assemble_release_task(self, variant, channel, is_staging, version_name):
         if is_staging:
             secret_index = 'garbage/staging/project/mobile/fenix'
         else:
-            secret_index = 'project/mobile/fenix/{}'.format(variant.build_type)
+            secret_index = 'project/mobile/fenix/{}'.format(channel)
 
         pre_gradle_commands = (
             'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
