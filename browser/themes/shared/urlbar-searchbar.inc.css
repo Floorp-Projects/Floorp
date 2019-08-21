@@ -100,6 +100,11 @@
   padding-bottom: 0 !important;
 }
 
+#urlbar.megabar:not(.hidden-focus)[focused="true"] > #urlbar-input-container,
+#urlbar.megabar[open="true"] > #urlbar-input-container {
+  width: 100%;
+}
+
 #urlbar:not(.hidden-focus):-moz-lwtheme[focused="true"],
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
@@ -386,12 +391,12 @@
   transition: opacity 0.15s ease;
 }
 
-#urlbar[switchingtabs] > .urlbar-history-dropmarker {
+#urlbar[switchingtabs] > #urlbar-input-container > .urlbar-history-dropmarker {
   transition: none;
 }
 
-#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > .urlbar-history-dropmarker,
-#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar.hidden-focus > .urlbar-history-dropmarker {
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar:not([focused]) > #urlbar-input-container > .urlbar-history-dropmarker,
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container:not(:hover) > #urlbar.hidden-focus > #urlbar-input-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
 

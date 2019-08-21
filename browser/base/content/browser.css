@@ -610,18 +610,18 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Visible if the urlbar is not focused and it overflows at the start.
    Uses the required-valid trick to check if it contains a value */
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > #urlbar-scheme:valid {
+#urlbar[textoverflow="start"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
   visibility: visible;
 }
 
 /* Fade out URL on overflow
    This mask may be overriden when a Contextual Feature Recommendation is shown,
    see browser/themes/shared/urlbar-searchbar.inc.css for details */
-#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > #urlbar-input {
+#urlbar[textoverflow="end"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
 
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > #urlbar-input {
+#urlbar[textoverflow="start"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
@@ -636,10 +636,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-#urlbar[actionoverride] > #urlbar-display-box,
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-display-box,
-#urlbar:not([actiontype="switchtab"]) > #urlbar-display-box > #switchtab,
-#urlbar:not([actiontype="extension"]) > #urlbar-display-box > #extension {
+#urlbar[actionoverride] > #urlbar-input-container > #urlbar-display-box,
+#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-input-container > #urlbar-display-box,
+#urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-display-box > #switchtab,
+#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-display-box > #extension {
   display: none;
 }
 
@@ -687,11 +687,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   margin-inline-start: 0;
 }
 
-#urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
+#urlbar-input-container[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
-#urlbar[usertyping] > .urlbar-history-dropmarker,
-#urlbar:not([usertyping]) > #urlbar-go-button,
-#urlbar:not([focused]) > #urlbar-go-button {
+#urlbar[usertyping] > #urlbar-input-container > .urlbar-history-dropmarker,
+#urlbar:not([usertyping]) > #urlbar-input-container > #urlbar-go-button,
+#urlbar:not([focused]) > #urlbar-input-container > #urlbar-go-button {
   display: none;
 }
 
