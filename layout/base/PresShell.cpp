@@ -848,6 +848,8 @@ PresShell::PresShell()
   mReflowCountMgr->SetPresShell(this);
 #endif
   mLastOSWake = mLoadBegin = TimeStamp::Now();
+  PodZero(&mReqsPerFlush);
+  PodZero(&mFlushesPerTick);
 
   PointerEventHandler::Initialize();
 }
@@ -4200,6 +4202,30 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     // or due to SuppressInterruptibleReflows().  Either way, the
     // mNeedLayoutFlush flag needs to be re-set.
     SetNeedLayoutFlush();
+  }
+
+  // Update flush counters
+  if (didStyleFlush) {
+    mFlushesPerTick[FlushKind::Style]++;
+  }
+
+  if (didLayoutFlush) {
+    mFlushesPerTick[FlushKind::Layout]++;
+  }
+
+  // Record telemetry for the number of requests per each flush type.
+  //
+  // Flushes happen as style or style+layout. This depends upon the `flushType`
+  // where flushType >= InterruptibleLayout means flush layout and flushType >=
+  // Style means flush style. We only report if didLayoutFlush or didStyleFlush
+  // is true because we care if a flush really did take place. (Flush is guarded
+  // by `isSafeToFlush == true`.)
+  if (flushType >= FlushType::InterruptibleLayout && didLayoutFlush) {
+    MOZ_ASSERT(didLayoutFlush == didStyleFlush);
+    PingReqsPerFlushTelemetry(FlushKind::Layout);
+  } else if (flushType >= FlushType::Style && didStyleFlush) {
+    MOZ_ASSERT(!didLayoutFlush);
+    PingReqsPerFlushTelemetry(FlushKind::Style);
   }
 }
 
@@ -11191,5 +11217,40 @@ void PresShell::EndPaint() {
 
   if (mDocument) {
     mDocument->EnumerateSubDocuments(EndPaintHelper, nullptr);
+  }
+}
+
+void PresShell::PingReqsPerFlushTelemetry(FlushKind aFlushKind) {
+  if (aFlushKind == FlushKind::Layout) {
+    auto styleFlushReqs = mReqsPerFlush[FlushKind::Style].value();
+    auto layoutFlushReqs = mReqsPerFlush[FlushKind::Layout].value();
+    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
+                          NS_LITERAL_CSTRING("Style"), styleFlushReqs);
+    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
+                          NS_LITERAL_CSTRING("Layout"), layoutFlushReqs);
+    mReqsPerFlush[FlushKind::Style] = SaturateUint8(0);
+    mReqsPerFlush[FlushKind::Layout] = SaturateUint8(0);
+  } else {
+    auto styleFlushReqs = mReqsPerFlush[FlushKind::Style].value();
+    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_STYLE_FLUSH,
+                          styleFlushReqs);
+    mReqsPerFlush[FlushKind::Style] = SaturateUint8(0);
+  }
+}
+
+void PresShell::PingFlushPerTickTelemetry(FlushType aFlushType) {
+  MOZ_ASSERT(aFlushType == FlushType::Style || aFlushType == FlushType::Layout);
+  auto styleFlushes = mFlushesPerTick[FlushKind::Style].value();
+  if (styleFlushes > 0) {
+    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
+                          NS_LITERAL_CSTRING("Style"), styleFlushes);
+    mFlushesPerTick[FlushKind::Style] = SaturateUint8(0);
+  }
+
+  auto layoutFlushes = mFlushesPerTick[FlushKind::Layout].value();
+  if (aFlushType == FlushType::Layout && layoutFlushes > 0) {
+    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
+                          NS_LITERAL_CSTRING("Layout"), layoutFlushes);
+    mFlushesPerTick[FlushKind::Layout] = SaturateUint8(0);
   }
 }

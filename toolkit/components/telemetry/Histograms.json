@@ -15658,17 +15658,17 @@
     "description": "How many milliseconds it took before 100 wakeups for the thread was done because of new Runnables."
   },
   "REFRESH_DRIVER_TICK_PHASE_WEIGHT": {
-      "record_in_processes": ["main", "content"],
-      "products": ["firefox", "fennec", "geckoview"],
-      "alert_emails": ["dglastonbury@mozilla.com"],
-      "bug_numbers": [1568107],
-      "expires_in_version": "76",
-      "keyed": true,
-      "keys": ["Event", "Style", "Reflow", "Display", "Paint", "Other"],
-      "kind": "linear",
-      "high": 100,
-      "n_buckets": 12,
-      "description": "Percentages of times for phases in an expensive refresh tick relative to the time spent in the entire tick (REFRESH_DRIVER_TICK)."
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dglastonbury@mozilla.com"],
+    "bug_numbers": [1568107],
+    "expires_in_version": "76",
+    "keyed": true,
+    "keys": ["Event", "Style", "Reflow", "Display", "Paint", "Other"],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "Percentages of times for phases in an expensive refresh tick relative to the time spent in the entire tick (REFRESH_DRIVER_TICK)."
   },
   "HYPHENATION_MEMORY": {
     "record_in_processes": ["main", "content"],
@@ -15693,6 +15693,43 @@
     "n_buckets": 100,
     "releaseChannelCollection": "opt-out",
     "description": "How many milliseconds it took to load a hyphenation resource."
+  },
+  "PRESSHELL_REQS_PER_STYLE_FLUSH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dglastonbury@mozilla.com"],
+    "bug_numbers": [1571612],
+    "expires_in_version": "76",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 32,
+    "description": "The number of style flush requests pending per style flush."
+  },
+  "PRESSHELL_REQS_PER_LAYOUT_FLUSH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dglastonbury@mozilla.com"],
+    "bug_numbers": [1571612],
+    "expires_in_version": "76",
+    "keyed": true,
+    "keys": ["Style", "Layout"],
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 32,
+    "description": "The number of style flush requests and layout flush requests pending per layout flush. Both values are recorded because flushing a pending layout flush also flushes style."
+  },
+  "PRESSHELL_FLUSHES_PER_TICK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dglastonbury@mozilla.com"],
+    "bug_numbers": [1571612],
+    "expires_in_version": "76",
+    "keyed": true,
+    "keys": ["Style", "Layout"],
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 32,
+    "description": "The number of style and layout flushes that occur per Refresh Driver tick."
   },
   "IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT": {
     "record_in_processes": ["main", "content"],
