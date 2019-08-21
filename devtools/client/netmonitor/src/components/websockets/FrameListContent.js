@@ -27,6 +27,8 @@ const Actions = require("../../actions/index");
 
 const { getSelectedFrame } = require("../../selectors/index");
 
+// Components
+const FrameListContextMenu = require("devtools/client/netmonitor/src/components/websockets/FrameListContextMenu");
 loader.lazyGetter(this, "FrameListHeader", function() {
   return createFactory(require("./FrameListHeader"));
 });
@@ -55,6 +57,7 @@ class FrameListContent extends Component {
   constructor(props) {
     super(props);
 
+    this.onContextMenu = this.onContextMenu.bind(this);
     this.framesLimit = Services.prefs.getIntPref(
       "devtools.netmonitor.ws.displayed-frames.limit"
     );
@@ -133,6 +136,15 @@ class FrameListContent extends Component {
     if (evt.button === LEFT_MOUSE_BUTTON) {
       this.props.selectFrame(item);
     }
+  }
+
+  onContextMenu(evt, item) {
+    evt.preventDefault();
+    const { connector } = this.props;
+    this.contextMenu = new FrameListContextMenu({
+      connector,
+    });
+    this.contextMenu.open(evt, item);
   }
 
   render() {
@@ -234,6 +246,7 @@ class FrameListContent extends Component {
               index,
               isSelected: item === selectedFrame,
               onMouseDown: evt => this.onMouseDown(evt, item),
+              onContextMenu: evt => this.onContextMenu(evt, item),
               connector,
               visibleColumns,
             })

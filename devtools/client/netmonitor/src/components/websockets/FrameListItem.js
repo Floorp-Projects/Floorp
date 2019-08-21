@@ -49,6 +49,7 @@ class FrameListItem extends Component {
       index: PropTypes.number.isRequired,
       isSelected: PropTypes.bool.isRequired,
       onMouseDown: PropTypes.func.isRequired,
+      onContextMenu: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
       visibleColumns: PropTypes.array.isRequired,
     };
@@ -60,6 +61,7 @@ class FrameListItem extends Component {
       index,
       isSelected,
       onMouseDown,
+      onContextMenu,
       connector,
       visibleColumns,
     } = this.props;
@@ -78,6 +80,7 @@ class FrameListItem extends Component {
         className: classList.join(" "),
         tabIndex: 0,
         onMouseDown,
+        onContextMenu,
       },
       visibleColumns.map(name => {
         const ColumnComponent = COLUMN_COMPONENT_MAP[name];
