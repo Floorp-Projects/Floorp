@@ -2690,22 +2690,26 @@ void SVGTextDrawPathCallbacks::FillAndStrokeGeometry() {
   }
 
   uint32_t paintOrder = mFrame->StyleSVG()->mPaintOrder;
-  if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
+  if (!paintOrder) {
     FillGeometry();
     StrokeGeometry();
   } else {
     while (paintOrder) {
-      uint32_t component =
-          paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+      auto component = StylePaintOrder(paintOrder & kPaintOrderMask);
       switch (component) {
-        case NS_STYLE_PAINT_ORDER_FILL:
+        case StylePaintOrder::Fill:
           FillGeometry();
           break;
-        case NS_STYLE_PAINT_ORDER_STROKE:
+        case StylePaintOrder::Stroke:
           StrokeGeometry();
           break;
+        default:
+          MOZ_FALLTHROUGH_ASSERT("Unknown paint-order value");
+        case StylePaintOrder::Markers:
+        case StylePaintOrder::Normal:
+          break;
       }
-      paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+      paintOrder >>= kPaintOrderShift;
     }
   }
 

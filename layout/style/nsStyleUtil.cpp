@@ -186,64 +186,6 @@ void nsStyleUtil::AppendBitmaskCSSValue(const nsCSSKTableEntry aTable[],
 }
 
 /* static */
-void nsStyleUtil::AppendPaintOrderValue(uint8_t aValue, nsAString& aResult) {
-  static_assert(
-      NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE <= 8,
-      "SVGStyleStruct::mPaintOrder and local variables not big enough");
-
-  if (aValue == NS_STYLE_PAINT_ORDER_NORMAL) {
-    aResult.AppendLiteral("normal");
-    return;
-  }
-
-  // Append the minimal value necessary for the given paint order.
-  static_assert(NS_STYLE_PAINT_ORDER_LAST_VALUE == 3,
-                "paint-order values added; check serialization");
-
-  // The following relies on the default order being the order of the
-  // constant values.
-
-  const uint8_t MASK = (1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1;
-
-  uint32_t lastPositionToSerialize = 0;
-  for (uint32_t position = NS_STYLE_PAINT_ORDER_LAST_VALUE - 1; position > 0;
-       position--) {
-    uint8_t component =
-        (aValue >> (position * NS_STYLE_PAINT_ORDER_BITWIDTH)) & MASK;
-    uint8_t earlierComponent =
-        (aValue >> ((position - 1) * NS_STYLE_PAINT_ORDER_BITWIDTH)) & MASK;
-    if (component < earlierComponent) {
-      lastPositionToSerialize = position - 1;
-      break;
-    }
-  }
-
-  for (uint32_t position = 0; position <= lastPositionToSerialize; position++) {
-    if (position > 0) {
-      aResult.Append(' ');
-    }
-    uint8_t component = aValue & MASK;
-    switch (component) {
-      case NS_STYLE_PAINT_ORDER_FILL:
-        aResult.AppendLiteral("fill");
-        break;
-
-      case NS_STYLE_PAINT_ORDER_STROKE:
-        aResult.AppendLiteral("stroke");
-        break;
-
-      case NS_STYLE_PAINT_ORDER_MARKERS:
-        aResult.AppendLiteral("markers");
-        break;
-
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected paint-order component value");
-    }
-    aValue >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
-  }
-}
-
-/* static */
 float nsStyleUtil::ColorComponentToFloat(uint8_t aAlpha) {
   // Alpha values are expressed as decimals, so we should convert
   // back, using as few decimal places as possible for
