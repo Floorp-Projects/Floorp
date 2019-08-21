@@ -735,5 +735,7 @@ load 1346454-1.html
 load 1346454-2.html
 load 1555142.html
 load 1562105.html
+pref(layout.css.column-span.enabled,true) load 1568001-1.html
+pref(layout.css.column-span.enabled,true) load 1568001-2.html
 load 1571460.html
 load 1574552.html
