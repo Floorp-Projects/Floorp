@@ -134,7 +134,7 @@ var ReaderMode = {
       triggeringPrincipal: principal,
       loadFlags,
       referrerInfo: new ReferrerInfo(
-        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        Ci.nsIReferrerInfo.EMPTY,
         true,
         referrerURI
       ),

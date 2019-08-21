@@ -27,7 +27,7 @@ function run_test() {
           Assert.equal(currentReferrer, "http://site1.com/");
           let uri = Services.io.newURI("http://site2.com");
           subject.referrerInfo = new ReferrerInfo(
-            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+            Ci.nsIReferrerInfo.EMPTY,
             true,
             uri
           );

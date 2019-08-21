@@ -100,7 +100,7 @@ function checkSecondLoad() {
     .getService(Ci.imgITools)
     .createScriptedObserver(listener);
   var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+    Ci.nsIReferrerInfo.NO_REFERRER_WHEN_DOWNGRADE,
     true,
     null
   );
@@ -217,7 +217,7 @@ function startImageCallback(otherCb) {
       .getService(Ci.imgITools)
       .createScriptedObserver(listener2);
     var referrerInfo = new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+      Ci.nsIReferrerInfo.NO_REFERRER_WHEN_DOWNGRADE,
       true,
       null
     );
@@ -271,7 +271,7 @@ function run_test() {
     .getService(Ci.imgITools)
     .createScriptedObserver(listener);
   var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+    Ci.nsIReferrerInfo.NO_REFERRER_WHEN_DOWNGRADE,
     true,
     null
   );

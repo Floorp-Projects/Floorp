@@ -91,7 +91,7 @@ function loadImage(isPrivate, callback) {
     : nonPrivateLoadContext;
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
   var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+    Ci.nsIReferrerInfo.NO_REFERRER_WHEN_DOWNGRADE,
     true,
     null
   );

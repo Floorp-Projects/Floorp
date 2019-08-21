@@ -117,7 +117,7 @@ const TEST_GLOBAL = {
   },
   Ci: {
     nsICryptoHash: {},
-    nsIHttpChannel: { REFERRER_POLICY_UNSAFE_URL: 5 },
+    nsIReferrerInfo: { UNSAFE_URL: 5 },
     nsITimer: { TYPE_ONE_SHOT: 1 },
     nsIWebProgressListener: { LOCATION_CHANGE_SAME_DOCUMENT: 1 },
     nsIDOMWindow: Object,

@@ -286,7 +286,7 @@ class PlacesFeed {
         "init"
       );
       params.referrerInfo = new ReferrerInfo(
-        Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+        Ci.nsIReferrerInfo.UNSAFE_URL,
         true,
         Services.io.newURI(referrer)
       );

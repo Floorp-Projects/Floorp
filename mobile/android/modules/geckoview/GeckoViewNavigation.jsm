@@ -35,11 +35,7 @@ const createReferrerInfo = aReferrer => {
     referrerUri = Services.io.newURI(aReferrer);
   } catch (ignored) {}
 
-  return new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    true,
-    referrerUri
-  );
+  return new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, referrerUri);
 };
 
 // Handles navigation requests between Gecko and a GeckoView.
@@ -153,7 +149,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
           const referrerPolicy = referrerWindow.browser.referrerInfo
             ? referrerWindow.browser.referrerInfo.referrerPolicy
-            : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
+            : Ci.nsIReferrerInfo.EMPTY;
 
           referrerInfo = new ReferrerInfo(
             referrerPolicy,

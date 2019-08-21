@@ -30,7 +30,7 @@ add_task(async function() {
 
   // Load a new URI with a specific referrer.
   let referrerInfo1 = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     Services.io.newURI(REFERRER1)
   );
@@ -52,7 +52,7 @@ add_task(async function() {
   );
 
   let referrerInfo2 = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     Services.io.newURI(REFERRER2)
   );

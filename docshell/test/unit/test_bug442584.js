@@ -13,11 +13,7 @@ function run_test() {
   Services.prefs.setBoolPref("network.prefetch-next", true);
   for (var i = 0; i < 5; i++) {
     var uri = Services.io.newURI("http://localhost/" + i);
-    var referrerInfo = new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-      true,
-      uri
-    );
+    var referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
     prefetch.prefetchURI(uri, referrerInfo, null, true);
   }
 
@@ -32,11 +28,7 @@ function run_test() {
   Services.prefs.setBoolPref("network.prefetch-next", true);
   for (var k = 0; k < 5; k++) {
     var uri2 = Services.io.newURI("http://localhost/" + k);
-    var referrerInfo2 = new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-      true,
-      uri2
-    );
+    var referrerInfo2 = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri2);
     prefetch.prefetchURI(uri2, referrerInfo2, null, true);
   }
   Assert.ok(prefetch.hasMoreElements());

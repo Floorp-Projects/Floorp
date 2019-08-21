@@ -376,7 +376,7 @@ add_task(async function test_windows_zoneInformation() {
 
   function createReferrerInfo(
     aReferrer,
-    aRefererPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET
+    aRefererPolicy = Ci.nsIReferrerInfo.EMPTY
   ) {
     return new ReferrerInfo(aRefererPolicy, true, NetUtil.newURI(aReferrer));
   }
@@ -400,7 +400,7 @@ add_task(async function test_windows_zoneInformation() {
       options: {
         referrerInfo: createReferrerInfo(
           TEST_REFERRER_URL,
-          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL
+          Ci.nsIReferrerInfo.UNSAFE_URL
         ),
       },
       expectedZoneId:
@@ -514,7 +514,7 @@ add_task(async function test_referrer() {
   });
   let download;
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+    Ci.nsIReferrerInfo.UNSAFE_URL,
     true,
     NetUtil.newURI(TEST_REFERRER_URL)
   );

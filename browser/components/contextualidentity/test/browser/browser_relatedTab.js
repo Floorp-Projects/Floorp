@@ -39,7 +39,7 @@ add_task(async function() {
 
   gBrowser.selectedTab = tab;
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     gBrowser.currentURI
   );
@@ -55,7 +55,7 @@ add_task(async function() {
 
   gBrowser.selectedTab = tab;
   referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     gBrowser.currentURI
   );
