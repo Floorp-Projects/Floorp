@@ -90,7 +90,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
 
         if (SDK_INT <= Build.VERSION_CODES.M) {
-            findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))?.apply {
+            findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))?.apply {
                 isVisible = false
             }
         }
@@ -106,17 +106,17 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         (activity as AppCompatActivity).title = getString(R.string.settings_title)
         (activity as AppCompatActivity).supportActionBar?.show()
         val defaultBrowserPreference =
-            findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))
+            findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))
         defaultBrowserPreference?.updateSwitch()
 
         val searchEnginePreference =
-            findPreference<Preference>(getString(R.string.pref_key_search_engine_settings))
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_search_engine_settings))
         searchEnginePreference?.summary = context?.let {
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
         }
 
         val trackingProtectionPreference =
-            findPreference<Preference>(getString(R.string.pref_key_tracking_protection_settings))
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
             if (org.mozilla.fenix.utils.Settings.getInstance(it).shouldUseTrackingProtection) {
                 getString(R.string.tracking_protection_on)
@@ -126,12 +126,12 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         val themesPreference =
-            findPreference<Preference>(getString(R.string.pref_key_theme))
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_theme))
         themesPreference?.summary = context?.let {
             org.mozilla.fenix.utils.Settings.getInstance(it).themeSettingString
         }
 
-        val aboutPreference = findPreference<Preference>(getString(R.string.pref_key_about))
+        val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
         val appName = getString(R.string.app_name)
         aboutPreference?.title = getString(R.string.preferences_about, appName)
 
@@ -198,16 +198,16 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                 navigateToThemeSettings()
             }
             resources.getString(pref_key_privacy_link) -> {
-                requireContext().apply {
-                    val intent = SupportUtils.createCustomTabIntent(this, SupportUtils.PRIVACY_NOTICE_URL)
+                requireContext().let { context ->
+                    val intent = SupportUtils.createCustomTabIntent(context, SupportUtils.PRIVACY_NOTICE_URL)
                     startActivity(intent)
                 }
             }
             resources.getString(pref_key_your_rights) -> {
-                requireContext().apply {
+                requireContext().let { context ->
                     val intent = SupportUtils.createCustomTabIntent(
-                        this,
-                        SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.YOUR_RIGHTS)
+                        context,
+                        SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
                     )
                     startActivity(intent)
                 }
@@ -229,9 +229,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     private fun setupPreferences() {
-        val makeDefaultBrowserKey = context!!.getPreferenceKey(pref_key_make_default_browser)
-        val leakKey = context!!.getPreferenceKey(pref_key_leakcanary)
-        val debuggingKey = context!!.getPreferenceKey(pref_key_remote_debugging)
+        val makeDefaultBrowserKey = getPreferenceKey(pref_key_make_default_browser)
+        val leakKey = getPreferenceKey(pref_key_leakcanary)
+        val debuggingKey = getPreferenceKey(pref_key_remote_debugging)
 
         val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)

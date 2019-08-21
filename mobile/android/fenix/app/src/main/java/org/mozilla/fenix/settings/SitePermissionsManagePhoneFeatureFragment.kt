@@ -92,7 +92,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     }
 
     private fun RadioButton.restoreState(action: SitePermissionsRules.Action) {
-        if (phoneFeature.action == action) {
+        if (phoneFeature.getAction(settings) == action) {
             this.isChecked = true
             this.setStartCheckedIndicator()
         }
@@ -119,16 +119,6 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         }
     }
 
-    private val PhoneFeature.action: SitePermissionsRules.Action
-        get() {
-            return when (phoneFeature) {
-                PhoneFeature.CAMERA -> settings.sitePermissionsPhoneFeatureCameraAction
-                PhoneFeature.LOCATION -> settings.sitePermissionsPhoneFeatureLocation
-                PhoneFeature.MICROPHONE -> settings.sitePermissionsPhoneFeatureMicrophoneAction
-                PhoneFeature.NOTIFICATION -> settings.sitePermissionsPhoneFeatureNotificationAction
-            }
-        }
-
     private fun initSettingsButton(rootView: View) {
         val button = rootView.findViewById<Button>(R.id.settings_button)
         button.setOnClickListener {
@@ -144,11 +134,6 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     }
 
     private fun saveActionInSettings(action: SitePermissionsRules.Action) {
-        when (phoneFeature) {
-            PhoneFeature.CAMERA -> settings.sitePermissionsPhoneFeatureCameraAction = action
-            PhoneFeature.LOCATION -> settings.sitePermissionsPhoneFeatureLocation = action
-            PhoneFeature.MICROPHONE -> settings.sitePermissionsPhoneFeatureMicrophoneAction = action
-            PhoneFeature.NOTIFICATION -> settings.sitePermissionsPhoneFeatureNotificationAction = action
-        }
+        settings.setSitePermissionsPhoneFeatureAction(phoneFeature, action)
     }
 }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ext
 
 import androidx.annotation.IdRes
+import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
@@ -29,3 +30,5 @@ fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, extras: Navigator.E
 fun Fragment.nav(@IdRes id: Int?, directions: NavDirections, options: NavOptions) {
     findNavController(this).nav(id, directions, options)
 }
+
+fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(resourceId)

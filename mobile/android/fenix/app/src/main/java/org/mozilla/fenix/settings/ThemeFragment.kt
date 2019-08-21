@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
 class ThemeFragment : PreferenceFragmentCompat() {
@@ -60,7 +61,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindLightTheme() {
-        val keyLightTheme = getString(R.string.pref_key_light_theme)
+        val keyLightTheme = getPreferenceKey(R.string.pref_key_light_theme)
         radioLightTheme = requireNotNull(findPreference(keyLightTheme))
         radioLightTheme.onClickListener {
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
@@ -70,7 +71,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     @SuppressLint("WrongConstant")
     // Suppressing erroneous lint warning about using MODE_NIGHT_AUTO_BATTERY, a likely library bug
     private fun bindAutoBatteryTheme() {
-        val keyBatteryTheme = getString(R.string.pref_key_auto_battery_theme)
+        val keyBatteryTheme = getPreferenceKey(R.string.pref_key_auto_battery_theme)
         radioAutoBatteryTheme = requireNotNull(findPreference(keyBatteryTheme))
         radioAutoBatteryTheme.onClickListener {
             setNewTheme(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
@@ -78,7 +79,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindDarkTheme() {
-        val keyDarkTheme = getString(R.string.pref_key_dark_theme)
+        val keyDarkTheme = getPreferenceKey(R.string.pref_key_dark_theme)
         radioDarkTheme = requireNotNull(findPreference(keyDarkTheme))
         radioDarkTheme.onClickListener {
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
@@ -86,7 +87,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindFollowDeviceTheme() {
-        val keyDeviceTheme = getString(R.string.pref_key_follow_device_theme)
+        val keyDeviceTheme = getPreferenceKey(R.string.pref_key_follow_device_theme)
         radioFollowDeviceTheme = requireNotNull(findPreference(keyDeviceTheme))
         if (SDK_INT >= Build.VERSION_CODES.P) {
             radioFollowDeviceTheme.onClickListener {

@@ -21,12 +21,18 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
+/**
+ * Displays the logo and information about the app, including library versions.
+ */
 class AboutFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_about, container, false)
     }
 
+    /**
+     * Sets the activity title, displays library version strings, and sets up the [view_licenses_button].
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -53,8 +59,8 @@ class AboutFragment : Fragment() {
             ""
         }
 
-        val buildDate = BuildConfig.BUILD_DATE
         val content = getString(R.string.about_content, appName)
+        val buildDate = BuildConfig.BUILD_DATE
 
         about_text.text = aboutText
         about_content.text = content
@@ -62,12 +68,7 @@ class AboutFragment : Fragment() {
 
         view_licenses_button.setOnClickListener {
             startActivity(Intent(context, OssLicensesMenuActivity::class.java))
-            OssLicensesMenuActivity.setActivityTitle(
-                getString(
-                    R.string.open_source_licenses_title,
-                    getString(R.string.app_name)
-                )
-            )
+            OssLicensesMenuActivity.setActivityTitle(getString(R.string.open_source_licenses_title, appName))
         }
     }
 

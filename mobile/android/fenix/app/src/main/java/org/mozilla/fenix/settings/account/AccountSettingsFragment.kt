@@ -113,12 +113,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         accountManager.register(accountStateObserver, this, true)
 
         // Sign out
-        val signOut = context!!.getPreferenceKey(R.string.pref_key_sign_out)
+        val signOut = getPreferenceKey(R.string.pref_key_sign_out)
         val preferenceSignOut = findPreference<Preference>(signOut)
         preferenceSignOut?.onPreferenceClickListener = getClickListenerForSignOut()
 
         // Sync now
-        val syncNow = context!!.getPreferenceKey(R.string.pref_key_sync_now)
+        val syncNow = getPreferenceKey(R.string.pref_key_sync_now)
         val preferenceSyncNow = findPreference<Preference>(syncNow)
         preferenceSyncNow?.let {
             it.onPreferenceClickListener = getClickListenerForSyncNow()
@@ -134,7 +134,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         // Device Name
         val deviceConstellation = accountManager.authenticatedAccount()?.deviceConstellation()
-        val deviceNameKey = context!!.getPreferenceKey(R.string.pref_key_sync_device_name)
+        val deviceNameKey = getPreferenceKey(R.string.pref_key_sync_device_name)
         findPreference<EditTextPreference>(deviceNameKey)?.apply {
             onPreferenceChangeListener = getChangeListenerForDeviceName()
             deviceConstellation?.state()?.currentDevice?.let { device ->
@@ -211,7 +211,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     private val syncStatusObserver = object : SyncStatusObserver {
         override fun onStarted() {
             lifecycleScope.launch {
-                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
@@ -221,7 +221,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         // Sync stopped successfully.
         override fun onIdle() {
             lifecycleScope.launch {
-                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
                     pref.isEnabled = true
@@ -235,7 +235,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         // Sync stopped after encountering a problem.
         override fun onError(error: Exception?) {
             lifecycleScope.launch {
-                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
                     pref.isEnabled = true
@@ -256,7 +256,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateDeviceName(state: AccountSettingsState) {
-        val deviceNameKey = context!!.getPreferenceKey(R.string.pref_key_sync_device_name)
+        val deviceNameKey = getPreferenceKey(R.string.pref_key_sync_device_name)
         val preferenceDeviceName = findPreference<Preference>(deviceNameKey)
         preferenceDeviceName?.summary = state.deviceName
     }
@@ -280,7 +280,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             )
         }
 
-        val syncNow = context!!.getPreferenceKey(R.string.pref_key_sync_now)
+        val syncNow = getPreferenceKey(R.string.pref_key_sync_now)
         findPreference<Preference>(syncNow)?.summary = value
     }
 

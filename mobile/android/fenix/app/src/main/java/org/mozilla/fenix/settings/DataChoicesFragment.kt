@@ -11,14 +11,18 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * Lets the user toggle telemetry on/off.
+ */
 class DataChoicesFragment : PreferenceFragmentCompat() {
 
     private val preferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             when (key) {
-                getString(R.string.pref_key_telemetry) -> {
+                getPreferenceKey(R.string.pref_key_telemetry) -> {
                     if (sharedPreferences.getBoolean(key, Settings.getInstance(requireContext()).isTelemetryEnabled)) {
                         context?.components?.analytics?.metrics?.start()
                     } else {
@@ -51,16 +55,13 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
 
-        val telemetryPreference = findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry))?.apply {
+        findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_telemetry))?.apply {
             isChecked = Settings.getInstance(context).isTelemetryEnabled
 
             val appName = context.getString(R.string.app_name)
             summary = context.getString(R.string.preferences_usage_data_description, appName)
-        }
-        telemetryPreference?.setOnPreferenceChangeListener { preference, newValue ->
-            Settings.getInstance(preference.context).preferences.edit().putBoolean(preference.key, newValue as Boolean)
-                .apply()
-            true
+
+            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
 }

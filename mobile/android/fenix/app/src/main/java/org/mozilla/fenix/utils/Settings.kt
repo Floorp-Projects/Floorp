@@ -14,9 +14,10 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.sharedpreferences.PreferencesHolder
 import org.mozilla.fenix.settings.sharedpreferences.booleanPreference
-import org.mozilla.fenix.settings.sharedpreferences.sitePermissionsRulesActionPreference
+import java.security.InvalidParameterException
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -29,6 +30,19 @@ class Settings private constructor(
     companion object {
         const val autoBounceMaximumCount = 2
         const val FENIX_PREFERENCES = "fenix_preferences"
+        private const val BLOCKED_INT = 0
+        private const val ASK_TO_ALLOW_INT = 1
+
+        private fun actionToInt(action: SitePermissionsRules.Action) = when (action) {
+            SitePermissionsRules.Action.BLOCKED -> BLOCKED_INT
+            SitePermissionsRules.Action.ASK_TO_ALLOW -> ASK_TO_ALLOW_INT
+        }
+
+        private fun intToAction(action: Int) = when (action) {
+            BLOCKED_INT -> SitePermissionsRules.Action.BLOCKED
+            ASK_TO_ALLOW_INT -> SitePermissionsRules.Action.ASK_TO_ALLOW
+            else -> throw InvalidParameterException("$action is not a valid SitePermissionsRules.Action")
+        }
 
         var instance: Settings? = null
 
@@ -147,28 +161,19 @@ class Settings private constructor(
         default = true
     )
 
-    var sitePermissionsPhoneFeatureCameraAction by sitePermissionsRulesActionPreference(
-        appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera)
-    )
+    fun getSitePermissionsPhoneFeatureAction(feature: PhoneFeature) =
+        intToAction(preferences.getInt(feature.getPreferenceKey(appContext), ASK_TO_ALLOW_INT))
 
-    var sitePermissionsPhoneFeatureMicrophoneAction by sitePermissionsRulesActionPreference(
-        appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone)
-    )
-
-    var sitePermissionsPhoneFeatureNotificationAction by sitePermissionsRulesActionPreference(
-        appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification)
-    )
-
-    var sitePermissionsPhoneFeatureLocation by sitePermissionsRulesActionPreference(
-        appContext.getPreferenceKey(R.string.pref_key_phone_feature_location)
-    )
+    fun setSitePermissionsPhoneFeatureAction(feature: PhoneFeature, value: SitePermissionsRules.Action) {
+        preferences.edit().putInt(feature.getPreferenceKey(appContext), actionToInt(value)).apply()
+    }
 
     fun getSitePermissionsCustomSettingsRules(): SitePermissionsRules {
         return SitePermissionsRules(
-            notification = sitePermissionsPhoneFeatureNotificationAction,
-            microphone = sitePermissionsPhoneFeatureMicrophoneAction,
-            location = sitePermissionsPhoneFeatureLocation,
-            camera = sitePermissionsPhoneFeatureCameraAction
+            notification = getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION),
+            microphone = getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE),
+            location = getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION),
+            camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA)
         )
     }
 

@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
+import org.mozilla.fenix.settings.PhoneFeature
 import org.robolectric.annotation.Config
 
 @ObsoleteCoroutinesApi
@@ -231,52 +232,52 @@ class SettingsTest {
     fun sitePermissionsPhoneFeatureCameraAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureCameraAction)
+        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA))
 
         // When
-        settings.sitePermissionsPhoneFeatureCameraAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureCameraAction)
+        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA))
     }
 
     @Test
     fun sitePermissionsPhoneFeatureMicrophoneAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureMicrophoneAction)
+        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE))
 
         // When
-        settings.sitePermissionsPhoneFeatureMicrophoneAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureMicrophoneAction)
+        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE))
     }
 
     @Test
     fun sitePermissionsPhoneFeatureNotificationAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureNotificationAction)
+        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION))
 
         // When
-        settings.sitePermissionsPhoneFeatureNotificationAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureNotificationAction)
+        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION))
     }
 
     @Test
     fun sitePermissionsPhoneFeatureLocation() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.sitePermissionsPhoneFeatureLocation)
+        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION))
 
         // When
-        settings.sitePermissionsPhoneFeatureLocation = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.sitePermissionsPhoneFeatureLocation)
+        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION))
     }
 
     @Test
@@ -292,7 +293,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_camera() {
         // When
-        settings.sitePermissionsPhoneFeatureCameraAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA, BLOCKED)
 
         // Then
         assertEquals(
@@ -304,7 +305,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_notification() {
         // When
-        settings.sitePermissionsPhoneFeatureNotificationAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION, BLOCKED)
 
         // Then
         assertEquals(
@@ -316,7 +317,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_location() {
         // When
-        settings.sitePermissionsPhoneFeatureLocation = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION, BLOCKED)
 
         // Then
         assertEquals(
@@ -328,7 +329,7 @@ class SettingsTest {
     @Test
     fun getSitePermissionsCustomSettingsRules_microphone() {
         // When
-        settings.sitePermissionsPhoneFeatureMicrophoneAction = BLOCKED
+        settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE, BLOCKED)
 
         // Then
         assertEquals(

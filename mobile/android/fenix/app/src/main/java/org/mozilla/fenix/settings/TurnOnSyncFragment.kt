@@ -11,8 +11,8 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
-import androidx.navigation.fragment.NavHostFragment.findNavController
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_turn_on_sync.view.*
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
@@ -23,6 +23,22 @@ import org.mozilla.fenix.ext.requireComponents
 
 @SuppressWarnings("TooManyFunctions")
 class TurnOnSyncFragment : Fragment(), AccountObserver {
+
+    private val signInClickListener = View.OnClickListener {
+        requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
+        // TODO The sign-in web content populates session history,
+        // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
+        // session history stack.
+        // We could auto-close this tab once we get to the end of the authentication process?
+        // Via an interceptor, perhaps.
+    }
+
+    private val paringClickListener = View.OnClickListener {
+        val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
+        view!!.findNavController().navigate(directions)
+        requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
@@ -36,7 +52,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onResume() {
         super.onResume()
         if (requireComponents.backgroundServices.accountManager.authenticatedAccount() != null) {
-            findNavController(this).popBackStack()
+            findNavController().popBackStack()
             return
         }
 
@@ -47,32 +63,13 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_turn_on_sync, container, false)
-        view.signInScanButton.setOnClickListener(getClickListenerForPairing())
-        view.signInEmailButton.setOnClickListener(getClickListenerForSignIn())
+        view.signInScanButton.setOnClickListener(paringClickListener)
+        view.signInEmailButton.setOnClickListener(signInClickListener)
         view.signInInstructions.text = HtmlCompat.fromHtml(
             getString(R.string.sign_in_instructions),
             HtmlCompat.FROM_HTML_MODE_LEGACY
         )
         return view
-    }
-
-    private fun getClickListenerForSignIn(): View.OnClickListener {
-        return View.OnClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
-            // TODO The sign-in web content populates session history,
-            // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
-            // session history stack.
-            // We could auto-close this tab once we get to the end of the authentication process?
-            // Via an interceptor, perhaps.
-        }
-    }
-
-    private fun getClickListenerForPairing(): View.OnClickListener {
-        return View.OnClickListener {
-            val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
-            Navigation.findNavController(view!!).navigate(directions)
-            requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
-        }
     }
 
     override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {

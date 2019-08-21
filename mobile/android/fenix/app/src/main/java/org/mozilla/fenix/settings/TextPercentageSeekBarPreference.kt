@@ -39,23 +39,19 @@ import org.mozilla.fenix.R
 import java.text.NumberFormat
 
 /**
- * Preference based on android.preference.SeekBarPreference but uses support preference as a base
- * . It contains a title and a [SeekBar] and a SeekBar value [TextView] and an Example [TextView].
+ * Preference based on android.preference.SeekBarPreference but uses support preference as a base.
+ * It contains a title and a [SeekBar] and a SeekBar value [TextView] and an Example [TextView].
  * The actual preference layout is customizable by setting `android:layout` on the
  * preference widget layout or `seekBarPreferenceStyle` attribute.
- *
  *
  * The [SeekBar] within the preference can be defined adjustable or not by setting `adjustable` attribute.
  * If adjustable, the preference will be responsive to DPAD left/right keys.
  * Otherwise, it skips those keys.
  *
- *
  * The [SeekBar] value view can be shown or disabled by setting `showSeekBarValue`
  * attribute to true or false, respectively.
  *
- *
- * Other [SeekBar] specific attributes (e.g. `title, summary, defaultValue, min,
- * max`)
+ * Other [SeekBar] specific attributes (e.g. `title, summary, defaultValue, min, max`)
  * can be set directly on the preference widget layout.
  */
 class TextPercentageSeekBarPreference @JvmOverloads constructor(
@@ -64,21 +60,32 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     defStyleAttr: Int = R.attr.seekBarPreferenceStyle,
     defStyleRes: Int = 0
 ) : Preference(context, attrs, defStyleAttr, defStyleRes) {
-    internal /* synthetic access */ var mSeekBarValue: Int = 0
-    internal /* synthetic access */ var mMin: Int = 0
+    /* synthetic access */
+    internal var mSeekBarValue: Int = 0
+    /* synthetic access */
+    internal var mMin: Int = 0
     private var mMax: Int = 0
     private var mSeekBarIncrement: Int = 0
-    internal /* synthetic access */ var mTrackingTouch: Boolean = false
-    internal /* synthetic access */ var mSeekBar: SeekBar? = null
+    /* synthetic access */
+    internal var mTrackingTouch: Boolean = false
+    /* synthetic access */
+    internal var mSeekBar: SeekBar? = null
     private var mSeekBarValueTextView: TextView? = null
     private var mExampleTextTextView: TextView? = null
-    // Whether the SeekBar should respond to the left/right keys
-    /* synthetic access */ var isAdjustable: Boolean = false
-    // Whether to show the SeekBar value TextView next to the bar
+    /**
+     * Whether the SeekBar should respond to the left/right keys
+     */
+    /* synthetic access */
+    var isAdjustable: Boolean = false
+    /**
+     * Whether to show the SeekBar value TextView next to the bar
+     */
     private var mShowSeekBarValue: Boolean = false
-    // Whether the SeekBarPreference should continuously save the Seekbar value while it is being
-    // dragged.
-    /* synthetic access */ var updatesContinuously: Boolean = false
+    /**
+     * Whether the SeekBarPreference should continuously save the Seekbar value while it is being dragged.
+     */
+    /* synthetic access */
+    var updatesContinuously: Boolean = false
     /**
      * Listener reacting to the [SeekBar] changing value by the user
      */
@@ -111,26 +118,21 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      * to be handled accordingly.
      */
     private val mSeekBarKeyListener = View.OnKeyListener { _, keyCode, event ->
-        if (event.action != KeyEvent.ACTION_DOWN) {
-            return@OnKeyListener false
-        }
-
-        if (!isAdjustable && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)) {
+        return@OnKeyListener if (event.action != KeyEvent.ACTION_DOWN) {
+            false
+        } else if (!isAdjustable && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)) {
             // Right or left keys are pressed when in non-adjustable mode; Skip the keys.
-            return@OnKeyListener false
-        }
-
-        // We don't want to propagate the click keys down to the SeekBar view since it will
-        // create the ripple effect for the thumb.
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-            return@OnKeyListener false
-        }
-
-        if (mSeekBar == null) {
+            false
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+            // We don't want to propagate the click keys down to the SeekBar view since it will
+            // create the ripple effect for the thumb.
+            false
+        } else if (mSeekBar == null) {
             Log.e(TAG, "SeekBar view is null and hence cannot be adjusted.")
-            return@OnKeyListener false
+            false
+        } else {
+            mSeekBar!!.onKeyDown(keyCode, event)
         }
-        mSeekBar!!.onKeyDown(keyCode, event)
     }
 
     /**
@@ -158,13 +160,14 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      * from the default mKeyProgressIncrement value in [android.widget.AbsSeekBar].
      * @return The amount of increment on the [SeekBar] performed after each user's arrow
      * key press
-     *
-     * Sets the increment amount on the [SeekBar] for each arrow key press.
-     * @param seekBarIncrement The amount to increment or decrement when the user presses an
-     * arrow key.
      */
     var seekBarIncrement: Int
         get() = mSeekBarIncrement
+        /**
+         * Sets the increment amount on the [SeekBar] for each arrow key press.
+         * @param seekBarIncrement The amount to increment or decrement when the user presses an
+         * arrow key.
+         */
         set(seekBarIncrement) {
             if (seekBarIncrement != mSeekBarIncrement) {
                 mSeekBarIncrement = Math.min(mMax - mMin, Math.abs(seekBarIncrement))
@@ -173,10 +176,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         }
 
     /**
-     * Gets the upper bound set on the [SeekBar].
-     * @return The upper bound set
-     * Sets the upper bound on the [SeekBar].
-     * @param max The upper bound to set
+     * Gets/Sets the upper bound set on the [SeekBar].
      */
     var max: Int
         get() = mMax
@@ -195,29 +195,27 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      * Gets whether the current [SeekBar] value is displayed to the user.
      * @return Whether the current [SeekBar] value is displayed to the user
      * @see .setShowSeekBarValue
-     * Sets whether the current [SeekBar] value is displayed to the user.
-     * @param showSeekBarValue Whether the current [SeekBar] value is displayed to the user
-     * @see .getShowSeekBarValue
      */
     var showSeekBarValue: Boolean
         get() = mShowSeekBarValue
+        /**
+         * Sets whether the current [SeekBar] value is displayed to the user.
+         * @param showSeekBarValue Whether the current [SeekBar] value is displayed to the user
+         * @see .getShowSeekBarValue
+         */
         set(showSeekBarValue) {
             mShowSeekBarValue = showSeekBarValue
             notifyChanged()
         }
 
     /**
-     * Gets the current progress of the [SeekBar].
-     * @return The current progress of the [SeekBar]
-     * Sets the current progress of the [SeekBar].
-     * @param seekBarValue The current progress of the [SeekBar]
+     * Gets/Sets the current progress of the [SeekBar].
      */
     var value: Int
         get() = mSeekBarValue
         set(seekBarValue) = setValueInternal(seekBarValue, true)
 
     init {
-
         val a = context.obtainStyledAttributes(
             attrs, R.styleable.SeekBarPreference, defStyleAttr, defStyleRes
         )
@@ -308,7 +306,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      * Persist the [SeekBar]'s SeekBar value if callChangeListener returns true, otherwise
      * set the [SeekBar]'s value to the stored value.
      */
-    internal /* synthetic access */ fun syncValueInternal(seekBar: SeekBar) {
+    /* synthetic access */
+    internal fun syncValueInternal(seekBar: SeekBar) {
         val seekBarValue = mMin + seekBar.progress
         if (seekBarValue != mSeekBarValue) {
             if (callChangeListener(seekBarValue)) {
@@ -324,9 +323,10 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     /**
      * Attempts to update the TextView label that displays the current value.
      *
-     * @param value the value to display next to the [SeekBar]
+     * @param labelValue the value to display next to the [SeekBar]
      */
-    internal /* synthetic access */ fun updateLabelValue(labelValue: Int) {
+    /* synthetic access */
+    internal fun updateLabelValue(labelValue: Int) {
         var value = labelValue
         if (mSeekBarValueTextView != null) {
             value = value * STEP_SIZE + MIN_VALUE
@@ -339,9 +339,9 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     /**
      * Attempts to update the example TextView text with text scale size.
      *
-     * @param value the value of text size
+     * @param textValue the value of text size
      */
-    internal /* synthetic access */ fun updateExampleTextValue(textValue: Int) {
+    internal fun updateExampleTextValue(textValue: Int) {
         var value = textValue
         if (mExampleTextTextView != null) {
             value = value * STEP_SIZE + MIN_VALUE

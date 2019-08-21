@@ -48,10 +48,10 @@ class QuickSettingsComponent(
         return if (sitePermissions == null) {
             val settings = Settings.getInstance(context)
             val origin = requireNotNull(url.toUri().host)
-            var location = settings.sitePermissionsPhoneFeatureLocation.toStatus()
-            var camera = settings.sitePermissionsPhoneFeatureCameraAction.toStatus()
-            var microphone = settings.sitePermissionsPhoneFeatureMicrophoneAction.toStatus()
-            var notification = settings.sitePermissionsPhoneFeatureNotificationAction.toStatus()
+            var location = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION).toStatus()
+            var camera = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA).toStatus()
+            var microphone = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE).toStatus()
+            var notification = settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION).toStatus()
 
             when (featurePhone) {
                 PhoneFeature.CAMERA -> camera = camera.toggle()

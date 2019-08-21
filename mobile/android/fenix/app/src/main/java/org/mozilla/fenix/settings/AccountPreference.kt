@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
 import android.widget.TextView
+import androidx.core.view.isGone
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
@@ -49,10 +49,7 @@ class AccountPreference @JvmOverloads constructor(
     }
 
     private fun updateDisplayName(name: String?) {
-        displayNameView?.text = name.orEmpty()
-        displayNameView?.visibility = when (displayName.isNullOrEmpty()) {
-            true -> View.GONE
-            false -> View.VISIBLE
-        }
+        displayNameView?.text = name
+        displayNameView?.isGone = displayName.isNullOrEmpty()
     }
 }

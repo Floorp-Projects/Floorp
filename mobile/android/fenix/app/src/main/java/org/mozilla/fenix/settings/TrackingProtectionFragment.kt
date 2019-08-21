@@ -6,16 +6,27 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.Navigation
+import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * Displays the toggle for tracking protection and a button to open
+ * the tracking protection [org.mozilla.fenix.exceptions.ExceptionsFragment].
+ */
 class TrackingProtectionFragment : PreferenceFragmentCompat() {
+
+    private val exceptionsClickListener = Preference.OnPreferenceClickListener {
+        val directions = TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
+        view!!.findNavController().navigate(directions)
+        true
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tracking_protection_preferences, rootKey)
     }
@@ -26,34 +37,22 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         (activity as AppCompatActivity).supportActionBar?.show()
 
         // Tracking Protection Switch
-        val trackingProtectionKey =
-            context!!.getPreferenceKey(R.string.pref_key_tracking_protection)
+        val trackingProtectionKey = getPreferenceKey(R.string.pref_key_tracking_protection)
         val preferenceTP = findPreference<SwitchPreference>(trackingProtectionKey)
 
         preferenceTP?.isChecked = Settings.getInstance(context!!).shouldUseTrackingProtection
-        preferenceTP?.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener { _, newValue ->
-                Settings.getInstance(requireContext()).shouldUseTrackingProtection = newValue as Boolean
-                with(requireComponents) {
-                    val policy = core.createTrackingProtectionPolicy(newValue)
-                    useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
-                    useCases.sessionUseCases.reload.invoke()
-                }
-                true
+        preferenceTP?.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
+            Settings.getInstance(preference.context).shouldUseTrackingProtection = trackingProtectionOn
+            with(preference.context.components) {
+                val policy = core.createTrackingProtectionPolicy(trackingProtectionOn)
+                useCases.settingsUseCases.updateTrackingProtection(policy)
+                useCases.sessionUseCases.reload()
             }
-
-        val exceptions =
-            context!!.getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
-        val preferenceExceptions = findPreference<Preference>(exceptions)
-        preferenceExceptions?.onPreferenceClickListener = getClickListenerForExceptions()
-    }
-
-    private fun getClickListenerForExceptions(): Preference.OnPreferenceClickListener {
-        return Preference.OnPreferenceClickListener {
-            val directions =
-                TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
-            Navigation.findNavController(view!!).navigate(directions)
             true
         }
+
+        val exceptions = getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
+        val preferenceExceptions = findPreference<Preference>(exceptions)
+        preferenceExceptions?.onPreferenceClickListener = exceptionsClickListener
     }
 }

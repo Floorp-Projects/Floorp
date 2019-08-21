@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_pair.*
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.BackHandler
@@ -68,8 +69,7 @@ class PairFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean {
         qrFeature.onBackPressed()
-        findNavController(this@PairFragment)
-            .popBackStack(R.id.turnOnSyncFragment, false)
+        findNavController().popBackStack(R.id.turnOnSyncFragment, false)
         return true
     }
 

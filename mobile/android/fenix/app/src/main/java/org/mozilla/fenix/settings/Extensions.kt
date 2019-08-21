@@ -4,82 +4,22 @@
 
 package org.mozilla.fenix.settings
 
-import android.content.Context
 import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
 import androidx.core.text.HtmlCompat
+import androidx.preference.Preference
 import mozilla.components.feature.sitepermissions.SitePermissions
-import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 
-internal fun SitePermissionsRules.Action.toString(context: Context): String {
-    return when (this) {
-        SitePermissionsRules.Action.ASK_TO_ALLOW -> {
-            context.getString(R.string.preference_option_phone_feature_ask_to_allow)
-        }
-        SitePermissionsRules.Action.BLOCKED -> {
-            context.getString(R.string.preference_option_phone_feature_blocked)
-        }
-    }
-}
-
-internal fun SitePermissions.Status.toString(context: Context): String {
-    return when (this) {
-        SitePermissions.Status.BLOCKED -> {
-            context.getString(R.string.preference_option_phone_feature_blocked)
-        }
-        SitePermissions.Status.NO_DECISION -> {
-            context.getString(R.string.preference_option_phone_feature_ask_to_allow)
-        }
-        SitePermissions.Status.ALLOWED -> {
-            context.getString(R.string.preference_option_phone_feature_allowed)
-        }
-    }
-}
-
 fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
     return when (featurePhone) {
-        PhoneFeature.CAMERA -> {
-            copy(
-                camera = camera.toggle()
-            )
-        }
-        PhoneFeature.LOCATION -> {
-            copy(
-                location = location.toggle()
-            )
-        }
-        PhoneFeature.MICROPHONE -> {
-            copy(
-                microphone = microphone.toggle()
-            )
-        }
-        PhoneFeature.NOTIFICATION -> {
-            copy(
-                notification = notification.toggle()
-            )
-        }
-    }
-}
-
-fun PhoneFeature.getLabel(context: Context): String {
-    return when (this) {
-        PhoneFeature.CAMERA -> context.getString(R.string.preference_phone_feature_camera)
-        PhoneFeature.LOCATION -> context.getString(R.string.preference_phone_feature_location)
-        PhoneFeature.MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
-        PhoneFeature.NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
-    }
-}
-
-fun PhoneFeature.getPreferenceKey(context: Context): String {
-    return when (this) {
-        PhoneFeature.CAMERA -> context.getString(R.string.pref_key_phone_feature_camera)
-        PhoneFeature.LOCATION -> context.getString(R.string.pref_key_phone_feature_location)
-        PhoneFeature.MICROPHONE -> context.getString(R.string.pref_key_phone_feature_microphone)
-        PhoneFeature.NOTIFICATION -> context.getString(R.string.pref_key_phone_feature_notification)
+        PhoneFeature.CAMERA -> copy(camera = camera.toggle())
+        PhoneFeature.LOCATION -> copy(location = location.toggle())
+        PhoneFeature.MICROPHONE -> copy(microphone = microphone.toggle())
+        PhoneFeature.NOTIFICATION -> copy(notification = notification.toggle())
     }
 }
 
@@ -109,5 +49,20 @@ fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: V
         descriptionLabel.text = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)
     } else {
         blockedByAndroidView.visibility = View.GONE
+    }
+}
+
+/**
+ * Sets the callback to be invoked when this preference is changed by the user (but before
+ * the internal state has been updated). Allows the type of the preference to be specified.
+ * If the new value doesn't match the preference type the listener isn't called.
+ *
+ * @param onPreferenceChangeListener The callback to be invoked
+ */
+inline fun <reified T> Preference.setOnPreferenceChangeListener(
+    crossinline onPreferenceChangeListener: (Preference, T) -> Boolean
+) {
+    setOnPreferenceChangeListener { preference: Preference, newValue: Any ->
+        (newValue as? T)?.let { onPreferenceChangeListener(preference, it) } ?: false
     }
 }

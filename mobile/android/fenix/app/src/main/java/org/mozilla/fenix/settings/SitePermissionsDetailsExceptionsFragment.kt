@@ -19,6 +19,7 @@ import org.jetbrains.anko.noButton
 import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
 import org.mozilla.fenix.settings.PhoneFeature.LOCATION
 import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
@@ -83,7 +84,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindClearPermissionsButton() {
-        val keyPreference = getString(R.string.pref_key_exceptions_clear_site_permissions)
+        val keyPreference = getPreferenceKey(R.string.pref_key_exceptions_clear_site_permissions)
         val button: Preference = requireNotNull(findPreference(keyPreference))
 
         button.onPreferenceClickListener = Preference.OnPreferenceClickListener {

@@ -8,8 +8,12 @@ import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
+import androidx.annotation.StringRes
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.utils.Settings
 import android.Manifest.permission.CAMERA as CAMERA_PERMISSION
 
@@ -32,55 +36,48 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
     }
 
     fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null): String {
-        val label = when (this) {
-            CAMERA -> {
-                sitePermissions?.camera?.toString(context) ?: settings
-                    ?.sitePermissionsPhoneFeatureCameraAction
-                    ?.toString(context)
-            }
-            LOCATION -> {
-                sitePermissions?.location?.toString(context) ?: settings
-                    ?.sitePermissionsPhoneFeatureLocation
-                    ?.toString(context)
-            }
-            MICROPHONE -> {
-                sitePermissions?.microphone?.toString(context) ?: settings
-                    ?.sitePermissionsPhoneFeatureMicrophoneAction
-                    ?.toString(context)
-            }
-            NOTIFICATION -> {
-                sitePermissions?.notification?.toString(context) ?: settings
-                    ?.sitePermissionsPhoneFeatureNotificationAction
-                    ?.toString(context)
-            }
+        @StringRes val stringRes = when (getStatus(sitePermissions, settings)) {
+            SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
+            SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
+            SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
         }
-        return requireNotNull(label)
+        return context.getString(stringRes)
     }
 
     fun getStatus(sitePermissions: SitePermissions? = null, settings: Settings? = null): SitePermissions.Status {
-        val status = when (this) {
-            CAMERA -> {
-                sitePermissions?.camera ?: settings
-                    ?.sitePermissionsPhoneFeatureCameraAction
-                    ?.toStatus()
-            }
-            LOCATION -> {
-                sitePermissions?.location ?: settings
-                    ?.sitePermissionsPhoneFeatureLocation
-                    ?.toStatus()
-            }
-            MICROPHONE -> {
-                sitePermissions?.microphone ?: settings
-                    ?.sitePermissionsPhoneFeatureMicrophoneAction
-                    ?.toStatus()
-            }
-            NOTIFICATION -> {
-                sitePermissions?.notification ?: settings
-                    ?.sitePermissionsPhoneFeatureNotificationAction
-                    ?.toStatus()
-            }
-        }
+        val status = getStatus(sitePermissions) ?: settings?.let(::getAction)?.toStatus()
         return requireNotNull(status)
+    }
+
+    fun getLabel(context: Context): String {
+        return when (this) {
+            CAMERA -> context.getString(R.string.preference_phone_feature_camera)
+            LOCATION -> context.getString(R.string.preference_phone_feature_location)
+            MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
+            NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
+        }
+    }
+
+    fun getPreferenceKey(context: Context): String {
+        return when (this) {
+            CAMERA -> context.getPreferenceKey(R.string.pref_key_phone_feature_camera)
+            LOCATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_location)
+            MICROPHONE -> context.getPreferenceKey(R.string.pref_key_phone_feature_microphone)
+            NOTIFICATION -> context.getPreferenceKey(R.string.pref_key_phone_feature_notification)
+        }
+    }
+
+    fun getAction(settings: Settings): SitePermissionsRules.Action =
+        settings.getSitePermissionsPhoneFeatureAction(this)
+
+    private fun getStatus(sitePermissions: SitePermissions?): SitePermissions.Status? {
+        sitePermissions ?: return null
+        return when (this) {
+            CAMERA -> sitePermissions.camera
+            LOCATION -> sitePermissions.location
+            MICROPHONE -> sitePermissions.microphone
+            NOTIFICATION -> sitePermissions.notification
+        }
     }
 
     companion object {
