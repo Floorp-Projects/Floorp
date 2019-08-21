@@ -6,25 +6,27 @@
 
 #include "mozilla/Assertions.h"
 
+#include "jsutil.h"
 #include "threading/posix/ThreadPlatformData.h"
 #include "threading/Thread.h"
 
-inline js::Thread::Id::PlatformData* js::Thread::Id::platformData() {
+namespace js {
+
+inline Thread::Id::PlatformData* Thread::Id::platformData() {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<PlatformData*>(platformData_);
 }
 
-inline const js::Thread::Id::PlatformData* js::Thread::Id::platformData()
-    const {
+inline const Thread::Id::PlatformData* Thread::Id::platformData() const {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<const PlatformData*>(platformData_);
 }
 
-js::Thread::Id::Id() { platformData()->hasThread = false; }
+Thread::Id::Id() { platformData()->hasThread = false; }
 
-bool js::Thread::Id::operator==(const Id& aOther) const {
+bool Thread::Id::operator==(const Id& aOther) const {
   const PlatformData& self = *platformData();
   const PlatformData& other = *aOther.platformData();
   return (!self.hasThread && !other.hasThread) ||
@@ -32,7 +34,7 @@ bool js::Thread::Id::operator==(const Id& aOther) const {
           pthread_equal(self.ptThread, other.ptThread));
 }
 
-bool js::Thread::create(void* (*aMain)(void*), void* aArg) {
+bool Thread::create(void* (*aMain)(void*), void* aArg) {
   LockGuard<Mutex> lock(idMutex_);
 
   pthread_attr_t attrs;
@@ -53,7 +55,7 @@ bool js::Thread::create(void* (*aMain)(void*), void* aArg) {
   return true;
 }
 
-void js::Thread::join() {
+void Thread::join() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   int r = pthread_join(id_.platformData()->ptThread, nullptr);
@@ -61,7 +63,7 @@ void js::Thread::join() {
   id_ = Id();
 }
 
-void js::Thread::detach() {
+void Thread::detach() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   int r = pthread_detach(id_.platformData()->ptThread);
@@ -69,15 +71,15 @@ void js::Thread::detach() {
   id_ = Id();
 }
 
-js::Thread::Id js::ThisThread::GetId() {
-  js::Thread::Id id;
+Thread::Id ThisThread::GetId() {
+  Thread::Id id;
   id.platformData()->ptThread = pthread_self();
   id.platformData()->hasThread = true;
-  MOZ_RELEASE_ASSERT(id != js::Thread::Id());
+  MOZ_RELEASE_ASSERT(id != Thread::Id());
   return id;
 }
 
-void js::ThisThread::SetName(const char* name) {
+void ThisThread::SetName(const char* name) {
   MOZ_RELEASE_ASSERT(name);
 
 #if (defined(__APPLE__) && defined(__MACH__)) || defined(__linux__)
@@ -104,7 +106,7 @@ void js::ThisThread::SetName(const char* name) {
   MOZ_RELEASE_ASSERT(!rv || mozilla::recordreplay::IsRecordingOrReplaying());
 }
 
-void js::ThisThread::GetName(char* nameBuffer, size_t len) {
+void ThisThread::GetName(char* nameBuffer, size_t len) {
   MOZ_RELEASE_ASSERT(len >= 16);
 
   int rv = -1;
@@ -121,3 +123,5 @@ void js::ThisThread::GetName(char* nameBuffer, size_t len) {
     nameBuffer[0] = '\0';
   }
 }
+
+}  // namespace js

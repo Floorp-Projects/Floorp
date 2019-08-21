@@ -25,14 +25,18 @@
 
 #include "threading/Thread.h"
 
-class js::Thread::Id::PlatformData {
-  friend class js::Thread;
-  friend js::Thread::Id js::ThisThread::GetId();
+namespace js {
+
+class Thread::Id::PlatformData {
+  friend class Thread;
+  friend Thread::Id ThisThread::GetId();
   pthread_t ptThread;
 
   // pthread_t does not have a default initializer, so we have to carry a bool
   // to tell whether it is safe to compare or not.
   bool hasThread;
 };
+
+}  // namespace js
 
 #endif  // threading_posix_PlatformData_h

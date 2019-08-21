@@ -4,32 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jsutil.h"
 #include "threading/Thread.h"
 #include "threading/windows/ThreadPlatformData.h"
 
-inline js::Thread::Id::PlatformData* js::Thread::Id::platformData() {
+namespace js {
+
+inline Thread::Id::PlatformData* Thread::Id::platformData() {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<PlatformData*>(platformData_);
 }
 
-inline const js::Thread::Id::PlatformData* js::Thread::Id::platformData()
-    const {
+inline const Thread::Id::PlatformData* Thread::Id::platformData() const {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
   return reinterpret_cast<const PlatformData*>(platformData_);
 }
 
-js::Thread::Id::Id() {
+Thread::Id::Id() {
   platformData()->handle = nullptr;
   platformData()->id = 0;
 }
 
-bool js::Thread::Id::operator==(const Id& aOther) const {
+bool Thread::Id::operator==(const Id& aOther) const {
   return platformData()->id == aOther.platformData()->id;
 }
 
-bool js::Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
+bool Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   LockGuard<Mutex> lock(idMutex_);
 
   // Use _beginthreadex and not CreateThread, because threads that are
@@ -48,7 +50,7 @@ bool js::Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   return true;
 }
 
-void js::Thread::join() {
+void Thread::join() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   DWORD r = WaitForSingleObject(id_.platformData()->handle, INFINITE);
@@ -58,7 +60,7 @@ void js::Thread::join() {
   id_ = Id();
 }
 
-void js::Thread::detach() {
+void Thread::detach() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
   BOOL success = CloseHandle(id_.platformData()->handle);
@@ -66,15 +68,15 @@ void js::Thread::detach() {
   id_ = Id();
 }
 
-js::Thread::Id js::ThisThread::GetId() {
-  js::Thread::Id id;
+Thread::Id ThisThread::GetId() {
+  Thread::Id id;
   id.platformData()->handle = GetCurrentThread();
   id.platformData()->id = GetCurrentThreadId();
-  MOZ_RELEASE_ASSERT(id != js::Thread::Id());
+  MOZ_RELEASE_ASSERT(id != Thread::Id());
   return id;
 }
 
-void js::ThisThread::SetName(const char* name) {
+void ThisThread::SetName(const char* name) {
   MOZ_RELEASE_ASSERT(name);
 
 #ifdef _MSC_VER
@@ -107,7 +109,9 @@ void js::ThisThread::SetName(const char* name) {
 #endif  // _MSC_VER
 }
 
-void js::ThisThread::GetName(char* nameBuffer, size_t len) {
+void ThisThread::GetName(char* nameBuffer, size_t len) {
   MOZ_RELEASE_ASSERT(len > 0);
   *nameBuffer = '\0';
 }
+
+}  // namespace js
