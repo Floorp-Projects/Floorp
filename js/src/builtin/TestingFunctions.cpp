@@ -461,7 +461,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   }
 
 #ifndef JS_MORE_DETERMINISTIC
-  size_t preBytes = cx->runtime()->gc.heapSize.gcBytes();
+  size_t preBytes = cx->runtime()->gc.heapSize.bytes();
 #endif
 
   if (zone) {
@@ -476,7 +476,7 @@ static bool GC(JSContext* cx, unsigned argc, Value* vp) {
   char buf[256] = {'\0'};
 #ifndef JS_MORE_DETERMINISTIC
   SprintfLiteral(buf, "before %zu, after %zu\n", preBytes,
-                 cx->runtime()->gc.heapSize.gcBytes());
+                 cx->runtime()->gc.heapSize.bytes());
 #endif
   return ReturnStringCopy(cx, args, buf);
 }
