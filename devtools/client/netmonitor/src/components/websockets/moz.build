@@ -15,6 +15,7 @@ DevToolsModules(
     'FrameListColumnSize.js',
     'FrameListColumnTime.js',
     'FrameListContent.js',
+    'FrameListContextMenu.js',
     'FrameListHeader.js',
     'FrameListHeaderContextMenu.js',
     'FrameListItem.js',
