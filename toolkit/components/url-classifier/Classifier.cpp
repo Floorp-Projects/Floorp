@@ -729,7 +729,7 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
                    "MUST be on update thread");
 
         nsresult bgRv;
-        nsCString failedTableName;
+        nsTArray<nsCString> failedTableNames;
 
         TableUpdateArray updates;
 
@@ -737,7 +737,7 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
         // we process them on the background thread.
         if (updates.AppendElements(aUpdates, fallible)) {
           LOG(("Step 1. ApplyUpdatesBackground on update thread."));
-          bgRv = self->ApplyUpdatesBackground(updates, failedTableName);
+          bgRv = self->ApplyUpdatesBackground(updates, failedTableNames);
         } else {
           LOG(
               ("Step 1. Not enough memory to run ApplyUpdatesBackground on "
@@ -747,12 +747,13 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
 
         nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction(
             "safebrowsing::Classifier::AsyncApplyUpdates",
-            [self, aCallback, bgRv, failedTableName, callerThread] {
+            [self, aCallback, bgRv, failedTableNames, callerThread] {
               MOZ_ASSERT(NS_GetCurrentThread() == callerThread,
                          "MUST be on caller thread");
 
               LOG(("Step 2. ApplyUpdatesForeground on caller thread"));
-              nsresult rv = self->ApplyUpdatesForeground(bgRv, failedTableName);
+              nsresult rv =
+                  self->ApplyUpdatesForeground(bgRv, failedTableNames);
 
               LOG(("Step 3. Updates applied! Fire callback."));
               aCallback(rv);
@@ -763,8 +764,8 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   return mUpdateThread->Dispatch(bgRunnable, NS_DISPATCH_NORMAL);
 }
 
-nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
-                                            nsACString& aFailedTableName) {
+nsresult Classifier::ApplyUpdatesBackground(
+    TableUpdateArray& aUpdates, nsTArray<nsCString>& aFailedTableNames) {
   // |mUpdateInterrupted| is guaranteed to have been unset.
   // If |mUpdateInterrupted| is set at any point, Reset() must have
   // been called then we need to interrupt the update process.
@@ -826,11 +827,25 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
       rv = UpdateTableV4(aUpdates, updateTable);
     }
 
-    if (NS_FAILED(rv)) {
-      aFailedTableName = updateTable;
-      RemoveUpdateIntermediaries();
-      return rv;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("Failed to update table: %s", updateTable.get()));
+      // We don't quit the updating process immediately when we discover
+      // a failure. Instead, we continue to apply updates to the
+      // remaining tables to find other tables which may also fail to
+      // apply an update. This help us reset all the corrupted tables
+      // within a single update.
+      // Note that changes that result from successful updates don't take
+      // effect after the updating process is finished. This is because
+      // when an error occurs during the updating process, we ignore all
+      // changes that have happened during the udpating process.
+      aFailedTableNames.AppendElement(updateTable);
+      continue;
     }
+  }
+
+  if (!aFailedTableNames.IsEmpty()) {
+    RemoveUpdateIntermediaries();
+    return NS_ERROR_FAILURE;
   }
 
   if (LOG_ENABLED()) {
@@ -843,7 +858,7 @@ nsresult Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
 }
 
 nsresult Classifier::ApplyUpdatesForeground(
-    nsresult aBackgroundRv, const nsACString& aFailedTableName) {
+    nsresult aBackgroundRv, const nsTArray<nsCString>& aFailedTableNames) {
   if (ShouldAbort()) {
     LOG(("Update is interrupted! Just remove update intermediaries."));
     RemoveUpdateIntermediaries();
@@ -857,7 +872,7 @@ nsresult Classifier::ApplyUpdatesForeground(
     return SwapInNewTablesAndCleanup();
   }
   if (NS_ERROR_OUT_OF_MEMORY != aBackgroundRv) {
-    ResetTables(Clear_All, nsTArray<nsCString>{nsCString(aFailedTableName)});
+    ResetTables(Clear_All, aFailedTableNames);
   }
   return aBackgroundRv;
 }
