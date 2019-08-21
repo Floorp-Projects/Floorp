@@ -186,24 +186,6 @@ menuitem.bookmark-item {
   border-color: ThreeDShadow;
 }
 
-/* ::::: URL Bar Zoom Reset Button ::::: */
-@keyframes urlbar-zoom-reset-pulse {
-  0% {
-    transform: scale(0);
-  }
-  75% {
-    transform: scale(1.5);
-  }
-  100% {
-    transform: scale(1.0);
-  }
-}
-
-#urlbar-zoom-button {
-  -moz-appearance: none;
-  color: inherit;
-}
-
 #urlbar-display-box {
   margin-top: -1px;
   margin-bottom: -1px;
@@ -211,10 +193,6 @@ menuitem.bookmark-item {
 
 .urlbar-display {
   margin-inline-start: 0;
-}
-
-#search-container {
-  min-width: calc(54px + 11ch);
 }
 
 /* identity box */

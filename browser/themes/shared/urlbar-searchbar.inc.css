@@ -721,11 +721,25 @@
 /* Zoom button */
 
 #urlbar-zoom-button {
+  -moz-appearance: none;
+  color: inherit;
   font-size: .8em;
   padding: 0 8px;
   border-radius: 1em;
   background-color: hsla(0,0%,0%,.05);
   border: 1px solid hsla(210,4%,50%,.3);
+}
+
+@keyframes urlbar-zoom-reset-pulse {
+  0% {
+    transform: scale(0);
+  }
+  75% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1.0);
+  }
 }
 
 #urlbar-zoom-button[animate="true"] {
@@ -764,6 +778,10 @@
 }
 
 /* Search bar */
+
+#search-container {
+  min-width: calc(54px + 11ch);
+}
 
 .searchbar-search-button {
   -moz-box-align: center;
