@@ -83,8 +83,7 @@ describe("SourcesTree", () => {
         const newSource = createMockSource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
-          true,
-          ""
+          true
         );
 
         const newThreadSources = {
@@ -149,8 +148,7 @@ describe("SourcesTree", () => {
             "server1.conn13.child1/41": createMockSource(
               "server1.conn13.child1/41",
               "http://mdn.com/three.js",
-              true,
-              ""
+              true
             ),
           },
         };
@@ -177,8 +175,7 @@ describe("SourcesTree", () => {
         const newSource = createMockSource(
           "server1.conn13.child1/43",
           "http://mdn.com/four.js",
-          true,
-          ""
+          true
         );
 
         const newThreadSources = {
@@ -227,8 +224,7 @@ describe("SourcesTree", () => {
         const mockSource = createMockSource(
           "server1.conn13.child1/41",
           "http://mdn.com/three.js",
-          false,
-          null
+          false
         );
         await component.setProps({
           ...props,
@@ -363,32 +359,26 @@ function generateDefaults(overrides: Object) {
       "server1.conn13.child1/39": createMockSource(
         "server1.conn13.child1/39",
         "http://mdn.com/one.js",
-        false,
-        null
+        false
       ),
       "server1.conn13.child1/40": createMockSource(
         "server1.conn13.child1/40",
         "http://mdn.com/two.js",
-        false,
-        null
+        false
       ),
       "server1.conn13.child1/41": createMockSource(
         "server1.conn13.child1/41",
         "http://mdn.com/three.js",
-        false,
-        null
+        false
       ),
       "server1.conn13.child1/42/originalSource-sha": createMockSource(
         "server1.conn13.child1/42/originalSource-sha",
         "http://mdn.com/four.js",
-        false,
-        null
+        false
       ),
       "server1.conn13.child1/42": createMockSource(
         "server1.conn13.child1/42",
-        "http://mdn.com/four.js",
-        false,
-        "data:application/json?charset=utf?dsffewrsf"
+        "http://mdn.com/four.js"
       ),
     },
   };
@@ -430,11 +420,10 @@ function render(overrides = {}) {
   return { component, props, defaultState, instance };
 }
 
-function createMockSource(id, url, isBlackBoxed = false, sourceMapURL = null) {
+function createMockSource(id, url, isBlackBoxed = false) {
   return {
     ...makeMockSource(url, id),
     isBlackBoxed,
-    sourceMapURL,
   };
 }
 
