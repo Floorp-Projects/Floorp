@@ -260,8 +260,8 @@ nscoord nsBox::GetXULFlex() {
   return flex;
 }
 
-uint32_t nsIFrame::GetXULOrdinal() {
-  uint32_t ordinal = StyleXUL()->mBoxOrdinal;
+int32_t nsIFrame::GetXULOrdinal() {
+  int32_t ordinal = StyleXUL()->mBoxOrdinal;
 
   // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();

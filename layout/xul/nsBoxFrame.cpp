@@ -1205,7 +1205,7 @@ nsresult nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox,
 }
 
 nsresult nsBoxFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild) {
-  uint32_t ord = aChild->GetXULOrdinal();
+  int32_t ord = aChild->GetXULOrdinal();
 
   nsIFrame* child = mFrames.FirstChild();
   nsIFrame* newPrevSib = nullptr;
