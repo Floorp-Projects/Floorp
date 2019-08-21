@@ -118,3 +118,6 @@ test-pref(layout.css.text-decoration-thickness.enabled,false) == text-decoration
 test-pref(layout.css.text-decoration-skip-ink.enabled,true) test-pref(layout.css.text-underline-offset.enabled,true) fails HTTP(..) == skip-ink-multiline-position.html skip-ink-multiline-position-ref.html
 # fails due to bug 1573711
 test-pref(layout.css.text-decoration-skip-ink.enabled,true) fails == skip-ink-vertical-align.html skip-ink-vertical-align-ref.html
+pref(layout.css.text-decoration-skip-ink.enabled,true) fuzzy(0-94,0-4) == skip-ink-cjk-1.html skip-ink-cjk-1-ref.html
+pref(layout.css.text-decoration-skip-ink.enabled,true) == skip-ink-cjk-2.html skip-ink-cjk-2-ref.html
+pref(layout.css.text-decoration-skip-ink.enabled,true) == skip-ink-cjk-3.html skip-ink-cjk-3-ref.html
