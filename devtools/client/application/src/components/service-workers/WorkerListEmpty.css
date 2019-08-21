@@ -2,9 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.app-page__title .external-link {
-  font-weight: var(--title-30-font-weight);
+.worker-list-empty {
+  max-width: calc(var(--base-unit) * 179);
+  font-size: var(--body-10-font-size);
+  color: var(--theme-toolbar-color);
 }
+
+.worker-list-empty__title {
+  font-size: var(--title-20-font-size);
+  font-weight: var(--title-20-font-weight);
+}
+
+.worker-list-empty__title .external-link {
+  font-weight: var(--title-30-font-weight);
+} 
 
 .worker-list-empty__tips {
   margin-inline-start: 2rem;
