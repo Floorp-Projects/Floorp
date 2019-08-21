@@ -555,6 +555,13 @@ const startupPhases = {
       close: 1,
     },
     {
+      // bug 1003968
+      path: "XREAppDist:searchplugins",
+      condition: WIN,
+      ignoreIfUnused: true, // with WebRender enabled this may happen during "before becoming idle"
+      stat: 1,
+    },
+    {
       path: "XCurProcD:extensions",
       condition: WIN,
       stat: 1,
@@ -657,6 +664,13 @@ const startupPhases = {
       condition: WIN,
       ignoreIfUnused: true,
       stat: 3,
+    },
+    {
+      // bug 1003968
+      path: "XREAppDist:searchplugins",
+      condition: WIN,
+      ignoreIfUnused: true, // with WebRender enabled this may happen during "before handling user events"
+      stat: 1,
     },
   ],
 };
