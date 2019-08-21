@@ -15,6 +15,7 @@ const NCB_PREF = "network.cookie.cookieBehavior";
 const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const STRICT_DEF_PREF = "browser.contentblocking.features.strict";
 
 // Tests that the content blocking standard category definition is based on the default settings of
@@ -46,6 +47,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${CM_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(STP_PREF),
+    `${STP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(NCB_PREF),
     `${NCB_PREF} pref has the default value`
   );
@@ -55,6 +60,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   let originalTPPBM = defaults.getBoolPref(TP_PBM_PREF);
   let originalFP = defaults.getBoolPref(FP_PREF);
   let originalCM = defaults.getBoolPref(CM_PREF);
+  let originalSTP = defaults.getBoolPref(STP_PREF);
   let originalNCB = defaults.getIntPref(NCB_PREF);
 
   let nonDefaultNCB;
@@ -71,6 +77,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(TP_PBM_PREF, !originalTPPBM);
   defaults.setBoolPref(FP_PREF, !originalFP);
   defaults.setBoolPref(CM_PREF, !originalCM);
+  defaults.setBoolPref(CM_PREF, !originalSTP);
   defaults.setIntPref(NCB_PREF, !originalNCB);
 
   ok(
@@ -90,6 +97,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${CM_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(STP_PREF),
+    `${STP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(NCB_PREF),
     `${NCB_PREF} pref has the default value`
   );
@@ -100,6 +111,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(TP_PBM_PREF, originalTPPBM);
   defaults.setBoolPref(FP_PREF, originalFP);
   defaults.setBoolPref(CM_PREF, originalCM);
+  defaults.setBoolPref(STP_PREF, originalSTP);
   defaults.setIntPref(NCB_PREF, originalNCB);
 });
 
@@ -109,7 +121,10 @@ add_task(async function testContentBlockingStandardDefinition() {
 add_task(async function testContentBlockingStrictDefinition() {
   let defaults = Services.prefs.getDefaultBranch("");
   let originalStrictPref = defaults.getStringPref(STRICT_DEF_PREF);
-  defaults.setStringPref(STRICT_DEF_PREF, "tp,tpPrivate,fp,cm,cookieBehavior0");
+  defaults.setStringPref(
+    STRICT_DEF_PREF,
+    "tp,tpPrivate,fp,cm,cookieBehavior0,stp"
+  );
   Services.prefs.setStringPref(CAT_PREF, "strict");
   is(
     Services.prefs.getStringPref(CAT_PREF),
@@ -123,7 +138,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   );
   is(
     Services.prefs.getStringPref(STRICT_DEF_PREF),
-    "tp,tpPrivate,fp,cm,cookieBehavior0",
+    "tp,tpPrivate,fp,cm,cookieBehavior0,stp",
     `${STRICT_DEF_PREF} changed to what we set.`
   );
 
@@ -146,6 +161,11 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getBoolPref(CM_PREF),
     true,
     `${CM_PREF} pref has been set to true`
+  );
+  is(
+    Services.prefs.getBoolPref(STP_PREF),
+    true,
+    `${STP_PREF} pref has been set to true`
   );
   is(
     Services.prefs.getIntPref(NCB_PREF),
@@ -173,13 +193,17 @@ add_task(async function testContentBlockingStrictDefinition() {
     `${CM_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(STP_PREF),
+    `${STP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(NCB_PREF),
     `${NCB_PREF} pref has the default value`
   );
 
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3"
+    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,-stp"
   );
   is(
     Services.prefs.getBoolPref(TP_PREF),
@@ -200,6 +224,11 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getBoolPref(CM_PREF),
     false,
     `${CM_PREF} pref has been set to false`
+  );
+  is(
+    Services.prefs.getBoolPref(STP_PREF),
+    false,
+    `${STP_PREF} pref has been set to false`
   );
   is(
     Services.prefs.getIntPref(NCB_PREF),
