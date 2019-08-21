@@ -57,9 +57,6 @@ const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight 
 const scrubberOffsetX = controlBarMargin + playButtonWidth + scrubberMargin;
 const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
-const screenWidth = window.screen.width;
-const screenHeight = window.screen.height;
-
 const video = document.getElementById("video");
 
 let expectingEvents;
@@ -426,8 +423,12 @@ add_task(async function ensure_fullscreen_button() {
   video.mozRequestFullScreen();
   await waitForEvent("mozfullscreenchange");
 
-  const buttonCenterX = screenWidth - Math.round(fullscreenButtonWidth / 2) - controlBarMargin;
-  const buttonCenterY = screenHeight - Math.round(fullscreenButtonHeight / 2);
+  // Compute the location to click on to hit the fullscreen button.
+  // Use the video size instead of the screen size here, because mozfullscreenchange does not
+  // guarantee that our document covers the screen, see bug 1575630.
+  const r = video.getBoundingClientRect();
+  const buttonCenterX = r.right - fullscreenButtonWidth / 2 - controlBarMargin;
+  const buttonCenterY = r.bottom - fullscreenButtonHeight / 2;
 
   // Wiggle the mouse a bit
   synthesizeMouse(video, buttonCenterX, buttonCenterY, { type: "mousemove" });
