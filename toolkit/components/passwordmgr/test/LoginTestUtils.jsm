@@ -70,8 +70,15 @@ this.LoginTestUtils = {
       (_, data) => data == "addLogin"
     );
     Services.logins.addLogin(login);
-    await storageChangedPromised;
-    return login;
+    let [savedLogin] = await storageChangedPromised;
+    return savedLogin;
+  },
+
+  resetGeneratedPasswordsCache() {
+    let { LoginManagerParent } = ChromeUtils.import(
+      "resource://gre/modules/LoginManagerParent.jsm"
+    );
+    LoginManagerParent._generatedPasswordsByPrincipalOrigin.clear();
   },
 
   /**
