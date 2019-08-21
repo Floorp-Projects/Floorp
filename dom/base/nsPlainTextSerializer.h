@@ -114,11 +114,12 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   // Inlined functions
   inline bool MayWrap() {
-    return mWrapColumn && ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-                           (mFlags & nsIDocumentEncoder::OutputWrap));
+    return mWrapColumn &&
+           ((mSettings.mFlags & nsIDocumentEncoder::OutputFormatted) ||
+            (mSettings.mFlags & nsIDocumentEncoder::OutputWrap));
   }
   inline bool MayBreakLines() {
-    return !(mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
+    return !(mSettings.mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
   }
 
   inline bool DoOutput() const { return mHeadLevel == 0; }
@@ -148,7 +149,26 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   uint32_t mHeadLevel;
   bool mAtFirstColumn;
 
-  bool mStructs;  // Output structs (pref)
+  struct Settings {
+    // Pref: converter.html2txt.structs.
+    bool mStructs = true;
+
+    // Pref: converter.html2txt.header_strategy.
+    int32_t mHeaderStrategy = 1; /* Header strategy (pref)
+                                  0 = no indention
+                                  1 = indention, increased with
+                                      header level (default)
+                                  2 = numbering and slight indention */
+
+    // Flags defined in nsIDocumentEncoder.idl.
+    int32_t mFlags = 0;
+
+    // Whether the output should include ruby annotations.
+    bool mWithRubyAnnotation = false;
+  };
+
+  Settings mSettings;
+
 
   // If we've just written out a cite blockquote, we need to remember it
   // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
@@ -160,7 +180,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // That could be, for instance, the bullet in a bulleted list.
   nsString mInIndentString;
   int32_t mCiteQuoteLevel;
-  int32_t mFlags;
   int32_t mFloatingLines;  // To store the number of lazy line breaks
 
   // The wrap column is how many standard sized chars (western languages)
@@ -191,15 +210,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   bool mPreformattedBlockBoundary;
 
-  // Whether the output should include ruby annotations.
-  bool mWithRubyAnnotation;
-
   nsString mURL;
-  int32_t mHeaderStrategy;   /* Header strategy (pref)
-                                0 = no indention
-                                1 = indention, increased with
-                                    header level (default)
-                                2 = numbering and slight indention */
   int32_t mHeaderCounter[7]; /* For header-numbering:
                                 Number of previous headers of
                                 the same depth and in the same
