@@ -1079,22 +1079,6 @@ void Gecko_FontWeight_SetFloat(FontWeight* aWeight, float aFloat) {
   *aWeight = FontWeight(aFloat);
 }
 
-void Gecko_ClearAlternateValues(nsFont* aFont, size_t aLength) {
-  aFont->alternateValues.Clear();
-  aFont->alternateValues.SetCapacity(aLength);
-}
-
-void Gecko_AppendAlternateValues(nsFont* aFont, uint32_t aAlternateName,
-                                 nsAtom* aAtom) {
-  aFont->alternateValues.AppendElement(
-      gfxAlternateValue{aAlternateName, nsDependentAtomString(aAtom)});
-}
-
-void Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc) {
-  aDest->alternateValues.Clear();
-  aDest->alternateValues.AppendElements(aSrc->alternateValues);
-}
-
 void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName) {
   RefPtr<nsAtom> name = already_AddRefed<nsAtom>(aName);
   *aPtr = name.forget();

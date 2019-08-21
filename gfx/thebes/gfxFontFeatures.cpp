@@ -30,25 +30,6 @@ bool gfxFontFeatureValueSet::GetFontFeatureValuesFor(
   return false;
 }
 
-void gfxFontFeatureValueSet::AddFontFeatureValues(
-    const nsACString& aFamily,
-    const nsTArray<gfxFontFeatureValueSet::FeatureValues>& aValues) {
-  nsAutoCString family(aFamily);
-  ToLowerCase(family);
-
-  uint32_t i, numFeatureValues = aValues.Length();
-  for (i = 0; i < numFeatureValues; i++) {
-    const FeatureValues& fv = aValues.ElementAt(i);
-    uint32_t alternate = fv.alternate;
-    uint32_t j, numValues = fv.valuelist.Length();
-    for (j = 0; j < numValues; j++) {
-      const ValueList& v = fv.valuelist.ElementAt(j);
-      auto* array = AppendFeatureValueHashEntry(family, v.name, alternate);
-      *array = v.featureSelectors;
-    }
-  }
-}
-
 nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
     const nsACString& aFamily, const nsAString& aName, uint32_t aAlternate) {
   FeatureValueHashKey key(aFamily, aAlternate, aName);
