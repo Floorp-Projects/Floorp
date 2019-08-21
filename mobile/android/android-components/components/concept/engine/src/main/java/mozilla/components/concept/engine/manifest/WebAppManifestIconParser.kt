@@ -7,6 +7,7 @@
 package mozilla.components.concept.engine.manifest
 
 import mozilla.components.support.ktx.android.org.json.asSequence
+import mozilla.components.support.ktx.android.org.json.tryGet
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
@@ -35,28 +36,25 @@ internal fun parseIcons(json: JSONObject): List<WebAppManifest.Icon> {
         .toList()
 }
 
-private fun parseIconSizes(json: JSONObject): List<Size> {
-    val sizes = json.tryGetString("sizes") ?: return emptyList()
-
-    return sizes
-        .split(whitespace)
-        .mapNotNull { Size.parse(it) }
+/**
+ * Parses a string set, which is expressed as either a space-delimited string or JSONArray of strings.
+ *
+ * Gecko returns a JSONArray to represent the intermediate infra type for some properties.
+ */
+private fun parseStringSet(set: Any?): Sequence<String>? = when (set) {
+    is String -> set.split(whitespace).asSequence()
+    is JSONArray -> set.asSequence { i -> getString(i) }
+    else -> null
 }
 
-@Suppress("ComplexMethod")
-private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
-    // "purpose" is normally a space-separated string, but Gecko current returns an array instead.
-    val purposeRaw = if (json.has("purpose")) {
-        json.get("purpose")
-    } else {
-        null
-    }
+private fun parseIconSizes(json: JSONObject): List<Size> {
+    val sizes = parseStringSet(json.tryGet("sizes")) ?: return emptyList()
 
-    val purpose = when (purposeRaw) {
-        is String -> purposeRaw.split(whitespace).asSequence()
-        is JSONArray -> purposeRaw.asSequence { i -> getString(i) }
-        else -> return setOf(WebAppManifest.Icon.Purpose.ANY)
-    }
+    return sizes.mapNotNull { Size.parse(it) }.toList()
+}
+
+private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
+    val purpose = parseStringSet(json.tryGet("purpose")) ?: return setOf(WebAppManifest.Icon.Purpose.ANY)
 
     return purpose
         .mapNotNull {
