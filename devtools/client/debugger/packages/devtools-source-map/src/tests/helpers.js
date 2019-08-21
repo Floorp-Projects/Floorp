@@ -23,7 +23,7 @@ function getMap(_path) {
   return fs.readFileSync(mapPath, "utf8");
 }
 
-async function setupBundleFixture(name) {
+async function setupBundleFixtureAndData(name) {
   const source = {
     id: `${name}.js`,
     sourceMapURL: `${name}.js.map`,
@@ -35,7 +35,10 @@ async function setupBundleFixture(name) {
     return { content };
   });
 
-  const data = await getOriginalURLs(source);
+  return getOriginalURLs(source);
+}
+async function setupBundleFixture(name) {
+  const data = await setupBundleFixtureAndData(name);
 
   return data.map(item => item.url);
 }
@@ -44,5 +47,6 @@ module.exports = {
   formatLocations,
   formatLocation,
   setupBundleFixture,
+  setupBundleFixtureAndData,
   getMap,
 };
