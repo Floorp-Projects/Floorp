@@ -537,6 +537,7 @@ class MarkupContextMenu {
 
     menu.append(
       new MenuItem({
+        id: "node-menu-mutation-breakpoint-subtree",
         checked: mutationBreakpoints.subtree,
         click: () => this.markup.toggleMutationBreakpoint("subtree"),
         disabled: !isSelectionElement,
