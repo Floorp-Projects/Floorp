@@ -104,6 +104,8 @@ class MachCommands(MachCommandBase):
             env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
             env['XPCOM_DEBUG_BREAK'] = 'warn'
 
+            env.update(self.extra_environment_variables)
+
             outputHandler = OutputHandler(self.log)
             kp_kwargs = {'processOutputLine': [outputHandler]}
 

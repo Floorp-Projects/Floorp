@@ -385,6 +385,23 @@ class MozbuildObject(ProcessExecutionMixin):
         return platform_name, bits + 'bit'
 
     @memoized_property
+    def extra_environment_variables(self):
+        '''Some extra environment variables are stored in .mozconfig.mk.
+        This functions extracts and returns them.'''
+        from mozbuild import shellutil
+        mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
+        env = {}
+        with open(mozconfig_mk) as fh:
+            for line in fh:
+                if line.startswith('export '):
+                    exports = shellutil.split(line)[1:]
+                    for e in exports:
+                        if '=' in e:
+                            key, value = e.split('=')
+                            env[key] = value
+        return env
+
+    @memoized_property
     def repository(self):
         '''Get a `mozversioncontrol.Repository` object for the
         top source directory.'''

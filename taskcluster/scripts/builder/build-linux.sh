@@ -46,6 +46,11 @@ export MOZ_SIMPLE_PACKAGE_NAME=target
 # Ensure that in tree libraries can be found
 export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64
 
+if [[ -n ${USE_SCCACHE} ]]; then
+    # Point sccache at the Taskcluster proxy for AWS credentials.
+    export AWS_IAM_CREDENTIALS_URL="http://taskcluster/auth/v1/aws/s3/read-write/taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${TASKCLUSTER_WORKER_GROUP}/?format=iam-role-compat"
+fi
+
 # test required parameters are supplied
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
 if [[ -z "${MOZHARNESS_CONFIG}" && -z "${EXTRA_MOZHARNESS_CONFIG}" ]]; then fail "MOZHARNESS_CONFIG or EXTRA_MOZHARNESS_CONFIG is not set"; fi
