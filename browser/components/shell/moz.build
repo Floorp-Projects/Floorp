@@ -26,7 +26,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
         'nsMacShellService.cpp',
     ]
-elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     XPIDL_SOURCES += [
         'nsIGNOMEShellService.idl',
     ]

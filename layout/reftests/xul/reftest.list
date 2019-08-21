@@ -7,7 +7,7 @@ random-if(Android) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xul chr
 == chrome://reftest/content/xul/textbox-overflow-1.xul chrome://reftest/content/xul/textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xul chrome://reftest/content/xul/accesskey-ref.xul
-pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xul chrome://reftest/content/xul/tree-row-outline-1-ref.xul # win8: bug 1254832
+pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/xul/tree-row-outline-1.xul chrome://reftest/content/xul/tree-row-outline-1-ref.xul # win8: bug 1254832
 skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xul chrome://reftest/content/xul/mac-tab-toolbar-ref.xul
 pref(layout.css.xul-tree-pseudos.content.enabled,true) != chrome://reftest/content/xul/tree-row-outline-1.xul chrome://reftest/content/xul/tree-row-outline-1-notref.xul
 == chrome://reftest/content/xul/text-crop.xul chrome://reftest/content/xul/text-crop-ref.xul

@@ -39,7 +39,7 @@ LOCAL_INCLUDES += [
     '/netwerk/streamconv/converters',
 ]
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [
         '/netwerk/protocol/gio',
     ]

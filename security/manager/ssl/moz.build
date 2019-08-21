@@ -138,7 +138,7 @@ UNIFIED_SOURCES += [
     'TransportSecurityInfo.cpp',
 ]
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
         'LibSecret.cpp',
     ]

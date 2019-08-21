@@ -246,5 +246,5 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['TK_CFLAGS']

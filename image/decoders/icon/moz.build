@@ -23,7 +23,7 @@ EXPORTS += [
 
 platform = None
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     platform = 'gtk'
 
 if CONFIG['OS_ARCH'] == 'WINNT':

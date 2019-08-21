@@ -117,11 +117,11 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         '-Wno-unused-private-field',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk3', 'android'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY']:
@@ -401,7 +401,7 @@ def write_mozbuild(sources):
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):\n")
   write_sources(f, sources['mac'], 4)
 
-  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':\n")
+  f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':\n")
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
