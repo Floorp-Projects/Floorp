@@ -24,7 +24,6 @@ from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.util import (
     indented_repr,
-    system_encoding,
 )
 import mozpack.path as mozpath
 import six
@@ -102,12 +101,12 @@ def config_status(config):
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
     logging.getLogger('moz.configure').info('Creating config.status')
-    with codecs.open('config.status', 'w', system_encoding) as fh:
+    with codecs.open('config.status', 'w', 'utf-8') as fh:
         fh.write(textwrap.dedent('''\
             #!%(python)s
-            # coding=%(encoding)s
+            # coding=utf-8
             from __future__ import unicode_literals
-        ''') % {'python': config['PYTHON'], 'encoding': system_encoding})
+        ''') % {'python': config['PYTHON']})
         for k, v in six.iteritems(sanitized_config):
             fh.write('%s = %s\n' % (k, indented_repr(v)))
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
