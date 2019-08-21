@@ -10,7 +10,6 @@
 // Keep others in (case-insensitive) order:
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"

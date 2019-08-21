@@ -1295,44 +1295,12 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-    uint32_t referrerPolicy = 0;
+    ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
     mReferrer = EmptyString();
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
-      referrerPolicy = referrerInfo->GetReferrerPolicy();
+      referrerPolicy = referrerInfo->ReferrerPolicy();
       Unused << referrerInfo->GetComputedReferrerSpec(mReferrer);
-    }
-    switch (referrerPolicy) {
-      case nsIHttpChannel::REFERRER_POLICY_UNSET:
-        mReferrerPolicy = ReferrerPolicy::_empty;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER:
-        mReferrerPolicy = ReferrerPolicy::No_referrer;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_ORIGIN:
-        mReferrerPolicy = ReferrerPolicy::Origin;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE:
-        mReferrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN:
-        mReferrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL:
-        mReferrerPolicy = ReferrerPolicy::Unsafe_url;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN:
-        mReferrerPolicy = ReferrerPolicy::Same_origin;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN:
-        mReferrerPolicy = ReferrerPolicy::Strict_origin_when_cross_origin;
-        break;
-      case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN:
-        mReferrerPolicy = ReferrerPolicy::Strict_origin;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid Referrer Policy enum value?");
-        break;
     }
 
     rv = httpChannel->GetRequestMethod(mMethod);

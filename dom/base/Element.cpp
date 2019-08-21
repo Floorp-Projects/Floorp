@@ -3828,19 +3828,19 @@ float Element::FontSizeInflation() {
   return 1.0;
 }
 
-net::ReferrerPolicy Element::GetReferrerPolicyAsEnum() {
+ReferrerPolicy Element::GetReferrerPolicyAsEnum() {
   if (IsHTMLElement()) {
     const nsAttrValue* referrerValue = GetParsedAttr(nsGkAtoms::referrerpolicy);
     return ReferrerPolicyFromAttr(referrerValue);
   }
-  return net::RP_Unset;
+  return ReferrerPolicy::_empty;
 }
 
-net::ReferrerPolicy Element::ReferrerPolicyFromAttr(const nsAttrValue* aValue) {
+ReferrerPolicy Element::ReferrerPolicyFromAttr(const nsAttrValue* aValue) {
   if (aValue && aValue->Type() == nsAttrValue::eEnum) {
-    return net::ReferrerPolicy(aValue->GetEnumValue());
+    return ReferrerPolicy(aValue->GetEnumValue());
   }
-  return net::RP_Unset;
+  return ReferrerPolicy::_empty;
 }
 
 already_AddRefed<nsDOMStringMap> Element::Dataset() {

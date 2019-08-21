@@ -579,10 +579,9 @@ nsresult FetchDriver::HttpFetch(
     // associated referrer policy.
     // Basically, "client" is not in our implementation, we use
     // EnvironmentReferrerPolicy of the worker or document context
-    net::ReferrerPolicy net_referrerPolicy =
-        mRequest->GetEnvironmentReferrerPolicy();
+    ReferrerPolicy referrerPolicy = mRequest->GetEnvironmentReferrerPolicy();
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
-      mRequest->SetReferrerPolicy(net_referrerPolicy);
+      mRequest->SetReferrerPolicy(referrerPolicy);
     }
     // Step 6 of https://fetch.spec.whatwg.org/#main-fetch
     // If request’s referrer policy is the empty string,
@@ -590,8 +589,8 @@ nsresult FetchDriver::HttpFetch(
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
       nsCOMPtr<nsILoadInfo> loadInfo = httpChan->LoadInfo();
       bool isPrivate = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-      net::ReferrerPolicy referrerPolicy = static_cast<net::ReferrerPolicy>(
-          ReferrerInfo::GetDefaultReferrerPolicy(httpChan, uri, isPrivate));
+      referrerPolicy =
+          ReferrerInfo::GetDefaultReferrerPolicy(httpChan, uri, isPrivate);
       mRequest->SetReferrerPolicy(referrerPolicy);
     }
 
@@ -1351,8 +1350,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     nsAutoString computedReferrerSpec;
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
-      mRequest->SetReferrerPolicy(
-          static_cast<net::ReferrerPolicy>(referrerInfo->GetReferrerPolicy()));
+      mRequest->SetReferrerPolicy(referrerInfo->ReferrerPolicy());
       Unused << referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
     }
 

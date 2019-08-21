@@ -17,7 +17,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class nsINode;
 class nsIURI;
@@ -160,7 +159,7 @@ class txMozillaXSLTProcessor final : public nsIDocumentTransformer,
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
                              mozilla::dom::Document* aLoaderDocument,
-                             mozilla::net::ReferrerPolicy aReferrerPolicy);
+                             mozilla::dom::ReferrerPolicy aReferrerPolicy);
 
 extern nsresult TX_CompileStylesheet(nsINode* aNode,
                                      txMozillaXSLTProcessor* aProcessor,

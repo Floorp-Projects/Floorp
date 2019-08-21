@@ -69,7 +69,7 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
   rv = nsSyncLoadService::LoadDocument(
       xslUri, nsIContentPolicy::TYPE_XSLT, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, nullptr,
-      aDocument->CookieSettings(), true, mozilla::net::RP_Unset,
+      aDocument->CookieSettings(), true, ReferrerPolicy::_empty,
       getter_AddRefs(xslDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 

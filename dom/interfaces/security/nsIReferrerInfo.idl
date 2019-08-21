@@ -5,29 +5,40 @@
 #include "nsISupports.idl"
 #include "nsISerializable.idl"
 
+%{C++
+#include "mozilla/dom/ReferrerPolicyBinding.h"
+%}
+
 interface nsIURI;
 webidl Document;
 webidl Node;
 
+native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
 native URIRef(already_AddRefed<nsIURI>);
 
 [scriptable, builtinclass, uuid(081cdc36-f2e2-4f94-87bf-78578f06f1eb)]
 interface nsIReferrerInfo : nsISerializable
 {
   /**
-  * The original referrer URI which indicates the full referrer before applying
-  * referrer policy
-  */
+   * The original referrer URI which indicates the full referrer before applying
+   * referrer policy
+   */
   [infallible] readonly attribute nsIURI originalReferrer;
 
   /**
-  * Referrer policy which is applied to the referrer
-  */
-  [infallible] readonly attribute unsigned long referrerPolicy;
+   * Referrer policy which is applied to the referrer
+   */
+  readonly attribute ReferrerPolicy referrerPolicy;
 
   /**
-  * Indicates if the referrer should not be sent or not even when it's available.
-  */
+   * C++ friendly version of referrerPolicy getter
+   */
+  [noscript, notxpcom, nostdcall, binaryname(ReferrerPolicy)]
+  ReferrerPolicy binaryReferrerPolicy();
+
+  /**
+   * Indicates if the referrer should not be sent or not even when it's available.
+   */
   [infallible] readonly attribute boolean sendReferrer;
 
   /**

@@ -1509,8 +1509,7 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
 ScriptLoadRequest* ScriptLoader::CreateLoadRequest(
     ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
     nsIPrincipal* aTriggeringPrincipal, CORSMode aCORSMode,
-    const SRIMetadata& aIntegrity,
-    mozilla::net::ReferrerPolicy aReferrerPolicy) {
+    const SRIMetadata& aIntegrity, ReferrerPolicy aReferrerPolicy) {
   nsIURI* referrer = mDocument->GetDocumentURIAsReferrer();
   ScriptFetchOptions* fetchOptions = new ScriptFetchOptions(
       aCORSMode, aReferrerPolicy, aElement, aTriggeringPrincipal);
@@ -1649,7 +1648,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     }
 
     CORSMode ourCORSMode = aElement->GetCORSMode();
-    mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+    ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
 
     request = CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
                                 ourCORSMode, sriMetadata, referrerPolicy);
@@ -1787,7 +1786,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     corsMode = aElement->GetCORSMode();
   }
 
-  mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+  ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
   RefPtr<ScriptLoadRequest> request =
       CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
                         mDocument->NodePrincipal(), corsMode,
@@ -1888,7 +1887,7 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   // we have now.
   nsAutoString elementCharset;
   aElement->GetScriptCharset(elementCharset);
-  mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+  ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
 
   if (!elementCharset.Equals(preloadCharset) ||
       aElement->GetCORSMode() != request->CORSMode() ||
@@ -1926,11 +1925,9 @@ void ScriptLoader::GetSRIMetadata(const nsAString& aIntegrityAttr,
                               aMetadataOut);
 }
 
-mozilla::net::ReferrerPolicy ScriptLoader::GetReferrerPolicy(
-    nsIScriptElement* aElement) {
-  mozilla::net::ReferrerPolicy scriptReferrerPolicy =
-      aElement->GetReferrerPolicy();
-  if (scriptReferrerPolicy != mozilla::net::RP_Unset) {
+ReferrerPolicy ScriptLoader::GetReferrerPolicy(nsIScriptElement* aElement) {
+  ReferrerPolicy scriptReferrerPolicy = aElement->GetReferrerPolicy();
+  if (scriptReferrerPolicy != ReferrerPolicy::_empty) {
     return scriptReferrerPolicy;
   }
   return mDocument->GetReferrerPolicy();
@@ -3699,11 +3696,12 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   ProcessPendingRequests();
 }
 
-void ScriptLoader::PreloadURI(
-    nsIURI* aURI, const nsAString& aCharset, const nsAString& aType,
-    const nsAString& aCrossOrigin, const nsAString& aIntegrity,
-    bool aScriptFromHead, bool aAsync, bool aDefer, bool aNoModule,
-    const mozilla::net::ReferrerPolicy aReferrerPolicy) {
+void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
+                              const nsAString& aType,
+                              const nsAString& aCrossOrigin,
+                              const nsAString& aIntegrity, bool aScriptFromHead,
+                              bool aAsync, bool aDefer, bool aNoModule,
+                              const ReferrerPolicy aReferrerPolicy) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
