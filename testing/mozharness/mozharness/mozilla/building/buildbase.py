@@ -40,8 +40,6 @@ from mozharness.mozilla.automation import (
     TBPL_WORST_LEVEL_TUPLE,
 )
 from mozharness.mozilla.secrets import SecretsMixin
-from mozharness.mozilla.testing.errors import TinderBoxPrintRe
-from mozharness.mozilla.testing.unittest import tbox_print_summary
 from mozharness.base.python import (
     PerfherderResourceOptionsMixin,
     VirtualenvMixin,
@@ -100,69 +98,6 @@ class MakeUploadOutputParser(OutputParser):
                 break
         else:
             self.info(line)
-
-
-class CheckTestCompleteParser(OutputParser):
-    tbpl_error_list = TBPL_UPLOAD_ERRORS
-
-    def __init__(self, **kwargs):
-        self.matches = {}
-        super(CheckTestCompleteParser, self).__init__(**kwargs)
-        self.pass_count = 0
-        self.fail_count = 0
-        self.leaked = False
-        self.harness_err_re = TinderBoxPrintRe['harness_error']['full_regex']
-        self.tbpl_status = TBPL_SUCCESS
-
-    def parse_single_line(self, line):
-        # Counts and flags.
-        # Regular expression for crash and leak detections.
-        if "TEST-PASS" in line:
-            self.pass_count += 1
-            return self.info(line)
-        if "TEST-UNEXPECTED-" in line:
-            # Set the error flags.
-            # Or set the failure count.
-            m = self.harness_err_re.match(line)
-            if m:
-                r = m.group(1)
-                if r == "missing output line for total leaks!":
-                    self.leaked = None
-                else:
-                    self.leaked = True
-            self.fail_count += 1
-            return self.warning(line)
-        self.info(line)  # else
-
-    def evaluate_parser(self, return_code,  success_codes=None):
-        success_codes = success_codes or [0]
-
-        if self.num_errors:  # ran into a script error
-            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
-                                                levels=TBPL_WORST_LEVEL_TUPLE)
-
-        if self.fail_count > 0:
-            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
-                                                levels=TBPL_WORST_LEVEL_TUPLE)
-
-        # Account for the possibility that no test summary was output.
-        if (self.pass_count == 0 and self.fail_count == 0 and
-           os.environ.get('TRY_SELECTOR') != 'coverage'):
-            self.error('No tests run or test summary not found')
-            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
-                                                levels=TBPL_WORST_LEVEL_TUPLE)
-
-        if return_code not in success_codes:
-            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
-                                                levels=TBPL_WORST_LEVEL_TUPLE)
-
-        # Print the summary.
-        summary = tbox_print_summary(self.pass_count,
-                                     self.fail_count,
-                                     self.leaked)
-        self.info("TinderboxPrint: check<br/>%s\n" % summary)
-
-        return self.tbpl_status
 
 
 class MozconfigPathError(Exception):
@@ -809,20 +744,6 @@ or run without that action (ie: --no-{action})"
                 return True
         return False
 
-    def query_check_test_env(self):
-        c = self.config
-        dirs = self.query_abs_dirs()
-        check_test_env = {}
-        if c.get('check_test_env'):
-            for env_var, env_value in c['check_test_env'].iteritems():
-                check_test_env[env_var] = env_value % dirs
-        # Check tests don't upload anything, however our mozconfigs depend on
-        # UPLOAD_PATH, so we prevent configure from re-running by keeping the
-        # environments consistent.
-        if c.get('upload_env'):
-            check_test_env.update(c['upload_env'])
-        return check_test_env
-
     def _rm_old_package(self):
         """rm the old package."""
         c = self.config
@@ -1195,41 +1116,6 @@ or run without that action (ie: --no-{action})"
             cwd=dirs['abs_obj_dir'],
             env=env, output_timeout=60*45, halt_on_failure=True,
         )
-
-    def check_test(self):
-        if os.environ.get('USE_ARTIFACT'):
-            self.info('Skipping due to forced artifact build.')
-            return
-        c = self.config
-        dirs = self.query_abs_dirs()
-
-        env = self.query_build_env()
-        env.update(self.query_check_test_env())
-
-        cmd = self._query_mach() + [
-            '--log-no-times',
-            'build',
-            '-v',
-            '--keep-going',
-            'check',
-        ]
-
-        parser = CheckTestCompleteParser(config=c,
-                                         log_obj=self.log_obj)
-        return_code = self.run_command(command=cmd,
-                                       cwd=dirs['abs_src_dir'],
-                                       env=env,
-                                       output_parser=parser)
-        tbpl_status = parser.evaluate_parser(return_code)
-        return_code = EXIT_STATUS_DICT[tbpl_status]
-
-        if return_code:
-            self.return_code = self.worst_level(
-                return_code,  self.return_code,
-                AUTOMATION_EXIT_CODES[::-1]
-            )
-            self.error("'mach build check' did not run successfully. Please "
-                       "check log for errors.")
 
     def _is_configuration_shipped(self):
         """Determine if the current build configuration is shipped to users.

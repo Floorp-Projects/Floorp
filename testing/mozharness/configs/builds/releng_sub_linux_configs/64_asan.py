@@ -4,7 +4,6 @@ config = {
     'default_actions': [
         'clobber',
         'build',
-        'check-test',
     ],
     'stage_platform': 'linux64-asan',
     #### 64 bit build specific #####

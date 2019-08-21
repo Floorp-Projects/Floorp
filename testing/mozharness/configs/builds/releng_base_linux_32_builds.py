@@ -12,7 +12,6 @@ config = {
     'default_actions': [
         'clobber',
         'build',
-        'check-test',
     ],
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'secret_files': [

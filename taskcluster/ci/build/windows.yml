@@ -170,7 +170,7 @@ win64-plain/debug:
             PERFHERDER_EXTRA_OPTIONS: plain
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
-        actions: [build, check-test]
+        actions: [build]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
