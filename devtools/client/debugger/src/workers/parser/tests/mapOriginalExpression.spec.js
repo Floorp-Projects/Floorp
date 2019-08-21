@@ -9,7 +9,7 @@ import { format } from "prettier";
 
 const formatOutput = output =>
   format(output, {
-    parser: "babylon",
+    parser: "babel",
   });
 
 const mapOriginalExpression = (expression, mappings) =>
