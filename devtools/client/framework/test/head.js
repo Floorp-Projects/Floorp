@@ -12,12 +12,6 @@ Services.scriptloader.loadSubScript(
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-// This is far from ideal. https://bugzilla.mozilla.org/show_bug.cgi?id=1565279
-// covers removing this pref flip.
-SpecialPowers.pushPrefEnv({
-  set: [["security.allow_unsafe_parent_loads", true]],
-});
-
 function toggleAllTools(state) {
   for (const [, tool] of gDevTools._tools) {
     if (!tool.visibilityswitch) {
