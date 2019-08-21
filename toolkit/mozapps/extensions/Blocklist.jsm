@@ -192,6 +192,36 @@ const BlocklistTelemetry = {
       );
     }
   },
+
+  /**
+   * Record a telemety event on XML Blocklist update errors.
+   *
+   * @param {string} errorType
+   *        A string that identify the type of update error (one of CHECK_CERT_ERROR,
+   *        DOWNLOAD_ERROR, INVALID_XML_ERROR, INVALID_BLOCKLIST_URL,
+   *        MISSING_BLOCKLIST_SERVER_URL, UNEXPECTED_STATUS_CODE, WRITE_FILE_ERROR)
+   *
+   * @param {object} [extra]
+   *        An optional set of extra vars.
+   * @param {number} [extra.status_code]
+   *        HTTP status code (included when reportType is "UNEXPECTED_STATUS_CODE"
+   *        or "DOWNLOAD_ERROR").
+   */
+  recordXMLBlocklistUpdateError(errorType, { status_code } = {}) {
+    const extra = {};
+
+    if (typeof status_code === "number") {
+      extra.status_code = String(status_code);
+    }
+
+    Services.telemetry.recordEvent(
+      "addonsManager",
+      "blocklistUpdateError",
+      "xml",
+      errorType,
+      extra
+    );
+  },
 };
 
 const Utils = {
@@ -1736,14 +1766,21 @@ var BlocklistXML = {
     return url.replace(/%blockID%/g, id);
   },
 
+  _getBlocklistServerURL() {
+    return Services.prefs.getCharPref(PREF_BLOCKLIST_URL);
+  },
+
   notify(aTimer) {
     if (!gBlocklistEnabled) {
       return;
     }
 
     try {
-      var dsURI = Services.prefs.getCharPref(PREF_BLOCKLIST_URL);
+      var dsURI = this._getBlocklistServerURL();
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError(
+        "MISSING_BLOCKLIST_SERVER_URL"
+      );
       LOG(
         "Blocklist::notify: The " +
           PREF_BLOCKLIST_URL +
@@ -1852,6 +1889,7 @@ var BlocklistXML = {
     try {
       var uri = Services.io.newURI(dsURI);
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("INVALID_BLOCKLIST_URL");
       LOG(
         "Blocklist::notify: There was an error creating the blocklist URI\r\n" +
           "for: " +
@@ -1891,6 +1929,7 @@ var BlocklistXML = {
       CertUtils.checkCert(request.channel);
     } catch (e) {
       LOG("Blocklist::onXMLLoad: " + e);
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("CHECK_CERT_ERROR");
       return;
     }
 
@@ -1905,6 +1944,10 @@ var BlocklistXML = {
         "Blocklist::onXMLLoad: there was an error during load, got status: " +
           status
       );
+      BlocklistTelemetry.recordXMLBlocklistUpdateError(
+        "UNEXPECTED_STATUS_CODE",
+        { status_code: status }
+      );
       return;
     }
 
@@ -1916,6 +1959,7 @@ var BlocklistXML = {
       LOG(
         "Blocklist::onXMLLoad: there was an error during load, we got invalid XML"
       );
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("INVALID_XML_ERROR");
       return;
     }
 
@@ -1941,6 +1985,7 @@ var BlocklistXML = {
         tmpPath: path + ".tmp",
       });
     } catch (e) {
+      BlocklistTelemetry.recordXMLBlocklistUpdateError("WRITE_FILE_ERROR");
       LOG("Blocklist::onXMLLoad: " + e);
     }
   },
@@ -1961,6 +2006,9 @@ var BlocklistXML = {
         statusText = request.statusText;
       } catch (e) {}
     }
+    BlocklistTelemetry.recordXMLBlocklistUpdateError("DOWNLOAD_ERROR", {
+      status_code: status,
+    });
     LOG(
       "Blocklist:onError: There was an error loading the blocklist file\r\n" +
         statusText
