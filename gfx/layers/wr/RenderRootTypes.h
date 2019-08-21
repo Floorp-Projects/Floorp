@@ -48,8 +48,12 @@ struct ResourceUpdates {
   nsTArray<mozilla::ipc::Shmem> mLargeShmems;
 };
 
+struct ParentCommands {
+  nsTArray<WebRenderParentCommand> mCommands;
+};
+
 typedef Variant<RenderRootDisplayListData, RenderRootUpdates, ResourceUpdates,
-                FocusTarget>
+                ParentCommands, FocusTarget>
     RenderRootDeferredData;
 
 }  // namespace layers
