@@ -91,6 +91,8 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
+  virtual bool IsProxied() const override { return false; }
+
   virtual int write(const void* msg, size_t len, size_t* written) override {
     size_t to_write = std::min(len, writable_);
 

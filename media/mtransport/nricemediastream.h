@@ -87,6 +87,7 @@ struct NrIceCandidate {
   std::string label;
   bool trickled;
   uint32_t priority;
+  bool is_proxied = false;
 };
 
 struct NrIceCandidatePair {
