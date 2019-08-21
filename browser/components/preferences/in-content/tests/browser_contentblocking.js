@@ -67,6 +67,7 @@ add_task(async function testContentBlockingMainCategory() {
   let prefs = [
     [TP_PREF, false],
     [TP_PBM_PREF, true],
+    [STP_PREF, false],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
   ];
 
@@ -542,7 +543,8 @@ add_task(async function testContentBlockingDependentTPControls() {
   gBrowser.removeCurrentTab();
 });
 
-// Checks that cryptomining and fingerprinting visibility can be controlled via pref.
+// Checks that social media trackers, cryptomining and fingerprinting visibility
+// can be controlled via pref.
 add_task(async function testCustomOptionsVisibility() {
   Services.prefs.setBoolPref(
     "browser.contentblocking.cryptomining.preferences.ui.enabled",
@@ -550,6 +552,10 @@ add_task(async function testCustomOptionsVisibility() {
   );
   Services.prefs.setBoolPref(
     "browser.contentblocking.fingerprinting.preferences.ui.enabled",
+    false
+  );
+  Services.prefs.setBoolPref(
+    "privacy.socialtracking.block_cookies.enabled",
     false
   );
 
@@ -604,12 +610,44 @@ add_task(async function testCustomOptionsVisibility() {
 
   gBrowser.removeCurrentTab();
 
+  // Social media trackers UI should be hidden
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  doc = gBrowser.contentDocument;
+  let socialTrackingUI = [...doc.querySelectorAll(".social-media-option")];
+
+  ok(
+    socialTrackingUI.every(el => el.hidden),
+    "All Social media tracker UI instances are hidden"
+  );
+
+  gBrowser.removeCurrentTab();
+
+  // Social media trackers UI should be visible
+  Services.prefs.setBoolPref(
+    "privacy.socialtracking.block_cookies.enabled",
+    true
+  );
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  doc = gBrowser.contentDocument;
+  socialTrackingUI = [...doc.querySelectorAll(".social-media-option")];
+
+  ok(
+    !socialTrackingUI.every(el => el.hidden),
+    "All Social media tracker UI instances are visible"
+  );
+
+  gBrowser.removeCurrentTab();
+
   Services.prefs.clearUserPref(
     "browser.contentblocking.cryptomining.preferences.ui.enabled"
   );
   Services.prefs.clearUserPref(
     "browser.contentblocking.fingerprinting.preferences.ui.enabled"
   );
+  Services.prefs.clearUserPref("privacy.socialtracking.block_cookies.enabled");
 });
 
 // Checks that adding a custom enterprise policy will put the user in the custom category.
