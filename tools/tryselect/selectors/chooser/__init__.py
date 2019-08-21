@@ -19,7 +19,16 @@ class ChooserParser(BaseTryParser):
     name = 'chooser'
     arguments = []
     common_groups = ['push', 'task']
-    templates = ['artifact', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile', 'disable-pgo']
+    templates = [
+        'artifact',
+        'browsertime',
+        'chemspill-prio',
+        'disable-pgo',
+        'env',
+        'gecko-profile',
+        'path',
+        'rebuild',
+    ]
 
 
 def run(update=False, query=None, try_config=None, full=False, parameters=None,

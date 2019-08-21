@@ -714,6 +714,28 @@ def setup_raptor(config, tests):
 
 
 @transforms.add
+def setup_browsertime_flag(config, tests):
+    """Optionally add `--browsertime` flag to Raptor pageload tests."""
+
+    browsertime_flag = config.params['try_task_config'].get('browsertime', False)
+
+    for test in tests:
+        if not browsertime_flag or test['suite'] != 'raptor':
+            yield test
+            continue
+
+        if test['treeherder-symbol'].startswith('Rap'):
+            # The Rap group is subdivided as Rap{-fenix,-refbrow,-fennec}(...),
+            # so `taskgraph.util.treeherder.replace_group` isn't appropriate.
+            test['treeherder-symbol'] = test['treeherder-symbol'].replace('Rap', 'Btime', 1)
+
+        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+        extra_options.append('--browsertime')
+
+        yield test
+
+
+@transforms.add
 def handle_artifact_prefix(config, tests):
     """Handle translating `artifact_prefix` appropriately"""
     for test in tests:
