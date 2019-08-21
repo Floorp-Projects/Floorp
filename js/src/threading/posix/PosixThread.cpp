@@ -35,6 +35,8 @@ bool Thread::Id::operator==(const Id& aOther) const {
 }
 
 bool Thread::create(void* (*aMain)(void*), void* aArg) {
+  MOZ_RELEASE_ASSERT(!joinable());
+
   pthread_attr_t attrs;
   int r = pthread_attr_init(&attrs);
   MOZ_RELEASE_ASSERT(!r);
