@@ -71,6 +71,36 @@ class MediaTest {
 
         verify(observer, times(1)).onPlaybackStateChanged(any(), any())
     }
+
+    @Test
+    fun `State - YouTube - Backgrounding`() {
+        val media = FakeMedia()
+
+        // Playing video
+
+        media.playbackState = Media.PlaybackState.PLAY
+        assertEquals(Media.State.PLAYING, media.state)
+
+        media.playbackState = Media.PlaybackState.EMPTIED
+        assertEquals(Media.State.PLAYING, media.state)
+
+        media.playbackState = Media.PlaybackState.PLAY
+        assertEquals(Media.State.PLAYING, media.state)
+
+        media.playbackState = Media.PlaybackState.WAITING
+        assertEquals(Media.State.PLAYING, media.state)
+
+        media.playbackState = Media.PlaybackState.PLAYING
+        assertEquals(Media.State.PLAYING, media.state)
+
+        // Background
+
+        media.playbackState = Media.PlaybackState.ABORT
+        assertEquals(Media.State.STOPPED, media.state)
+
+        media.playbackState = Media.PlaybackState.EMPTIED
+        assertEquals(Media.State.STOPPED, media.state)
+    }
 }
 
 private class FakeMedia : Media() {
