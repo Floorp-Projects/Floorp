@@ -12,7 +12,11 @@ ifdef CROSS_COMPILE
 # Narrow the definition of cross compilation to not include win32 builds
 # on win64 and linux32 builds on linux64.
 ifeq ($(HOST_OS_ARCH),$(OS_TARGET))
+ifneq (,$(filter x86%,$(CPU_ARCH)))
 FUZZY_CROSS_COMPILE =
+else
+FUZZY_CROSS_COMPILE = 1
+endif
 else
 FUZZY_CROSS_COMPILE = 1
 endif
