@@ -54,9 +54,11 @@ class CertificateSection extends HTMLElement {
   // as nth-child/parent-based selectors aren't supported
   // due to the encapsulation of custom-element CSS.
   addClassForPadding() {
-    let items = this.shadowRoot
-      .querySelector(".embedded-scts")
-      .shadowRoot.querySelectorAll(".version");
+    let embeddedScts = this.shadowRoot.querySelector(".embedded-scts");
+    if (!embeddedScts) {
+      return;
+    }
+    let items = embeddedScts.shadowRoot.querySelectorAll(".version");
 
     for (let i = 0; i < items.length; i++) {
       items[i].classList.add("padding");
