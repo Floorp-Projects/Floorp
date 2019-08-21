@@ -184,37 +184,30 @@ def rust_compiler(rustc_info, cargo_info, build_project):
 
 
 @depends(rustc, when=rust_compiler)
+@imports(_from='__builtin__', _import='ValueError')
 def rust_supported_targets(rustc):
     out = check_cmd_output(rustc, '--print', 'target-list').splitlines()
-    # The os in the triplets used by rust may match the same OSes, in which
-    # case we need to check the raw_os instead.
-    per_os = {}
-    ambiguous = set()
-    per_raw_os = {}
+    data = {}
     for t in out:
-        t = split_triplet(t, allow_unknown=True)
-        endianness = t.endianness
-        if t.cpu.startswith('thumb') and endianness not in ('big', 'little'):
-            endianness = 'little'
-        key = (t.cpu, endianness, t.os)
-        if key in per_os:
-            previous = per_os[key]
-            per_raw_os[(previous.cpu, previous.endianness,
-                        previous.raw_os)] = previous
-            del per_os[key]
-            ambiguous.add(key)
-        if key in ambiguous:
-            raw_os = t.raw_os
-            # split_triplet will return a raw_os of 'androideabi' for
-            # rust targets in the form cpu-linux-androideabi, but what
-            # we get from the build system is linux-androideabi, so
-            # normalize.
-            if raw_os == 'androideabi':
-                raw_os = 'linux-androideabi'
-            per_raw_os[(t.cpu, endianness, raw_os)] = t
-        else:
-            per_os[key] = t
-    return namespace(per_os=per_os, per_raw_os=per_raw_os)
+        try:
+            info = split_triplet(t)
+        except ValueError:
+            if t.startswith('thumb'):
+                cpu, rest = t.split('-', 1)
+                retry = '-'.join(('arm', rest))
+            elif t.endswith('-windows-msvc'):
+                retry = t[:-len('windows-msvc')] + 'mingw32'
+            elif t.endswith('-windows-gnu'):
+                retry = t[:-len('windows-gnu')] + 'mingw32'
+            else:
+                continue
+            try:
+                info = split_triplet(retry)
+            except ValueError:
+                continue
+        key = (info.cpu, info.endianness, info.os)
+        data.setdefault(key, []).append(namespace(rust_target=t, target=info))
+    return data
 
 
 @template
@@ -246,33 +239,96 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
         # munging to get the correct option to rustc.
         # We correlate the autoconf-derived targets with the list of targets
         # rustc gives us with --print target-list.
-        if host_or_target.kernel == 'WINNT':
-            if compiler_info.type in ('gcc', 'clang'):
-                host_or_target_os = 'windows-gnu'
-            else:
-                host_or_target_os = 'windows-msvc'
-            host_or_target_raw_os = host_or_target_os
-        else:
-            host_or_target_os = host_or_target.os
-            host_or_target_raw_os = host_or_target.raw_os
+        candidates = rust_supported_targets.get(
+            (host_or_target.cpu, host_or_target.endianness, host_or_target.os), [])
 
-        if host_or_target.cpu == 'arm' and arm_target.arm_arch == 7 and \
-                arm_target.fpu == 'neon' and arm_target.thumb2:
-            host_or_target_cpus = ('thumbv7neon', host_or_target.cpu)
-        else:
-            host_or_target_cpus = (host_or_target.cpu,)
+        def find_candidate(candidates):
+            if len(candidates) == 1:
+                return candidates[0].rust_target
+            elif not candidates:
+                return None
 
-        for host_or_target_cpu in host_or_target_cpus:
-            rustc_target = rust_supported_targets.per_os.get(
-                (host_or_target_cpu, host_or_target.endianness, host_or_target_os))
-            if rustc_target:
-                break
+            # We have multiple candidates. There are two cases where we can try to
+            # narrow further down using extra information from the build system.
+            # - For windows targets, correlate with the C compiler type
+            if host_or_target.kernel == 'WINNT':
+                if compiler_info.type in ('gcc', 'clang'):
+                    suffix = 'windows-gnu'
+                else:
+                    suffix = 'windows-msvc'
+                narrowed = [c for c in candidates if c.rust_target.endswith('-{}'.format(suffix))]
+                if len(narrowed) == 1:
+                    return narrowed[0].rust_target
+                elif narrowed:
+                    candidates = narrowed
 
-            rustc_target = rust_supported_targets.per_raw_os.get(
-                (host_or_target_cpu, host_or_target.endianness,
-                 host_or_target_raw_os))
-            if rustc_target:
-                break
+            # - For arm targets, correlate with arm_target
+            #   we could be more thorough with the supported rust targets, but they
+            #   don't support OSes that are supported to build Gecko anyways.
+            #   Also, sadly, the only interface to check the rust target cpu features
+            #   is --print target-spec-json, and it's unstable, so we have to rely on
+            #   our own knowledge of what each arm target means.
+            if host_or_target.cpu == 'arm' and host_or_target.endianness == 'little':
+                prefixes = []
+                if arm_target.arm_arch >= 7:
+                    if arm_target.thumb2 and arm_target.fpu == 'neon':
+                        prefixes.append('thumbv7neon')
+                    if arm_target.thumb2:
+                        prefixes.append('thumbv7a')
+                    prefixes.append('armv7')
+                if arm_target.arm_arch >= 6:
+                    prefixes.append('armv6')
+                    if host_or_target.os != 'Android':
+                        # arm-* rust targets are armv6... except arm-linux-androideabi
+                        prefixes.append('arm')
+                if arm_target.arm_arch >= 5:
+                    prefixes.append('armv5te')
+                    if host_or_target.os == 'Android':
+                        # arm-* rust targets are armv6... except arm-linux-androideabi
+                        prefixes.append('arm')
+                if arm_target.arm_arch >= 4:
+                    prefixes.append('armv4t')
+                # rust freebsd targets are the only ones that don't have a 'hf' suffix
+                # for hard-float. Technically, that means if the float abi ever is not
+                # hard-float, this will pick a wrong target, but since rust only
+                # supports hard-float, let's assume that means freebsd only support
+                # hard-float.
+                if arm_target.float_abi == 'hard' and host_or_target.os != 'FreeBSD':
+                    suffix = 'hf'
+                else:
+                    suffix = ''
+                for p in prefixes:
+                    for c in candidates:
+                        if c.rust_target.startswith('{}-'.format(p)) and \
+                                c.rust_target.endswith(suffix):
+                            return c.rust_target
+
+            # See if we can narrow down on the exact alias
+            narrowed = [c for c in candidates if c.target.alias == host_or_target.alias]
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
+            elif narrowed:
+                candidates = narrowed
+
+            # See if we can narrow down with the raw OS
+            narrowed = [c for c in candidates if c.target.raw_os == host_or_target.raw_os]
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
+            elif narrowed:
+                candidates = narrowed
+
+            # See if we can narrow down with the raw OS and raw CPU
+            narrowed = [
+                c for c in candidates
+                if c.target.raw_os == host_or_target.raw_os and
+                   c.target.raw_cpu == host_or_target.raw_cpu
+            ]
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
+
+            return None
+
+        rustc_target = find_candidate(candidates)
 
         if rustc_target is None:
             die("Don't know how to translate {} for rustc".format(
@@ -280,7 +336,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
 
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
-        target_arg = '--target=' + rustc_target.alias
+        target_arg = '--target=' + rustc_target
         in_fd, in_path = mkstemp(prefix='conftest', suffix='.rs')
         out_fd, out_path = mkstemp(prefix='conftest', suffix='.rlib')
         os.close(out_fd)
@@ -308,7 +364,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
                 a rust std library for that target installed. Try:
 
                   rustup target add {}
-                '''.format(host_or_target.alias, rustc, rustc_target.alias)))
+                '''.format(host_or_target.alias, rustc, rustc_target)))
             check_cmd_output(*cmd, onerror=failed)
             if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
                 failed()
@@ -317,7 +373,7 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
             os.remove(out_path)
 
         # This target is usable.
-        return rustc_target.alias
+        return rustc_target
 
     return rust_target
 
