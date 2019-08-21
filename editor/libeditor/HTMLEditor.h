@@ -798,9 +798,10 @@ class HTMLEditor final : public TextEditor,
                                          int32_t* outOffset = 0);
 
   /**
-   * @param aElement        Must not be null.
+   * NodeIsBlockStatic() returns true if aElement is an element node and
+   * should be treated as a block.
    */
-  static bool NodeIsBlockStatic(const nsINode* aElement);
+  static bool NodeIsBlockStatic(const nsINode& aElement);
 
   /**
    * extracts an element from the normal flow of the document and
