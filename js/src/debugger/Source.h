@@ -54,6 +54,7 @@ class DebuggerSource : public NativeObject {
   static bool getText(JSContext* cx, unsigned argc, Value* vp);
   static bool getBinary(JSContext* cx, unsigned argc, Value* vp);
   static bool getURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool getStartLine(JSContext* cx, unsigned argc, Value* vp);
   static bool getId(JSContext* cx, unsigned argc, Value* vp);
   static bool getDisplayURL(JSContext* cx, unsigned argc, Value* vp);
   static bool getElement(JSContext* cx, unsigned argc, Value* vp);
