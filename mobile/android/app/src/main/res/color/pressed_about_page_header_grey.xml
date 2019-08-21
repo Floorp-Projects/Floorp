@@ -5,8 +5,10 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_pressed="true"
+          android:color="@color/about_page_header_grey"
           android:drawable="@color/about_page_header_grey" />
 
-    <item android:drawable="@android:color/transparent"/>
+    <item android:color="@android:color/transparent"
+          android:drawable="@android:color/transparent"/>
 
 </selector>
