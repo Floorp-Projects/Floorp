@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { SourceId, Source, SourceLocation, Context } from "../../types";
+import type { Source, SourceLocation, Context } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 import type { SourceBase } from "../../reducers/sources";
 
@@ -31,11 +31,6 @@ export type SourceAction =
       +type: "ADD_SOURCES",
       +cx: Context,
       +sources: Array<SourceBase>,
-    |}
-  | {|
-      +type: "CLEAR_SOURCE_MAP_URL",
-      +cx: Context,
-      +sourceId: SourceId,
     |}
   | {|
       +type: "SET_SELECTED_LOCATION",
