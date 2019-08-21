@@ -2,7 +2,7 @@
 
 # toScope
 
-`@MainThread fun <ERROR CLASS>.toScope(): CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/view/View.kt#L117)
+`@MainThread fun <ERROR CLASS>.toScope(): CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/view/View.kt#L93)
 
 Creates a [CoroutineScope](#) that is active as long as this [View](#) is attached. Once this [View](#)
 gets detached this [CoroutineScope](#) gets cancelled automatically.

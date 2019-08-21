@@ -154,6 +154,7 @@
 | [mozilla.components.service.glean.testing](mozilla.components.service.glean.testing/index.md) |  |
 | [mozilla.components.service.glean.timing](mozilla.components.service.glean.timing/index.md) |  |
 | [mozilla.components.service.location](mozilla.components.service.location/index.md) |  |
+| [mozilla.components.service.location.search](mozilla.components.service.location.search/index.md) |  |
 | [mozilla.components.service.pocket](mozilla.components.service.pocket/index.md) |  |
 | [mozilla.components.service.pocket.data](mozilla.components.service.pocket.data/index.md) |  |
 | [mozilla.components.service.pocket.net](mozilla.components.service.pocket.net/index.md) |  |
