@@ -109,6 +109,8 @@ check_and_add_gcc_warning('-Wstring-conversion')
 check_and_add_gcc_warning('-Wtautological-overlap-compare')
 check_and_add_gcc_warning('-Wtautological-unsigned-enum-zero-compare')
 check_and_add_gcc_warning('-Wtautological-unsigned-zero-compare')
+# This can be triggered by certain patterns used deliberately in portable code
+check_and_add_gcc_warning('-Wno-error=tautological-type-limit-compare')
 
 # we inline 'new' and 'delete' in mozalloc
 check_and_add_gcc_warning('-Wno-inline-new-delete', cxx_compiler)
