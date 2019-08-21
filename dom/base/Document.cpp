@@ -14397,25 +14397,13 @@ bool Document::InlineScriptAllowedByCSP() {
   return allowsInlineScript;
 }
 
-static bool ReportExternalResourceUseCounters(Document* aDocument,
-                                              void* aData) {
-  const auto reportKind =
-      Document::UseCounterReportKind::eIncludeExternalResources;
-  aDocument->ReportUseCounters(reportKind);
-  return true;
-}
-
-void Document::ReportUseCounters(UseCounterReportKind aKind) {
+void Document::ReportUseCounters() {
   static const bool sDebugUseCounters = false;
   if (mReportedUseCounters) {
     return;
   }
 
   mReportedUseCounters = true;
-
-  if (aKind == UseCounterReportKind::eIncludeExternalResources) {
-    EnumerateExternalResources(ReportExternalResourceUseCounters, nullptr);
-  }
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
       (IsContentDocument() || IsResourceDoc())) {

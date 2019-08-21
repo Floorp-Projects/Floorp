@@ -1208,15 +1208,5 @@ void HTMLImageElement::MediaFeatureValuesChanged() {
   QueueImageLoadTask(false);
 }
 
-void HTMLImageElement::FlushUseCounters() {
-  nsCOMPtr<imgIRequest> request;
-  GetRequest(CURRENT_REQUEST, getter_AddRefs(request));
-
-  nsCOMPtr<imgIContainer> container;
-  request->GetImage(getter_AddRefs(container));
-
-  static_cast<image::Image*>(container.get())->ReportUseCounters();
-}
-
 }  // namespace dom
 }  // namespace mozilla
