@@ -66,9 +66,10 @@ payload.events[...].modules[...].moduleName
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The path to the module file, modified to remove any potentially sensitive
 information. In most cases, the directory path is removed leaving only the
-file name, e.g. ``foo.dll``. There are two exceptions:
+file name, e.g. ``foo.dll``. There are three exceptions:
 
 * Paths under ``%ProgramFiles%`` are preserved, e.g. ``%ProgramFiles%\FooApplication\foo.dll``
+* Paths under ``%SystemRoot%`` are preserved, e.g. ``%SystemRoot%\System32\DriverStore\FileRepository\nvlt.inf_amd64_97992900c592012e\nvinitx.dll``
 * Paths under the temporary path are preserved, e.g. ``%TEMP%\bin\foo.dll``
 
 payload.events[...].modules[...].loaderName

@@ -2039,6 +2039,43 @@ bool WinUtils::UnexpandEnvVars(nsAString& aPath) {
   return true;
 }
 
+/* static */
+WinUtils::WhitelistVec WinUtils::BuildWhitelist() {
+  WhitelistVec result;
+
+  Unused << result.emplaceBack(mozilla::MakePair(
+      nsString(NS_LITERAL_STRING("%ProgramFiles%")), nsDependentString()));
+
+  // When no substitution is required, set the void flag
+  result.back().second().SetIsVoid(true);
+
+  Unused << result.emplaceBack(mozilla::MakePair(
+      nsString(NS_LITERAL_STRING("%SystemRoot%")), nsDependentString()));
+  result.back().second().SetIsVoid(true);
+
+  wchar_t tmpPath[MAX_PATH + 1] = {};
+  if (GetTempPath(MAX_PATH, tmpPath)) {
+    // GetTempPath's result always ends with a backslash, which we don't want
+    uint32_t tmpPathLen = wcslen(tmpPath);
+    if (tmpPathLen) {
+      tmpPath[tmpPathLen - 1] = 0;
+    }
+
+    nsAutoString cleanTmpPath(tmpPath);
+    if (UnexpandEnvVars(cleanTmpPath)) {
+      NS_NAMED_LITERAL_STRING(tempVar, "%TEMP%");
+      Unused << result.emplaceBack(mozilla::MakePair(
+          nsString(cleanTmpPath), nsDependentString(tempVar, 0)));
+    }
+  }
+
+  // If we add more items to the whitelist, ensure we still don't invoke an
+  // unnecessary heap allocation.
+  MOZ_ASSERT(result.length() <= kMaxWhitelistedItems);
+
+  return result;
+}
+
 /**
  * This function provides an array of (system path, substitution) pairs that are
  * considered to be acceptable with respect to privacy, for the purposes of
@@ -2051,42 +2088,24 @@ bool WinUtils::UnexpandEnvVars(nsAString& aPath) {
  * @see PreparePathForTelemetry for an example of its usage.
  */
 /* static */
-const nsTArray<mozilla::Pair<nsString, nsDependentString>>&
-WinUtils::GetWhitelistedPaths() {
-  // We know the maximum number of items this array will hold, so avoid a heap
-  // allocation by using AutoTArray<T,N>
-  static const size_t kMaxWhitelistedItems = 2;
-  static StaticAutoPtr<
-      AutoTArray<Pair<nsString, nsDependentString>, kMaxWhitelistedItems>>
-      sWhitelist;
-  if (sWhitelist) {
-    return *sWhitelist;
-  }
-  sWhitelist =
-      new AutoTArray<Pair<nsString, nsDependentString>, kMaxWhitelistedItems>();
-  sWhitelist->AppendElement(mozilla::MakePair(
-      nsString(NS_LITERAL_STRING("%ProgramFiles%")), nsDependentString()));
-  // When no substitution is required, set the void flag
-  sWhitelist->LastElement().second().SetIsVoid(true);
-  wchar_t tmpPath[MAX_PATH + 1] = {0};
-  if (GetTempPath(MAX_PATH, tmpPath)) {
-    // GetTempPath's result always ends with a backslash, which we don't want
-    uint32_t tmpPathLen = wcslen(tmpPath);
-    if (tmpPathLen) {
-      tmpPath[tmpPathLen - 1] = 0;
-    }
-    nsAutoString cleanTmpPath(tmpPath);
-    if (UnexpandEnvVars(cleanTmpPath)) {
-      sWhitelist->AppendElement(mozilla::MakePair(
-          nsString(cleanTmpPath), nsDependentString(L"%TEMP%")));
-    }
-  }
-  ClearOnShutdown(&sWhitelist);
+const WinUtils::WhitelistVec& WinUtils::GetWhitelistedPaths() {
+  static WhitelistVec sWhitelist([]() -> WhitelistVec {
+    auto setClearFn = [ptr = &sWhitelist]() -> void {
+      RunOnShutdown([ptr]() -> void { ptr->clear(); }, ShutdownPhase::Shutdown);
+    };
 
-  // If we add more items to the whitelist, ensure we still don't invoke an
-  // unnecessary heap allocation.
-  MOZ_ASSERT(sWhitelist->Length() <= kMaxWhitelistedItems);
-  return *sWhitelist;
+    if (NS_IsMainThread()) {
+      setClearFn();
+    } else {
+      SystemGroup::Dispatch(
+          TaskCategory::Other,
+          NS_NewRunnableFunction("WinUtils::GetWhitelistedPaths",
+                                 std::move(setClearFn)));
+    }
+
+    return BuildWhitelist();
+  }());
+  return sWhitelist;
 }
 
 /**
@@ -2174,10 +2193,9 @@ bool WinUtils::PreparePathForTelemetry(nsAString& aPath,
     }
   }
 
-  const nsTArray<Pair<nsString, nsDependentString>>& whitelistedPaths =
-      GetWhitelistedPaths();
+  const WhitelistVec& whitelistedPaths = GetWhitelistedPaths();
 
-  for (uint32_t i = 0; i < whitelistedPaths.Length(); ++i) {
+  for (uint32_t i = 0; i < whitelistedPaths.length(); ++i) {
     const nsString& testPath = whitelistedPaths[i].first();
     const nsDependentString& substitution = whitelistedPaths[i].second();
     if (StringBeginsWith(aPath, testPath,
@@ -2193,13 +2211,13 @@ bool WinUtils::PreparePathForTelemetry(nsAString& aPath,
   // the filename. We can't use nsLocalFile to do this because these paths may
   // begin with environment variables, and nsLocalFile doesn't like
   // non-absolute paths.
-  MOZ_ASSERT(aPath.Length() <= MAX_PATH);
-  wchar_t tmpPath[MAX_PATH + 1] = {0};
-  if (wcsncpy_s(tmpPath, ArrayLength(tmpPath),
-                (char16ptr_t)aPath.BeginReading(), aPath.Length())) {
-    return false;
+  const nsString& flatPath = PromiseFlatString(aPath);
+  LPCWSTR leafStart = ::PathFindFileNameW(flatPath.get());
+  ptrdiff_t cutLen = leafStart - flatPath.get();
+  if (cutLen) {
+    aPath.Cut(0, cutLen);
   }
-  aPath.Assign((char16ptr_t)::PathFindFileNameW(tmpPath));
+
   return true;
 }
 
