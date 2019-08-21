@@ -4,20 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <assert.h>
-#include <new.h>
-#include <process.h>
-
 #include "threading/Thread.h"
-#include "util/Windows.h"
-
-class js::Thread::Id::PlatformData {
-  friend class js::Thread;
-  friend js::Thread::Id js::ThisThread::GetId();
-
-  HANDLE handle;
-  unsigned id;
-};
+#include "threading/windows/ThreadPlatformData.h"
 
 /* static */ js::HashNumber js::Thread::Hasher::hash(const Lookup& l) {
   return mozilla::HashBytes(l.platformData_, sizeof(l.platformData_));
@@ -45,27 +33,6 @@ bool js::Thread::Id::operator==(const Id& aOther) const {
   return platformData()->id == aOther.platformData()->id;
 }
 
-js::Thread::~Thread() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
-}
-
-js::Thread::Thread(Thread&& aOther) : idMutex_(mutexid::ThreadId) {
-  LockGuard<Mutex> lock(aOther.idMutex_);
-  id_ = aOther.id_;
-  aOther.id_ = Id();
-  options_ = aOther.options_;
-}
-
-js::Thread& js::Thread::operator=(Thread&& aOther) {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
-  id_ = aOther.id_;
-  aOther.id_ = Id();
-  options_ = aOther.options_;
-  return *this;
-}
-
 bool js::Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
   LockGuard<Mutex> lock(idMutex_);
 
@@ -76,8 +43,8 @@ bool js::Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
                                     STACK_SIZE_PARAM_IS_A_RESERVATION,
                                     &id_.platformData()->id);
   if (!handle) {
-    // The documentation does not say what state the thread id has if the method
-    // fails, so assume that it is undefined and reset it manually.
+    // On either Windows or POSIX we can't be sure if id_ was initalisad. So
+    // reset it manually.
     id_ = Id();
     return false;
   }
@@ -93,18 +60,6 @@ void js::Thread::join() {
   BOOL success = CloseHandle(id_.platformData()->handle);
   MOZ_RELEASE_ASSERT(success);
   id_ = Id();
-}
-
-js::Thread::Id js::Thread::get_id() {
-  LockGuard<Mutex> lock(idMutex_);
-  return id_;
-}
-
-bool js::Thread::joinable(LockGuard<Mutex>& lock) { return id_ != Id(); }
-
-bool js::Thread::joinable() {
-  LockGuard<Mutex> lock(idMutex_);
-  return joinable(lock);
 }
 
 void js::Thread::detach() {
@@ -153,7 +108,7 @@ void js::ThisThread::SetName(const char* name) {
   } __except (EXCEPTION_EXECUTE_HANDLER) {
     // Do nothing.
   }
-#endif
+#endif  // _MSC_VER
 }
 
 void js::ThisThread::GetName(char* nameBuffer, size_t len) {

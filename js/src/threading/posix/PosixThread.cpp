@@ -6,35 +6,8 @@
 
 #include "mozilla/Assertions.h"
 
-#include <new>
-#include <pthread.h>
-#include <stdlib.h>
-#include <string.h>
-
-#if defined(__APPLE__) && defined(__MACH__)
-#  include <dlfcn.h>
-#endif
-
-#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-#  include <pthread_np.h>
-#endif
-
-#if defined(__linux__)
-#  include <sys/prctl.h>
-#endif
-
+#include "threading/posix/ThreadPlatformData.h"
 #include "threading/Thread.h"
-
-class js::Thread::Id::PlatformData {
-  friend class js::Thread;
-  friend js::Thread::Id js::ThisThread::GetId();
-
-  pthread_t ptThread;
-
-  // pthread_t does not have a default initializer, so we have to carry a bool
-  // to tell whether it is safe to compare or not.
-  bool hasThread;
-};
 
 /* static */ js::HashNumber js::Thread::Hasher::hash(const Lookup& l) {
   return mozilla::HashBytes(&l.platformData()->ptThread, sizeof(pthread_t));
@@ -63,27 +36,6 @@ bool js::Thread::Id::operator==(const Id& aOther) const {
           pthread_equal(self.ptThread, other.ptThread));
 }
 
-js::Thread::~Thread() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
-}
-
-js::Thread::Thread(Thread&& aOther) : idMutex_(mutexid::ThreadId) {
-  LockGuard<Mutex> lock(aOther.idMutex_);
-  id_ = aOther.id_;
-  aOther.id_ = Id();
-  options_ = aOther.options_;
-}
-
-js::Thread& js::Thread::operator=(Thread&& aOther) {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
-  id_ = aOther.id_;
-  aOther.id_ = Id();
-  options_ = aOther.options_;
-  return *this;
-}
-
 bool js::Thread::create(void* (*aMain)(void*), void* aArg) {
   LockGuard<Mutex> lock(idMutex_);
 
@@ -96,7 +48,8 @@ bool js::Thread::create(void* (*aMain)(void*), void* aArg) {
   }
   r = pthread_create(&id_.platformData()->ptThread, &attrs, aMain, aArg);
   if (r) {
-    // |pthread_create| may leave id_ in an undefined state.
+    // On either Windows or POSIX we can't be sure if id_ was initialised. So
+    // reset it manually.
     id_ = Id();
     return false;
   }
@@ -112,18 +65,6 @@ void js::Thread::join() {
   id_ = Id();
 }
 
-js::Thread::Id js::Thread::get_id() {
-  LockGuard<Mutex> lock(idMutex_);
-  return id_;
-}
-
-bool js::Thread::joinable(LockGuard<Mutex>& lock) { return id_ != Id(); }
-
-bool js::Thread::joinable() {
-  LockGuard<Mutex> lock(idMutex_);
-  return joinable(lock);
-}
-
 void js::Thread::detach() {
   LockGuard<Mutex> lock(idMutex_);
   MOZ_RELEASE_ASSERT(joinable(lock));
@@ -136,6 +77,7 @@ js::Thread::Id js::ThisThread::GetId() {
   js::Thread::Id id;
   id.platformData()->ptThread = pthread_self();
   id.platformData()->hasThread = true;
+  MOZ_RELEASE_ASSERT(id != js::Thread::Id());
   return id;
 }
 
