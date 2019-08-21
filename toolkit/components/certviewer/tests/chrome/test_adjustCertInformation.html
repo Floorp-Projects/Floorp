@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>certviewer adjustCertInformation test</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="chrome://global/content/certviewer/pvutils_bundle.js"></script>
+    <script src="chrome://global/content/certviewer/asn1js_bundle.js"></script>
+    <script src="chrome://global/content/certviewer/pkijs_bundle.js"></script>
+
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  </head>
+<body>
+  <script type="module">
+    import { adjustCertInformation } from "chrome://global/content/certviewer/certviewer.js";
+    import { parseOutput } from "./parseOutput.js";
+
+    function hasNullElements(obj) {
+      for (let key of Object.keys(obj)) {
+        if (obj[key] == null) return false;
+        if (typeof(obj[key]) === 'object') {
+          if (hasNullElements(obj[key]) === false) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    async function doTest() {
+      ok(adjustCertInformation, "adjustCertInformation should be available in this context");
+      ok(parseOutput, "parseOutput should be available in this context");
+      is(typeof(parseOutput), 'object', "parseOutput must be an object");
+
+      for (let cert of parseOutput) {
+        let adjustedCerts = adjustCertInformation(cert);
+        let result = hasNullElements(adjustedCerts.certItems);
+        ok(result, "adjustCertInformation function shouldn't return null elements");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    doTest();
+
+  </script>
+</body>
+</html>
