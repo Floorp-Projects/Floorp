@@ -18,7 +18,7 @@ add_task(async function() {
 
   function addTab(aURL, aReferrer) {
     let referrerInfo = new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      Ci.nsIReferrerInfo.EMPTY,
       true,
       aReferrer
     );

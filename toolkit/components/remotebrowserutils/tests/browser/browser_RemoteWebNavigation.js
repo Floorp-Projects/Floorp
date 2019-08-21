@@ -26,7 +26,7 @@ add_task(async function test_referrer() {
   let loadURIOptionsWithReferrer = {
     triggeringPrincipal: SYSTEMPRINCIPAL,
     referrerInfo: new ReferrerInfo(
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      Ci.nsIReferrerInfo.EMPTY,
       true,
       Services.io.newURI(DUMMY2)
     ),

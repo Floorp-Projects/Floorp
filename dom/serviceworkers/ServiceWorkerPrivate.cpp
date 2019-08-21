@@ -1295,11 +1295,11 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-    ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
+    mReferrerPolicy = ReferrerPolicy::_empty;
     mReferrer = EmptyString();
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
     if (referrerInfo) {
-      referrerPolicy = referrerInfo->ReferrerPolicy();
+      mReferrerPolicy = referrerInfo->ReferrerPolicy();
       Unused << referrerInfo->GetComputedReferrerSpec(mReferrer);
     }
 

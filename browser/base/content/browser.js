@@ -6526,16 +6526,12 @@ nsBrowserAccess.prototype = {
 
     let referrerInfo;
     if (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_REFERRER) {
-      referrerInfo = new ReferrerInfo(
-        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-        false,
-        null
-      );
+      referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, false, null);
     } else {
       referrerInfo = new ReferrerInfo(
         aOpener && aOpener.document
-          ? aOpener.document.referrerPolicy
-          : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+          ? aOpener.document.referrerInfo.referrerPolicy
+          : Ci.nsIReferrerInfo.EMPTY,
         true,
         aOpener ? makeURI(aOpener.location.href) : null
       );

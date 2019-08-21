@@ -20,7 +20,7 @@ function getTestReferrer(server_uri, referer_uri, isPrivate = false) {
 
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     referrer
   );
