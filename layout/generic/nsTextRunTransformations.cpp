@@ -133,11 +133,8 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       gfxTextRun::CompressedGlyph::MakeComplex(false, false, 0);
   while (iter.NextRun()) {
     const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
-    nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
-                                     run->mOrientation);
-    if (NS_FAILED(rv)) {
-      return;
-    }
+    aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
+                       run->mOrientation);
 
     bool anyMissing = false;
     uint32_t mergeRunStart = iter.GetStringStart();
