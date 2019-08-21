@@ -6,26 +6,28 @@ from __future__ import print_function
 import json
 import subprocess
 
-from lib.variant import Variant
+from lib.variant import Variant, VariantApk
 
 
-def get_variants_for_build_type(build_type):
-    print("Fetching build variants from gradle")
-    output = _run_gradle_process('printBuildVariants')
-    content = _extract_content_from_command_output(output, prefix='variants: ')
-    variants = json.loads(content)
-
-    if len(variants) == 0:
-        raise ValueError("Could not get build variants from gradle")
-
-    print("Got variants: {}".format(variants))
-    return [Variant(variant_dict['name'], variant_dict['abi'], variant_dict['isSigned'], variant_dict['buildType'])
-            for variant_dict in variants
-            if variant_dict['buildType'] == build_type]
+def get_variant(build_type, engine):
+    print("Fetching variant information for build_type='{}', engine='{}'".format(build_type, engine))
+    output = _run_gradle_process('printVariant', variantBuildType=build_type, variantEngine=engine)
+    content = _extract_content_from_command_output(output, prefix='variant: ')
+    raw_variant = json.loads(content)
+    return Variant(
+        raw_variant['name'],
+        build_type,
+        [VariantApk(build_type, raw_apk['abi'], engine, raw_apk['fileName']) for raw_apk in raw_variant['apks']]
+    )
 
 
-def _run_gradle_process(gradle_command):
-    process = subprocess.Popen(["./gradlew", "--no-daemon", "--quiet", gradle_command], stdout=subprocess.PIPE)
+def _run_gradle_process(gradle_command, **kwargs):
+    gradle_properties = [
+        '-P{property_name}={value}'.format(property_name=property_name, value=value)
+        for property_name, value in kwargs.iteritems()
+    ]
+
+    process = subprocess.Popen(["./gradlew", "--no-daemon", "--quiet", gradle_command] + gradle_properties, stdout=subprocess.PIPE)
     output, err = process.communicate()
     exit_code = process.wait()
 

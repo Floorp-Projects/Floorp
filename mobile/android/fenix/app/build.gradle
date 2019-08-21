@@ -14,6 +14,7 @@ import com.android.build.gradle.internal.tasks.AppPreBuildTask
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 import static org.gradle.api.tasks.testing.TestResult.ResultType
+import com.android.build.OutputFile
 
 android {
     compileSdkVersion 28
@@ -52,24 +53,46 @@ android {
             applicationIdSuffix ".performancetest"
             debuggable true
         }
-        nightlyLegacy releaseTemplate >> {
+        fenixNightlyLegacy releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
-        nightly releaseTemplate >> {
+        fenixNightly releaseTemplate >> {
             applicationIdSuffix ".nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
-        beta releaseTemplate >> {
+        fenixBeta releaseTemplate >> {
             applicationIdSuffix ".beta"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
-        production releaseTemplate >> {
+        fenixProduction releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
     }
 
     variantFilter { // There's a "release" build type that exists by default that we don't use (it's replaced by "nightly" and "beta")
         if (buildType.name == 'release') {
+            setIgnore true
+        }
+
+        // Current build variant setup:
+        //
+        //                      | geckoNightly  | geckoBeta |
+        // |--------------------|---------------|-----------|
+        // | debug              | ✅            | ✅       | Both variants for testing and development.
+        // | forPerformanceTest | ✅            | ✅       | Both variants unless the perf team only cares about Nightly (TBD).
+        // | fenixNightlyLegacy | ✅            | ✅       | Release type will be decommissioned soon.
+        // | fenixNightly       | ✅            | ✅       | Built with both, but only the "geckoNightly" one is published to Google Play
+        // | fenixBeta          | ❌            | ✅       | Fenix Beta ships with GV Beta
+        // | fenixProduction    | ❌            | ✅       | Fenix Production ships with GV Beta
+        //
+
+        def flavors = flavors*.name.toString().toLowerCase()
+
+        if (buildType.name == 'fenixBeta' && flavors.contains("geckonightly")) {
+            setIgnore true
+        }
+
+        if (buildType.name == 'fenixProduction' && flavors.contains("geckonightly")) {
             setIgnore true
         }
     }
@@ -79,32 +102,25 @@ android {
         unitTests.includeAndroidResources = true
     }
 
-    flavorDimensions "abi"
+    flavorDimensions "engine"
 
     productFlavors {
-        arm {
-            dimension "abi"
-            ndk {
-                abiFilter "armeabi-v7a"
-            }
+        geckoNightly {
+            dimension "engine"
         }
-        aarch64 {
-            dimension "abi"
-            ndk {
-                abiFilter "arm64-v8a"
-            }
+
+        geckoBeta {
+            dimension "engine"
         }
-        x86 {
-            dimension "abi"
-            ndk {
-                abiFilter "x86"
-            }
-        }
-        x86_64 {
-            dimension "abi"
-            ndk {
-                abiFilter "x86_64"
-            }
+    }
+
+    splits {
+        abi {
+            enable true
+
+            reset()
+
+            include "x86", "armeabi-v7a", "arm64-v8a", "x86_64"
         }
     }
 
@@ -126,6 +142,8 @@ android {
     }
 }
 
+def baseVersionCode = generatedVersionCode
+
 android.applicationVariants.all { variant ->
 
 // -------------------------------------------------------------------------------------------------
@@ -144,14 +162,10 @@ android.applicationVariants.all { variant ->
 // Generate version codes for builds
 // -------------------------------------------------------------------------------------------------
 
-    def buildType = variant.buildType.name
-    def versionCode = null
     def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
     def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
 
     if (useReleaseVersioning) {
-        versionCode = generatedVersionCode
-
         // The Google Play Store does not allow multiple APKs for the same app that all have the
         // same version code. Therefore we need to have different version codes for our ARM and x86
         // builds.
@@ -160,17 +174,24 @@ android.applicationVariants.all { variant ->
         // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
         // with ARM compatibility mode.
 
-        if (variant.flavorName.contains("x86_64")) {
-            versionCode = versionCode + 3
-        } else if (variant.flavorName.contains("x86")) {
-            versionCode = versionCode + 2
-        } else if (variant.flavorName.contains("aarch64")) {
-            versionCode = versionCode + 1
-        }// else variant.flavorName.contains("Arm")) use generated version code
+        variant.outputs.each { output ->
+            def abi = output.getFilter(OutputFile.ABI)
 
-        variant.outputs.all {
-            versionCodeOverride = versionCode
-            versionNameOverride = Config.releaseVersionName(project)
+            def versionCodeOverride
+
+            if (abi == "x86_64") {
+                versionCodeOverride = baseVersionCode + 3
+            } else if (abi == "x86") {
+                versionCodeOverride = baseVersionCode + 2
+            } else if (abi == "arm64-v8a") {
+                versionCodeOverride = baseVersionCode + 1
+            } else if (abi == "armeabi-v7a") {
+                versionCodeOverride = baseVersionCode
+            } else {
+                throw RuntimeException("Unknown ABI: $abi")
+            }
+
+            println("versionCode for $abi = $versionCodeOverride")
         }
 
         // If this is a release build, validate that "versionName" is set
@@ -277,6 +298,9 @@ androidExtensions {
 dependencies {
     implementation project(':architecture')
 
+    geckoNightlyImplementation Deps.mozilla_browser_engine_gecko_nightly
+    geckoBetaImplementation Deps.mozilla_browser_engine_gecko_beta
+
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
     implementation Deps.androidx_appcompat
@@ -309,7 +333,6 @@ dependencies {
     implementation Deps.mozilla_browser_domains
     implementation Deps.mozilla_browser_icons
     implementation Deps.mozilla_browser_menu
-    implementation Deps.mozilla_browser_engine_gecko_beta
     implementation Deps.mozilla_browser_search
     implementation Deps.mozilla_browser_session
     implementation Deps.mozilla_browser_storage_sync
@@ -483,17 +506,22 @@ if (project.hasProperty("coverage")) {
 }
 
 // -------------------------------------------------------------------------------------------------
-// Task for printing all build variants to build variants in parallel in automation
+// Task for printing APK information for the requested variant
+// Usage: "./gradlew printVariant -PvariantBuildType=nightly -PvariantEngine=geckoNightly"
 // -------------------------------------------------------------------------------------------------
-task printBuildVariants {
+task printVariant {
     doLast {
-        def variantData = android.applicationVariants.collect { variant -> [
-            name: variant.name,
-            buildType: variant.buildType.name,
-            abi: variant.productFlavors.find { it.dimension == 'abi' }.name,
-            isSigned: variant.signingReady,
-        ]}
-        println "variants: " + groovy.json.JsonOutput.toJson(variantData)
+        def rawVariant = android.applicationVariants.find {
+            it.buildType.name == variantBuildType &&
+                    it.productFlavors.find { it.dimension == 'engine' }.name == variantEngine
+        }
+        println 'variant: ' + groovy.json.JsonOutput.toJson([
+            name: rawVariant.name,
+            apks: rawVariant.variantData.outputScope.apkDatas.collect { [
+                    abi: it.filters.find { it.filterType == 'ABI' }.identifier,
+                    fileName: it.outputFileName,
+            ]}
+        ])
     }
 }
 

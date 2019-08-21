@@ -1,20 +1,27 @@
-class Variant:
-    def __init__(self, raw, abi, is_signed, build_type):
-        self.raw = raw
+import taskcluster
+
+
+class VariantApk:
+    def __init__(self, build_type, abi, engine, file_name):
         self.abi = abi
+        self.taskcluster_path = 'public/build/{}/{}/target.apk'.format(abi, engine)
+        self.absolute_path = '/opt/fenix/app/build/outputs/apk/{}/{}/{}'.format(engine, build_type, file_name)
+
+
+class Variant:
+    def __init__(self, name, build_type, apks):
+        self.name = name
         self.build_type = build_type
-        self._is_signed = is_signed
-        self.for_gradle_command = raw[:1].upper() + raw[1:]
-        self.platform = 'android-{}-{}'.format(self.abi, self.build_type)
+        self._apks = apks
 
-    def apk_absolute_path(self):
-        return '/opt/fenix/app/build/outputs/apk/{abi}/{build_type}/app-{abi}-{build_type}{unsigned}.apk'.format(
-            build_type=self.build_type,
-            abi=self.abi,
-            unsigned='' if self._is_signed else '-unsigned',
-        )
+    def artifacts(self):
+        return {
+            apk.taskcluster_path: {
+                'type': 'file',
+                'path': apk.absolute_path,
+                'expires': taskcluster.stringDate(taskcluster.fromNow('1 year')),
+            } for apk in self._apks
+        }
 
-    @staticmethod
-    def from_values(abi, is_signed, build_type):
-        raw = abi + build_type[:1].upper() + build_type[1:]
-        return Variant(raw, abi, is_signed, build_type)
+    def upstream_artifacts(self):
+        return [apk.taskcluster_path for apk in self._apks]
