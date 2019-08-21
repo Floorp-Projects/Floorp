@@ -32,7 +32,10 @@ const SCHEMA = [
 /* global EventManager */
 const API = class extends ExtensionAPI {
   primeListener(extension, event, fire, params) {
-    Services.obs.notifyObservers({ event, params }, "prime-event-listener");
+    Services.obs.notifyObservers(
+      { event, fire, params },
+      "prime-event-listener"
+    );
 
     const FIRE_TOPIC = `fire-${event}`;
 
@@ -43,7 +46,8 @@ const API = class extends ExtensionAPI {
         }
         await fire.async(subject.wrappedJSObject.listenerArgs);
       } catch (err) {
-        Services.obs.notifyObservers({ event }, "listener-callback-exception");
+        let errSubject = { event, errorMessage: err.toString() };
+        Services.obs.notifyObservers(errSubject, "listener-callback-exception");
       }
     }
     Services.obs.addObserver(listener, FIRE_TOPIC);
@@ -152,7 +156,7 @@ async function promiseObservable(topic, count, fn = null) {
   return results;
 }
 
-add_task(async function() {
+add_task(async function setup() {
   Services.prefs.setBoolPref(
     "extensions.webextensions.background-delayed-startup",
     true
@@ -167,9 +171,11 @@ add_task(async function() {
     "43"
   );
 
-  await AddonTestUtils.promiseStartupManager();
-
   ExtensionParent.apiManager.registerModules(MODULE_INFO);
+});
+
+add_task(async function test_persistent_events() {
+  await AddonTestUtils.promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -384,15 +390,132 @@ add_task(async function() {
     { listenerArgs, waitForBackground: true },
     "fire-onEvent1"
   );
-  await p;
-  ok(
-    true,
+  equal(
+    (await p)[0].errorMessage,
+    "Error: primed listener not re-registered",
     "Primed listener that was not re-registered received an error when event was triggered during startup"
   );
 
   await extension.awaitMessage("ready");
 
   await extension.unload();
+
+  await AddonTestUtils.promiseShutdownManager();
+});
+
+// This test checks whether primed listeners are correctly unregistered when
+// a background page load is interrupted. In particular, it verifies that the
+// fire.wakeup() and fire.async() promises settle eventually.
+add_task(async function test_shutdown_before_background_loaded() {
+  await AddonTestUtils.promiseStartupManager();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    background() {
+      let listener = arg => browser.test.sendMessage("triggered", arg);
+      browser.eventtest.onEvent1.addListener(listener, "triggered");
+      browser.test.sendMessage("bg_started");
+    },
+  });
+  await Promise.all([
+    promiseObservable("register-event-listener", 1),
+    extension.startup(),
+  ]);
+  await extension.awaitMessage("bg_started");
+
+  await Promise.all([
+    promiseObservable("unregister-event-listener", 1),
+    new Promise(resolve => extension.extension.once("shutdown", resolve)),
+    AddonTestUtils.promiseShutdownManager(),
+  ]);
+
+  let primeListenerPromise = promiseObservable("prime-event-listener", 1);
+  let fire;
+  let fireWakeupBeforeBgFail;
+  let fireAsyncBeforeBgFail;
+
+  let bgAbortedPromise = new Promise(resolve => {
+    let Management = ExtensionParent.apiManager;
+    Management.once("extension-browser-inserted", (eventName, browser) => {
+      browser.loadURI = async () => {
+        // The fire.wakeup/fire.async promises created while loading the
+        // background page should settle when the page fails to load.
+        fire = (await primeListenerPromise)[0].fire;
+        fireWakeupBeforeBgFail = fire.wakeup();
+        fireAsyncBeforeBgFail = fire.async();
+
+        extension.extension.once("background-page-aborted", resolve);
+        info("Forcing the background load to fail");
+        browser.remove();
+      };
+    });
+  });
+
+  let unregisterPromise = promiseObservable("unregister-primed-listener", 1);
+
+  await Promise.all([
+    primeListenerPromise,
+    AddonTestUtils.promiseStartupManager(),
+  ]);
+  await bgAbortedPromise;
+  info("Loaded extension and aborted load of background page");
+
+  await unregisterPromise;
+  info("Primed listener has been unregistered");
+
+  await fireWakeupBeforeBgFail;
+  info("fire.wakeup() before background load failure should settle");
+
+  await Assert.rejects(
+    fireAsyncBeforeBgFail,
+    /Error: listener not re-registered/,
+    "fire.async before background load failure should be rejected"
+  );
+
+  await fire.wakeup();
+  info("fire.wakeup() after background load failure should settle");
+
+  await Assert.rejects(
+    fire.async(),
+    /Error: primed listener not re-registered/,
+    "fire.async after background load failure should be rejected"
+  );
+
+  await AddonTestUtils.promiseShutdownManager();
+
+  // End of the abnormal shutdown test. Now restart the extension to verify
+  // that the persistent listeners have not been unregistered.
+
+  // Suppress background page start until an explicit notification.
+  ExtensionParent._resetStartupPromises();
+  await Promise.all([
+    promiseObservable("prime-event-listener", 1),
+    AddonTestUtils.promiseStartupManager(),
+  ]);
+  info("Triggering persistent event to force the background page to start");
+  Services.obs.notifyObservers({ listenerArgs: 123 }, "fire-onEvent1");
+  Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+  await extension.awaitMessage("bg_started");
+  equal(await extension.awaitMessage("triggered"), 123, "triggered event");
+
+  await Promise.all([
+    promiseObservable("unregister-primed-listener", 1),
+    AddonTestUtils.promiseShutdownManager(),
+  ]);
+
+  // And lastly, verify that a primed listener is correctly removed when the
+  // extension unloads normally before the delayed background page can load.
+  ExtensionParent._resetStartupPromises();
+  await Promise.all([
+    promiseObservable("prime-event-listener", 1),
+    AddonTestUtils.promiseStartupManager(),
+  ]);
+
+  info("Unloading extension before background page has loaded");
+  await Promise.all([
+    promiseObservable("unregister-primed-listener", 1),
+    extension.unload(),
+  ]);
 
   await AddonTestUtils.promiseShutdownManager();
 });
