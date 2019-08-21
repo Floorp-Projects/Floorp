@@ -13,11 +13,12 @@ const FORM_PAGE_PATH =
 const passwordInputSelector = "#form-basic-password";
 const usernameInputSelector = "#form-basic-username";
 
-let login1;
 async function setup_withOneLogin(username = "username", password = "pass1") {
   // Reset to a single, known login
   Services.logins.removeAllLogins();
-  login1 = await LoginTestUtils.addLogin({ username, password });
+  LoginTestUtils.resetGeneratedPasswordsCache();
+  let login = await LoginTestUtils.addLogin({ username, password });
+  return login;
 }
 
 async function setup_withNoLogins() {
@@ -28,6 +29,7 @@ async function setup_withNoLogins() {
     0,
     "0 logins at the start of the test"
   );
+  LoginTestUtils.resetGeneratedPasswordsCache();
 }
 
 async function fillGeneratedPasswordFromACPopup(
@@ -216,17 +218,17 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
     expected.anchorExtraAttr,
     "Check icon extraAttr attribute"
   );
-  if (!PopupNotifications.isPanelOpen) {
-    let promiseShown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
-    await SimpleTest.promiseFocus(browser);
-    info("Clicking on anchor to show popup.");
-    notif.anchorElement.click();
+  let { panel } = PopupNotifications;
+  // if the doorhanged is dimissed, we will open it to check panel contents
+  if (panel.state !== "open") {
+    let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
+    if (panel.state !== "showing") {
+      // synthesize click on anchor as this also blurs the form field triggering
+      // a change event
+      EventUtils.synthesizeMouseAtCenter(notif.anchorElement, {});
+    }
     await promiseShown;
   }
-  // if the doorhanged is dimissed, we will open it to check panel contents
   let { passwordValue, usernameValue } = await checkPromptContents(
     notif.anchorElement,
     browser,
@@ -326,7 +328,14 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+      await promiseHidden;
+
       // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
       ok(
         !notif.anchorElement.hasAttribute("extraAttr"),
@@ -394,7 +403,13 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
-      await clickDoorhangerButton(notif, CHANGE_BUTTON);
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+
       info("Waiting for modifyLogin");
       await storageChangedPromise;
       verifyLogins([
@@ -454,7 +469,13 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
-      await clickDoorhangerButton(notif, REMEMBER_BUTTON);
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, REMEMBER_BUTTON);
+      await promiseHidden;
+
       info("Waiting for addLogin");
       await storageChangedPromise;
       verifyLogins([
@@ -518,7 +539,13 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
-      await clickDoorhangerButton(notif, CHANGE_BUTTON);
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+
       info("Waiting for modifyLogin");
       await storageChangedPromise;
       verifyLogins([
@@ -562,7 +589,14 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
-      await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+      await promiseHidden;
+
       info("Waiting to verifyGeneratedPasswordWasFilled");
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
@@ -578,7 +612,13 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH + 2,
       });
-      await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+
+      promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+      await promiseHidden;
 
       verifyLogins([
         {
@@ -597,7 +637,13 @@ add_task(async function autocomplete_generated_password_edited_no_auto_save() {
         passwordLength: LoginTestUtils.generation.LENGTH + 2,
       });
 
-      await clickDoorhangerButton(notif, CHANGE_BUTTON);
+      promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+
       info("Waiting for modifyLogin");
       await storageChangedPromise;
       verifyLogins([
@@ -659,7 +705,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         browser,
         passwordInputSelector
       );
-      info("waiting for password-change doorhanger");
+      info("waiting for dismissed password-change notification");
       await waitForDoorhanger(browser, "password-change");
       // Make sure confirmation hint was shown
       await hintPromiseShown;
@@ -667,6 +713,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
 
       info("waiting for addLogin");
       await storageChangedPromise;
+
       // Check properties of the newly auto-saved login
       verifyLogins([
         null, // ignore the first one
@@ -701,7 +748,14 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
       );
-      await clickDoorhangerButton(notif, CHANGE_BUTTON);
+
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+
       info("Waiting for modifyLogin");
       await storageChangedPromise;
       verifyLogins([
@@ -752,7 +806,7 @@ add_task(async function contextmenu_password_change_form_without_username() {
         passwordInputSelector
       );
 
-      info("waiting for password-change doorhanger");
+      info("waiting for dismissed password-change notification");
       await waitForDoorhanger(browser, "password-change");
       // Make sure confirmation hint was shown
       await hintPromiseShown;
@@ -807,6 +861,197 @@ add_task(async function contextmenu_password_change_form_without_username() {
       notif = getCaptureDoorhanger("password-change");
       ok(!notif, "No new doorhanger should be shown");
       await cleanupDoorhanger(); // cleanup for next test
+    }
+  );
+});
+
+add_task(async function autosaved_login_updated_to_existing_login() {
+  // test when filling with a generated password and editing the username in the
+  // doorhanger to match an existing login:
+  // * the matching login should be updated
+  // * the auto-saved login should be deleted
+  // * the metadata for the matching login should be updated
+  // * the by-origin cache for the password should point at the updated login
+  await setup_withOneLogin("user1", "xyzpassword");
+  await LoginTestUtils.addLogin({ username: "user2", password: "abcpassword" });
+  await openFormInNewTab(
+    TEST_ORIGIN + FORM_PAGE_PATH,
+    {
+      password: {
+        selector: passwordInputSelector,
+        expectedValue: "",
+      },
+      username: {
+        selector: usernameInputSelector,
+        expectedValue: "",
+      },
+    },
+    async function taskFn(browser) {
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+
+      let storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "addLogin"
+      );
+      let confirmationHint = document.getElementById("confirmation-hint");
+      let hintPromiseShown = BrowserTestUtils.waitForEvent(
+        confirmationHint,
+        "popupshown"
+      );
+
+      info("waiting to fill generated password using context menu");
+      await doFillGeneratedPasswordContextMenuItem(
+        browser,
+        passwordInputSelector
+      );
+
+      info("waiting for dismissed password-change notification");
+      await waitForDoorhanger(browser, "password-change");
+      // Make sure confirmation hint was shown
+      await hintPromiseShown;
+      await verifyConfirmationHint(confirmationHint);
+
+      info("waiting for addLogin");
+      await storageChangedPromise;
+      info("addLogin promise resolved");
+      // Check properties of the newly auto-saved login
+      let [user1LoginSnapshot, unused, autoSavedLogin] = verifyLogins([
+        null, // ignore the first one
+        null, // ignore the 2nd one
+        {
+          timesUsed: 1,
+          username: "",
+          passwordLength: LoginTestUtils.generation.LENGTH,
+        },
+      ]);
+      info("user1LoginSnapshot, guid: " + user1LoginSnapshot.guid);
+      info("unused, guid: " + unused.guid);
+      info("autoSavedLogin, guid: " + autoSavedLogin.guid);
+
+      info("verifyLogins ok");
+      let passwordCacheEntry = LoginManagerParent._generatedPasswordsByPrincipalOrigin.get(
+        "https://example.com"
+      );
+
+      ok(
+        passwordCacheEntry,
+        "Got the cached generated password entry for https://example.com"
+      );
+      is(
+        passwordCacheEntry.value,
+        autoSavedLogin.password,
+        "Cached password matches the auto-saved login password"
+      );
+      is(
+        passwordCacheEntry.storageGUID,
+        autoSavedLogin.guid,
+        "Cached password guid matches the auto-saved login guid"
+      );
+
+      let messagePromise = new Promise(resolve => {
+        const eventName = "PasswordManager:onGeneratedPasswordFilledOrEdited";
+        browser.messageManager.addMessageListener(
+          eventName,
+          function mgsHandler(msg) {
+            if (msg.target != browser) {
+              return;
+            }
+            browser.messageManager.removeMessageListener(eventName, mgsHandler);
+            info("Got onGeneratedPasswordFilledOrEdited, resolving");
+            // allow LMP to handle the message, then resolve
+            SimpleTest.executeSoon(resolve);
+          }
+        );
+      });
+
+      info("Waiting to openAndVerifyDoorhanger");
+      // also moves focus, producing another onGeneratedPasswordFilledOrEdited message from content
+      let notif = await openAndVerifyDoorhanger(browser, "password-change", {
+        dismissed: true,
+        anchorExtraAttr: "attention",
+        usernameValue: "",
+        password: autoSavedLogin.password,
+      });
+      ok(notif, "Got password-change notification");
+
+      // content sends a 2nd message when we blur the password field,
+      // wait for that before interacting with doorhanger
+      info("waiting for messagePromise");
+      await messagePromise;
+
+      info("Calling updateDoorhangerInputValues");
+      await updateDoorhangerInputValues({
+        username: "user1",
+      });
+      info("doorhanger inputs updated");
+
+      let loginModifiedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => {
+          if (data == "modifyLogin") {
+            info("passwordmgr-storage-changed, action: " + data);
+            info("subject: " + JSON.stringify(_));
+            return true;
+          }
+          return false;
+        }
+      );
+      let loginRemovedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => {
+          if (data == "removeLogin") {
+            info("passwordmgr-storage-changed, action: " + data);
+            info("subject: " + JSON.stringify(_));
+            return true;
+          }
+          return false;
+        }
+      );
+
+      let promiseHidden = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+      info("clicking change button");
+      clickDoorhangerButton(notif, CHANGE_BUTTON);
+      await promiseHidden;
+
+      info("Waiting for modifyLogin promise");
+      await loginModifiedPromise;
+
+      info("Waiting for removeLogin promise");
+      await loginRemovedPromise;
+
+      info("storage-change promises resolved");
+      // Check the auto-saved login was removed and the original login updated
+      let savedLogins = verifyLogins([
+        {
+          username: "user1",
+          password: autoSavedLogin.password,
+          timeCreated: user1LoginSnapshot.timeCreated,
+          timeLastUsed: user1LoginSnapshot.timeLastUsed,
+          passwordChangedSince: autoSavedLogin.timePasswordChanged,
+        },
+        null, // ignore user2
+      ]);
+
+      // Check we have no notifications at this point
+      ok(!PopupNotifications.isPanelOpen, "No doorhanger is open");
+      ok(
+        !PopupNotifications.getNotification("password", browser),
+        "No notifications"
+      );
+
+      // make sure the cache entry is up to date:
+      let updatedLogin = savedLogins[0];
+      passwordCacheEntry = LoginManagerParent._generatedPasswordsByPrincipalOrigin.get(
+        "https://example.com"
+      );
+      todo_is(
+        passwordCacheEntry.storageGUID,
+        updatedLogin.guid,
+        "Generated password cache entry points at the correct login"
+      );
     }
   );
 });
