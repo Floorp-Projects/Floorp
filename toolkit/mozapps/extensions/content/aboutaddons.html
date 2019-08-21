@@ -66,12 +66,18 @@
           <div class="card-contents">
             <div class="addon-name-container">
               <span class="addon-name"></span>
-              <div class="addon-badge addon-badge-recommended"
-                   data-l10n-id="addon-badge-recommended"
-                   hidden></div>
-              <div class="addon-badge addon-badge-private-browsing-allowed"
-                   data-l10n-id="addon-badge-private-browsing-allowed"
-                   hidden></div>
+              <a class="addon-badge addon-badge-recommended"
+                 is="support-link"
+                 support-page="recommended-extensions-program"
+                 data-l10n-id="addon-badge-recommended2"
+                 hidden>
+              </a>
+              <a class="addon-badge addon-badge-private-browsing-allowed"
+                 is="support-link"
+                 support-page="extensions-pb"
+                 data-l10n-id="addon-badge-private-browsing-allowed2"
+                 hidden>
+              </a>
             </div>
             <span class="addon-description"></span>
           </div>
@@ -157,19 +163,19 @@
             </div>
           </div>
           <div class="addon-detail-row addon-detail-help-row" data-l10n-id="addon-detail-private-browsing-help" hidden>
-            <a target="_blank" data-l10n-name="learn-more"></a>
+            <a is="support-link" support-page="extensions-pb" data-l10n-name="learn-more"></a>
           </div>
           <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-disallowed" hidden>
             <label data-l10n-id="detail-private-disallowed-label"></label>
           </div>
-          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-disallowed-description" hidden>
-            <label class="text-link" data-l10n-name="detail-private-browsing-learn-more" action="pb-learn-more" aria-role="link" tabindex="0"></label>
+          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-disallowed-description2" hidden>
+            <a is="support-link" data-l10n-name="learn-more" support-page="extensions-pb"></a>
           </div>
           <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-required" hidden>
             <label class="learn-more-label-link" data-l10n-id="detail-private-required-label"></label>
           </div>
-          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-required-description" hidden>
-            <label class="text-link" data-l10n-name="detail-private-browsing-learn-more" action="pb-learn-more" aria-role="link" tabindex="0"></label>
+          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-required-description2" hidden>
+            <a is="support-link" data-l10n-name="learn-more" support-page="extensions-pb"></a>
           </div>
           <div class="addon-detail-row addon-detail-row-author">
             <label data-l10n-id="addon-detail-author-label"></label>
@@ -246,8 +252,9 @@
           <span data-l10n-id="discopane-intro">
             <a
               class="discopane-intro-learn-more-link"
-              data-l10n-name="learn-more-trigger"
-              target="_blank">
+              is="support-link"
+              support-page="recommended-extensions-program"
+              data-l10n-name="learn-more-trigger">
             </a>
           </span>
         </p>

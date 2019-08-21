@@ -520,6 +520,28 @@ var DiscoveryAPI = {
   },
 };
 
+class SupportLink extends HTMLAnchorElement {
+  static get observedAttributes() {
+    return ["support-page"];
+  }
+
+  connectedCallback() {
+    this.setHref();
+    this.setAttribute("target", "_blank");
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name === "support-page") {
+      this.setHref();
+    }
+  }
+
+  setHref() {
+    this.href = SUPPORT_URL + this.getAttribute("support-page");
+  }
+}
+customElements.define("support-link", SupportLink, { extends: "a" });
+
 class PanelList extends HTMLElement {
   static get observedAttributes() {
     return ["open"];
@@ -1240,9 +1262,8 @@ class AddonPermissionsList extends HTMLElement {
     // Add a learn more link.
     let learnMoreRow = document.createElement("div");
     learnMoreRow.classList.add("addon-detail-row");
-    let learnMoreLink = document.createElement("a");
-    learnMoreLink.setAttribute("target", "_blank");
-    learnMoreLink.href = SUPPORT_URL + "extension-permissions";
+    let learnMoreLink = document.createElement("a", { is: "support-link" });
+    learnMoreLink.setAttribute("support-page", "extension-permissions");
     learnMoreLink.textContent = browserBundle.GetStringFromName(
       "webextPerms.learnMore"
     );
@@ -1258,13 +1279,11 @@ class AddonDetails extends HTMLElement {
       this.render();
     }
     this.deck.addEventListener("view-changed", this);
-    this.addEventListener("keypress", this);
   }
 
   disconnectedCallback() {
     this.inlineOptions.destroyBrowser();
     this.deck.removeEventListener("view-changed", this);
-    this.removeEventListener("keypress", this);
   }
 
   handleEvent(e) {
@@ -1288,13 +1307,6 @@ class AddonDetails extends HTMLElement {
             this.inlineOptions.ensureBrowserCreated();
           }
           break;
-      }
-    } else if (e.type == "keypress") {
-      if (
-        e.keyCode == KeyEvent.DOM_VK_RETURN &&
-        e.target.getAttribute("action") === "pb-learn-more"
-      ) {
-        e.target.click();
       }
     }
   }
@@ -1437,10 +1449,6 @@ class AddonDetails extends HTMLElement {
       pbRow.nextElementSibling.hidden = false;
       let isAllowed = await isAllowedInPrivateBrowsing(addon);
       pbRow.querySelector(`[value="${isAllowed ? 1 : 0}"]`).checked = true;
-      let learnMore = pbRow.nextElementSibling.querySelector(
-        'a[data-l10n-name="learn-more"]'
-      );
-      learnMore.href = SUPPORT_URL + "extensions-pb";
     }
 
     // Author.
@@ -1713,15 +1721,9 @@ class AddonCard extends HTMLElement {
             );
           }
           break;
-        case "pb-learn-more":
-          windowRoot.ownerGlobal.openTrustedLinkIn(
-            SUPPORT_URL + "extensions-pb",
-            "tab"
-          );
-          break;
         default:
           // Handle a click on the card itself.
-          if (!this.expanded) {
+          if (!this.expanded && !e.target.closest("a")) {
             loadViewFn("detail", this.addon.id);
           } else if (
             e.target.localName == "a" &&
@@ -2889,12 +2891,6 @@ customElements.define("recommended-themes-section", RecommendedThemesSection);
 class DiscoveryPane extends RecommendedSection {
   get template() {
     return "discopane";
-  }
-
-  render() {
-    super.render();
-    this.querySelector(".discopane-intro-learn-more-link").href =
-      SUPPORT_URL + "recommended-extensions-program";
   }
 }
 customElements.define("discovery-pane", DiscoveryPane);
