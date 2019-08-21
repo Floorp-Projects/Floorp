@@ -30,7 +30,7 @@ const INSTALLER_PREFS_BRANCH = "installer.";
 // current use (e.g., currently active experiments).
 // Only add prefs to this list which are in INSTALLER_PREFS_BRANCH;
 // any others will be ignored.
-const INSTALLER_PREFS_LIST = [];
+const INSTALLER_PREFS_LIST = ["installer.taskbarpin.win10.enabled"];
 
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
