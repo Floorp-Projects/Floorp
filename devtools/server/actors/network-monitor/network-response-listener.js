@@ -324,6 +324,9 @@ NetworkResponseListener.prototype = {
     // was a redirect from http to https, the request object seems to contain
     // security info for the https request after redirect.
     const secinfo = this.httpActivity.channel.securityInfo;
+    if (secinfo) {
+      secinfo.QueryInterface(Ci.nsITransportSecurityInfo);
+    }
     const info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
 
     let isRacing = false;

@@ -25,6 +25,9 @@
  */
 
 #include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-shape-complex-arabic.hh"
 #include "hb-ot-shape.hh"
 
@@ -710,3 +713,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_arabic =
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE,
   true, /* fallback_position */
 };
+
+
+#endif

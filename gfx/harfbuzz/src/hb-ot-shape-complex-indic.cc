@@ -24,6 +24,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-shape-complex-indic.hh"
 #include "hb-ot-shape-complex-vowel-constraints.hh"
 #include "hb-ot-layout.hh"
@@ -140,49 +144,45 @@ indic_features[] =
  * Must be in the same order as the indic_features array.
  */
 enum {
-  _NUKT,
-  _AKHN,
-  RPHF,
-  _RKRF,
-  PREF,
-  BLWF,
-  ABVF,
-  HALF,
-  PSTF,
-  _VATU,
-  _CJCT,
+  _INDIC_NUKT,
+  _INDIC_AKHN,
+  INDIC_RPHF,
+  _INDIC_RKRF,
+  INDIC_PREF,
+  INDIC_BLWF,
+  INDIC_ABVF,
+  INDIC_HALF,
+  INDIC_PSTF,
+  _INDIC_VATU,
+  _INDIC_CJCT,
 
-  INIT,
-  _PRES,
-  _ABVS,
-  _BLWS,
-  _PSTS,
-  _HALN,
+  INDIC_INIT,
+  _INDIC_PRES,
+  _INDIC_ABVS,
+  _INDIC_BLWS,
+  _INDIC_PSTS,
+  _INDIC_HALN,
 
-  _DIST,
-  _ABVM,
-  _BLWM,
+  _INDIC_DIST,
+  _INDIC_ABVM,
+  _INDIC_BLWM,
 
   INDIC_NUM_FEATURES,
-  INDIC_BASIC_FEATURES = INIT, /* Don't forget to update this! */
+  INDIC_BASIC_FEATURES = INDIC_INIT, /* Don't forget to update this! */
 };
 
 static void
-setup_syllables (const hb_ot_shape_plan_t *plan,
-		 hb_font_t *font,
-		 hb_buffer_t *buffer);
+setup_syllables_indic (const hb_ot_shape_plan_t *plan,
+		       hb_font_t *font,
+		       hb_buffer_t *buffer);
 static void
-initial_reordering (const hb_ot_shape_plan_t *plan,
-		    hb_font_t *font,
-		    hb_buffer_t *buffer);
+initial_reordering_indic (const hb_ot_shape_plan_t *plan,
+			  hb_font_t *font,
+			  hb_buffer_t *buffer);
 static void
-final_reordering (const hb_ot_shape_plan_t *plan,
-		  hb_font_t *font,
-		  hb_buffer_t *buffer);
-static void
-clear_syllables (const hb_ot_shape_plan_t *plan,
-		 hb_font_t *font,
-		 hb_buffer_t *buffer);
+final_reordering_indic (const hb_ot_shape_plan_t *plan,
+			hb_font_t *font,
+			hb_buffer_t *buffer);
 
 static void
 collect_features_indic (hb_ot_shape_planner_t *plan)
@@ -190,7 +190,7 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
   hb_ot_map_builder_t *map = &plan->map;
 
   /* Do this before any lookups have been applied. */
-  map->add_gsub_pause (setup_syllables);
+  map->add_gsub_pause (setup_syllables_indic);
 
   map->enable_feature (HB_TAG('l','o','c','l'));
   /* The Indic specs do not require ccmp, but we apply it here since if
@@ -199,14 +199,14 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
 
 
   unsigned int i = 0;
-  map->add_gsub_pause (initial_reordering);
+  map->add_gsub_pause (initial_reordering_indic);
 
   for (; i < INDIC_BASIC_FEATURES; i++) {
     map->add_feature (indic_features[i]);
     map->add_gsub_pause (nullptr);
   }
 
-  map->add_gsub_pause (final_reordering);
+  map->add_gsub_pause (final_reordering_indic);
 
   for (; i < INDIC_NUM_FEATURES; i++)
     map->add_feature (indic_features[i]);
@@ -214,7 +214,7 @@ collect_features_indic (hb_ot_shape_planner_t *plan)
   map->enable_feature (HB_TAG('c','a','l','t'));
   map->enable_feature (HB_TAG('c','l','i','g'));
 
-  map->add_gsub_pause (clear_syllables);
+  map->add_gsub_pause (_hb_clear_syllables);
 }
 
 static void
@@ -223,32 +223,6 @@ override_features_indic (hb_ot_shape_planner_t *plan)
   plan->map.disable_feature (HB_TAG('l','i','g','a'));
 }
 
-
-struct would_substitute_feature_t
-{
-  void init (const hb_ot_map_t *map, hb_tag_t feature_tag, bool zero_context_)
-  {
-    zero_context = zero_context_;
-    map->get_stage_lookups (0/*GSUB*/,
-			    map->get_feature_stage (0/*GSUB*/, feature_tag),
-			    &lookups, &count);
-  }
-
-  bool would_substitute (const hb_codepoint_t *glyphs,
-			 unsigned int          glyphs_count,
-			 hb_face_t            *face) const
-  {
-    for (unsigned int i = 0; i < count; i++)
-      if (hb_ot_layout_lookup_would_substitute (face, lookups[i].index, glyphs, glyphs_count, zero_context))
-	return true;
-    return false;
-  }
-
-  private:
-  const hb_ot_map_t::lookup_map_t *lookups;
-  unsigned int count;
-  bool zero_context;
-};
 
 struct indic_shape_plan_t
 {
@@ -281,10 +255,10 @@ struct indic_shape_plan_t
 #endif
   mutable hb_atomic_int_t virama_glyph;
 
-  would_substitute_feature_t rphf;
-  would_substitute_feature_t pref;
-  would_substitute_feature_t blwf;
-  would_substitute_feature_t pstf;
+  hb_indic_would_substitute_feature_t rphf;
+  hb_indic_would_substitute_feature_t pref;
+  hb_indic_would_substitute_feature_t blwf;
+  hb_indic_would_substitute_feature_t pstf;
 
   hb_mask_t mask_array[INDIC_NUM_FEATURES];
 };
@@ -367,13 +341,13 @@ consonant_position_from_face (const indic_shape_plan_t *indic_plan,
 }
 
 
-enum syllable_type_t {
-  consonant_syllable,
-  vowel_syllable,
-  standalone_cluster,
-  symbol_cluster,
-  broken_cluster,
-  non_indic_cluster,
+enum indic_syllable_type_t {
+  indic_consonant_syllable,
+  indic_vowel_syllable,
+  indic_standalone_cluster,
+  indic_symbol_cluster,
+  indic_broken_cluster,
+  indic_non_indic_cluster,
 };
 
 #include "hb-ot-shape-complex-indic-machine.hh"
@@ -397,11 +371,11 @@ setup_masks_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
 }
 
 static void
-setup_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		 hb_font_t *font HB_UNUSED,
-		 hb_buffer_t *buffer)
+setup_syllables_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		       hb_font_t *font HB_UNUSED,
+		       hb_buffer_t *buffer)
 {
-  find_syllables (buffer);
+  find_syllables_indic (buffer);
   foreach_syllable (buffer, start, end)
     buffer->unsafe_to_break (start, end);
 }
@@ -418,9 +392,9 @@ compare_indic_order (const hb_glyph_info_t *pa, const hb_glyph_info_t *pb)
 
 
 static void
-update_consonant_positions (const hb_ot_shape_plan_t *plan,
-			    hb_font_t         *font,
-			    hb_buffer_t       *buffer)
+update_consonant_positions_indic (const hb_ot_shape_plan_t *plan,
+				  hb_font_t         *font,
+				  hb_buffer_t       *buffer)
 {
   const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
 
@@ -493,7 +467,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
      *    and has more than one consonant, Ra is excluded from candidates for
      *    base consonants. */
     unsigned int limit = start;
-    if (indic_plan->mask_array[RPHF] &&
+    if (indic_plan->mask_array[INDIC_RPHF] &&
 	start + 3 <= end &&
 	(
 	 (indic_plan->config->reph_mode == REPH_MODE_IMPLICIT && !is_joiner (info[start + 2])) ||
@@ -829,13 +803,13 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 
     /* Reph */
     for (unsigned int i = start; i < end && info[i].indic_position() == POS_RA_TO_BECOME_REPH; i++)
-      info[i].mask |= indic_plan->mask_array[RPHF];
+      info[i].mask |= indic_plan->mask_array[INDIC_RPHF];
 
     /* Pre-base */
-    mask = indic_plan->mask_array[HALF];
+    mask = indic_plan->mask_array[INDIC_HALF];
     if (!indic_plan->is_old_spec &&
 	indic_plan->config->blwf_mode == BLWF_MODE_PRE_AND_POST)
-      mask |= indic_plan->mask_array[BLWF];
+      mask |= indic_plan->mask_array[INDIC_BLWF];
     for (unsigned int i = start; i < base; i++)
       info[i].mask  |= mask;
     /* Base */
@@ -843,7 +817,9 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
     if (base < end)
       info[base].mask |= mask;
     /* Post-base */
-    mask = indic_plan->mask_array[BLWF] | indic_plan->mask_array[ABVF] | indic_plan->mask_array[PSTF];
+    mask = indic_plan->mask_array[INDIC_BLWF] |
+	   indic_plan->mask_array[INDIC_ABVF] |
+	   indic_plan->mask_array[INDIC_PSTF];
     for (unsigned int i = base + 1; i < end; i++)
       info[i].mask  |= mask;
   }
@@ -875,13 +851,13 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 	  (i + 2 == base ||
 	   info[i+2].indic_category() != OT_ZWJ))
       {
-	info[i  ].mask |= indic_plan->mask_array[BLWF];
-	info[i+1].mask |= indic_plan->mask_array[BLWF];
+	info[i  ].mask |= indic_plan->mask_array[INDIC_BLWF];
+	info[i+1].mask |= indic_plan->mask_array[INDIC_BLWF];
       }
   }
 
   unsigned int pref_len = 2;
-  if (indic_plan->mask_array[PREF] && base + pref_len < end)
+  if (indic_plan->mask_array[INDIC_PREF] && base + pref_len < end)
   {
     /* Find a Halant,Ra sequence and mark it for pre-base-reordering processing. */
     for (unsigned int i = base + 1; i + pref_len - 1 < end; i++) {
@@ -891,7 +867,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
       if (indic_plan->pref.would_substitute (glyphs, pref_len, face))
       {
 	for (unsigned int j = 0; j < pref_len; j++)
-	  info[i++].mask |= indic_plan->mask_array[PREF];
+	  info[i++].mask |= indic_plan->mask_array[INDIC_PREF];
 	break;
       }
     }
@@ -912,7 +888,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 
 	/* A ZWNJ disables HALF. */
 	if (non_joiner)
-	  info[j].mask &= ~indic_plan->mask_array[HALF];
+	  info[j].mask &= ~indic_plan->mask_array[INDIC_HALF];
 
       } while (j > start && !is_consonant (info[j]));
     }
@@ -941,34 +917,34 @@ initial_reordering_standalone_cluster (const hb_ot_shape_plan_t *plan,
 }
 
 static void
-initial_reordering_syllable (const hb_ot_shape_plan_t *plan,
-			     hb_face_t *face,
-			     hb_buffer_t *buffer,
-			     unsigned int start, unsigned int end)
+initial_reordering_syllable_indic (const hb_ot_shape_plan_t *plan,
+				   hb_face_t *face,
+				   hb_buffer_t *buffer,
+				   unsigned int start, unsigned int end)
 {
-  syllable_type_t syllable_type = (syllable_type_t) (buffer->info[start].syllable() & 0x0F);
+  indic_syllable_type_t syllable_type = (indic_syllable_type_t) (buffer->info[start].syllable() & 0x0F);
   switch (syllable_type)
   {
-    case vowel_syllable: /* We made the vowels look like consonants.  So let's call the consonant logic! */
-    case consonant_syllable:
+    case indic_vowel_syllable: /* We made the vowels look like consonants.  So let's call the consonant logic! */
+    case indic_consonant_syllable:
      initial_reordering_consonant_syllable (plan, face, buffer, start, end);
      break;
 
-    case broken_cluster: /* We already inserted dotted-circles, so just call the standalone_cluster. */
-    case standalone_cluster:
+    case indic_broken_cluster: /* We already inserted dotted-circles, so just call the standalone_cluster. */
+    case indic_standalone_cluster:
      initial_reordering_standalone_cluster (plan, face, buffer, start, end);
      break;
 
-    case symbol_cluster:
-    case non_indic_cluster:
+    case indic_symbol_cluster:
+    case indic_non_indic_cluster:
       break;
   }
 }
 
 static inline void
-insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		       hb_font_t *font,
-		       hb_buffer_t *buffer)
+insert_dotted_circles_indic (const hb_ot_shape_plan_t *plan HB_UNUSED,
+			     hb_font_t *font,
+			     hb_buffer_t *buffer)
 {
   if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
     return;
@@ -979,7 +955,7 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
   for (unsigned int i = 0; i < count; i++)
-    if ((info[i].syllable() & 0x0F) == broken_cluster)
+    if ((info[i].syllable() & 0x0F) == indic_broken_cluster)
     {
       has_broken_syllables = true;
       break;
@@ -1004,8 +980,8 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
   while (buffer->idx < buffer->len && buffer->successful)
   {
     unsigned int syllable = buffer->cur().syllable();
-    syllable_type_t syllable_type = (syllable_type_t) (syllable & 0x0F);
-    if (unlikely (last_syllable != syllable && syllable_type == broken_cluster))
+    indic_syllable_type_t syllable_type = (indic_syllable_type_t) (syllable & 0x0F);
+    if (unlikely (last_syllable != syllable && syllable_type == indic_broken_cluster))
     {
       last_syllable = syllable;
 
@@ -1029,21 +1005,21 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
 }
 
 static void
-initial_reordering (const hb_ot_shape_plan_t *plan,
-		    hb_font_t *font,
-		    hb_buffer_t *buffer)
+initial_reordering_indic (const hb_ot_shape_plan_t *plan,
+			  hb_font_t *font,
+			  hb_buffer_t *buffer)
 {
-  update_consonant_positions (plan, font, buffer);
-  insert_dotted_circles (plan, font, buffer);
+  update_consonant_positions_indic (plan, font, buffer);
+  insert_dotted_circles_indic (plan, font, buffer);
 
   foreach_syllable (buffer, start, end)
-    initial_reordering_syllable (plan, font->face, buffer, start, end);
+    initial_reordering_syllable_indic (plan, font->face, buffer, start, end);
 }
 
 static void
-final_reordering_syllable (const hb_ot_shape_plan_t *plan,
-			   hb_buffer_t *buffer,
-			   unsigned int start, unsigned int end)
+final_reordering_syllable_indic (const hb_ot_shape_plan_t *plan,
+				 hb_buffer_t *buffer,
+				 unsigned int start, unsigned int end)
 {
   const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
   hb_glyph_info_t *info = buffer->info;
@@ -1079,7 +1055,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
    * syllable.
    */
 
-  bool try_pref = !!indic_plan->mask_array[PREF];
+  bool try_pref = !!indic_plan->mask_array[INDIC_PREF];
 
   /* Find base again */
   unsigned int base;
@@ -1089,7 +1065,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
       if (try_pref && base + 1 < end)
       {
 	for (unsigned int i = base + 1; i < end; i++)
-	  if ((info[i].mask & indic_plan->mask_array[PREF]) != 0)
+	  if ((info[i].mask & indic_plan->mask_array[INDIC_PREF]) != 0)
 	  {
 	    if (!(_hb_glyph_info_substituted (&info[i]) &&
 		  _hb_glyph_info_ligated_and_didnt_multiply (&info[i])))
@@ -1411,7 +1387,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
   if (try_pref && base + 1 < end) /* Otherwise there can't be any pre-base-reordering Ra. */
   {
     for (unsigned int i = base + 1; i < end; i++)
-      if ((info[i].mask & indic_plan->mask_array[PREF]) != 0)
+      if ((info[i].mask & indic_plan->mask_array[INDIC_PREF]) != 0)
       {
 	/*       1. Only reorder a glyph produced by substitution during application
 	 *          of the <pref> feature. (Note that a font may shape a Ra consonant with
@@ -1474,7 +1450,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
     if (!start ||
 	!(FLAG_UNSAFE (_hb_glyph_info_get_general_category (&info[start - 1])) &
 	 FLAG_RANGE (HB_UNICODE_GENERAL_CATEGORY_FORMAT, HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
-      info[start].mask |= indic_plan->mask_array[INIT];
+      info[start].mask |= indic_plan->mask_array[INDIC_INIT];
     else
       buffer->unsafe_to_break (start - 1, start + 1);
   }
@@ -1504,30 +1480,18 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
 
 static void
-final_reordering (const hb_ot_shape_plan_t *plan,
-		  hb_font_t *font HB_UNUSED,
-		  hb_buffer_t *buffer)
+final_reordering_indic (const hb_ot_shape_plan_t *plan,
+			hb_font_t *font HB_UNUSED,
+			hb_buffer_t *buffer)
 {
   unsigned int count = buffer->len;
   if (unlikely (!count)) return;
 
   foreach_syllable (buffer, start, end)
-    final_reordering_syllable (plan, buffer, start, end);
+    final_reordering_syllable_indic (plan, buffer, start, end);
 
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_category);
   HB_BUFFER_DEALLOCATE_VAR (buffer, indic_position);
-}
-
-
-static void
-clear_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		 hb_font_t *font HB_UNUSED,
-		 hb_buffer_t *buffer)
-{
-  hb_glyph_info_t *info = buffer->info;
-  unsigned int count = buffer->len;
-  for (unsigned int i = 0; i < count; i++)
-    info[i].syllable() = 0;
 }
 
 
@@ -1648,3 +1612,6 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_indic =
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
   false, /* fallback_position */
 };
+
+
+#endif

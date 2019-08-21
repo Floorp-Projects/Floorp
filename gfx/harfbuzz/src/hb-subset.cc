@@ -187,7 +187,7 @@ _subset_table (hb_subset_plan_t *plan,
       DEBUG_MSG(SUBSET, nullptr, "skip loca handled by glyf");
       return true;
     case HB_OT_TAG_cmap:
-      result = _subset<const OT::cmap> (plan);
+      result = _subset2<const OT::cmap> (plan);
       break;
     case HB_OT_TAG_OS2:
       result = _subset2<const OT::OS2> (plan);

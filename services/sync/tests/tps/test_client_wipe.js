@@ -3,10 +3,9 @@
 
 /*
  * The list of phases mapped to their corresponding profiles.  The object
- * here must be in strict JSON format, as it will get parsed by the Python
- * testrunner (no single quotes, extra comma's, etc).
+ * here must be in JSON format as it will get parsed by the Python
+ * testrunner. It is parsed by the YAML package, so it relatively flexible.
  */
-
 var phases = { phase1: "profile1", phase2: "profile2", phase3: "profile1" };
 
 /*

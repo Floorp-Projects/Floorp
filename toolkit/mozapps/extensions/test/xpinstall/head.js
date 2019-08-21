@@ -179,6 +179,7 @@ var Harness = {
     // that which fixes the rest of the tests.  Since no test
     // here cares about this panel, we just need it to close.
     win.PanelUI.notificationPanel.hidePopup();
+    win.AppMenuNotifications.removeNotification("addon-installed");
     delete this._boundWin;
     finish();
   },

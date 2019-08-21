@@ -65,7 +65,7 @@ import type {
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
-import type { DebuggeeState } from "./debuggee";
+import type { ThreadsState } from "./threads";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
@@ -519,7 +519,7 @@ export function getBlackBoxList() {
 // pick off the piece of state we're interested in. It's impossible
 // (right now) to type those wrapped functions.
 type OuterState = { sources: SourcesState };
-type DebuggeeOuterState = { debuggee: DebuggeeState };
+type ThreadsOuterState = { threads: ThreadsState };
 
 const getSourcesState = (state: OuterState) => state.sources;
 
@@ -718,7 +718,7 @@ export function getSourceList(state: OuterState): Source[] {
 }
 
 export function getDisplayedSourcesList(
-  state: OuterState & SourceActorOuterState & DebuggeeOuterState
+  state: OuterState & SourceActorOuterState & ThreadsOuterState
 ): Source[] {
   return ((Object.values(getDisplayedSources(state)): any).flatMap(
     Object.values
@@ -838,17 +838,17 @@ const queryAllDisplayedSources: ReduceQuery<
 );
 
 function getAllDisplayedSources(
-  state: OuterState & DebuggeeOuterState
+  state: OuterState & ThreadsOuterState
 ): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
     chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled,
-    debuggeeIsWebExtension: state.debuggee.isWebExtension,
+    debuggeeIsWebExtension: state.threads.isWebExtension,
   });
 }
 
 type GetDisplayedSourceIDsSelector = (
-  OuterState & SourceActorOuterState & DebuggeeOuterState
+  OuterState & SourceActorOuterState & ThreadsOuterState
 ) => { [ThreadId]: Set<SourceId> };
 const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
   getAllThreadsBySource,
@@ -874,7 +874,7 @@ const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
 );
 
 type GetDisplayedSourcesSelector = (
-  OuterState & SourceActorOuterState & DebuggeeOuterState
+  OuterState & SourceActorOuterState & ThreadsOuterState
 ) => SourcesMapByThread;
 export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
   state => state.sources.sources,

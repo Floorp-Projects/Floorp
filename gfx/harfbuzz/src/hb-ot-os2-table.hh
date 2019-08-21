@@ -59,6 +59,10 @@ struct OS2V1Tail
 
 struct OS2V2Tail
 {
+  bool has_data () const { return sxHeight || sCapHeight; }
+
+  const OS2V2Tail * operator -> () const { return this; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -77,6 +81,23 @@ struct OS2V2Tail
 
 struct OS2V5Tail
 {
+  inline bool get_optical_size (unsigned int *lower, unsigned int *upper) const
+  {
+    unsigned int lower_optical_size = usLowerOpticalPointSize;
+    unsigned int upper_optical_size = usUpperOpticalPointSize;
+
+    /* Per https://docs.microsoft.com/en-us/typography/opentype/spec/os2#lps */
+    if (lower_optical_size < upper_optical_size &&
+	lower_optical_size >= 1 && lower_optical_size <= 0xFFFE &&
+	upper_optical_size >= 2 && upper_optical_size <= 0xFFFF)
+    {
+      *lower = lower_optical_size;
+      *upper = upper_optical_size;
+      return true;
+    }
+    return false;
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -94,7 +115,7 @@ struct OS2
 {
   static constexpr hb_tag_t tableTag = HB_OT_TAG_OS2;
 
-  bool has_data () const { return this != &Null (OS2); }
+  bool has_data () const { return usWeightClass || usWidthClass || usFirstCharIndex || usLastCharIndex; }
 
   const OS2V1Tail &v1 () const { return version >= 1 ? v1X : Null (OS2V1Tail); }
   const OS2V2Tail &v2 () const { return version >= 2 ? v2X : Null (OS2V2Tail); }
@@ -113,9 +134,9 @@ struct OS2
     OBLIQUE		= 1u<<9
   };
 
-  bool is_italic () const       { return fsSelection & ITALIC; }
-  bool is_oblique () const      { return fsSelection & OBLIQUE; }
-  bool is_typo_metrics () const { return fsSelection & USE_TYPO_METRICS; }
+  bool is_italic () const        { return fsSelection & ITALIC; }
+  bool is_oblique () const       { return fsSelection & OBLIQUE; }
+  bool use_typo_metrics () const { return fsSelection & USE_TYPO_METRICS; }
 
   enum width_class_t {
     FWIDTH_ULTRA_CONDENSED	= 1, /* 50% */
@@ -192,13 +213,14 @@ struct OS2
   }
 
   static void find_min_and_max_codepoint (const hb_set_t *codepoints,
-						 uint16_t *min_cp, /* OUT */
-						 uint16_t *max_cp  /* OUT */)
+					  uint16_t *min_cp, /* OUT */
+					  uint16_t *max_cp  /* OUT */)
   {
     *min_cp = codepoints->get_min ();
     *max_cp = codepoints->get_max ();
   }
 
+  /* https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681 */
   enum font_page_t {
     HEBREW_FONT_PAGE		= 0xB100, // Hebrew Windows 3.1 font page
     SIMP_ARABIC_FONT_PAGE	= 0xB200, // Simplified Arabic Windows 3.1 font page
@@ -208,8 +230,6 @@ struct OS2
     TRAD_FARSI_FONT_PAGE	= 0xBB00, // Traditional Farsi Windows 3.1 font page
     THAI_FONT_PAGE		= 0xDE00  // Thai Windows 3.1 font page
   };
-
-  // https://github.com/Microsoft/Font-Validator/blob/520aaae/OTFontFileVal/val_OS2.cs#L644-L681
   font_page_t get_font_page () const
   { return (font_page_t) (version == 0 ? fsSelection & 0xFF00 : 0); }
 

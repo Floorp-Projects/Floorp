@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FILES_PER_UNIFIED_FILE = 100
+
 EXPORTS.harfbuzz += [
     'hb-aat-layout.h',
     'hb-aat.h',
@@ -19,6 +21,8 @@ EXPORTS.harfbuzz += [
     'hb-ot-font.h',
     'hb-ot-layout.h',
     'hb-ot-math.h',
+    'hb-ot-meta.h',
+    'hb-ot-metrics.h',
     'hb-ot-name.h',
     'hb-ot-shape.h',
     'hb-ot-var.h',
@@ -31,15 +35,6 @@ EXPORTS.harfbuzz += [
     'hb.h',
 ]
 
-SOURCES += [
-    'hb-ot-cff1-table.cc', # error: redefinition of 'ExtentsParam'
-    'hb-ot-cff2-table.cc', # error: redefinition of 'ExtentsParam'
-    'hb-ot-shape-complex-indic.cc', # error: redefinition of enumerator 'INIT'
-    'hb-ot-shape-complex-khmer.cc', # error: redefinition of enumerator 'syllable_type_t'
-    'hb-ot-shape-complex-use.cc', # error: redefinition of 'basic_features'
-    'hb-ot-shape.cc', # error: functions that differ only in their return type cannot be overloaded
-]
-
 UNIFIED_SOURCES += [
     'hb-aat-layout.cc',
     'hb-aat-map.cc',
@@ -48,24 +43,32 @@ UNIFIED_SOURCES += [
     'hb-common.cc',
     'hb-face.cc',
     'hb-font.cc',
+    'hb-ot-cff1-table.cc',
+    'hb-ot-cff2-table.cc',
     'hb-ot-color.cc',
     'hb-ot-face.cc',
     'hb-ot-font.cc',
     'hb-ot-layout.cc',
     'hb-ot-map.cc',
     'hb-ot-math.cc',
+    'hb-ot-meta.cc',
+    'hb-ot-metrics.cc',
     'hb-ot-name.cc',
     'hb-ot-shape-complex-arabic.cc',
     'hb-ot-shape-complex-default.cc',
     'hb-ot-shape-complex-hangul.cc',
     'hb-ot-shape-complex-hebrew.cc',
     'hb-ot-shape-complex-indic-table.cc',
+    'hb-ot-shape-complex-indic.cc',
+    'hb-ot-shape-complex-khmer.cc',
     'hb-ot-shape-complex-myanmar.cc',
     'hb-ot-shape-complex-thai.cc',
     'hb-ot-shape-complex-use-table.cc',
+    'hb-ot-shape-complex-use.cc',
     'hb-ot-shape-complex-vowel-constraints.cc',
     'hb-ot-shape-fallback.cc',
     'hb-ot-shape-normalize.cc',
+    'hb-ot-shape.cc',
     'hb-ot-tag.cc',
     'hb-ot-var.cc',
     'hb-set.cc',

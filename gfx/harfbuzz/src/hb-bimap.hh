@@ -28,6 +28,7 @@
 #define HB_BIMAP_HH
 
 #include "hb.hh"
+#include "hb-map.hh"
 
 /* Bi-directional map */
 struct hb_bimap_t
@@ -57,6 +58,8 @@ struct hb_bimap_t
 
   void set (hb_codepoint_t lhs, hb_codepoint_t rhs)
   {
+    if (unlikely (lhs == HB_MAP_VALUE_INVALID)) return;
+    if (unlikely (rhs == HB_MAP_VALUE_INVALID)) { del (lhs); return; }
     forw_map.set (lhs, rhs);
     back_map.set (rhs, lhs);
   }
@@ -131,6 +134,7 @@ struct hb_inc_bimap_t : hb_bimap_t
   
     work.qsort (cmp_id);
   
+    clear ();
     for (hb_codepoint_t rhs = 0; rhs < count; rhs++)
       set (work[rhs], rhs);
   }

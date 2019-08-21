@@ -15,6 +15,10 @@
  * UnicodeData.txt does not have a header.
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-shape-complex-use.hh"
 
 #pragma GCC diagnostic push
@@ -851,4 +855,6 @@ hb_use_get_category (hb_codepoint_t u)
 #undef VMPst
 #undef VMAbv
 
+
+#endif
 /* == End of generated table == */

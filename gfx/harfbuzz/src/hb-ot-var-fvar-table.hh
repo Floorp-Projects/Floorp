@@ -237,7 +237,7 @@ struct fvar
       v = (v - axis.default_value) / (axis.default_value - axis.min_value);
     else
       v = (v - axis.default_value) / (axis.max_value - axis.default_value);
-    return (int) (v * 16384.f + (v >= 0.f ? .5f : -.5f));
+    return roundf (v * 16384.f);
   }
 
   unsigned int get_instance_count () const { return instanceCount; }

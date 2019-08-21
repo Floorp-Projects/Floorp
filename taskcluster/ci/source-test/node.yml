@@ -22,6 +22,8 @@ debugger-tests:
             cd devtools/client/debugger/ &&
             yarn &&
             node bin/try-runner.js
+    attributes:
+        code-review: true
     when:
         files-changed:
             - 'devtools/client/debugger/**'

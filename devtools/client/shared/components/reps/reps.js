@@ -7415,8 +7415,6 @@ var _devtoolsComponents = _interopRequireDefault(__webpack_require__(108));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -7486,11 +7484,6 @@ const {
 class ObjectInspector extends Component {
   constructor(props) {
     super();
-
-    _defineProperty(this, "props", void 0);
-
-    _defineProperty(this, "cachedNodes", void 0);
-
     this.cachedNodes = new Map();
     const self = this;
     self.getItemChildren = this.getItemChildren.bind(this);
@@ -7713,8 +7706,6 @@ class ObjectInspector extends Component {
   }
 
 }
-
-_defineProperty(ObjectInspector, "defaultProps", void 0);
 
 function mapStateToProps(state, props) {
   return {

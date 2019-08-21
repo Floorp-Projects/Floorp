@@ -59,9 +59,8 @@ nsISupports* Pose::GetParentObject() const { return mParent; }
 void Pose::SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
                            JS::MutableHandle<JSObject*> aRetVal,
                            JS::Heap<JSObject*>& aObj, float* aVal,
-                           uint32_t aValLength, bool bCreate,
-                           ErrorResult& aRv) {
-  if (!bCreate || !aVal) {
+                           uint32_t aValLength, ErrorResult& aRv) {
+  if (!aVal) {
     aRetVal.set(nullptr);
     return;
   }

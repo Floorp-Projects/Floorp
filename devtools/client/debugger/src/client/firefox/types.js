@@ -21,7 +21,6 @@ import type {
   Frame,
   SourceId,
   QueuedSourceData,
-  Worker,
   Range,
 } from "../../types";
 
@@ -381,7 +380,6 @@ export type ThreadFront = {
 export type Panel = {|
   emit: (eventName: string) => void,
   openLink: (url: string) => void,
-  openWorkerToolbox: (worker: Worker) => void,
   openElementInInspector: (grip: Object) => void,
   openConsoleAndEvaluate: (input: string) => void,
   highlightDomElement: (grip: Object) => void,

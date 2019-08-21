@@ -843,17 +843,16 @@ nsBrowserContentHandler.prototype = {
 
   /* nsICommandLineValidator */
   validate: function bch_validate(cmdLine) {
-    // Other handlers may use osint so only handle the osint flag if the url
-    // flag is also present and the command line is valid.
-    var osintFlagIdx = cmdLine.findFlag("osint", false);
     var urlFlagIdx = cmdLine.findFlag("url", false);
     if (
       urlFlagIdx > -1 &&
-      (osintFlagIdx > -1 ||
-        cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_EXPLICIT)
+      cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
     ) {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
-      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/i.test(urlParam)) {
+      if (
+        cmdLine.length != urlFlagIdx + 2 ||
+        /firefoxurl(-[a-f0-9]+)?:/i.test(urlParam)
+      ) {
         throw Cr.NS_ERROR_ABORT;
       }
       var isDefault = false;
@@ -870,7 +869,6 @@ nsBrowserContentHandler.prototype = {
         // We don't have to show the instruction page.
         throw Cr.NS_ERROR_ABORT;
       }
-      cmdLine.handleFlag("osint", false);
     }
   },
 };

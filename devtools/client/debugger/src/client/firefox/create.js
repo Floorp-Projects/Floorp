@@ -5,7 +5,7 @@
 // @flow
 // This module converts Firefox specific types to the generic types
 
-import type { Frame, ThreadId, GeneratedSourceData, Worker } from "../../types";
+import type { Frame, ThreadId, GeneratedSourceData, Thread } from "../../types";
 import type {
   PausedPacket,
   FramesResponse,
@@ -73,7 +73,7 @@ export function createPause(
   };
 }
 
-export function createThread(actor: string, target: Target): Worker {
+export function createThread(actor: string, target: Target): Thread {
   return {
     actor,
     url: target.url || "",

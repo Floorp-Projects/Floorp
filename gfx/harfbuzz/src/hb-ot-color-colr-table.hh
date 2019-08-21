@@ -39,13 +39,15 @@ namespace OT {
 
 struct LayerRecord
 {
+  operator hb_ot_color_layer_t () const { return {glyphId, colorIdx}; }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this));
   }
 
-  public:
+  protected:
   GlyphID	glyphId;	/* Glyph ID of layer glyph */
   Index		colorIdx;	/* Index value to use with a
 				 * selected color palette.
@@ -98,18 +100,14 @@ struct COLR
   {
     const BaseGlyphRecord &record = (this+baseGlyphsZ).bsearch (numBaseGlyphs, glyph);
 
-    hb_array_t<const LayerRecord> all_layers ((this+layersZ).arrayZ, numLayers);
+    hb_array_t<const LayerRecord> all_layers = (this+layersZ).as_array (numLayers);
     hb_array_t<const LayerRecord> glyph_layers = all_layers.sub_array (record.firstLayerIdx,
 								       record.numLayers);
     if (count)
     {
-      hb_array_t<const LayerRecord> segment_layers = glyph_layers.sub_array (start_offset, *count);
-      *count = segment_layers.length;
-      for (unsigned int i = 0; i < segment_layers.length; i++)
-      {
-        layers[i].glyph = segment_layers.arrayZ[i].glyphId;
-        layers[i].color_index = segment_layers.arrayZ[i].colorIdx;
-      }
+      + glyph_layers.sub_array (start_offset, count)
+      | hb_sink (hb_array (layers, *count))
+      ;
     }
     return glyph_layers.length;
   }

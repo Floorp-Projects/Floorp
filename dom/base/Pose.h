@@ -43,8 +43,7 @@ class Pose : public nsWrapperCache {
   static void SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
                               JS::MutableHandle<JSObject*> aRetVal,
                               JS::Heap<JSObject*>& aObj, float* aVal,
-                              uint32_t aValLength, bool bCreate,
-                              ErrorResult& aRv);
+                              uint32_t aValLength, ErrorResult& aRv);
 
  protected:
   virtual ~Pose();

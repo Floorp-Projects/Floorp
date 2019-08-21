@@ -8,7 +8,7 @@ declare var it: (desc: string, func: () => void) => void;
 declare var expect: (value: any) => any;
 
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
-import { initialDebuggeeState } from "../debuggee";
+import { initialThreadsState } from "../threads";
 import updateSourceActors from "../source-actors";
 import type { SourceActor } from "../../types";
 import { prefs } from "../../utils/prefs";
@@ -93,7 +93,7 @@ describe("sources selectors", () => {
     state = {
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction),
-      debuggee: initialDebuggeeState(),
+      threads: initialThreadsState(),
     };
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(3);
@@ -119,7 +119,7 @@ describe("sources selectors", () => {
     state = {
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction),
-      debuggee: initialDebuggeeState(),
+      threads: initialThreadsState(),
     };
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(1);

@@ -22,7 +22,6 @@ bootstrap(React, ReactDOM).then(connection => {
       const win = window.open(url, "_blank");
       win.focus();
     },
-    openWorkerToolbox: worker => alert(worker.url),
     openElementInInspector: grip =>
       alert(`Opening node in Inspector: ${grip.class}`),
     openConsoleAndEvaluate: input => alert(`console.log: ${input}`),
