@@ -3592,31 +3592,12 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
     locationChangeData->charsetAutodetected() =
         docShell->GetCharsetAutodetected();
 
-    MOZ_TRY(PrincipalToPrincipalInfo(
-        document->EffectiveStoragePrincipal(),
-        &locationChangeData->contentStoragePrincipal(), false));
-
-    MOZ_TRY(PrincipalToPrincipalInfo(document->NodePrincipal(),
-                                     &locationChangeData->contentPrincipal(),
-                                     false));
-
-    nsIPrincipal* contentBlockingAllowListPrincipal =
-
+    locationChangeData->contentPrincipal() = document->NodePrincipal();
+    locationChangeData->contentStoragePrincipal() =
+        document->EffectiveStoragePrincipal();
+    locationChangeData->csp() = document->GetCsp();
+    locationChangeData->contentBlockingAllowListPrincipal() =
         document->GetContentBlockingAllowListPrincipal();
-    if (contentBlockingAllowListPrincipal) {
-      PrincipalInfo principalInfo;
-      MOZ_TRY(PrincipalToPrincipalInfo(contentBlockingAllowListPrincipal,
-                                       &principalInfo, false));
-      locationChangeData->contentBlockingAllowListPrincipal() = principalInfo;
-    } else {
-      locationChangeData->contentBlockingAllowListPrincipal() = void_t();
-    }
-
-    if (const nsCOMPtr<nsIContentSecurityPolicy> csp = document->GetCsp()) {
-      locationChangeData->csp().emplace();
-      MOZ_TRY(CSPToCSPInfo(csp, &locationChangeData->csp().ref()));
-    }
-
     locationChangeData->referrerInfo() = document->ReferrerInfo();
     locationChangeData->isSyntheticDocument() = document->IsSyntheticDocument();
 
