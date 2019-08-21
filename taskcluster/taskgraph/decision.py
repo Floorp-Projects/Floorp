@@ -121,6 +121,7 @@ try_task_config_schema = Schema({
     Required('tasks'): [basestring],
     Optional('templates'): {basestring: object},
     Optional('disable-pgo'): bool,
+    Optional('browsertime'): bool,
 })
 
 

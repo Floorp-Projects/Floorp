@@ -122,7 +122,14 @@ class FuzzyParser(BaseTryParser):
     ]
     common_groups = ['push', 'task', 'preset']
     templates = [
-        'artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile', 'disable-pgo',
+        'artifact',
+        'browsertime',
+        'chemspill-prio',
+        'disable-pgo',
+        'env',
+        'gecko-profile',
+        'path',
+        'rebuild',
     ]
 
 

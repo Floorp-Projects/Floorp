@@ -220,6 +220,21 @@ class GeckoProfile(Template):
         return {'gecko-profile': profile}
 
 
+class Browsertime(TryConfig):
+    arguments = [
+        [['--browsertime'],
+         {'action': 'store_true',
+          'help': 'Use browsertime during Raptor tasks.',
+          }],
+    ]
+
+    def try_config(self, browsertime, **kwargs):
+        if browsertime:
+            return {
+                'browsertime': True,
+            }
+
+
 class DisablePgo(TryConfig):
 
     arguments = [
@@ -238,10 +253,11 @@ class DisablePgo(TryConfig):
 
 all_templates = {
     'artifact': Artifact,
-    'path': Path,
-    'env': Environment,
-    'rebuild': Rebuild,
+    'browsertime': Browsertime,
     'chemspill-prio': ChemspillPrio,
-    'gecko-profile': GeckoProfile,
     'disable-pgo': DisablePgo,
+    'env': Environment,
+    'gecko-profile': GeckoProfile,
+    'path': Path,
+    'rebuild': Rebuild,
 }
