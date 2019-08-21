@@ -20,9 +20,9 @@ here = os.path.dirname(__file__)
 
 BUILDCONFIG = {
     'topobjdir': buildconfig.topobjdir,
-    'MOZ_APP_NAME': buildconfig.substs.get('MOZ_APP_NAME'),
-    'OMNIJAR_NAME': buildconfig.substs.get('OMNIJAR_NAME'),
-    'MOZ_MACBUNDLE_NAME': buildconfig.substs.get('MOZ_MACBUNDLE_NAME'),
+    'MOZ_APP_NAME': buildconfig.substs.get('MOZ_APP_NAME', 'nightly'),
+    'OMNIJAR_NAME': buildconfig.substs.get('OMNIJAR_NAME', 'omni.ja'),
+    'MOZ_MACBUNDLE_NAME': buildconfig.substs.get('MOZ_MACBUNDLE_NAME', 'Nightly.app'),
 }
 
 basic_file = """TN:Compartment_5f7f5c30251800
@@ -332,8 +332,8 @@ class TestUrlFinder(unittest.TestCase):
             shutil.move(self._old_chrome_info_file, self._chrome_map_file)
 
     def test_jar_paths(self):
-        app_name = buildconfig.substs.get('MOZ_APP_NAME')
-        omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
+        app_name = BUILDCONFIG['MOZ_APP_NAME']
+        omnijar_name = BUILDCONFIG['OMNIJAR_NAME']
 
         paths = [
             ('jar:file:///home/worker/workspace/build/application/' + app_name +
