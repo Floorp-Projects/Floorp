@@ -1044,16 +1044,17 @@ endif
 #   dependency directory in the object directory, where we really need
 #   it.
 
-ifneq (,$(filter-out all chrome default export realchrome clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-MDDEPEND_FILES		:= $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(addsuffix .pp,$(notdir $(sort $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)))))))
+_MDDEPEND_FILES :=
 
-ifneq (,$(MDDEPEND_FILES))
--include $(MDDEPEND_FILES)
+ifneq (,$(filter target-objects target all default,$(MAKECMDGOALS)))
+_MDDEPEND_FILES += $(addsuffix .pp,$(notdir $(sort $(OBJS) $(PROGOBJS))))
 endif
 
+ifneq (,$(filter host-objects host all default,$(MAKECMDGOALS)))
+_MDDEPEND_FILES += $(addsuffix .pp,$(notdir $(sort $(HOST_OBJS) $(HOST_PROGOBJS))))
 endif
 
-MDDEPEND_FILES		:= $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(EXTRA_MDDEPEND_FILES))))
+MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(_MDDEPEND_FILES) $(EXTRA_MDDEPEND_FILES))))
 
 ifneq (,$(MDDEPEND_FILES))
 -include $(MDDEPEND_FILES)
