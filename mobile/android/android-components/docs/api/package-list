@@ -47,13 +47,11 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozil
 $dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
-$dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray, kotlin.Int)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toSha256Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha256-digest.md
-$dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
 $dokka.location:mozilla.components.support.locale$toLocale(kotlin.String)mozilla.components.support.locale/kotlin.-string/to-locale.md
 $dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
 mozilla.components
@@ -206,6 +204,7 @@ mozilla.components.service.glean.storages
 mozilla.components.service.glean.testing
 mozilla.components.service.glean.timing
 mozilla.components.service.location
+mozilla.components.service.location.search
 mozilla.components.service.pocket
 mozilla.components.service.pocket.data
 mozilla.components.service.pocket.net

@@ -10,4 +10,3 @@
 | [kotlin.Char](kotlin.-char/index.md) |  |
 | [kotlin.String](kotlin.-string/index.md) |  |
 | [kotlin.collections.Collection](kotlin.collections.-collection/index.md) |  |
-| [kotlin.collections.Map](kotlin.collections.-map/index.md) |  |

@@ -2,4 +2,4 @@
 
 # UncoloredUrl
 
-`object UncoloredUrl : `[`RenderStyle`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/ToolbarFeature.kt#L83)
+`object UncoloredUrl : `[`RenderStyle`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/ToolbarFeature.kt#L84)

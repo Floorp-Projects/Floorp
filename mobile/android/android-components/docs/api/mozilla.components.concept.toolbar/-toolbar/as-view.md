@@ -2,7 +2,7 @@
 
 # asView
 
-`open fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L118)
+`open fun asView(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L123)
 
 Casts this toolbar to an Android View object.
 

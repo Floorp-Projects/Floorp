@@ -2,7 +2,7 @@
 
 # CustomTabActionButtonConfig
 
-`data class CustomTabActionButtonConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L198)
+`data class CustomTabActionButtonConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L44)
 
 ### Constructors
 

@@ -2,7 +2,7 @@
 
 # toDate
 
-`fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toDate(format: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, locale: `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)` = Locale.ROOT): `[`Date`](https://developer.android.com/reference/java/util/Date.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L44)
+`fun `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`.toDate(format: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, locale: `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)` = Locale.ROOT): `[`Date`](https://developer.android.com/reference/java/util/Date.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/String.kt#L43)
 
 Converts a [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) to a [Date](https://developer.android.com/reference/java/util/Date.html) object.
 
