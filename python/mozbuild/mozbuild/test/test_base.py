@@ -297,16 +297,38 @@ class TestMozbuildObject(unittest.TestCase):
             shutil.rmtree(d)
 
     def test_config_environment(self):
-        base = self.get_base(topobjdir=topobjdir)
+        d = os.path.realpath(tempfile.mkdtemp())
 
-        ce = base.config_environment
-        self.assertIsInstance(ce, ConfigEnvironment)
+        try:
+            with open(os.path.join(d, 'config.status'), 'w') as fh:
+                fh.write('# coding=utf-8\n')
+                fh.write('from __future__ import unicode_literals\n')
+                fh.write("topobjdir = '%s'\n" % mozpath.normsep(d))
+                fh.write("topsrcdir = '%s'\n" % topsrcdir)
+                fh.write("mozconfig = None\n")
+                fh.write("defines = { 'FOO': 'foo' }\n")
+                fh.write("non_global_defines = ['BAR']\n")
+                fh.write("substs = { 'QUX': 'qux' }\n")
+                fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
+                         "'non_global_defines', 'substs', 'mozconfig']")
 
-        self.assertEqual(base.defines, ce.defines)
-        self.assertEqual(base.substs, ce.substs)
+            base = self.get_base(topobjdir=d)
 
-        self.assertIsInstance(base.defines, dict)
-        self.assertIsInstance(base.substs, dict)
+            ce = base.config_environment
+            self.assertIsInstance(ce, ConfigEnvironment)
+
+            self.assertEqual(base.defines, ce.defines)
+            self.assertEqual(base.substs, ce.substs)
+
+            self.assertEqual(base.defines, {'FOO': 'foo'})
+            self.assertEqual(base.substs, {
+                'ACDEFINES': '-DFOO=foo',
+                'ALLEMPTYSUBSTS': '',
+                'ALLSUBSTS': 'ACDEFINES = -DFOO=foo\nQUX = qux',
+                'QUX': 'qux',
+            })
+        finally:
+            shutil.rmtree(d)
 
     def test_get_binary_path(self):
         base = self.get_base(topobjdir=topobjdir)
