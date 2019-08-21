@@ -15,6 +15,9 @@ type Props = {
   editor: Object,
   line: number,
   previews: Array<Preview>,
+  // Represents the number of column breakpoints to help with preview
+  // positioning
+  numColumnBreakpoints: number,
 };
 
 import "./InlinePreview.css";
@@ -36,6 +39,16 @@ class InlinePreviewRow extends PureComponent<Props> {
 
   componentWillUnmount() {
     this.updatePreviewWidget(null, this.props);
+  }
+
+  getPreviewPosition(editor: Object, line: number) {
+    const lineStartPos = editor.codeMirror.cursorCoords({ line, ch: 0 });
+    const lineEndPos = editor.codeMirror.cursorCoords({
+      line,
+      ch: editor.getLine(line).length,
+    });
+    const previewSpacing = 8;
+    return lineEndPos.left - lineStartPos.left + previewSpacing;
   }
 
   updatePreviewWidget(props: Props | null, prevProps: Props | null) {
@@ -65,8 +78,7 @@ class InlinePreviewRow extends PureComponent<Props> {
       this.IPWidget = editor.codeMirror.addLineWidget(line, widget);
     }
 
-    // Determine the end of line and append preview after leaving gap of 8px
-    const left = editor.getLine(line).length * editor.defaultCharWidth() + 8;
+    const left = this.getPreviewPosition(editor, line);
     if (!prevProps || this.lastLeft !== left) {
       this.lastLeft = left;
       this.IPWidget.node.style.left = `${left}px`;
