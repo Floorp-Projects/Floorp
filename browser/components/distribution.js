@@ -314,9 +314,19 @@ DistributionCustomizer.prototype = {
         ".bookmarksProcessed";
     }
 
-    let bmProcessed = Services.prefs.getBoolPref(bmProcessedPref, false);
+    if (Services.prefs.getBoolPref(bmProcessedPref, false)) {
+      return;
+    }
 
-    if (!bmProcessed) {
+    let ProfileAge = ChromeUtils.import(
+      "resource://gre/modules/ProfileAge.jsm",
+      {}
+    ).ProfileAge;
+    let profileAge = await ProfileAge();
+    let resetDate = await profileAge.reset;
+
+    // If the profile has been reset, don't recreate bookmarks.
+    if (!resetDate) {
       if (sections.BookmarksMenu) {
         await this._parseBookmarksSection(
           PlacesUtils.bookmarks.menuGuid,
@@ -329,8 +339,8 @@ DistributionCustomizer.prototype = {
           "BookmarksToolbar"
         );
       }
-      Services.prefs.setBoolPref(bmProcessedPref, true);
     }
+    Services.prefs.setBoolPref(bmProcessedPref, true);
   },
 
   _prefDefaultsApplied: false,
