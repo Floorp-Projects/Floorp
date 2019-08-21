@@ -123,11 +123,6 @@ this.StoragePrincipalHelper = {
         await cleanupFunction();
       }
       UrlClassifierTestUtils.cleanupTestTrackers();
-
-      // While running these tests we typically do not have enough idle time to do
-      // GC reliably, so force it here.
-      /* import-globals-from antitracking_head.js */
-      forceGC();
     });
   },
 };
