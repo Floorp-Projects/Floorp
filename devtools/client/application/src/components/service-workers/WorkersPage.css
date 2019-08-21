@@ -15,3 +15,18 @@
  *  |                     Link to about:debugging |
  *  +---------------------------------------------+
  */
+.workers-page {
+  height: 100vh;
+  padding: 0 2rem;
+  display: grid;
+  -moz-user-select: none;
+}
+
+.workers-page--empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.workers-page:not(.workers-page--empty) {
+  grid-template-rows: 1fr auto;
+}

@@ -2,28 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-/*
- * Page container for worker + manifest views
- */
-
-.app-page {
-  height: 100vh;
+.manifest-page {
+	height: 100vh;
   padding: 0 2rem;
   display: grid;
-  grid-template-rows: 1fr auto;
   -moz-user-select: none;
-}
 
-.app-page--empty {
+  /* slipt up in components in https://bugzilla.mozilla.org/show_bug.cgi?id=1566011 */
   align-items: center;
   justify-content: center;
-  font-size: var(--body-10-font-size);
+  font-size: var(--title-10-font-size);
   color: var(--theme-toolbar-color);
-}
-
-.app-page__title {
-  font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
-  margin: 0;
 }
