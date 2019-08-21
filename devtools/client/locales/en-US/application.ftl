@@ -80,6 +80,24 @@ serviceworker-empty-suggestions-debugger = Step through your Service Worker regi
 # Clicking on the link will open about:debugging in a new tab.
 serviceworker-empty-suggestions-aboutdebugging = Inspect Service Workers from other domains. <a>Open about:debugging</a>
 
+# Header for the view of Manifest displayed in the application panel for the current page.
+manifest-view-header = App Manifest
+
+# Header for the Errors and Warnings section of Manifest inspection displayed in the application panel.
+manifest-item-warnings = Errors and Warnings
+
+# Header for the Identity section of Manifest inspection displayed in the application panel.
+manifest-item-identity = Identity
+
+# Header for the Presentation section of Manifest inspection displayed in the application panel.
+manifest-item-presentation = Presentation
+
+# Header for the Icon section of Manifest inspection displayed in the application panel.
+manifest-item-icons = Icons
+
+# Text displayed when no manifest was found for the current page.
+manifest-empty-intro = No manifest found to inspect.
+
 # Text displayed while we are loading the manifest file
 manifest-loading = Loading manifest…
 
@@ -91,3 +109,4 @@ manifest-loaded-error = There was an error while loading the manifest:
 
 # Text displayed when the page has no manifest available
 manifest-non-existing = No manifest found to inspect.
+
