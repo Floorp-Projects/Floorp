@@ -46,15 +46,6 @@ async function assertSitesListed(blocked) {
     );
     is(listItems.length, 1, "We have 1 tracker in the list");
 
-    let strictInfo = document.getElementById(
-      "protections-popup-trackersView-strict-info"
-    );
-    is(
-      BrowserTestUtils.is_hidden(strictInfo),
-      Services.prefs.getBoolPref(TP_PREF),
-      "Strict info is hidden if TP is enabled."
-    );
-
     let mainView = document.getElementById("protections-popup-mainView");
     viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
     let backButton = trackersView.querySelector(".subviewbutton-back");

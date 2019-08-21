@@ -311,13 +311,6 @@ var TrackingProtection = {
     ));
   },
 
-  get strictInfo() {
-    delete this.strictInfo;
-    return (this.strictInfo = document.getElementById(
-      "protections-popup-trackersView-strict-info"
-    ));
-  },
-
   strings: {
     get subViewBlocked() {
       delete this.subViewBlocked;
@@ -410,9 +403,6 @@ var TrackingProtection = {
 
     let contentBlockingLog = await gBrowser.selectedBrowser.getContentBlockingLog();
     contentBlockingLog = JSON.parse(contentBlockingLog);
-
-    // Don't tell the user to turn on TP if they are already blocking trackers.
-    this.strictInfo.hidden = this.enabled;
 
     let fragment = document.createDocumentFragment();
     for (let [origin, actions] of Object.entries(contentBlockingLog)) {
