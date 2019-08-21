@@ -368,7 +368,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             mh_command.extend(['--download-symbols', 'true'])
     if mozharness.get('include-blob-upload-branch'):
         mh_command.append('--blob-upload-branch=' + config.params['project'])
-    mh_command.extend(mozharness.get('extra-options', []))
 
     # TODO: remove the need for run['chunked']
     if mozharness.get('chunked') or test['chunks'] > 1:
