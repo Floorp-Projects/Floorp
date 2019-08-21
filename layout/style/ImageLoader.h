@@ -84,8 +84,6 @@ class ImageLoader final : public imgINotificationObserver {
   // May be called from any thread.
   static void DeregisterCSSImageFromAllLoaders(const StyleLoadData&);
 
-  void FlushUseCounters();
-
  private:
   // This callback is used to unblock document onload after a reflow
   // triggered from an image load.

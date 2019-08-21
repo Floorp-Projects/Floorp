@@ -1836,17 +1836,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   bool hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
 
-  /*
-   * Force the use counters for the node's associated document(s) to be
-   * flushed to telemetry.  For example, a document node will flush its own
-   * counters and an image node with an SVG source will flush the SVG
-   * document's counters.  Normally, use counters are flushed to telemetry
-   * upon document destruction, but as document destruction is somewhat
-   * non-deterministic, we have this method here for more determinism when
-   * running tests.
-   */
-  void forceUseCounterFlush(in Node aNode);
-
   /**
    * Enable or disable displayport suppression. This is intended to be used by
    * testing code, to provide more deterministic behaviour over the displayport

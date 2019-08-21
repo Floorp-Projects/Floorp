@@ -3817,31 +3817,6 @@ nsDOMWindowUtils::TriggerDeviceReset() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ForceUseCounterFlush(nsINode* aNode) {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  if (nsCOMPtr<Document> doc = do_QueryInterface(aNode)) {
-    mozilla::css::ImageLoader* loader = doc->StyleImageLoader();
-    loader->FlushUseCounters();
-
-    // Flush the document and any external documents that it depends on.
-    const auto reportKind =
-        Document::UseCounterReportKind::eIncludeExternalResources;
-    doc->ReportUseCounters(reportKind);
-    return NS_OK;
-  }
-
-  if (nsCOMPtr<nsIContent> content = do_QueryInterface(aNode)) {
-    if (HTMLImageElement* img = HTMLImageElement::FromNode(content)) {
-      img->FlushUseCounters();
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                           bool* aRetVal) {
   PresShell* presShell = GetPresShell();
