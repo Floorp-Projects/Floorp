@@ -950,8 +950,8 @@ bool nsHtml5TreeOpExecutor::ShouldPreloadURI(nsIURI* aURI) {
 
 dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
     const nsAString& aReferrerPolicy) {
-  net::ReferrerPolicy referrerPolicy =
-      net::AttributeReferrerPolicyFromString(aReferrerPolicy);
+  dom::ReferrerPolicy referrerPolicy =
+      dom::ReferrerInfo::ReferrerPolicyAttributeFromString(aReferrerPolicy);
   return GetPreloadReferrerPolicy(referrerPolicy);
 }
 

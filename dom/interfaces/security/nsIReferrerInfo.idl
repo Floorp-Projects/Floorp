@@ -90,6 +90,11 @@ interface nsIReferrerInfo : nsISerializable
   ReferrerPolicy binaryReferrerPolicy();
 
   /**
+   * Get referrer policy as string
+   */
+  ACString getReferrerPolicyString();
+
+  /**
    * Indicates if the referrer should not be sent or not even when it's available.
    */
   [infallible] readonly attribute boolean sendReferrer;

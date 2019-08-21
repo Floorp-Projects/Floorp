@@ -204,7 +204,47 @@ class ReferrerInfo : public nsIReferrerInfo {
       nsIHttpChannel* aChannel = nullptr, nsIURI* aURI = nullptr,
       bool privateBrowsing = false);
 
-   /**
+  /*
+   * Helper function to parse ReferrerPolicy from meta tag referrer content.
+   * For example: <meta name="referrer" content="origin">
+   *
+   * @param aContent content string to be transformed into ReferrerPolicyEnum,
+   *                 e.g. "origin".
+   */
+  static ReferrerPolicyEnum ReferrerPolicyFromMetaString(
+      const nsAString& aContent);
+
+  /*
+   * Helper function to parse ReferrerPolicy from string content of
+   * referrerpolicy attribute.
+   * For example: <a href="http://example.com" referrerpolicy="no-referrer">
+   *
+   * @param aContent content string to be transformed into ReferrerPolicyEnum,
+   *                 e.g. "no-referrer".
+   */
+  static ReferrerPolicyEnum ReferrerPolicyAttributeFromString(
+      const nsAString& aContent);
+
+  /*
+   * Helper function to parse ReferrerPolicy from string content of
+   * Referrer-Policy header.
+   * For example: Referrer-Policy: origin no-referrer
+   * https://www.w3.org/tr/referrer-policy/#parse-referrer-policy-from-header
+   *
+   * @param aContent content string to be transformed into ReferrerPolicyEnum.
+   *                e.g. "origin no-referrer"
+   */
+  static ReferrerPolicyEnum ReferrerPolicyFromHeaderString(
+      const nsAString& aContent);
+
+  /*
+   * Helper function to convert ReferrerPolicy enum to string
+   *
+   * @param aPolicy referrer policy to convert.
+   */
+  static const char* ReferrerPolicyToString(ReferrerPolicyEnum aPolicy);
+
+  /**
    * Hash function for this object
    */
   HashNumber Hash() const;
@@ -266,7 +306,8 @@ class ReferrerInfo : public nsIReferrerInfo {
    * Currently, referrerpolicy attribute is supported in a, area, img, iframe,
    * script, or link element.
    */
-  void GetReferrerPolicyFromAtribute(nsINode* aNode, ReferrerPolicyEnum& aPolicy) const;
+  void GetReferrerPolicyFromAtribute(nsINode* aNode,
+                                     ReferrerPolicyEnum& aPolicy) const;
 
   /**
    * Return true if node has a rel="noreferrer" attribute.

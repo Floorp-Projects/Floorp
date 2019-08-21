@@ -49,6 +49,7 @@
 #include "nsIPrincipal.h"
 #include "nsContainerFrame.h"
 #include "nsStyleUtil.h"
+#include "ReferrerInfo.h"
 
 #include "mozilla/PresState.h"
 #include "nsILayoutHistoryState.h"
@@ -100,7 +101,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 #include "nsComputedDOMStyle.h"
-#include "ReferrerPolicy.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 
@@ -1034,25 +1034,29 @@ bool nsGenericHTMLElement::ParseImageAttribute(nsAtom* aAttribute,
 
 bool nsGenericHTMLElement::ParseReferrerAttribute(const nsAString& aString,
                                                   nsAttrValue& aResult) {
-  static const nsAttrValue::EnumTable kReferrerTable[] = {
-      {ReferrerPolicyToString(net::RP_No_Referrer),
-       static_cast<int16_t>(net::RP_No_Referrer)},
-      {ReferrerPolicyToString(net::RP_Origin),
-       static_cast<int16_t>(net::RP_Origin)},
-      {ReferrerPolicyToString(net::RP_Origin_When_Crossorigin),
-       static_cast<int16_t>(net::RP_Origin_When_Crossorigin)},
-      {ReferrerPolicyToString(net::RP_No_Referrer_When_Downgrade),
-       static_cast<int16_t>(net::RP_No_Referrer_When_Downgrade)},
-      {ReferrerPolicyToString(net::RP_Unsafe_URL),
-       static_cast<int16_t>(net::RP_Unsafe_URL)},
-      {ReferrerPolicyToString(net::RP_Strict_Origin),
-       static_cast<int16_t>(net::RP_Strict_Origin)},
-      {ReferrerPolicyToString(net::RP_Same_Origin),
-       static_cast<int16_t>(net::RP_Same_Origin)},
-      {ReferrerPolicyToString(net::RP_Strict_Origin_When_Cross_Origin),
-       static_cast<int16_t>(net::RP_Strict_Origin_When_Cross_Origin)},
-      {nullptr, 0}};
-  return aResult.ParseEnumValue(aString, kReferrerTable, false);
+  using mozilla::dom::ReferrerInfo;
+  static const nsAttrValue::EnumTable kReferrerPolicyTable[] = {
+      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::No_referrer),
+       static_cast<int16_t>(ReferrerPolicy::No_referrer)},
+      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Origin),
+       static_cast<int16_t>(ReferrerPolicy::Origin)},
+      {ReferrerInfo::ReferrerPolicyToString(
+           ReferrerPolicy::Origin_when_cross_origin),
+       static_cast<int16_t>(ReferrerPolicy::Origin_when_cross_origin)},
+      {ReferrerInfo::ReferrerPolicyToString(
+           ReferrerPolicy::No_referrer_when_downgrade),
+       static_cast<int16_t>(ReferrerPolicy::No_referrer_when_downgrade)},
+      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Unsafe_url),
+       static_cast<int16_t>(ReferrerPolicy::Unsafe_url)},
+      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Strict_origin),
+       static_cast<int16_t>(ReferrerPolicy::Strict_origin)},
+      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Same_origin),
+       static_cast<int16_t>(ReferrerPolicy::Same_origin)},
+      {ReferrerInfo::ReferrerPolicyToString(
+           ReferrerPolicy::Strict_origin_when_cross_origin),
+       static_cast<int16_t>(ReferrerPolicy::Strict_origin_when_cross_origin)},
+      {nullptr, ReferrerPolicy::_empty}};
+  return aResult.ParseEnumValue(aString, kReferrerPolicyTable, false);
 }
 
 bool nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,

@@ -201,29 +201,6 @@ interface nsINetUtil : nsISupports
                                         out long aCharsetStart,
                                         out long aCharsetEnd);
 
-/**
-   * Parse an attribute referrer policy string (no-referrer, origin, unsafe-url)
-   * and return the according integer code (defined in nsIHttpChannel.idl)
-   *
-   * @param aPolicyString
-   *        the policy string given as attribute
-   * @return aPolicyEnum
-   *         referrer policy code from nsIHttpChannel.idl, (see parser in
-   *         ReferrerPolicy.h for details)
-   */
-  unsigned long parseAttributePolicyString(in AString aPolicyString);
-
-/**
-   * Convert referrer policy integer code (defined in nsIHttpChannel.idl) to
-   * string.
-   *
-   * @param aPolicy
-   *        the policy integer code (defined in nsIHttpChannel.idl)
-   * @return aPolicyString
-   *         referrer policy string from code
-   */
-  ACString getReferrerPolicyString(in unsigned long aPolicy);
-
   /**
    * This is test-only. Send an IPC message to let socket process send a
    * telemetry.
