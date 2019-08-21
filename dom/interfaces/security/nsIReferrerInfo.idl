@@ -20,6 +20,59 @@ native URIRef(already_AddRefed<nsIURI>);
 interface nsIReferrerInfo : nsISerializable
 {
   /**
+   * Unfortunately we can not query the ReferrerPolicy values defined within
+   * ReferrerPolicy.webidl directly from xpidl. Hence we define the enum value
+   * ReferrerPolicyIDL to set up the ReferrerInfo object from JS. If you need
+   * ReferrerPolicy in native code, please directly query it from
+   * ReferrerPolicy.webidl.
+   */
+  cenum ReferrerPolicyIDL : 8 {
+  /**
+   * The undefined state, or no referrer policy, usually causing a fallback to a
+   * referrer policy definded in higher level policy. For example: request by
+   * clicking <a> element with empty referrer policy will be sent with the
+   * referrer policy of the a element’s node document.
+   * If there is no higher-level policy available, we fall back to the default
+   * value, which usually is "no-referrer-when-downgrade".
+   */
+  EMPTY = 0,
+  /**
+   * Do not send referrer from https->http
+   */
+  NO_REFERRER_WHEN_DOWNGRADE = 1,
+  /**
+   * Do not send referrer at all.
+   */
+  NO_REFERRER = 2,
+  /**
+   * Only send the origin of the referring URL
+   */
+  ORIGIN = 3,
+  /**
+   * Send origin when cross-origin.
+   */
+  ORIGIN_WHEN_CROSS_ORIGIN = 4,
+  /**
+   * Always sends the referrer, even on downgrade.
+   */
+  UNSAFE_URL = 5,
+  /**
+   * Send referrer when same-origin, no referrer when cross-origin
+   */
+  SAME_ORIGIN = 6,
+  /**
+   * Send origin when request from https->https or http->http(s). No referrer
+   * when request from https->http.
+   */
+  STRICT_ORIGIN = 7,
+  /**
+   * Send referrer when same-origin, send origin when cross-origin from
+   * https->https or http->http(s). No referrer when request from https->http.
+   */
+  STRICT_ORIGIN_WHEN_CROSS_ORIGIN = 8,
+  };
+
+  /**
    * The original referrer URI which indicates the full referrer before applying
    * referrer policy
    */
@@ -28,7 +81,7 @@ interface nsIReferrerInfo : nsISerializable
   /**
    * Referrer policy which is applied to the referrer
    */
-  readonly attribute ReferrerPolicy referrerPolicy;
+  [implicit_jscontext] readonly attribute nsIReferrerInfo_ReferrerPolicyIDL referrerPolicy;
 
   /**
    * C++ friendly version of referrerPolicy getter
@@ -60,12 +113,13 @@ interface nsIReferrerInfo : nsISerializable
   boolean equals(in nsIReferrerInfo other);
 
   /**
-   * Initialize method.
+   * Initialize method to create ReferrerInfo object from JS
    * @param aReferrerPolicy referrer policy of the created object
    * @param aSendReferrer sendReferrer of the created object, defaults to false
    * @param aOriginalReferrer the original referrer, defaults to null.
    */
-  void init(in uint32_t aReferrerPolicy,
+  [implicit_jscontext]
+  void init(in nsIReferrerInfo_ReferrerPolicyIDL aReferrerPolicy,
            [optional] in boolean aSendReferrer,
            [optional] in nsIURI aOriginalReferrer);
 

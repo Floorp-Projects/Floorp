@@ -9,7 +9,7 @@ const ReferrerInfo = Components.Constructor(
 );
 
 const referrerInfo = new ReferrerInfo(
-  Ci.nsIHttpChannel.REFERRER_POLICY_ORIGIN,
+  Ci.nsIReferrerInfo.ORIGIN,
   true,
   Services.io.newURI(TEST_REFERRER)
 );

@@ -37,11 +37,7 @@ function run_test() {
 
 add_test(function test_cancel1() {
   var uri = ios.newURI("http://localhost/1");
-  var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    true,
-    uri
-  );
+  var referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
 
   prefetch.prefetchURI(uri, referrerInfo, node1, true);
 
@@ -74,11 +70,7 @@ add_test(function test_cancel2() {
   // in the queue and canceling one will not cancel the other.
 
   var uri = ios.newURI("http://localhost/1");
-  var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    true,
-    uri
-  );
+  var referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
 
   prefetch.prefetchURI(uri, referrerInfo, node1, true);
   prefetch.prefetchURI(uri, referrerInfo, node2, true);
@@ -102,11 +94,7 @@ add_test(function test_cancel3() {
   // Request a prefetch of a uri. Trying to cancel a prefetch for the same uri
   // with a different node will fail.
   var uri = ios.newURI("http://localhost/1");
-  var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    true,
-    uri
-  );
+  var referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
 
   prefetch.prefetchURI(uri, referrerInfo, node1, true);
 
@@ -136,11 +124,7 @@ add_test(function test_cancel4() {
   // with the same node will fail.
   var uri1 = ios.newURI("http://localhost/1");
   var uri2 = ios.newURI("http://localhost/2");
-  var referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    true,
-    uri1
-  );
+  var referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri1);
 
   prefetch.prefetchURI(uri1, referrerInfo, node1, true);
 

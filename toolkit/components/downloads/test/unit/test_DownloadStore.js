@@ -49,7 +49,7 @@ add_task(async function test_save_reload() {
     storeForSave.path
   );
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     NetUtil.newURI(TEST_REFERRER_URL)
   );
@@ -171,7 +171,7 @@ add_task(async function test_load_string_predefined() {
   let sourceUriLiteral = JSON.stringify(httpUrl("source.txt"));
   let emptyUriLiteral = JSON.stringify(httpUrl("empty.txt"));
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     NetUtil.newURI(TEST_REFERRER_URL)
   );
@@ -307,7 +307,7 @@ add_task(async function test_save_reload_unknownProperties() {
   listForSave.add(download2);
 
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    Ci.nsIReferrerInfo.EMPTY,
     true,
     NetUtil.newURI(TEST_REFERRER_URL)
   );

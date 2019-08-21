@@ -626,6 +626,81 @@ void ReferrerInfo::LogMessageToConsole(
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
+ReferrerPolicy ReferrerPolicyIDLToReferrerPolicy(
+    nsIReferrerInfo::ReferrerPolicyIDL aReferrerPolicy) {
+  switch (aReferrerPolicy) {
+    case nsIReferrerInfo::EMPTY:
+      return ReferrerPolicy::_empty;
+      break;
+    case nsIReferrerInfo::NO_REFERRER:
+      return ReferrerPolicy::No_referrer;
+      break;
+    case nsIReferrerInfo::NO_REFERRER_WHEN_DOWNGRADE:
+      return ReferrerPolicy::No_referrer_when_downgrade;
+      break;
+    case nsIReferrerInfo::ORIGIN:
+      return ReferrerPolicy::Origin;
+      break;
+    case nsIReferrerInfo::ORIGIN_WHEN_CROSS_ORIGIN:
+      return ReferrerPolicy::Origin_when_cross_origin;
+      break;
+    case nsIReferrerInfo::UNSAFE_URL:
+      return ReferrerPolicy::Unsafe_url;
+      break;
+    case nsIReferrerInfo::SAME_ORIGIN:
+      return ReferrerPolicy::Same_origin;
+      break;
+    case nsIReferrerInfo::STRICT_ORIGIN:
+      return ReferrerPolicy::Strict_origin;
+      break;
+    case nsIReferrerInfo::STRICT_ORIGIN_WHEN_CROSS_ORIGIN:
+      return ReferrerPolicy::Strict_origin_when_cross_origin;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
+      break;
+  }
+
+  return ReferrerPolicy::_empty;
+}
+
+nsIReferrerInfo::ReferrerPolicyIDL ReferrerPolicyToReferrerPolicyIDL(ReferrerPolicy aReferrerPolicy) {
+  switch (aReferrerPolicy) {
+    case ReferrerPolicy::_empty:
+    return nsIReferrerInfo::EMPTY;
+      break;
+    case ReferrerPolicy::No_referrer:
+    return nsIReferrerInfo::NO_REFERRER;
+      break;
+    case ReferrerPolicy::No_referrer_when_downgrade:
+    return nsIReferrerInfo::NO_REFERRER_WHEN_DOWNGRADE;
+      break;
+    case ReferrerPolicy::Origin:
+    return nsIReferrerInfo::ORIGIN;
+      break;
+    case ReferrerPolicy::Origin_when_cross_origin:
+    return nsIReferrerInfo::ORIGIN_WHEN_CROSS_ORIGIN;
+      break;
+    case ReferrerPolicy::Unsafe_url:
+    return nsIReferrerInfo::UNSAFE_URL;
+      break;
+    case ReferrerPolicy::Same_origin:
+    return nsIReferrerInfo::SAME_ORIGIN;
+      break;
+    case ReferrerPolicy::Strict_origin:
+    return nsIReferrerInfo::STRICT_ORIGIN;
+      break;
+    case ReferrerPolicy::Strict_origin_when_cross_origin:
+    return nsIReferrerInfo::STRICT_ORIGIN_WHEN_CROSS_ORIGIN;
+      break;
+    default:
+    MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
+    break;
+  }
+
+  return nsIReferrerInfo::EMPTY;
+}
+
 ReferrerInfo::ReferrerInfo()
     : mOriginalReferrer(nullptr),
       mPolicy(ReferrerPolicy::_empty),
@@ -686,8 +761,8 @@ ReferrerInfo::GetOriginalReferrer(nsIURI** aOriginalReferrer) {
 }
 
 NS_IMETHODIMP
-ReferrerInfo::GetReferrerPolicy(ReferrerPolicyEnum* aReferrerPolicy) {
-  *aReferrerPolicy = mPolicy;
+ReferrerInfo::GetReferrerPolicy(JSContext* aCx, nsIReferrerInfo::ReferrerPolicyIDL* aReferrerPolicy) {
+  *aReferrerPolicy = ReferrerPolicyToReferrerPolicyIDL(mPolicy);
   return NS_OK;
 }
 
@@ -773,14 +848,14 @@ HashNumber ReferrerInfo::Hash() const {
 }
 
 NS_IMETHODIMP
-ReferrerInfo::Init(uint32_t aReferrerPolicy, bool aSendReferrer,
-                   nsIURI* aOriginalReferrer) {
+ReferrerInfo::Init(nsIReferrerInfo::ReferrerPolicyIDL aReferrerPolicy, bool aSendReferrer,
+                   nsIURI* aOriginalReferrer, JSContext* aCx) {
   MOZ_ASSERT(!mInitialized);
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
   };
 
-  mPolicy = aReferrerPolicy;
+  mPolicy = ReferrerPolicyIDLToReferrerPolicy(aReferrerPolicy);
   mSendReferrer = aSendReferrer;
   mOriginalReferrer = aOriginalReferrer;
   mInitialized = true;
@@ -1161,12 +1236,16 @@ ReferrerInfo::Read(nsIObjectInputStream* aStream) {
     mOriginalReferrer = nullptr;
   }
 
+  // ReferrerPolicy.webidl has different order with ReferrerPolicyIDL. We store
+  // to disk using the order of ReferrerPolicyIDL, so we convert to
+  // ReferrerPolicyIDL to make it be compatible to the old format.
   uint32_t policy;
   rv = aStream->Read32(&policy);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  mPolicy = static_cast<ReferrerPolicyEnum>(policy);
+  mPolicy = ReferrerPolicyIDLToReferrerPolicy(
+      static_cast<nsIReferrerInfo::ReferrerPolicyIDL>(policy));
 
   rv = aStream->ReadBoolean(&mSendReferrer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1222,7 +1301,7 @@ ReferrerInfo::Write(nsIObjectOutputStream* aStream) {
     }
   }
 
-  rv = aStream->Write32(static_cast<uint32_t>(mPolicy));
+  rv = aStream->Write32(ReferrerPolicyToReferrerPolicyIDL(mPolicy));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -38,7 +38,7 @@ const appRepURLPref = "browser.safebrowsing.downloads.remote.url";
 
 function createReferrerInfo(
   aURI,
-  aRefererPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER
+  aRefererPolicy = Ci.nsIReferrerInfo.NO_REFERRER
 ) {
   return new ReferrerInfo(aRefererPolicy, true, aURI);
 }
@@ -300,15 +300,15 @@ add_test(function test_local_blacklist() {
 add_test(async function test_referer_blacklist() {
   Services.prefs.setCharPref(appRepURLPref, "http://localhost:4444/download");
   let testReferrerPolicies = [
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER,
-    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
-    Ci.nsIHttpChannel.REFERRER_POLICY_ORIGIN,
-    Ci.nsIHttpChannel.REFERRER_POLICY_ORIGIN_WHEN_XORIGIN,
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
-    Ci.nsIHttpChannel.REFERRER_POLICY_SAME_ORIGIN,
-    Ci.nsIHttpChannel.REFERRER_POLICY_STRICT_ORIGIN,
-    Ci.nsIHttpChannel.REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN,
+    Ci.nsIReferrerInfo.EMPTY,
+    Ci.nsIReferrerInfo.NO_REFERRER,
+    Ci.nsIReferrerInfo.NO_REFERRER_WHEN_DOWNGRADE,
+    Ci.nsIReferrerInfo.ORIGIN,
+    Ci.nsIReferrerInfo.ORIGIN_WHEN_CROSS_ORIGIN,
+    Ci.nsIReferrerInfo.UNSAFE_URL,
+    Ci.nsIReferrerInfo.SAME_ORIGIN,
+    Ci.nsIReferrerInfo.STRICT_ORIGIN,
+    Ci.nsIReferrerInfo.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
   ];
 
   function runReferrerPolicyTest(referrerPolicy) {

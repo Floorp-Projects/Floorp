@@ -54,7 +54,7 @@ add_task(async function test_referrer_restart() {
   );
 
   let referrerInfo = new ReferrerInfo(
-    Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+    Ci.nsIReferrerInfo.UNSAFE_URL,
     true,
     NetUtil.newURI(TEST_REFERRER_URL)
   );

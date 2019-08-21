@@ -60,7 +60,7 @@ BrowserElementWebNavigation.prototype = {
       uri,
       flags,
       referrer,
-      Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      Ci.nsIReferrerInfo.EMPTY,
       postData,
       headers,
       null,

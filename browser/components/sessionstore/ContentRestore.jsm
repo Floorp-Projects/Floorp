@@ -219,7 +219,7 @@ ContentRestoreInternal.prototype = {
           let referrerPolicy =
             "referrerPolicy" in loadArguments
               ? loadArguments.referrerPolicy
-              : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
+              : Ci.nsIReferrerInfo.EMPTY;
           let ReferrerInfo = Components.Constructor(
             "@mozilla.org/referrer-info;1",
             "nsIReferrerInfo",
