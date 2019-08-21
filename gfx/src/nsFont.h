@@ -37,9 +37,6 @@ struct nsFont final {
   // Font variations from CSS font-variation-settings
   nsTArray<gfxFontVariation> fontVariationSettings;
 
-  // -- list of value tags for font-specific alternate features
-  nsTArray<gfxAlternateValue> alternateValues;
-
   // The logical size of the font, in nscoord units
   nscoord size = 0;
 
@@ -68,9 +65,7 @@ struct nsFont final {
   // Some font-variant-alternates property values require
   // font-specific settings defined via @font-feature-values rules.
   // These are resolved *after* font matching occurs.
-
-  // -- bitmask for both enumerated and functional propvals
-  uint16_t variantAlternates = NS_FONT_VARIANT_ALTERNATES_NORMAL;
+  mozilla::StyleVariantAlternatesList variantAlternates;
 
   // Variant subproperties
   uint16_t variantLigatures = NS_FONT_VARIANT_LIGATURES_NORMAL;
@@ -122,8 +117,6 @@ struct nsFont final {
   enum class MaxDifference : uint8_t { eNone, eVisual, eLayoutAffecting };
 
   MaxDifference CalcDifference(const nsFont& aOther) const;
-
-  void CopyAlternates(const nsFont& aOther);
 
   // Add featureSettings into style
   void AddFontFeaturesToStyle(gfxFontStyle* aStyle, bool aVertical) const;
