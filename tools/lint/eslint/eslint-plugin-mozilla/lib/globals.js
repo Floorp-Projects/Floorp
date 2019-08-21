@@ -252,7 +252,10 @@ module.exports = {
         if (name === "script" && "src" in attribs) {
           scriptSrcs.push({
             src: attribs.src,
-            type: "type" in attribs ? attribs.type : "script",
+            type:
+              "type" in attribs && attribs.type == "module"
+                ? "module"
+                : "script",
           });
         }
       },

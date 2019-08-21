@@ -1,14 +1,15 @@
 "use strict";
 
 module.exports = {
+  "env": {
+    "webextensions": true,
+  },
 
   globals: {
-    "browser": [],
-    "chrome": [],
-    "getTestConfig": true,
-    "startMark": [],
-    "endMark": [],
-    "name": "",
+    "getTestConfig": false,
+    "startMark": true,
+    "endMark": true,
+    "name": true,
   },
 
   "plugins": [
