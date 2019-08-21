@@ -11,8 +11,7 @@
 
 // This file uses ContentTask & frame scripts, where these are available.
 /* global addEventListener, removeEventListener, sendAsyncMessage,
-          addMessageListener, removeMessageListener,
-          privateNoteIntentionalCrash, ContentTaskUtils */
+          addMessageListener, removeMessageListener, ContentTaskUtils */
 
 "use strict";
 
