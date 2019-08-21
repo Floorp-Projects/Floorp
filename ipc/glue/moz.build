@@ -47,7 +47,6 @@ EXPORTS.mozilla.ipc += [
     'Shmem.h',
     'TaskFactory.h',
     'Transport.h',
-    'TransportSecurityInfoUtils.h',
     'URIUtils.h',
     'WindowsMessageLoop.h',
 ]
@@ -168,7 +167,6 @@ UNIFIED_SOURCES += [
     'SharedMemory.cpp',
     'Shmem.cpp',
     'StringUtil.cpp',
-    'TransportSecurityInfoUtils.cpp',
     'URIUtils.cpp',
 ]
 

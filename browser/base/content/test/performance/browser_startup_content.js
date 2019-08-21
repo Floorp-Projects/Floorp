@@ -49,6 +49,7 @@ const whitelist = {
     "resource://gre/modules/ActorManagerChild.jsm",
     "resource://gre/modules/E10SUtils.jsm",
     "resource://gre/modules/Readerable.jsm",
+    "resource://gre/modules/WebProgressChild.jsm",
 
     // Telemetry
     "resource://gre/modules/TelemetryController.jsm", // bug 1470339

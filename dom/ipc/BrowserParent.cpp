@@ -2497,17 +2497,33 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
                                                           aCanGoForward);
 
   if (aWebProgressData && aWebProgressData->isTopLevel()) {
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    if (aLocationChangeData->csp().isSome()) {
+      csp = CSPInfoToCSP(aLocationChangeData->csp().ref(), nullptr, nullptr);
+    }
+
+    nsCOMPtr<nsIPrincipal> contentPrincipal =
+        PrincipalInfoToPrincipal(aLocationChangeData->contentPrincipal());
+    nsCOMPtr<nsIPrincipal> contentStoragePrincipal = PrincipalInfoToPrincipal(
+        aLocationChangeData->contentStoragePrincipal());
     nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+    if (aLocationChangeData->contentBlockingAllowListPrincipal().type() ==
+        OptionalPrincipalInfo::TPrincipalInfo) {
+      contentBlockingAllowListPrincipal = PrincipalInfoToPrincipal(
+          aLocationChangeData->contentBlockingAllowListPrincipal()
+              .get_PrincipalInfo());
+    }
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        aLocationChangeData->referrerInfo();
+
     Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
     Unused << browser->UpdateForLocationChange(
         aLocation, aLocationChangeData->charset(),
         aLocationChangeData->mayEnableCharacterEncodingMenu(),
         aLocationChangeData->charsetAutodetected(),
         aLocationChangeData->documentURI(), aLocationChangeData->title(),
-        aLocationChangeData->contentPrincipal(),
-        aLocationChangeData->contentStoragePrincipal(),
-        aLocationChangeData->contentBlockingAllowListPrincipal(),
-        aLocationChangeData->csp(), aLocationChangeData->referrerInfo(),
+        contentPrincipal, contentStoragePrincipal,
+        contentBlockingAllowListPrincipal, csp, referrerInfo,
         aLocationChangeData->isSyntheticDocument(),
         aWebProgressData->innerDOMWindowID(),
         aLocationChangeData->requestContextID().isSome(),
@@ -2541,35 +2557,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStatusChange(
 
   Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
                                               aMessage.get());
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserParent::RecvOnSecurityChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const uint32_t aState,
-    const Maybe<WebProgressSecurityChangeData>& aSecurityChangeData) {
-  nsCOMPtr<nsIBrowser> browser;
-  nsCOMPtr<nsIWebProgress> manager;
-  nsCOMPtr<nsIWebProgressListener> managerAsListener;
-  if (!GetWebProgressListener(getter_AddRefs(browser), getter_AddRefs(manager),
-                              getter_AddRefs(managerAsListener))) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   getter_AddRefs(webProgress),
-                                   getter_AddRefs(request));
-
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
-    Unused << browser->UpdateSecurityUIForSecurityChange(
-        aSecurityChangeData->securityInfo(), aState,
-        aSecurityChangeData->isSecureContext());
-  }
-
-  Unused << managerAsListener->OnSecurityChange(webProgress, request, aState);
 
   return IPC_OK();
 }
