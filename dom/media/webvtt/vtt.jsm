@@ -926,6 +926,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     const fullDimension = isWritingDirectionHorizontal ?
       containerBox.height : containerBox.width;
     if (cue.snapToLines) {
+      LOG(`Adjust position when 'snap-to-lines' is true.`);
       // The step is the height or width of the line box. We should use font
       // size directly, instead of using text box's width or height, because the
       // width or height of the box would be changed when the text is wrapped to
@@ -1014,6 +1015,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         });
       }
     } else {
+      LOG(`Adjust position when 'snap-to-lines' is false.`);
       // (snap-to-lines if false) spec 7.2.10.1 ~ 7.2.10.2
       if (cue.lineAlign != "start") {
         const isCenterAlign = cue.lineAlign == "center";
