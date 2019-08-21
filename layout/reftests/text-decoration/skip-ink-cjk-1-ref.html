@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<meta charset="utf-8">
+<style>
+body {
+  font: 16px/2 sans-serif;
+}
+.test {
+  font: 32px sans-serif;
+  text-decoration: 2px red underline;
+  text-underline-offset: 1px;
+}
+span {
+  text-decoration-skip-ink: none;
+}
+</style>
+<div>The underline should skip descenders on the English but not the Japanese:</div>
+<div class=test>skipping <span>土砂災害警戒情報</span> skipping</div>
