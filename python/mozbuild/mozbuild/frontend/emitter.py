@@ -993,7 +993,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 for suffix, srcs in ctxt_sources['HOST_SOURCES'].items():
                     host_linkable.sources[suffix] += srcs
 
-        for f, flags in all_flags.iteritems():
+        for f, flags in sorted(all_flags.iteritems()):
             if flags.flags:
                 ext = mozpath.splitext(f)[1]
                 yield PerSourceFlag(context, f, flags.flags)
