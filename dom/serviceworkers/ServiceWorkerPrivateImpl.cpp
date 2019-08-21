@@ -148,46 +148,12 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
       InternalRequest::MapChannelToRequestCredentials(underlyingChannel);
 
   nsAutoString referrer;
-  uint32_t referrerPolicyInt = 0;
+  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
   if (referrerInfo) {
-    referrerPolicyInt = referrerInfo->GetReferrerPolicy();
+    referrerPolicy = referrerInfo->ReferrerPolicy();
     Unused << referrerInfo->GetComputedReferrerSpec(referrer);
-  }
-
-  ReferrerPolicy referrerPolicy;
-  switch (referrerPolicyInt) {
-    case nsIHttpChannel::REFERRER_POLICY_UNSET:
-      referrerPolicy = ReferrerPolicy::_empty;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER:
-      referrerPolicy = ReferrerPolicy::No_referrer;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_ORIGIN:
-      referrerPolicy = ReferrerPolicy::Origin;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE:
-      referrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN:
-      referrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL:
-      referrerPolicy = ReferrerPolicy::Unsafe_url;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN:
-      referrerPolicy = ReferrerPolicy::Same_origin;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN:
-      referrerPolicy = ReferrerPolicy::Strict_origin_when_cross_origin;
-      break;
-    case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN:
-      referrerPolicy = ReferrerPolicy::Strict_origin;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid Referrer Policy enum value?");
-      break;
   }
 
   uint32_t loadFlags;

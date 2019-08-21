@@ -948,27 +948,26 @@ bool nsHtml5TreeOpExecutor::ShouldPreloadURI(nsIURI* aURI) {
   return mPreloadedURLs.EnsureInserted(spec);
 }
 
-net::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
+dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
     const nsAString& aReferrerPolicy) {
   net::ReferrerPolicy referrerPolicy =
       net::AttributeReferrerPolicyFromString(aReferrerPolicy);
   return GetPreloadReferrerPolicy(referrerPolicy);
 }
 
-net::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
+dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
     ReferrerPolicy aReferrerPolicy) {
-  if (aReferrerPolicy != net::RP_Unset) {
+  if (aReferrerPolicy != dom::ReferrerPolicy::_empty) {
     return aReferrerPolicy;
   }
 
-  return static_cast<net::ReferrerPolicy>(
-      mDocument->GetPreloadReferrerInfo()->GetReferrerPolicy());
+  return mDocument->GetPreloadReferrerInfo()->ReferrerPolicy();
 }
 
 void nsHtml5TreeOpExecutor::PreloadScript(
     const nsAString& aURL, const nsAString& aCharset, const nsAString& aType,
     const nsAString& aCrossOrigin, const nsAString& aIntegrity,
-    net::ReferrerPolicy aReferrerPolicy, bool aScriptFromHead, bool aAsync,
+    dom::ReferrerPolicy aReferrerPolicy, bool aScriptFromHead, bool aAsync,
     bool aDefer, bool aNoModule) {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {

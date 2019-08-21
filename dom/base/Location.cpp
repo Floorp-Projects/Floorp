@@ -69,7 +69,7 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
 
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   nsCOMPtr<nsIURI> sourceURI;
-  net::ReferrerPolicy referrerPolicy = net::RP_Unset;
+  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
 
   // Get security manager.
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();

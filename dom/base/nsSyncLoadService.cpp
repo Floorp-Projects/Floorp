@@ -30,7 +30,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-using mozilla::net::ReferrerPolicy;
+using mozilla::dom::ReferrerPolicy;
 
 /**
  * This class manages loading a single XML document

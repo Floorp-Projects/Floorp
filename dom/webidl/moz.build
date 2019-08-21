@@ -745,6 +745,7 @@ WEBIDL_FILES = [
     'PushSubscriptionOptions.webidl',
     'RadioNodeList.webidl',
     'Range.webidl',
+    'ReferrerPolicy.webidl',
     'Reporting.webidl',
     'Request.webidl',
     'ResizeObserver.webidl',

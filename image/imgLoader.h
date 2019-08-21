@@ -23,7 +23,6 @@
 #include "nsIChannel.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "imgIRequest.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class imgLoader;
 class imgRequestProxy;

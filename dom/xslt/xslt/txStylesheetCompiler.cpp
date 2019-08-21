@@ -25,7 +25,7 @@
 #include "nsTArray.h"
 
 using namespace mozilla;
-using mozilla::net::ReferrerPolicy;
+using mozilla::dom::ReferrerPolicy;
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
                                            ReferrerPolicy aReferrerPolicy,
@@ -469,7 +469,7 @@ txStylesheetCompilerState::txStylesheetCompilerState(
       mDoneWithThisStylesheet(false),
       mNextInstrPtr(nullptr),
       mToplevelIterator(nullptr),
-      mReferrerPolicy(mozilla::net::RP_Unset) {
+      mReferrerPolicy(ReferrerPolicy::_empty) {
   // Embedded stylesheets have another handler, which is set in
   // txStylesheetCompiler::init if the baseURI has a fragment identifier.
   mHandlerTable = gTxRootHandler;
@@ -843,7 +843,7 @@ static nsresult findFunction(nsAtom* aName, int32_t aNamespaceID,
 
 extern bool TX_XSLTFunctionAvailable(nsAtom* aName, int32_t aNameSpaceID) {
   RefPtr<txStylesheetCompiler> compiler =
-      new txStylesheetCompiler(EmptyString(), mozilla::net::RP_Unset, nullptr);
+      new txStylesheetCompiler(EmptyString(), ReferrerPolicy::_empty, nullptr);
   NS_ENSURE_TRUE(compiler, false);
 
   nsAutoPtr<FunctionCall> fnCall;

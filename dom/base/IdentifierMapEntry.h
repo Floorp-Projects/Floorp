@@ -16,7 +16,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/dom/TreeOrderedArray.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
@@ -49,7 +48,6 @@ class Element;
 class IdentifierMapEntry : public PLDHashEntryHdr {
   typedef dom::Document Document;
   typedef dom::Element Element;
-  typedef net::ReferrerPolicy ReferrerPolicy;
 
   /**
    * @see Document::IDTargetObserver, this is just here to avoid include hell.

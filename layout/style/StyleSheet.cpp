@@ -1246,7 +1246,7 @@ const ServoCssRules* StyleSheet::ToShared(
     RawServoSharedMemoryBuilder* aBuilder) {
   // Assert some things we assume when creating a StyleSheet using shared
   // memory.
-  MOZ_ASSERT(GetReferrerInfo()->GetReferrerPolicy() == net::RP_Unset);
+  MOZ_ASSERT(GetReferrerInfo()->ReferrerPolicy() == ReferrerPolicy::_empty);
   MOZ_ASSERT(GetReferrerInfo()->GetSendReferrer());
   MOZ_ASSERT(!nsCOMPtr<nsIURI>(GetReferrerInfo()->GetComputedReferrer()));
   MOZ_ASSERT(GetCORSMode() == CORS_NONE);

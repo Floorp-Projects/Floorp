@@ -35,7 +35,7 @@ class WindowProxyHolder;
 
 class nsHTMLDocument : public mozilla::dom::Document {
  protected:
-  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+  typedef mozilla::dom::ReferrerPolicy ReferrerPolicy;
   typedef mozilla::dom::Document Document;
   typedef mozilla::Encoding Encoding;
   template <typename T>

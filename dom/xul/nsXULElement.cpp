@@ -1818,7 +1818,7 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
     // inline styles are allowed to be applied.
     // XXX No specific specs talk about xul and referrer policy, pass Unset
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new mozilla::dom::ReferrerInfo(aDocumentURI, mozilla::net::RP_Unset);
+        new ReferrerInfo(aDocumentURI, ReferrerPolicy::_empty);
 
     RefPtr<URLExtraData> data =
         new URLExtraData(aDocumentURI, referrerInfo, principal);

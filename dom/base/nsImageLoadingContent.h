@@ -24,7 +24,6 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/net/ReferrerPolicy.h"
 #include "nsAttrValue.h"
 
 class nsIURI;
@@ -214,7 +213,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   virtual mozilla::CORSMode GetCORSMode();
 
-  virtual mozilla::net::ReferrerPolicy GetImageReferrerPolicy();
+  virtual mozilla::dom::ReferrerPolicy GetImageReferrerPolicy();
 
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
   void BindToTree(mozilla::dom::BindContext&, nsINode& aParent);

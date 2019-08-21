@@ -11,7 +11,6 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/LoadTainting.h"
-#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsIContentPolicy.h"
@@ -199,73 +198,11 @@ class InternalRequest final {
     mReferrerPolicy = aReferrerPolicy;
   }
 
-  void SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy) {
-    switch (aReferrerPolicy) {
-      case net::RP_Unset:
-        mReferrerPolicy = ReferrerPolicy::_empty;
-        break;
-      case net::RP_No_Referrer:
-        mReferrerPolicy = ReferrerPolicy::No_referrer;
-        break;
-      case net::RP_No_Referrer_When_Downgrade:
-        mReferrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
-        break;
-      case net::RP_Origin:
-        mReferrerPolicy = ReferrerPolicy::Origin;
-        break;
-      case net::RP_Origin_When_Crossorigin:
-        mReferrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
-        break;
-      case net::RP_Unsafe_URL:
-        mReferrerPolicy = ReferrerPolicy::Unsafe_url;
-        break;
-      case net::RP_Same_Origin:
-        mReferrerPolicy = ReferrerPolicy::Same_origin;
-        break;
-      case net::RP_Strict_Origin:
-        mReferrerPolicy = ReferrerPolicy::Strict_origin;
-        break;
-      case net::RP_Strict_Origin_When_Cross_Origin:
-        mReferrerPolicy = ReferrerPolicy::Strict_origin_when_cross_origin;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
-        break;
-    }
-  }
-
-  net::ReferrerPolicy GetReferrerPolicy() {
-    switch (mReferrerPolicy) {
-      case ReferrerPolicy::_empty:
-        return net::RP_Unset;
-      case ReferrerPolicy::No_referrer:
-        return net::RP_No_Referrer;
-      case ReferrerPolicy::No_referrer_when_downgrade:
-        return net::RP_No_Referrer_When_Downgrade;
-      case ReferrerPolicy::Origin:
-        return net::RP_Origin;
-      case ReferrerPolicy::Origin_when_cross_origin:
-        return net::RP_Origin_When_Crossorigin;
-      case ReferrerPolicy::Unsafe_url:
-        return net::RP_Unsafe_URL;
-      case ReferrerPolicy::Strict_origin:
-        return net::RP_Strict_Origin;
-      case ReferrerPolicy::Same_origin:
-        return net::RP_Same_Origin;
-      case ReferrerPolicy::Strict_origin_when_cross_origin:
-        return net::RP_Strict_Origin_When_Cross_Origin;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy enum value?");
-        break;
-    }
-    return net::RP_Unset;
-  }
-
-  net::ReferrerPolicy GetEnvironmentReferrerPolicy() const {
+  ReferrerPolicy GetEnvironmentReferrerPolicy() const {
     return mEnvironmentReferrerPolicy;
   }
 
-  void SetEnvironmentReferrerPolicy(net::ReferrerPolicy aReferrerPolicy) {
+  void SetEnvironmentReferrerPolicy(ReferrerPolicy aReferrerPolicy) {
     mEnvironmentReferrerPolicy = aReferrerPolicy;
   }
 
@@ -462,9 +399,7 @@ class InternalRequest final {
   // This will be used for request created from Window or Worker contexts
   // In case there's no Referrer Policy in Request, this will be passed to
   // channel.
-  // The Environment Referrer Policy should be net::ReferrerPolicy so that it
-  // could be associated with nsIHttpChannel.
-  net::ReferrerPolicy mEnvironmentReferrerPolicy;
+  ReferrerPolicy mEnvironmentReferrerPolicy;
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
   MOZ_INIT_OUTSIDE_CTOR LoadTainting mResponseTainting;

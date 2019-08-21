@@ -22,6 +22,7 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWebProgressListener.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIIOService.h"
 #include "nsIPermissionManager.h"

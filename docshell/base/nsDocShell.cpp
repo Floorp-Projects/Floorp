@@ -70,7 +70,6 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 
-#include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
@@ -5793,7 +5792,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
      * For most refreshes the current URI is an appropriate
      * internal referrer.
      */
-    referrerInfo = new ReferrerInfo(mCurrentURI, mozilla::net::RP_Unset, false);
+    referrerInfo = new ReferrerInfo(mCurrentURI, ReferrerPolicy::_empty, false);
   }
 
   loadState->SetReferrerInfo(referrerInfo);

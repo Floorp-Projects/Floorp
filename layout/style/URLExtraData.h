@@ -13,7 +13,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UserAgentStyleSheetID.h"
-#include "mozilla/net/ReferrerPolicy.h"
+#include "ReferrerInfo.h"
 
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"

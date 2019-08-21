@@ -735,8 +735,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   nsIReferrerInfo* GetReferrerInfo() const { return mLoadInfo.mReferrerInfo; }
 
-  uint32_t GetReferrerPolicy() const {
-    return mLoadInfo.mReferrerInfo->GetReferrerPolicy();
+  ReferrerPolicy GetReferrerPolicy() const {
+    return mLoadInfo.mReferrerInfo->ReferrerPolicy();
   }
 
   void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {

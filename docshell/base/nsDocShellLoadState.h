@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsDocShellLoadTypes.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIContentSecurityPolicy;
 class nsIInputStream;

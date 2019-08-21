@@ -10364,15 +10364,15 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
     // tracking channel, we may need to set our referrer with referrer policy
     // once again to ensure our defaults properly take effect now.
     if (mReferrerInfo) {
-      dom::ReferrerInfo* referrerInfo =
-          static_cast<dom::ReferrerInfo*>(mReferrerInfo.get());
+      ReferrerInfo* referrerInfo =
+          static_cast<ReferrerInfo*>(mReferrerInfo.get());
 
       if (referrerInfo->IsPolicyOverrided() &&
-          referrerInfo->GetReferrerPolicy() ==
+          referrerInfo->ReferrerPolicy() ==
               ReferrerInfo::GetDefaultReferrerPolicy(nullptr, nullptr,
                                                      isPrivate)) {
         nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
-            referrerInfo->CloneWithNewPolicy(RP_Unset);
+            referrerInfo->CloneWithNewPolicy(ReferrerPolicy::_empty);
         SetReferrerInfo(newReferrerInfo, false, true);
       }
     }
