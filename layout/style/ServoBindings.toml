@@ -224,7 +224,6 @@ whitelist-types = [
     "FrameRequestCallback",
     "GeckoParserExtraData",
     "GeckoFontMetrics",
-    "gfxAlternateValue",
     "gfxFontFeatureValueSet",
     "GridNamedArea",
     "mozilla::HalfCorner",
@@ -522,6 +521,7 @@ cbindgen-types = [
     { gecko = "StyleGenericTrackList", servo = "values::generics::grid::TrackList" },
     { gecko = "StyleGenericGridTemplateComponent", servo = "values::generics::grid::GridTemplateComponent" },
     { gecko = "StyleTextEmphasisStyle", servo = "values::computed::text::TextEmphasisStyle" },
+    { gecko = "StyleVariantAlternatesList", servo = "values::specified::font::VariantAlternatesList" },
 ]
 
 mapped-generic-types = [

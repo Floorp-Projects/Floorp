@@ -331,86 +331,119 @@ void gfxFontCache::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 #define MAX_SSXX_VALUE 99
 #define MAX_CVXX_VALUE 99
 
-static void LookupAlternateValues(gfxFontFeatureValueSet* featureLookup,
+static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
                                   const nsACString& aFamily,
-                                  const nsTArray<gfxAlternateValue>& altValue,
+                                  const StyleVariantAlternates& aAlternates,
                                   nsTArray<gfxFontFeature>& aFontFeatures) {
-  uint32_t numAlternates = altValue.Length();
-  for (uint32_t i = 0; i < numAlternates; i++) {
-    const gfxAlternateValue& av = altValue.ElementAt(i);
-    AutoTArray<uint32_t, 4> values;
+  using Tag = StyleVariantAlternates::Tag;
 
-    // map <family, name, feature> ==> <values>
-    bool found = featureLookup->GetFontFeatureValuesFor(aFamily, av.alternate,
-                                                        av.value, values);
-    uint32_t numValues = values.Length();
+  // historical-forms gets handled in nsFont::AddFontFeaturesToStyle.
+  if (aAlternates.IsHistoricalForms()) {
+    return;
+  }
 
-    // nothing defined, skip
-    if (!found || numValues == 0) {
-      continue;
-    }
-
-    gfxFontFeature feature;
-    if (av.alternate == NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT) {
-      NS_ASSERTION(numValues <= 2,
+  gfxFontFeature feature;
+  if (aAlternates.IsCharacterVariant()) {
+    for (auto& ident : aAlternates.AsCharacterVariant().AsSpan()) {
+      AutoTArray<uint32_t, 4> values;
+      // FIXME(emilio): Use atoms directly.
+      aFeatureLookup.GetFontFeatureValuesFor(
+          aFamily, NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT,
+          nsDependentAtomString(ident.AsAtom()), values);
+      // nothing defined, skip
+      if (values.IsEmpty()) {
+        continue;
+      }
+      NS_ASSERTION(values.Length() <= 2,
                    "too many values allowed for character-variant");
       // character-variant(12 3) ==> 'cv12' = 3
-      uint32_t nn = values.ElementAt(0);
+      uint32_t nn = values[0];
       // ignore values greater than 99
       if (nn == 0 || nn > MAX_CVXX_VALUE) {
         continue;
       }
-      feature.mValue = 1;
-      if (numValues > 1) {
-        feature.mValue = values.ElementAt(1);
-      }
+      feature.mValue = values.SafeElementAt(1, 1);
       feature.mTag = HB_TAG('c', 'v', ('0' + nn / 10), ('0' + nn % 10));
       aFontFeatures.AppendElement(feature);
+    }
+    return;
+  }
 
-    } else if (av.alternate == NS_FONT_VARIANT_ALTERNATES_STYLESET) {
+  if (aAlternates.IsStyleset()) {
+    for (auto& ident : aAlternates.AsStyleset().AsSpan()) {
+      AutoTArray<uint32_t, 4> values;
+      // FIXME(emilio): Use atoms directly.
+      aFeatureLookup.GetFontFeatureValuesFor(
+          aFamily, NS_FONT_VARIANT_ALTERNATES_STYLESET,
+          nsDependentAtomString(ident.AsAtom()), values);
+
       // styleset(1 2 7) ==> 'ss01' = 1, 'ss02' = 1, 'ss07' = 1
       feature.mValue = 1;
-      for (uint32_t v = 0; v < numValues; v++) {
-        uint32_t nn = values.ElementAt(v);
+      for (uint32_t nn : values) {
         if (nn == 0 || nn > MAX_SSXX_VALUE) {
           continue;
         }
         feature.mTag = HB_TAG('s', 's', ('0' + nn / 10), ('0' + nn % 10));
         aFontFeatures.AppendElement(feature);
       }
-
-    } else {
-      NS_ASSERTION(numValues == 1,
-                   "too many values for font-specific font-variant-alternates");
-      feature.mValue = values.ElementAt(0);
-
-      switch (av.alternate) {
-        case NS_FONT_VARIANT_ALTERNATES_STYLISTIC:  // salt
-          feature.mTag = HB_TAG('s', 'a', 'l', 't');
-          break;
-        case NS_FONT_VARIANT_ALTERNATES_SWASH:  // swsh, cswh
-          feature.mTag = HB_TAG('s', 'w', 's', 'h');
-          aFontFeatures.AppendElement(feature);
-          feature.mTag = HB_TAG('c', 's', 'w', 'h');
-          break;
-        case NS_FONT_VARIANT_ALTERNATES_ORNAMENTS:  // ornm
-          feature.mTag = HB_TAG('o', 'r', 'n', 'm');
-          break;
-        case NS_FONT_VARIANT_ALTERNATES_ANNOTATION:  // nalt
-          feature.mTag = HB_TAG('n', 'a', 'l', 't');
-          break;
-        default:
-          feature.mTag = 0;
-          break;
-      }
-
-      NS_ASSERTION(feature.mTag, "unsupported alternate type");
-      if (!feature.mTag) {
-        continue;
-      }
-      aFontFeatures.AppendElement(feature);
     }
+    return;
   }
+
+  uint32_t constant = 0;
+  nsAtom* name = nullptr;
+  switch (aAlternates.tag) {
+    case Tag::Swash:
+      constant = NS_FONT_VARIANT_ALTERNATES_SWASH;
+      name = aAlternates.AsSwash().AsAtom();
+      break;
+    case Tag::Stylistic:
+      constant = NS_FONT_VARIANT_ALTERNATES_STYLISTIC;
+      name = aAlternates.AsStylistic().AsAtom();
+      break;
+    case Tag::Ornaments:
+      constant = NS_FONT_VARIANT_ALTERNATES_ORNAMENTS;
+      name = aAlternates.AsOrnaments().AsAtom();
+      break;
+    case Tag::Annotation:
+      constant = NS_FONT_VARIANT_ALTERNATES_ANNOTATION;
+      name = aAlternates.AsAnnotation().AsAtom();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-variant-alternates value!");
+      return;
+  }
+
+  AutoTArray<uint32_t, 4> values;
+  aFeatureLookup.GetFontFeatureValuesFor(aFamily, constant,
+                                         nsDependentAtomString(name), values);
+  if (values.IsEmpty()) {
+    return;
+  }
+  MOZ_ASSERT(values.Length() == 1,
+             "too many values for font-specific font-variant-alternates");
+
+  feature.mValue = values[0];
+  switch (aAlternates.tag) {
+    case Tag::Swash:  // swsh, cswh
+      feature.mTag = HB_TAG('s', 'w', 's', 'h');
+      aFontFeatures.AppendElement(feature);
+      feature.mTag = HB_TAG('c', 's', 'w', 'h');
+      break;
+    case Tag::Stylistic:  // salt
+      feature.mTag = HB_TAG('s', 'a', 'l', 't');
+      break;
+    case Tag::Ornaments:  // ornm
+      feature.mTag = HB_TAG('o', 'r', 'n', 'm');
+      break;
+    case Tag::Annotation:  // nalt
+      feature.mTag = HB_TAG('n', 'a', 'l', 't');
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("how?");
+      return;
+  }
+  aFontFeatures.AppendElement(feature);
 }
 
 /* static */
@@ -419,7 +452,6 @@ void gfxFontShaper::MergeFontFeatures(
     bool aDisableLigatures, const nsACString& aFamilyName, bool aAddSmallCaps,
     void (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
     void* aHandleFeatureData) {
-  uint32_t numAlts = aStyle->alternateValues.Length();
   const nsTArray<gfxFontFeature>& styleRuleFeatures = aStyle->featureSettings;
 
   // Bail immediately if nothing to do, which is the common case.
@@ -427,7 +459,7 @@ void gfxFontShaper::MergeFontFeatures(
       !aDisableLigatures &&
       aStyle->variantCaps == NS_FONT_VARIANT_CAPS_NORMAL &&
       aStyle->variantSubSuper == NS_FONT_VARIANT_POSITION_NORMAL &&
-      numAlts == 0) {
+      aStyle->variantAlternates.IsEmpty()) {
     return;
   }
 
@@ -441,11 +473,7 @@ void gfxFontShaper::MergeFontFeatures(
   }
 
   // add feature values from font
-  uint32_t i, count;
-
-  count = aFontFeatures.Length();
-  for (i = 0; i < count; i++) {
-    const gfxFontFeature& feature = aFontFeatures.ElementAt(i);
+  for (const gfxFontFeature& feature : aFontFeatures) {
     mergedFeatures.Put(feature.mTag, feature.mValue);
   }
 
@@ -507,24 +535,22 @@ void gfxFontShaper::MergeFontFeatures(
   }
 
   // add font-specific feature values from style rules
-  if (aStyle->featureValueLookup && numAlts > 0) {
+  if (aStyle->featureValueLookup && !aStyle->variantAlternates.IsEmpty()) {
     AutoTArray<gfxFontFeature, 4> featureList;
 
     // insert list of alternate feature settings
-    LookupAlternateValues(aStyle->featureValueLookup, aFamilyName,
-                          aStyle->alternateValues, featureList);
+    for (auto& alternate : aStyle->variantAlternates.AsSpan()) {
+      LookupAlternateValues(*aStyle->featureValueLookup, aFamilyName, alternate,
+                            featureList);
+    }
 
-    count = featureList.Length();
-    for (i = 0; i < count; i++) {
-      const gfxFontFeature& feature = featureList.ElementAt(i);
+    for (const gfxFontFeature& feature : featureList) {
       mergedFeatures.Put(feature.mTag, feature.mValue);
     }
   }
 
   // add feature values from style rules
-  count = styleRuleFeatures.Length();
-  for (i = 0; i < count; i++) {
-    const gfxFontFeature& feature = styleRuleFeatures.ElementAt(i);
+  for (const gfxFontFeature& feature : styleRuleFeatures) {
     mergedFeatures.Put(feature.mTag, feature.mValue);
   }
 

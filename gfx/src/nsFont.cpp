@@ -48,8 +48,7 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
       (variantLigatures != aOther.variantLigatures) ||
       (variantNumeric != aOther.variantNumeric) ||
       (variantPosition != aOther.variantPosition) ||
-      (variantWidth != aOther.variantWidth) ||
-      (alternateValues != aOther.alternateValues)) {
+      (variantWidth != aOther.variantWidth)) {
     return MaxDifference::eLayoutAffecting;
   }
 
@@ -62,11 +61,6 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
 }
 
 nsFont& nsFont::operator=(const nsFont& aOther) = default;
-
-void nsFont::CopyAlternates(const nsFont& aOther) {
-  variantAlternates = aOther.variantAlternates;
-  alternateValues = aOther.alternateValues;
-}
 
 // mapping from bitflag to font feature tag/value pair
 //
@@ -173,15 +167,22 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
   }
 
   // -- alternates
-  if (variantAlternates & NS_FONT_VARIANT_ALTERNATES_HISTORICAL) {
-    setting.mValue = 1;
-    setting.mTag = TRUETYPE_TAG('h', 'i', 's', 't');
-    aStyle->featureSettings.AppendElement(setting);
+  //
+  // NOTE(emilio): We handle historical-forms here because it doesn't depend on
+  // other values set by @font-face and thus may be less expensive to do here
+  // than after font-matching.
+  for (auto& alternate : variantAlternates.AsSpan()) {
+    if (alternate.IsHistoricalForms()) {
+      setting.mValue = 1;
+      setting.mTag = TRUETYPE_TAG('h', 'i', 's', 't');
+      aStyle->featureSettings.AppendElement(setting);
+      break;
+    }
   }
 
   // -- copy font-specific alternate info into style
   //    (this will be resolved after font-matching occurs)
-  aStyle->alternateValues.AppendElements(alternateValues);
+  aStyle->variantAlternates = variantAlternates;
 
   // -- caps
   aStyle->variantCaps = variantCaps;
