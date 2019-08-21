@@ -118,10 +118,9 @@ class HTMLEditRules : public TextEditRules {
     return mData->HTMLEditorRef();
   }
 
-  static bool IsBlockNode(const nsINode& aNode) {
-    return HTMLEditor::NodeIsBlockStatic(&aNode);
+  static bool IsInlineNode(const nsINode& aNode) {
+    return !HTMLEditor::NodeIsBlockStatic(aNode);
   }
-  static bool IsInlineNode(const nsINode& aNode) { return !IsBlockNode(aNode); }
 
   enum RulesEndpoint { kStart, kEnd };
 
