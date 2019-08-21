@@ -46,13 +46,24 @@ permalink: /changelog/
 * **browser-toolbar**
   * HTTP sites are now marked as insecure with a broken padlock icon, rather than a globe icon. Apps can revert to the globe icon by using a custom `BrowserToolbar.siteSecurityIcon`.
 
-* **service-firefox-accounts**, `concept-sync`
+* **service-firefox-accounts**, **concept-sync**
   * `FxaAccountManager`, if configured with `DeviceCapability.SEND_TAB`, will now automatically refresh device constellation state and poll for device events during initialization and login.
   * `FxaAccountManager.syncNowAsync` can now receive a `debounce` parameter, allowing consumers to specify debounce behaviour of their sync requests.
   * ⚠️ **This is a breaking change:**
   * Removed public methods from `DeviceConstellation` and its implementation in `FxaDeviceConstellation`: `fetchAllDevicesAsync`, `startPeriodicRefresh`, `stopPeriodicRefresh`.
-  * `DeviceConstellation`@`refreshDeviceStateAsync` no longer polls for device events, and was renamed to `refreshDevicesAsync`.
-  * `pollForEventsAsync` no longer returns the events. Use the observer API instead.
+  * `DeviceConstellation#refreshDeviceStateAsync` was renamed to `refreshDevicesAsync`: no longer polls for device events, only updates device states (e.g. new devices, name changes)
+  * `pollForEventsAsync` no longer returns the events. Use the observer API instead:
+  ```kotlin
+  val deviceConstellation = autheneticatedAccount()?.deviceConstellation() ?: return
+  deviceConstellation.registerDeviceObserver(
+    object: DeviceEventsObserver {
+      override fun onEvents(events: List<DeviceEvent>) {
+          // Process device events here.
+      }
+    }, lifecycleOwner, false)
+  // Poll for events.
+  deviceConstellation.pollForEventsAsync().await()
+  ```
 
 * **browser-session**
   * Removed deprecated `CustomTabConfig` helpers. Use the equivalent methods in **feature-customtabs** instead.
