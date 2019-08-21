@@ -726,7 +726,23 @@ class ADBDevice(ADBCommand):
         self._logger.info("%s supported" % self._ls)
 
         # Do we have cp?
-        self._have_cp = self.shell_bool("type cp", timeout=timeout)
+        boot_completed = False
+        while not boot_completed and (time.time() - start_time) <= float(timeout):
+            try:
+                self.shell_output('cp --help', timeout=timeout)
+                boot_completed = True
+                self._have_cp = True
+            except ADBError as e:
+                if 'not found' in e.message:
+                    self._have_cp = False
+                    boot_completed = True
+                elif 'known option' in e.message:
+                    self._have_cp = True
+                    boot_completed = True
+            if not boot_completed:
+                time.sleep(2)
+        if not boot_completed:
+            raise ADBTimeoutError("ADBDevice: cp not found.")
         self._logger.info("Native cp support: %s" % self._have_cp)
 
         # Do we have chmod -R?
