@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -81,10 +80,7 @@ class TestMozbuildObject(unittest.TestCase):
     def test_objdir_config_status(self):
         """Ensure @CONFIG_GUESS@ is handled when loading mozconfig."""
         base = self.get_base()
-        cmd = base._normalize_command(
-            [os.path.join(topsrcdir, 'build', 'autoconf', 'config.guess')],
-            True)
-        guess = subprocess.check_output(cmd, cwd=topsrcdir).strip()
+        guess = base.resolve_config_guess()
 
         # There may be symlinks involved, so we use real paths to ensure
         # path consistency.
