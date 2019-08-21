@@ -1988,7 +1988,10 @@ var gProtectionsHandler = {
     this._protectionsPopupTrackersCounterDescription.textContent = PluralForm.get(
       trackerCount,
       forms
-    ).replace("#1", trackerCount);
+    ).replace(
+      "#1",
+      trackerCount.toLocaleString(Services.locale.appLocalesAsBCP47)
+    );
 
     // Show the counter if the number of tracker is not zero.
     this._protectionsPopupTrackersCounterBox.toggleAttribute(
