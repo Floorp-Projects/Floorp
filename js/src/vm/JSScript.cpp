@@ -3432,6 +3432,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
 
   mutedErrors_ = options.mutedErrors();
 
+  startLine_ = options.lineno;
   introductionType_ = options.introductionType;
   setIntroductionOffset(options.introductionOffset);
   parameterListEnd_ = parameterListEnd.isSome() ? parameterListEnd.value() : 0;

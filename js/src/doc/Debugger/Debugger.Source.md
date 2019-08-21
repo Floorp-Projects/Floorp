@@ -105,6 +105,11 @@ from its prototype:
     **If the instance refers to WebAssembly code**, the URL of the script that
     called `new WebAssembly.Module` with the string `"> wasm"` appended.
 
+`startLine`
+:   **If the instance refers to JavaScript source**, the start line of the
+    source within the file or URL it was loaded from. This is normally `1`, but
+    may have another value if the source is part of an HTML document.
+
 `id`
 :   **If the instance refers to JavaScript source**, an int32 counter that identifies
     the source within the current process.  This ID is used in other places in Gecko
