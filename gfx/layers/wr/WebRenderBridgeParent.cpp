@@ -378,7 +378,7 @@ void WebRenderBridgeParent::RemoveDeferredPipeline(wr::PipelineId aPipelineId) {
             wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mSmallShmems);
             wr::IpcResourceUpdateQueue::ReleaseShmems(self, x.mLargeShmems);
           },
-          [=](FocusTarget& x) {});
+          [=](ParentCommands& x) {}, [=](FocusTarget& x) {});
     }
     entry.Remove();
   }
@@ -450,6 +450,17 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
           Api(wr::RenderRoot::Default)->SendTransaction(txn);
           wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mSmallShmems);
           wr::IpcResourceUpdateQueue::ReleaseShmems(this, data.mLargeShmems);
+          return true;
+        },
+        [&](ParentCommands& data) {
+          wr::TransactionBuilder txn;
+          txn.SetLowPriority(!IsRootWebRenderBridgeParent());
+          if (!ProcessWebRenderParentCommands(data.mCommands, txn,
+                                              wr::RenderRoot::Default)) {
+            return false;
+          }
+
+          Api(wr::RenderRoot::Default)->SendTransaction(txn);
           return true;
         },
         [&](FocusTarget& data) {
@@ -1523,6 +1534,15 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
   if (mDestroyed) {
     return IPC_OK();
   }
+
+  if (!mRenderRoot) {
+    MOZ_ASSERT(aRenderRoot == RenderRoot::Default);
+    PushDeferredPipelineData(AsVariant(ParentCommands{
+        std::move(aCommands),
+    }));
+    return IPC_OK();
+  }
+
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
   if (!ProcessWebRenderParentCommands(aCommands, txn, aRenderRoot)) {
