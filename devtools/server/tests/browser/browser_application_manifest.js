@@ -54,6 +54,22 @@ add_task(async function() {
   );
 });
 
+add_task(async function() {
+  info("Testing a validation error when fetching a manifest with invalid JSON");
+  const response = await fetchManifest(
+    "application-manifest-invalid-json.html"
+  );
+  ok(
+    response.manifest && response.manifest.moz_validation,
+    "Returns an object with validation data"
+  );
+  const validation = response.manifest.moz_validation;
+  ok(
+    validation.find(x => x.error && x.type === "json"),
+    "Has the expected error in the validation field"
+  );
+});
+
 async function fetchManifest(filename) {
   const url = MAIN_DOMAIN + filename;
   const target = await addTabTarget(url);
