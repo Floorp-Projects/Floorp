@@ -270,3 +270,37 @@ tryselect:
             - 'taskcluster/ci/test/**'
             - 'taskcluster/taskgraph/transforms/**'
             - 'tools/tryselect/**'
+
+mozbuild:
+    description: mozbuild unit tests
+    platform:
+        - linux64/opt
+        - macosx1014-64/opt
+        - windows10-64/opt
+    python-version: [2, 3]
+    treeherder:
+        symbol: mbu
+    run:
+        using: python-test
+        subsuite: mozbuild
+    fetches:
+        toolchain:
+            by-platform:
+                linux64/opt:
+                    - linux64-node
+                macosx1014-64/opt:
+                    - macosx64-node
+                windows10-64/opt:
+                    - win64-node
+    when:
+        files-changed:
+            - '**/moz.configure'
+            - 'build/moz.configure/**'
+            - 'config/tests/**'
+            - 'python/mach/**'
+            - 'python/mozboot/**'
+            - 'python/mozbuild/**'
+            - 'python/mozterm/**'
+            - 'python/mozversioncontrol/**'
+            - 'testing/mozbase/**'
+            - 'testing/xpcshell/xpcshellcommandline.py'
