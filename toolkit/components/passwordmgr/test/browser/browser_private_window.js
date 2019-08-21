@@ -188,7 +188,7 @@ add_task(async function test_normal_popup_notification_1() {
           () => !notif.dismissed,
           "notification should not be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -259,7 +259,7 @@ add_task(async function test_private_popup_notification_2() {
 
         ok(toggleCheckbox.hidden, "Toggle should be hidden upon 2nd opening");
 
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -307,7 +307,7 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
 
       ok(!notif, "Expected no notification popup");
       if (notif) {
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -349,7 +349,7 @@ add_task(async function test_normal_popup_notification_3() {
       );
       ok(!notif, "got no notification popup");
       if (notif) {
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -400,7 +400,7 @@ add_task(async function test_private_popup_notification_3b() {
       );
       ok(!notif, "got no notification popup");
       if (notif) {
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -453,7 +453,7 @@ add_task(async function test_normal_new_password_4() {
           () => !notif.dismissed,
           "notification should not be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -515,7 +515,7 @@ add_task(async function test_private_new_password_5() {
           () => !notif.dismissed,
           "notification should not be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -563,7 +563,7 @@ add_task(async function test_normal_with_login_6() {
           () => !notif.dismissed,
           "notification should not be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
       Services.logins.removeLogin(login);
     }
@@ -729,7 +729,7 @@ add_task(async function test_normal_http_basic_auth() {
           () => !notif.dismissed,
           "notification should not be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -774,7 +774,7 @@ add_task(async function test_private_http_basic_auth() {
           () => notif.dismissed,
           "notification should be dismissed"
         );
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
@@ -820,7 +820,7 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
 
       ok(!notif, "got no notification popup");
       if (notif) {
-        notif.remove();
+        await cleanupDoorhanger(notif);
       }
     }
   );
