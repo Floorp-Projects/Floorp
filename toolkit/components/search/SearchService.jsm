@@ -1062,10 +1062,6 @@ SearchService.prototype = {
         if (!done) {
           distDirs.push(dir);
         }
-      } catch (ex) {
-        if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
-          throw ex;
-        }
       } finally {
         iterator.close();
       }

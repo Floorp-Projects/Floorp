@@ -64,11 +64,16 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
   if (NS_FAILED(rv)) return;
   searchPlugins->AppendNative(NS_LITERAL_CSTRING("searchplugins"));
 
+  bool exists;
+  rv = searchPlugins->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) return;
+
   nsCOMPtr<nsIFile> commonPlugins;
   rv = searchPlugins->Clone(getter_AddRefs(commonPlugins));
   if (NS_SUCCEEDED(rv)) {
     commonPlugins->AppendNative(NS_LITERAL_CSTRING("common"));
-    array.AppendObject(commonPlugins);
+    rv = commonPlugins->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists) array.AppendObject(commonPlugins);
   }
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -87,8 +92,11 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
       rv = localePlugins->Clone(getter_AddRefs(defLocalePlugins));
       if (NS_SUCCEEDED(rv)) {
         defLocalePlugins->AppendNative(defLocale);
-        array.AppendObject(defLocalePlugins);
-        return;  // all done
+        rv = defLocalePlugins->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists) {
+          array.AppendObject(defLocalePlugins);
+          return;  // all done
+        }
       }
     }
 
@@ -100,8 +108,11 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
     rv = localePlugins->Clone(getter_AddRefs(curLocalePlugins));
     if (NS_SUCCEEDED(rv)) {
       curLocalePlugins->AppendNative(locale);
-      array.AppendObject(curLocalePlugins);
-      return;  // all done
+      rv = curLocalePlugins->Exists(&exists);
+      if (NS_SUCCEEDED(rv) && exists) {
+        array.AppendObject(curLocalePlugins);
+        return;  // all done
+      }
     }
   }
 }
@@ -154,6 +165,10 @@ DirectoryProvider::AppendingEnumerator::GetNext(nsISupports** aResult) {
       mNext->AppendNative(nsDependentCString(*i));
       ++i;
     }
+
+    bool exists;
+    rv = mNext->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists) break;
 
     mNext = nullptr;
   }
