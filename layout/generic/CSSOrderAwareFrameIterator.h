@@ -85,23 +85,12 @@ class CSSOrderAwareFrameIteratorT {
     bool isOrdered = aState != eKnownUnordered;
     if (aState == eUnknownOrder) {
       auto maxOrder = std::numeric_limits<int32_t>::min();
-      for (auto child : mChildren) {
+      for (auto* child : mChildren) {
         ++count;
 
-        int32_t order;
-        if (aOrderProp == eUseBoxOrdinalGroup) {
-          // We'll be using mBoxOrdinal, which has type uint32_t. However, the
-          // modern 'order' property (whose functionality we're co-opting) has
-          // type int32_t.  So: if we happen to have a uint32_t value that's
-          // greater than INT32_MAX, we clamp it rather than letting it
-          // overflow. Chances are, this is just an author using BIG_VALUE
-          // anyway, so the clamped value should be fine.
-          uint32_t clampedBoxOrdinal = std::min(
-              child->StyleXUL()->mBoxOrdinal, static_cast<uint32_t>(INT32_MAX));
-          order = static_cast<int32_t>(clampedBoxOrdinal);
-        } else {
-          order = child->StylePosition()->mOrder;
-        }
+        int32_t order = aOrderProp == eUseBoxOrdinalGroup
+                            ? child->StyleXUL()->mBoxOrdinal
+                            : child->StylePosition()->mOrder;
 
         if (order < maxOrder) {
           isOrdered = false;
