@@ -16,13 +16,12 @@ import { getSourcesForTabs } from "../../reducers/tabs";
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
-import { isFulfilled } from "../../utils/async-value";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
 
 import { prefs } from "../../utils/prefs";
-import { shouldPrettyPrint, isMinified } from "../../utils/source";
+import { isMinified } from "../../utils/source";
 import { createLocation } from "../../utils/location";
 import { mapLocation } from "../../utils/source-maps";
 
@@ -33,6 +32,7 @@ import {
   getActiveSearch,
   getSelectedLocation,
   getSelectedSource,
+  canPrettyPrintSource,
 } from "../../selectors";
 
 import type {
@@ -169,19 +169,12 @@ export function selectLocation(
       return;
     }
     const sourceWithContent = getSourceWithContent(getState(), source.id);
-    const sourceContent =
-      sourceWithContent.content && isFulfilled(sourceWithContent.content)
-        ? sourceWithContent.content.value
-        : null;
 
     if (
       keepContext &&
       prefs.autoPrettyPrint &&
       !getPrettySource(getState(), loadedSource.id) &&
-      shouldPrettyPrint(
-        loadedSource,
-        sourceContent || { type: "text", value: "", contentType: undefined }
-      ) &&
+      canPrettyPrintSource(getState(), loadedSource.id) &&
       isMinified(sourceWithContent)
     ) {
       await dispatch(togglePrettyPrint(cx, loadedSource.id));

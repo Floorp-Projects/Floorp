@@ -17,6 +17,8 @@ import {
   isGenerated,
   isOriginal as isOriginalSource,
   getPlainUrl,
+  isPretty,
+  isJavaScript,
 } from "../utils/source";
 import {
   createInitial,
@@ -37,7 +39,14 @@ import {
 } from "../utils/resource";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
-import * as asyncValue from "../utils/async-value";
+import {
+  pending,
+  fulfilled,
+  rejected,
+  asSettled,
+  isFulfilled,
+} from "../utils/async-value";
+
 import type { AsyncValue, SettledValue } from "../utils/async-value";
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
@@ -260,7 +269,7 @@ const resourceAsSourceBase = memoizeResourceShallow(
 const resourceAsSourceWithContent = memoizeResourceShallow(
   ({ content, ...source }: SourceResource): SourceWithContent => ({
     ...source,
-    content: asyncValue.asSettled(content),
+    content: asSettled(content),
   })
 );
 
@@ -417,17 +426,17 @@ function updateLoadedState(
 
   let content;
   if (action.status === "start") {
-    content = asyncValue.pending();
+    content = pending();
   } else if (action.status === "error") {
-    content = asyncValue.rejected(action.error);
+    content = rejected(action.error);
   } else if (typeof action.value.text === "string") {
-    content = asyncValue.fulfilled({
+    content = fulfilled({
       type: "text",
       value: action.value.text,
       contentType: action.value.contentType,
     });
   } else {
-    content = asyncValue.fulfilled({
+    content = fulfilled({
       type: "wasm",
       value: action.value.text,
     });
@@ -789,7 +798,7 @@ export function getSourceContent(
   id: SourceId
 ): SettledValue<SourceContent> | null {
   const { content } = getResource(state.sources.sources, id);
-  return asyncValue.asSettled(content);
+  return asSettled(content);
 }
 
 export function getSelectedSourceId(state: OuterState) {
@@ -924,6 +933,38 @@ export function canLoadSource(
 
   const actors = getSourceActorsForSource(state, sourceId);
   return actors.length != 0;
+}
+
+export function isSourceWithMap(
+  state: OuterState & SourceActorOuterState,
+  id: SourceId
+): boolean {
+  const source = getSource(state, id);
+  return source ? !!source.sourceMapURL : false;
+}
+
+export function canPrettyPrintSource(
+  state: OuterState & SourceActorOuterState,
+  id: SourceId
+): boolean {
+  const source: SourceWithContent = getSourceWithContent(state, id);
+  if (
+    !source ||
+    isPretty(source) ||
+    isOriginalSource(source) ||
+    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, id))
+  ) {
+    return false;
+  }
+
+  const sourceContent =
+    source.content && isFulfilled(source.content) ? source.content.value : null;
+
+  if (!sourceContent || !isJavaScript(source, sourceContent)) {
+    return false;
+  }
+
+  return true;
 }
 
 export function getBreakpointPositions(
