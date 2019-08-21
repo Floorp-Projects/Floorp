@@ -5985,6 +5985,11 @@
   value: 0
   mirror: always
 
+- name: network.dns.disablePrefetchFromHTTPS
+  type: bool
+  value: true
+  mirror: always
+
 # Max time to shutdown the resolver threads
 - name: network.dns.resolver_shutdown_timeout_ms
   type: uint32_t

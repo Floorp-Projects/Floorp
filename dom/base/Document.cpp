@@ -34,6 +34,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPrefs_plugins.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -350,8 +351,6 @@
 #define XML_DECLARATION_BITS_STANDALONE_YES (1 << 3)
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
-
-extern bool sDisablePrefetchHTTPSPref;
 
 mozilla::LazyLogModule gPageCacheLog("PageCache");
 
@@ -3495,7 +3494,8 @@ void Document::RemoveFromIdTable(Element* aElement, nsAtom* aId) {
 void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
                              nsIPrincipal* aNewStoragePrincipal) {
   MOZ_ASSERT(!!aNewPrincipal == !!aNewStoragePrincipal);
-  if (aNewPrincipal && mAllowDNSPrefetch && sDisablePrefetchHTTPSPref) {
+  if (aNewPrincipal && mAllowDNSPrefetch &&
+      StaticPrefs::network_dns_disablePrefetchFromHTTPS()) {
     nsCOMPtr<nsIURI> uri;
     aNewPrincipal->GetURI(getter_AddRefs(uri));
     if (!uri || uri->SchemeIs("https")) {
