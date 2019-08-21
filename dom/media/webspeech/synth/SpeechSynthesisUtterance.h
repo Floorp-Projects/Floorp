@@ -70,10 +70,6 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
 
   void GetChosenVoiceURI(nsString& aResult) const;
 
-  enum { STATE_NONE, STATE_PENDING, STATE_SPEAKING, STATE_ENDED };
-
-  uint32_t GetState() { return mState; }
-
   bool IsPaused() { return mPaused; }
 
   IMPL_EVENT_HANDLER(start)
@@ -103,8 +99,6 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
   float mPitch;
 
   nsString mChosenVoiceURI;
-
-  uint32_t mState;
 
   bool mPaused;
 
