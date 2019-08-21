@@ -782,11 +782,27 @@ class ADBDevice(ADBCommand):
         self.enforcing = 'Permissive'
 
         # Do we have pidof?
-        if self.version >= version_codes.N:
-            self._have_pidof = self.shell_bool("type pidof", timeout=timeout)
-        else:
+        if self.version < version_codes.N:
             # unexpected pidof behavior observed on Android 6 in bug 1514363
             self._have_pidof = False
+        else:
+            boot_completed = False
+            while not boot_completed and (time.time() - start_time) <= float(timeout):
+                try:
+                    self.shell_output('pidof --help', timeout=timeout)
+                    boot_completed = True
+                    self._have_pidof = True
+                except ADBError as e:
+                    if 'not found' in e.message:
+                        self._have_pidof = False
+                        boot_completed = True
+                    elif 'known option' in e.message:
+                        self._have_pidof = True
+                        boot_completed = True
+                if not boot_completed:
+                    time.sleep(2)
+            if not boot_completed:
+                raise ADBTimeoutError("ADBDevice: pidof not found.")
         self._logger.info("Native pidof support: {}".format(self._have_pidof))
 
         # Bug 1529960 observed pidof intermittently returning no results for a
