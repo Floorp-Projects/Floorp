@@ -1,0 +1,4 @@
+[*.{kt,kts}]
+# Disabling rules that were added in the latest versions of ktlint
+# tracking here: https://github.com/mozilla-mobile/fenix/issues/4861
+disabled_rules=import-ordering
