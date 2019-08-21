@@ -8,7 +8,7 @@
 // ------------------------------------------------------------------------------
 
 var rule = require("../lib/rules/avoid-Date-timing");
-var RuleTester = require("eslint/lib/testers/rule-tester");
+var RuleTester = require("eslint").RuleTester;
 
 const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 

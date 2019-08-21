@@ -8,7 +8,7 @@
 // ------------------------------------------------------------------------------
 
 var rule = require("../lib/rules/use-chromeutils-generateqi");
-var RuleTester = require("eslint/lib/testers/rule-tester");
+var RuleTester = require("eslint").RuleTester;
 
 const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
