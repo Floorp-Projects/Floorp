@@ -31,6 +31,8 @@ input[type="url"][readOnly] {
   display: inline-block;
   width: -moz-available;
   background-color: transparent !important; /* override common.inc.css */
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .detail-cell input:not([type="checkbox"]),
@@ -108,6 +110,7 @@ input[type="url"][readOnly]:hover:active {
 
 .detail-cell {
   flex-grow: 1;
+  min-width: 0; /* Allow long passwords to collapse down to flex item width */
 }
 
 .field-label {
@@ -172,6 +175,7 @@ input[type="url"][readOnly]:hover:active {
   -moz-context-properties: fill;
   fill: currentColor !important;
   opacity: var(--reveal-checkbox-opacity);
+  flex-shrink: 0;
 }
 
 .reveal-password-checkbox:hover {
