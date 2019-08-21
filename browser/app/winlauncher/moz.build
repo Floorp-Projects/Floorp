@@ -32,6 +32,19 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 else:
     SOURCES['DllBlocklistWin.cpp'].flags += ['-ffreestanding']
 
+# Disable -ftrivial-auto-var-init=pattern for DllBlocklistWin.cpp because
+# the file's interceptions happen so early in the main process that the
+# loader hasn't yet resolved the import of memset (used by
+# -ftrivial-auto-var-init) from vcruntime140.dll.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    SOURCES['DllBlocklistWin.cpp'].flags += [
+        '-Xclang', '-ftrivial-auto-var-init=uninitialized',
+    ]
+else:
+    SOURCES['DllBlocklistWin.cpp'].flags += [
+        '-ftrivial-auto-var-init=uninitialized',
+    ]
+
 OS_LIBS += [
     'ntdll',
     'oleaut32',
