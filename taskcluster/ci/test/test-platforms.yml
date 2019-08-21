@@ -376,6 +376,8 @@ android-hw-g5-7-0-arm7-api-16/opt:
     test-sets:
         - android-hw-arm7-raptor
         - android-hw-arm7-raptor-power
+        - android-hw-arm7-raptor-cpu-memory
+        - android-hw-arm7-raptor-cpu-memory-power
         - raptor-fetch-geckoview
 
 android-hw-g5-7-0-arm7-api-16/pgo:
@@ -383,6 +385,8 @@ android-hw-g5-7-0-arm7-api-16/pgo:
     test-sets:
         - android-hw-arm7-raptor
         - android-hw-arm7-raptor-power
+        - android-hw-arm7-raptor-cpu-memory
+        - android-hw-arm7-raptor-cpu-memory-power
         - raptor-fetch-geckoview
 
 # android-hw-p2-8-0 Google Pixel 2 Android 8.0
@@ -393,6 +397,8 @@ android-hw-p2-8-0-arm7-api-16/pgo:
         - android-hw-arm7-pgo-unittests
         - android-hw-arm7-raptor
         - android-hw-arm7-raptor-power
+        - android-hw-arm7-raptor-cpu-memory
+        - android-hw-arm7-raptor-cpu-memory-power
         - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16/opt:
@@ -401,6 +407,8 @@ android-hw-p2-8-0-arm7-api-16/opt:
         - android-hw-arm7-opt-unittests
         - android-hw-arm7-raptor
         - android-hw-arm7-raptor-power
+        - android-hw-arm7-raptor-cpu-memory
+        - android-hw-arm7-raptor-cpu-memory-power
         - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16/debug:
@@ -423,12 +431,16 @@ android-hw-p2-8-0-android-aarch64/opt:
     test-sets:
         - android-hw-aarch64-raptor
         - android-hw-aarch64-raptor-power
+        - android-hw-aarch64-raptor-cpu-memory
+        - android-hw-aarch64-raptor-cpu-memory-power
 
 android-hw-p2-8-0-android-aarch64/pgo:
     build-platform: android-aarch64-pgo/opt
     test-sets:
         - android-hw-aarch64-raptor
         - android-hw-aarch64-raptor-power
+        - android-hw-aarch64-raptor-cpu-memory
+        - android-hw-aarch64-raptor-cpu-memory-power
 
 android-hw-p2-8-0-arm7-api-16-nightly/opt:
     build-platform: android-api-16-nightly/opt

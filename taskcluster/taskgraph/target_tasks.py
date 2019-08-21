@@ -517,6 +517,10 @@ def target_tasks_android_power(full_task_graph, parameters, graph_config):
         try_name = attributes.get('raptor_try_name')
         if 'geckoview' not in try_name:
             return False
+        if '-cpu' in try_name:
+            return False
+        if '-memory' in try_name:
+            return False
         if '-power' in try_name and 'pgo' in platform:
             if '-speedometer-' in try_name:
                 return True

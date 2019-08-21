@@ -563,6 +563,42 @@ raptor-scn-power-idle-fenix:
             - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
+raptor-scn-cpu-memory-idle-fenix:
+    description: "Raptor idle-browser cpu/memory on Fenix"
+    try-name: raptor-scn-cpu-memory-idle-fenix
+    treeherder-symbol: Rap-fenix(idl-cm)
+    run-on-projects: []
+    e10s: true
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-scn-cpu-memory-power-idle-fenix:
+    description: "Raptor idle-browser cpu/memory/power on Fenix"
+    try-name: raptor-scn-cpu-memory-power-idle-fenix
+    treeherder-symbol: Rap-fenix(idl-cmp)
+    run-on-projects: []
+    e10s: true
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
 raptor-scn-power-idle-bg-fenix:
     description: "Raptor idle-browser (backgrounded) power-usage measurement on Fenix"
     try-name: raptor-scn-power-idle-bg-fenix
@@ -576,6 +612,42 @@ raptor-scn-power-idle-bg-fenix:
             - --test=raptor-scn-power-idle-bg
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-scn-cpu-memory-idle-bg-fenix:
+    description: "Raptor idle-browser (backgrounded) cpu/memory on Fenix"
+    try-name: raptor-scn-cpu-memory-idle-bg-fenix
+    treeherder-symbol: Rap-fenix(idlbg-cm)
+    run-on-projects: []
+    e10s: true
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-scn-cpu-memory-power-idle-bg-fenix:
+    description: "Raptor idle-browser (backgrounded) cpu/memory/power on Fenix"
+    try-name: raptor-scn-cpu-memory-power-idle-bg-fenix
+    treeherder-symbol: Rap-fenix(idlbg-cmp)
+    run-on-projects: []
+    e10s: true
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --cpu-test
+            - --memory-test
             - --power-test
             - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity

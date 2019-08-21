@@ -651,7 +651,7 @@ raptor-speedometer-geckoview:
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
 raptor-speedometer-geckoview-power:
-    description: "Raptor Speedometer Power on GeckoView"
+    description: "Raptor Speedometer power on GeckoView"
     try-name: raptor-speedometer-geckoview-power
     treeherder-symbol: Rap(sp-p)
     target: geckoview_example.apk
@@ -662,6 +662,42 @@ raptor-speedometer-geckoview-power:
             - --test=raptor-speedometer
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
+            - --power-test
+            - --page-cycles 5
+            - --host HOST_IP
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-speedometer-geckoview-cpu-memory:
+    description: "Raptor Speedometer cpu/memory on GeckoView"
+    try-name: raptor-speedometer-geckoview-cpu-memory
+    treeherder-symbol: Rap(sp-cm)
+    target: geckoview_example.apk
+    run-on-projects: []
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --page-cycles 5
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-speedometer-geckoview-cpu-memory-power:
+    description: "Raptor Speedometer cpu/memory/power on GeckoView"
+    try-name: raptor-speedometer-geckoview-cpu-memory-power
+    treeherder-symbol: Rap(sp-cmp)
+    target: geckoview_example.apk
+    run-on-projects: []
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
             - --power-test
             - --page-cycles 5
             - --host HOST_IP
@@ -684,8 +720,44 @@ raptor-scn-power-idle-geckoview:
             - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
+raptor-scn-cpu-memory-idle-geckoview:
+    description: "Raptor idle-browser cpu/memory on GeckoView"
+    try-name: raptor-scn-cpu-memory-idle-geckoview
+    treeherder-symbol: Rap(idl-cm)
+    target: geckoview_example.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-scn-cpu-memory-power-idle-geckoview:
+    description: "Raptor idle-browser cpu/memory/power on GeckoView"
+    try-name: raptor-scn-cpu-memory-power-idle-geckoview
+    treeherder-symbol: Rap(idl-cmp)
+    target: geckoview_example.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
 raptor-scn-power-idle-refbrow:
-    description: "Raptor idle-browser power-use measurement on Reference Browser"
+    description: "Raptor idle-browser power on Reference Browser"
     try-name: raptor-scn-power-idle-refbrow
     treeherder-symbol: Rap-refbrow(idl-p)
     target:
@@ -708,6 +780,56 @@ raptor-scn-power-idle-refbrow:
             - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
 
+raptor-scn-cpu-memory-idle-refbrow:
+    description: "Raptor idle-browser cpu/memory on Reference Browser"
+    try-name: raptor-scn-cpu-memory-idle-refbrow
+    treeherder-symbol: Rap-refbrow(idl-cm)
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.v2.raptor.latest.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.reference-browser.v2.raptor.latest.arm
+                name: target.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-power-idle-refbrow:
+    description: "Raptor idle-browser cpu/memory/power on Reference Browser"
+    try-name: raptor-scn-cpu-memory-power-idle-refbrow
+    treeherder-symbol: Rap-refbrow(idl-cmp)
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.v2.raptor.latest.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.reference-browser.v2.raptor.latest.arm
+                name: target.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
 raptor-scn-power-idle-bg-geckoview:
     description: "Raptor idle-browser (backgrounded) power-use measurement on GeckoView"
     try-name: raptor-scn-power-idle-bg-geckoview
@@ -725,8 +847,44 @@ raptor-scn-power-idle-bg-geckoview:
             - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
+raptor-scn-cpu-memory-idle-bg-geckoview:
+    description: "Raptor idle-browser (backgrounded) cpu/memory on GeckoView"
+    try-name: raptor-scn-cpu-memory-idle-bg-geckoview
+    treeherder-symbol: Rap(idlbg-cm)
+    target: geckoview_example.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
+raptor-scn-cpu-memory-power-idle-bg-geckoview:
+    description: "Raptor idle-browser (backgrounded) cpu/memory/power on GeckoView"
+    try-name: raptor-scn-cpu-memory-power-idle-bg-geckoview
+    treeherder-symbol: Rap(idlbg-cmp)
+    target: geckoview_example.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --cpu-test
+            - --memory-test
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
 raptor-scn-power-idle-bg-refbrow:
-    description: "Raptor idle-browser (backgrounded) power-use measurement on Reference Browser"
+    description: "Raptor idle-browser (backgrounded) power on Reference Browser"
     try-name: raptor-scn-power-idle-bg-refbrow
     treeherder-symbol: Rap-refbrow(idlbg-p)
     target:
@@ -745,6 +903,56 @@ raptor-scn-power-idle-bg-refbrow:
             - --test=raptor-scn-power-idle-bg
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
+            - --power-test
+            - --host HOST_IP
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-idle-bg-refbrow:
+    description: "Raptor idle-browser (backgrounded) cpu/memory on Reference Browser"
+    try-name: raptor-scn-cpu-memory-idle-bg-refbrow
+    treeherder-symbol: Rap-refbrow(idlbg-cm)
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.v2.raptor.latest.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.reference-browser.v2.raptor.latest.arm
+                name: target.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
+            - --activity=org.mozilla.reference.browser.BrowserTestActivity
+
+raptor-scn-cpu-memory-power-idle-bg-refbrow:
+    description: "Raptor idle-browser (backgrounded) cpu/memory/power on Reference Browser"
+    try-name: raptor-scn-cpu-memory-power-idle-bg-refbrow
+    treeherder-symbol: Rap-refbrow(idlbg-cmp)
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.v2.raptor.latest.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.reference-browser.v2.raptor.latest.arm
+                name: target.apk
+    run-on-projects: []
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle-bg
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser.raptor
+            - --cpu-test
+            - --memory-test
             - --power-test
             - --host HOST_IP
             - --activity=org.mozilla.reference.browser.BrowserTestActivity

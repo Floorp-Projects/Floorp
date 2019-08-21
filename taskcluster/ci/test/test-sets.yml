@@ -789,6 +789,28 @@ android-hw-arm7-raptor-power:
     - raptor-scn-power-idle-bg-geckoview
     - raptor-scn-power-idle-bg-refbrow
 
+android-hw-arm7-raptor-cpu-memory:
+    - raptor-speedometer-geckoview-cpu-memory
+    - raptor-scn-cpu-memory-idle-fenix
+    - raptor-scn-cpu-memory-idle-fennec
+    - raptor-scn-cpu-memory-idle-geckoview
+    - raptor-scn-cpu-memory-idle-refbrow
+    - raptor-scn-cpu-memory-idle-bg-fenix
+    - raptor-scn-cpu-memory-idle-bg-fennec
+    - raptor-scn-cpu-memory-idle-bg-geckoview
+    - raptor-scn-cpu-memory-idle-bg-refbrow
+
+android-hw-arm7-raptor-cpu-memory-power:
+    - raptor-speedometer-geckoview-cpu-memory-power
+    - raptor-scn-cpu-memory-power-idle-fenix
+    - raptor-scn-cpu-memory-power-idle-fennec
+    - raptor-scn-cpu-memory-power-idle-geckoview
+    - raptor-scn-cpu-memory-power-idle-refbrow
+    - raptor-scn-cpu-memory-power-idle-bg-fenix
+    - raptor-scn-cpu-memory-power-idle-bg-fennec
+    - raptor-scn-cpu-memory-power-idle-bg-geckoview
+    - raptor-scn-cpu-memory-power-idle-bg-refbrow
+
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
     - raptor-scn-power-idle-fenix
@@ -799,6 +821,28 @@ android-hw-aarch64-raptor-power:
     - raptor-scn-power-idle-bg-fennec
     - raptor-scn-power-idle-bg-geckoview
     - raptor-scn-power-idle-bg-refbrow
+
+android-hw-aarch64-raptor-cpu-memory:
+    - raptor-speedometer-geckoview-cpu-memory
+    - raptor-scn-cpu-memory-idle-fenix
+    - raptor-scn-cpu-memory-idle-fennec
+    - raptor-scn-cpu-memory-idle-geckoview
+    - raptor-scn-cpu-memory-idle-refbrow
+    - raptor-scn-cpu-memory-idle-bg-fenix
+    - raptor-scn-cpu-memory-idle-bg-fennec
+    - raptor-scn-cpu-memory-idle-bg-geckoview
+    - raptor-scn-cpu-memory-idle-bg-refbrow
+
+android-hw-aarch64-raptor-cpu-memory-power:
+    - raptor-speedometer-geckoview-cpu-memory-power
+    - raptor-scn-cpu-memory-power-idle-fenix
+    - raptor-scn-cpu-memory-power-idle-fennec
+    - raptor-scn-cpu-memory-power-idle-geckoview
+    - raptor-scn-cpu-memory-power-idle-refbrow
+    - raptor-scn-cpu-memory-power-idle-bg-fenix
+    - raptor-scn-cpu-memory-power-idle-bg-fennec
+    - raptor-scn-cpu-memory-power-idle-bg-geckoview
+    - raptor-scn-cpu-memory-power-idle-bg-refbrow
 
 android-hw-arm7-raptor-nightly:
     - raptor-speedometer-fennec
