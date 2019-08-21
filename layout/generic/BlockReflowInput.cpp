@@ -113,22 +113,20 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                        "width calculation");
   mContentArea.ISize(wm) = aReflowInput.ComputedISize();
 
-  // Compute content area height. Unlike the width, if we have a
-  // specified style height we ignore it since extra content is
-  // managed by the "overflow" property. When we don't have a
-  // specified style height then we may end up limiting our height if
-  // the availableHeight is constrained (this situation occurs when we
-  // are paginated).
+  // Compute content area block-size. Unlike the inline-size, if we have a
+  // specified style block-size, we ignore it since extra content is managed by
+  // the "overflow" property. When we don't have a specified style block-size,
+  // then we may end up limiting our block-size if the available block-size is
+  // constrained (this situation occurs when we are paginated).
   if (NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize()) {
-    // We are in a paginated situation. The bottom edge is just inside
-    // the bottom border and padding. The content area height doesn't
-    // include either border or padding edge.
+    // We are in a paginated situation. The block-end edge is just inside the
+    // block-end border and padding. The content area block-size doesn't include
+    // either border or padding edge.
     mBEndEdge = aReflowInput.AvailableBSize() - mBorderPadding.BEnd(wm);
     mContentArea.BSize(wm) = std::max(0, mBEndEdge - mBorderPadding.BStart(wm));
   } else {
-    // When we are not in a paginated situation then we always use
-    // a constrained height.
-    mFlags.mHasUnconstrainedBSize = true;
+    // When we are not in a paginated situation, then we always use a
+    // unconstrained block-size.
     mContentArea.BSize(wm) = mBEndEdge = NS_UNCONSTRAINEDSIZE;
   }
   mContentArea.IStart(wm) = mBorderPadding.IStart(wm);
@@ -207,16 +205,17 @@ void BlockReflowInput::ComputeBlockAvailSpace(
          aFloatAvailableSpace.HasFloats());
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
+  const nscoord availBSize = mReflowInput.AvailableBSize();
   aResult.BStart(wm) = mBCoord;
   aResult.BSize(wm) =
-      mFlags.mHasUnconstrainedBSize
+      availBSize == NS_UNCONSTRAINEDSIZE
           ? NS_UNCONSTRAINEDSIZE
-          : mReflowInput.AvailableBSize() - mBCoord -
+          : availBSize - mBCoord -
                 GetBEndMarginClone(aFrame, mReflowInput.mRenderingContext,
                                    mContentArea, wm);
   // mBCoord might be greater than mBEndEdge if the block's top margin pushes
-  // it off the page/column. Negative available height can confuse other code
-  // and is nonsense in principle.
+  // it off the page/column. Negative available block-size can confuse other
+  // code and is nonsense in principle.
 
   // XXX Do we really want this condition to be this restrictive (i.e.,
   // more restrictive than it used to be)?  The |else| here is allowed

@@ -29,8 +29,7 @@ class BlockReflowInput {
   // Block reflow input flags.
   struct Flags {
     Flags()
-        : mHasUnconstrainedBSize(false),
-          mIsBStartMarginRoot(false),
+        : mIsBStartMarginRoot(false),
           mIsBEndMarginRoot(false),
           mShouldApplyBStartMargin(false),
           mIsFirstInflow(false),
@@ -40,12 +39,6 @@ class BlockReflowInput {
           mIsOverflowContainer(false),
           mIsFloatListInBlockPropertyTable(false),
           mCanHaveOverflowMarkers(false) {}
-
-    // Set in the BlockReflowInput constructor when the frame being reflowed has
-    // been given NS_UNCONSTRAINEDSIZE as its available BSize in the
-    // ReflowInput. If set, NS_UNCONSTRAINEDSIZE is passed to nsLineLayout as
-    // the available BSize.
-    bool mHasUnconstrainedBSize : 1;
 
     // Set in the BlockReflowInput constructor when reflowing a "block margin
     // root" frame (i.e. a frame with the NS_BLOCK_MARGIN_ROOT flag set, for
