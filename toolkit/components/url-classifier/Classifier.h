@@ -151,7 +151,9 @@ class Classifier {
   nsresult DumpFailedUpdate();
 #endif
 
-  nsresult ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables);
+  nsresult ScanStoreDir(nsIFile* aDirectory,
+                        const nsTArray<nsCString>& aExtensions,
+                        nsTArray<nsCString>& aTables);
 
   nsresult UpdateHashStore(TableUpdateArray& aUpdates,
                            const nsACString& aTable);
@@ -170,7 +172,11 @@ class Classifier {
 
   bool CheckValidUpdate(TableUpdateArray& aUpdates, const nsACString& aTable);
 
-  nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
+  nsresult LoadHashStore(nsIFile* aDirectory, nsACString& aResult,
+                         nsTArray<nsCString>& aFailedTableNames);
+
+  nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult,
+                        nsTArray<nsCString>& aFailedTableNames);
 
   static nsCString GetProvider(const nsACString& aTableName);
 
@@ -181,7 +187,7 @@ class Classifier {
    * successful or not.
    */
   nsresult ApplyUpdatesBackground(TableUpdateArray& aUpdates,
-                                  nsACString& aFailedTableName);
+                                  nsTArray<nsCString>& aFailedTableNames);
 
   /**
    * The "foreground" part of ApplyUpdates. The in-use data (in-memory and
@@ -194,7 +200,7 @@ class Classifier {
    * |aBackgroundRv| will be returned to forward the background update result.
    */
   nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
-                                  const nsACString& aFailedTableName);
+                                  const nsTArray<nsCString>& aFailedTableNames);
 
   // Used by worker thread and update thread to abort current operation.
   bool ShouldAbort() const;

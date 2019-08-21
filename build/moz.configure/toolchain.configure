@@ -603,11 +603,8 @@ def check_compiler(compiler, language, target):
 @imports(_from='__builtin__', _import='open')
 @imports('json')
 @imports('os')
-@imports('subprocess')
-@imports('sys')
 def get_vc_paths(topsrcdir):
     def vswhere(args):
-        encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
         program_files = (os.environ.get('PROGRAMFILES(X86)') or
                          os.environ.get('PROGRAMFILES'))
         if not program_files:
@@ -616,9 +613,7 @@ def get_vc_paths(topsrcdir):
                                'Installer', 'vswhere.exe')
         if not os.path.exists(vswhere):
             return []
-        return json.loads(
-            subprocess.check_output([vswhere, '-format', 'json'] + args)
-            .decode(encoding, 'replace'))
+        return json.loads(check_cmd_output(vswhere, '-format', 'json', *args))
 
     for install in vswhere(['-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64']):
         path = install['installationPath']
@@ -1434,6 +1429,21 @@ def is_windows(target, host):
 
 include('windows.configure', when=is_windows)
 
+
+# On Power ISA, determine compiler flags for VMX, VSX and VSX-3.
+
+set_config('PPC_VMX_FLAGS',
+           ['-maltivec'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
+set_config('PPC_VSX_FLAGS',
+           ['-mvsx'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
+set_config('PPC_VSX3_FLAGS',
+           ['-mvsx','-mcpu=power9'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
 # ASAN
 # ==============================================================
 
@@ -1535,8 +1545,9 @@ option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
 # possible security flags will be omitted by --disable-hardening, as many are
 # compiler-default options we do not explicitly enable.)
 @depends('--enable-hardening', '--enable-address-sanitizer',
-         '--enable-optimize', c_compiler, target)
-def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target):
+         '--enable-debug', '--enable-optimize', c_compiler, target)
+def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
+                              target):
     compiler_is_gccish = c_compiler.type in ('gcc', 'clang')
 
     flags = []
@@ -1561,18 +1572,31 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
         # not on as ASAN will catch the crashes for us
+        # mingw-clang cross-compile toolchain has bugs with stack protector
+        mingw_clang = c_compiler.type == 'clang' and target.os == 'WINNT'
         if compiler_is_gccish and not asan:
-            # mingw-clang cross-compile toolchain has bugs with stack protector
-            if target.os != 'WINNT' or c_compiler == 'gcc':
+            if not mingw_clang:
                 flags.append("-fstack-protector-strong")
                 ldflags.append("-fstack-protector-strong")
                 js_flags.append("-fstack-protector-strong")
                 js_ldflags.append("-fstack-protector-strong")
 
+        # ftrivial-auto-var-init ------------------------------
+        # Initialize local variables with a 0xAA pattern in clang debug builds.
+        # Linux32 fails some xpcshell tests with -ftrivial-auto-var-init
+        linux32 = target.kernel == 'Linux' and target.cpu == 'x86'
+        if (c_compiler.type == 'clang' or c_compiler.type == 'clang-cl') and \
+            c_compiler.version >= '8' and debug and not linux32:
+            if c_compiler.type == 'clang-cl':
+                flags.append('-Xclang')
+                js_flags.append('-Xclang')
+            flags.append('-ftrivial-auto-var-init=pattern')
+            js_flags.append('-ftrivial-auto-var-init=pattern')
+
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
         # mingw-clang build requires it to be explicitly enabled
-        if target.os == 'WINNT' and c_compiler.type == 'clang':
+        if mingw_clang:
             ldflags.append("-Wl,--dynamicbase")
             js_ldflags.append("-Wl,--dynamicbase")
 

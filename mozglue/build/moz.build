@@ -94,6 +94,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
     EXPORTS.mozilla += [
         'arm.h',
         'mips.h',
+        'ppc.h',
         'SSE.h',
         'WindowsDllBlocklist.h',
     ]
@@ -111,6 +112,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
     if CONFIG['CPU_ARCH'].startswith('mips'):
         SOURCES += [
             'mips.cpp',
+        ]
+
+    if CONFIG['CPU_ARCH'].startswith('ppc'):
+        SOURCES += [
+            'ppc.cpp',
         ]
 
     if CONFIG['MOZ_LINKER']:

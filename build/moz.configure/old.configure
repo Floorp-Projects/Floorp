@@ -5,13 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@imports('codecs')
-@imports('sys')
-def encoded_open(path, mode):
-    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-    return codecs.open(path, mode, encoding)
-
-
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 
@@ -148,7 +141,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                 die('Failed re-creating old-configure: %s' % e.message)
 
     cmd = [shell, old_configure]
-    with encoded_open('old-configure.vars', 'w') as out:
+    with open('old-configure.vars', 'w') as out:
         log.debug('Injecting the following to old-configure:')
 
         def inject(command):
@@ -351,7 +344,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
     if ret:
         with log.queue_debug():
             if config_log:
-                with encoded_open(config_log.baseFilename, 'r') as fh:
+                with open(config_log.baseFilename, 'r') as fh:
                     fh.seek(log_size)
                     for line in fh:
                         log.debug(line.rstrip())
@@ -368,7 +361,7 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
         'split': split,
         'unique_list': unique_list,
     }
-    with encoded_open('config.data', 'r') as fh:
+    with open('config.data', 'r') as fh:
         code = compile(fh.read(), 'config.data', 'exec')
         # Every variation of the exec() function I tried led to:
         # SyntaxError: unqualified exec is not allowed in function 'main' it

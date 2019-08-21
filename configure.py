@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 import textwrap
+from collections import Iterable
 
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -24,8 +25,10 @@ from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.util import (
     indented_repr,
     encode,
+    system_encoding,
 )
 import mozpack.path as mozpath
+import six
 
 
 def main(argv):
@@ -42,6 +45,27 @@ def main(argv):
         return 0
 
     return config_status(config)
+
+
+def check_unicode(obj):
+    '''Recursively check that all strings in the object are unicode strings.'''
+    if isinstance(obj, dict):
+        result = True
+        for k, v in six.iteritems(obj):
+            if not check_unicode(k):
+                print("%s key is not unicode." % k, file=sys.stderr)
+                result = False
+            elif not check_unicode(v):
+                print("%s value is not unicode." % k, file=sys.stderr)
+                result = False
+        return result
+    if isinstance(obj, bytes):
+        return False
+    if isinstance(obj, six.text_type):
+        return True
+    if isinstance(obj, Iterable):
+        return all(check_unicode(o) for o in obj)
+    return True
 
 
 def config_status(config):
@@ -70,19 +94,23 @@ def config_status(config):
     sanitized_config['topobjdir'] = config['TOPOBJDIR']
     sanitized_config['mozconfig'] = config.get('MOZCONFIG')
 
+    if not check_unicode(sanitized_config):
+        print("Configuration should be all unicode.", file=sys.stderr)
+        print("Please file a bug for the above.", file=sys.stderr)
+        sys.exit(1)
+
     # Create config.status. Eventually, we'll want to just do the work it does
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
     logging.getLogger('moz.configure').info('Creating config.status')
-    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-    with codecs.open('config.status', 'w', encoding) as fh:
+    with codecs.open('config.status', 'w', system_encoding) as fh:
         fh.write(textwrap.dedent('''\
             #!%(python)s
             # coding=%(encoding)s
             from __future__ import unicode_literals
             from mozbuild.util import encode
             encoding = '%(encoding)s'
-        ''') % {'python': config['PYTHON'], 'encoding': encoding})
+        ''') % {'python': config['PYTHON'], 'encoding': system_encoding})
         # A lot of the build backend code is currently expecting byte
         # strings and breaks in subtle ways with unicode strings. (bug 1296508)
         for k, v in sanitized_config.iteritems():
@@ -125,7 +153,7 @@ def config_status(config):
 
         # A lot of the build backend code is currently expecting byte strings
         # and breaks in subtle ways with unicode strings.
-        return config_status(args=[], **encode(sanitized_config, encoding))
+        return config_status(args=[], **encode(sanitized_config, system_encoding))
     return 0
 
 

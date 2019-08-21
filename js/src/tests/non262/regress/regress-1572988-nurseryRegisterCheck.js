@@ -6,6 +6,20 @@
 // it gets tenured.
 
 var x = 0;
+var N = 1000; // This failed most of the time on my linux64 box.
+
+// But it can time out on the slower machines.
+if (this.getBuildConfiguration) {
+  for (let [k, v] of Object.entries(getBuildConfiguration())) {
+    if (k.includes("simulator") && v)
+      N = 10;
+    if (k.includes("arm") && v)
+      N = 10;
+    if (k.includes("android") && v)
+      N = 10;
+  }
+}
+
 function makeString() {
     x += 1;
     const extensible = ensureFlatString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + x);
@@ -13,7 +27,7 @@ function makeString() {
 }
 
 function f(arr) {
-    for (let i = 0; i < 1000; i++)
+    for (let i = 0; i < N; i++)
         arr.push(makeString());
     return arr;
 }

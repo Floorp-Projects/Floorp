@@ -632,7 +632,7 @@ Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
         mock_pkg_config_path = mozpath.abspath('/usr/bin/pkg-config')
 
         def mock_pkg_config(_, args):
-            if args[0:2] == ['--errors-to-stdout', '--print-errors']:
+            if args[0:2] == ('--errors-to-stdout', '--print-errors'):
                 assert len(args) == 3
                 package = args[2]
                 if package == 'unknown':
@@ -652,7 +652,7 @@ Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
                 return 0, '-l%s' % args[1], ''
             if args[0] == '--version':
                 return 0, mock_pkg_config_version, ''
-            self.fail("Unexpected arguments to mock_pkg_config: %s" % args)
+            self.fail("Unexpected arguments to mock_pkg_config: %s" % (args,))
 
         def get_result(cmd, args=[], extra_paths=None):
             return self.get_result(textwrap.dedent('''\

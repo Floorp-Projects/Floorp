@@ -167,6 +167,14 @@ recurse_android-fat-aar-artifact:
     --distdir $(abspath $(DIST)/fat-aar))
 endif
 
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+
+recurse_android-stage-package: stage-package
+
+recurse_android-archive-geckoview:
+	GRADLE_INVOKED_WITHIN_MACH_BUILD=1 $(topsrcdir)/mach --log-no-times android archive-geckoview
+endif
+
 ifdef MOZ_WIDGET_TOOLKIT
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites

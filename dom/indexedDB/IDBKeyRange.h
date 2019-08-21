@@ -92,11 +92,6 @@ class IDBKeyRange : public nsISupports {
 
   bool IsOnly() const { return mIsOnly; }
 
-  void GetBindingClause(const nsACString& aKeyColumnName,
-                        nsACString& _retval) const;
-
-  nsresult BindToStatement(mozIStorageStatement* aStatement) const;
-
   void DropJSObjects();
 
   // WebIDL
