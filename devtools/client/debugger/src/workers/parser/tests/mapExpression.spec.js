@@ -22,9 +22,9 @@ function test({
   if (parseExpression) {
     expect(
       format(res.expression, {
-        parser: "babylon",
+        parser: "babel",
       })
-    ).toEqual(format(newExpression, { parser: "babylon" }));
+    ).toEqual(format(newExpression, { parser: "babel" }));
   } else {
     expect(res.expression).toEqual(newExpression);
   }
