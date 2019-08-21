@@ -23,6 +23,7 @@ RUN apt-get update && \
       openssh-client \
       procps \
       python-cryptography \
+      python-dev \
       python-pip \
       python-setuptools \
       python-virtualenv \
