@@ -26,6 +26,8 @@ void PresShell::SetNeedLayoutFlush() {
     mReflowCause = profiler_get_backtrace();
   }
 #endif
+
+  mReqsPerFlush[FlushKind::Layout]++;
 }
 
 void PresShell::SetNeedStyleFlush() {
@@ -41,6 +43,8 @@ void PresShell::SetNeedStyleFlush() {
     mStyleCause = profiler_get_backtrace();
   }
 #endif
+
+  mReqsPerFlush[FlushKind::Style]++;
 }
 
 void PresShell::EnsureStyleFlush() {
