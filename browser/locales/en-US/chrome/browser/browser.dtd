@@ -795,8 +795,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.manageSettings2.label "Manage Protection Settings">
 <!ENTITY contentBlocking.manageSettings.accesskey "M">
 
-<!ENTITY contentBlocking.trackersView.strictInfo.label "To block all trackers, set content blocking to “Strict”.">
-
 <!ENTITY contentBlocking.socialblock.label "Social Media Trackers">
 
 <!ENTITY contentBlocking.cookies2.label "Cross-Site Tracking Cookies">
