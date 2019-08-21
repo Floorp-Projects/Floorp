@@ -228,6 +228,8 @@ SimpleTest._inChaosMode = false;
 SimpleTest.expected = 'pass';
 SimpleTest.num_failed = 0;
 
+SpecialPowers.setAsDefaultAssertHandler();
+
 function usesFailurePatterns() {
   return Array.isArray(SimpleTest.expected);
 }
