@@ -23,51 +23,5 @@ const PAGE_TYPES = {
 
 const DEFAULT_PAGE = PAGE_TYPES.MANIFEST;
 
-const MANIFEST_DATA = {
-  background_color: "#F9D",
-  dir: "auto",
-  display: "browser",
-  icons: [
-    {
-      src:
-        "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-      type: "type/png",
-      size: "16x16",
-    },
-    {
-      src:
-        "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-      type: "type/png",
-      size: "32x32",
-    },
-    {
-      src:
-        "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-      type: "type/png",
-      size: "64x64",
-    },
-  ],
-  lang: "en-US",
-  moz_manifest_url: "",
-  moz_validation: [
-    { warn: "Icons item at index 0 is invalid." },
-    {
-      warn:
-        "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
-    },
-  ],
-  name:
-    "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
-  orientation: "landscape",
-  scope: "./",
-  short_name: "Na",
-  start_url: "root",
-  theme_color: "#345",
-};
-
 // flatten constants
-module.exports = Object.assign(
-  {},
-  { DEFAULT_PAGE, PAGE_TYPES, MANIFEST_DATA },
-  actionTypes
-);
+module.exports = Object.assign({}, { DEFAULT_PAGE, PAGE_TYPES }, actionTypes);

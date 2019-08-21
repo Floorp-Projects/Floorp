@@ -2,54 +2,8 @@
 
 exports[`ManifestPage renders the expected snapshot 1`] = `
 <section
-  className="app-page "
+  className="manifest-page"
 >
   <Connect(ManifestLoader) />
-  <ManifestView
-    icons={
-      Array [
-        Object {
-          "size": "16x16",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
-        },
-        Object {
-          "size": "32x32",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
-        },
-        Object {
-          "size": "64x64",
-          "src": "https://design.firefox.com/icons/icons/desktop/default-browser-16.svg",
-          "type": "type/png",
-        },
-      ]
-    }
-    identity={
-      Object {
-        "name": "Name is a verrry long name and the name is longer tha you thinnk because it is loooooooooooooooooooooooooooooooooooooooooooooooong",
-        "short_name": "Na",
-      }
-    }
-    presentation={
-      Object {
-        "background_color": "#F9D",
-        "display": "browser",
-        "orientation": "landscape",
-        "start_url": "root",
-        "theme_color": "#345",
-      }
-    }
-    warnings={
-      Array [
-        Object {
-          "warn": "Icons item at index 0 is invalid.",
-        },
-        Object {
-          "warn": "Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid. Icons item at index 2 is invalid.",
-        },
-      ]
-    }
-  />
 </section>
 `;
