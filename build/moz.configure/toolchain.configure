@@ -1429,6 +1429,21 @@ def is_windows(target, host):
 
 include('windows.configure', when=is_windows)
 
+
+# On Power ISA, determine compiler flags for VMX, VSX and VSX-3.
+
+set_config('PPC_VMX_FLAGS',
+           ['-maltivec'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
+set_config('PPC_VSX_FLAGS',
+           ['-mvsx'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
+set_config('PPC_VSX3_FLAGS',
+           ['-mvsx','-mcpu=power9'],
+           when=depends(target.cpu)(lambda cpu: cpu.startswith('ppc')))
+
 # ASAN
 # ==============================================================
 
