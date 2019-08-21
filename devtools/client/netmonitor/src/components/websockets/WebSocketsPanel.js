@@ -107,7 +107,12 @@ class WebSocketsPanel extends Component {
   }
 
   render() {
-    const { frameDetailsOpen, connector, selectedFrame } = this.props;
+    const {
+      frameDetailsOpen,
+      connector,
+      selectedFrame,
+      channelId,
+    } = this.props;
 
     const searchboxRef = this.searchboxRef;
     const startPanelContainer = this.state.startPanelContainer;
@@ -131,6 +136,7 @@ class WebSocketsPanel extends Component {
         startPanel: FrameListContent({
           connector,
           startPanelContainer,
+          channelId,
         }),
         endPanel:
           frameDetailsOpen &&
