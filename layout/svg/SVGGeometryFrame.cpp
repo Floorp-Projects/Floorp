@@ -260,26 +260,28 @@ void SVGGeometryFrame::PaintSVG(gfxContext& aContext,
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
-
-  if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
+  if (!paintOrder) {
     Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aImgParams);
     PaintMarkers(aContext, aTransform, aImgParams);
   } else {
     while (paintOrder) {
-      uint32_t component =
-          paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+      auto component = StylePaintOrder(paintOrder & kPaintOrderMask);
       switch (component) {
-        case NS_STYLE_PAINT_ORDER_FILL:
+        case StylePaintOrder::Fill:
           Render(&aContext, eRenderFill, newMatrix, aImgParams);
           break;
-        case NS_STYLE_PAINT_ORDER_STROKE:
+        case StylePaintOrder::Stroke:
           Render(&aContext, eRenderStroke, newMatrix, aImgParams);
           break;
-        case NS_STYLE_PAINT_ORDER_MARKERS:
+        case StylePaintOrder::Markers:
           PaintMarkers(aContext, aTransform, aImgParams);
           break;
+        default:
+          MOZ_FALLTHROUGH_ASSERT("Unknown paint-order variant, how?");
+        case StylePaintOrder::Normal:
+          break;
       }
-      paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+      paintOrder >>= kPaintOrderShift;
     }
   }
 }
