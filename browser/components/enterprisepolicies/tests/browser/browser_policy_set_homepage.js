@@ -151,19 +151,7 @@ add_task(async function homepage_test_repeat_same_policy_value() {
     expectedPageVal: 3,
   });
   Services.prefs.clearUserPref("browser.startup.page");
-});
-
-add_task(async function homepage_test_different_policy_value() {
-  // This policy is a change from the policy's previous value. This should
-  // override the user's homepage
-  await setupPolicyEngineWithJson({
-    policies: {
-      Homepage: {
-        URL: "http://example3.com/",
-      },
-    },
-  });
-  await check_homepage({ expectedURL: "http://example3.com/" });
+  Services.prefs.clearUserPref("browser.startup.homepage");
 });
 
 add_task(async function homepage_test_empty_additional() {
