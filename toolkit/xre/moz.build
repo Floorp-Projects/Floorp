@@ -87,7 +87,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
         'nsNativeAppSupportDefault.cpp',
         'UIKitDirProvider.mm',
     ]
-elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]
@@ -101,7 +101,7 @@ if CONFIG['MOZ_HAS_REMOTE']:
         '../components/remote',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     UNIFIED_SOURCES += [
         'nsGDKErrorHandler.cpp',
     ]
@@ -245,7 +245,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 DEFINES['TOPOBJDIR'] = TOPOBJDIR

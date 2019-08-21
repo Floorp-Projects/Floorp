@@ -10,7 +10,7 @@ with Files('**'):
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
   DEFINES['MOZ_FENNEC'] = True
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
   DEFINES['MOZ_GTK'] = True
 
 JAR_MANIFESTS += ['jar.mn']

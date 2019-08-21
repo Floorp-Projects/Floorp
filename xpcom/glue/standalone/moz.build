@@ -32,5 +32,5 @@ DisableStlWrapping()
 
 DIST_INSTALL = True
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['GLIB_CFLAGS']

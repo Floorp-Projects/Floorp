@@ -34,7 +34,7 @@ class TestTestManifest(unittest.TestCase):
                          ['fleem'])
 
         # You should be able to expect failures:
-        last = manifest.active_tests(exists=False, toolkit='gtk3')[-1]
+        last = manifest.active_tests(exists=False, toolkit='gtk')[-1]
         self.assertEqual(last['name'], 'linuxtest')
         self.assertEqual(last['expected'], 'pass')
         last = manifest.active_tests(exists=False, toolkit='cocoa')[-1]

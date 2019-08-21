@@ -1,5 +1,5 @@
 HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
-fuzzy-if(xulRuntime.widgetToolkit=="gtk3",0-1,0-23) == deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d # bug 1182632
+fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-23) == deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d # bug 1182632
 HTTP == fixed-1.html fixed-1.html?ref
 fuzzy-if(skiaContent,0-1,0-32200) HTTP == fixed-table-1.html fixed-table-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref

@@ -143,7 +143,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 712600-3.html 712600-3-r
 == 817406-3.html 817406-1-ref.html
 == 817406-4.html 817406-4-ref.html
 == 847242-1.html 847242-1-ref.html
-pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",0-1,0-11) == chrome://reftest/content/bidi/869833-1.xul chrome://reftest/content/bidi/869833-1-ref.xul
+pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/bidi/869833-1.xul chrome://reftest/content/bidi/869833-1-ref.xul
 == 922530-1.html 922530-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 922550-1.html 922550-1-ref.html # Bug 1392106
 == 989994-1.html 989994-1-ref.html

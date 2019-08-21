@@ -13,7 +13,7 @@ with Files("*CompositorWidget*"):
 with Files("*WindowSurface*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     DIRS += ['mozgtk']
 
 if CONFIG['MOZ_WAYLAND']:
@@ -153,7 +153,7 @@ CFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
 # use only system Cairo symbols that GTK3 uses. This allows that
 # any Cairo objects created can be freely passed back and forth
 # between the widget code and GTK3.
-if not (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3' and CONFIG['MOZ_TREE_CAIRO']):
+if not (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk' and CONFIG['MOZ_TREE_CAIRO']):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
 CXXFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
