@@ -121,6 +121,11 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
 
+; This needs to be inserted after InitHashAppModelId because it uses
+; $AppUserModelID and the compiler can't handle using variables lexically before
+; they've been declared.
+!insertmacro GetInstallerRegistryPref
+
 !include shared.nsh
 
 ; Helper macros for ui callbacks. Insert these after shared.nsh
