@@ -2,7 +2,7 @@
 
 exports[`WorkersPage filters out workers from diferent domains 1`] = `
 <section
-  className="workers-page "
+  className="app-page "
 >
   <WorkerList
     canDebugWorkers={true}
@@ -32,7 +32,7 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
 
 exports[`WorkersPage filters out workers from different domains and renders an empty list when there is none left 1`] = `
 <section
-  className="workers-page workers-page--empty"
+  className="app-page app-page--empty"
 >
   <WorkerListEmpty />
 </section>
@@ -40,7 +40,7 @@ exports[`WorkersPage filters out workers from different domains and renders an e
 
 exports[`WorkersPage it renders a list with a single element if there's just 1 worker 1`] = `
 <section
-  className="workers-page "
+  className="app-page "
 >
   <WorkerList
     canDebugWorkers={true}
@@ -62,7 +62,7 @@ exports[`WorkersPage it renders a list with a single element if there's just 1 w
 
 exports[`WorkersPage renders a list with multiple elements when there are multiple workers 1`] = `
 <section
-  className="workers-page "
+  className="app-page "
 >
   <WorkerList
     canDebugWorkers={true}
@@ -100,7 +100,7 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
 
 exports[`WorkersPage renders an empty list if there are no workers 1`] = `
 <section
-  className="workers-page workers-page--empty"
+  className="app-page app-page--empty"
 >
   <WorkerListEmpty />
 </section>
