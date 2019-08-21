@@ -5226,7 +5226,7 @@ static void InitPref(const char* aName, float aDefaultValue) {
 }
 
 template <typename T>
-static void InitAlwaysPref(const nsACString& aName, T* aCache,
+static void InitAlwaysPref(const nsCString& aName, T* aCache,
                            StripAtomic<T> aDefaultValue, bool aIsStartup,
                            bool aIsParent) {
   // In the parent process, set/reset the pref value and the `always` mirror (if
@@ -5235,7 +5235,7 @@ static void InitAlwaysPref(const nsACString& aName, T* aCache,
   // - In child processes, the parent sends the correct initial values via
   //   shared memory, so we do not re-initialize them here.
   if (aIsParent) {
-    InitPref(PromiseFlatCString(aName).get(), aDefaultValue);
+    InitPref(aName.get(), aDefaultValue);
     *aCache = aDefaultValue;
   }
 
