@@ -12,6 +12,7 @@ const {
 } = require("devtools/shared/protocol.js");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
+const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
@@ -24,6 +25,11 @@ loader.lazyRequireGetter(
   "BrowsingContextTargetFront",
   "devtools/shared/fronts/targets/browsing-context",
   true
+);
+
+const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
+  "devtools.browsertoolbox.fission",
+  false
 );
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
@@ -280,7 +286,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.numChildren;
   }
   get remoteFrame() {
-    return this._form.remoteFrame;
+    return BROWSER_TOOLBOX_FISSION_ENABLED && this._form.remoteFrame;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;
@@ -512,6 +518,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   }
 
   async connectToRemoteFrame() {
+    if (!this.remoteFrame) {
+      console.warn("Tried to open remote connection to an invalid frame.");
+      return null;
+    }
     if (this._remoteFrameTarget) {
       return this._remoteFrameTarget;
     }

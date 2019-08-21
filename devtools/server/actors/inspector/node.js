@@ -145,11 +145,6 @@ const SUBGRID_ENABLED = Services.prefs.getBoolPref(
   "layout.css.grid-template-subgrid-value.enabled"
 );
 
-const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
-  "devtools.browsertoolbox.fission",
-  false
-);
-
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 
@@ -317,8 +312,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return (
       this.numChildren == 0 &&
       ChromeUtils.getClassName(this.rawNode) == "XULFrameElement" &&
-      this.rawNode.getAttribute("remote") == "true" &&
-      BROWSER_TOOLBOX_FISSION_ENABLED
+      this.rawNode.getAttribute("remote") == "true"
     );
   },
 
