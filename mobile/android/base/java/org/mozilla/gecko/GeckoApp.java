@@ -149,6 +149,8 @@ public abstract class GeckoApp extends GeckoActivity
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
     public static final String PREFS_CLEANUP_TEMP_FILES    = "cleanupTempFiles";
+    public static final String PREFS_ENHANCED_SEARCH_USAGE = "enhancedSearchUsed";
+    public static final String PREFS_ENHANCED_SEARCH_READY = "enhancedSearchReady";
 
     /**
      * Used with SharedPreferences, per profile, to determine if this is the first run of
