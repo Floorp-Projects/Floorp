@@ -13,6 +13,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
+#include "SpecialSystemDirectory.h"
 
 #ifdef XP_UNIX  // {
 #  include "mozilla/Preferences.h"
@@ -417,7 +418,12 @@ nsresult nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
 #endif
   nsresult rv;
   if (!*aFile) {
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, aFile);
+    if (NS_IsMainThread()) {
+      // This allows tests to override, but isn't safe off-mainthread.
+      rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, aFile);
+    } else {
+      rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, aFile);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
