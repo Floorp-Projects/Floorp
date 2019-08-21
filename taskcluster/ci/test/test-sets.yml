@@ -126,7 +126,6 @@ raptor-profiling:
     - raptor-wasm-godot-firefox-profiling
     - raptor-ares6-firefox-profiling
     - raptor-jetstream2-firefox-profiling
-    - raptor-youtube-playback-firefox-profiling
 
 raptor-chromium:
     - raptor-tp6-1-chromium
