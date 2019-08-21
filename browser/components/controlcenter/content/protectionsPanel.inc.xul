@@ -191,10 +191,6 @@
         </vbox>
         <vbox id="protections-popup-trackersView-list" class="protections-popup-list">
         </vbox>
-        <hbox id="protections-popup-trackersView-strict-info">
-          <image/>
-          <label>&contentBlocking.trackersView.strictInfo.label;</label>
-        </hbox>
         <vbox class="panel-footer">
           <button id="protections-popup-trackersView-settings-button"
                   label="&contentBlocking.manageSettings2.label;"
