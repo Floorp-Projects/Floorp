@@ -1040,8 +1040,34 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
           specifiedPosition = box.clone(),
           outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
       let hasFoundBestPosition = false;
-      const axis = ["-y", "-x", "+x", "+y"];
-      const toMove = styleBox.getFirstLineBoxSize();
+
+      // For the different writing directions, we should have different priority
+      // for the moving direction. For example, if the writing direction is
+      // horizontal, which means the cues will grow from the top to the bottom,
+      // then moving cues along the `y` axis should be more important than moving
+      // cues along the `x` axis, and vice versa for those cues growing from the
+      // left to right, or from the right to the left. We don't follow the exact
+      // way which the spec requires, see the reason in bug1575460.
+      function getAxis(writingDirection) {
+        if (writingDirection == "") {
+          return ["+y", "-y", "+x", "-x"];
+        }
+        // Growing from left to right.
+        if (writingDirection == "lr") {
+          return ["+x", "-x", "+y", "-y"];
+        }
+        // Growing from right to left.
+        return ["-x", "+x", "+y", "-y"];
+      }
+      const axis = getAxis(cue.vertical);
+
+      // This factor effects the granularity of the moving unit, when using the
+      // factor=1 often moves too much and results in too many redudant spaces
+      // between boxes. So we can increase the factor to slightly reduce the
+      // move we do every time, but still can preverse the reasonable spaces
+      // between boxes.
+      const factor = 4;
+      const toMove = styleBox.getFirstLineBoxSize() / factor;
       for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
         while (!box.isOutsideTheAxisBoundary(containerBox, axis[i]) &&
                (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {
