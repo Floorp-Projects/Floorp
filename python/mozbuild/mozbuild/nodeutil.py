@@ -25,7 +25,10 @@ def find_node_paths():
     """
     # Also add in the location to which `mach bootstrap` or
     # `mach artifact toolchain` installs clang.
-    mozbuild_state_dir = get_state_dir()
+    if 'MOZ_FETCHES_DIR' in os.environ:
+        mozbuild_state_dir = os.environ['MOZ_FETCHES_DIR']
+    else:
+        mozbuild_state_dir = get_state_dir()
 
     if platform.system() == "Windows":
         mozbuild_node_path = os.path.join(mozbuild_state_dir, 'node')
