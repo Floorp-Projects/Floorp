@@ -10,6 +10,10 @@ const { ExtensionPermissions } = ChromeUtils.import(
   {}
 );
 
+const SUPPORT_URL = Services.urlFormatter.formatURL(
+  Services.prefs.getStringPref("app.support.baseURL")
+);
+const PB_SUMO_URL = SUPPORT_URL + "extensions-pb";
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
 
@@ -795,6 +799,12 @@ add_task(async function testPrivateBrowsingExtension() {
     null,
     "The disabled message is not shown for the add-on"
   );
+
+  info("Verify the badge links to the support page");
+  let tabOpened = BrowserTestUtils.waitForNewTab(gBrowser, PB_SUMO_URL);
+  EventUtils.synthesizeMouseAtCenter(badge, {}, win);
+  let tab = await tabOpened;
+  BrowserTestUtils.removeTab(tab);
 
   // Disable the add-on and change the value.
   updated = BrowserTestUtils.waitForEvent(card, "update");

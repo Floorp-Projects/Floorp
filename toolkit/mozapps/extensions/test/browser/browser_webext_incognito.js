@@ -120,10 +120,7 @@ function checkHelpRow(selector, expected) {
   let helpRow = getHtmlElem(`${selector} + .addon-detail-help-row`);
   if (expected) {
     is_element_visible(helpRow, `Help row should be shown: ${selector}`);
-    is_element_visible(
-      helpRow.querySelector("a, [action='pb-learn-more']"),
-      "Expected learn more link"
-    );
+    is_element_visible(helpRow.querySelector("a"), "Expected learn more link");
   } else {
     is_element_hidden(helpRow, `Help row should be hidden: ${selector}`);
   }

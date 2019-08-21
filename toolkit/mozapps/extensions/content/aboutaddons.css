@@ -139,12 +139,13 @@ addon-card[expanded] .addon-card-message {
 }
 
 .addon-badge {
+  display: inline-block;
+  margin-inline-end: 8px;
   width: 16px;
   height: 16px;
   background-size: 16px;
   background-repeat: no-repeat;
   background-position: center;
-  margin-inline-end: 8px;
 }
 
 .addon-badge-private-browsing-allowed {
