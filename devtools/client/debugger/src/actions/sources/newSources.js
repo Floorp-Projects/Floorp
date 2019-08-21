@@ -9,7 +9,6 @@
  * @module actions/sources
  */
 
-import { generatedToOriginalId } from "devtools-source-map";
 import { flatten } from "lodash";
 
 import {
@@ -101,7 +100,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
     dispatch,
     getState,
     sourceMaps,
-  }: ThunkArgs): Promise<Source[]> {
+  }: ThunkArgs): Promise<OriginalSourceData[]> {
     const source = getSource(getState(), sourceId);
 
     if (
@@ -113,7 +112,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
       return [];
     }
 
-    let urls = null;
+    let data = null;
     try {
       // Unable to correctly type the result of a spread on a union type.
       // See https://github.com/facebook/flow/pull/7298
@@ -126,12 +125,12 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
         // however, so use that for resolving any source maps in the source.
         (urlInfo: any).url = urlInfo.introductionUrl;
       }
-      urls = await sourceMaps.getOriginalURLs(urlInfo);
+      data = await sourceMaps.getOriginalURLs(urlInfo);
     } catch (e) {
       console.error(e);
     }
 
-    if (!urls) {
+    if (!data) {
       // If this source doesn't have a sourcemap, enable it for pretty printing
       dispatch(
         ({
@@ -144,10 +143,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
     }
 
     validateNavigateContext(getState(), cx);
-    return urls.map(url => ({
-      id: generatedToOriginalId(source.id, url),
-      url,
-    }));
+    return data;
   };
 }
 
