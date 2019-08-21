@@ -33,7 +33,7 @@ add_task(async function setup() {
 
 async function testPopup(hasPopup, buttonToClick) {
   let numPageLoaded = gProtectionsHandler._socialTrackingSessionPageLoad;
-  let numPopupShown = SpecialPowers.getIntPref(
+  let numPopupShown = Services.prefs.getIntPref(
     "privacy.socialtracking.notification.counter",
     0
   );
@@ -89,7 +89,7 @@ async function testPopup(hasPopup, buttonToClick) {
     // click on the button of the popup notification
     if (typeof buttonToClick === "string") {
       is(
-        SpecialPowers.getBoolPref(
+        Services.prefs.getBoolPref(
           "privacy.socialtracking.notification.enabled",
           false
         ),
@@ -101,7 +101,7 @@ async function testPopup(hasPopup, buttonToClick) {
       EventUtils.synthesizeMouseAtCenter(notification[buttonToClick], {});
 
       is(
-        SpecialPowers.getBoolPref(
+        Services.prefs.getBoolPref(
           "privacy.socialtracking.notification.enabled",
           true
         ),
@@ -110,13 +110,13 @@ async function testPopup(hasPopup, buttonToClick) {
       );
     }
 
-    let lastShown = SpecialPowers.getCharPref(
+    let lastShown = Services.prefs.getCharPref(
       "privacy.socialtracking.notification.lastShown",
       "0"
     );
     ok(lastShown !== "0", "last shown timestamp updated");
     is(
-      SpecialPowers.getIntPref(
+      Services.prefs.getIntPref(
         "privacy.socialtracking.notification.counter",
         0
       ),
@@ -221,12 +221,12 @@ add_task(async function testSocialTrackingPopups() {
 
   for (let config of configs) {
     ok(config.description, config.description);
-    SpecialPowers.pushPrefEnv({
+    await SpecialPowers.pushPrefEnv({
       set: config.prefs,
     });
     for (let result of config.results) {
       await testPopup(result, config.button);
     }
-    SpecialPowers.popPrefEnv();
+    await SpecialPowers.popPrefEnv();
   }
 });
