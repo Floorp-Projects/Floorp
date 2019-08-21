@@ -305,12 +305,17 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   // computed block-size if we have an unconstrained available block-size.
   nscoord computedBSize =
       GetEffectiveComputedBSize(aReflowInput, consumedBSize);
-  nscoord colBSize = GetAvailableContentBSize(aReflowInput);
 
-  if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-    colBSize = aReflowInput.ComputedBSize();
-  } else if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
-    colBSize = std::min(colBSize, aReflowInput.ComputedMaxBSize());
+  nscoord colBSize;
+  if (StaticPrefs::layout_css_column_span_enabled()) {
+    colBSize = aReflowInput.AvailableBSize();
+  } else {
+    colBSize = GetAvailableContentBSize(aReflowInput);
+    if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+      colBSize = aReflowInput.ComputedBSize();
+    } else if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
+      colBSize = std::min(colBSize, aReflowInput.ComputedMaxBSize());
+    }
   }
 
   nscoord colGap =
@@ -414,12 +419,6 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
     colBSize = std::max(colBSize, nsPresContext::CSSPixelsToAppUnits(1));
   }
 
-  COLUMN_SET_LOG(
-      "%s: numColumns=%d, colISize=%d, expectedISizeLeftOver=%d,"
-      " colBSize=%d, colGap=%d, isBalancing %d",
-      __func__, numColumns, colISize, expectedISizeLeftOver, colBSize, colGap,
-      isBalancing);
-
   ReflowConfig config;
   config.mBalanceColCount = numColumns;
   config.mColISize = colISize;
@@ -431,6 +430,13 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   config.mKnownInfeasibleBSize = 0;
   config.mComputedBSize = computedBSize;
   config.mConsumedBSize = consumedBSize;
+
+  COLUMN_SET_LOG(
+      "%s: this=%p, mBalanceColCount=%d, mColISize=%d, "
+      "mExpectedISizeLeftOver=%d, mColGap=%d, mColMaxBSize=%d, mIsBalancing=%d",
+      __func__, this, config.mBalanceColCount, config.mColISize,
+      config.mExpectedISizeLeftOver, config.mColGap, config.mColMaxBSize,
+      config.mIsBalancing);
 
   return config;
 }
@@ -717,6 +723,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColMaxBSize);
       if (aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1) {
         availSize.BSize(wm) = GetAvailableContentBSize(aReflowInput);
+
+        COLUMN_SET_LOG(
+            "%s: Measuring content block-size, change available block-size "
+            "from %d to %d",
+            __func__, aConfig.mColMaxBSize, availSize.BSize(wm));
       }
 
       if (reflowNext) {
@@ -993,8 +1004,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
   colData.mFeasible =
       allFit && aStatus.IsFullyComplete() && !aStatus.IsTruncated();
-  COLUMN_SET_LOG("%s: Done column reflow pass: %s", __func__,
-                 colData.mFeasible ? "Feasible :)" : "Infeasible :(");
+  COLUMN_SET_LOG(
+      "%s: Done column reflow pass: %s, mMaxBSize=%d, mSumBSize=%d, "
+      "mMaxOverflowingBSize=%d",
+      __func__, colData.mFeasible ? "Feasible :)" : "Infeasible :(",
+      colData.mMaxBSize, colData.mSumBSize, colData.mMaxOverflowingBSize);
 
   return colData;
 }
@@ -1030,10 +1044,6 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                                             ReflowOutput& aDesiredSize,
                                             bool aUnboundedLastColumn,
                                             nsReflowStatus& aStatus) {
-  nsMargin bp = aReflowInput.ComputedPhysicalBorderPadding();
-  bp.ApplySkipSides(GetSkipSides());
-  bp.bottom = aReflowInput.ComputedPhysicalBorderPadding().bottom;
-
   nscoord availableContentBSize = GetAvailableContentBSize(aReflowInput);
 
   // Termination of the algorithm below is guaranteed because
@@ -1081,9 +1091,10 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       }
     }
 
-    COLUMN_SET_LOG("%s: KnownInfeasibleBSize=%d, KnownFeasibleBSize=%d",
-                   __func__, aConfig.mKnownInfeasibleBSize,
-                   aConfig.mKnownFeasibleBSize);
+    COLUMN_SET_LOG(
+        "%s: this=%p, mKnownInfeasibleBSize=%d, mKnownFeasibleBSize=%d",
+        __func__, this, aConfig.mKnownInfeasibleBSize,
+        aConfig.mKnownFeasibleBSize);
 
     if (aConfig.mKnownInfeasibleBSize >= aConfig.mKnownFeasibleBSize - 1) {
       // aConfig.mKnownFeasibleBSize is where we want to be

@@ -7,11 +7,18 @@ var numSamples = 500;
 var delays = new Array(numSamples);
 var gcs = new Array(numSamples);
 var minorGCs = new Array(numSamples);
+var majorGCs = new Array(numSamples);
 var gcBytes = new Array(numSamples);
 var mallocBytes = new Array(numSamples);
 var sampleIndex = 0;
 var sampleTime = 16; // ms
 var gHistogram = new Map(); // {ms: count}
+
+var stroke = {
+    'gcslice': 'rgb(255,100,0)',
+    'minor': 'rgb(0,255,100)',
+    'initialMajor': 'rgb(180,60,255)'
+};
 
 var features = {
   trackingSizes: ('mozMemory' in performance),
@@ -156,34 +163,47 @@ LatencyGraph.prototype.draw = function () {
 
     // Draw vertical lines marking minor and major GCs
     if (features.showingGCs) {
-        var { width, height } = ctx.canvas;
+        const { width, height } = ctx.canvas;
 
-        ctx.strokeStyle = 'rgb(255,100,0)';
+        ctx.strokeStyle = stroke.gcslice;
         var idx = sampleIndex % numSamples;
-        var gcCount = gcs[idx];
+        const count = {major: majorGCs[idx], minor: 0, any: gcs[idx]};
         for (var i = 0; i < numSamples; i++) {
+            // A minor GC bumps count.minor and count.any. A major GC slice
+            // bumps count.any only (though it might run a minor GC too.) The
+            // first slice of a major GC bumps count.major and count.any, and
+            // will also do a minor GC and so ends up bumping count.minor as
+            // well.
+            //
+            // So there's no way to distinguish a minor GC from a major GC
+            // slice that also runs a minor GC! Both bump count.any and
+            // count.minor and not count.major.
             idx = (sampleIndex + i) % numSamples;
-            if (gcCount < gcs[idx]) {
+            const isMajorStart = count.major < majorGCs[idx];
+            if (count.any < gcs[idx]) {
+                if (isMajorStart) ctx.strokeStyle = stroke.initialMajor;
                 ctx.beginPath();
                 ctx.moveTo(this.xpos(idx), 0);
                 ctx.lineTo(this.xpos(idx), this.layout.xAxisLabel_Y);
                 ctx.stroke();
+                if (isMajorStart) ctx.strokeStyle = stroke.gcslice;
             }
-            gcCount = gcs[idx];
+            count.any = gcs[idx];
+            count.major = majorGCs[idx];
         }
 
-        ctx.strokeStyle = 'rgb(0,255,100)';
+        ctx.strokeStyle = stroke.minor;
         idx = sampleIndex % numSamples;
-        gcCount = gcs[idx];
+        count.minor = gcs[idx];
         for (var i = 0; i < numSamples; i++) {
             idx = (sampleIndex + i) % numSamples;
-            if (gcCount < minorGCs[idx]) {
+            if (count.minor < minorGCs[idx]) {
                 ctx.beginPath();
                 ctx.moveTo(this.xpos(idx), 0);
                 ctx.lineTo(this.xpos(idx), 20);
                 ctx.stroke();
             }
-            gcCount = minorGCs[idx];
+            count.minor = minorGCs[idx];
         }
     }
 
@@ -347,6 +367,7 @@ function handler(timestamp)
         if (features.showingGCs) {
             gcs[idx] = performance.mozMemory.gcNumber;
             minorGCs[idx] = performance.mozMemory.minorGCCount;
+            majorGCs[idx] = performance.mozMemory.majorGCCount;
         }
     }
 
