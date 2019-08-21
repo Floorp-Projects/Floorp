@@ -18,7 +18,6 @@ add_task(async function setup() {
   });
 
   let chromeScript = SpecialPowers.loadChromeScript(async _ => {
-    /* global sendAsyncMessage */
     const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
     await UrlClassifierTestUtils.addTestTrackers();
     sendAsyncMessage("trackersLoaded");
