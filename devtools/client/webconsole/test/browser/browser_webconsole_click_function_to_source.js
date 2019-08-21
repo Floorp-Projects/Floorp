@@ -38,7 +38,7 @@ add_task(async function() {
   info("Click on the jump to definition button.");
   jumpIcon.click();
 
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
   await waitForSelectedSource(dbg, TEST_SCRIPT_URI);
 
