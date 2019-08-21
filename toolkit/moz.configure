@@ -1261,6 +1261,35 @@ def launcher(value, target):
 set_config('MOZ_LAUNCHER_PROCESS', launcher)
 set_define('MOZ_LAUNCHER_PROCESS', launcher)
 
+# llvm-dlltool (Windows only)
+# ==============================================================
+
+@depends(build_project, target, '--enable-compile-environment')
+def check_for_llvm_dlltool(build_project, target, compile_environment):
+    if build_project != 'browser':
+        return
+
+    if target.os != 'WINNT':
+        return
+
+    return compile_environment
+
+llvm_dlltool = check_prog('LLVM_DLLTOOL', ('llvm-dlltool',),
+                          what='llvm-dlltool', when=check_for_llvm_dlltool,
+                          paths=toolchain_search_path)
+
+@depends(target, when=llvm_dlltool)
+def llvm_dlltool_flags(target):
+    arch = {
+        'x86': 'i386',
+        'x86_64': 'i386:x86-64',
+        'aarch64': 'arm64',
+    }[target.cpu]
+
+    return ['-m', arch]
+
+set_config('LLVM_DLLTOOL_FLAGS', llvm_dlltool_flags)
+
 # Maintenance service (Windows only)
 # ==============================================================
 
