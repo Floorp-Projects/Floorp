@@ -374,12 +374,12 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'threading/windows/CpuCount.cpp',
-        'threading/windows/Thread.cpp',
+        'threading/windows/WindowsThread.cpp',
     ]
 else:
     UNIFIED_SOURCES += [
         'threading/posix/CpuCount.cpp',
-        'threading/posix/Thread.cpp',
+        'threading/posix/PosixThread.cpp',
     ]
 
 if CONFIG['JS_HAS_CTYPES']:
