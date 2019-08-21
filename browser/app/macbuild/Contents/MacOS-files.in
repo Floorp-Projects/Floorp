@@ -1,5 +1,6 @@
+# Specifies files that should be copied (preserving symlinks) from dist/bin
+# to the .app/Contents/MacOS directory.
 /*.app/***
-/*.dylib
 /certutil
 /firefox-bin
 #if defined(MOZ_GECKODRIVER)
