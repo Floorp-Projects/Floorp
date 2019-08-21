@@ -13,8 +13,8 @@ exports[`WorkerListEmpty renders the expected snapshot 1`] = `
     }
     id="serviceworker-empty-intro"
   >
-    <p
-      className="worker-list-empty__title"
+    <h1
+      className="app-page__title"
     />
   </Localized>
   <Localized
