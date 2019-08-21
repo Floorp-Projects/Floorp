@@ -4,7 +4,6 @@ config = {
     'default_actions': [
         'clobber',
         'build',
-        'check-test',
     ],
     'stage_platform': 'win32-debug',
     'debug_build': True,

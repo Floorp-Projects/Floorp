@@ -4,7 +4,6 @@ config = {
     'default_actions': [
         'get-secrets',
         'build',
-        'check-test',
     ],
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
