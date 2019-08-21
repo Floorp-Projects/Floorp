@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestViewEmpty renders the expected snapshot 1`] = `
+<article
+  className="manifest-view-empty"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <Localized
+    id="manifest-empty-intro"
+  >
+    <p />
+  </Localized>
+</article>
+`;

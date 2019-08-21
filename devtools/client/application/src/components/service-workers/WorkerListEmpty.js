@@ -12,6 +12,7 @@ const {
 const {
   a,
   article,
+  h1,
   li,
   p,
   ul,
@@ -58,7 +59,7 @@ class WorkerListEmpty extends PureComponent {
             onClick: () => this.openDocumentation(),
           }),
         },
-        p({ className: "worker-list-empty__title" })
+        h1({ className: "app-page__title" })
       ),
       Localized({ id: "serviceworker-empty-suggestions" }, p({})),
       ul(
