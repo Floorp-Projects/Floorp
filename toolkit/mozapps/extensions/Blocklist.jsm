@@ -165,6 +165,35 @@ const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS =
   "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
 
+const BlocklistTelemetry = {
+  /**
+   * Record the XML Blocklist lastModified server time into the
+   * "blocklist.lastModified_xml scalar.
+   *
+   * @param {XMLDocument} xmlDoc
+   *        The blocklist XML file to retrieve the lastupdate attribute
+   *        and record it into the "blocklist.lastModified_xml" scalar.
+   *        The scalar value is a datetime string in UTC format.
+   */
+  recordXMLBlocklistLastModified(xmlDoc) {
+    const lastUpdate =
+      xmlDoc && xmlDoc.documentElement.getAttribute("lastupdate");
+    if (lastUpdate) {
+      Services.telemetry.scalarSet(
+        "blocklist.lastModified_xml",
+        // Date(...).toUTCString will return "Invalid Date" if the
+        // timestamp isn't valid (e.g. parseInt returns NaN).
+        new Date(parseInt(lastUpdate, 10)).toUTCString()
+      );
+    } else {
+      Services.telemetry.scalarSet(
+        "blocklist.lastModified_xml",
+        "Missing Date"
+      );
+    }
+  },
+};
+
 const Utils = {
   /**
    * Checks whether this entry is valid for the current OS and ABI.
@@ -2137,6 +2166,10 @@ var BlocklistXML = {
         "Blocklist::_loadBlocklistFromXML: Error constructing blocklist " + e
       );
     }
+
+    // Record the last modified timestamp right before notify the observers.
+    BlocklistTelemetry.recordXMLBlocklistLastModified(doc);
+
     // Dispatch to mainthread because consumers may try to construct nsIPluginHost
     // again based on this notification, while we were called from nsIPluginHost
     // anyway, leading to re-entrancy.
