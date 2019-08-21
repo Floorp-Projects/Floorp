@@ -4,7 +4,7 @@
 == 347496-1.xhtml 347496-1-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-1.xml 355548-1-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-2.xml 355548-2-ref.xml # Bug 1392106
-pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
+pref(mathml.legacy_number_syntax.disabled,false) pref(mathml.nonzero_unitless_lengths.disabled,false) pref(mathml.mathsize_names.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-3.xml 355548-3-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-4.xml 355548-4-ref.xml # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 355548-5.xml 355548-5-ref.xml # Bug 1392106
 == 370692-1.xhtml 370692-1-ref.xhtml
