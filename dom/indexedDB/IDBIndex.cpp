@@ -495,7 +495,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
         "database(%s).transaction(%s).objectStore(%s).index(%s)."
         "openCursor(%s, %s)",
         "IndexedDB %s: C T[%lld] R[%llu]: "
-        "IDBObjectStore.openKeyCursor()",
+        "IDBObjectStore.openCursor()",
         IDB_LOG_ID_STRING(), transaction->LoggingSerialNumber(),
         request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(transaction->Database()),
