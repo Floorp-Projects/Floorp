@@ -1030,10 +1030,6 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                                             ReflowOutput& aDesiredSize,
                                             bool aUnboundedLastColumn,
                                             nsReflowStatus& aStatus) {
-  nsMargin bp = aReflowInput.ComputedPhysicalBorderPadding();
-  bp.ApplySkipSides(GetSkipSides());
-  bp.bottom = aReflowInput.ComputedPhysicalBorderPadding().bottom;
-
   nscoord availableContentBSize = GetAvailableContentBSize(aReflowInput);
 
   // Termination of the algorithm below is guaranteed because
