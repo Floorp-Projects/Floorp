@@ -598,7 +598,7 @@ Object.defineProperty(exports, "isOriginalId", {
     return _utils.isOriginalId;
   }
 });
-exports.default = exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.getOriginalStackFrames = exports.hasMappedSource = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getLocationScopes = exports.getFileGeneratedRange = exports.getGeneratedRangesForOriginal = exports.getOriginalLocations = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = void 0;
+exports.default = exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.getOriginalStackFrames = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getFileGeneratedRange = exports.getGeneratedRangesForOriginal = exports.getOriginalLocations = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = void 0;
 
 var _utils = __webpack_require__(64);
 
@@ -646,19 +646,19 @@ const hasOriginalURL = async url => dispatcher.invoke("hasOriginalURL", url);
 
 exports.hasOriginalURL = hasOriginalURL;
 
-const getOriginalRanges = async (sourceId, url) => dispatcher.invoke("getOriginalRanges", sourceId, url);
+const getOriginalRanges = async sourceId => dispatcher.invoke("getOriginalRanges", sourceId);
 
 exports.getOriginalRanges = getOriginalRanges;
 
-const getGeneratedRanges = async (location, originalSource) => _getGeneratedRanges(location, originalSource);
+const getGeneratedRanges = async location => _getGeneratedRanges(location);
 
 exports.getGeneratedRanges = getGeneratedRanges;
 
-const getGeneratedLocation = async (location, originalSource) => _getGeneratedLocation(location, originalSource);
+const getGeneratedLocation = async location => _getGeneratedLocation(location);
 
 exports.getGeneratedLocation = getGeneratedLocation;
 
-const getAllGeneratedLocations = async (location, originalSource) => _getAllGeneratedLocations(location, originalSource);
+const getAllGeneratedLocations = async location => _getAllGeneratedLocations(location);
 
 exports.getAllGeneratedLocations = getAllGeneratedLocations;
 
@@ -666,21 +666,19 @@ const getOriginalLocation = async (location, options = {}) => _getOriginalLocati
 
 exports.getOriginalLocation = getOriginalLocation;
 
-const getOriginalLocations = async (sourceId, locations, options = {}) => dispatcher.invoke("getOriginalLocations", sourceId, locations, options);
+const getOriginalLocations = async (locations, options = {}) => dispatcher.invoke("getOriginalLocations", locations, options);
 
 exports.getOriginalLocations = getOriginalLocations;
 
-const getGeneratedRangesForOriginal = async (sourceId, url, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, url, mergeUnmappedRegions);
+const getGeneratedRangesForOriginal = async (sourceId, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, mergeUnmappedRegions);
 
 exports.getGeneratedRangesForOriginal = getGeneratedRangesForOriginal;
 
-const getFileGeneratedRange = async originalSource => dispatcher.invoke("getFileGeneratedRange", originalSource);
+const getFileGeneratedRange = async originalSourceId => dispatcher.invoke("getFileGeneratedRange", originalSourceId);
 
 exports.getFileGeneratedRange = getFileGeneratedRange;
-const getLocationScopes = dispatcher.task("getLocationScopes");
-exports.getLocationScopes = getLocationScopes;
 
-const getOriginalSourceText = async originalSource => dispatcher.invoke("getOriginalSourceText", originalSource);
+const getOriginalSourceText = async originalSourceId => dispatcher.invoke("getOriginalSourceText", originalSourceId);
 
 exports.getOriginalSourceText = getOriginalSourceText;
 
@@ -691,10 +689,6 @@ exports.applySourceMap = applySourceMap;
 const clearSourceMaps = async () => dispatcher.invoke("clearSourceMaps");
 
 exports.clearSourceMaps = clearSourceMaps;
-
-const hasMappedSource = async location => dispatcher.invoke("hasMappedSource", location);
-
-exports.hasMappedSource = hasMappedSource;
 
 const getOriginalStackFrames = async generatedLocation => dispatcher.invoke("getOriginalStackFrames", generatedLocation);
 

@@ -21,6 +21,7 @@ const {
 } = require("./utils/fetchSourceMap");
 const {
   getSourceMap,
+  getSourceMapWithMetadata,
   setSourceMap,
   clearSourceMaps: clearSourceMapsRequests,
 } = require("./utils/sourceMapRequests");
@@ -33,7 +34,7 @@ const {
 } = require("./utils");
 const { clearWasmXScopes } = require("devtools-wasm-dwarf");
 
-import type { SourceLocation, Source, SourceId } from "debugger-html";
+import type { SourceLocation, SourceId } from "debugger-html";
 
 type Range = {
   start: {
@@ -45,31 +46,32 @@ type Range = {
     column: number,
   },
 };
+export type SourceMapInput = {|
+  id: SourceId,
+  url: string,
+  sourceMapURL: string,
+  isWasm: boolean,
+|};
 
 export type LocationOptions = {
   search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND",
 };
 
 async function getOriginalURLs(
-  generatedSource: Source
+  generatedSource: SourceMapInput
 ): Promise<?Array<{| id: SourceId, url: string |}>> {
-  const map = await fetchSourceMap(generatedSource);
-  if (!map || !map.sources) {
-    return null;
-  }
+  await fetchSourceMap(generatedSource);
 
-  return map.sources.map(url => ({
-    id: generatedToOriginalId(generatedSource.id, url),
-    url,
-  }));
+  const data = await getSourceMapWithMetadata(generatedSource.id);
+
+  return data ? data.sources : null;
 }
 
 const COMPUTED_SPANS = new WeakSet();
 
 const SOURCE_MAPPINGS = new WeakMap();
 async function getOriginalRanges(
-  sourceId: SourceId,
-  url: string
+  sourceId: SourceId
 ): Promise<
   Array<{
     line: number,
@@ -82,10 +84,12 @@ async function getOriginalRanges(
   }
 
   const generatedSourceId = originalToGeneratedId(sourceId);
-  const map = await getSourceMap(generatedSourceId);
-  if (!map) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  if (!data) {
     return [];
   }
+  const { map } = data;
+  const url = data.urlsById.get(sourceId);
 
   let mappings = SOURCE_MAPPINGS.get(map);
   if (!mappings) {
@@ -135,8 +139,7 @@ async function getOriginalRanges(
  * are mapped from the original range containing the location.
  */
 async function getGeneratedRanges(
-  location: SourceLocation,
-  originalSource: Source
+  location: SourceLocation
 ): Promise<
   Array<{
     line: number,
@@ -149,10 +152,11 @@ async function getGeneratedRanges(
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
-  if (!map) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  if (!data) {
     return [];
   }
+  const { urlsById, map } = data;
 
   if (!COMPUTED_SPANS.has(map)) {
     COMPUTED_SPANS.add(map);
@@ -166,7 +170,7 @@ async function getGeneratedRanges(
   // exact original location, making any bias value unnecessary, and then
   // use that location for the call to 'allGeneratedPositionsFor'.
   const genPos = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column,
     bias: SourceMapConsumer.GREATEST_LOWER_BOUND,
@@ -195,21 +199,21 @@ async function getGeneratedRanges(
 }
 
 async function getGeneratedLocation(
-  location: SourceLocation,
-  originalSource: Source
+  location: SourceLocation
 ): Promise<SourceLocation> {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
-  if (!map) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  if (!data) {
     return location;
   }
+  const { urlsById, map } = data;
 
   const positions = map.allGeneratedPositionsFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column,
   });
@@ -227,7 +231,7 @@ async function getGeneratedLocation(
 
   if (!match) {
     match = map.generatedPositionFor({
-      source: originalSource.url,
+      source: urlsById.get(location.sourceId),
       line: location.line,
       column: location.column == null ? 0 : location.column,
       bias: SourceMapConsumer.LEAST_UPPER_BOUND,
@@ -242,21 +246,21 @@ async function getGeneratedLocation(
 }
 
 async function getAllGeneratedLocations(
-  location: SourceLocation,
-  originalSource: Source
+  location: SourceLocation
 ): Promise<Array<SourceLocation>> {
   if (!isOriginalId(location.sourceId)) {
     return [];
   }
 
   const generatedSourceId = originalToGeneratedId(location.sourceId);
-  const map = await getSourceMap(generatedSourceId);
-  if (!map) {
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  if (!data) {
     return [];
   }
+  const { urlsById, map } = data;
 
   const positions = map.allGeneratedPositionsFor({
-    source: originalSource.url,
+    source: urlsById.get(location.sourceId),
     line: location.line,
     column: location.column == null ? 0 : location.column,
   });
@@ -269,22 +273,24 @@ async function getAllGeneratedLocations(
 }
 
 async function getOriginalLocations(
-  sourceId: string,
   locations: SourceLocation[],
   options: LocationOptions = {}
 ): Promise<SourceLocation[]> {
-  if (locations.some(location => location.sourceId != sourceId)) {
-    throw new Error("Generated locations must belong to the same source");
-  }
+  const maps = {};
 
-  const map = await getSourceMap(sourceId);
-  if (!map) {
-    return locations;
-  }
+  const results = [];
+  for (const location of locations) {
+    let map = maps[location.sourceId];
+    if (map === undefined) {
+      map = await getSourceMap(location.sourceId);
+      maps[location.sourceId] = map || null;
+    }
 
-  return locations.map(location =>
-    getOriginalLocationSync(map, location, options)
-  );
+    results.push(
+      map ? getOriginalLocationSync(map, location, options) : location
+    );
+  }
+  return results;
 }
 
 function getOriginalLocationSync(
@@ -347,23 +353,25 @@ async function getOriginalLocation(
 }
 
 async function getOriginalSourceText(
-  originalSource: Source
+  originalSourceId: SourceId
 ): Promise<?{
   text: string,
   contentType: string,
 }> {
-  assert(isOriginalId(originalSource.id), "Source is not an original source");
+  assert(isOriginalId(originalSourceId), "Source is not an original source");
 
-  const generatedSourceId = originalToGeneratedId(originalSource.id);
-  const map = await getSourceMap(generatedSourceId);
-  if (!map) {
+  const generatedSourceId = originalToGeneratedId(originalSourceId);
+  const data = await getSourceMapWithMetadata(generatedSourceId);
+  if (!data) {
     return null;
   }
+  const { urlsById, map } = data;
 
-  let text = map.sourceContentFor(originalSource.url);
+  const url = urlsById.get(originalSourceId);
+  let text = map.sourceContentFor(url);
   if (!text) {
     try {
-      const response = await networkRequest(originalSource.url, {
+      const response = await networkRequest(url, {
         loadFromCache: false,
       });
       text = response.content;
@@ -372,7 +380,7 @@ async function getOriginalSourceText(
       // failed to load, so we include it in the error metadata.
       err.metadata = {
         ...err.metadata,
-        url: originalSource.url,
+        url,
       };
       throw err;
     }
@@ -380,7 +388,7 @@ async function getOriginalSourceText(
 
   return {
     text,
-    contentType: getContentType(originalSource.url || ""),
+    contentType: getContentType(url || ""),
   };
 }
 
@@ -399,17 +407,17 @@ async function getOriginalSourceText(
 const GENERATED_MAPPINGS = new WeakMap();
 async function getGeneratedRangesForOriginal(
   sourceId: SourceId,
-  url: string,
   mergeUnmappedRegions: boolean = false
 ): Promise<Range[]> {
   assert(isOriginalId(sourceId), "Source is not an original source");
 
-  const map = await getSourceMap(originalToGeneratedId(sourceId));
-
+  const data = await getSourceMapWithMetadata(originalToGeneratedId(sourceId));
   // NOTE: this is only needed for Flow
-  if (!map) {
+  if (!data) {
     return [];
   }
+  const { urlsById, map } = data;
+  const url = urlsById.get(sourceId);
 
   if (!COMPUTED_SPANS.has(map)) {
     COMPUTED_SPANS.add(map);
@@ -527,24 +535,27 @@ function wrappedMappingPosition(pos: {
 }
 
 async function getFileGeneratedRange(
-  originalSource: Source
+  originalSourceId: SourceId
 ): Promise<?{ start: any, end: any }> {
-  assert(isOriginalId(originalSource.id), "Source is not an original source");
+  assert(isOriginalId(originalSourceId), "Source is not an original source");
 
-  const map = await getSourceMap(originalToGeneratedId(originalSource.id));
-  if (!map) {
+  const data = await getSourceMapWithMetadata(
+    originalToGeneratedId(originalSourceId)
+  );
+  if (!data) {
     return;
   }
+  const { urlsById, map } = data;
 
   const start = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(originalSourceId),
     line: 1,
     column: 0,
     bias: SourceMapConsumer.LEAST_UPPER_BOUND,
   });
 
   const end = map.generatedPositionFor({
-    source: originalSource.url,
+    source: urlsById.get(originalSourceId),
     line: Number.MAX_SAFE_INTEGER,
     column: Number.MAX_SAFE_INTEGER,
     bias: SourceMapConsumer.GREATEST_LOWER_BOUND,
@@ -554,15 +565,6 @@ async function getFileGeneratedRange(
     start,
     end,
   };
-}
-
-async function hasMappedSource(location: SourceLocation): Promise<boolean> {
-  if (isOriginalId(location.sourceId)) {
-    return true;
-  }
-
-  const loc = await getOriginalLocation(location);
-  return loc.sourceId !== location.sourceId;
 }
 
 function applySourceMap(
@@ -599,5 +601,4 @@ module.exports = {
   getFileGeneratedRange,
   applySourceMap,
   clearSourceMaps,
-  hasMappedSource,
 };
