@@ -17,18 +17,10 @@
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
   --popup-shadow-color: #d0d0d0;
-  --theme-inline-preview-background: rgba(192, 105, 255, 0.05);
-  --theme-inline-preview-border-color: #EBD1FF;
-  --theme-inline-preview-label-color: #6300a6;
-  --theme-inline-preview-label-background: rgb(244, 230, 255);
 }
 
 :root.theme-dark,
 :root .theme-dark {
   --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
   --popup-shadow-color: #5c667b;
-  --theme-inline-preview-background: rgba(192, 105, 255, 0.05);
-  --theme-inline-preview-border-color: #47326C;
-  --theme-inline-preview-label-color: #DFCCFF;
-  --theme-inline-preview-label-background: #3F2E5F;
 }
