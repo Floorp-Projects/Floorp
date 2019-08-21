@@ -8,6 +8,10 @@ job-defaults:
         by-test-platform:
             linux64/debug: ['fission', 'serviceworker']
             default: ['fission']
+    target:
+        by-test-platform:
+            android-em-7.*: geckoview-androidTest.apk
+            default: null
     mozharness:
         script:
             by-test-platform:
