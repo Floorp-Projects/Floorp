@@ -5605,8 +5605,8 @@ NSC_WrapKey(CK_SESSION_HANDLE hSession,
     }
 
     key = sftk_ObjectFromHandle(hKey, session);
-    sftk_FreeSession(session);
     if (key == NULL) {
+        sftk_FreeSession(session);
         return CKR_KEY_HANDLE_INVALID;
     }
 
@@ -5712,7 +5712,7 @@ NSC_WrapKey(CK_SESSION_HANDLE hSession,
             break;
     }
     sftk_FreeObject(key);
-
+    sftk_FreeSession(session);
     return sftk_mapWrap(crv);
 }
 
