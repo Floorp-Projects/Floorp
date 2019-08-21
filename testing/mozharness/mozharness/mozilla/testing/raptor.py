@@ -49,9 +49,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
     install and run raptor tests
     """
 
-    # Options to browsertime that take a path.  Such paths are made
-    # absolute before passing through to browsertime itself.
-    browsertime_path_options = [
+    # Options to browsertime.  Paths are expected to be absolute.
+    browsertime_options = [
         [["--browsertime-node"], {
             "dest": "browsertime_node",
             "default": None,
@@ -70,6 +69,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         [["--browsertime-geckodriver"], {
             "dest": "browsertime_geckodriver",
             "default": None,
+            "help": argparse.SUPPRESS
+        }],
+        [["--browsertime"], {
+            "dest": "browsertime",
+            "action": "store_true",
+            "default": False,
             "help": argparse.SUPPRESS
         }],
     ]
@@ -215,7 +220,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
     ] + testing_config_options + \
         copy.deepcopy(code_coverage_config_options) + \
-        browsertime_path_options
+        browsertime_options
 
     def __init__(self, **kwargs):
         kwargs.setdefault('config_options', self.config_options)
@@ -302,7 +307,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.debug_mode = self.config.get('debug_mode', False)
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
 
-        for (arg,), details in Raptor.browsertime_path_options:
+        for (arg,), details in Raptor.browsertime_options:
             # Allow to override defaults on the `./mach raptor-test ...` command line.
             value = self.config.get(details['dest'])
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
@@ -447,14 +452,14 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         if self.config.get('enable_webrender', False):
             options.extend(['--enable-webrender'])
 
-        for (arg,), details in Raptor.browsertime_path_options:
+        for (arg,), details in Raptor.browsertime_options:
             # Allow to override defaults on the `./mach raptor-test ...` command line.
             value = self.config.get(details['dest'])
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
-                # Right now all the browsertime options are paths.  Turn relative paths into
-                # absolute paths.
-                value = os.path.normpath(os.path.abspath(value))
-                options.extend([arg, value])
+                if isinstance(value, basestring):
+                    options.extend([arg, os.path.expandvars(value)])
+                else:
+                    options.extend([arg])
 
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
