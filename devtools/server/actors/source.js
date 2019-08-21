@@ -240,7 +240,16 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       (this._contentType.includes("javascript") ||
         this._contentType === "text/wasm")
     ) {
-      return toResolvedContent(this._source.text);
+      // If the source doesn't start at line 1, line numbers in the client will
+      // not match up with those in the source. Pad the text with blank lines to
+      // fix this. This can show up for sources associated with inline scripts
+      // in HTML created via document.write() calls: the script's source line
+      // number is relative to the start of the written HTML, but we show the
+      // source's content by itself.
+      const padding = this._source.startLine
+        ? "\n".repeat(this._source.startLine - 1)
+        : "";
+      return toResolvedContent(padding + this._source.text);
     }
 
     const result = await this.sources.htmlFileContents(
@@ -305,13 +314,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   _calculateStartLineColumnDisplacement(fileContents) {
-    const scripts = this._findDebuggeeScripts();
-    if (!scripts.length) {
-      return {};
-    }
-
-    const sorted = scripts.sort((a, b) => b.startLine < a.startLine);
-    const startLine = sorted[0].startLine;
+    const startLine = this._source.startLine;
 
     const lineBreak = /\r\n?|\n|\u2028|\u2029/;
     const fileStartLine =
