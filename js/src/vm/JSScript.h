@@ -646,10 +646,10 @@ class ScriptSource {
   // management.
   const char* introductionType_ = nullptr;
 
-  // bytecode offset in caller script that generated this code.
-  // This is present for eval-ed code, as well as "new Function(...)"-introduced
+  // Bytecode offset in caller script that generated this code.  This is
+  // present for eval-ed code, as well as "new Function(...)"-introduced
   // scripts.
-  uint32_t introductionOffset_ = 0;
+  mozilla::Maybe<uint32_t> introductionOffset_;
 
   // If this source is for Function constructor, the position of ")" after
   // parameter list in the source.  This is used to get function body.
@@ -661,7 +661,6 @@ class ScriptSource {
 
   // Set to true if parser saw  asmjs directives.
   bool containsAsmJS_ = false;
-  bool hasIntroductionOffset_ = false;
 
   //
   // End of fields.
@@ -1131,16 +1130,12 @@ class ScriptSource {
 
   bool mutedErrors() const { return mutedErrors_; }
 
-  bool hasIntroductionOffset() const { return hasIntroductionOffset_; }
-  uint32_t introductionOffset() const {
-    MOZ_ASSERT(hasIntroductionOffset());
-    return introductionOffset_;
-  }
+  bool hasIntroductionOffset() const { return introductionOffset_.isSome(); }
+  uint32_t introductionOffset() const { return introductionOffset_.value(); }
   void setIntroductionOffset(uint32_t offset) {
     MOZ_ASSERT(!hasIntroductionOffset());
     MOZ_ASSERT(offset <= (uint32_t)INT32_MAX);
-    introductionOffset_ = offset;
-    hasIntroductionOffset_ = true;
+    introductionOffset_.emplace(offset);
   }
 
   bool containsAsmJS() const { return containsAsmJS_; }
