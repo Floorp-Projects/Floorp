@@ -147,6 +147,8 @@ def create_parser(mach_interface=False):
             help="Flag which indicates if Raptor should not offer to install Android APK.")
 
     # Arguments for invoking browsertime.
+    add_arg('--browsertime', dest='browsertime', default=False, action="store_true",
+            help="Whether to use browsertime to execute pageload tests")
     add_arg('--browsertime-node', dest='browsertime_node',
             help="path to Node.js executable")
     add_arg('--browsertime-browsertimejs', dest='browsertime_browsertimejs',

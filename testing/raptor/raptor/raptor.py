@@ -1155,12 +1155,16 @@ def main(args=sys.argv[1:]):
     for next_test in raptor_test_list:
         LOG.info(next_test['name'])
 
-    if args.app == "firefox":
-        raptor_class = RaptorDesktopFirefox
-    elif args.app in CHROMIUM_DISTROS:
-        raptor_class = RaptorDesktopChrome
+    if not args.browsertime:
+        if args.app == "firefox":
+            raptor_class = RaptorDesktopFirefox
+        elif args.app in CHROMIUM_DISTROS:
+            raptor_class = RaptorDesktopChrome
+        else:
+            raptor_class = RaptorAndroid
     else:
-        raptor_class = RaptorAndroid
+        LOG.critical("Browsertime is not yet supported!")
+        sys.exit(1)
 
     raptor = raptor_class(args.app,
                           args.binary,
