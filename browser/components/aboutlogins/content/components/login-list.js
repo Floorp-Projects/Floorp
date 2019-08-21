@@ -96,7 +96,7 @@ export default class LoginList extends HTMLElement {
       }
       listItem.classList.toggle(
         "breached",
-        this._breachesByLoginGUID &&
+        !!this._breachesByLoginGUID &&
           this._breachesByLoginGUID.has(listItem.dataset.guid)
       );
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
