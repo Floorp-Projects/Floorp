@@ -122,7 +122,7 @@ void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT_UNREACHABLE("Cols don't paint themselves");
 }
 
-int32_t nsTableColFrame::GetSpan() { return StyleTable()->mSpan; }
+int32_t nsTableColFrame::GetSpan() { return StyleTable()->mXSpan; }
 
 #ifdef DEBUG
 void nsTableColFrame::Dump(int32_t aIndent) {

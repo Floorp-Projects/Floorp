@@ -384,7 +384,7 @@ nsTableColFrame* nsTableColGroupFrame::GetNextColumn(nsIFrame* aChildFrame) {
   return result;
 }
 
-int32_t nsTableColGroupFrame::GetSpan() { return StyleTable()->mSpan; }
+int32_t nsTableColGroupFrame::GetSpan() { return StyleTable()->mXSpan; }
 
 void nsTableColGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
                                                       BCPixelSize aPixelValue) {

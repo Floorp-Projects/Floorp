@@ -1879,7 +1879,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable {
   nsChangeHint CalcDifference(const nsStyleTable& aNewData) const;
 
   uint8_t mLayoutStrategy;  // NS_STYLE_TABLE_LAYOUT_*
-  int32_t mSpan;  // -x-span; the number of columns spanned by a colgroup or col
+  int32_t mXSpan;  // The number of columns spanned by a colgroup or col
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTableBorder {
