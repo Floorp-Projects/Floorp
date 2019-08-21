@@ -89,13 +89,19 @@ add_task(async function test() {
             .toLowerCase();
 
           let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
+
           if (adjustedCertsElemInfo == null) {
             adjustedCertsElemInfo = "";
           }
 
-          if (typeof adjustedCertsElemInfo !== "string") {
+          if (
+            typeof adjustedCertsElemInfo !== "string" ||
+            Array.isArray(adjustedCertsElemInfo)
+          ) {
             // there is a case where we have a boolean
-            adjustedCertsElemInfo = adjustedCertsElemInfo.toString();
+            adjustedCertsElemInfo = adjustedCertsElemInfo
+              .toString()
+              .replace(/,/g, ", ");
           }
 
           Assert.ok(
