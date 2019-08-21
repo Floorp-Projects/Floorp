@@ -190,7 +190,7 @@ abstract class Media(
         }
     }
 
-    override fun toString(): String = "Media($playbackState)"
+    override fun toString(): String = "Media(state=$state,playbackState=$playbackState)"
 }
 
 /**

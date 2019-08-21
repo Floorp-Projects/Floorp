@@ -53,7 +53,7 @@ internal class MediaService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        logger.debug("Command received")
+        logger.debug("Command received: ${intent?.action}")
 
         when (intent?.action) {
             ACTION_UPDATE_STATE -> processCurrentState()
@@ -67,7 +67,9 @@ internal class MediaService : Service() {
 
     private fun processCurrentState() {
         val state = MediaStateMachine.state
+
         if (state == MediaState.None) {
+            updateNotification(state)
             shutdown()
             return
         }
@@ -93,13 +95,21 @@ internal class MediaService : Service() {
 
         val notification = notification.create(state, mediaSession)
 
-        if (state is MediaState.Playing) {
-            startForeground(notificationId, notification)
-        } else {
+        // Android wants us to always, always, ALWAYS call startForeground() if
+        // startForegroundService() was invoked. Even if we already did that for this service or
+        // if we are stopping foreground or stopping the whole service. No matter what. Always
+        // call startForeground().
+        startForeground(notificationId, notification)
+
+        if (state !is MediaState.Playing) {
             stopForeground(false)
 
             NotificationManagerCompat.from(this)
                 .notify(notificationId, notification)
+        }
+
+        if (state is MediaState.None) {
+            stopForeground(true)
         }
     }
 
