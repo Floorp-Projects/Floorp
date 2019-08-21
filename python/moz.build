@@ -60,16 +60,12 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mach/mach/test/python.ini',
     'mozboot/mozboot/test/python.ini',
     'mozbuild/dumbmake/test/python.ini',
+    'mozbuild/mozbuild/test/python.ini',
+    'mozbuild/mozbuild/test/python2.ini',
+    'mozbuild/mozpack/test/python.ini',
+    'mozbuild/mozpack/test/python2.ini',
     'mozlint/test/python.ini',
     'mozrelease/test/python.ini',
     'mozterm/test/python.ini',
     'mozversioncontrol/test/python.ini',
 ]
-
-if CONFIG['MOZ_BUILD_APP']:
-    PYTHON_UNITTEST_MANIFESTS += [
-        'mozbuild/mozbuild/test/python.ini',
-        'mozbuild/mozbuild/test/python2.ini',
-        'mozbuild/mozpack/test/python.ini',
-        'mozbuild/mozpack/test/python2.ini',
-    ]
