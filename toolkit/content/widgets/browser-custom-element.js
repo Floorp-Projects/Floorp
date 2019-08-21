@@ -1264,8 +1264,6 @@
         this.messageManager.addMessageListener("DOMTitleChanged", this);
         this.messageManager.addMessageListener("ImageDocumentLoaded", this);
 
-        // browser-child messages, such as Content:LocationChange, are handled in
-        // RemoteWebProgress, ensure it is loaded and ready.
         let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
         let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
 
@@ -1511,6 +1509,16 @@
           aEnabledCommands,
           aDisabledCommands
         );
+      }
+    }
+
+    updateSecurityUIForSecurityChange(aSecurityInfo, aState, aIsSecureContext) {
+      if (this.isRemoteBrowser && this.messageManager) {
+        // Invoking this getter triggers the generation of the underlying object,
+        // which we need to access with ._securityUI, because .securityUI returns
+        // a wrapper that makes _update inaccessible.
+        void this.securityUI;
+        this._securityUI._update(aSecurityInfo, aState, aIsSecureContext);
       }
     }
 
