@@ -67,3 +67,16 @@
 .secondary-panes-wrapper .command-bar.bottom {
   background-color: var(--theme-body-background);
 }
+
+/**
+ * Skip Pausing style
+ * Add a gray background and lower content opacity
+ */
+.skip-pausing .xhr-breakpoints-pane ._content,
+.skip-pausing .breakpoints-pane ._content,
+.skip-pausing .event-listeners-pane ._content,
+.skip-pausing .dom-mutations-pane ._content {
+  background-color: var(--skip-pausing-background-color);
+  opacity: var(--skip-pausing-opacity);
+  color: var(--skip-pausing-color);
+}
