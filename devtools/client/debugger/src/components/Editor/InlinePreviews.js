@@ -10,20 +10,29 @@ import {
   getSelectedFrame,
   getCurrentThread,
   getInlinePreviews,
+  visibleColumnBreakpoints,
 } from "../../selectors";
 
 import type { Frame } from "../../types";
+import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/visibleColumnBreakpoints";
 
 type Props = {
   editor: Object,
   selectedFrame: Frame,
   selectedSource: Object,
   previews: Object,
+  columnBreakpoints: ColumnBreakpointType[],
 };
 
 class InlinePreviews extends Component<Props> {
   render() {
-    const { editor, selectedFrame, selectedSource, previews } = this.props;
+    const {
+      editor,
+      selectedFrame,
+      selectedSource,
+      previews,
+      columnBreakpoints,
+    } = this.props;
 
     // Render only if currently open file is the one where debugger is paused
     if (
@@ -36,12 +45,18 @@ class InlinePreviews extends Component<Props> {
 
     return (
       <div>
-        {Object.keys(previews).map(line => {
+        {Object.keys(previews).map((line: string) => {
+          const lineNum: number = parseInt(line, 10);
+          const numColumnBreakpoints = columnBreakpoints.filter(
+            bp => bp.location.line === lineNum + 1
+          ).length;
+
           return (
             <InlinePreviewRow
               editor={editor}
-              line={parseInt(line, 10)}
+              line={lineNum}
               previews={previews[line]}
+              numColumnBreakpoints={numColumnBreakpoints}
             />
           );
         })}
@@ -59,6 +74,7 @@ const mapStateToProps = state => {
   return {
     selectedFrame,
     previews: getInlinePreviews(state, thread, selectedFrame.id),
+    columnBreakpoints: visibleColumnBreakpoints(state),
   };
 };
 
