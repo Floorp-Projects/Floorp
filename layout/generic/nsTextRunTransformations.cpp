@@ -134,7 +134,7 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   while (iter.NextRun()) {
     const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
-                       run->mOrientation);
+                       run->mOrientation, run->mIsCJK);
 
     bool anyMissing = false;
     uint32_t mergeRunStart = iter.GetStringStart();
