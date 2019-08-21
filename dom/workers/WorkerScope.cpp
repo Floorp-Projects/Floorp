@@ -717,7 +717,7 @@ namespace {
 
 class ReportFetchListenerWarningRunnable final : public Runnable {
   const nsCString mScope;
-  nsCString mSourceSpec;
+  nsString mSourceSpec;
   uint32_t mLine;
   uint32_t mColumn;
 
@@ -739,8 +739,8 @@ class ReportFetchListenerWarningRunnable final : public Runnable {
 
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mScope, "ServiceWorkerNoFetchHandler", nsTArray<nsString>{},
-        nsIScriptError::warningFlag, NS_ConvertUTF8toUTF16(mSourceSpec),
-        EmptyString(), mLine, mColumn);
+        nsIScriptError::warningFlag, mSourceSpec, EmptyString(), mLine,
+        mColumn);
 
     return NS_OK;
   }
