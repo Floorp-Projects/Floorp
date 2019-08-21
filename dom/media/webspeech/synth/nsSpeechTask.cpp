@@ -214,6 +214,8 @@ nsresult nsSpeechTask::DispatchErrorImpl(float aElapsedTime,
                                          uint32_t aCharIndex) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchErrorImpl"));
 
+  DestroyAudioChannelAgent();
+
   MOZ_ASSERT(mUtterance);
   if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
