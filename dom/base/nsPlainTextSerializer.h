@@ -145,7 +145,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   static bool IsCssBlockLevelElement(mozilla::dom::Element* aElement);
 
  private:
-  nsString mCurrentLine;
   uint32_t mHeadLevel;
   bool mAtFirstColumn;
 
@@ -169,6 +168,15 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   Settings mSettings;
 
+  struct CurrentLineContent {
+    // Excludes indentation and quotes.
+    nsString mValue;
+
+    // The width of the line as it will appear on the screen (approx.).
+    uint32_t mWidth = 0;
+  };
+
+  CurrentLineContent mCurrentLineContent;
 
   // If we've just written out a cite blockquote, we need to remember it
   // so we don't duplicate spaces before a <pre wrap> (which mail uses to quote
@@ -186,9 +194,6 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   // should be allowed on a line. There could be less chars if the chars
   // are wider than latin chars of more if the chars are more narrow.
   uint32_t mWrapColumn;
-
-  // The width of the line as it will appear on the screen (approx.)
-  uint32_t mCurrentLineWidth;
 
   // Treat quoted text as though it's preformatted -- don't wrap it.
   // Having it on a pref is a temporary measure, See bug 69638.
