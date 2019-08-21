@@ -9,6 +9,7 @@
 #include "ActorsChild.h"
 #include "IPCBlobInputStreamThread.h"
 #include "LocalStorageCommon.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -1129,7 +1130,8 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
       {
         StaticMutexAutoLock lock(gRequestHelperMutex);
 
-        if (NS_WARN_IF(gPendingSyncMessage)) {
+        if (StaticPrefs::dom_storage_abort_on_sync_parent_to_child_messages() &&
+            NS_WARN_IF(gPendingSyncMessage)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -1171,7 +1173,9 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
             {
               StaticMutexAutoLock lock(gRequestHelperMutex);
-              if (NS_WARN_IF(gPendingSyncMessage)) {
+              if (StaticPrefs::
+                      dom_storage_abort_on_sync_parent_to_child_messages() &&
+                  NS_WARN_IF(gPendingSyncMessage)) {
                 return true;
               }
             }
