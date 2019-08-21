@@ -1761,8 +1761,6 @@ Document::~Document() {
     }
   }
 
-  ReportUseCounters();
-
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
 
@@ -10456,6 +10454,8 @@ void Document::Destroy() {
       mContentBlockingLog.ReportOrigins();
     }
   }
+
+  ReportUseCounters();
 
   mIsGoingAway = true;
 
