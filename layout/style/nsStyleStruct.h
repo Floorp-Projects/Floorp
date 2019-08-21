@@ -1744,7 +1744,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     // exemption as necessary.
     return (mContain & mozilla::StyleContain_SIZE) &&
            !IsInternalRubyDisplayType() &&
-           (mozilla::StyleDisplay::Table != mDisplay) && !IsInnerTableStyle();
+           DisplayInside() != mozilla::StyleDisplayInside::Table &&
+           !IsInnerTableStyle();
   }
 
   /* Returns whether the element has the transform property or a related
