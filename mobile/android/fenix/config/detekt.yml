@@ -1,24 +1,6 @@
 autoCorrect: true
 failFast: false
 
-test-pattern: # Configure exclusions for test sources
-  active: true
-  patterns: # Test file regexes
-    - '.*/test/.*'
-    - '.*Test.kt'
-    - '.*Spec.kt'
-  exclude-rule-sets:
-    - 'comments'
-  exclude-rules:
-    - 'NamingRules'
-    - 'WildcardImport'
-    - 'MagicNumber'
-    - 'MaxLineLength'
-    - 'LateinitUsage'
-    - 'StringLiteralDuplication'
-    - 'SpreadOperator'
-    - 'TooManyFunctions'
-
 build:
   maxIssues: 0
   weights:
@@ -54,6 +36,7 @@ output-reports:
 
 comments:
   active: true
+  excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
   CommentOverPrivateFunction:
     active: false
   CommentOverPrivateProperty:
@@ -87,10 +70,16 @@ complexity:
     active: false
   LargeClass:
     active: true
-    threshold: 150
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
+    # Had to increase the threshold as RC13 started counting lines of code
+    # https://github.com/mozilla-mobile/fenix/issues/4861
+    threshold: 200
   LongMethod:
     active: true
-    threshold: 20
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
+    # Had to increase the threshold as RC13 started counting lines of code
+    # https://github.com/mozilla-mobile/fenix/issues/4861
+    threshold: 75
   LongParameterList:
     active: true
     threshold: 6
@@ -103,12 +92,14 @@ complexity:
     threshold: 4
   StringLiteralDuplication:
     active: false
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     threshold: 3
     ignoreAnnotation: true
     excludeStringsWithLessThan5Characters: true
     ignoreStringsRegex: '$^'
   TooManyFunctions:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     thresholdInFiles: 11
     thresholdInClasses: 11
     thresholdInInterfaces: 11
@@ -134,6 +125,7 @@ empty-blocks:
     active: true
   EmptyFunctionBlock:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
   EmptyIfBlock:
     active: true
   EmptyInitBlock:
@@ -211,6 +203,7 @@ naming:
     minimumFunctionNameLength: 3
   FunctionNaming:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     functionPattern: '^([a-z$][a-zA-Z$0-9]*)|(`.*`)$'
     excludeClassPattern: '$^'
   MatchingDeclarationName:
@@ -247,6 +240,7 @@ performance:
     active: true
   SpreadOperator:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
   UnnecessaryTemporaryInstantiation:
     active: true
 
@@ -268,6 +262,7 @@ potential-bugs:
     active: false
   LateinitUsage:
     active: false
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     excludeAnnotatedProperties: ""
     ignoreOnClassesPattern: ""
   UnconditionalJumpStatementInLoop:
@@ -309,6 +304,7 @@ style:
     maxJumpCount: 1
   MagicNumber:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     ignoreNumbers: '-1,0,1,2'
     ignoreHashCodeFunction: false
     ignorePropertyDeclaration: false
@@ -319,6 +315,7 @@ style:
     ignoreEnums: false
   MaxLineLength:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     maxLineLength: 120
     excludePackageStatements: false
     excludeImportStatements: false
@@ -376,4 +373,5 @@ style:
     active: false
   WildcardImport:
     active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
     excludeImports: 'java.util.*,kotlinx.android.synthetic.*'

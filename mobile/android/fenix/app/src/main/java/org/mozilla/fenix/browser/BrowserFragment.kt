@@ -56,7 +56,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
  */
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private lateinit var quickActionSheetView: QuickActionSheetView
     private var quickActionSheetSessionObserver: QuickActionSheetSessionObserver? = null

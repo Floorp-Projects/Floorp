@@ -45,7 +45,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
     }
 
     // We're not currently sending events directly to Adjust
-    override fun track(event: Event) { }
+    override fun track(event: Event) { /* noop */ }
     override fun shouldTrack(event: Event): Boolean = false
 
     companion object {
@@ -61,14 +61,14 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             Adjust.onPause()
         }
 
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) { /* noop */ }
 
-        override fun onActivityStarted(activity: Activity) {}
+        override fun onActivityStarted(activity: Activity) { /* noop */ }
 
-        override fun onActivityStopped(activity: Activity) {}
+        override fun onActivityStopped(activity: Activity) { /* noop */ }
 
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) { /* noop */ }
 
-        override fun onActivityDestroyed(activity: Activity) {}
+        override fun onActivityDestroyed(activity: Activity) { /* noop */ }
     }
 }

@@ -145,7 +145,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         browserInitialized = initializeUI(view) != null
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     @CallSuper
     protected open fun initializeUI(view: View): Session? {
         val sessionManager = requireComponents.core.sessionManager

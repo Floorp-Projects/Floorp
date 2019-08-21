@@ -303,7 +303,7 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "LongMethod")
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
@@ -423,6 +423,7 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
+    @SuppressWarnings("LongMethod")
     private fun handleCollectionAction(action: CollectionAction) {
         when (action) {
             is CollectionAction.Expand -> {
@@ -801,8 +802,8 @@ class HomeFragment : Fragment(), AccountObserver {
                     border?.visibility = View.GONE
                 }
 
-                override fun onAnimationStart(animation: Animator?) {}
-                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationStart(animation: Animator?) { /* noop */ }
+                override fun onAnimationRepeat(animation: Animator?) { /* noop */ }
                 override fun onAnimationEnd(animation: Animator?) {
                     border?.animate()?.alpha(0.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
                         ?.setDuration(FADE_ANIM_DURATION)

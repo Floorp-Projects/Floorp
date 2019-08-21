@@ -249,7 +249,7 @@ open class QuickActionSheetBehavior<V : View>(context: Context, attrs: Attribute
             }
         }
 
-        @Suppress("ComplexCondition")
+        @Suppress("ComplexCondition", "LongMethod")
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             val top: Int
             @State val targetState: Int

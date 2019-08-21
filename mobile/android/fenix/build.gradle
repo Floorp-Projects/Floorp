@@ -58,6 +58,9 @@ detekt {
             enabled = true
             destination = file("$projectDir/build/reports/detekt.html")
         }
+        xml {
+            enabled = false
+        }
     }
 }
 

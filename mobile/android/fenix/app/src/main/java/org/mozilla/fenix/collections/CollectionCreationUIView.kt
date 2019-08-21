@@ -34,6 +34,7 @@ import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.UIView
 
+@SuppressWarnings("LargeClass")
 class CollectionCreationUIView(
     container: ViewGroup,
     actionEmitter: Observer<CollectionCreationAction>,
@@ -104,7 +105,7 @@ class CollectionCreationUIView(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     override fun updateView() = Consumer<CollectionCreationState> {
         step = it.saveCollectionStep
         selectedTabs = it.selectedTabs
@@ -231,17 +232,16 @@ class CollectionCreationUIView(
                     }, TRANSITION_DURATION)
                 }
                 transition.addListener(object : Transition.TransitionListener {
-                    override fun onTransitionStart(transition: Transition) {
-                    }
+                    override fun onTransitionStart(transition: Transition) { /* noop */ }
 
                     override fun onTransitionEnd(transition: Transition) {
                         view.name_collection_edittext.showKeyboard()
                         transition.removeListener(this)
                     }
 
-                    override fun onTransitionCancel(transition: Transition) {}
-                    override fun onTransitionPause(transition: Transition) {}
-                    override fun onTransitionResume(transition: Transition) {}
+                    override fun onTransitionCancel(transition: Transition) { /* noop */ }
+                    override fun onTransitionPause(transition: Transition) { /* noop */ }
+                    override fun onTransitionResume(transition: Transition) { /* noop */ }
                 })
                 TransitionManager.beginDelayedTransition(
                     view.collection_constraint_layout,
@@ -289,17 +289,16 @@ class CollectionCreationUIView(
                     }, TRANSITION_DURATION)
                 }
                 transition.addListener(object : Transition.TransitionListener {
-                    override fun onTransitionStart(transition: Transition) {
-                    }
+                    override fun onTransitionStart(transition: Transition) { /* noop */ }
 
                     override fun onTransitionEnd(transition: Transition) {
                         view.name_collection_edittext.showKeyboard()
                         transition.removeListener(this)
                     }
 
-                    override fun onTransitionCancel(transition: Transition) {}
-                    override fun onTransitionPause(transition: Transition) {}
-                    override fun onTransitionResume(transition: Transition) {}
+                    override fun onTransitionCancel(transition: Transition) { /* noop */ }
+                    override fun onTransitionPause(transition: Transition) { /* noop */ }
+                    override fun onTransitionResume(transition: Transition) { /* noop */ }
                 })
                 TransitionManager.beginDelayedTransition(
                     view.collection_constraint_layout,

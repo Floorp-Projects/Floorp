@@ -35,7 +35,7 @@ class HistoryDataSource(
         }
     }
 
-    override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<HistoryItem>) {}
+    override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<HistoryItem>) { /* noop */ }
 
     companion object {
         private const val INITIAL_OFFSET = 0L
