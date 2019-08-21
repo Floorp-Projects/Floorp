@@ -114,11 +114,12 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
                                              size_t videoFrameLength,
                                              int32_t degrees,
                                              int64_t captureTime) {
-  // _captureStarted is written on the controlling thread in
-  // StartCapture/StopCapture. This is the camera thread.
-  // CaptureStarted() will access it under a lock.
-  if (!CaptureStarted())
-    return 0;
+  VideoCaptureCapability capability;
+  {
+    rtc::CritScope cs(&_apiCs);
+    if (!_captureStarted) return 0;
+    capability = _captureCapability;
+  }
 
   VideoRotation current_rotation =
       (degrees <= 45 || degrees > 315) ? kVideoRotation_0 :
@@ -133,8 +134,7 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
     if (status != 0)
       return status;
   }
-  return IncomingFrame(
-      videoFrame, videoFrameLength, _captureCapability, captureTime);
+  return IncomingFrame(videoFrame, videoFrameLength, capability, captureTime);
 }
 
 VideoCaptureAndroid::VideoCaptureAndroid()
