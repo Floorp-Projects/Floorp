@@ -90,7 +90,7 @@ class BrowserToolbarView(
                     this,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
                     requestDesktopStateProvider = {
-                        sessionManager.selectedSession?.private ?: false
+                        sessionManager.selectedSession?.desktopMode ?: false
                     },
                     onItemTapped = { interactor.onBrowserToolbarMenuItemTapped(it) }
                 )
