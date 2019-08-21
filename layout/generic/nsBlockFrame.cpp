@@ -4076,7 +4076,7 @@ void nsBlockFrame::DoReflowInlineFrames(
   nscoord iStart = lineRect.IStart(lineWM);
   nscoord availISize = lineRect.ISize(lineWM);
   nscoord availBSize;
-  if (aState.mFlags.mHasUnconstrainedBSize) {
+  if (aState.mReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
     availBSize = NS_UNCONSTRAINEDSIZE;
   } else {
     /* XXX get the height right! */
