@@ -834,7 +834,15 @@ ne_read_float(nestegg_io * io, double * val, uint64_t length)
 {
   union {
     uint64_t u;
-    float f;
+    struct {
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+      uint32_t _pad;
+      float f;
+#else
+      float f;
+      uint32_t _pad;
+#endif
+    } f;
     double d;
   } value;
   int r;
@@ -846,7 +854,7 @@ ne_read_float(nestegg_io * io, double * val, uint64_t length)
   if (r != 1)
     return r;
   if (length == 4)
-    *val = value.f;
+    *val = value.f.f;
   else
     *val = value.d;
   return 1;
