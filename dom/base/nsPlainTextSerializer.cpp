@@ -1177,12 +1177,6 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
 
     linelength = mCurrentLineContent.mValue.Length();
 
-#ifdef DEBUG_wrapping
-    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.mValue.get(),
-                                       mCurrentLine.mValue.Length()) ==
-                     (int32_t)mCurrentLine.mWidth,
-                 "mCurrentLine.mWidth and reality out of sync!");
-#endif
     // Yes, wrap!
     // The "+4" is to avoid wrap lines that only would be a couple
     // of letters too long. We give this bonus only if the
