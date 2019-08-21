@@ -7,6 +7,14 @@
 /* import-globals-from ../../mochitest/layout.js */
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
+async function waitForContentPaint(browser) {
+  await ContentTask.spawn(browser, {}, () => {
+    return new Promise(function(r) {
+      content.requestAnimationFrame(() => content.setTimeout(r));
+    });
+  });
+}
+
 async function runTests(browser, accDoc) {
   loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
@@ -25,6 +33,8 @@ async function runTests(browser, accDoc) {
     docX,
     docY
   );
+
+  await waitForContentPaint(browser);
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 
   await ContentTask.spawn(browser, {}, () => {
@@ -43,6 +53,8 @@ async function runTests(browser, accDoc) {
     docX,
     docY
   );
+
+  await waitForContentPaint(browser);
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 }
 
