@@ -217,9 +217,6 @@ user_pref("test.mousescroll", true);
 // Don't send 'bhr' ping during tests, otherwise the testing framework might
 // wait on the pingsender to finish and slow down tests.
 user_pref("toolkit.telemetry.bhrPing.enabled", false);
-// Enable telemetry event ping during tests, even for geckoview, where it
-// is normally disabled.
-user_pref("toolkit.telemetry.eventping.enabled", true);
 // Don't send the 'first-shutdown' during tests, otherwise tests expecting
 // main and subsession pings will fail.
 user_pref("toolkit.telemetry.firstShutdownPing.enabled", false);

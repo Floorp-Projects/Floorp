@@ -23,3 +23,6 @@ user_pref("dom.ipc.processPriorityManager.enabled", false);
 // Avoid idle-daily notifications, to avoid expensive operations that may
 // cause unexpected test timeouts.
 user_pref("idle.lastDailyNotification", -1);
+// Enable telemetry event ping during tests, even for geckoview, where it
+// is normally disabled.
+user_pref("toolkit.telemetry.eventping.enabled", true);
