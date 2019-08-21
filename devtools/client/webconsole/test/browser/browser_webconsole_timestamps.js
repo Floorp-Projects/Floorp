@@ -31,7 +31,7 @@ add_task(async function() {
 
   info("Open the settings panel");
   const observer = new PrefObserver("");
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const { panelDoc, panelWin } = await toolbox.selectTool("options");
 
   info("Change Timestamp preference");

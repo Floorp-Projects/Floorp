@@ -84,9 +84,9 @@ class WebConsoleWrapper {
         this.webConsoleUI[id] = node;
       };
       const { webConsoleUI } = this;
-      const debuggerClient = this.hud.currentTarget.client;
+      const debuggerClient = this.hud.target.client;
 
-      const webConsoleClient = await this.hud.currentTarget.getFront("console");
+      const webConsoleClient = await this.hud.target.getFront("console");
       this.networkDataProvider = new DataProvider({
         actions: {
           updateRequest: (id, data) => {
@@ -114,15 +114,23 @@ class WebConsoleWrapper {
           webConsoleUI.hud.openLink(url, e);
         },
         canRewind: () => {
-          const target = webConsoleUI.hud && webConsoleUI.hud.currentTarget;
-          const traits = target && target.traits;
-          return traits && traits.canRewind;
+          if (
+            !(
+              webConsoleUI.hud &&
+              webConsoleUI.hud.target &&
+              webConsoleUI.hud.target.traits
+            )
+          ) {
+            return false;
+          }
+
+          return webConsoleUI.hud.target.traits.canRewind;
         },
         createElement: nodename => {
           return this.document.createElement(nodename);
         },
         fetchObjectProperties: async (grip, ignoreNonIndexedProperties) => {
-          const client = new ObjectClient(this.hud.currentTarget.client, grip);
+          const client = new ObjectClient(this.hud.target.client, grip);
           const { iterator } = await client.enumProperties({
             ignoreNonIndexedProperties,
           });
@@ -130,7 +138,7 @@ class WebConsoleWrapper {
           return ownProperties;
         },
         fetchObjectEntries: async grip => {
-          const client = new ObjectClient(this.hud.currentTarget.client, grip);
+          const client = new ObjectClient(this.hud.target.client, grip);
           const { iterator } = await client.enumEntries();
           const { ownProperties } = await iterator.slice(0, iterator.count);
           return ownProperties;

@@ -16,7 +16,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await openDebugger();
 
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
   await selectSource(dbg, "test-closure-optimized-out.html");

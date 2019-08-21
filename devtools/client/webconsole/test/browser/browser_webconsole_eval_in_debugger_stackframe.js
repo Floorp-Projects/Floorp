@@ -30,7 +30,7 @@ add_task(async function() {
 
   info("Open the debugger and then select the console again");
   await openDebugger();
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
   await openConsole();

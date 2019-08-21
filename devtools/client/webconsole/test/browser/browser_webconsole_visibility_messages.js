@@ -25,7 +25,7 @@ const MESSAGES_COUNT = 10;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
 
   info("Log one message in the console");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
@@ -85,7 +85,7 @@ add_task(async function() {
 // Here, the messages should still be logged.
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = hud.toolbox;
+  const toolbox = gDevTools.getToolbox(hud.target);
 
   info("Log one message in the console");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
