@@ -51,7 +51,6 @@ namespace recordreplay {
 #define FOR_EACH_ORIGINAL_FUNCTION(MACRO)   \
   MACRO(__workq_kernreturn)                 \
   MACRO(CFDataGetLength)                    \
-  MACRO(CGPathApply)                        \
   MACRO(close)                              \
   MACRO(lseek)                              \
   MACRO(mach_absolute_time)                 \
@@ -88,7 +87,6 @@ FOR_EACH_ORIGINAL_FUNCTION(DECLARE_ORIGINAL_FUNCTION)
 
 enum CallbackEvent {
   CallbackEvent_CFRunLoopPerformCallBack,
-  CallbackEvent_CGPathApplierFunction
 };
 
 typedef void (*CFRunLoopPerformCallBack)(void*);
@@ -102,53 +100,11 @@ static void CFRunLoopPerformCallBackWrapper(void* aInfo) {
   PauseMainThreadAndServiceCallbacks();
 }
 
-static size_t CGPathElementPointCount(CGPathElement* aElement) {
-  switch (aElement->type) {
-    case kCGPathElementCloseSubpath:
-      return 0;
-    case kCGPathElementMoveToPoint:
-    case kCGPathElementAddLineToPoint:
-      return 1;
-    case kCGPathElementAddQuadCurveToPoint:
-      return 2;
-    case kCGPathElementAddCurveToPoint:
-      return 3;
-    default:
-      MOZ_CRASH();
-  }
-}
-
-static void CGPathApplierFunctionWrapper(void* aInfo, CGPathElement* aElement) {
-  RecordReplayCallback(CGPathApplierFunction, &aInfo);
-
-  CGPathElement replayElement;
-  if (IsReplaying()) {
-    aElement = &replayElement;
-  }
-
-  aElement->type = (CGPathElementType)RecordReplayValue(aElement->type);
-
-  size_t npoints = CGPathElementPointCount(aElement);
-  if (IsReplaying()) {
-    aElement->points = new CGPoint[npoints];
-  }
-  RecordReplayBytes(aElement->points, npoints * sizeof(CGPoint));
-
-  rrc.mFunction(aInfo, aElement);
-
-  if (IsReplaying()) {
-    delete[] aElement->points;
-  }
-}
-
 void ReplayInvokeCallback(size_t aCallbackId) {
   MOZ_RELEASE_ASSERT(IsReplaying());
   switch (aCallbackId) {
     case CallbackEvent_CFRunLoopPerformCallBack:
       CFRunLoopPerformCallBackWrapper(nullptr);
-      break;
-    case CallbackEvent_CGPathApplierFunction:
-      CGPathApplierFunctionWrapper(nullptr, nullptr);
       break;
     default:
       MOZ_CRASH();
@@ -1716,25 +1672,104 @@ static void MM_CGDataProviderCreateWithData(MiddlemanCallContext& aCx) {
   }
 }
 
+static size_t CGPathElementPointCount(CGPathElementType aType) {
+  switch (aType) {
+    case kCGPathElementCloseSubpath:
+      return 0;
+    case kCGPathElementMoveToPoint:
+    case kCGPathElementAddLineToPoint:
+      return 1;
+    case kCGPathElementAddQuadCurveToPoint:
+      return 2;
+    case kCGPathElementAddCurveToPoint:
+      return 3;
+    default:
+      MOZ_CRASH();
+  }
+}
+
+static void CGPathDataCallback(void* aData, const CGPathElement* aElement) {
+  InfallibleVector<char>* data = (InfallibleVector<char>*) aData;
+
+  data->append((char) aElement->type);
+
+  for (size_t i = 0; i < CGPathElementPointCount(aElement->type); i++) {
+    data->append((char*) &aElement->points[i], sizeof(CGPoint));
+  }
+}
+
+static void GetCGPathData(CGPathRef aPath, InfallibleVector<char>& aData) {
+  CGPathApply(aPath, &aData, CGPathDataCallback);
+}
+
+static void CGPathApplyWithData(const InfallibleVector<char>& aData,
+                                void* aInfo, CGPathApplierFunction aFunction) {
+  size_t offset = 0;
+  while (offset < aData.length()) {
+    CGPathElement element;
+    element.type = (CGPathElementType) aData[offset++];
+
+    CGPoint points[3];
+    element.points = points;
+    size_t pointCount = CGPathElementPointCount(element.type);
+    MOZ_RELEASE_ASSERT(pointCount <= ArrayLength(points));
+    for (size_t i = 0; i < pointCount; i++) {
+      memcpy(&points[i], &aData[offset], sizeof(CGPoint));
+      offset += sizeof(CGPoint);
+    }
+
+    aFunction(aInfo, &element);
+  }
+}
+
 static PreambleResult Preamble_CGPathApply(CallArguments* aArguments) {
-  if (AreThreadEventsPassedThrough()) {
+  if (AreThreadEventsPassedThrough() || HasDivergedFromRecording()) {
     return PreambleResult::Redirect;
   }
 
   auto& path = aArguments->Arg<0, CGPathRef>();
-  auto& data = aArguments->Arg<1, void*>();
+  auto& info = aArguments->Arg<1, void*>();
   auto& function = aArguments->Arg<2, CGPathApplierFunction>();
 
-  RegisterCallbackData(BitwiseCast<void*>(function));
-  RegisterCallbackData(data);
-  PassThroughThreadEventsAllowCallbacks([&]() {
-    CallbackWrapperData wrapperData(function, data);
-    CallFunction<void>(gOriginal_CGPathApply, path, &wrapperData,
-                       CGPathApplierFunctionWrapper);
-  });
-  RemoveCallbackData(data);
+  InfallibleVector<char> pathData;
+  if (IsRecording()) {
+    AutoPassThroughThreadEvents pt;
+    GetCGPathData(path, pathData);
+  }
+  size_t len = RecordReplayValue(pathData.length());
+  if (IsReplaying()) {
+    pathData.appendN(0, len);
+  }
+  RecordReplayBytes(pathData.begin(), len);
+
+  CGPathApplyWithData(pathData, info, function);
 
   return PreambleResult::Veto;
+}
+
+static void MM_CGPathApply(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
+  MM_SkipInMiddleman(aCx);
+
+  if (aCx.AccessOutput()) {
+    InfallibleVector<char> pathData;
+    if (IsMiddleman()) {
+      auto path = aCx.mArguments->Arg<0, CGPathRef>();
+      GetCGPathData(path, pathData);
+    }
+    size_t len = pathData.length();
+    aCx.ReadOrWriteOutputBytes(&len, sizeof(len));
+    if (IsReplaying()) {
+      pathData.appendN(0, len);
+    }
+    aCx.ReadOrWriteOutputBytes(pathData.begin(), len);
+
+    if (IsReplaying()) {
+      auto& data = aCx.mArguments->Arg<1, void*>();
+      auto& function = aCx.mArguments->Arg<2, CGPathApplierFunction>();
+      CGPathApplyWithData(pathData, data, function);
+    }
+  }
 }
 
 // Note: We only redirect CTRunGetGlyphsPtr, not CTRunGetGlyphs. The latter may
@@ -2301,7 +2336,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"CGImageRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
     {"CGMainDisplayID", RR_ScalarRval},
     {"CGPathAddPath"},
-    {"CGPathApply", nullptr, Preamble_CGPathApply},
+    {"CGPathApply", nullptr, Preamble_CGPathApply, MM_CGPathApply },
     {"CGPathContainsPoint", RR_ScalarRval},
     {"CGPathCreateMutable", RR_ScalarRval},
     {"CGPathCreateWithRoundedRect", RR_ScalarRval, nullptr,
