@@ -39,12 +39,19 @@ internal class MediaNotification(
             .setContentTitle(data.title)
             .setContentText(data.description)
             .setLargeIcon(data.largeIcon)
-            .addAction(data.action)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession.sessionToken)
-                .setShowActionsInCompactView(0))
+
+        val style = androidx.media.app.NotificationCompat.MediaStyle()
+            .setMediaSession(mediaSession.sessionToken)
+
+        if (data.action != null) {
+            builder.addAction(data.action)
+
+            style.setShowActionsInCompactView(0)
+        }
+
+        builder.setStyle(style)
 
         if (!state.isForExternalApp()) {
             // We only set a content intent if this media notification is not for an "external app"
@@ -89,7 +96,9 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     0)
             ).build()
         )
-        else -> throw IllegalArgumentException("Cannot create notification for state: $this")
+        // Dummy notification that is only used to satisfy the requirement to ALWAYS call
+        // startForeground with a notification.
+        else -> NotificationData()
     }
 }
 
@@ -106,11 +115,11 @@ private val Session.nonPrivateIcon: Bitmap?
     get() = if (private) null else icon
 
 private data class NotificationData(
-    val title: String,
-    val description: String,
-    @DrawableRes val icon: Int,
+    val title: String = "",
+    val description: String = "",
+    @DrawableRes val icon: Int = R.drawable.mozac_feature_media_playing,
     val largeIcon: Bitmap? = null,
-    val action: NotificationCompat.Action
+    val action: NotificationCompat.Action? = null
 )
 
 private fun MediaState.isForExternalApp(): Boolean {
