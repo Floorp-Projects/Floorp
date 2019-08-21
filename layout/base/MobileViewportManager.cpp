@@ -614,10 +614,13 @@ void MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     return;
   }
 
-  if (!mContext->AllowZoomingForDocument()) {
+  if (!mContext->AllowZoomingForDocument() || mContext->IsInReaderMode()) {
     // If zoom is disabled, we don't scale down wider contents to fit them
     // into device screen because users won't be able to zoom out the tiny
     // contents.
+    // We special-case reader mode, because it doesn't allow zooming, but
+    // the restriction is often not yet in place at the time this logic
+    // runs.
     return;
   }
 
