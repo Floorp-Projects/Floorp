@@ -11,6 +11,7 @@ import unittest
 import mozunit
 
 from mozbuild.action.node import generate, SCRIPT_ALLOWLIST
+from mozbuild.nodeutil import find_node_executable
 import mozpack.path as mozpath
 
 
@@ -32,6 +33,8 @@ class TestNode(unittest.TestCase):
     """
 
     def setUp(self):
+        if not buildconfig.substs.get("NODEJS"):
+            buildconfig.substs['NODEJS'] = find_node_executable()[0]
         SCRIPT_ALLOWLIST.append(TEST_SCRIPT)
 
     def tearDown(self):
