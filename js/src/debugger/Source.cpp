@@ -314,6 +314,28 @@ bool DebuggerSource::getURL(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+class DebuggerSourceGetStartLineMatcher {
+ public:
+  using ReturnType = uint32_t;
+
+  ReturnType match(HandleScriptSourceObject sourceObject) {
+    ScriptSource* ss = sourceObject->source();
+    return ss->startLine();
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) { return 0; }
+};
+
+/* static */
+bool DebuggerSource::getStartLine(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get startLine)", args, obj,
+                            referent);
+
+  DebuggerSourceGetStartLineMatcher matcher;
+  uint32_t line = referent.match(matcher);
+  args.rval().setNumber(line);
+  return true;
+}
+
 class DebuggerSourceGetIdMatcher {
  public:
   using ReturnType = uint32_t;
@@ -603,6 +625,7 @@ const JSPropertySpec DebuggerSource::properties_[] = {
     JS_PSG("text", getText, 0),
     JS_PSG("binary", getBinary, 0),
     JS_PSG("url", getURL, 0),
+    JS_PSG("startLine", getStartLine, 0),
     JS_PSG("id", getId, 0),
     JS_PSG("element", getElement, 0),
     JS_PSG("displayURL", getDisplayURL, 0),

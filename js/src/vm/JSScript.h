@@ -656,6 +656,9 @@ class ScriptSource {
   // 0 for other cases.
   uint32_t parameterListEnd_ = 0;
 
+  // Line number within the file where this source starts.
+  uint32_t startLine_ = 0;
+
   // See: CompileOptions::mutedErrors.
   bool mutedErrors_ = false;
 
@@ -1129,6 +1132,8 @@ class ScriptSource {
   }
 
   bool mutedErrors() const { return mutedErrors_; }
+
+  uint32_t startLine() const { return startLine_; }
 
   bool hasIntroductionOffset() const { return introductionOffset_.isSome(); }
   uint32_t introductionOffset() const { return introductionOffset_.value(); }
