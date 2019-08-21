@@ -11,6 +11,7 @@ from urllib import urlencode, unquote
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
 from utils import transform_platform
+from constants.raptor_tests_constants import YOUTUBE_PLAYBACK_MEASURE
 
 here = os.path.abspath(os.path.dirname(__file__))
 raptor_ini = os.path.join(here, 'raptor.ini')
@@ -115,6 +116,11 @@ def validate_test_ini(test_details):
         # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
         # convert to a list; and remove any spaces
         test_details['alert_on'] = [_item.strip() for _item in test_details['alert_on'].split(',')]
+
+        # if test is raptor-youtube-playback and measure is empty, use all the tests
+        if test_details.get('measure') is None \
+                and 'youtube-playback' in test_details.get('name', ''):
+            test_details['measure'] = YOUTUBE_PLAYBACK_MEASURE
 
         # now make sure each alert_on value provided is valid
         for alert_on_value in test_details['alert_on']:

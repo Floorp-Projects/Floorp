@@ -1418,11 +1418,6 @@ raptor-youtube-playback-geckoview:
     description: "Raptor YouTube Playback on GeckoView"
     try-name: raptor-youtube-playback-geckoview
     treeherder-symbol: Rap(ytp)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
-            android-hw-g5.*/pgo: ['mozilla-central']
-            default: []
     target: geckoview_example.apk
     max-run-time: 3600
     tier: 2
