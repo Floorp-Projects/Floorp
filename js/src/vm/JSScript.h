@@ -66,6 +66,7 @@ class GCParallelTask;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
+class ScriptSourceHolder;
 class SourceCompressionTask;
 class Shape;
 class DebugAPI;
@@ -435,16 +436,30 @@ struct SourceTypeTraits<char16_t> {
 extern MOZ_MUST_USE bool SynchronouslyCompressSource(
     JSContext* cx, JS::Handle<JSScript*> script);
 
-class ScriptSourceHolder;
-
 // Retrievable source can be retrieved using the source hook (and therefore
 // need not be XDR'd, can be discarded if desired because it can always be
 // reconstituted later, etc.).
 enum class SourceRetrievable { Yes, No };
 
+// [SMDOC] ScriptSource
+//
+// This class abstracts over the source we used to compile from. The current
+// representation may transition to different modes in order to save memory.
+// Abstractly the source may be one of UTF-8, UTF-16, or BinAST. The data
+// itself may be unavailable, retrieveable-using-source-hook, compressed, or
+// uncompressed. If source is retrieved or decompressed for use, we may update
+// the ScriptSource to hold the result.
 class ScriptSource {
-  friend class SourceCompressionTask;
+  // NOTE: While ScriptSources may be compressed off thread, they are only
+  // modified by the main thread, and all members are always safe to access
+  // on the main thread.
 
+  friend class SourceCompressionTask;
+  friend bool SynchronouslyCompressSource(JSContext* cx,
+                                          JS::Handle<JSScript*> script);
+
+ private:
+  // Common base class of the templated variants of PinnedUnits<T>.
   class PinnedUnitsBase {
    protected:
     PinnedUnitsBase** stack_ = nullptr;
@@ -480,16 +495,25 @@ class ScriptSource {
   };
 
  private:
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      refs;
+  // Missing source text that isn't retrievable using the source hook.  (All
+  // ScriptSources initially begin in this state.  Users that are compiling
+  // source text will overwrite |data| to store a different state.)
+  struct Missing {};
 
-  // Note: while ScriptSources may be compressed off thread, they are only
-  // modified by the main thread, and all members are always safe to access
-  // on the main thread.
+  // Source that can be retrieved using the registered source hook.  |Unit|
+  // records the source type so that source-text coordinates in functions and
+  // scripts that depend on this |ScriptSource| are correct.
+  template <typename Unit>
+  struct Retrievable {
+    // The source hook and script URL required to retrieve source are stored
+    // elsewhere, so nothing is needed here.  It'd be better hygiene to store
+    // something source-hook-like in each |ScriptSource| that needs it, but that
+    // requires reimagining a source-hook API that currently depends on source
+    // hooks being uniquely-owned pointers...
+  };
 
-  // Indicate which field in the |data| union is active.
-
+  // Uncompressed source text. Templates distinguish if we are interconvertable
+  // to |Retrievable| or not.
   template <typename Unit>
   class UncompressedData {
     typename SourceTypeTraits<Unit>::SharedImmutableString string_;
@@ -504,7 +528,6 @@ class ScriptSource {
     size_t length() const { return string_.length(); }
   };
 
-  // Uncompressed source text.
   template <typename Unit, SourceRetrievable CanRetrieve>
   class Uncompressed : public UncompressedData<Unit> {
     using Base = UncompressedData<Unit>;
@@ -513,6 +536,8 @@ class ScriptSource {
     using Base::Base;
   };
 
+  // Compressed source text. Templates distinguish if we are interconvertable
+  // to |Retrievable| or not.
   template <typename Unit>
   struct CompressedData {
     // Single-byte compressed text, regardless whether the original text
@@ -524,7 +549,6 @@ class ScriptSource {
         : raw(std::move(raw)), uncompressedLength(uncompressedLength) {}
   };
 
-  // Compressed source text.
   template <typename Unit, SourceRetrievable CanRetrieve>
   struct Compressed : public CompressedData<Unit> {
     using Base = CompressedData<Unit>;
@@ -532,23 +556,6 @@ class ScriptSource {
    public:
     using Base::Base;
   };
-
-  // Source that can be retrieved using the registered source hook.  |Unit|
-  // records the source type so that source-text coordinates in functions and
-  // scripts that depend on this |ScriptSource| are correct.
-  template <typename Unit>
-  struct Retrievable {
-    // The source hook and script URL required to retrieve source are stored
-    // elsewhere, so nothing is needed here.  It'd be better hygiene to store
-    // something source-hook-like in each |ScriptSource| that needs it, but that
-    // requires reimagining a source-hook API that currently depends on source
-    // hooks being uniquely-owned pointers...
-  };
-
-  // Missing source text that isn't retrievable using the source hook.  (All
-  // ScriptSources initially begin in this state.  Users that are compiling
-  // source text will overwrite |data| to store a different state.)
-  struct Missing {};
 
   // BinAST source.
   struct BinAST {
@@ -560,6 +567,7 @@ class ScriptSource {
         : string(std::move(str)), metadata(std::move(metadata)) {}
   };
 
+  // The set of currently allowed encoding modes.
   using SourceType =
       mozilla::Variant<Compressed<mozilla::Utf8Unit, SourceRetrievable::Yes>,
                        Uncompressed<mozilla::Utf8Unit, SourceRetrievable::Yes>,
@@ -571,10 +579,17 @@ class ScriptSource {
                        Uncompressed<char16_t, SourceRetrievable::No>,
                        Retrievable<mozilla::Utf8Unit>, Retrievable<char16_t>,
                        Missing, BinAST>;
-  SourceType data;
 
-  friend bool SynchronouslyCompressSource(JSContext* cx,
-                                          JS::Handle<JSScript*> script);
+  //
+  // Start of fields.
+  //
+
+  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      refs;
+
+  // Source data (as a mozilla::Variant).
+  SourceType data;
 
   // If the GC calls triggerConvertToCompressedSource with PinnedUnits present,
   // the first PinnedUnits (that is, bottom of the stack) will install the
@@ -652,13 +667,17 @@ class ScriptSource {
   // unique anymore.
   uint32_t id_;
 
+  bool hasIntroductionOffset_ : 1;
+  bool containsAsmJS_ : 1;
+
+  //
+  // End of fields.
+  //
+
   // How many ids have been handed out to sources.
   static mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
                          mozilla::recordreplay::Behavior::DontPreserve>
       idCount_;
-
-  bool hasIntroductionOffset_ : 1;
-  bool containsAsmJS_ : 1;
 
   template <typename Unit>
   const Unit* chunkUnits(JSContext* cx,
