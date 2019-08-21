@@ -32,6 +32,11 @@ ext.configureVariantWithGeckoBinaries = { variant ->
 
     def syncLibsFromDistDir = task("syncLibsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
         onlyIf {
+            if (!mozconfig.substs.COMPILE_ENVIRONMENT && !mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+                // We won't have JNI libraries if we're not compiling and we're not downloading
+                // artifacts.  Such a configuration is used for running lints, generating docs, etc.
+                return true
+            }
             if (source.empty) {
                 throw new StopExecutionException("Required JNI libraries not found in ${distDir}/lib.  Have you built and packaged?")
             }
