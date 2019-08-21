@@ -1247,7 +1247,7 @@ uint32_t gfxTextRun::FindFirstGlyphRunContaining(uint32_t aOffset) const {
 
 void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
                              uint32_t aUTF16Offset, bool aForceNewRun,
-                             gfx::ShapedTextFlags aOrientation) {
+                             gfx::ShapedTextFlags aOrientation, bool aIsCJK) {
   NS_ASSERTION(aFont, "adding glyph run for null font!");
   NS_ASSERTION(aOrientation != gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED,
                "mixed orientation should have been resolved");
@@ -1258,7 +1258,7 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
     // We don't currently have an array.
     if (!mSingleGlyphRun.mFont) {
       // This is the first glyph run: just store it directly.
-      mSingleGlyphRun.SetProperties(aFont, aOrientation, aMatchType);
+      mSingleGlyphRun.SetProperties(aFont, aOrientation, aIsCJK, aMatchType);
       mSingleGlyphRun.mCharacterOffset = aUTF16Offset;
       return;
     }
@@ -1273,7 +1273,7 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
                  "Glyph runs out of order (and run not forced)");
 
     // Don't append a run if the font is already the one we want
-    if (lastGlyphRun->Matches(aFont, aOrientation, aMatchType)) {
+    if (lastGlyphRun->Matches(aFont, aOrientation, aIsCJK, aMatchType)) {
       return;
     }
 
@@ -1284,7 +1284,7 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
       // font as the new one wants, merge with it instead of creating
       // adjacent runs with the same font
       if (numGlyphRuns > 1 && mGlyphRunArray[numGlyphRuns - 2].Matches(
-                                  aFont, aOrientation, aMatchType)) {
+                                  aFont, aOrientation, aIsCJK, aMatchType)) {
         mGlyphRunArray.TruncateLength(numGlyphRuns - 1);
         if (mGlyphRunArray.Length() == 1) {
           ConvertFromGlyphRunArray();
@@ -1292,7 +1292,7 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
         return;
       }
 
-      lastGlyphRun->SetProperties(aFont, aOrientation, aMatchType);
+      lastGlyphRun->SetProperties(aFont, aOrientation, aIsCJK, aMatchType);
       return;
     }
   }
@@ -1306,7 +1306,7 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
   }
 
   GlyphRun* glyphRun = mGlyphRunArray.AppendElement();
-  glyphRun->SetProperties(aFont, aOrientation, aMatchType);
+  glyphRun->SetProperties(aFont, aOrientation, aIsCJK, aMatchType);
   glyphRun->mCharacterOffset = aUTF16Offset;
 }
 
@@ -1332,8 +1332,8 @@ void gfxTextRun::SortGlyphRuns() {
     // A GlyphRun with the same font and orientation as the previous can
     // just be skipped; the last GlyphRun will cover its character range.
     MOZ_ASSERT(run.mFont != nullptr);
-    if (!prevRun ||
-        !prevRun->Matches(run.mFont, run.mOrientation, run.mMatchType)) {
+    if (!prevRun || !prevRun->Matches(run.mFont, run.mOrientation, run.mIsCJK,
+                                      run.mMatchType)) {
       // If two fonts have the same character offset, Sort() will have
       // randomized the order.
       MOZ_ASSERT(prevRun == nullptr ||
@@ -1469,6 +1469,7 @@ void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
     gfxFont* font = iter.GetGlyphRun()->mFont;
     MOZ_ASSERT(!prevRun || !prevRun->Matches(iter.GetGlyphRun()->mFont,
                                              iter.GetGlyphRun()->mOrientation,
+                                             iter.GetGlyphRun()->mIsCJK,
                                              FontMatchType::Kind::kUnspecified),
                "Glyphruns not coalesced?");
 #ifdef DEBUG
@@ -1494,7 +1495,7 @@ void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
 
     AddGlyphRun(font, iter.GetGlyphRun()->mMatchType,
                 start - aRange.start + aDest, false,
-                iter.GetGlyphRun()->mOrientation);
+                iter.GetGlyphRun()->mOrientation, iter.GetGlyphRun()->mIsCJK);
   }
 }
 
@@ -1524,8 +1525,13 @@ void gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
       aDrawTarget, &space, 1, gfxShapedWord::HashMix(0, ' '), Script::LATIN,
       vertical, mAppUnitsPerDevUnit, flags, roundingFlags, nullptr);
   if (sw) {
+    const GlyphRun* prevRun = TrailingGlyphRun();
+    bool isCJK = prevRun && prevRun->mFont == aFont &&
+                         prevRun->mOrientation == aOrientation
+                     ? prevRun->mIsCJK
+                     : false;
     AddGlyphRun(aFont, FontMatchType::Kind::kUnspecified, aCharIndex, false,
-                aOrientation);
+                aOrientation, isCJK);
     CopyGlyphDataFrom(sw, aCharIndex);
     GetCharacterGlyphs()[aCharIndex].SetIsSpace();
   }
@@ -1549,8 +1555,13 @@ bool gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
     return false;
   }
 
+  const GlyphRun* prevRun = TrailingGlyphRun();
+  bool isCJK = prevRun && prevRun->mFont == aFont &&
+                       prevRun->mOrientation == aOrientation
+                   ? prevRun->mIsCJK
+                   : false;
   AddGlyphRun(aFont, FontMatchType::Kind::kUnspecified, aCharIndex, false,
-              aOrientation);
+              aOrientation, isCJK);
   CompressedGlyph g =
       CompressedGlyph::MakeSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
   if (aSpaceChar == ' ') {
@@ -2139,7 +2150,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeSpaceTextRun(
     // them, and always create at least size 1 fonts, i.e. they still
     // render something for size 0 fonts.
     textRun->AddGlyphRun(font, FontMatchType::Kind::kUnspecified, 0, false,
-                         orientation);
+                         orientation, false);
   } else {
     if (font->GetSpaceGlyph()) {
       // Normally, the font has a cached space glyph, so we can avoid
@@ -2177,7 +2188,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeBlankTextRun(
     orientation = ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT;
   }
   textRun->AddGlyphRun(GetFirstValidFont(), FontMatchType::Kind::kUnspecified,
-                       0, false, orientation);
+                       0, false, orientation, false);
   return textRun.forget();
 }
 
@@ -2475,6 +2486,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
   ComputeRanges(fontRanges, aString, aLength, aRunScript, orientation);
   uint32_t numRanges = fontRanges.Length();
   bool missingChars = false;
+  bool isCJK = gfxTextRun::IsCJKScript(aRunScript);
 
   for (uint32_t r = 0; r < numRanges; r++) {
     const TextRange& range = fontRanges[r];
@@ -2485,7 +2497,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
       // common case - just do glyph layout and record the
       // resulting positioned glyphs
       aTextRun->AddGlyphRun(matchedFont, range.matchType, aOffset + runStart,
-                            (matchedLength > 0), range.orientation);
+                            (matchedLength > 0), range.orientation, isCJK);
       if (!matchedFont->SplitAndInitTextRun(
               aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
               matchedLength, aRunScript, range.orientation)) {
@@ -2520,7 +2532,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         RefPtr<gfxFont> subSuperFont = matchedFont->GetSubSuperscriptFont(
             aTextRun->GetAppUnitsPerDevUnit());
         aTextRun->AddGlyphRun(subSuperFont, range.matchType, aOffset + runStart,
-                              (matchedLength > 0), range.orientation);
+                              (matchedLength > 0), range.orientation, isCJK);
         if (!subSuperFont->SplitAndInitTextRun(
                 aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
                 matchedLength, aRunScript, range.orientation)) {
@@ -2554,7 +2566,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
 
         // do glyph layout and record the resulting positioned glyphs
         aTextRun->AddGlyphRun(matchedFont, range.matchType, aOffset + runStart,
-                              (matchedLength > 0), range.orientation);
+                              (matchedLength > 0), range.orientation, isCJK);
         if (!matchedFont->SplitAndInitTextRun(
                 aDrawTarget, aTextRun, aString + runStart, aOffset + runStart,
                 matchedLength, aRunScript, range.orientation)) {
@@ -2565,7 +2577,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
     } else {
       aTextRun->AddGlyphRun(mainFont, FontMatchType::Kind::kFontGroup,
                             aOffset + runStart, (matchedLength > 0),
-                            range.orientation);
+                            range.orientation, isCJK);
     }
 
     if (!matchedFont) {
