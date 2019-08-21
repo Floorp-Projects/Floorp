@@ -151,7 +151,9 @@ class Classifier {
   nsresult DumpFailedUpdate();
 #endif
 
-  nsresult ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables);
+  nsresult ScanStoreDir(nsIFile* aDirectory,
+                        const nsTArray<nsCString>& aExtensions,
+                        nsTArray<nsCString>& aTables);
 
   nsresult UpdateHashStore(TableUpdateArray& aUpdates,
                            const nsACString& aTable);
@@ -170,7 +172,11 @@ class Classifier {
 
   bool CheckValidUpdate(TableUpdateArray& aUpdates, const nsACString& aTable);
 
-  nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
+  nsresult LoadHashStore(nsIFile* aDirectory, nsACString& aResult,
+                         nsTArray<nsCString>& aFailedTableNames);
+
+  nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult,
+                        nsTArray<nsCString>& aFailedTableNames);
 
   static nsCString GetProvider(const nsACString& aTableName);
 
