@@ -7,10 +7,7 @@
 #include "threading/Thread.h"
 #include "mozilla/Assertions.h"
 
-js::Thread::~Thread() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
-}
+js::Thread::~Thread() { MOZ_RELEASE_ASSERT(!joinable()); }
 
 js::Thread::Thread(Thread&& aOther) : idMutex_(mutexid::ThreadId) {
   LockGuard<Mutex> lock(aOther.idMutex_);
@@ -39,3 +36,4 @@ bool js::Thread::joinable() {
   LockGuard<Mutex> lock(idMutex_);
   return joinable(lock);
 }
+
