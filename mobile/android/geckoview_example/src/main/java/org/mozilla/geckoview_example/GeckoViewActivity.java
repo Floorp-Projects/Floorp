@@ -189,15 +189,16 @@ public class GeckoViewActivity extends AppCompatActivity {
                 mUseMultiprocess = session.getSettings().getUseMultiprocess();
                 mFullAccessibilityTree = session.getSettings().getFullAccessibilityTree();
 
-                mTabSessionManager.addSession(session);
-                setGeckoViewSession(session);
+                mTabSessionManager.setCurrentSession(session);
+                mGeckoView.setSession(session);
             } else {
                 session = createSession();
                 session.open(sGeckoRuntime);
                 mTabSessionManager.setCurrentSession(session);
                 mGeckoView.setSession(session);
+
+                loadFromIntent(getIntent());
             }
-            loadFromIntent(getIntent());
         }
 
         mToolbarView.getLocationView().setCommitListener(mCommitListener);

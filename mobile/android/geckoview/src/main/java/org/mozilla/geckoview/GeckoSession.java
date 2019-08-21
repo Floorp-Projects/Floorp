@@ -1284,7 +1284,7 @@ public class GeckoSession implements Parcelable {
     }
 
     @Override // Parcelable
-    @UiThread
+    @AnyThread
     public void writeToParcel(final Parcel out, final int flags) {
         out.writeStrongInterface(mWindow);
         out.writeParcelable(mSettings, flags);
@@ -1292,7 +1292,7 @@ public class GeckoSession implements Parcelable {
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
-    @UiThread
+    @AnyThread
     public void readFromParcel(final @NonNull Parcel source) {
         final IBinder binder = source.readStrongBinder();
         final IInterface ifce = (binder != null) ?
@@ -1306,7 +1306,7 @@ public class GeckoSession implements Parcelable {
 
     public static final Creator<GeckoSession> CREATOR = new Creator<GeckoSession>() {
         @Override
-        @UiThread
+        @AnyThread
         public GeckoSession createFromParcel(final Parcel in) {
             final GeckoSession session = new GeckoSession();
             session.readFromParcel(in);
@@ -1314,7 +1314,7 @@ public class GeckoSession implements Parcelable {
         }
 
         @Override
-        @UiThread
+        @AnyThread
         public GeckoSession[] newArray(final int size) {
             return new GeckoSession[size];
         }
