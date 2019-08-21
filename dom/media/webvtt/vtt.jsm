@@ -1065,6 +1065,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         box = specifiedPosition.clone();
       }
 
+      // Can not find a place to place this box inside the rendering area.
+      if (!box.within(containerBox)) {
+        return null;
+      }
+
       styleBox.applyStyles({
         top: getPercentagePosition(box.top, containerBox.height),
         left: getPercentagePosition(box.left, containerBox.width),
