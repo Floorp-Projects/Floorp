@@ -986,6 +986,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       minorGCNumber(0),
       majorGCNumber(0),
       number(0),
+      sliceNumber(0),
       isFull(false),
       incrementalState(gc::State::NotActive),
       initialState(gc::State::NotActive),
@@ -7084,6 +7085,8 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
     budget.makeUnlimited();
   }
 
+  incGcSliceNumber();
+
   switch (incrementalState) {
     case State::NotActive:
       incMajorGcNumber();
@@ -8893,6 +8896,12 @@ static bool MinorGCCountGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GCSliceCountGetter(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setNumber(double(cx->runtime()->gc.gcSliceCount()));
+  return true;
+}
+
 static bool ZoneGCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(double(cx->zone()->zoneSize.gcBytes()));
@@ -8964,7 +8973,8 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
                  {"gcIsHighFrequencyMode", GCHighFreqGetter},
                  {"gcNumber", GCNumberGetter},
                  {"majorGCCount", MajorGCCountGetter},
-                 {"minorGCCount", MinorGCCountGetter}};
+                 {"minorGCCount", MinorGCCountGetter},
+                 {"sliceCount", GCSliceCountGetter}};
 
   for (auto pair : getters) {
 #ifdef JS_MORE_DETERMINISTIC

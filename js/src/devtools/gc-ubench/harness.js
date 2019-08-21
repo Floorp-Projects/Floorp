@@ -8,6 +8,7 @@ var delays = new Array(numSamples);
 var gcs = new Array(numSamples);
 var minorGCs = new Array(numSamples);
 var majorGCs = new Array(numSamples);
+var slices = new Array(numSamples);
 var gcBytes = new Array(numSamples);
 var mallocBytes = new Array(numSamples);
 var sampleIndex = 0;
@@ -167,20 +168,15 @@ LatencyGraph.prototype.draw = function () {
 
         ctx.strokeStyle = stroke.gcslice;
         var idx = sampleIndex % numSamples;
-        const count = {major: majorGCs[idx], minor: 0, any: gcs[idx]};
+        const count = {
+            major: majorGCs[idx],
+            minor: 0,
+            slice: slices[idx]
+        };
         for (var i = 0; i < numSamples; i++) {
-            // A minor GC bumps count.minor and count.any. A major GC slice
-            // bumps count.any only (though it might run a minor GC too.) The
-            // first slice of a major GC bumps count.major and count.any, and
-            // will also do a minor GC and so ends up bumping count.minor as
-            // well.
-            //
-            // So there's no way to distinguish a minor GC from a major GC
-            // slice that also runs a minor GC! Both bump count.any and
-            // count.minor and not count.major.
             idx = (sampleIndex + i) % numSamples;
             const isMajorStart = count.major < majorGCs[idx];
-            if (count.any < gcs[idx]) {
+            if (count.slice < slices[idx]) {
                 if (isMajorStart) ctx.strokeStyle = stroke.initialMajor;
                 ctx.beginPath();
                 ctx.moveTo(this.xpos(idx), 0);
@@ -188,8 +184,8 @@ LatencyGraph.prototype.draw = function () {
                 ctx.stroke();
                 if (isMajorStart) ctx.strokeStyle = stroke.gcslice;
             }
-            count.any = gcs[idx];
             count.major = majorGCs[idx];
+            count.slice = slices[idx];
         }
 
         ctx.strokeStyle = stroke.minor;
@@ -368,6 +364,14 @@ function handler(timestamp)
             gcs[idx] = performance.mozMemory.gcNumber;
             minorGCs[idx] = performance.mozMemory.minorGCCount;
             majorGCs[idx] = performance.mozMemory.majorGCCount;
+
+            // Previous versions lacking sliceCount will fall back to assuming
+            // any GC activity was a major GC slice, even though that
+            // incorrectly includes minor GCs. Although this file is versioned
+            // with the code that implements the new sliceCount field, it is
+            // common to load the gc-ubench index.html with different browser
+            // versions.
+            slices[idx] = performance.mozMemory.sliceCount || performance.mozMemory.gcNumber;
         }
     }
 
