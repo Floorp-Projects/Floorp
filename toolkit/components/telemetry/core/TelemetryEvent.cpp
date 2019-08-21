@@ -1294,7 +1294,7 @@ nsresult TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
     snapshotter(gEventRecords);
     if (aClear) {
       gEventRecords.Clear();
-      for (auto pair : leftovers) {
+      for (auto& pair : leftovers) {
         gEventRecords.Put(pair.first(),
                           new EventRecordArray(std::move(pair.second())));
       }

@@ -872,16 +872,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       return false;
     }
 
-    // Check if this box overlaps any other boxes in boxes.
-    overlapsAny(boxes) {
-      for (let i = 0; i < boxes.length; i++) {
-        if (this.overlaps(boxes[i])) {
-          return true;
-        }
-      }
-      return false;
-    }
-
     // Check if this box is within another box.
     within(container) {
       return (this.top >= container.top - this.fuzz) &&
@@ -936,6 +926,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     const fullDimension = isWritingDirectionHorizontal ?
       containerBox.height : containerBox.width;
     if (cue.snapToLines) {
+      LOG(`Adjust position when 'snap-to-lines' is true.`);
       // The step is the height or width of the line box. We should use font
       // size directly, instead of using text box's width or height, because the
       // width or height of the box would be changed when the text is wrapped to
@@ -1024,6 +1015,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         });
       }
     } else {
+      LOG(`Adjust position when 'snap-to-lines' is false.`);
       // (snap-to-lines if false) spec 7.2.10.1 ~ 7.2.10.2
       if (cue.lineAlign != "start") {
         const isCenterAlign = cue.lineAlign == "center";
@@ -1040,8 +1032,34 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
           specifiedPosition = box.clone(),
           outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
       let hasFoundBestPosition = false;
-      const axis = ["-y", "-x", "+x", "+y"];
-      const toMove = styleBox.getFirstLineBoxSize();
+
+      // For the different writing directions, we should have different priority
+      // for the moving direction. For example, if the writing direction is
+      // horizontal, which means the cues will grow from the top to the bottom,
+      // then moving cues along the `y` axis should be more important than moving
+      // cues along the `x` axis, and vice versa for those cues growing from the
+      // left to right, or from the right to the left. We don't follow the exact
+      // way which the spec requires, see the reason in bug1575460.
+      function getAxis(writingDirection) {
+        if (writingDirection == "") {
+          return ["+y", "-y", "+x", "-x"];
+        }
+        // Growing from left to right.
+        if (writingDirection == "lr") {
+          return ["+x", "-x", "+y", "-y"];
+        }
+        // Growing from right to left.
+        return ["-x", "+x", "+y", "-y"];
+      }
+      const axis = getAxis(cue.vertical);
+
+      // This factor effects the granularity of the moving unit, when using the
+      // factor=1 often moves too much and results in too many redudant spaces
+      // between boxes. So we can increase the factor to slightly reduce the
+      // move we do every time, but still can preverse the reasonable spaces
+      // between boxes.
+      const factor = 4;
+      const toMove = styleBox.getFirstLineBoxSize() / factor;
       for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
         while (!box.isOutsideTheAxisBoundary(containerBox, axis[i]) &&
                (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {
@@ -1065,9 +1083,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         box = specifiedPosition.clone();
       }
 
+      // Can not find a place to place this box inside the rendering area.
+      if (!box.within(containerBox)) {
+        return null;
+      }
+
       styleBox.applyStyles({
-        top: getPercentagePosition(box.top, fullDimension),
-        left: getPercentagePosition(box.left, fullDimension),
+        top: getPercentagePosition(box.top, containerBox.height),
+        left: getPercentagePosition(box.left, containerBox.width),
       });
     }
 

@@ -684,7 +684,8 @@ nsresult LookupCache::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
   Header header;
   rv = ReadValue(in, header);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    LOG(("Failed to read header for %s", mTableName.get()));
+    return NS_ERROR_FILE_CORRUPTED;
   }
 
   rv = SanityCheck(header);

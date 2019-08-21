@@ -798,9 +798,19 @@ class HTMLEditor final : public TextEditor,
                                          int32_t* outOffset = 0);
 
   /**
-   * @param aElement        Must not be null.
+   * NodeIsBlockStatic() returns true if aElement is an element node and
+   * should be treated as a block.
    */
-  static bool NodeIsBlockStatic(const nsINode* aElement);
+  static bool NodeIsBlockStatic(const nsINode& aElement);
+
+  /**
+   * NodeIsInlineStatic() returns true if aElement is an element node but
+   * shouldn't be treated as a block or aElement is not an element.
+   * XXX This looks odd.  For example, how about a comment node?
+   */
+  static bool NodeIsInlineStatic(const nsINode& aElement) {
+    return !NodeIsBlockStatic(aElement);
+  }
 
   /**
    * extracts an element from the normal flow of the document and

@@ -35,6 +35,9 @@ from io import (
 if sys.platform == 'win32':
     _kernel32 = ctypes.windll.kernel32
     _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
+    system_encoding = 'mbcs'
+else:
+    system_encoding = 'utf-8'
 
 
 def exec_(object, globals=None, locals=None):

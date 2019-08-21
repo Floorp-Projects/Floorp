@@ -12,6 +12,7 @@ import subprocess
 import traceback
 
 from mozpack import path as mozpath
+from mozbuild.util import system_encoding
 
 
 MOZ_MYCONFIG_ERROR = '''
@@ -356,8 +357,7 @@ class MozconfigLoader(object):
             # XXX This is an ugly hack. Data may be lost from things
             # like environment variable values.
             # See https://bugzilla.mozilla.org/show_bug.cgi?id=831381
-            line = line.decode('mbcs' if sys.platform == 'win32' else 'utf-8',
-                               'ignore')
+            line = line.decode(system_encoding, 'ignore')
 
             if not line:
                 continue

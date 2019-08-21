@@ -794,17 +794,15 @@ def help_host_target(help, host, target):
         )
 
 
-@imports('subprocess')
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), '..',
                               'autoconf', 'config.sub')
-    return subprocess.check_output([shell, config_sub, triplet]).strip()
+    return check_cmd_output(shell, config_sub, triplet).strip()
 
 
 @depends('--host', shell)
 @checking('for host system type', lambda h: h.alias)
 @imports('os')
-@imports('subprocess')
 @imports('sys')
 @imports(_from='__builtin__', _import='ValueError')
 def real_host(value, shell):
@@ -819,7 +817,7 @@ def real_host(value, shell):
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
-        host = subprocess.check_output([shell, config_guess], universal_newlines=True).strip()
+        host = check_cmd_output(shell, config_guess, universal_newlines=True).strip()
         try:
             return split_triplet(host)
         except ValueError:

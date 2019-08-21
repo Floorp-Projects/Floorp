@@ -85,64 +85,51 @@ global.ChromeUtils = {
 
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
-/* eslint-disable complexity */
 requireHacker.global_hook("default", (path, module) => {
-  switch (path) {
+  const paths = {
     // For Enzyme
-    case "react-dom":
-      return getModule("devtools/client/shared/vendor/react-dom");
-    case "react-dom/server":
-      return getModule("devtools/client/shared/vendor/react-dom-server");
-    case "react-dom/test-utils":
-      return getModule(
-        "devtools/client/shared/vendor/react-dom-test-utils-dev"
-      );
-    case "react-redux":
-      return getModule("devtools/client/shared/vendor/react-redux");
+    "react-dom": () => getModule("devtools/client/shared/vendor/react-dom"),
+    "react-dom/server": () =>
+      getModule("devtools/client/shared/vendor/react-dom-server"),
+    "react-dom/test-utils": () =>
+      getModule("devtools/client/shared/vendor/react-dom-test-utils-dev"),
+    "react-redux": () => getModule("devtools/client/shared/vendor/react-redux"),
     // Use react-dev. This would be handled by browserLoader in Firefox.
-    case "react":
-    case "devtools/client/shared/vendor/react":
-      return getModule("devtools/client/shared/vendor/react-dev");
-    case "chrome":
-      return `module.exports = { Cc: {}, Ci: {}, Cu: {} }`;
-  }
-
-  // Some modules depend on Chrome APIs which don't work in mocha. When such a module
-  // is required, replace it with a mock version.
-  switch (path) {
-    case "devtools/shared/l10n":
-      return getModule(
+    react: () => getModule("devtools/client/shared/vendor/react-dev"),
+    "devtools/client/shared/vendor/react": () =>
+      getModule("devtools/client/shared/vendor/react-dev"),
+    chrome: () => `module.exports = { Cc: {}, Ci: {}, Cu: {} }`,
+    // Some modules depend on Chrome APIs which don't work in mocha. When such a module
+    // is required, replace it with a mock version.
+    "devtools/shared/l10n": () =>
+      getModule(
         "devtools/client/webconsole/test/node/fixtures/LocalizationHelper"
-      );
-    case "devtools/shared/plural-form":
-      return getModule(
-        "devtools/client/webconsole/test/node/fixtures/PluralForm"
-      );
-    case "Services":
-    case "Services.default":
-      return `module.exports = require("devtools-modules/src/Services")`;
-    case "devtools/shared/client/object-client":
-    case "devtools/shared/client/long-string-client":
-      return `() => {}`;
-    case "devtools/client/shared/components/SmartTrace":
-    case "devtools/client/netmonitor/src/components/TabboxPanel":
-    case "devtools/client/webconsole/utils/context-menu":
-      return "{}";
-    case "devtools/client/shared/telemetry":
-      return `module.exports = function() {
-        this.recordEvent = () => {};
-        this.getKeyedHistogramById = () => ({add: () => {}});
-      }`;
-    case "devtools/shared/event-emitter":
-      return `module.exports = require("devtools-modules/src/utils/event-emitter")`;
-    case "devtools/client/shared/unicode-url":
-      return `module.exports = require("devtools-modules/src/unicode-url")`;
-    case "devtools/shared/DevToolsUtils":
-      return "{}";
-    case "devtools/server/actors/reflow":
-      return "{}";
-    case "devtools/shared/layout/utils":
-      return "{getCurrentZoom = () => {}}";
+      ),
+    "devtools/shared/plural-form": () =>
+      getModule("devtools/client/webconsole/test/node/fixtures/PluralForm"),
+    Services: () => `module.exports = require("devtools-modules/src/Services")`,
+    "Services.default": () =>
+      `module.exports = require("devtools-modules/src/Services")`,
+    "devtools/shared/client/object-client": () => `() => {}`,
+    "devtools/shared/client/long-string-client": () => `() => {}`,
+    "devtools/client/shared/components/SmartTrace": () => "{}",
+    "devtools/client/netmonitor/src/components/TabboxPanel": () => "{}",
+    "devtools/client/webconsole/utils/context-menu": () => "{}",
+    "devtools/client/shared/telemetry": () => `module.exports = function() {
+      this.recordEvent = () => {};
+      this.getKeyedHistogramById = () => ({add: () => {}});
+    }`,
+    "devtools/shared/event-emitter": () =>
+      `module.exports = require("devtools-modules/src/utils/event-emitter")`,
+    "devtools/client/shared/unicode-url": () =>
+      `module.exports = require("devtools-modules/src/unicode-url")`,
+    "devtools/shared/DevToolsUtils": () => "{}",
+    "devtools/server/actors/reflow": () => "{}",
+    "devtools/shared/layout/utils": () => "{getCurrentZoom = () => {}}",
+  };
+
+  if (paths.hasOwnProperty(path)) {
+    return paths[path]();
   }
 
   // We need to rewrite all the modules assuming the root is mozilla-central and give them
@@ -153,7 +140,6 @@ requireHacker.global_hook("default", (path, module) => {
 
   return undefined;
 });
-/* eslint-enable complexity */
 
 // Configure enzyme with React 16 adapter. This needs to be done after we set the
 // requireHack hook so `require()` calls in Enzyme are handled as well.

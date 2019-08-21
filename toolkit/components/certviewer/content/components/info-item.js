@@ -31,7 +31,9 @@ export class InfoItem extends HTMLElement {
     this.classList.add(labelText);
 
     let info = this.shadowRoot.querySelector(".info");
-    info.textContent = this.item.info;
+    info.textContent = Array.isArray(this.item.info)
+      ? this.item.info.join(", ")
+      : this.item.info;
 
     // TODO: Use Fluent-friendly condition.
     if (this.item.label === "Modulus") {

@@ -20034,7 +20034,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
     return rv;
   }
 
-  markerFile->Exists(&exists);
+  rv = markerFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -26005,48 +26005,26 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
   keyRangeClause.Truncate();
   nsAutoCString continueToKeyRangeClause;
 
+  const bool isUpperBound = mCursor->mDirection == IDBCursor::NEXT ||
+                            mCursor->mDirection == IDBCursor::NEXT_UNIQUE;
+
+  Key bound;
+  bool open;
+  GetRangeKeyInfo(!isUpperBound, &bound, &open);
+
   NS_NAMED_LITERAL_CSTRING(currentKey, "current_key");
-  NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
+  AppendConditionClause(keyString, currentKey, !isUpperBound, false,
+                        keyRangeClause);
+  AppendConditionClause(keyString, currentKey, !isUpperBound, true,
+                        continueToKeyRangeClause);
+  if (usingKeyRange && !bound.IsUnset()) {
+    NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
 
-  switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE: {
-      Key upper;
-      bool open;
-      GetRangeKeyInfo(false, &upper, &open);
-      AppendConditionClause(keyString, currentKey, false, false,
-                            keyRangeClause);
-      AppendConditionClause(keyString, currentKey, false, true,
-                            continueToKeyRangeClause);
-      if (usingKeyRange && !upper.IsUnset()) {
-        AppendConditionClause(keyString, rangeKey, true, !open, keyRangeClause);
-        AppendConditionClause(keyString, rangeKey, true, !open,
-                              continueToKeyRangeClause);
-        mCursor->mRangeKey = upper;
-      }
-      break;
-    }
-
-    case IDBCursor::PREV:
-    case IDBCursor::PREV_UNIQUE: {
-      Key lower;
-      bool open;
-      GetRangeKeyInfo(true, &lower, &open);
-      AppendConditionClause(keyString, currentKey, true, false, keyRangeClause);
-      AppendConditionClause(keyString, currentKey, true, true,
-                            continueToKeyRangeClause);
-      if (usingKeyRange && !lower.IsUnset()) {
-        AppendConditionClause(keyString, rangeKey, false, !open,
-                              keyRangeClause);
-        AppendConditionClause(keyString, rangeKey, false, !open,
-                              continueToKeyRangeClause);
-        mCursor->mRangeKey = lower;
-      }
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
+    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
+                          keyRangeClause);
+    AppendConditionClause(keyString, rangeKey, isUpperBound, !open,
+                          continueToKeyRangeClause);
+    mCursor->mRangeKey = bound;
   }
 
   mCursor->mContinueQuery =
