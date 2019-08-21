@@ -97,7 +97,7 @@ private class MediaSessionObserver(
         updateState()
     }
 
-    override fun onPlaybackStateChanged(media: Media, playbackState: Media.PlaybackState) {
+    override fun onStateChanged(media: Media, state: Media.State) {
         updateState()
     }
 
