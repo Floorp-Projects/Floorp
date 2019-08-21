@@ -7882,27 +7882,6 @@ bool nsContentUtils::IsUpgradableDisplayType(nsContentPolicyType aType) {
 }
 
 // static
-ReferrerPolicy nsContentUtils::GetReferrerPolicyFromHeader(
-    const nsAString& aHeader) {
-  // Multiple headers could be concatenated into one comma-separated
-  // list of policies. Need to tokenize the multiple headers.
-  nsCharSeparatedTokenizer tokenizer(aHeader, ',');
-  nsAutoString token;
-  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
-  while (tokenizer.hasMoreTokens()) {
-    token = tokenizer.nextToken();
-    if (token.IsEmpty()) {
-      continue;
-    }
-    ReferrerPolicy policy = net::ReferrerPolicyFromString(token);
-    if (policy != ReferrerPolicy::_empty) {
-      referrerPolicy = policy;
-    }
-  }
-  return referrerPolicy;
-}
-
-// static
 ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
     nsIChannel* aChannel) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
@@ -7918,7 +7897,8 @@ ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
     return ReferrerPolicy::_empty;
   }
 
-  return GetReferrerPolicyFromHeader(NS_ConvertUTF8toUTF16(headerValue));
+  return ReferrerInfo::ReferrerPolicyFromHeaderString(
+      NS_ConvertUTF8toUTF16(headerValue));
 }
 
 // static

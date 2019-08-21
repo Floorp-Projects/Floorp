@@ -3254,7 +3254,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
     if (!tRPHeaderValue.IsEmpty()) {
       referrerPolicy =
-          nsContentUtils::GetReferrerPolicyFromHeader(tRPHeaderValue);
+          dom::ReferrerInfo::ReferrerPolicyFromHeaderString(tRPHeaderValue);
     }
 
     DebugOnly<nsresult> success;

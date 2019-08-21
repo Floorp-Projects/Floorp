@@ -2841,16 +2841,6 @@ class nsContentUtils {
   static mozilla::dom::ReferrerPolicy GetReferrerPolicyFromChannel(
       nsIChannel* aChannel);
 
-  /*
-   * Parse a referrer policy from a Referrer-Policy header
-   * https://www.w3.org/TR/referrer-policy/#parse-referrer-policy-from-header
-   *
-   * @param aHeader the response's Referrer-Policy header to parse
-   * @return referrer policy from the response header.
-   */
-  static mozilla::dom::ReferrerPolicy GetReferrerPolicyFromHeader(
-      const nsAString& aHeader);
-
   static bool IsNonSubresourceRequest(nsIChannel* aChannel);
 
   static bool IsNonSubresourceInternalPolicyType(nsContentPolicyType aType);

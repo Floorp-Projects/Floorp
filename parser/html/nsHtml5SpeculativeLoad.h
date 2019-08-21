@@ -147,7 +147,8 @@ class nsHtml5SpeculativeLoad {
         nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
             referrerPolicy);
     mScriptReferrerPolicy =
-        mozilla::net::AttributeReferrerPolicyFromString(referrerPolicy);
+        mozilla::dom::ReferrerInfo::ReferrerPolicyAttributeFromString(
+            referrerPolicy);
 
     mIsAsync = aAsync;
     mIsDefer = aDefer;
