@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
       const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
       const allow_nonzero_unitless_lengths = !SpecialPowers.getBoolPref('mathml.nonzero_unitless_lengths.disabled');
       const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
+      const allow_legacy_numbers = !SpecialPowers.getBoolPref('mathml.legacy_number_syntax.disabled');
       
       var g_errorInfo = {
       /*<math><mroot></mroot></math>
@@ -71,6 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         <math><mspace width="thickmathspace"/></math>
         <math><mspace width="verythickmathspace"/></math>
         <math><mspace width="veryverythickmathspace"/></math>
+        <math><mspace width="12345."/></math>
         <math><mo minsize="17">+</mo></math>
       */
         LengthParsingError : {
@@ -93,6 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                      allow_mathspace_names,
                      allow_mathspace_names,
                      allow_mathspace_names,
+                     allow_legacy_numbers,
                      allow_nonzero_unitless_lengths,
                     ],
             args: [["2..0px"],
@@ -114,6 +117,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                    ["thickmathspace"],
                    ["verythickmathspace"],
                    ["veryverythickmathspace"],
+                   ["12345."],
                    ["17"]
                   ]
         },
@@ -230,6 +234,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
     <math><mspace width="thickmathspace"/></math>
     <math><mspace width="verythickmathspace"/></math>
     <math><mspace width="veryverythickmathspace"/></math>
+    <math><mspace width="12345."/></math>
     
     <!-- MMultiscriptsErrors -->
     <math><mmultiscripts></mmultiscripts></math>

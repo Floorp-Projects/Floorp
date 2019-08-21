@@ -4913,6 +4913,13 @@
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
 
+# Whether to disable legacy MathML number values that are not valid CSS numbers
+# (e.g. "1234.")
+- name: mathml.legacy_number_syntax.disabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to disable legacy names "small", "normal" and "big" for the
 # mathsize attribute.
 - name: mathml.mathsize_names.disabled
