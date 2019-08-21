@@ -8,16 +8,16 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
+import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Before
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EngineSource
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EventSource
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
-import org.mozilla.fenix.components.FenixLocaleSearchLocalizationProvider
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EngineSource
+import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EventSource
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -49,7 +49,7 @@ class PerformedSearchTest {
     }
 
     private val provider = AssetsSearchEngineProvider(
-        localizationProvider = FenixLocaleSearchLocalizationProvider(),
+        localizationProvider = LocaleSearchLocalizationProvider(),
         additionalIdentifiers = listOf(
             "amazon-au",
             "amazon-br",
