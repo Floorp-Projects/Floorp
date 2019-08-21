@@ -50,14 +50,14 @@ moz_automation_symbols = \
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$($(sym))),$(tier_$(sym))))
 
 # Dependencies between automation build steps
-automation/uploadsymbols: automation/buildsymbols
+automation-start/uploadsymbols: automation/buildsymbols
 
-automation/l10n-check: automation/package
+automation-start/l10n-check: automation/package
 
-automation/upload: automation/package
-automation/upload: automation/package-tests
-automation/upload: automation/buildsymbols
-automation/upload: automation/package-generated-sources
+automation-start/upload: automation/package
+automation-start/upload: automation/package-tests
+automation-start/upload: automation/buildsymbols
+automation-start/upload: automation/package-generated-sources
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	@echo Automation steps completed.
