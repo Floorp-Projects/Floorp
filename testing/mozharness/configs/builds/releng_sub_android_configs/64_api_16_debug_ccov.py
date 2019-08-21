@@ -5,9 +5,6 @@ config = {
     'debug_build': True,
     'postflight_build_mach_commands': [
         ['android',
-         'archive-geckoview',
-        ],
-        ['android',
          'archive-coverage-artifacts',
         ],
     ],
