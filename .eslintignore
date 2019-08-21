@@ -3,30 +3,30 @@
 
 # Always ignore crashtests - specially crafted files that originally caused a
 # crash.
-**/crashtests/**
+**/crashtests/
 # Also ignore reftest - specially crafted to produce expected output.
-**/reftest/**
-**/reftests/**
+**/reftest/
+**/reftests/
 
 # Exclude expected objdirs.
-obj*/**
+obj*/
 
 # dom/ exclusions which should be removed (aka ESLint enabled)
-dom/media/test/**
+dom/media/test/
 !dom/media/test/marionette/yttest/*.js
-dom/xhr/**
+dom/xhr/
 
 # build/ third-party code
-build/pgo/js-input/**
+build/pgo/js-input/
 
 # browser/ exclusions
-browser/app/**
+browser/app/
 browser/branding/**/firefox-branding.js
 # Gzipped test file.
 browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
 # Third-party code.
-browser/components/payments/res/vendor/*
+browser/components/payments/res/vendor/
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
@@ -35,15 +35,15 @@ browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
 # code as a .jsm (schema.jsm)
 browser/components/enterprisepolicies/schemas/schema.jsm
 # generated & special files in cld2
-browser/components/translation/cld2/**
+browser/components/translation/cld2/
 # Screenshots is imported as a system add-on and has
 # their own lint rules currently.
-browser/extensions/screenshots/**
-browser/extensions/pdfjs/content/build**
-browser/extensions/pdfjs/content/web**
+browser/extensions/screenshots/
+browser/extensions/pdfjs/content/build
+browser/extensions/pdfjs/content/web
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
-browser/components/pocket/content/panels/js/vendor/**
+browser/components/pocket/content/panels/js/vendor/
 
 # Ignore newtab files
 # Kept in sync with browser/components/newtab/.eslintignore
@@ -52,9 +52,9 @@ browser/components/newtab/logs/
 browser/components/newtab/vendor/
 
 # The only file in browser/locales/ is pre-processed.
-browser/locales/**
+browser/locales/
 # imported from chromium
-browser/extensions/mortar/**
+browser/extensions/mortar/
 # Generated data files
 browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
@@ -86,33 +86,33 @@ devtools/server/tests/mochitest/test_inspector-inactive-property-helper.html
 # Ignore devtools debugger files
 # Keep in sync with devtools/client/debugger/.eslintignore
 devtools/client/debugger/assets/*
-devtools/client/debugger/src/test/examples/**
-devtools/client/debugger/src/test/integration/**
-devtools/client/debugger/src/test/unit-sources/**
-devtools/client/debugger/src/**/fixtures/**
-devtools/client/debugger/src/test/mochitest/**
+devtools/client/debugger/src/test/examples/
+devtools/client/debugger/src/test/integration/
+devtools/client/debugger/src/test/unit-sources/
+devtools/client/debugger/src/**/fixtures/
+devtools/client/debugger/src/test/mochitest/
 devtools/client/debugger/bin/
-devtools/client/debugger/packages/**/fixtures/**
+devtools/client/debugger/packages/**/fixtures/
 devtools/client/debugger/node_modules
 devtools/client/debugger/out
 
 # Ignore devtools debugger files which aren't intended for linting, and also
 # aren't included in any .eslintignore or .prettierignore file.
 # See https://github.com/firefox-devtools/debugger/blob/master/package.json#L24
-devtools/client/debugger/configs/**
-devtools/client/debugger/dist/**
-devtools/client/debugger/flow-typed/**
-devtools/client/debugger/images/**
-devtools/client/debugger/test/**
+devtools/client/debugger/configs/
+devtools/client/debugger/dist/
+devtools/client/debugger/flow-typed/
+devtools/client/debugger/images/
+devtools/client/debugger/test/
 devtools/client/debugger/index.html
 
 # Ignore devtools imported repositories
-devtools/client/shared/components/reps/**
+devtools/client/shared/components/reps/
 
 # Ignore devtools preferences files
-devtools/client/preferences/**
-devtools/client/webide/preferences/**
-devtools/shared/preferences/**
+devtools/client/preferences/
+devtools/client/webide/preferences/
+devtools/shared/preferences/
 devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools generated code
@@ -121,24 +121,24 @@ devtools/client/webconsole/test/node/fixtures/stubs/*.js
 !devtools/client/webconsole/test/node/fixtures/stubs/index.js
 
 # Ignore devtools third-party libs
-devtools/shared/jsbeautify/*
-devtools/shared/acorn/*
-devtools/shared/node-properties/*
-devtools/shared/pretty-fast/*
-devtools/shared/sourcemap/*
-devtools/shared/sprintfjs/*
-devtools/shared/qrcode/decoder/*
-devtools/shared/qrcode/encoder/*
+devtools/shared/jsbeautify/
+devtools/shared/acorn/
+devtools/shared/node-properties/
+devtools/shared/pretty-fast/
+devtools/shared/sourcemap/
+devtools/shared/sprintfjs/
+devtools/shared/qrcode/decoder/
+devtools/shared/qrcode/encoder/
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js
 devtools/client/shared/demangle.js
-devtools/client/shared/source-map/*
-devtools/client/shared/vendor/*
+devtools/client/shared/source-map/
+devtools/client/shared/vendor/
 devtools/client/shared/sourceeditor/codemirror/*.js
 devtools/client/shared/sourceeditor/codemirror/**/*.js
-devtools/client/shared/sourceeditor/tern/*
+devtools/client/shared/sourceeditor/tern/
 devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
-devtools/client/shared/sourceeditor/test/codemirror/*
+devtools/client/shared/sourceeditor/test/codemirror/
 devtools/server/actors/utils/automation-timeline.js
 
 # Ignore devtools files testing sourcemaps / code style
@@ -156,10 +156,10 @@ devtools/server/tests/unit/sourcemapped.js
 devtools/server/tests/unit/xpcshell_debugging_script.js
 
 # Third-party
-dom/canvas/test/webgl-conf/**
-dom/imptests/**
-dom/media/webaudio/test/blink/**
-dom/media/webvtt/**
+dom/canvas/test/webgl-conf/
+dom/imptests/
+dom/media/webaudio/test/blink/
+dom/media/webvtt/
 dom/svg/test/test_nonAnimStrings.xhtml
 dom/svg/test/test_SVG_namespace_ids.html
 
@@ -195,42 +195,42 @@ dom/workers/test/invalid.js
 dom/workers/test/threadErrors_worker1.js
 
 # Third-party
-editor/libeditor/tests/browserscope/**
+editor/libeditor/tests/browserscope/
 
 # Third-party
-gfx/ots/**
-gfx/skia/**
-gfx/wr/**
+gfx/ots/
+gfx/skia/
+gfx/wr/
 
 # intl/ exclusions
-intl/icu/**
-intl/locale/**
-intl/strres/**
-intl/uconv/**
+intl/icu/
+intl/locale/
+intl/strres/
+intl/uconv/
 # Bug 1527075: This directory is linted in github repository
-intl/l10n/**
+intl/l10n/
 
 # Third-party
-layout/mathml/imptests/**
+layout/mathml/imptests/
 
 # Exclude everything but self-hosted JS
-js/ductwork/**
-js/examples/**
-js/ipc/**
-js/public/**
-js/xpconnect/**
-js/src/devtools/**
-js/src/octane/**
-js/src/jit-test/**
-js/src/jsapi-tests/binast/**
-js/src/tests/**
+js/ductwork/
+js/examples/
+js/ipc/
+js/public/
+js/xpconnect/
+js/src/devtools/
+js/src/octane/
+js/src/jit-test/
+js/src/jsapi-tests/binast/
+js/src/tests/
 js/src/Y.js
 
 # Third-party
-media/webrtc/trunk/**
+media/webrtc/trunk/
 
 # mobile/android/ exclusions
-mobile/android/tests/browser/chrome/tp5/**
+mobile/android/tests/browser/chrome/tp5/
 
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
@@ -246,10 +246,10 @@ mobile/android/locales/
 # Pre-processed/pref files
 modules/libpref/greprefs.js
 modules/libpref/init/all.js
-modules/libpref/test/unit/*data/**
+modules/libpref/test/unit/*data/
 
 # Only contains non-standard test files.
-python/**
+python/
 
 # Remote agent
 remote/Protocol.jsm
@@ -262,7 +262,7 @@ remote/test/demo.js
 remote/test/puppeteer/
 
 # NSS / taskcluster only.
-security/nss/**
+security/nss/
 
 # services/ exclusions
 
@@ -277,7 +277,7 @@ services/fxaccounts/FxAccountsPairingChannel.js
 services/sync/modules/constants.js
 
 # Servo is imported.
-servo/**
+servo/
 
 # Remote protocol exclusions
 testing/marionette/atom.js
@@ -288,37 +288,37 @@ testing/marionette/harness
 
 # other testing/ exclusions
 # third party modules
-testing/mochitest/tests/Harness_sanity/**
-testing/mochitest/MochiKit/**
-testing/mochitest/tests/MochiKit-1.4.2/**
-testing/mochitest/tests/SimpleTest/**
+testing/mochitest/tests/Harness_sanity/
+testing/mochitest/MochiKit/
+testing/mochitest/tests/MochiKit-1.4.2/
+testing/mochitest/tests/SimpleTest/
 testing/modules/ajv-4.1.1.js
 testing/modules/sinon-7.2.7.js
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 
 # Mozproxy third party
-testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/**
+testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
 
 testing/talos/talos/scripts/jszip.min.js
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
-testing/talos/talos/tests/devtools/addon/content/pages/**
-testing/talos/talos/tests/dromaeo/**
-testing/talos/talos/tests/v8_7/**
-testing/talos/talos/tests/kraken/**
+testing/talos/talos/tests/devtools/addon/content/pages/
+testing/talos/talos/tests/dromaeo/
+testing/talos/talos/tests/v8_7/
+testing/talos/talos/tests/kraken/
 # Runing Talos may extract data here, see bug 1435677.
-testing/talos/talos/tests/tp5n/**
+testing/talos/talos/tests/tp5n/
 
-testing/web-platform/**
-testing/xpcshell/moz-http2/**
-testing/xpcshell/node-http2/**
-testing/xpcshell/dns-packet/**
-testing/xpcshell/node-ip/**
+testing/web-platform/
+testing/xpcshell/moz-http2/
+testing/xpcshell/node-http2/
+testing/xpcshell/dns-packet/
+testing/xpcshell/node-ip/
 
 
 # Third party.
-third_party/**
+third_party/
 
 # toolkit/ exclusions
 
@@ -343,7 +343,7 @@ toolkit/modules/AppConstants.jsm
 toolkit/modules/tests/xpcshell/test_task.js
 
 # Third party
-toolkit/modules/third_party/**
+toolkit/modules/third_party/
 
 tools/tryselect/selectors/chooser/templates/chooser.html
 
