@@ -1145,6 +1145,93 @@
   !verbose pop
 !macroend
 
+/**
+ * Read the value of an installer pref that's been set by the product.
+ *
+ * @param   _KEY ($R1)
+ *          Sub key containing all the installer prefs
+ *          Usually "Software\Mozilla\${AppName}"
+ * @param   _PREF ($R2)
+ *          Name of the pref to look up
+ * @return  _RESULT ($R3)
+ *          'true' or 'false' (only boolean prefs are supported)
+ *          If no value exists for the requested pref, the result is 'false'
+ */
+!macro GetInstallerRegistryPref
+  !ifndef ${_MOZFUNC_UN}GetInstallerRegistryPref
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetInstallerRegistryPref "!insertmacro GetInstallerRegistryPrefCall"
+
+    Function ${_MOZFUNC_UN}GetInstallerRegistryPref
+      ; stack: key, pref
+      Exch $R1 ; key, stack: old R1, pref
+      Exch 1   ; stack: pref, old R1
+      Exch $R2 ; pref, stack: old R2, old R1
+      Push $R3
+
+      StrCpy $R3 0
+
+      ; These prefs are always stored in the native registry.
+      SetRegView 64
+
+      ClearErrors
+      ReadRegDWORD $R3 HKCU "$R1\Installer\$AppUserModelID" "$R2"
+
+      SetRegView lastused
+
+      ${IfNot} ${Errors}
+      ${AndIf} $R3 != 0
+        StrCpy $R1 "true"
+      ${Else}
+        StrCpy $R1 "false"
+      ${EndIf}
+
+      ; stack: old R3, old R2, old R1
+      Pop $R3 ; stack: old R2, old R1
+      Pop $R2 ; stack: old R1
+      Exch $R1 ; stack: result
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro GetInstallerRegistryPrefCall _KEY _PREF _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PREF}"
+  Push "${_KEY}"
+  Call GetInstallerRegistryPref
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetInstallerRegistryPrefCall _KEY _PREF _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PREF}"
+  Push "${_KEY}"
+  Call un.GetInstallerRegistryPref
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.GetInstallerRegistryPref
+  !ifndef un.GetInstallerRegistryPref
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro GetInstallerRegistryPref
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
 ################################################################################
 # Macros for adding file and protocol handlers
 
@@ -2661,6 +2748,73 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro RegCleanMain
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+
+/**
+ * Removes registry keys that reference this install location and for paths that
+ * no longer exist.
+ *
+ * @param   _KEY ($R1)
+ *          The registry subkey
+ *          (typically this will be Software\Mozilla\${AppName}).
+ */
+!macro RegCleanPrefs
+  !ifndef ${_MOZFUNC_UN}RegCleanPrefs
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}RegCleanPrefs "!insertmacro ${_MOZFUNC_UN}RegCleanPrefsCall"
+
+    Function ${_MOZFUNC_UN}RegCleanPrefs
+      Exch $R1 ; get _KEY from the stack
+
+      ; These prefs are always stored in the native registry.
+      SetRegView 64
+
+      ; Delete the installer prefs key for this installation, if one exists.
+      DeleteRegKey HKCU "$R1\Installer\$AppUserModelID"
+
+      ; If there aren't any more installer prefs keys, delete the parent key.
+      DeleteRegKey /ifempty HKCU "$R1\Installer"
+
+      SetRegView lastused
+
+      Pop $R1 ; restore the previous $R1
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro RegCleanPrefsCall _KEY
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call RegCleanPrefs
+  !verbose pop
+!macroend
+
+!macro un.RegCleanPrefsCall _KEY
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Call un.RegCleanPrefs
+  !verbose pop
+!macroend
+
+!macro un.RegCleanPrefs
+  !ifndef un.RegCleanPrefs
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RegCleanPrefs
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN

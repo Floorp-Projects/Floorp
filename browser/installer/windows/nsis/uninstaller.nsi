@@ -105,6 +105,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro un.RegCleanAppHandler
 !insertmacro un.RegCleanFileHandler
 !insertmacro un.RegCleanMain
+!insertmacro un.RegCleanPrefs
 !insertmacro un.RegCleanUninstall
 !insertmacro un.RegCleanProtocolHandler
 !insertmacro un.RemoveQuotesFromPath
@@ -286,6 +287,7 @@ Section "Uninstall"
 
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${un.RegCleanMain} "Software\Mozilla"
+  ${un.RegCleanPrefs} "Software\Mozilla\${AppName}"
   ${un.RegCleanUninstall}
   ${un.DeleteShortcuts}
 
