@@ -1,0 +1,277 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time: 2700
+    suite: raptor
+    workdir: /builds/worker
+    run-on-projects: []
+    tier: 2
+    target:
+        by-test-platform:
+            android-hw-p2-8-0-android-aarch64.*:
+                index: gecko.v2.mozilla-release.revision.65621d0fe1262af0643cec37c23b2d9ec42588ad.mobile.android-aarch64-opt
+                name: build/target.apk
+            default:
+                index: gecko.v2.mozilla-release.revision.65621d0fe1262af0643cec37c23b2d9ec42588ad.mobile.android-api-16-opt
+                name: build/target.apk
+    virtualization: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            - raptor/android_hw_config.py
+
+raptor-tp6m-1-fennec64:
+    description: "Raptor tp6m-1 on Fennec64"
+    try-name: raptor-tp6m-1-fennec64
+    treeherder-symbol: Rap(tp6m-1-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-1-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-2-fennec64:
+    description: "Raptor tp6m-2 on Fennec64"
+    try-name: raptor-tp6m-2-fennec64
+    treeherder-symbol: Rap(tp6m-2-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-2-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-3-fennec64:
+    description: "Raptor tp6m-3 on Fennec64"
+    try-name: raptor-tp6m-3-fennec64
+    treeherder-symbol: Rap(tp6m-3-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-3-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-4-fennec64:
+    description: "Raptor tp6m-4 on Fennec64"
+    try-name: raptor-tp6m-4-fennec64
+    treeherder-symbol: Rap(tp6m-4-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-4
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-5-fennec64:
+    description: "Raptor tp6m-5 on Fennec64"
+    try-name: raptor-tp6m-5-fennec64
+    treeherder-symbol: Rap(tp6m-5-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-5-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-6-fennec64:
+    description: "Raptor tp6m-6 on Fennec64"
+    try-name: raptor-tp6m-6-fennec64
+    treeherder-symbol: Rap(tp6m-6-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-6-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-7-fennec64:
+    description: "Raptor tp6m-7 on Fennec64"
+    try-name: raptor-tp6m-7-fennec64
+    treeherder-symbol: Rap(tp6m-7-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-7-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-8-fennec64:
+    description: "Raptor tp6m-8 on Fennec64"
+    try-name: raptor-tp6m-8-fennec64
+    treeherder-symbol: Rap(tp6m-8-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-8-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-9-fennec64:
+    description: "Raptor tp6m-9 on Fennec64"
+    try-name: raptor-tp6m-9-fennec64
+    treeherder-symbol: Rap(tp6m-9-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-9-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-10-fennec64:
+    description: "Raptor tp6m-10 on Fennec64"
+    try-name: raptor-tp6m-10-fennec64
+    treeherder-symbol: Rap(tp6m-10-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-10-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-1-fennec64-cold:
+    description: "Raptor tp6m-1 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-1-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-1-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-1-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-2-fennec64-cold:
+    description: "Raptor tp6m-2 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-2-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-2-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-2-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-3-fennec64-cold:
+    description: "Raptor tp6m-3 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-3-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-3-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-3-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-4-fennec64-cold:
+    description: "Raptor tp6m-4 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-4-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-4-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-4-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-5-fennec64-cold:
+    description: "Raptor tp6m-5 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-5-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-5-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-5-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-6-fennec64-cold:
+    description: "Raptor tp6m-6 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-6-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-6-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-6-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-7-fennec64-cold:
+    description: "Raptor tp6m-7 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-7-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-7-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-7-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-8-fennec64-cold:
+    description: "Raptor tp6m-8 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-8-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-8-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-8-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-9-fennec64-cold:
+    description: "Raptor tp6m-9 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-9-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-9-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-9-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-10-fennec64-cold:
+    description: "Raptor tp6m-10 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-10-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-10-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-10-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-11-fennec64-cold:
+    description: "Raptor tp6m-11 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-11-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-11-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-11-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-12-fennec64-cold:
+    description: "Raptor tp6m-12 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-12-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-12-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-12-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-13-fennec64-cold:
+    description: "Raptor tp6m-13 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-13-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-13-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-13-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-tp6m-14-fennec64-cold:
+    description: "Raptor tp6m-14 cold page-load on Fennec64"
+    max-run-time: 3600
+    try-name: raptor-tp6m-14-fennec64-cold
+    treeherder-symbol: Rap(tp6m-c-14-f64)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-14-fennec64
+            - --app=fennec
+            - --binary=org.mozilla.firefox
