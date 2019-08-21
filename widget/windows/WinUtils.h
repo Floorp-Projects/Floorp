@@ -565,9 +565,16 @@ class WinUtils {
       nsAString& aPath,
       PathTransformFlags aFlags = PathTransformFlags::Default);
 
-  static const nsTArray<Pair<nsString, nsDependentString>>&
-  GetWhitelistedPaths();
+  static const size_t kMaxWhitelistedItems = 3;
+  using WhitelistVec =
+      Vector<Pair<nsString, nsDependentString>, kMaxWhitelistedItems>;
 
+  static const WhitelistVec& GetWhitelistedPaths();
+
+ private:
+  static WhitelistVec BuildWhitelist();
+
+ public:
 #ifdef ACCESSIBILITY
   static a11y::Accessible* GetRootAccessibleForHWND(HWND aHwnd);
 #endif
