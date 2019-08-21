@@ -9,10 +9,6 @@
 #include "threading/posix/ThreadPlatformData.h"
 #include "threading/Thread.h"
 
-/* static */ js::HashNumber js::Thread::Hasher::hash(const Lookup& l) {
-  return mozilla::HashBytes(&l.platformData()->ptThread, sizeof(pthread_t));
-}
-
 inline js::Thread::Id::PlatformData* js::Thread::Id::platformData() {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
