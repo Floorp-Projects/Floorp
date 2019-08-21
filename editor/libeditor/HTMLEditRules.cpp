@@ -189,19 +189,12 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
 
 HTMLEditRules::HTMLEditRules() : mHTMLEditor(nullptr), mInitialized(false) {
   mIsHTMLEditRules = true;
-  InitFields();
-}
-
-void HTMLEditRules::InitFields() {
-  mHTMLEditor = nullptr;
 }
 
 nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   if (NS_WARN_IF(!aTextEditor) || NS_WARN_IF(!aTextEditor->AsHTMLEditor())) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  InitFields();
 
   mHTMLEditor = aTextEditor->AsHTMLEditor();
   if (NS_WARN_IF(!mHTMLEditor)) {

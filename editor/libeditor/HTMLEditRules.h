@@ -120,8 +120,6 @@ class HTMLEditRules : public TextEditRules {
 
   enum RulesEndpoint { kStart, kEnd };
 
-  void InitFields();
-
   /**
    * Called before inserting something into the editor.
    * This method may removes mBougsNode if there is.  Therefore, this method
