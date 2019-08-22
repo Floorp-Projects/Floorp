@@ -102,7 +102,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         val sessionManager = context.components.core.sessionManager
 
         return super.initializeUI(view)?.also {
-
             readerViewFeature.set(
                 feature = ReaderViewFeature(
                     context,

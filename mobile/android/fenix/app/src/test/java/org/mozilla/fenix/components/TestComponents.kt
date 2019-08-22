@@ -13,7 +13,7 @@ class TestComponents(private val context: Context) : Components(context) {
     override val backgroundServices by lazy {
         mockk<BackgroundServices>(relaxed = true)
     }
-    override val services by lazy { Services(backgroundServices.accountManager) }
+    override val services by lazy { Services(context, backgroundServices.accountManager) }
     override val core by lazy { TestCore(context) }
     override val search by lazy { Search(context) }
     override val useCases by lazy {

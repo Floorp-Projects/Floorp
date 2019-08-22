@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.accounts.FxaWebChannelFeature
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -49,6 +50,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
+import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -70,6 +72,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
@@ -96,6 +99,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
+    private val webchannelIntegration = ViewBoundFeatureWrapper<FxaWebChannelFeature>()
 
     var customTabSessionId: String? = null
 
@@ -372,6 +376,20 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             } else {
                 // Disable pull to refresh
                 view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
+            }
+
+            if (!requireContext().isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+                webchannelIntegration.set(
+                    feature = FxaWebChannelFeature(
+                        requireContext(),
+                        customTabSessionId,
+                        requireComponents.core.engine,
+                        requireComponents.core.sessionManager,
+                        requireComponents.backgroundServices.accountManager
+                    ),
+                    owner = this,
+                    view = view
+                )
             }
 
             (activity as HomeActivity).updateThemeForSession(session)

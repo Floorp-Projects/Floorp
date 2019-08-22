@@ -19,6 +19,8 @@ object Experiments {
     val asFeatureSyncDisabled = ExperimentDescriptor("asFeatureSyncDisabled")
     // application services flag to disable Firefox Accounts pairing button.
     val asFeatureFxAPairingDisabled = ExperimentDescriptor("asFeatureFxAPairingDisabled")
+    // application services flag to disable Firefox Accounts WebChannel integration.
+    val asFeatureWebChannelsDisabled = ExperimentDescriptor("asFeatureWebChannelsDisabled")
 }
 
 val Context.app: FenixApplication

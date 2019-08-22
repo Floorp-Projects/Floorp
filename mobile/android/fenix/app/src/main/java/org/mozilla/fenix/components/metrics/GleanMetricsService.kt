@@ -225,14 +225,26 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SyncAuthSignIn -> EventWrapper<NoExtraKeys>(
             { SyncAuth.signIn.record(it) }
         )
+        is Event.SyncAuthSignUp -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.signUp.record(it) }
+        )
+        is Event.SyncAuthPaired -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.paired.record(it) }
+        )
+        is Event.SyncAuthOtherExternal -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.otherExternal.record(it) }
+        )
+        is Event.SyncAuthFromShared -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.autoLogin.record(it) }
+        )
+        is Event.SyncAuthRecovered -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.recovered.record(it) }
+        )
         is Event.SyncAuthSignOut -> EventWrapper<NoExtraKeys>(
             { SyncAuth.signOut.record(it) }
         )
         is Event.SyncAuthScanPairing -> EventWrapper<NoExtraKeys>(
             { SyncAuth.scanPairing.record(it) }
-        )
-        is Event.SyncAuthCreateAccount -> EventWrapper<NoExtraKeys>(
-            { SyncAuth.createAccount.record(it) }
         )
         is Event.SyncAccountOpened -> EventWrapper<NoExtraKeys>(
             { SyncAccount.opened.record(it) }

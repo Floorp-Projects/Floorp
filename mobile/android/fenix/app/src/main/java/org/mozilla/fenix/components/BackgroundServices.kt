@@ -5,9 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Build
-import android.preference.PreferenceManager
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +53,12 @@ class BackgroundServices(
 ) {
     companion object {
         const val CLIENT_ID = "a2270f727f45f648"
-        const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
+
+        fun redirectUrl(context: Context) = if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+            "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
+        } else {
+            "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
+        }
     }
 
     fun defaultDeviceName(context: Context): String = context.getString(
@@ -65,7 +68,7 @@ class BackgroundServices(
         Build.MODEL
     )
 
-    private val serverConfig = ServerConfig.release(CLIENT_ID, REDIRECT_URL)
+    private val serverConfig = ServerConfig.release(CLIENT_ID, redirectUrl(context))
     private val deviceConfig = DeviceConfig(
         name = defaultDeviceName(context),
         type = DeviceType.MOBILE,
@@ -122,6 +125,46 @@ class BackgroundServices(
         }
     }
 
+    private val telemetryAccountObserver = object : AccountObserver {
+        override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
+            when (authType) {
+                // User signed-in into an existing FxA account.
+                AuthType.Signin ->
+                    context.components.analytics.metrics.track(Event.SyncAuthSignIn)
+
+                // User created a new FxA account.
+                AuthType.Signup ->
+                    context.components.analytics.metrics.track(Event.SyncAuthSignUp)
+
+                // User paired to an existing account via QR code scanning.
+                AuthType.Pairing ->
+                    context.components.analytics.metrics.track(Event.SyncAuthPaired)
+
+                // User signed-in into an FxA account shared from another locally installed app
+                // (e.g. Fennec).
+                AuthType.Shared ->
+                    context.components.analytics.metrics.track(Event.SyncAuthFromShared)
+
+                // Account Manager recovered a broken FxA auth state, without direct user involvement.
+                AuthType.Recovered ->
+                    context.components.analytics.metrics.track(Event.SyncAuthRecovered)
+
+                // User signed-in into an FxA account via unknown means.
+                // Exact mechanism identified by the 'action' param.
+                is AuthType.OtherExternal ->
+                    context.components.analytics.metrics.track(Event.SyncAuthOtherExternal)
+            }
+            // Used by Leanplum as a context variable.
+            context.settings.fxaSignedIn = true
+        }
+
+        override fun onLoggedOut() {
+            context.components.analytics.metrics.track(Event.SyncAuthSignOut)
+            // Used by Leanplum as a context variable.
+            context.settings.fxaSignedIn = false
+        }
+    }
+
     /**
      * When we login/logout of FxA, we need to update our push subscriptions to match the newly
      * logged in account.
@@ -136,30 +179,16 @@ class BackgroundServices(
      * We should have this removed when we are more confident
      * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
      */
-    private val accountObserver = object : AccountObserver {
+    private val pushAccountObserver = object : AccountObserver {
         override fun onLoggedOut() {
             push.unsubscribeForType(PushType.Services)
-
-            context.components.analytics.metrics.track(Event.SyncAuthSignOut)
-
-            context.settings.fxaSignedIn = false
         }
 
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             if (authType != AuthType.Existing) {
                 push.subscribeForType(PushType.Services)
             }
-
-            context.components.analytics.metrics.track(Event.SyncAuthSignIn)
-
-            context.settings.fxaSignedIn = true
         }
-    }
-
-    private val preferences: SharedPreferences by lazy {
-        PreferenceManager.getDefaultSharedPreferences(
-            context
-        )
     }
 
     val accountManager = FxaAccountManager(
@@ -174,13 +203,17 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
+        // TODO this needs to change once we have a SyncManager
         context.settings.fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 
+        // Register a telemetry account observer to keep track of FxA auth metrics.
+        it.register(telemetryAccountObserver)
+
         // Enable push if we have the config.
         if (pushConfig != null) {
-            // Register our account observer so we know how to update our push subscriptions.
-            it.register(accountObserver)
+            // Register the push account observer so we know how to update our push subscriptions.
+            it.register(pushAccountObserver)
 
             val logger = Logger("AutoPushFeature")
 

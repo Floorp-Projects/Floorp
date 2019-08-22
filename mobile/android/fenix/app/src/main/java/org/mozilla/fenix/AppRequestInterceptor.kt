@@ -25,8 +25,13 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         }
 
         adjustTrackingProtection(host, context, session)
-        // Accounts uses interception to check for a "success URL" in the sign-in flow to finalize authentication.
-        return context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
+
+        // WebChannel-driven authentication does not require a separate redirect interceptor.
+        return if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+            context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
+        } else {
+            null
+        }
     }
 
     private fun adjustTrackingProtection(host: String, context: Context, session: EngineSession) {

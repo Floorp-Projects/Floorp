@@ -816,21 +816,65 @@ sync_auth:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+  sign_up:
+    type: event
+    description: >
+      User registered a new Firefox Account, and was signed into it
+    bugs:
+      - 4971
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  paired:
+    type: event
+    description: >
+      User signed into FxA by pairing with a different Firefox browser, using a QR code
+    bugs:
+      - 4971
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  auto_login:
+    type: event
+    description: >
+      User signed into FxA via an account shared from another locally installed Mozilla application (e.g. Fennec)
+    bugs:
+      - 4971
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  recovered:
+    type: event
+    description: >
+      Account manager automatically recovered FxA authentication state without direct user involvement
+    bugs:
+      - 4971
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  other_external:
+    type: event
+    description: >
+      User authenticated via FxA using an unknown mechanism. "Known" mechanisms are currently sign-in, sign-up and pairing
+    bugs:
+      - 4971
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
   scan_pairing:
     type: event
     description: >
       A user pressed the scan pairing button on the sync authentication page
-    bugs:
-    - 1190
-    data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
-    notification_emails:
-    - fenix-core@mozilla.com
-    expires: "2020-03-01"
-  create_account:
-    type: event
-    description: >
-      A user pressed the create account button on the sync authentication page
     bugs:
     - 1190
     data_reviews:

@@ -16,7 +16,7 @@ class Components(private val context: Context) {
     val backgroundServices by lazy {
         BackgroundServices(context, core.historyStorage, core.bookmarksStorage)
     }
-    val services by lazy { Services(backgroundServices.accountManager) }
+    val services by lazy { Services(context, backgroundServices.accountManager) }
     val core by lazy { Core(context) }
     val search by lazy { Search(context) }
     val useCases by lazy {
