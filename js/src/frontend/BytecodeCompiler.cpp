@@ -387,7 +387,7 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
       cx(cx),
       options(options),
       sourceObject(cx),
-      directives(options.forceStrictMode()),
+      directives(options.strictOption),
       script(cx) {}
 
 bool BytecodeCompiler::createScriptSource(
@@ -402,8 +402,8 @@ bool BytecodeCompiler::createScriptSource(
 }
 
 bool BytecodeCompiler::canLazilyParse() const {
-  return !options.discardSource && !options.sourceIsLazy &&
-         !options.forceFullParse();
+  return options.canLazilyParse && !options.discardSource &&
+         !options.sourceIsLazy && !options.forceFullParse();
 }
 
 template <typename Unit>
@@ -745,7 +745,7 @@ JSScript* frontend::CompileGlobalBinASTScript(
     return nullptr;
   }
 
-  Directives directives(options.forceStrictMode());
+  Directives directives(options.strictOption);
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
 
@@ -796,8 +796,8 @@ static ModuleObject* InternalParseModule(
   AutoAssertReportedException assertException(cx);
 
   CompileOptions options(cx, optionsInput);
-  options.setForceStrictMode();  // ES6 10.2.1 Module code is always strict mode
-                                 // code.
+  options.maybeMakeStrictMode(
+      true);  // ES6 10.2.1 Module code is always strict mode code.
   options.setIsRunOnce(true);
   options.allowHTMLComments = false;
 

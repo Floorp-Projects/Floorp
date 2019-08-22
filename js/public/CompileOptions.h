@@ -103,10 +103,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // conditions are checked in the CompileOptions constructor.
   bool forceFullParse_ = false;
 
-  // Either the Realm configuration or the compile request may force
-  // strict-mode.
-  bool forceStrictMode_ = false;
-
   const char* filename_ = nullptr;
   const char* introducerFilename_ = nullptr;
   const char16_t* sourceMapURL_ = nullptr;
@@ -114,6 +110,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
  public:
   // POD options.
   bool selfHostingMode = false;
+  bool canLazilyParse = true;
+  bool strictOption = false;
   bool extraWarningsOption = false;
   bool werrorOption = false;
   AsmJSOption asmJSOption = AsmJSOption::Disabled;
@@ -133,6 +131,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 
   unsigned introductionLineno = 0;
   uint32_t introductionOffset = 0;
+  bool hasIntroductionInfo = false;
 
   // Mask of operation kinds which should be instrumented.
   uint32_t instrumentationKinds = 0;
@@ -145,13 +144,10 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   void copyPODTransitiveOptions(const TransitiveCompileOptions& rhs);
 
  public:
-  bool hasIntroductionInfo() const { return introducerFilename_ != nullptr; }
-
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
   bool forceFullParse() const { return forceFullParse_; }
-  bool forceStrictMode() const { return forceStrictMode_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
@@ -214,16 +210,20 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   ReadOnlyCompileOptions() = default;
 
   // Set all POD options (those not requiring reference counts, copies,
-  // rooting, or other hand-holding) not set by copyPODTransitiveOptions to
-  // their values in |rhs|.
-  void copyPODNonTransitiveOptions(const ReadOnlyCompileOptions& rhs);
+  // rooting, or other hand-holding) to their values in |rhs|.
+  void copyPODOptions(const ReadOnlyCompileOptions& rhs);
 
  public:
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
+  bool mutedErrors() const { return mutedErrors_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
+  JSObject* element() const override = 0;
+  JSString* elementAttributeName() const override = 0;
+  JSScript* introductionScript() const override = 0;
+  JSScript* scriptOrModule() const override = 0;
 
  private:
   void operator=(const ReadOnlyCompileOptions&) = delete;
@@ -289,10 +289,25 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   Rooted<JSScript*> scriptOrModuleRoot;
 
  public:
-  // Default options determined using the JSContext.
   explicit CompileOptions(JSContext* cx);
 
-  // Copy the transitive options from another options object.
+  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
+      : ReadOnlyCompileOptions(),
+        elementRoot(cx),
+        elementAttributeNameRoot(cx),
+        introductionScriptRoot(cx),
+        scriptOrModuleRoot(cx) {
+    copyPODOptions(rhs);
+
+    filename_ = rhs.filename();
+    introducerFilename_ = rhs.introducerFilename();
+    sourceMapURL_ = rhs.sourceMapURL();
+    elementRoot = rhs.element();
+    elementAttributeNameRoot = rhs.elementAttributeName();
+    introductionScriptRoot = rhs.introductionScript();
+    scriptOrModuleRoot = rhs.scriptOrModule();
+  }
+
   CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
       : ReadOnlyCompileOptions(),
         elementRoot(cx),
@@ -308,13 +323,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
     scriptOrModuleRoot = rhs.scriptOrModule();
-  }
-
-  // Copy both the transitive and the non-transitive options from another
-  // options object.
-  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
-      : CompileOptions(cx, static_cast<const TransitiveCompileOptions&>(rhs)) {
-    copyPODNonTransitiveOptions(rhs);
   }
 
   JSObject* element() const override { return elementRoot; }
@@ -360,6 +368,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
+  CompileOptions& setIntroductionScript(JSScript* s) {
+    introductionScriptRoot = s;
+    return *this;
+  }
+
   CompileOptions& setScriptOrModule(JSScript* s) {
     scriptOrModuleRoot = s;
     return *this;
@@ -395,6 +408,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
+  CompileOptions& setCanLazilyParse(bool clp) {
+    canLazilyParse = clp;
+    return *this;
+  }
+
   CompileOptions& setSourceIsLazy(bool l) {
     sourceIsLazy = l;
     return *this;
@@ -406,7 +424,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setIntroductionType(const char* t) {
-    MOZ_ASSERT(t);
     introductionType = t;
     return *this;
   }
@@ -414,14 +431,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   CompileOptions& setIntroductionInfo(const char* introducerFn,
                                       const char* intro, unsigned line,
                                       JSScript* script, uint32_t offset) {
-    setIntroductionType(intro);
-
-    MOZ_ASSERT(introducerFn);
     introducerFilename_ = introducerFn;
+    introductionType = intro;
     introductionLineno = line;
     introductionScriptRoot = script;
     introductionOffset = offset;
-
+    hasIntroductionInfo = true;
     return *this;
   }
 
@@ -429,13 +444,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   CompileOptions& setIntroductionInfoToCaller(JSContext* cx,
                                               const char* introductionType);
 
-  CompileOptions& setForceFullParse() {
-    forceFullParse_ = true;
-    return *this;
-  }
-
-  CompileOptions& setForceStrictMode() {
-    forceStrictMode_ = true;
+  CompileOptions& maybeMakeStrictMode(bool strict) {
+    strictOption = strictOption || strict;
     return *this;
   }
 
