@@ -4392,6 +4392,26 @@ static void PurgeShapeCachesForShrinkingGC(JSRuntime* rt) {
   }
 }
 
+// The debugger keeps track of the URLs for the sources of each realm's scripts.
+// These URLs are purged on shrinking GCs.
+static void PurgeSourceURLsForShrinkingGC(JSRuntime* rt) {
+  gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::PURGE_SOURCE_URLS);
+  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+    // URLs are not tracked for realms in the system zone.
+    if (!CanRelocateZone(zone) || zone->isSystem) {
+      continue;
+    }
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+      for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
+        GlobalObject* global = realm.get()->unsafeUnbarrieredMaybeGlobal();
+        if (global) {
+          global->clearSourceURLSHolder();
+        }
+      }
+    }
+  }
+}
+
 static void UnmarkCollectedZones(GCParallelTask* task) {
   JSRuntime* rt = task->runtime();
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -4479,6 +4499,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
     if (invocationKind == GC_SHRINK) {
       RelazifyFunctionsForShrinkingGC(rt);
       PurgeShapeCachesForShrinkingGC(rt);
+      PurgeSourceURLsForShrinkingGC(rt);
     }
 
     /*
