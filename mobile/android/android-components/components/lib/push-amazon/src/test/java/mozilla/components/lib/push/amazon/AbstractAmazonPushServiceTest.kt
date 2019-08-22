@@ -6,15 +6,19 @@
 
 package mozilla.components.lib.push.amazon
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import com.amazon.device.messaging.ADM
 import com.amazon.device.messaging.ADMMessageHandlerBase
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
-import org.junit.Assert
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +29,7 @@ import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowADMMessageHandlerBase::class])
+@Config(shadows = [ShadowADMMessageHandlerBase::class, ShadowADM::class])
 class AbstractAmazonPushServiceTest {
     private val processor: PushProcessor = mock()
     private val service = TestService()
@@ -59,11 +63,29 @@ class AbstractAmazonPushServiceTest {
 
         Mockito.verify(processor).onMessageReceived(captor.capture())
 
-        Assert.assertEquals("1234", captor.value.channelId)
-        Assert.assertEquals("contents", captor.value.body)
-        Assert.assertEquals("encoding", captor.value.encoding)
-        Assert.assertEquals("salt", captor.value.salt)
-        Assert.assertEquals("dh256", captor.value.cryptoKey)
+        assertEquals("1234", captor.value.channelId)
+        assertEquals("contents", captor.value.body)
+        assertEquals("encoding", captor.value.encoding)
+        assertEquals("salt", captor.value.salt)
+        assertEquals("dh256", captor.value.cryptoKey)
+    }
+
+    @Test
+    fun `registration errors are forwarded to the processor`() {
+        val service = object: AbstractAmazonPushService() {
+            public override fun onRegistrationError(errorId: String) {
+                super.onRegistrationError(errorId)
+            }
+        }
+
+        val captor = argumentCaptor<PushError>()
+
+        service.onRegistrationError("123")
+
+        Mockito.verify(processor).onError(captor.capture())
+
+        assertTrue(captor.value is PushError.Registration)
+        assertTrue(captor.value.desc.contains("registration failed"))
     }
 
     @Test
@@ -78,8 +100,8 @@ class AbstractAmazonPushServiceTest {
 
         Mockito.verify(processor).onError(captor.capture())
 
-        Assert.assertTrue(captor.value is PushError.MalformedMessage)
-        Assert.assertTrue(captor.value.desc.contains("NoSuchElementException"))
+        assertTrue(captor.value is PushError.MalformedMessage)
+        assertTrue(captor.value.desc.contains("NoSuchElementException"))
     }
 
     @Test
@@ -90,11 +112,16 @@ class AbstractAmazonPushServiceTest {
         Mockito.verifyZeroInteractions(processor)
     }
 
+    @Test
+    fun `service available reflects Amazon Device Messaging availability`() {
+        assertTrue(service.isServiceAvailable(testContext))
+    }
+
     class TestService : AbstractAmazonPushService()
 }
 
 /**
- * Custom Shadow for [ADMMessageHandlerBase]
+ * Custom Shadow for [ADMMessageHandlerBase].
  */
 @Implements(ADMMessageHandlerBase::class)
 class ShadowADMMessageHandlerBase {
@@ -106,4 +133,18 @@ class ShadowADMMessageHandlerBase {
     @Implementation
     @Suppress("UNUSED_PARAMETER")
     fun __constructor__(name: String) {}
+}
+
+/**
+ * Custom Shadow for [ADM].
+ */
+@Implements(ADM::class)
+class ShadowADM {
+
+    @Implementation
+    @Suppress("UNUSED_PARAMETER")
+    fun __constructor__(context: Context) {
+    }
+
+    fun isSupported() = true
 }

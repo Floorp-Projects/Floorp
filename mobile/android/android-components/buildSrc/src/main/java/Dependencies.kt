@@ -68,6 +68,7 @@ object Dependencies {
 
     const val testing_junit = "junit:junit:${Versions.junit}"
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
+    const val testing_robolectric_playservices = "org.robolectric:shadows-playservices:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
