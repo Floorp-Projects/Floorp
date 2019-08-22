@@ -242,7 +242,7 @@ ImageObjectProcessor.prototype.process = function(
         .filter(isValidSizeValue)
         .reduce((collector, size) => collector.add(size), sizes);
     }
-    return sizes.size ? Array.from(sizes).join(" ") : undefined;
+    return sizes.size ? Array.from(sizes) : undefined;
     // Implementation of HTML's link@size attribute checker.
     function isValidSizeValue(aSize) {
       const size = aSize.toLowerCase();

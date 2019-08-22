@@ -15,7 +15,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Reload the content window");
-  const onNavigate = hud.target.once("navigate");
+  const onNavigate = hud.currentTarget.once("navigate");
   ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.location.reload();
   });

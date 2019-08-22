@@ -149,9 +149,7 @@ class nsWebBrowser final : public nsIWebBrowser,
   nsCOMPtr<nsIWidget> mInternalWidget;
   nsCOMPtr<nsIWindowWatcher> mWWatch;
   const uint32_t mContentType;
-  bool mActivating;
   bool mShouldEnableHistory;
-  bool mIsActive;
   nativeWindow mParentNativeWindow;
   nsIWebProgressListener* mProgressListener;
   nsCOMPtr<nsIWebProgress> mWebProgress;

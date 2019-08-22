@@ -16,10 +16,10 @@ registerCleanupFunction(
   async function cleanup_removeAllLoginsAndResetRecipes() {
     await SpecialPowers.popPrefEnv();
 
-    Services.logins.removeAllLogins();
+    LoginTestUtils.clearData();
+    LoginTestUtils.resetGeneratedPasswordsCache();
     clearHttpAuths();
     Services.telemetry.clearEvents();
-    LMP._generatedPasswordsByPrincipalOrigin.clear();
 
     let recipeParent = LoginTestUtils.recipes.getRecipeParent();
     if (!recipeParent) {
@@ -27,8 +27,65 @@ registerCleanupFunction(
       return;
     }
     await recipeParent.then(recipeParentResult => recipeParentResult.reset());
+
+    await cleanupDoorhanger();
+    let notif;
+    while ((notif = PopupNotifications.getNotification("password"))) {
+      notif.remove();
+    }
+    await Promise.resolve();
   }
 );
+
+/**
+ * Compared logins in storage to expected values
+ *
+ * @param {array} expectedLogins
+ *        An array of expected login properties
+ * @return {nsILoginInfo[]} - All saved logins sorted by timeCreated
+ */
+function verifyLogins(expectedLogins = []) {
+  let allLogins = Services.logins.getAllLogins();
+  allLogins.sort((a, b) => a.timeCreated > b.timeCreated);
+  is(
+    allLogins.length,
+    expectedLogins.length,
+    "Check actual number of logins matches the number of provided expected property-sets"
+  );
+  for (let i = 0; i < expectedLogins.length; i++) {
+    // if the test doesn't care about comparing properties for this login, just pass false/null.
+    let expected = expectedLogins[i];
+    if (expected) {
+      let login = allLogins[i];
+      if (typeof expected.timesUsed !== "undefined") {
+        is(login.timesUsed, expected.timesUsed, "Check timesUsed");
+      }
+      if (typeof expected.passwordLength !== "undefined") {
+        is(
+          login.password.length,
+          expected.passwordLength,
+          "Check passwordLength"
+        );
+      }
+      if (typeof expected.username !== "undefined") {
+        is(login.username, expected.username, "Check username");
+      }
+      if (typeof expected.password !== "undefined") {
+        is(login.password, expected.password, "Check password");
+      }
+      if (typeof expected.usedSince !== "undefined") {
+        ok(login.timeLastUsed > expected.usedSince, "Check timeLastUsed");
+      }
+      if (typeof expected.passwordChangedSince !== "undefined") {
+        ok(
+          login.timePasswordChanged > expected.passwordChangedSince,
+          "Check timePasswordChanged"
+        );
+      }
+    }
+  }
+  return allLogins;
+}
 
 /**
  * Loads a test page in `DIRECTORY_URL` which automatically submits to formsubmit.sjs and returns a
@@ -155,6 +212,37 @@ function getCaptureDoorhanger(
   return notification;
 }
 
+async function getCaptureDoorhangerThatMayOpen(
+  aKind,
+  popupNotifications = PopupNotifications,
+  browser = null
+) {
+  let notif = getCaptureDoorhanger(aKind, popupNotifications, browser);
+  if (notif && !notif.dismissed) {
+    if (popupNotifications.panel.state !== "open") {
+      await BrowserTestUtils.waitForEvent(
+        popupNotifications.panel,
+        "popupshown"
+      );
+    }
+  }
+  return notif;
+}
+
+function getDoorhangerButton(aPopup, aButtonIndex) {
+  let notifications = aPopup.owner.panel.children;
+  ok(notifications.length > 0, "at least one notification displayed");
+  ok(true, notifications.length + " notification(s)");
+  let notification = notifications[0];
+
+  if (aButtonIndex == "button") {
+    return notification.button;
+  } else if (aButtonIndex == "secondaryButton") {
+    return notification.secondaryButton;
+  }
+  return notification.menupopup.querySelectorAll("menuitem")[aButtonIndex];
+}
+
 /**
  * Clicks the specified popup notification button.
  *
@@ -165,23 +253,27 @@ function getCaptureDoorhanger(
 function clickDoorhangerButton(aPopup, aButtonIndex) {
   ok(true, "Looking for action at index " + aButtonIndex);
 
-  let notifications = aPopup.owner.panel.children;
-  ok(notifications.length > 0, "at least one notification displayed");
-  ok(true, notifications.length + " notification(s)");
-  let notification = notifications[0];
-
+  let button = getDoorhangerButton(aPopup, aButtonIndex);
   if (aButtonIndex == "button") {
     ok(true, "Triggering main action");
-    notification.button.doCommand();
   } else if (aButtonIndex == "secondaryButton") {
     ok(true, "Triggering secondary action");
-    notification.secondaryButton.doCommand();
   } else {
     ok(true, "Triggering menuitem # " + aButtonIndex);
-    notification.menupopup
-      .querySelectorAll("menuitem")
-      [aButtonIndex].doCommand();
   }
+  button.doCommand();
+}
+
+async function cleanupDoorhanger(notif) {
+  let PN = notif ? notif.owner : PopupNotifications;
+  if (notif) {
+    notif.remove();
+  }
+  let promiseHidden = PN.isPanelOpen
+    ? BrowserTestUtils.waitForEvent(PN.panel, "popuphidden")
+    : Promise.resolve();
+  PN.panel.hidePopup();
+  await promiseHidden;
 }
 
 /**
@@ -207,6 +299,55 @@ async function checkDoorhangerUsernamePassword(username, password) {
     password,
     "Check doorhanger password"
   );
+}
+
+/**
+ * Change the doorhanger's username and password input values.
+ *
+ * @param {object} newValues
+ *        named values to update
+ * @param {string} [newValues.password = undefined]
+ *        An optional string value to replace whatever is in the password field
+ * @param {string} [newValues.username = undefined]
+ *        An optional string value to replace whatever is in the username field
+ */
+async function updateDoorhangerInputValues(newValues) {
+  let { panel } = PopupNotifications;
+  is(panel.state, "open", "Check the doorhanger is already open");
+
+  let notifElem = panel.childNodes[0];
+
+  // Note: setUserInput does not reliably dispatch input events from chrome elements?
+  async function setInputValue(target, value) {
+    info(`setInputValue: on target: ${target.id}, value: ${value}`);
+    target.focus();
+    target.select();
+    await EventUtils.synthesizeKey("KEY_Backspace");
+    info(
+      `setInputValue: target.value: ${target.value}, sending new value string`
+    );
+    await EventUtils.sendString(value);
+    await EventUtils.synthesizeKey("KEY_Tab");
+    return Promise.resolve();
+  }
+
+  let passwordField = notifElem.querySelector(
+    "#password-notification-password"
+  );
+  let usernameField = notifElem.querySelector(
+    "#password-notification-username"
+  );
+
+  if (typeof newValues.password !== "undefined") {
+    if (passwordField.value !== newValues.password) {
+      await setInputValue(passwordField, newValues.password);
+    }
+  }
+  if (typeof newValues.username !== "undefined") {
+    if (usernameField.value !== newValues.username) {
+      await setInputValue(usernameField, newValues.username);
+    }
+  }
 }
 
 // End popup notification (doorhanger) functions //
@@ -371,9 +512,27 @@ async function doFillGeneratedPasswordContextMenuItem(browser, passwordInput) {
       await ContentTaskUtils.waitForEvent(input, "input");
     }
   );
+  let messagePromise = new Promise(resolve => {
+    const eventName = "PasswordManager:onGeneratedPasswordFilledOrEdited";
+    browser.messageManager.addMessageListener(eventName, function mgsHandler(
+      msg
+    ) {
+      if (msg.target != browser) {
+        return;
+      }
+      browser.messageManager.removeMessageListener(eventName, mgsHandler);
+      info(
+        "doFillGeneratedPasswordContextMenuItem: Got onGeneratedPasswordFilledOrEdited, resolving"
+      );
+      // allow LMP to handle the message, then resolve
+      SimpleTest.executeSoon(resolve);
+    });
+  });
 
-  generatedPasswordItem.doCommand();
-  info("Waiting for input event");
+  EventUtils.synthesizeMouseAtCenter(generatedPasswordItem, {});
+  info(
+    "doFillGeneratedPasswordContextMenuItem: Waiting for content input event"
+  );
   await passwordChangedPromise;
-  document.getElementById("contentAreaContextMenu").hidePopup();
+  await messagePromise;
 }

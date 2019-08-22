@@ -13,7 +13,6 @@
 
 :host([data-editing]) .edit-button,
 :host([data-editing]) .copy-button,
-:host([data-editing]) .open-site-button,
 :host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
 :host([data-is-new-login]) .meta-info,

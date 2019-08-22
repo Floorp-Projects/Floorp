@@ -7,7 +7,6 @@
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   WebConsoleConnectionProxy,
 } = require("devtools/client/webconsole/webconsole-connection-proxy");
@@ -143,20 +142,21 @@ class WebConsoleUI {
       this.wrapper.destroy();
     }
 
-    const toolbox = gDevTools.getToolbox(this.hud.target);
+    const toolbox = this.hud.toolbox;
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
       toolbox.off("select", this._onChangeSplitConsoleState);
     }
 
-    this.window = this.hud = this.wrapper = null;
-
     for (const proxy of this.getAllProxies()) {
       proxy.disconnect();
     }
     this.proxy = null;
     this.additionalProxies = null;
+
+    // Nullify `hud` last as it nullify also target which is used on destroy
+    this.window = this.hud = this.wrapper = null;
   }
 
   /**
@@ -222,7 +222,7 @@ class WebConsoleUI {
   }
 
   logWarningAboutReplacedAPI() {
-    return this.hud.target.logWarningInPage(
+    return this.hud.currentTarget.logWarningInPage(
       l10n.getStr("ConsoleAPIDisabled"),
       "ConsoleAPIDisabled"
     );
@@ -257,19 +257,11 @@ class WebConsoleUI {
    *         A promise object that is resolved/reject based on the proxies connections.
    */
   async _initConnection() {
-    this.proxy = new WebConsoleConnectionProxy(
-      this,
-      this.hud.target,
-      this.isBrowserConsole,
-      this.fissionSupport
-    );
+    this.proxy = new WebConsoleConnectionProxy(this, this.hud.currentTarget);
 
-    if (
-      this.fissionSupport &&
-      this.hud.target.chrome &&
-      !this.hud.target.isAddon
-    ) {
-      const { mainRoot } = this.hud.target.client;
+    const target = this.hud.currentTarget;
+    if (this.fissionSupport && target.chrome && !target.isAddon) {
+      const { mainRoot } = target.client;
       const { processes } = await mainRoot.listProcesses();
 
       this.additionalProxies = [];
@@ -278,7 +270,7 @@ class WebConsoleUI {
 
         // Don't create a proxy for the "main" target,
         // as we already created it in this.proxy.
-        if (targetFront === this.hud.target) {
+        if (targetFront === target) {
           continue;
         }
 
@@ -291,12 +283,7 @@ class WebConsoleUI {
         }
 
         this.additionalProxies.push(
-          new WebConsoleConnectionProxy(
-            this,
-            targetFront,
-            this.isBrowserConsole,
-            this.fissionSupport
-          )
+          new WebConsoleConnectionProxy(this, targetFront)
         );
       }
     }
@@ -310,7 +297,7 @@ class WebConsoleUI {
 
     this.outputNode = this.document.getElementById("app-wrapper");
 
-    const toolbox = gDevTools.getToolbox(this.hud.target);
+    const toolbox = this.hud.toolbox;
 
     // Initialize module loader and load all the WebConsoleWrapper. The entire code-base
     // doesn't need any extra privileges and runs entirely in content scope.

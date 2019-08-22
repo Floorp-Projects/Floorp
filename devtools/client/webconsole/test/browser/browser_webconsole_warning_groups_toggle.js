@@ -278,7 +278,7 @@ async function toggleWarningGroupPreference(hud, fromUI = true) {
 
   info("Open the settings panel");
   const observer = new PrefObserver("");
-  const toolbox = gDevTools.getToolbox(hud.target);
+  const toolbox = hud.toolbox;
   const { panelDoc, panelWin } = await toolbox.selectTool("options");
 
   info("Change warning preference");

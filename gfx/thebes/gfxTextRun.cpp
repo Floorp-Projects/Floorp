@@ -1332,9 +1332,8 @@ void gfxTextRun::SortGlyphRuns() {
     // A GlyphRun with the same font and orientation as the previous can
     // just be skipped; the last GlyphRun will cover its character range.
     MOZ_ASSERT(run.mFont != nullptr);
-    if (!prevRun ||
-        !prevRun->Matches(run.mFont, run.mOrientation, run.mIsCJK,
-                          run.mMatchType)) {
+    if (!prevRun || !prevRun->Matches(run.mFont, run.mOrientation, run.mIsCJK,
+                                      run.mMatchType)) {
       // If two font runs have the same character offset, Sort() will have
       // randomized their order!
       MOZ_ASSERT(prevRun == nullptr ||
