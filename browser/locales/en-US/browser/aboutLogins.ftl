@@ -81,7 +81,6 @@ login-item-delete-button = Delete
 login-item-origin-label = Website Address
 login-item-origin =
   .placeholder = https://www.example.com
-login-item-open-site-button = Launch
 login-item-username-label = Username
 login-item-username =
   .placeholder = name@example.com
@@ -139,5 +138,5 @@ confirm-discard-changes-dialog-confirm-button = Discard
 
 breach-alert-text = Passwords were leaked or stolen from this website since you last updated your login details. Change your password to protect your account.
 breach-alert-link = Learn more about this breach.
-breach-alert-dismiss = 
+breach-alert-dismiss =
     .title = Close this alert
