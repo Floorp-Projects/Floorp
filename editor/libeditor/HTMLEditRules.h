@@ -149,15 +149,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
   /**
-   * SplitMailCites() splits mail-cite elements at start of Selection if
-   * Selection starts from inside a mail-cite element.  Of course, if it's
-   * necessary, this inserts <br> node to new left nodes or existing right
-   * nodes.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE EditActionResult SplitMailCites();
-
-  /**
    * Called before deleting selected contents.  This method actually removes
    * selected contents.
    *
