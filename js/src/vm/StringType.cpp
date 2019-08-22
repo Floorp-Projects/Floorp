@@ -1312,10 +1312,6 @@ bool StaticStrings::isStatic(JSAtom* atom) {
 }
 
 bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
-  if (!s->isAtom()) {
-    s->setNonDeduplicatable();
-  }
-
   RootedLinearString linearString(cx, s->ensureLinear(cx));
   if (!linearString) {
     return false;

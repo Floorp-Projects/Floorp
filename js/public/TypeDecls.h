@@ -33,7 +33,6 @@ class JSObject;
 struct JSRuntime;
 class JSScript;
 class JSString;
-class JSDependentString;
 
 namespace js {
 class TempAllocPolicy;
