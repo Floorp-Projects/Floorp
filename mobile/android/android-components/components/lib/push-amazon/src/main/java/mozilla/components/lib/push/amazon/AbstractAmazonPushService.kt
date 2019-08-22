@@ -39,7 +39,7 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
     }
 
     override fun onRegistrationError(errorId: String) {
-        PushError.Registration("registration failed: $errorId")
+        PushProcessor.requireInstance.onError(PushError.Registration("registration failed: $errorId"))
     }
 
     override fun onUnregistered(registrationId: String) {
@@ -72,6 +72,21 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
 
     override fun stop() {
         stopSelf()
+    }
+
+    override fun isServiceAvailable(context: Context): Boolean {
+        // This is a strange API: the ADM SDK may exist on the device if it's an Amazon device, but we
+        // also need to check if it's a *supported* Amazon device then.
+        // We create a temporary instance of the ADM class, if it's available so that we can call `isSupported`.
+        // This is the recommended approach as per the docs:
+        // https://developer.amazon.com/docs/adm/integrate-your-app.html#gracefully-degrade-if-adm-is-unavailable
+        return try {
+            Class.forName("com.amazon.device.messaging.ADM")
+            ADM(context).isSupported
+        } catch (e: ClassNotFoundException) {
+            logger.warn("ADM is not available on this device.")
+            false
+        }
     }
 
     private fun Bundle.getStringWithException(key: String): String {
