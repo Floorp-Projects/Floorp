@@ -20,6 +20,7 @@
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"    // for DebuggerScript
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/CompilationAndEvaluation.h" // for Compile
 #include "js/StableStringChars.h"  // for AutoStableStringChars
 #include "vm/BytecodeUtil.h"       // for JSDVG_SEARCH_STACK
 #include "vm/JSContext.h"          // for JSContext (ptr only)
@@ -621,6 +622,68 @@ bool DebuggerSource::getSourceMapURL(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+template <typename Unit>
+static JSScript* ReparseSource(JSContext* cx, HandleScriptSourceObject sso) {
+  AutoRealm ar(cx, sso);
+  ScriptSource* ss = sso->source();
+
+  JS::CompileOptions options(cx);
+  options.hideScriptFromDebugger = true;
+  options.setFileAndLine(ss->filename(), ss->startLine());
+
+  UncompressedSourceCache::AutoHoldEntry holder;
+
+  ScriptSource::PinnedUnits<Unit> units(cx, ss, holder, 0, ss->length());
+  if (!units.get()) {
+    return nullptr;
+  }
+
+  JS::SourceText<Unit> srcBuf;
+  if (!srcBuf.init(cx, units.get(), ss->length(),
+                   JS::SourceOwnership::Borrowed)) {
+    return nullptr;
+  }
+
+  return JS::Compile(cx, options, srcBuf);
+}
+
+/* static */
+bool DebuggerSource::reparse(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "reparse", args, obj,
+                            referent);
+  if (!referent.is<ScriptSourceObject*>()) {
+    JS_ReportErrorASCII(cx, "Source object required");
+    return false;
+  }
+
+  RootedScriptSourceObject sso(cx, referent.as<ScriptSourceObject*>());
+
+  if (!sso->source()->hasSourceText()) {
+    JS_ReportErrorASCII(cx, "Source object missing text");
+    return false;
+  }
+
+  RootedScript script(cx);
+  if (sso->source()->hasSourceType<mozilla::Utf8Unit>()) {
+    script = ReparseSource<mozilla::Utf8Unit>(cx, sso);
+  } else {
+    script = ReparseSource<char16_t>(cx, sso);
+  }
+
+  if (!script) {
+    return false;
+  }
+
+  Debugger* dbg = Debugger::fromChildJSObject(obj);
+  RootedObject scriptDO(cx, dbg->wrapScript(cx, script));
+  if (!scriptDO) {
+    return false;
+  }
+
+  args.rval().setObject(*scriptDO);
+  return true;
+}
+
 const JSPropertySpec DebuggerSource::properties_[] = {
     JS_PSG("text", getText, 0),
     JS_PSG("binary", getBinary, 0),
@@ -636,4 +699,6 @@ const JSPropertySpec DebuggerSource::properties_[] = {
     JS_PSGS("sourceMapURL", getSourceMapURL, setSourceMapURL, 0),
     JS_PS_END};
 
-const JSFunctionSpec DebuggerSource::methods_[] = {JS_FS_END};
+const JSFunctionSpec DebuggerSource::methods_[] = {
+    JS_FN("reparse", reparse, 0, 0),
+    JS_FS_END};
