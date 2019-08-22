@@ -2973,10 +2973,13 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     }
   }
 
-  // if character is in Private Use Area, don't do matching against pref or
-  // system fonts
-  if ((aCh >= 0xE000 && aCh <= 0xF8FF) || (aCh >= 0xF0000 && aCh <= 0x10FFFD))
+  // If character is in Private Use Area, don't do matching against pref or
+  // system fonts.
+  // Also don't attempt any fallback for control characters and noncharacters,
+  // or codepoints where global fallback has already noted a failure.
+  if (gfxPlatformFontList::PlatformFontList()->SkipFontFallbackForChar(aCh)) {
     return nullptr;
+  }
 
   // 2. search pref fonts
   gfxFont* font = WhichPrefFontSupportsChar(aCh, aNextCh);
