@@ -48,6 +48,15 @@ const {
   findClosestPoint,
 } = sandbox;
 
+function formatDisplayName(frame) {
+  if (frame.type === "call") {
+    const callee = frame.callee;
+    return callee.name || callee.userDisplayName || callee.displayName;
+  }
+
+  return `(${frame.type})`;
+}
+
 const dbg = new Debugger();
 const gFirstGlobal = dbg.makeGlobalObjectReference(sandbox);
 const gAllGlobals = [];
@@ -998,7 +1007,8 @@ const gManifestStartHandlers = {
       }
     }
 
-    const rv = frame.eval(text);
+    const displayName = formatDisplayName(frame);
+    const rv = frame.evalWithBindings(text, { displayName });
     const converted = convertCompletionValue(rv, { snapshot: true });
 
     const data = getPauseData();
