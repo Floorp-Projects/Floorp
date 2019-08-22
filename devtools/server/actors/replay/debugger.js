@@ -561,6 +561,10 @@ ReplayDebugger.prototype = {
     return data.map(source => this._addSource(source));
   },
 
+  findSourceURLs() {
+    return this.findSources().map(source => source.url);
+  },
+
   adoptSource(source) {
     assert(source._dbg == this);
     return source;
