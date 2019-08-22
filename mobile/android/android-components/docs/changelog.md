@@ -21,6 +21,10 @@ permalink: /changelog/
 * **service-location**
   * Added `RegionSearchLocalizationProvider` - A `SearchLocalizationProvider` implementation that uses a `MozillaLocationService` instance to do a region lookup via GeoIP.
   * ⚠️ **This is a breaking change**: An implementation of `SearchLocalizationProvider` now returns a `SearchLocalization` data class instead of multiple properties.
+  
+* **service-glean**
+  * ⚠️ **This is a breaking change**: `Glean.handleBackgroundEvent` is now an internal API.
+
 
 * **browser-engine-gecko(-beta/nightly)**, **concept-engine**
   * Added simplified `Media.state` derived from `Media.playbackState` events.
