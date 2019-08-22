@@ -1155,6 +1155,13 @@ this.LoginHelper = {
     // username and password of that login.
     for (const login of logins) {
       const loginURI = Services.io.newURI(login.origin);
+      let loginHost;
+      try {
+        // nsIURI.host can throw if the URI scheme doesn't have a host.
+        loginHost = loginURI.host;
+      } catch (ex) {
+        continue;
+      }
       for (const breach of breaches) {
         if (!breach.Domain) {
           continue;
@@ -1162,7 +1169,7 @@ this.LoginHelper = {
         const breachDate = new Date(breach.BreachDate).getTime();
         const breachAddedDate = new Date(breach.AddedDate).getTime();
         if (
-          Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
+          Services.eTLD.hasRootDomain(loginHost, breach.Domain) &&
           breach.hasOwnProperty("DataClasses") &&
           breach.DataClasses.includes("Passwords") &&
           login.timePasswordChanged < breachDate &&
