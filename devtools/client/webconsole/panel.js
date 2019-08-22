@@ -65,7 +65,11 @@ WebConsolePanel.prototype = {
       const chromeWindow = iframe.ownerDocument.defaultView;
 
       // Open the Web Console.
-      this.hud = new WebConsole(this.target, webConsoleUIWindow, chromeWindow);
+      this.hud = new WebConsole(
+        this._toolbox,
+        webConsoleUIWindow,
+        chromeWindow
+      );
       await this.hud.init();
 
       // Pipe 'reloaded' event from WebConsoleUI to WebConsolePanel.
