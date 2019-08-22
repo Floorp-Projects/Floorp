@@ -302,7 +302,10 @@ nsresult HTMLEditRules::BeforeEdit() {
                 nsIEditor::eNext
             ? selEndNode
             : selStartNode;
-    nsresult rv = CacheInlineStyles(selNode);
+    if (NS_WARN_IF(!selNode)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef()).CacheInlineStyles(*selNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9114,21 +9117,13 @@ Element* HTMLEditRules::GetTopEnclosingMailCite(nsINode& aNode) {
   return ret;
 }
 
-nsresult HTMLEditRules::CacheInlineStyles(nsINode* aNode) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
-  if (NS_WARN_IF(!aNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                    .GetInlineStyles(*aNode, HTMLEditorRef()
-                                                 .TopLevelEditSubActionDataRef()
-                                                 .mCachedInlineStyles);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = GetInlineStyles(
+      aNode, TopLevelEditSubActionDataRef().mCachedInlineStyles);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetInlineStyles() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,

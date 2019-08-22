@@ -1109,13 +1109,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
 
-  /**
-   * CacheInlineStyles() caches style of aNode into mCachedInlineStyles of
-   * TopLevelEditSubAction.  This may cause flushing layout at retrieving
-   * computed value of CSS properties.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
-
   void ClearCachedStyles();
 
   /**
