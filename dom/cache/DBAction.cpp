@@ -26,6 +26,7 @@ namespace dom {
 namespace cache {
 
 using mozilla::dom::quota::AssertIsOnIOThread;
+using mozilla::dom::quota::Client;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 
@@ -210,10 +211,14 @@ nsresult OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   nsAutoCString type;
   PersistenceTypeToText(PERSISTENCE_TYPE_DEFAULT, type);
 
+  nsAutoCString clientType;
+  Client::TypeToText(Client::DOMCACHE, clientType);
+
   rv = NS_MutateURI(mutator)
            .SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
                      NS_LITERAL_CSTRING("&group=") + aQuotaInfo.mGroup +
                      NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin +
+                     NS_LITERAL_CSTRING("&clientType=") + clientType +
                      NS_LITERAL_CSTRING("&cache=private"))
            .Finalize(dbFileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {

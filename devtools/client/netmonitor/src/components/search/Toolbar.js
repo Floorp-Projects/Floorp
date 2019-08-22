@@ -94,13 +94,14 @@ class Toolbar extends Component {
    * Render filter Search box.
    */
   renderFilterBox() {
-    const { addSearchQuery, connector } = this.props;
+    const { addSearchQuery, clearSearchResults, connector } = this.props;
     return SearchBox({
       keyShortcut: "CmdOrCtrl+Shift+F",
       placeholder: L10N.getStr("netmonitor.search.toolbar.inputPlaceholder"),
       type: "search",
       delay: FILTER_SEARCH_DELAY,
       ref: this.props.searchboxRef,
+      onClearButtonClick: () => clearSearchResults(),
       onChange: query => addSearchQuery(query),
       onKeyDown: event => this.onKeyDown(event, connector),
     });
@@ -112,8 +113,6 @@ class Toolbar extends Component {
         id: "netmonitor-toolbar-container",
         className: "devtools-toolbar devtools-input-toolbar",
       },
-      this.renderClearButton(),
-      this.renderSeparator(),
       this.renderFilterBox(),
       this.renderCloseButton()
     );

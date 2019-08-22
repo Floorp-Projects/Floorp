@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compat",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "5.0.2",
+  "version": "6.0.0",
 
   "applications": {
     "gecko": {
@@ -26,6 +26,22 @@
         "scopes": ["addon_parent"],
         "script": "about-compat/aboutPage.js",
         "events": ["startup"]
+      }
+    },
+    "experiments": {
+      "schema": "experiment-apis/experiments.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/experiments.js",
+        "paths": [["experiments"]]
+      }
+    },
+    "sharedPreferences": {
+      "schema": "experiment-apis/sharedPreferences.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/sharedPreferences.js",
+        "paths": [["sharedPreferences"]]
       }
     }
   },

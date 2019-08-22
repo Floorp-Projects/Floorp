@@ -263,6 +263,9 @@ void nsHttpConnectionInfo::BuildHashKey() {
       mHashKey.Append(connectionIsolationKey);
       mHashKey.AppendLiteral("}");
     }
+    if (mProxyInfo->Flags() & nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST) {
+      mHashKey.AppendLiteral("{TPRH}");
+    }
   }
 
   nsAutoCString originAttributes;

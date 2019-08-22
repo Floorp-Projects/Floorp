@@ -121,16 +121,6 @@ class HTMLEditRules : public TextEditRules {
   enum RulesEndpoint { kStart, kEnd };
 
   /**
-   * Called before inserting something into the editor.
-   * This method may removes mBougsNode if there is.  Therefore, this method
-   * might cause destroying the editor.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   *                            This can be nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
-
-  /**
    * Called before inserting text.
    * This method may actually inserts text into the editor.  Therefore, this
    * might cause destroying the editor.
@@ -801,15 +791,6 @@ class HTMLEditRules : public TextEditRules {
                                                    nsAtom& aItemType);
 
   /**
-   * CreateStyleForInsertText() sets CSS properties which are stored in
-   * TypeInState to proper element node.
-   *
-   * @param aDocument           The document of the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult CreateStyleForInsertText(dom::Document& aDocument);
-
-  /**
    * IsEmptyBlockElement() returns true if aElement is a block level element
    * and it doesn't have any visible content.
    */
@@ -1108,15 +1089,6 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
-
-  /**
-   * CacheInlineStyles() caches style of aNode into mCachedInlineStyles of
-   * TopLevelEditSubAction.  This may cause flushing layout at retrieving
-   * computed value of CSS properties.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
-
-  void ClearCachedStyles();
 
   /**
    * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts

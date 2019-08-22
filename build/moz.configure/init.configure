@@ -506,17 +506,6 @@ def hg_config(build_env, hg, version):
     # `hg version` worked.
     out = check_cmd_output(hg, 'config', env=env, cwd=build_env.topsrcdir)
 
-    # out is bytes. However, unicode literals are in effect, so implicit
-    # type coercion can occur. The underlying Mercurial config file may be
-    # in a user-defined encoding. However, HGPLAIN both overrides the decoding
-    # inside Mercurial *and* ensures output is utf-8. Because moz.configure
-    # is using unicode literals, our returned config object uses unicode
-    # keys and values to limit potential for coercion.
-
-    # Mercurial should emit utf-8. But be paranoid and ignore invalid utf-8
-    # byte sequences.
-    out = out.decode('utf-8', 'replace')
-
     config = {}
 
     for line in out.strip().splitlines():

@@ -11,6 +11,7 @@
 #include "nsNetUtil.h"
 #include "NullPrincipal.h"
 #include "nsCycleCollector.h"
+#include "RequestContextService.h"
 
 #include "FuzzingInterface.h"
 
@@ -144,6 +145,19 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     rv = gHttpChannel->SetRequestMethod(NS_LITERAL_CSTRING("GET"));
     if (rv != NS_OK) {
       MOZ_CRASH("SetRequestMethod on gHttpChannel failed.");
+    }
+
+    nsCOMPtr<nsIRequestContextService> rcsvc =
+        mozilla::net::RequestContextService::GetOrCreate();
+    nsCOMPtr<nsIRequestContext> rc;
+    rv = rcsvc->NewRequestContext(getter_AddRefs(rc));
+    if (rv != NS_OK) {
+      MOZ_CRASH("NewRequestContext failed.");
+    }
+
+    rv = gHttpChannel->SetRequestContextID(rc->GetID());
+    if (rv != NS_OK) {
+      MOZ_CRASH("SetRequestContextID on gHttpChannel failed.");
     }
 
     gStreamListener = new FuzzingStreamListener();

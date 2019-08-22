@@ -476,6 +476,10 @@ inline bool hasUnaliasedDouble() { return false; }
 // to a double as a temporary, you need a temporary double register.
 inline bool hasMultiAlias() { return false; }
 
+inline void FlushICache(void* code, size_t size) {
+  // No-op. Code and data caches are coherent on x86 and x64.
+}
+
 }  // namespace jit
 }  // namespace js
 

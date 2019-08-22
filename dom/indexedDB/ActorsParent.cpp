@@ -3895,6 +3895,9 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
   nsAutoCString type;
   PersistenceTypeToText(aPersistenceType, type);
 
+  nsAutoCString clientType;
+  Client::TypeToText(Client::IDB, clientType);
+
   nsAutoCString telemetryFilenameClause;
   if (aTelemetryId) {
     telemetryFilenameClause.AssignLiteral("&telemetryFilename=indexedDB-");
@@ -3906,6 +3909,7 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
            .SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
                      NS_LITERAL_CSTRING("&group=") + aGroup +
                      NS_LITERAL_CSTRING("&origin=") + aOrigin +
+                     NS_LITERAL_CSTRING("&clientType=") + clientType +
                      NS_LITERAL_CSTRING("&cache=private") +
                      telemetryFilenameClause)
            .Finalize(fileUrl);
@@ -8709,7 +8713,7 @@ nsresult DeleteFile(nsIFile* aDirectory, const nsAString& aFilename,
 
   if (aQuotaManager && fileSize > 0) {
     aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroup, aOrigin,
-                                          fileSize);
+                                          Client::IDB, fileSize);
   }
 
   return NS_OK;
@@ -8930,7 +8934,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
 
     if (aQuotaManager && usage) {
       aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aGroup, aOrigin,
-                                            usage);
+                                            Client::IDB, usage);
     }
 
     if (NS_FAILED(rv)) {
@@ -10271,9 +10275,9 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
         QuotaManager* quotaManager = QuotaManager::Get();
         MOZ_ASSERT(quotaManager);
 
-        quotaManager->DecreaseUsageForOrigin(aFileManager->Type(),
-                                             aFileManager->Group(),
-                                             aFileManager->Origin(), fileSize);
+        quotaManager->DecreaseUsageForOrigin(
+            aFileManager->Type(), aFileManager->Group(), aFileManager->Origin(),
+            Client::IDB, fileSize);
       }
 
       file = FileManager::GetFileForId(mJournalDirectory, aId);
@@ -16690,9 +16694,9 @@ nsresult DeleteFilesRunnable::DeleteFile(int64_t aFileId) {
     QuotaManager* quotaManager = QuotaManager::Get();
     NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
-    quotaManager->DecreaseUsageForOrigin(mFileManager->Type(),
-                                         mFileManager->Group(),
-                                         mFileManager->Origin(), fileSize);
+    quotaManager->DecreaseUsageForOrigin(
+        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
+        Client::IDB, fileSize);
   }
 
   file = mFileManager->GetFileForId(mJournalDirectory, aFileId);
@@ -19024,13 +19028,13 @@ already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
 
   if (aReadOnly) {
     RefPtr<FileInputStream> stream =
-        CreateFileInputStream(persistenceType, group, origin, mFile, -1, -1,
-                              nsIFileInputStream::DEFER_OPEN);
+        CreateFileInputStream(persistenceType, group, origin, Client::IDB,
+                              mFile, -1, -1, nsIFileInputStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileInputStream*, stream);
   } else {
     RefPtr<FileStream> stream =
-        CreateFileStream(persistenceType, group, origin, mFile, -1, -1,
-                         nsIFileStream::DEFER_OPEN);
+        CreateFileStream(persistenceType, group, origin, Client::IDB, mFile, -1,
+                         -1, nsIFileStream::DEFER_OPEN);
     result = NS_ISUPPORTS_CAST(nsIFileStream*, stream);
   }
   if (NS_WARN_IF(!result)) {
@@ -27022,7 +27026,7 @@ nsresult FileHelper::CreateFileFromStream(nsIFile* aFile, nsIFile* aJournalFile,
   // Now try to copy the stream.
   RefPtr<FileOutputStream> fileOutputStream =
       CreateFileOutputStream(mFileManager->Type(), mFileManager->Group(),
-                             mFileManager->Origin(), aFile);
+                             mFileManager->Origin(), Client::IDB, aFile);
   if (NS_WARN_IF(!fileOutputStream)) {
     return NS_ERROR_FAILURE;
   }
@@ -27068,9 +27072,9 @@ nsresult FileHelper::RemoveFile(nsIFile* aFile, nsIFile* aJournalFile) {
     QuotaManager* quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
 
-    quotaManager->DecreaseUsageForOrigin(mFileManager->Type(),
-                                         mFileManager->Group(),
-                                         mFileManager->Origin(), fileSize);
+    quotaManager->DecreaseUsageForOrigin(
+        mFileManager->Type(), mFileManager->Group(), mFileManager->Origin(),
+        Client::IDB, fileSize);
   }
 
   rv = aJournalFile->Remove(false);

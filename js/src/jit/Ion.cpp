@@ -2891,7 +2891,7 @@ void AutoFlushICache::flush(uintptr_t start, size_t len) {
   AutoFlushICache* afc = cx ? cx->autoFlushICache() : nullptr;
   if (!afc) {
     JitSpewCont(JitSpew_CacheFlush, "#");
-    ExecutableAllocator::cacheFlush((void*)start, len);
+    jit::FlushICache((void*)start, len);
     MOZ_ASSERT(len <= 32);
     return;
   }
@@ -2905,7 +2905,7 @@ void AutoFlushICache::flush(uintptr_t start, size_t len) {
   }
 
   JitSpewCont(JitSpew_CacheFlush, afc->inhibit_ ? "x" : "*");
-  ExecutableAllocator::cacheFlush((void*)start, len);
+  jit::FlushICache((void*)start, len);
 #else
   MOZ_CRASH("Unresolved porting API - AutoFlushICache::flush");
 #endif
@@ -2982,7 +2982,7 @@ AutoFlushICache::~AutoFlushICache() {
   MOZ_ASSERT(cx->autoFlushICache() == this);
 
   if (!inhibit_ && start_) {
-    ExecutableAllocator::cacheFlush((void*)start_, size_t(stop_ - start_));
+    jit::FlushICache((void*)start_, size_t(stop_ - start_));
   }
 
   JitSpewCont(JitSpew_CacheFlush, "%s%s>", name_, start_ ? "" : " U");

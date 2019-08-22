@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.3.86';
-var pdfjsBuild = '02dcd202';
+var pdfjsVersion = '2.3.101';
+var pdfjsBuild = '31f31930';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1322,7 +1322,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.3.86',
+    apiVersion: '2.3.101',
     source: {
       data: source.data,
       url: source.url,
@@ -3118,9 +3118,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.3.86';
+const version = '2.3.101';
 exports.version = version;
-const build = '02dcd202';
+const build = '31f31930';
 exports.build = build;
 
 /***/ }),
@@ -3397,9 +3397,21 @@ const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
 function addLinkAttributes(link, {
   url,
   target,
-  rel
+  rel,
+  enabled = true
 } = {}) {
-  link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
+  const urlNullRemoved = url ? (0, _util.removeNullCharacters)(url) : '';
+
+  if (enabled) {
+    link.href = link.title = urlNullRemoved;
+  } else {
+    link.href = '';
+    link.title = `Disabled: ${urlNullRemoved}`;
+
+    link.onclick = () => {
+      return false;
+    };
+  }
 
   if (url) {
     const LinkTargetValues = Object.values(LinkTarget);
@@ -8281,8 +8293,7 @@ var renderTextLayer = function renderTextLayerClosure() {
       fontAscent = (1 + style.descent) * fontAscent;
     }
 
-    var left;
-    var top;
+    let left, top;
 
     if (angle === 0) {
       left = tx[4];
@@ -8296,8 +8307,13 @@ var renderTextLayer = function renderTextLayerClosure() {
     styleBuf[3] = top;
     styleBuf[5] = fontHeight;
     styleBuf[7] = style.fontFamily;
-    textDivProperties.style = styleBuf.join('');
-    textDiv.setAttribute('style', textDivProperties.style);
+    const styleStr = styleBuf.join('');
+
+    if (task._enhanceTextSelection) {
+      textDivProperties.style = styleStr;
+    }
+
+    textDiv.setAttribute('style', styleStr);
     textDiv.textContent = geom.str;
 
     if (task._fontInspectorEnabled) {
@@ -8817,46 +8833,46 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
 
       for (var i = 0, ii = this._textDivs.length; i < ii; i++) {
-        var div = this._textDivs[i];
+        const div = this._textDivs[i];
 
-        var divProperties = this._textDivProperties.get(div);
+        const divProps = this._textDivProperties.get(div);
 
-        if (divProperties.isWhitespace) {
+        if (divProps.isWhitespace) {
           continue;
         }
 
         if (expandDivs) {
-          var transform = '',
+          let transform = '',
               padding = '';
 
-          if (divProperties.scale !== 1) {
-            transform = 'scaleX(' + divProperties.scale + ')';
+          if (divProps.scale !== 1) {
+            transform = `scaleX(${divProps.scale})`;
           }
 
-          if (divProperties.angle !== 0) {
-            transform = 'rotate(' + divProperties.angle + 'deg) ' + transform;
+          if (divProps.angle !== 0) {
+            transform = `rotate(${divProps.angle}deg) ${transform}`;
           }
 
-          if (divProperties.paddingLeft !== 0) {
-            padding += ' padding-left: ' + divProperties.paddingLeft / divProperties.scale + 'px;';
-            transform += ' translateX(' + -divProperties.paddingLeft / divProperties.scale + 'px)';
+          if (divProps.paddingLeft !== 0) {
+            padding += ` padding-left: ${divProps.paddingLeft / divProps.scale}px;`;
+            transform += ` translateX(${-divProps.paddingLeft / divProps.scale}px)`;
           }
 
-          if (divProperties.paddingTop !== 0) {
-            padding += ' padding-top: ' + divProperties.paddingTop + 'px;';
-            transform += ' translateY(' + -divProperties.paddingTop + 'px)';
+          if (divProps.paddingTop !== 0) {
+            padding += ` padding-top: ${divProps.paddingTop}px;`;
+            transform += ` translateY(${-divProps.paddingTop}px)`;
           }
 
-          if (divProperties.paddingRight !== 0) {
-            padding += ' padding-right: ' + divProperties.paddingRight / divProperties.scale + 'px;';
+          if (divProps.paddingRight !== 0) {
+            padding += ` padding-right: ${divProps.paddingRight / divProps.scale}px;`;
           }
 
-          if (divProperties.paddingBottom !== 0) {
-            padding += ' padding-bottom: ' + divProperties.paddingBottom + 'px;';
+          if (divProps.paddingBottom !== 0) {
+            padding += ` padding-bottom: ${divProps.paddingBottom}px;`;
           }
 
           if (padding !== '') {
-            div.setAttribute('style', divProperties.style + padding);
+            div.setAttribute('style', divProps.style + padding);
           }
 
           if (transform !== '') {
@@ -8864,7 +8880,7 @@ var renderTextLayer = function renderTextLayerClosure() {
           }
         } else {
           div.style.padding = 0;
-          div.style.transform = divProperties.originalTransform || '';
+          div.style.transform = divProps.originalTransform || '';
         }
       }
     }
@@ -9123,7 +9139,8 @@ class LinkAnnotationElement extends AnnotationElement {
     (0, _display_utils.addLinkAttributes)(link, {
       url: data.url,
       target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
-      rel: linkService.externalLinkRel
+      rel: linkService.externalLinkRel,
+      enabled: linkService.externalLinkEnabled
     });
 
     if (!data.url) {

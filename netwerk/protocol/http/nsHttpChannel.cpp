@@ -3912,9 +3912,10 @@ bool nsHttpChannel::IsIsolated() {
   if (mHasBeenIsolatedChecked) {
     return mIsIsolated;
   }
-  mIsIsolated = IsThirdPartyTrackingResource() &&
-                !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                    this, mURI, nullptr);
+  mIsIsolated = StaticPrefs::browser_cache_cache_isolation() ||
+                (IsThirdPartyTrackingResource() &&
+                 !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+                     this, mURI, nullptr));
   mHasBeenIsolatedChecked = true;
   return mIsIsolated;
 }
@@ -7497,12 +7498,7 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
   }
 
   RefPtr<mozilla::dom::BrowsingContext> ctx;
-  if (mLoadInfo->GetExternalContentPolicyType() ==
-      nsIContentPolicy::TYPE_DOCUMENT) {
-    mLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
-  } else {
-    mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(ctx));
-  }
+  mLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
 
   if (!ctx) {
     return NS_OK;
@@ -7525,7 +7521,17 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
     return NS_ERROR_BLOCKED_BY_POLICY;
   }
 
-  ctx->SetEmbedderPolicy(resultPolicy);
+  // XXX Bug 1572513 - we should have set the embedder policy during
+  // initializing docment object.
+  RefPtr<mozilla::dom::BrowsingContext> frameCtx = ctx;
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(frameCtx));
+  }
+
+  if (frameCtx) {
+    frameCtx->SetEmbedderPolicy(resultPolicy);
+  }
 
   return NS_OK;
 }
@@ -7567,9 +7573,8 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
 
     // Note that we treat invalid value as "cross-origin", which spec indicates.
     // We might want to make that stricter.
-    if ((content.IsEmpty() && ctx &&
-         ctx->GetEmbedderPolicy() ==
-             nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP)) {
+    if (content.IsEmpty() && ctx &&
+        ctx->GetEmbedderPolicy() == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
       content = NS_LITERAL_CSTRING("same-origin");
     }
   }
