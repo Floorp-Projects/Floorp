@@ -5581,7 +5581,8 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelPrincipal() {
     return nullptr;
   }
 
-  nsPIDOMWindowOuter* topLevelOuterWindow = GetInProcessTopInternal();
+  nsPIDOMWindowOuter* topLevelOuterWindow =
+      GetBrowsingContext()->Top()->GetDOMWindow();
   if (!topLevelOuterWindow) {
     return nullptr;
   }
@@ -5611,7 +5612,8 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal() {
     return nullptr;
   }
 
-  nsPIDOMWindowOuter* outerWindow = GetInProcessParentInternal();
+  BrowsingContext* parent = GetBrowsingContext()->GetParent();
+  nsPIDOMWindowOuter* outerWindow = parent ? parent->GetDOMWindow() : nullptr;
   if (!outerWindow) {
     // No outer window available!
     return nullptr;
