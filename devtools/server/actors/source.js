@@ -252,7 +252,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       return toResolvedContent(padding + this._source.text);
     }
 
-    const result = await this.sources.htmlFileContents(
+    const result = await this.sources.urlContents(
       this.url,
       /* partial */ false,
       /* canUseCache */ this.isInlineSource
@@ -294,7 +294,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // attaches to an existing page. In this case we don't need to get the
     // displacement synchronously, so it's OK if we yield to the event loop
     // while the promise resolves.
-    const fileContents = this.sources.htmlFileContents(
+    const fileContents = this.sources.urlContents(
       this.url,
       /* partial */ true,
       /* canUseCache */ this.isInlineSource
@@ -404,7 +404,13 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         scripts.push(script);
         script.getChildScripts().forEach(addScripts);
       }
-      addScripts(this._source.reparse());
+      try {
+        addScripts(this._source.reparse());
+      } catch (e) {
+        // reparse() will throw if the source is not valid JS. This can happen
+        // if this source is the resurrection of a GC'ed source and there are
+        // parse errors in the refetched contents.
+      }
     }
 
     const positions = [];

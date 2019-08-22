@@ -1308,8 +1308,30 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   addAllSources() {
-    for (const source of this.dbg.findSources()) {
+    // Compare the sources we find with the source URLs which have been loaded
+    // in debuggee realms. Count the number of sources associated with each
+    // URL so that we can detect if an HTML file has had some inline sources
+    // collected but not all.
+    const urlMap = {};
+    for (const url of this.dbg.findSourceURLs()) {
+      urlMap[url] = 1 + (urlMap[url] || 0);
+    }
+
+    const sources = this.dbg.findSources();
+
+    for (const source of sources) {
       this._addSource(source);
+
+      if (!source.introductionScript) {
+        urlMap[source.url]--;
+      }
+    }
+
+    // Resurrect any URLs for which not all sources are accounted for.
+    for (const [url, count] of Object.entries(urlMap)) {
+      if (count > 0) {
+        this._resurrectSource(url);
+      }
     }
   },
 
@@ -1997,6 +2019,97 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._debuggerSourcesSeen.add(source);
     return true;
+  },
+
+  /**
+   * Create a new source by refetching the specified URL and instantiating all
+   * sources that were found in the result.
+   *
+   * @param url The URL string to fetch.
+   */
+  _resurrectSource: async function(url) {
+    let { content, contentType, sourceMapURL } = await this.sources.urlContents(
+      url,
+      /* partial */ false,
+      /* canUseCache */ true
+    );
+
+    // Newlines in all sources should be normalized. Do this with HTML content
+    // to simplify the comparisons below.
+    content = content.replace(/\r\n?|\u2028|\u2029/g, "\n");
+
+    if (contentType == "text/html") {
+      // HTML files can contain any number of inline sources. We have to find
+      // all the inline sources and their start line without running any of the
+      // scripts on the page. The approach used here is approximate.
+      if (!this._parent.window) {
+        return;
+      }
+
+      // Find the offsets in the HTML at which inline scripts might start.
+      const scriptTagMatches = content.matchAll(/<script[^>]*>/gi);
+      const scriptStartOffsets = [...scriptTagMatches].map(
+        rv => rv.index + rv[0].length
+      );
+
+      // Find the script tags in this HTML page by parsing a new document from
+      // the contentand looking for its script elements.
+      const document = new DOMParser().parseFromString(content, "text/html");
+
+      // For each inline source found, see if there is a start offset for what
+      // appears to be a script tag, whose contents match the inline source.
+      const scripts = document.querySelectorAll("script");
+      for (const script of scripts) {
+        if (script.src) {
+          continue;
+        }
+
+        const text = script.innerText;
+        for (const offset of scriptStartOffsets) {
+          if (content.substring(offset, offset + text.length) == text) {
+            const allLineBreaks = content.substring(0, offset).matchAll("\n");
+            const startLine = 1 + [...allLineBreaks].length;
+            try {
+              const global = this.dbg.getDebuggees()[0];
+              this._addSource(
+                global.createSource({
+                  text,
+                  url,
+                  startLine,
+                  isScriptElement: true,
+                })
+              );
+            } catch (e) {
+              //  Ignore parse errors.
+            }
+            break;
+          }
+        }
+      }
+
+      // If no scripts were found, we might have an inaccurate content type and
+      // the file is actually JavaScript. Fall through and add the entire file
+      // as the source.
+      if (scripts.length) {
+        return;
+      }
+    }
+
+    // Other files should only contain javascript, so add the file contents as
+    // the source itself.
+    try {
+      const global = this.dbg.getDebuggees()[0];
+      this._addSource(
+        global.createSource({
+          text: content,
+          url,
+          startLine: 1,
+          sourceMapURL,
+        })
+      );
+    } catch (e) {
+      // Ignore parse errors.
+    }
   },
 
   onDump: function() {
