@@ -38,11 +38,16 @@ class BrowserConsole extends WebConsole {
    * @param Boolean fissionSupport
    */
   constructor(target, iframeWindow, chromeWindow, fissionSupport = false) {
-    super(target, iframeWindow, chromeWindow, true, fissionSupport);
+    super(null, iframeWindow, chromeWindow, true, fissionSupport);
 
+    this._browserConsoleTarget = target;
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
+  }
+
+  get currentTarget() {
+    return this._browserConsoleTarget;
   }
 
   /**
@@ -96,7 +101,7 @@ class BrowserConsole extends WebConsole {
       this._telemetry.toolClosed("browserconsole", -1, this);
 
       await super.destroy();
-      await this.target.destroy();
+      await this.currentTarget.destroy();
       this.chromeWindow.close();
     })();
 

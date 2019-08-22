@@ -1,3 +1,4 @@
 ---
 redirects:
+    browser/browser: browser
     testing/marionette/marionette: testing/marionette

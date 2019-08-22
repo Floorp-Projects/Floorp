@@ -84,7 +84,14 @@ class UITourChild extends ActorChild {
       return false;
     }
 
-    let permission = Services.perms.testPermission(uri, UITOUR_PERMISSION);
+    let principal = Services.scriptSecurityManager.principalWithOA(
+      content.document.nodePrincipal,
+      {}
+    );
+    let permission = Services.perms.testPermissionFromPrincipal(
+      principal,
+      UITOUR_PERMISSION
+    );
     if (permission == Services.perms.ALLOW_ACTION) {
       return true;
     }

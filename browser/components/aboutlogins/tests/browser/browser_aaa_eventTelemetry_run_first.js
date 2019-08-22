@@ -83,10 +83,8 @@ add_task(async function test_telemetry_events() {
   );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
-    let openSiteButton = loginItem.shadowRoot.querySelector(
-      ".open-site-button"
-    );
-    openSiteButton.click();
+    let originInput = loginItem.shadowRoot.querySelector(".origin-input");
+    originInput.click();
   });
   let newTab = await promiseNewTab;
   ok(true, "New tab opened to " + TEST_LOGIN2.origin);

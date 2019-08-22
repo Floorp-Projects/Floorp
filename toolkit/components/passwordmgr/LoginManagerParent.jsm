@@ -570,18 +570,18 @@ this.LoginManagerParent = {
       formActionOrigin,
     });
 
+    let { browsingContext } = browser;
+    let framePrincipalOrigin =
+      browsingContext.currentWindowGlobal.documentPrincipal.origin;
+    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
+      framePrincipalOrigin
+    );
+
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
     if (!usernameField && oldPasswordField && logins.length > 0) {
       let prompter = this._getPrompter(browser, openerTopWindowID);
-
-      let { browsingContext } = browser;
-      let framePrincipalOrigin =
-        browsingContext.currentWindowGlobal.documentPrincipal.origin;
-      let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
-        framePrincipalOrigin
-      );
 
       if (logins.length == 1) {
         let oldLogin = logins[0];
@@ -595,10 +595,25 @@ this.LoginManagerParent = {
           return;
         }
 
+        let autoSavedStorageGUID = "";
+        if (
+          generatedPW &&
+          generatedPW.storageGUID == oldLogin.guid &&
+          generatedPW.value == formLogin.password
+        ) {
+          // this login has a generated password, auto-saved in this session
+          autoSavedStorageGUID = generatedPW.storageGUID;
+        }
         formLogin.username = oldLogin.username;
         formLogin.usernameField = oldLogin.usernameField;
 
-        prompter.promptToChangePassword(oldLogin, formLogin, dismissedPrompt);
+        prompter.promptToChangePassword(
+          oldLogin,
+          formLogin,
+          dismissedPrompt,
+          false, // notifySaved
+          autoSavedStorageGUID
+        );
         return;
       } else if (!generatedPW || generatedPW.value != newPasswordField.value) {
         // Note: It's possible that that we already have the correct u+p saved
@@ -648,6 +663,15 @@ this.LoginManagerParent = {
 
     if (existingLogin) {
       log("Found an existing login matching this form submission");
+      let autoSavedStorageGUID = "";
+      if (
+        generatedPW &&
+        generatedPW.storageGUID == existingLogin.guid &&
+        generatedPW.value == formLogin.password
+      ) {
+        // this login has a generated password, auto-saved in this session
+        autoSavedStorageGUID = generatedPW.storageGUID;
+      }
 
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
@@ -656,7 +680,9 @@ this.LoginManagerParent = {
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
-          dismissedPrompt
+          dismissedPrompt,
+          false, // notifySaved
+          autoSavedStorageGUID
         );
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
@@ -664,7 +690,9 @@ this.LoginManagerParent = {
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
-          dismissedPrompt
+          dismissedPrompt,
+          false, // notifySaved
+          autoSavedStorageGUID
         );
       } else {
         recordLoginUse(existingLogin);
@@ -860,11 +888,24 @@ this.LoginManagerParent = {
     if (loginToChange) {
       // Show a change doorhanger to allow modifying an already-saved login
       // e.g. to add a username or update the password.
+      let autoSavedStorageGUID = "";
+      if (
+        generatedPW.value == loginToChange.password &&
+        generatedPW.storageGUID == loginToChange.guid
+      ) {
+        autoSavedStorageGUID = generatedPW.storageGUID;
+      }
+
+      log(
+        "_onGeneratedPasswordFilledOrEdited: promptToChangePassword with autoSavedStorageGUID: " +
+          autoSavedStorageGUID
+      );
       prompter.promptToChangePassword(
         loginToChange,
         formLogin,
         true, // dismissed prompt
-        autoSaveLogin // notifySaved
+        autoSaveLogin, // notifySaved
+        autoSavedStorageGUID // autoSavedLoginGuid
       );
       return;
     }
