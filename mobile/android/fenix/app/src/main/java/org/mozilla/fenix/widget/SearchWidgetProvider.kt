@@ -14,6 +14,8 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.Dimension
+import androidx.annotation.Dimension.DP
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
@@ -22,11 +24,11 @@ import org.mozilla.fenix.utils.Settings
 class SearchWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
-        Settings.instance?.addSearchWidgetInstalled(1)
+        Settings.getInstance(context).addSearchWidgetInstalled(1)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        Settings.instance?.addSearchWidgetInstalled(-appWidgetIds.size)
+        Settings.getInstance(context).addSearchWidgetInstalled(-appWidgetIds.size)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -66,7 +68,7 @@ class SearchWidgetProvider : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    private fun getLayoutSize(dp: Int) = when {
+    private fun getLayoutSize(@Dimension(unit = DP) dp: Int) = when {
         dp >= DP_LARGE -> SearchWidgetProviderSize.LARGE
         dp >= DP_MEDIUM -> SearchWidgetProviderSize.MEDIUM
         dp >= DP_SMALL -> SearchWidgetProviderSize.SMALL

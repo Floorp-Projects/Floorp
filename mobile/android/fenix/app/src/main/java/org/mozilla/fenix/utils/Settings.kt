@@ -44,7 +44,8 @@ class Settings private constructor(
             else -> throw InvalidParameterException("$action is not a valid SitePermissionsRules.Action")
         }
 
-        var instance: Settings? = null
+        @VisibleForTesting
+        internal var instance: Settings? = null
 
         @JvmStatic
         @Synchronized

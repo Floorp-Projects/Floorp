@@ -12,7 +12,7 @@ import com.leanplum.annotations.Parser
 import com.leanplum.internal.LeanplumInternal
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
-import java.util.UUID
+import java.util.UUID.randomUUID
 
 private val Event.name: String?
     get() = when (this) {
@@ -66,7 +66,7 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
 
         Leanplum.setIsTestModeEnabled(false)
         Leanplum.setApplicationContext(application)
-        Leanplum.setDeviceId(UUID.randomUUID().toString())
+        Leanplum.setDeviceId(randomUUID().toString())
         Parser.parseVariables(application)
 
         LeanplumActivityHelper.enableLifecycleCallbacks(application)
@@ -74,13 +74,13 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         val installedApps = MozillaProductDetector.getInstalledMozillaProducts(application)
 
         Leanplum.start(application, hashMapOf(
-            "default_browser" to (MozillaProductDetector.getMozillaBrowserDefault(application) ?: ""),
+            "default_browser" to MozillaProductDetector.getMozillaBrowserDefault(application).orEmpty(),
             "fennec_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FIREFOX.productName),
             "focus_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.FOCUS.productName),
             "klar_installed" to installedApps.contains(MozillaProductDetector.MozillaProducts.KLAR.productName),
-            "fxa_signed_in" to (Settings.instance?.fxaSignedIn ?: false),
-            "fxa_has_synced_items" to (Settings.instance?.fxaHasSyncedItems ?: false),
-            "search_widget_installed" to (Settings.instance?.searchWidgetInstalled ?: false)
+            "fxa_signed_in" to Settings.getInstance(application).fxaSignedIn,
+            "fxa_has_synced_items" to Settings.getInstance(application).fxaHasSyncedItems,
+            "search_widget_installed" to Settings.getInstance(application).searchWidgetInstalled
         ))
     }
 
@@ -99,9 +99,9 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun track(event: Event) {
-        val leanplumExtras = event.extras?.map {
-            it.key.toString() to it.value
-        }?.toMap()
+        val leanplumExtras = event.extras
+            ?.map { (key, value) -> key.toString() to value }
+            ?.toMap()
 
         event.name?.also {
             Leanplum.track(it, leanplumExtras)
