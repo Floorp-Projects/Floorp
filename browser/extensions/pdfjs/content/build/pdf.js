@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.213';
-var pdfjsBuild = '2cc0bfd1';
+var pdfjsVersion = '2.2.214';
+var pdfjsBuild = '969b1623';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1304,7 +1304,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.213',
+    apiVersion: '2.2.214',
     source: {
       data: source.data,
       url: source.url,
@@ -3100,9 +3100,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.213';
+const version = '2.2.214';
 exports.version = version;
-const build = '2cc0bfd1';
+const build = '969b1623';
 exports.build = build;
 
 /***/ }),
@@ -3379,9 +3379,21 @@ const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
 function addLinkAttributes(link, {
   url,
   target,
-  rel
+  rel,
+  enabled = true
 } = {}) {
-  link.href = link.title = url ? (0, _util.removeNullCharacters)(url) : '';
+  const urlNullRemoved = url ? (0, _util.removeNullCharacters)(url) : '';
+
+  if (enabled) {
+    link.href = link.title = urlNullRemoved;
+  } else {
+    link.href = '';
+    link.title = `Disabled: ${urlNullRemoved}`;
+
+    link.onclick = () => {
+      return false;
+    };
+  }
 
   if (url) {
     const LinkTargetValues = Object.values(LinkTarget);
@@ -9087,7 +9099,8 @@ class LinkAnnotationElement extends AnnotationElement {
     (0, _display_utils.addLinkAttributes)(link, {
       url: data.url,
       target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
-      rel: linkService.externalLinkRel
+      rel: linkService.externalLinkRel,
+      enabled: linkService.externalLinkEnabled
     });
 
     if (!data.url) {
