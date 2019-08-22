@@ -65,7 +65,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "a21bc69a41af"
+        "revision": "8de7cc60fc6a"
     },
     "ast": {
         "platforms": [
