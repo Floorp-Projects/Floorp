@@ -7,7 +7,6 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 const { requestIdleCallback } = ChromeUtils.import(
@@ -32,6 +31,10 @@ ChromeUtils.defineModuleGetter(
   "AsyncShutdown",
   "resource://gre/modules/AsyncShutdown.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  readAsyncStream: "resource://gre/modules/AsyncStreamReader.jsm",
+});
 
 /**
  * All SQL statements should be defined here.
@@ -137,31 +140,9 @@ TrackingDBService.prototype = {
     await db.close();
   },
 
-  _readAsyncStream(stream) {
-    return new Promise(function(resolve, reject) {
-      let result = "";
-      let source = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-        Ci.nsIBinaryInputStream
-      );
-      source.setInputStream(stream);
-      function readData() {
-        try {
-          result += source.readBytes(source.available());
-          stream.asyncWait(readData, 0, 0, Services.tm.currentThread);
-        } catch (e) {
-          if (e.result == Cr.NS_BASE_STREAM_CLOSED) {
-            resolve(result);
-          } else {
-            reject(e);
-          }
-        }
-      }
-      stream.asyncWait(readData, 0, 0, Services.tm.currentThread);
-    });
-  },
-
   async recordContentBlockingLog(inputStream) {
-    let json = await this._readAsyncStream(inputStream);
+    /* import-globals-from AsyncStreamReader.jsm */
+    let json = await readAsyncStream(inputStream);
     requestIdleCallback(this.saveEvents.bind(this, json));
   },
 

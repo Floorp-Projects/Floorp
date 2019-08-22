@@ -1,0 +1,21 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAsyncInputStream;
+
+[scriptable, uuid(aafadd3f-fe7e-4a75-83d3-26fe3d992364)]
+interface nsIAsyncStreamReader : nsISupports
+{
+  /**
+   * Read an asynchronous input stream and return a promise which will resolve
+   * with a string containing the contents of the stream when the read is
+   * finished successfully, or rejected with an error.
+   *
+   * @param aInputStream the input stream to read from.
+   */
+  Promise readAsyncStream(in nsIAsyncInputStream aInputStream);
+};
