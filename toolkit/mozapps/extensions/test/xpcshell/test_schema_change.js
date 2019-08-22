@@ -10,6 +10,11 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
 add_task(async function run_tests() {
+  // Fake installTelemetryInfo used in the addon installation,
+  // to verify that they are preserved after the DB is updated
+  // from the addon manifests.
+  const fakeInstallTelemetryInfo = { source: "amo", method: "amWebAPI" };
+
   const ID = "schema-change@tests.mozilla.org";
 
   const xpi1 = createTempWebExtensionFile({
@@ -77,11 +82,16 @@ add_task(async function run_tests() {
 
   for (let test of TESTS) {
     info(test.what);
-    await promiseInstallFile(xpi1);
+    await promiseInstallFile(xpi1, false, fakeInstallTelemetryInfo);
 
     let addon = await promiseAddonByID(ID);
     notEqual(addon, null, "Got an addon object as expected");
     equal(addon.version, "1.0", "Got the expected version");
+    Assert.deepEqual(
+      addon.installTelemetryInfo,
+      fakeInstallTelemetryInfo,
+      "Got the expected installTelemetryInfo after installing the addon"
+    );
 
     await promiseShutdownManager();
 
@@ -103,6 +113,11 @@ add_task(async function run_tests() {
     addon = await promiseAddonByID(ID);
     notEqual(addon, null, "Got an addon object as expected");
     equal(addon.version, test.expectedVersion, "Got the expected version");
+    Assert.deepEqual(
+      addon.installTelemetryInfo,
+      fakeInstallTelemetryInfo,
+      "Got the expected installTelemetryInfo after rebuilding the DB"
+    );
 
     await addon.uninstall();
   }
