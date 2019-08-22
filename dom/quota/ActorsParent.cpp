@@ -604,13 +604,10 @@ namespace {
 
 }  // namespace
 
-class ClientUsageArray final : public AutoTArray<uint64_t, Client::TYPE_MAX> {
+class ClientUsageArray final
+    : public AutoTArray<Maybe<uint64_t>, Client::TYPE_MAX> {
  public:
-  ClientUsageArray() {
-    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      AppendElement(0);
-    }
-  }
+  ClientUsageArray() { SetLength(Client::TypeMax()); }
 };
 
 class OriginInfo final {
@@ -635,8 +632,8 @@ class OriginInfo final {
 #ifdef DEBUG
     uint64_t usage = 0;
     for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-      AssertNoOverflow(usage, mClientUsages[index]);
-      usage += mClientUsages[index];
+      AssertNoOverflow(usage, mClientUsages[index].valueOr(0));
+      usage += mClientUsages[index].valueOr(0);
     }
     MOZ_ASSERT(mUsage == usage);
 #endif
@@ -1186,9 +1183,10 @@ class GetUsageOp final : public QuotaUsageRequestBase,
 };
 
 class GetOriginUsageOp final : public QuotaUsageRequestBase {
-  UsageInfo mUsageInfo;
   nsCString mSuffix;
   nsCString mGroup;
+  uint64_t mUsage;
+  uint64_t mFileUsage;
   bool mFromMemory;
 
  public:
@@ -2858,8 +2856,10 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
       AssertNoUnderflow(mOriginInfo->mUsage, delta);
       mOriginInfo->mUsage -= delta;
 
-      AssertNoUnderflow(mOriginInfo->mClientUsages[mClientType], delta);
-      mOriginInfo->mClientUsages[mClientType] -= delta;
+      MOZ_ASSERT(mOriginInfo->mClientUsages[mClientType].isSome());
+      AssertNoUnderflow(mOriginInfo->mClientUsages[mClientType].value(), delta);
+      mOriginInfo->mClientUsages[mClientType] =
+          Some(mOriginInfo->mClientUsages[mClientType].value() - delta);
 
       mSize = aSize;
     }
@@ -2874,8 +2874,9 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
   uint64_t delta = aSize - mSize;
 
-  AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
-  uint64_t newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
+  AssertNoOverflow(mOriginInfo->mClientUsages[mClientType].valueOr(0), delta);
+  uint64_t newClientUsage =
+      mOriginInfo->mClientUsages[mClientType].valueOr(0) + delta;
 
   AssertNoOverflow(mOriginInfo->mUsage, delta);
   uint64_t newUsage = mOriginInfo->mUsage + delta;
@@ -2971,8 +2972,8 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     AssertNoUnderflow(aSize, mSize);
     delta = aSize - mSize;
 
-    AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
-    newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
+    AssertNoOverflow(mOriginInfo->mClientUsages[mClientType].valueOr(0), delta);
+    newClientUsage = mOriginInfo->mClientUsages[mClientType].valueOr(0) + delta;
 
     AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
@@ -3011,7 +3012,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
     // Ok, we successfully freed enough space and the operation can continue
     // without throwing the quota error.
-    mOriginInfo->mClientUsages[mClientType] = newClientUsage;
+    mOriginInfo->mClientUsages[mClientType] = Some(newClientUsage);
 
     mOriginInfo->mUsage = newUsage;
     if (!mOriginInfo->LockedPersisted()) {
@@ -3034,7 +3035,7 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     return true;
   }
 
-  mOriginInfo->mClientUsages[mClientType] = newClientUsage;
+  mOriginInfo->mClientUsages[mClientType] = Some(newClientUsage);
 
   mOriginInfo->mUsage = newUsage;
   if (!mOriginInfo->LockedPersisted()) {
@@ -4388,12 +4389,12 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     }
 
     if (trackQuota) {
-      uint64_t clientUsage = usageInfo.TotalUsage();
+      Maybe<uint64_t> clientUsage = usageInfo.TotalUsage();
 
       clientUsages[clientType] = clientUsage;
 
-      AssertNoOverflow(usage, clientUsage);
-      usage += clientUsage;
+      AssertNoOverflow(usage, clientUsage.valueOr(0));
+      usage += clientUsage.valueOr(0);
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6749,8 +6750,8 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 #ifdef DEBUG
   uint64_t usage = 0;
   for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
-    AssertNoOverflow(usage, aClientUsages[index]);
-    usage += aClientUsages[index];
+    AssertNoOverflow(usage, aClientUsages[index].valueOr(0));
+    usage += aClientUsages[index].valueOr(0);
   }
   MOZ_ASSERT(aUsage == usage);
 #endif
@@ -6761,8 +6762,9 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 void OriginInfo::LockedDecreaseUsage(Client::Type aClientType, int64_t aSize) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  AssertNoUnderflow(mClientUsages[aClientType], aSize);
-  mClientUsages[aClientType] -= aSize;
+  MOZ_ASSERT(mClientUsages[aClientType].isSome());
+  AssertNoUnderflow(mClientUsages[aClientType].value(), aSize);
+  mClientUsages[aClientType] = Some(mClientUsages[aClientType].value() - aSize);
 
   AssertNoUnderflow(mUsage, aSize);
   mUsage -= aSize;
@@ -6782,9 +6784,9 @@ void OriginInfo::LockedDecreaseUsage(Client::Type aClientType, int64_t aSize) {
 void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  uint64_t size = mClientUsages[aClientType];
+  uint64_t size = mClientUsages[aClientType].valueOr(0);
 
-  mClientUsages[aClientType] = 0;
+  mClientUsages[aClientType].reset();
 
   AssertNoUnderflow(mUsage, size);
   mUsage -= size;
@@ -7697,7 +7699,6 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
   MOZ_ASSERT(aUsageInfo);
-  MOZ_ASSERT(aUsageInfo->TotalUsage() == 0);
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager->GetDirectoryForOrigin(aPersistenceType, aOrigin,
@@ -7982,7 +7983,7 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager* aQuotaManager,
   }
 
   ProcessOriginInternal(aQuotaManager, aPersistenceType, origin, timestamp,
-                        persisted, usageInfo.TotalUsage());
+                        persisted, usageInfo.TotalUsage().valueOr(0));
 
   return NS_OK;
 }
@@ -8029,7 +8030,8 @@ void GetUsageOp::GetResponse(UsageRequestResponse& aResponse) {
   }
 }
 
-GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams) {
+GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
+    : mUsage(0), mFileUsage(0) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
 
@@ -8051,7 +8053,8 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams) {
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mUsageInfo.TotalUsage() == 0);
+  MOZ_ASSERT(mUsage == 0);
+  MOZ_ASSERT(mFileUsage == 0);
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
 
@@ -8072,28 +8075,26 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
       return rv;
     }
 
-    // Get cached usage (the method doesn't have to stat any files).
-    uint64_t usage =
-        aQuotaManager->GetOriginUsage(mGroup, mOriginScope.GetOrigin());
-
-    // File usage is not tracked in memory separately, so just add to the
-    // database usage.
-    mUsageInfo.AppendToDatabaseUsage(usage);
+    // Get cached usage (the method doesn't have to stat any files). File usage
+    // is not tracked in memory separately, so just add to the total usage.
+    mUsage = aQuotaManager->GetOriginUsage(mGroup, mOriginScope.GetOrigin());
 
     return NS_OK;
   }
 
+  UsageInfo usageInfo;
+
   // Add all the persistent/temporary/default storage files we care about.
   for (const PersistenceType type : kAllPersistenceTypes) {
-    UsageInfo usageInfo;
     rv = GetUsageForOrigin(aQuotaManager, type, mGroup,
                            mOriginScope.GetOrigin(), &usageInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    mUsageInfo.Append(usageInfo);
   }
+
+  mUsage = usageInfo.TotalUsage().valueOr(0);
+  mFileUsage = usageInfo.FileUsage().valueOr(0);
 
   return NS_OK;
 }
@@ -8103,8 +8104,8 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 
   OriginUsageResponse usageResponse;
 
-  usageResponse.usage() = mUsageInfo.TotalUsage();
-  usageResponse.fileUsage() = mUsageInfo.FileUsage();
+  usageResponse.usage() = mUsage;
+  usageResponse.fileUsage() = mFileUsage;
 
   aResponse = usageResponse;
 }

@@ -8687,7 +8687,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       InitUsageForOrigin(aOrigin, usage);
     }
 
-    aUsageInfo->AppendToDatabaseUsage(uint64_t(usage));
+    aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(usage)));
   } else if (usageFileExists) {
     rv = usageFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8777,7 +8777,7 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   int64_t usage;
   if (mozilla::dom::GetUsageForOrigin(aOrigin, usage)) {
     MOZ_ASSERT(usage >= 0);
-    aUsageInfo->AppendToDatabaseUsage(usage);
+    aUsageInfo->AppendToDatabaseUsage(Some(usage));
   }
 
   return NS_OK;

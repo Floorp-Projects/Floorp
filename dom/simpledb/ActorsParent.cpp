@@ -1676,7 +1676,7 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
 
     MOZ_ASSERT(fileSize >= 0);
 
-    aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
+    aUsageInfo->AppendToDatabaseUsage(Some(uint64_t(fileSize)));
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

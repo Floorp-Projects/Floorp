@@ -14,49 +14,54 @@
 
 BEGIN_QUOTA_NAMESPACE
 
-class UsageInfo {
+class UsageInfo final {
  public:
-  UsageInfo() : mDatabaseUsage(0), mFileUsage(0) {}
-
-  virtual ~UsageInfo() {}
-
   void Append(const UsageInfo& aUsageInfo) {
-    IncrementUsage(&mDatabaseUsage, aUsageInfo.mDatabaseUsage);
-    IncrementUsage(&mFileUsage, aUsageInfo.mFileUsage);
+    IncrementUsage(mDatabaseUsage, aUsageInfo.mDatabaseUsage);
+    IncrementUsage(mFileUsage, aUsageInfo.mFileUsage);
   }
 
-  void AppendToDatabaseUsage(uint64_t aUsage) {
-    IncrementUsage(&mDatabaseUsage, aUsage);
+  void AppendToDatabaseUsage(const Maybe<uint64_t>& aUsage) {
+    IncrementUsage(mDatabaseUsage, aUsage);
   }
 
-  void AppendToFileUsage(uint64_t aUsage) {
-    IncrementUsage(&mFileUsage, aUsage);
+  void AppendToFileUsage(const Maybe<uint64_t>& aUsage) {
+    IncrementUsage(mFileUsage, aUsage);
   }
 
-  uint64_t DatabaseUsage() { return mDatabaseUsage; }
+  const Maybe<uint64_t>& DatabaseUsage() const { return mDatabaseUsage; }
 
-  uint64_t FileUsage() { return mFileUsage; }
+  const Maybe<uint64_t>& FileUsage() const { return mFileUsage; }
 
-  uint64_t TotalUsage() {
-    uint64_t totalUsage = mDatabaseUsage;
-    IncrementUsage(&totalUsage, mFileUsage);
+  Maybe<uint64_t> TotalUsage() {
+    Maybe<uint64_t> totalUsage;
+
+    IncrementUsage(totalUsage, mDatabaseUsage);
+    IncrementUsage(totalUsage, mFileUsage);
+
     return totalUsage;
   }
 
-  static void IncrementUsage(uint64_t* aUsage, uint64_t aDelta) {
-    MOZ_ASSERT(aUsage);
-    CheckedUint64 value = *aUsage;
-    value += aDelta;
+  static void IncrementUsage(Maybe<uint64_t>& aUsage,
+                             const Maybe<uint64_t>& aDelta) {
+    if (aDelta.isNothing()) {
+      return;
+    }
+
+    CheckedUint64 value = aUsage.valueOr(0);
+
+    value += aDelta.value();
+
     if (value.isValid()) {
-      *aUsage = value.value();
+      aUsage = Some(value.value());
     } else {
-      *aUsage = UINT64_MAX;
+      aUsage = Some(UINT64_MAX);
     }
   }
 
  private:
-  uint64_t mDatabaseUsage;
-  uint64_t mFileUsage;
+  Maybe<uint64_t> mDatabaseUsage;
+  Maybe<uint64_t> mFileUsage;
 };
 
 END_QUOTA_NAMESPACE
