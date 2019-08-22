@@ -728,7 +728,7 @@ nsresult HTMLEditRules::WillDoAction(EditSubActionInfo& aInfo, bool* aCancel,
                                  aHandled);
     case EditSubAction::eInsertElement:
     case EditSubAction::eInsertQuotedText: {
-      nsresult rv = WillInsert(aCancel);
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert(aCancel);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -1220,16 +1220,15 @@ nsresult HTMLEditRules::GetFormatString(nsINode* aNode, nsAString& outFormat) {
   return NS_OK;
 }
 
-nsresult HTMLEditRules::WillInsert(bool* aCancel) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::WillInsert(bool* aCancel) {
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // XXX Why don't we stop handling this call if we're readonly or disabled?
   if (aCancel && (IsReadonly() || IsDisabled())) {
     *aCancel = true;
   }
 
-  nsresult rv =
-      MOZ_KnownLive(HTMLEditorRef()).EnsureNoPaddingBRElementForEmptyEditor();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1258,11 +1257,10 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
 
   // Get prior node
   nsCOMPtr<nsIContent> priorNode =
-      HTMLEditorRef().GetPreviousEditableHTMLNode(atStartOfSelection);
+      GetPreviousEditableHTMLNode(atStartOfSelection);
   if (priorNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*priorNode)) {
-    RefPtr<Element> block1 =
-        HTMLEditorRef().GetBlock(*atStartOfSelection.GetContainer());
-    RefPtr<Element> block2 = HTMLEditorRef().GetBlockNodeParent(priorNode);
+    RefPtr<Element> block1 = GetBlock(*atStartOfSelection.GetContainer());
+    RefPtr<Element> block2 = GetBlockNodeParent(priorNode);
 
     if (block1 && block1 == block2) {
       // If we are here then the selection is right after a padding <br>
@@ -1272,7 +1270,7 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
       EditorRawDOMPoint point(priorNode);
       ErrorResult error;
       SelectionRefPtr()->Collapse(point, error);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      if (NS_WARN_IF(Destroyed())) {
         error.SuppressException();
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -1282,12 +1280,12 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
     }
   }
 
-  if (HTMLEditorRef().TopLevelEditSubActionDataRef().mDidDeleteSelection) {
-    switch (HTMLEditorRef().GetTopLevelEditSubAction()) {
+  if (TopLevelEditSubActionDataRef().mDidDeleteSelection) {
+    switch (GetTopLevelEditSubAction()) {
       case EditSubAction::eInsertText:
       case EditSubAction::eInsertTextComingFromIME:
       case EditSubAction::eDeleteSelectedContent: {
-        nsresult rv = MOZ_KnownLive(HTMLEditorRef()).ReapplyCachedStyles();
+        nsresult rv = ReapplyCachedStyles();
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1299,9 +1297,8 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
   }
   // For most actions we want to clear the cached styles, but there are
   // exceptions
-  if (!IsStyleCachePreservingSubAction(
-          HTMLEditorRef().GetTopLevelEditSubAction())) {
-    HTMLEditorRef().TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
+  if (!IsStyleCachePreservingSubAction(GetTopLevelEditSubAction())) {
+    TopLevelEditSubActionDataRef().mCachedInlineStyles.Clear();
   }
   return NS_OK;
 }
@@ -1335,7 +1332,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -1683,7 +1680,7 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -3903,7 +3900,7 @@ nsresult HTMLEditRules::WillMakeList(const nsAString* aListType,
   OwningNonNull<nsAtom> listType = NS_Atomize(*aListType);
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4433,7 +4430,7 @@ nsresult HTMLEditRules::WillMakeBasicBlock(const nsAString& aBlockType,
   OwningNonNull<nsAtom> blockType = NS_Atomize(aBlockType);
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4676,7 +4673,7 @@ nsresult HTMLEditRules::WillCSSIndent(bool* aCancel, bool* aHandled) {
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -4979,7 +4976,7 @@ nsresult HTMLEditRules::WillHTMLIndent(bool* aCancel, bool* aHandled) {
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -5996,7 +5993,7 @@ nsresult HTMLEditRules::WillAlign(const nsAString& aAlignType, bool* aCancel,
   *aHandled = false;
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10651,7 +10648,7 @@ nsresult HTMLEditRules::WillAbsolutePosition(bool* aCancel, bool* aHandled) {
   MOZ_ASSERT(aCancel && aHandled);
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10990,7 +10987,7 @@ nsresult HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -11034,7 +11031,7 @@ nsresult HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
   }
 
   // FYI: Ignore cancel result of WillInsert().
-  nsresult rv = WillInsert();
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef()).WillInsert();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
