@@ -68,6 +68,7 @@ class FrameListContent extends Component {
     this.pinnedToBottom = false;
     this.initIntersectionObserver = false;
     this.intersectionObserver = null;
+    this.toggleTruncationCheckBox = this.toggleTruncationCheckBox.bind(this);
   }
 
   componentDidMount() {
@@ -132,6 +133,12 @@ class FrameListContent extends Component {
     }
   }
 
+  toggleTruncationCheckBox() {
+    this.setState({
+      checked: !this.state.checked,
+    });
+  }
+
   onMouseDown(evt, item) {
     if (evt.button === LEFT_MOUSE_BUTTON) {
       this.props.selectFrame(item);
@@ -185,60 +192,56 @@ class FrameListContent extends Component {
       table(
         { className: "ws-frames-list-table" },
         FrameListHeader(),
-        tr(
-          {
-            tabIndex: 0,
-          },
-          td(
-            {
-              className: "truncated-messages-cell",
-              colSpan: visibleColumns.length,
-            },
-            shouldTruncate &&
-              div(
-                {
-                  className: "truncated-messages-header",
-                },
-                div(
-                  {
-                    className: "truncated-messages-container",
-                  },
-                  div({
-                    className: "truncated-messages-warning-icon",
-                  }),
-                  div(
-                    {
-                      className: "truncated-message",
-                      title: MESSAGES_TRUNCATED,
-                    },
-                    MESSAGES_TRUNCATED
-                  )
-                ),
-                label(
-                  {
-                    className: "truncated-messages-checkbox-label",
-                    title: TOGGLE_MESSAGES_TRUNCATION_TITLE,
-                  },
-                  input({
-                    type: "checkbox",
-                    className: "truncation-checkbox",
-                    title: TOGGLE_MESSAGES_TRUNCATION_TITLE,
-                    checked: this.state.checked,
-                    onClick: () => {
-                      this.setState({
-                        checked: !this.state.checked,
-                      });
-                    },
-                  }),
-                  TOGGLE_MESSAGES_TRUNCATION
-                )
-              )
-          )
-        ),
         tbody(
           {
             className: "ws-frames-list-body",
           },
+          tr(
+            {
+              tabIndex: 0,
+            },
+            td(
+              {
+                className: "truncated-messages-cell",
+                colSpan: visibleColumns.length,
+              },
+              shouldTruncate &&
+                div(
+                  {
+                    className: "truncated-messages-header",
+                  },
+                  div(
+                    {
+                      className: "truncated-messages-container",
+                    },
+                    div({
+                      className: "truncated-messages-warning-icon",
+                    }),
+                    div(
+                      {
+                        className: "truncated-message",
+                        title: MESSAGES_TRUNCATED,
+                      },
+                      MESSAGES_TRUNCATED
+                    )
+                  ),
+                  label(
+                    {
+                      className: "truncated-messages-checkbox-label",
+                      title: TOGGLE_MESSAGES_TRUNCATION_TITLE,
+                    },
+                    input({
+                      type: "checkbox",
+                      className: "truncation-checkbox",
+                      title: TOGGLE_MESSAGES_TRUNCATION_TITLE,
+                      checked: this.state.checked,
+                      onChange: this.toggleTruncationCheckBox,
+                    }),
+                    TOGGLE_MESSAGES_TRUNCATION
+                  )
+                )
+            )
+          ),
           displayedFrames.map((item, index) =>
             FrameListItem({
               key: "ws-frame-list-item-" + index,
