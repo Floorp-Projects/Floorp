@@ -409,7 +409,7 @@ urlbar:
 
 normandy:
   enroll:
-    objects: ["preference_study", "addon_study", "preference_rollout"]
+    objects: ["preference_study", "addon_study", "preference_rollout", "addon_rollout"]
     description: >
       Sent when applying a Normandy recipe of the above types has succeeded.
     extra_keys:
@@ -431,7 +431,7 @@ normandy:
 
   enroll_failed:
     methods: ["enrollFailed"]
-    objects: ["addon_study", "preference_rollout", "preference_study"]
+    objects: ["addon_study", "preference_rollout", "preference_study", "addon_rollout"]
     description: >
       Sent when applying a Normandy recipe of the above types has failed.
     extra_keys:
@@ -443,6 +443,8 @@ normandy:
         For addon_study and branched_addon study, extra text describing the failure.
       branch: >
         The branch that failed to enroll.
+      addonId: The ID of the addon for the rollout when reason=conflict.
+      conflictingSlug: The slug for the conlicting rollout.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:
@@ -454,7 +456,7 @@ normandy:
     expiry_version: never
 
   update:
-    objects: ["addon_study", "preference_rollout"]
+    objects: ["addon_study", "preference_rollout", "addon_rollout"]
     description: >
       This event is fired when a client detects that a recipe of the
       ahove types has changed on the server, and the new version of the
@@ -479,7 +481,7 @@ normandy:
 
   update_failed:
     methods: ["updateFailed"]
-    objects: ["addon_study"]
+    objects: ["addon_study", "addon_rollout"]
     description: >
       Sent when applying a new version of a Normandy recipe of the above types (over an
       existing, older version previously fetched from the server) has failed.
@@ -499,7 +501,7 @@ normandy:
     expiry_version: never
 
   unenroll:
-    objects: ["preference_study", "addon_study", "preference_rollback"]
+    objects: ["preference_study", "addon_study", "preference_rollback", "addon_rollback"]
     description: >
       Sent when a Normandy recipe of certain types "ends".  N.B. For
       preference_rollback, this is fired when the recipe is fired (the
@@ -525,7 +527,7 @@ normandy:
     methods: ["unenrollFailed"]
     description: >
       Sent when unenrolling a user fails (see the unenroll event).
-    objects: ["preference_rollback", "preference_study"]
+    objects: ["preference_rollback", "preference_study", "addon_rollback"]
     extra_keys:
       reason: A code describing the reason the unenroll failed.
     bug_numbers: [1443560]
