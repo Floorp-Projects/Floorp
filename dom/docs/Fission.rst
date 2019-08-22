@@ -13,15 +13,15 @@ IPC Diagram
 
 .. image:: Fission-IPC-Diagram.svg
 
-JS Window Actor
+JSWindowActor
 ===============
 
-What are JS Window Actors?
+What are JSWindowActors?
 --------------------------
 
-In the Fission world, JS Window Actors will be the replacement for framescripts. Framescripts were how we structured code to be aware of the parent (UI) and child (content) separation, including establishing the communication channel between the two (via the Frame Message Manager).
+In the Fission world, JSWindowActors will be the replacement for framescripts. Framescripts were how we structured code to be aware of the parent (UI) and child (content) separation, including establishing the communication channel between the two (via the Frame Message Manager).
 
-However, the framescripts had no way to establish further process separation downwards (that is, for out-of-process iframes). JS Window Actors will be the replacement.
+However, the framescripts had no way to establish further process separation downwards (that is, for out-of-process iframes). JSWindowActors will be the replacement.
 
 How are they structured?
 ------------------------
@@ -46,17 +46,17 @@ The Frame Message Manager communication mechanism follows a publish / subscribe 
    :width: 320px
    :height: 200px
 
-How JS Window Actors differ from the Frame Message Manager
+How JSWindowActors differ from the Frame Message Manager
 ``````````````````````````````````````````````````````````
 
-For Fission, the JS Window Actors replacing framescripts will be structured in pairs. A pair of JS Window Actors will be instantiated lazily: one in the parent and one in the child process, and a direct channel of communication between the two will be established. The JS Window Actor in the parent must extend the global ``JSWindowActorParent`` class, and the JS Window Actor in the child must extend the global ``JSWindowActorChild`` class.
+For Fission, the JSWindowActors replacing framescripts will be structured in pairs. A pair of JSWindowActors will be instantiated lazily: one in the parent and one in the child process, and a direct channel of communication between the two will be established. The JSWindowActor in the parent must extend the global ``JSWindowActorParent`` class, and the JSWindowActor in the child must extend the global ``JSWindowActorChild`` class.
 
-The JS Window Actor mechanism is similar to how `IPC Actors`_ work in the native layer of Firefox:
+The JSWindowActor mechanism is similar to how `IPC Actors`_ work in the native layer of Firefox:
 
 #. Every Actor has one counterpart in another process that they can communicate directly with.
 #. Every Actor inherits a common communications API from a parent class.
 #. Every Actor has a name that ends in either ``Parent`` or ``Child``.
-#. There is no built-in mechanism for subscribing to messages. When one JS Window Actor sends a message, the counterpart JS Window Actor on the other side will receive it without needing to explicitly listen for it.
+#. There is no built-in mechanism for subscribing to messages. When one JSWindowActor sends a message, the counterpart JSWindowActor on the other side will receive it without needing to explicitly listen for it.
 
 Other notable differences between JSWindowActor's and Message Manager / framescripts:
 
@@ -81,13 +81,13 @@ Other notable differences between JSWindowActor's and Message Manager / framescr
   If in the previously mentioned DOM hierarchy, one of the ``<iframe>``'s unload, any associated JSWindowActor pairs will be torn down.
 
 .. hint::
-   JS Window Actors are "managed" by the WindowGlobal IPC Actors, and are implemented as JS classes (subclasses of ``JSWindowActorParent`` and ``JSWindowActorChild``) instantiated when requested for any particular window. Like the Frame Message Manager, they are ultimately using IPC Actors to communicate under the hood.
+   JSWindowActors are "managed" by the WindowGlobal IPC Actors, and are implemented as JS classes (subclasses of ``JSWindowActorParent`` and ``JSWindowActorChild``) instantiated when requested for any particular window. Like the Frame Message Manager, they are ultimately using IPC Actors to communicate under the hood.
 
 .. figure:: Fission-actors-diagram.png
    :width: 233px
    :height: 240px
 
-Cross-process communication with JS Window Actors
+Cross-process communication with JSWindowActors
 -------------------------------------------------
 
 .. note::
@@ -133,6 +133,9 @@ Other JSWindowActor methods that can be overridden
 ``constructor()``
 
 If there's something you need to do as soon as the JSWindowActor is instantiated, the ``constructor`` function is a great place to do that.
+
+.. note::
+    At this point the infrastructure for sending messages is not ready yet and objects such as ``manager`` or ``browsingContext`` are not available.
 
 ``observe(subject, topic, data)``
 `````````````````````````````````
@@ -217,7 +220,7 @@ The ``nsIDocShell`` for the frame associated with this ``JSWindowActorChild``.
 
 See `JSWindowActor.webidl`_ for more detail on exactly what is exposed on both ``JSWindowActorParent`` and ``JSWindowActorChild`` implementations.
 
-How to port from message manager and framescripts to JS Window Actors
+How to port from message manager and framescripts to JSWindowActors
 ---------------------------------------------------------------------
 
 .. _fission.message-manager-actors:
@@ -406,6 +409,27 @@ Your best bet for storing state is in the parent process.
     If each individual frame needs state, consider using a ``WeakMap`` in the parent process, mapping ``CanonicalBrowsingContext``'s with that state. That way, if the associates frames ever go away, you don't have to do any cleaning up yourself.
 
 If you have state that you want multiple ``JSWindowActorParent``'s to have access to, consider having a "manager" of those ``JSWindowActorParent``'s inside of the same .jsm file to hold that state. See ``PermitUnloader`` inside the implementation of `BrowserElementParent.jsm`_ for example.
+
+Do not break Responsive Design Mode (RDM)
+`````````````````````````````````````````
+RDM not being fully covered by unit tests makes it fragile and easy to break without anyone noticing when porting things to ``JSWindowActor``. This is because RDM currently lives in its own minimalistic browser that is embedded into the regular one and messages are proxied between the inner and the outer browser Message Managers.
+
+However, tunneling is not necessary anymore since the RDM browser will have its own instance of ``JSWindowActorParent`` that can directly access
+the outer browser from the inner browser via the ``outerBrowser`` property set only when we are in RDM mode (see `bug 1569570 <https://bugzilla.mozilla.org/show_bug.cgi?id=1569570>`_). Here's an example where a JSWindowActorParent realizes that it has been sent to the RDM inner browser, and then accesses the outer browser:
+
+.. code-block:: javascript
+
+    let browser = this.browsingContext.top.embedderElement; // Should point to the inner
+                                                            // browser if we are in RDM.
+
+    if (browser.outerBrowser) {
+      // We are in RDM mode and we probably
+      // want to work with the outer browser.
+      browser = browser.outerBrowser;
+    }
+
+.. note::
+    Message Manager tunneling is done in `tunnel.js <https://searchfox.org/mozilla-central/source/devtools/client/responsive/browser/tunnel.js>`_ and messages can be deleted from it after porting the code that uses them.
 
 Minimal Example Actors
 ----------------------
