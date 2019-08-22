@@ -24,6 +24,7 @@ permalink: /changelog/
 
 * **service-glean**
   * ⚠️ **This is a breaking change**: `Glean.handleBackgroundEvent` is now an internal API.
+  * Added a `QuantityMetricType` (for internal use by Gecko metrics only).
 
 * **browser-engine-gecko(-beta/nightly)**, **concept-engine**
   * Added simplified `Media.state` derived from `Media.playbackState` events.

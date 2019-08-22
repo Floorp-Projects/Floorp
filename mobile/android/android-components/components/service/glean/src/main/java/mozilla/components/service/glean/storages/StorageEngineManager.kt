@@ -10,6 +10,7 @@ import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.CustomDistributionMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.MemoryDistributionMetricType
+import mozilla.components.service.glean.private.QuantityMetricType
 import mozilla.components.service.glean.private.StringListMetricType
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.service.glean.private.TimespanMetricType
@@ -32,6 +33,7 @@ internal class StorageEngineManager(
         "datetime" to DatetimesStorageEngine,
         "events" to EventsStorageEngine,
         "memory_distribution" to MemoryDistributionsStorageEngine,
+        "quantity" to QuantitiesStorageEngine,
         "string" to StringsStorageEngine,
         "string_list" to StringListsStorageEngine,
         "timespan" to TimespansStorageEngine,
@@ -150,6 +152,7 @@ internal class StorageEngineManager(
                 is CustomDistributionMetricType -> CustomDistributionsStorageEngine
                 is DatetimeMetricType -> DatetimesStorageEngine
                 is MemoryDistributionMetricType -> MemoryDistributionsStorageEngine
+                is QuantityMetricType -> QuantitiesStorageEngine
                 is StringListMetricType -> StringListsStorageEngine
                 is StringMetricType -> StringsStorageEngine
                 is TimingDistributionMetricType -> TimingDistributionsStorageEngine
