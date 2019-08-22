@@ -75,16 +75,18 @@ interface nsIQuotaManagerService : nsISupports
    *        A principal for the origin whose usage is being queried.
    * @param aCallback
    *        The callback that will be called when the usage is available.
-   * @param aGetGroupUsage
-   *        An optional flag to indicate whether getting group usage and limit
-   *        or origin usage and file usage. The default value is false.
+   * @param aFromMemory
+   *        An optional flag to indicate whether the cached usage should be
+   *        obtained. The default value is false.  Note that this operation may
+   *        still be delayed by other operations on the QM I/O thread that are
+   *        peforming I/O.
    * Note:  Origin usage here represents total usage of an origin. However,
-   *        group usage here represents only non-persistent usage of a group.
+   *        cached usage here represents only non-persistent usage of an origin.
    */
   [must_use] nsIQuotaUsageRequest
   getUsageForPrincipal(in nsIPrincipal aPrincipal,
                        in nsIQuotaUsageCallback aCallback,
-                       [optional] in boolean aGetGroupUsage);
+                       [optional] in boolean aFromMemory);
 
   /**
    * Schedules an asynchronous callback that will inspect all origins and
@@ -221,4 +223,23 @@ interface nsIQuotaManagerService : nsISupports
    */
   [must_use] nsIQuotaRequest
   persist(in nsIPrincipal aPrincipal);
+
+  /**
+   * Given an origin, asynchronously calculate its group quota usage and quota
+   * limit. An origin's group is the set of all origins that share the same
+   * eTLD+1. This method is intended to be used for our implementation of the
+   * StorageManager.estimate() method. When we fix bug 1305665 and stop tracking
+   * quota limits on a group basis, this method will switch to operating on
+   * origins. Callers should strongly consider whether they want to be using
+   * getUsageForPrincipal() instead.
+   *
+   * This mechanism uses cached quota values and does not perform any I/O on its
+   * own, but it may be delayed by QuotaManager operations that do need to
+   * perform I/O on the QuotaManager I/O thread.
+   *
+   * @param aPrincipal
+   *        A principal for the origin (group) which we want to estimate.
+   */
+  [must_use] nsIQuotaRequest
+  estimate(in nsIPrincipal aPrincipal);
 };
