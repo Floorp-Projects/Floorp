@@ -402,8 +402,8 @@ bool BytecodeCompiler::createScriptSource(
 }
 
 bool BytecodeCompiler::canLazilyParse() const {
-  return options.canLazilyParse && !options.discardSource &&
-         !options.sourceIsLazy && !options.forceFullParse();
+  return !options.discardSource && !options.sourceIsLazy &&
+         !options.forceFullParse();
 }
 
 template <typename Unit>
