@@ -9186,8 +9186,8 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["adw@mozilla.com", "loines@mozilla.com"],
-    "bug_numbers": [1089670, 1475571, 1482158, 1499193, 1545172],
-    "description": "Records search counts for search access points and in content searches. For search access points in general and for the urlbar when an internal @engine shorcut is not used, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]",
+    "bug_numbers": [1089670, 1475571, 1482158, 1499193, 1545172, 1572500],
+    "description": "Records search counts for search access points and in-content searches. For search access points in general, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in-content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]",
     "record_into_store": ["main", "pre-account"]
   },
   "SEARCH_SERVICE_INIT_MS": {
