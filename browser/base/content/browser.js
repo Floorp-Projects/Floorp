@@ -2842,11 +2842,11 @@ function focusAndSelectUrlBar(userInitiatedFocus = false) {
   gURLBar.userInitiatedFocus = false;
 }
 
-function openLocation() {
+function openLocation(event) {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
     focusAndSelectUrlBar(true);
     if (gURLBar.openViewOnFocus && !gURLBar.view.isOpen) {
-      gURLBar.startQuery();
+      gURLBar.startQuery({ event });
     }
     return;
   }
