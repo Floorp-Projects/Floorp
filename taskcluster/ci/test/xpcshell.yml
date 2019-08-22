@@ -69,8 +69,9 @@ xpcshell:
     max-run-time:
         by-test-platform:
             android-em-4.*: 5400
-            macosx.*: 3600
+            macosx.*(?!-ccov)...../.*: 3600
             windows10-aarch64/.*: 3600
+            .*-ccov/debug: 5400
             default: 2700
     allow-software-gl-layers: false
     tier:
