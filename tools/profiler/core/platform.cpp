@@ -3928,6 +3928,11 @@ double profiler_time() {
 UniqueProfilerBacktrace profiler_get_backtrace() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  // Fast racy early return.
+  if (!profiler_is_active()) {
+    return nullptr;
+  }
+
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
