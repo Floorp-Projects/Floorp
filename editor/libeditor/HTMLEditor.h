@@ -1193,6 +1193,20 @@ class HTMLEditor final : public TextEditor,
    */
   bool CanContainParagraph(Element& aElement) const;
 
+  /**
+   * InsertBRElement() inserts a <br> element into aInsertToBreak.
+   * This may split container elements at the point and/or may move following
+   * <br> element to immediately after the new <br> element if necessary.
+   * XXX This method name is too generic and unclear whether such complicated
+   *     things will be done automatically or not.
+   * XXX This modifies Selection, but should return CreateElementResult instead.
+   *
+   * @param aInsertToBreak      The point where new <br> element will be
+   *                            inserted before.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertBRElement(const EditorDOMPoint& aInsertToBreak);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
