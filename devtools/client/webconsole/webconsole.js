@@ -51,8 +51,8 @@ const isMacOS = Services.appinfo.OS === "Darwin";
 class WebConsole {
   /*
    * @constructor
-   * @param object target
-   *        The target that the web console will connect to.
+   * @param object toolbox
+   *        The toolbox where the web console is displayed.
    * @param nsIDOMWindow iframeWindow
    *        The window where the web console UI is already loaded.
    * @param nsIDOMWindow chromeWindow
@@ -60,16 +60,16 @@ class WebConsole {
    * @param bool isBrowserConsole
    */
   constructor(
-    target,
+    toolbox,
     iframeWindow,
     chromeWindow,
     isBrowserConsole = false,
     fissionSupport = false
   ) {
+    this.toolbox = toolbox;
     this.iframeWindow = iframeWindow;
     this.chromeWindow = chromeWindow;
     this.hudId = "hud_" + ++gHudId;
-    this.target = target;
     this.browserWindow = this.chromeWindow.top;
     this.isBrowserConsole = isBrowserConsole;
     this.fissionSupport = fissionSupport;
@@ -84,6 +84,10 @@ class WebConsole {
     this._destroyer = null;
 
     EventEmitter.decorate(this);
+  }
+
+  get target() {
+    return this.toolbox.target;
   }
 
   /**
