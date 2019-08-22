@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ClientID: "resource://gre/modules/ClientID.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -1413,7 +1414,8 @@ class AddonDetails extends HTMLElement {
     }
 
     // Hide the tab group if "details" is the only visible button.
-    this.tabGroup.hidden = Array.from(this.tabGroup.children).every(button => {
+    let tabGroupButtons = this.tabGroup.querySelectorAll("named-deck-button");
+    this.tabGroup.hidden = Array.from(tabGroupButtons).every(button => {
       return button.name == "details" || button.hidden;
     });
 
@@ -1723,7 +1725,7 @@ class AddonCard extends HTMLElement {
             openOptionsInTab(addon.optionsURL);
           } else if (getOptionsType(addon) == "inline") {
             this.recordActionEvent("preferences", "inline");
-            loadViewFn("detail", this.addon.id, "preferences");
+            loadViewFn(`detail/${this.addon.id}/preferences`, e);
           }
           break;
         case "remove":
@@ -1750,7 +1752,7 @@ class AddonCard extends HTMLElement {
           }
           break;
         case "expand":
-          loadViewFn("detail", this.addon.id);
+          loadViewFn(`detail/${this.addon.id}`, e);
           break;
         case "more-options":
           // Open panel on click from the keyboard.
@@ -1779,7 +1781,7 @@ class AddonCard extends HTMLElement {
         default:
           // Handle a click on the card itself.
           if (!this.expanded) {
-            loadViewFn("detail", this.addon.id);
+            loadViewFn(`detail/${this.addon.id}`, e);
           } else if (
             e.target.localName == "a" &&
             e.target.getAttribute("data-telemetry-name")
@@ -2035,11 +2037,15 @@ class AddonCard extends HTMLElement {
       throw new Error("addon-card must be initialized with setAddon()");
     }
 
-    this.card = importTemplate("card").firstElementChild;
+    let headingId = ExtensionCommon.makeWidgetId(`${addon.name}-heading`);
+    this.setAttribute("aria-labelledby", headingId);
     this.setAttribute("addon-id", addon.id);
 
+    this.card = importTemplate("card").firstElementChild;
+
     let nameContainer = this.card.querySelector(".addon-name-container");
-    let nameHeading = document.createElement("h3");
+    let headingLevel = this.expanded ? "h1" : "h3";
+    let nameHeading = document.createElement(headingLevel);
     nameHeading.classList.add("addon-name");
     if (!this.expanded) {
       let name = document.createElement("a");
@@ -2075,6 +2081,10 @@ class AddonCard extends HTMLElement {
     }
 
     this.appendChild(this.card);
+
+    if (this.expanded && this.keyboardNavigation) {
+      requestAnimationFrame(() => this.optionsButton.focus());
+    }
 
     // Return the promise of details rendering to wait on in DetailView.
     return doneRenderPromise;
@@ -2250,7 +2260,7 @@ class RecommendedAddonCard extends HTMLElement {
           action: "manage",
           addon: this.discoAddon,
         });
-        loadViewFn("detail", this.addonId);
+        loadViewFn(`detail/${this.addonId}`, event);
         break;
       default:
         if (event.target.matches(".disco-addon-author a[href]")) {
@@ -3017,11 +3027,12 @@ class ListView {
 }
 
 class DetailView {
-  constructor({ param, root }) {
+  constructor({ isKeyboardNavigation, param, root }) {
     let [id, selectedTab] = param.split("/");
     this.id = id;
     this.selectedTab = selectedTab;
     this.root = root;
+    this.isKeyboardNavigation = isKeyboardNavigation;
   }
 
   async render() {
@@ -3038,10 +3049,11 @@ class DetailView {
     setCategoryFn(addon.type);
 
     // Go back to the list view when the add-on is removed.
-    card.addEventListener("remove", () => loadViewFn("list", addon.type));
+    card.addEventListener("remove", () => loadViewFn(`list/${addon.type}`));
 
     card.setAddon(addon);
     card.expand();
+    card.keyboardNavigation = this.isKeyboardNavigation;
     await card.render();
     if (
       this.selectedTab === "preferences" &&
@@ -3147,13 +3159,17 @@ function initialize(opts) {
  * resolve once the view has been updated to conform with other about:addons
  * views.
  */
-async function show(type, param) {
+async function show(type, param, { isKeyboardNavigation }) {
   let container = document.createElement("div");
   container.setAttribute("current-view", type);
   if (type == "list") {
     await new ListView({ param, root: container }).render();
   } else if (type == "detail") {
-    await new DetailView({ param, root: container }).render();
+    await new DetailView({
+      isKeyboardNavigation,
+      param,
+      root: container,
+    }).render();
   } else if (type == "discover") {
     let discoverView = new DiscoveryView();
     let elem = discoverView.render();

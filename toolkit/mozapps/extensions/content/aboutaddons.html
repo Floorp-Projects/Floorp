@@ -106,10 +106,12 @@
 
     <template name="addon-details">
       <div class="deck-tab-group">
-        <named-deck-button deck="details-deck" name="details" data-l10n-id="details-addon-button"></named-deck-button>
-        <named-deck-button deck="details-deck" name="preferences" data-l10n-id="preferences-addon-button"></named-deck-button>
-        <named-deck-button deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button"></named-deck-button>
-        <named-deck-button deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button"></named-deck-button>
+        <named-deck-button-group>
+          <named-deck-button deck="details-deck" name="details" data-l10n-id="details-addon-button"></named-deck-button>
+          <named-deck-button deck="details-deck" name="preferences" data-l10n-id="preferences-addon-button"></named-deck-button>
+          <named-deck-button deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button"></named-deck-button>
+          <named-deck-button deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button"></named-deck-button>
+        </named-deck-button-group>
       </div>
       <named-deck id="details-deck">
         <section name="details">
