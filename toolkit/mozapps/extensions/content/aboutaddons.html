@@ -62,10 +62,9 @@
       <div class="card addon">
         <img class="card-heading-image">
         <div class="addon-card-collapsed">
-          <img class="card-heading-icon addon-icon">
+          <img class="card-heading-icon addon-icon" alt="">
           <div class="card-contents">
             <div class="addon-name-container">
-              <span class="addon-name"></span>
               <a class="addon-badge addon-badge-recommended"
                  is="support-link"
                  support-page="recommended-extensions-program"
@@ -79,10 +78,15 @@
                  hidden>
               </a>
             </div>
-            <span class="addon-description"></span>
+            <!-- This ends up in the tab order when the ellipsis happens, but it isn't necessary. -->
+            <span class="addon-description" tabindex="-1"></span>
           </div>
           <div class="more-options-menu">
-            <button class="more-options-button ghost-button" action="more-options"></button>
+            <button
+              class="more-options-button ghost-button"
+              action="more-options"
+              aria-haspopup="menu"
+              aria-expanded="false"></button>
           </div>
         </div>
         <message-bar class="addon-card-message" align="center" hidden>
