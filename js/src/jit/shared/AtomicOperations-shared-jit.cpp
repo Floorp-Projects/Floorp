@@ -877,7 +877,7 @@ bool InitializeJittedAtomics() {
   masm.executableCopy(code, /* flushICache = */ false);
 
   // Flush the icache using a primitive method.
-  ExecutableAllocator::cacheFlush(code, roundedCodeLength);
+  jit::FlushICache(code, roundedCodeLength);
 
   // Reprotect the whole region to avoid having separate RW and RX mappings.
   if (!ExecutableAllocator::makeExecutable(code, roundedCodeLength)) {

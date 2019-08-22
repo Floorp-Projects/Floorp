@@ -720,7 +720,7 @@ static inline bool UseHardFpABI() {
 }
 #endif
 
-bool ForceDoubleCacheFlush();
+void FlushICache(void* code, size_t size);
 
 // In order to handle SoftFp ABI calls, we need to be able to express that we
 // have ABIArg which are represented by pair of general purpose registers.

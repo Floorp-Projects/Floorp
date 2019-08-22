@@ -2864,11 +2864,11 @@ function focusAndSelectUrlBar() {
   gURLBar.select();
 }
 
-function openLocation() {
+function openLocation(event) {
   if (window.location.href == AppConstants.BROWSER_CHROME_URL) {
     focusAndSelectUrlBar();
     if (gURLBar.openViewOnFocus && !gURLBar.view.isOpen) {
-      gURLBar.startQuery();
+      gURLBar.startQuery({ event });
     }
     return;
   }

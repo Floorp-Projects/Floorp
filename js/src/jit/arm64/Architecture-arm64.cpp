@@ -8,6 +8,7 @@
 
 #include <cstring>
 
+#include "jit/arm64/vixl/Cpu-vixl.h"
 #include "jit/RegisterSets.h"
 
 namespace js {
@@ -67,6 +68,10 @@ uint32_t FloatRegister::getRegisterDumpOffsetInBytes() {
 }
 
 uint32_t GetARM64Flags() { return 0; }
+
+void FlushICache(void* code, size_t size) {
+  vixl::CPU::EnsureIAndDCacheCoherency(code, size);
+}
 
 }  // namespace jit
 }  // namespace js

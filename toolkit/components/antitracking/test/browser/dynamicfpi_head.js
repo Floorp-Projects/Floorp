@@ -120,6 +120,11 @@ this.DynamicFPIHelper = {
       if (cleanupFunction) {
         await cleanupFunction();
       }
+
+      // While running these tests we typically do not have enough idle time to do
+      // GC reliably, so force it here.
+      /* import-globals-from antitracking_head.js */
+      forceGC();
     });
   },
 };

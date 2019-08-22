@@ -100,6 +100,13 @@ public class ContentBlocking {
         /* package */ final Pref<String> mFpList = new Pref<String>(
             "urlclassifier.features.fingerprinting.blacklistTables",
             ContentBlocking.catToFpListPref(AntiTracking.NONE));
+        /* package */ final Pref<Boolean> mSt = new Pref<Boolean>(
+            "privacy.socialtracking.block_cookies.enabled", false);
+        /* package */ final Pref<Boolean> mStStrict = new Pref<Boolean>(
+            "privacy.trackingprotection.socialtracking.enabled", false);
+        /* package */ final Pref<String> mStList = new Pref<String>(
+            "urlclassifier.features.socialtracking.annotate.blacklistTables",
+            ContentBlocking.catToStListPref(AntiTracking.NONE));
 
         /* package */ final Pref<Boolean> mSbMalware = new Pref<Boolean>(
             "browser.safebrowsing.malware.enabled", true);
@@ -162,6 +169,24 @@ public class ContentBlocking {
 
             mFp.commit(ContentBlocking.catToFpPref(cat));
             mFpList.commit(ContentBlocking.catToFpListPref(cat));
+
+            mSt.commit(ContentBlocking.catToStPref(cat));
+            mStList.commit(ContentBlocking.catToStListPref(cat));
+            return this;
+        }
+
+        /**
+         * Set whether or not strict social tracking protection is enabled
+         * (ie, whether to block content or just cookies). Will only block
+         * if social tracking protection lists are supplied to
+         * {@link setAntiTracking}.
+         *
+         * @param enabled A boolean indicating whether or not to enable strict
+         *                social tracking protection.
+         * @return This Settings instance.
+         */
+        public @NonNull Settings setStrictSocialTrackingProtection(final boolean enabled) {
+            mStStrict.commit(enabled);
             return this;
         }
 
@@ -187,7 +212,8 @@ public class ContentBlocking {
         public @CBAntiTracking int getAntiTrackingCategories() {
             return ContentBlocking.atListToAtCat(mAt.get()) |
                    ContentBlocking.cmListToAtCat(mCmList.get()) |
-                   ContentBlocking.fpListToAtCat(mFpList.get());
+                   ContentBlocking.fpListToAtCat(mFpList.get()) |
+                   ContentBlocking.stListToAtCat(mStList.get());
         }
 
         /**
@@ -274,7 +300,8 @@ public class ContentBlocking {
         public static final int ANALYTIC = 1 << 2;
 
         /**
-         * Block social trackers.
+         * Block social trackers. Note: This is not the same as "Social Tracking Protection",
+         * which is controlled by {@link STP}.
          */
         public static final int SOCIAL = 1 << 3;
 
@@ -300,6 +327,11 @@ public class ContentBlocking {
         public static final int FINGERPRINTING = 1 << 7;
 
         /**
+         * Block trackers on the Social Tracking Protection list.
+         */
+        public static final int STP = 1 << 8;
+
+        /**
          * Block ad, analytic, social and test trackers.
          */
         public static final int DEFAULT = AD | ANALYTIC | SOCIAL | TEST;
@@ -320,6 +352,7 @@ public class ContentBlocking {
                       AntiTracking.TEST, AntiTracking.CRYPTOMINING,
                       AntiTracking.FINGERPRINTING,
                       AntiTracking.DEFAULT, AntiTracking.STRICT,
+                      AntiTracking.STP,
                       AntiTracking.NONE })
     /* package */ @interface CBAntiTracking {}
 
@@ -507,7 +540,8 @@ public class ContentBlocking {
                 uri,
                 ContentBlocking.atListToAtCat(matchedList) |
                     ContentBlocking.cmListToAtCat(matchedList) |
-                    ContentBlocking.fpListToAtCat(matchedList),
+                    ContentBlocking.fpListToAtCat(matchedList) |
+                    ContentBlocking.stListToAtCat(matchedList),
                 ContentBlocking.errorToSbCat(error),
                 ContentBlocking.geckoCatToCbCat(category),
                 blocking);
@@ -552,10 +586,9 @@ public class ContentBlocking {
     private static final String ANALYTIC = "analytics-track-digest256";
     private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
-    private static final String CRYPTOMINING =
-        "base-cryptomining-track-digest256";
-    private static final String FINGERPRINTING =
-        "base-fingerprinting-track-digest256";
+    private static final String CRYPTOMINING = "base-cryptomining-track-digest256";
+    private static final String FINGERPRINTING = "base-fingerprinting-track-digest256";
+    private static final String STP = "social-tracking-protection-digest256";
 
     /* package */ static @CBSafeBrowsing int sbMalwareToSbCat(final boolean enabled) {
         return enabled ? (SafeBrowsing.MALWARE | SafeBrowsing.UNWANTED | SafeBrowsing.HARMFUL)
@@ -637,6 +670,23 @@ public class ContentBlocking {
         return cat;
     }
 
+    /* package */ static boolean catToStPref(@CBAntiTracking final int cat) {
+        return (cat & AntiTracking.STP) != 0;
+    }
+
+    /* package */ static String catToStListPref(@CBAntiTracking final int cat) {
+        StringBuilder builder = new StringBuilder();
+
+        if ((cat & AntiTracking.STP) != 0) {
+            builder.append(STP).append(",");
+        }
+        if (builder.length() == 0) {
+            return "";
+        }
+        // Trim final ','.
+        return builder.substring(0, builder.length() - 1);
+    }
+
     /* package */ static @CBAntiTracking int atListToAtCat(final String list) {
         int cat = AntiTracking.NONE;
 
@@ -668,6 +718,17 @@ public class ContentBlocking {
         }
         if (list.indexOf(CRYPTOMINING) != -1) {
             cat |= AntiTracking.CRYPTOMINING;
+        }
+        return cat;
+    }
+
+    /* package */ static @CBAntiTracking int stListToAtCat(final String list) {
+        int cat = AntiTracking.NONE;
+        if (list == null) {
+            return cat;
+        }
+        if (list.indexOf(STP) != -1) {
+            cat |= AntiTracking.STP;
         }
         return cat;
     }
