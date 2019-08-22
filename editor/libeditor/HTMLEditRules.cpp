@@ -1344,17 +1344,24 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+  if (NS_WARN_IF(!firstRange)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // for every property that is set, insert a new inline style node
-  rv = CreateStyleForInsertText(*doc);
+  // XXX CreateStyleForInsertText() adjusts selection automatically, but
+  //     it should just return the insertion point instead.
+  rv = MOZ_KnownLive(HTMLEditorRef()).CreateStyleForInsertText(*firstRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // get the (collapsed) selection location
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
   }
+
   EditorDOMPoint pointToInsert(firstRange->StartRef());
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return NS_ERROR_FAILURE;
@@ -5837,63 +5844,57 @@ CreateElementResult HTMLEditRules::ConvertListType(Element& aListElement,
   return CreateElementResult(listElement.forget());
 }
 
-nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(HTMLEditorRef().mTypeInState);
+nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aAbstractRange.IsPositioned());
+  MOZ_ASSERT(mTypeInState);
 
-  bool weDidSomething = false;
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
-  if (NS_WARN_IF(!firstRange)) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsINode> node = firstRange->GetStartContainer();
-  int32_t offset = firstRange->StartOffset();
+  nsCOMPtr<nsINode> node = aAbstractRange.GetStartContainer();
+  int32_t offset = aAbstractRange.StartOffset();
 
-  RefPtr<Element> rootElement = aDocument.GetRootElement();
-  if (NS_WARN_IF(!rootElement)) {
+  RefPtr<Element> documentRootElement = GetDocument()->GetRootElement();
+  if (NS_WARN_IF(!documentRootElement)) {
     return NS_ERROR_FAILURE;
   }
 
   // process clearing any styles first
-  UniquePtr<PropItem> item = HTMLEditorRef().mTypeInState->TakeClearProperty();
+  UniquePtr<PropItem> item = mTypeInState->TakeClearProperty();
 
+  bool weDidSomething = false;
   {
     // Transactions may set selection, but we will set selection if necessary.
-    AutoTransactionsConserveSelection dontChangeMySelection(HTMLEditorRef());
+    AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    while (item && node != rootElement) {
+    while (item && node != documentRootElement) {
       // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
       //     method.
       nsresult rv =
-          MOZ_KnownLive(HTMLEditorRef())
-              .ClearStyle(address_of(node), &offset, MOZ_KnownLive(item->tag),
-                          MOZ_KnownLive(item->attr));
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+          ClearStyle(address_of(node), &offset, MOZ_KnownLive(item->tag),
+                     MOZ_KnownLive(item->attr));
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      item = HTMLEditorRef().mTypeInState->TakeClearProperty();
+      item = mTypeInState->TakeClearProperty();
       weDidSomething = true;
     }
   }
 
   // then process setting any styles
-  int32_t relFontSize = HTMLEditorRef().mTypeInState->TakeRelativeFontSize();
-  item = HTMLEditorRef().mTypeInState->TakeSetProperty();
+  int32_t relFontSize = mTypeInState->TakeRelativeFontSize();
+  item = mTypeInState->TakeSetProperty();
 
   if (item || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
     // nodes above.
     if (RefPtr<Text> text = node->GetAsText()) {
       // if we are in a text node, split it
-      SplitNodeResult splitTextNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .SplitNodeDeepWithTransaction(
-                  *text, EditorDOMPoint(text, offset),
-                  SplitAtEdges::eAllowToCreateEmptyContainer);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      SplitNodeResult splitTextNodeResult = SplitNodeDeepWithTransaction(
+          *text, EditorDOMPoint(text, offset),
+          SplitAtEdges::eAllowToCreateEmptyContainer);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(splitTextNodeResult.Failed())) {
@@ -5903,17 +5904,16 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
       node = splitPoint.GetContainer();
       offset = splitPoint.Offset();
     }
-    if (!HTMLEditorRef().IsContainer(node)) {
+    if (!IsContainer(node)) {
       return NS_OK;
     }
-    RefPtr<Text> newNode = HTMLEditorRef().CreateTextNode(EmptyString());
+    RefPtr<Text> newNode = CreateTextNode(EmptyString());
     if (NS_WARN_IF(!newNode)) {
       return NS_ERROR_FAILURE;
     }
     nsresult rv =
-        MOZ_KnownLive(HTMLEditorRef())
-            .InsertNodeWithTransaction(*newNode, EditorDOMPoint(node, offset));
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+        InsertNodeWithTransaction(*newNode, EditorDOMPoint(node, offset));
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5928,9 +5928,8 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
       HTMLEditor::FontSize dir = relFontSize > 0 ? HTMLEditor::FontSize::incr
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
-        rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RelativeFontChangeOnTextNode(dir, *newNode, 0, -1);
-        if (NS_WARN_IF(!CanHandleEditAction())) {
+        rv = RelativeFontChangeOnTextNode(dir, *newNode, 0, -1);
+        if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5940,17 +5939,16 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     }
 
     while (item) {
-      rv = MOZ_KnownLive(HTMLEditorRef())
-               .SetInlinePropertyOnNode(MOZ_KnownLive(*node->AsContent()),
-                                        MOZ_KnownLive(*item->tag),
-                                        MOZ_KnownLive(item->attr), item->value);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      rv = SetInlinePropertyOnNode(MOZ_KnownLive(*node->AsContent()),
+                                   MOZ_KnownLive(*item->tag),
+                                   MOZ_KnownLive(item->attr), item->value);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      item = HTMLEditorRef().mTypeInState->TakeSetProperty();
+      item = mTypeInState->TakeSetProperty();
     }
   }
 
@@ -5959,13 +5957,11 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
   }
 
   nsresult rv = SelectionRefPtr()->Collapse(node, offset);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Selection::Collapse() failed");
+  return rv;
 }
 
 bool HTMLEditRules::IsEmptyBlockElement(Element& aElement,
