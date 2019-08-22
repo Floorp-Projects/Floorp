@@ -791,15 +791,6 @@ class HTMLEditRules : public TextEditRules {
                                                    nsAtom& aItemType);
 
   /**
-   * CreateStyleForInsertText() sets CSS properties which are stored in
-   * TypeInState to proper element node.
-   *
-   * @param aDocument           The document of the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult CreateStyleForInsertText(dom::Document& aDocument);
-
-  /**
    * IsEmptyBlockElement() returns true if aElement is a block level element
    * and it doesn't have any visible content.
    */
