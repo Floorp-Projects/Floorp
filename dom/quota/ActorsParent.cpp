@@ -128,6 +128,9 @@ const char QuotaManager::kReplaceChars[] = CONTROL_CHARACTERS "/:*?\"<>|\\";
 
 namespace {
 
+template <typename T>
+void AssertNoOverflow(uint64_t aDest, T aArg);
+
 /*******************************************************************************
  * Constants
  ******************************************************************************/
@@ -601,13 +604,23 @@ namespace {
 
 }  // namespace
 
+class ClientUsageArray final : public AutoTArray<uint64_t, Client::TYPE_MAX> {
+ public:
+  ClientUsageArray() {
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
+      AppendElement(0);
+    }
+  }
+};
+
 class OriginInfo final {
   friend class GroupInfo;
   friend class QuotaManager;
   friend class QuotaObject;
 
  public:
-  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, uint64_t aUsage,
+  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
+             const ClientUsageArray& aClientUsages, uint64_t aUsage,
              int64_t aAccessTime, bool aPersisted, bool aDirectoryExists);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)
@@ -618,6 +631,15 @@ class OriginInfo final {
 
   int64_t LockedUsage() const {
     AssertCurrentThreadOwnsQuotaMutex();
+
+#ifdef DEBUG
+    uint64_t usage = 0;
+    for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
+      AssertNoOverflow(usage, mClientUsages[index]);
+      usage += mClientUsages[index];
+    }
+    MOZ_ASSERT(mUsage == usage);
+#endif
 
     return mUsage;
   }
@@ -642,7 +664,9 @@ class OriginInfo final {
     MOZ_ASSERT(!mQuotaObjects.Count());
   }
 
-  void LockedDecreaseUsage(int64_t aSize);
+  void LockedDecreaseUsage(Client::Type aClientType, int64_t aSize);
+
+  void LockedResetUsageForClient(Client::Type aClientType);
 
   void LockedUpdateAccessTime(int64_t aAccessTime) {
     AssertCurrentThreadOwnsQuotaMutex();
@@ -653,7 +677,7 @@ class OriginInfo final {
   void LockedPersist();
 
   nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
-
+  ClientUsageArray mClientUsages;
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;
   uint64_t mUsage;
@@ -2825,6 +2849,9 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
       AssertNoUnderflow(mOriginInfo->mUsage, delta);
       mOriginInfo->mUsage -= delta;
 
+      AssertNoUnderflow(mOriginInfo->mClientUsages[mClientType], delta);
+      mOriginInfo->mClientUsages[mClientType] -= delta;
+
       mSize = aSize;
     }
     return true;
@@ -2837,6 +2864,9 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
           ComplementaryPersistenceType(groupInfo->mPersistenceType));
 
   uint64_t delta = aSize - mSize;
+
+  AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
+  uint64_t newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
 
   AssertNoOverflow(mOriginInfo->mUsage, delta);
   uint64_t newUsage = mOriginInfo->mUsage + delta;
@@ -2932,6 +2962,9 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
     AssertNoUnderflow(aSize, mSize);
     delta = aSize - mSize;
 
+    AssertNoOverflow(mOriginInfo->mClientUsages[mClientType], delta);
+    newClientUsage = mOriginInfo->mClientUsages[mClientType] + delta;
+
     AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
 
@@ -2969,6 +3002,8 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
     // Ok, we successfully freed enough space and the operation can continue
     // without throwing the quota error.
+    mOriginInfo->mClientUsages[mClientType] = newClientUsage;
+
     mOriginInfo->mUsage = newUsage;
     if (!mOriginInfo->LockedPersisted()) {
       groupInfo->mUsage = newGroupUsage;
@@ -2989,6 +3024,8 @@ bool QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate) {
 
     return true;
   }
+
+  mOriginInfo->mClientUsages[mClientType] = newClientUsage;
 
   mOriginInfo->mUsage = newUsage;
   if (!mOriginInfo->LockedPersisted()) {
@@ -3346,7 +3383,7 @@ uint64_t QuotaManager::CollectOriginsForEviction(
       break;
     }
 
-    sizeToBeFreed += inactiveOrigins[index]->mUsage;
+    sizeToBeFreed += inactiveOrigins[index]->LockedUsage();
   }
 
   if (sizeToBeFreed >= aMinSizeToBeFreed) {
@@ -3517,6 +3554,7 @@ void QuotaManager::Shutdown() {
 void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
                                       const nsACString& aGroup,
                                       const nsACString& aOrigin,
+                                      const ClientUsageArray& aClientUsages,
                                       uint64_t aUsageBytes, int64_t aAccessTime,
                                       bool aPersisted) {
   AssertIsOnIOThread();
@@ -3527,9 +3565,9 @@ void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
   RefPtr<GroupInfo> groupInfo =
       LockedGetOrCreateGroupInfo(aPersistenceType, aGroup);
 
-  RefPtr<OriginInfo> originInfo =
-      new OriginInfo(groupInfo, aOrigin, aUsageBytes, aAccessTime, aPersisted,
-                     /* aDirectoryExists */ true);
+  RefPtr<OriginInfo> originInfo = new OriginInfo(
+      groupInfo, aOrigin, aClientUsages, aUsageBytes, aAccessTime, aPersisted,
+      /* aDirectoryExists */ true);
   groupInfo->LockedAddOriginInfo(originInfo);
 }
 
@@ -3547,8 +3585,9 @@ void QuotaManager::EnsureQuotaForOrigin(PersistenceType aPersistenceType,
   RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
   if (!originInfo) {
     originInfo = new OriginInfo(
-        groupInfo, aOrigin, /* aUsageBytes */ 0, /* aAccessTime */ PR_Now(),
-        /* aPersisted */ false, /* aDirectoryExists */ false);
+        groupInfo, aOrigin, ClientUsageArray(), /* aUsageBytes */ 0,
+        /* aAccessTime */ PR_Now(), /* aPersisted */ false,
+        /* aDirectoryExists */ false);
     groupInfo->LockedAddOriginInfo(originInfo);
   }
 }
@@ -3576,8 +3615,8 @@ void QuotaManager::NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
   } else {
     timestamp = PR_Now();
     RefPtr<OriginInfo> originInfo = new OriginInfo(
-        groupInfo, aOrigin, /* aUsageBytes */ 0, /* aAccessTime */ timestamp,
-        aPersisted, /* aDirectoryExists */ true);
+        groupInfo, aOrigin, ClientUsageArray(), /* aUsageBytes */ 0,
+        /* aAccessTime */ timestamp, aPersisted, /* aDirectoryExists */ true);
     groupInfo->LockedAddOriginInfo(originInfo);
   }
 
@@ -3587,6 +3626,7 @@ void QuotaManager::NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
 void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
                                           const nsACString& aGroup,
                                           const nsACString& aOrigin,
+                                          Client::Type aClientType,
                                           int64_t aSize) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
@@ -3605,7 +3645,32 @@ void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
 
   RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
   if (originInfo) {
-    originInfo->LockedDecreaseUsage(aSize);
+    originInfo->LockedDecreaseUsage(aClientType, aSize);
+  }
+}
+
+void QuotaManager::ResetUsageForClient(PersistenceType aPersistenceType,
+                                       const nsACString& aGroup,
+                                       const nsACString& aOrigin,
+                                       Client::Type aClientType) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+
+  MutexAutoLock lock(mQuotaMutex);
+
+  GroupInfoPair* pair;
+  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
+    return;
+  }
+
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  if (!groupInfo) {
+    return;
+  }
+
+  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
+  if (originInfo) {
+    originInfo->LockedResetUsageForClient(aClientType);
   }
 }
 
@@ -3671,8 +3736,8 @@ void QuotaManager::RemoveQuota() {
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, nsIFile* aFile, int64_t aFileSize,
-    int64_t* aFileSizeOut /* = nullptr */) {
+    const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
+    int64_t aFileSize, int64_t* aFileSizeOut /* = nullptr */) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   if (aFileSizeOut) {
@@ -3686,6 +3751,34 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   nsString path;
   nsresult rv = aFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, nullptr);
+
+#ifdef DEBUG
+  nsCOMPtr<nsIFile> directory;
+  rv = GetDirectoryForOrigin(aPersistenceType, aOrigin,
+                             getter_AddRefs(directory));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsAutoString clientType;
+  rv = Client::TypeToText(aClientType, clientType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  rv = directory->Append(clientType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsString directoryPath;
+  rv = directory->GetPath(directoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(StringBeginsWith(path, directoryPath));
+#endif
 
   int64_t fileSize;
 
@@ -3731,7 +3824,7 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     QuotaObject* quotaObject;
     if (!originInfo->mQuotaObjects.Get(path, &quotaObject)) {
       // Create a new QuotaObject.
-      quotaObject = new QuotaObject(originInfo, path, fileSize);
+      quotaObject = new QuotaObject(originInfo, aClientType, path, fileSize);
 
       // Put it to the hashtable. The hashtable is not responsible to delete
       // the QuotaObject.
@@ -3754,8 +3847,8 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
 
 already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
     PersistenceType aPersistenceType, const nsACString& aGroup,
-    const nsACString& aOrigin, const nsAString& aPath, int64_t aFileSize,
-    int64_t* aFileSizeOut /* = nullptr */) {
+    const nsACString& aOrigin, Client::Type aClientType, const nsAString& aPath,
+    int64_t aFileSize, int64_t* aFileSizeOut /* = nullptr */) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   if (aFileSizeOut) {
@@ -3766,8 +3859,8 @@ already_AddRefed<QuotaObject> QuotaManager::GetQuotaObject(
   nsresult rv = NS_NewLocalFile(aPath, false, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return GetQuotaObject(aPersistenceType, aGroup, aOrigin, file, aFileSize,
-                        aFileSizeOut);
+  return GetQuotaObject(aPersistenceType, aGroup, aOrigin, aClientType, file,
+                        aFileSize, aFileSizeOut);
 }
 
 Nullable<bool> QuotaManager::OriginPersisted(const nsACString& aGroup,
@@ -4171,10 +4264,10 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
   // We need to initialize directories of all clients if they exists and also
   // get the total usage to initialize the quota.
-  nsAutoPtr<UsageInfo> usageInfo;
-  if (trackQuota) {
-    usageInfo = new UsageInfo();
-  }
+
+  ClientUsageArray clientUsages;
+
+  uint64_t usage = 0;
 
   // A keeper to defer the return only in Nightly, so that the telemetry data
   // for whole profile can be collected
@@ -4274,14 +4367,24 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
 
-    Atomic<bool> dummy(false);
+    UsageInfo usageInfo;
     rv = mClients[clientType]->InitOrigin(aPersistenceType, aGroup, aOrigin,
-                                          /* aCanceled */ dummy, usageInfo,
+                                          /* aCanceled */ Atomic<bool>(false),
+                                          trackQuota ? &usageInfo : nullptr,
                                           /* aForGetUsage */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // error should have reported in InitOrigin
       RECORD_IN_NIGHTLY(statusKeeper, rv);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
+    }
+
+    if (trackQuota) {
+      uint64_t clientUsage = usageInfo.TotalUsage();
+
+      clientUsages[clientType] = clientUsage;
+
+      AssertNoOverflow(usage, clientUsage);
+      usage += clientUsage;
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4299,8 +4402,8 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 #endif
 
   if (trackQuota) {
-    InitQuotaForOrigin(aPersistenceType, aGroup, aOrigin,
-                       usageInfo->TotalUsage(), aAccessTime, aPersisted);
+    InitQuotaForOrigin(aPersistenceType, aGroup, aOrigin, clientUsages, usage,
+                       aAccessTime, aPersisted);
   }
 
   return NS_OK;
@@ -6410,7 +6513,7 @@ void QuotaManager::CheckTemporaryStorageLimits() {
             }
 
             doomedOriginInfos.AppendElement(originInfo);
-            groupUsage -= originInfo->mUsage;
+            groupUsage -= originInfo->LockedUsage();
 
             if (groupUsage <= quotaManager->GetGroupLimit()) {
               break;
@@ -6422,7 +6525,7 @@ void QuotaManager::CheckTemporaryStorageLimits() {
 
     uint64_t usage = 0;
     for (uint32_t index = 0; index < doomedOriginInfos.Length(); index++) {
-      usage += doomedOriginInfos[index]->mUsage;
+      usage += doomedOriginInfos[index]->LockedUsage();
     }
 
     if (mTemporaryStorageUsage - usage > mTemporaryStorageLimit) {
@@ -6461,7 +6564,7 @@ void QuotaManager::CheckTemporaryStorageLimits() {
           break;
         }
 
-        usage += originInfos[i]->mUsage;
+        usage += originInfos[i]->LockedUsage();
       }
 
       doomedOriginInfos.AppendElements(originInfos);
@@ -6600,23 +6703,38 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
  ******************************************************************************/
 
 OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
-                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted,
+                       const ClientUsageArray& aClientUsages, uint64_t aUsage,
+                       int64_t aAccessTime, bool aPersisted,
                        bool aDirectoryExists)
-    : mGroupInfo(aGroupInfo),
+    : mClientUsages(aClientUsages),
+      mGroupInfo(aGroupInfo),
       mOrigin(aOrigin),
       mUsage(aUsage),
       mAccessTime(aAccessTime),
       mPersisted(aPersisted),
       mDirectoryExists(aDirectoryExists) {
   MOZ_ASSERT(aGroupInfo);
+  MOZ_ASSERT(aClientUsages.Length() == Client::TypeMax());
   MOZ_ASSERT_IF(aPersisted,
                 aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+
+#ifdef DEBUG
+  uint64_t usage = 0;
+  for (uint32_t index = 0; index < uint32_t(Client::TypeMax()); index++) {
+    AssertNoOverflow(usage, aClientUsages[index]);
+    usage += aClientUsages[index];
+  }
+  MOZ_ASSERT(aUsage == usage);
+#endif
 
   MOZ_COUNT_CTOR(OriginInfo);
 }
 
-void OriginInfo::LockedDecreaseUsage(int64_t aSize) {
+void OriginInfo::LockedDecreaseUsage(Client::Type aClientType, int64_t aSize) {
   AssertCurrentThreadOwnsQuotaMutex();
+
+  AssertNoUnderflow(mClientUsages[aClientType], aSize);
+  mClientUsages[aClientType] -= aSize;
 
   AssertNoUnderflow(mUsage, aSize);
   mUsage -= aSize;
@@ -6631,6 +6749,28 @@ void OriginInfo::LockedDecreaseUsage(int64_t aSize) {
 
   AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, aSize);
   quotaManager->mTemporaryStorageUsage -= aSize;
+}
+
+void OriginInfo::LockedResetUsageForClient(Client::Type aClientType) {
+  AssertCurrentThreadOwnsQuotaMutex();
+
+  uint64_t size = mClientUsages[aClientType];
+
+  mClientUsages[aClientType] = 0;
+
+  AssertNoUnderflow(mUsage, size);
+  mUsage -= size;
+
+  if (!LockedPersisted()) {
+    AssertNoUnderflow(mGroupInfo->mUsage, size);
+    mGroupInfo->mUsage -= size;
+  }
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, size);
+  quotaManager->mTemporaryStorageUsage -= size;
 }
 
 void OriginInfo::LockedPersist() {
@@ -6666,16 +6806,18 @@ void GroupInfo::LockedAddOriginInfo(OriginInfo* aOriginInfo) {
                "Replacing an existing entry!");
   mOriginInfos.AppendElement(aOriginInfo);
 
+  uint64_t usage = aOriginInfo->LockedUsage();
+
   if (!aOriginInfo->LockedPersisted()) {
-    AssertNoOverflow(mUsage, aOriginInfo->mUsage);
-    mUsage += aOriginInfo->mUsage;
+    AssertNoOverflow(mUsage, usage);
+    mUsage += usage;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, aOriginInfo->mUsage);
-  quotaManager->mTemporaryStorageUsage += aOriginInfo->mUsage;
+  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, usage);
+  quotaManager->mTemporaryStorageUsage += usage;
 }
 
 void GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin) {
@@ -6683,17 +6825,18 @@ void GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin) {
 
   for (uint32_t index = 0; index < mOriginInfos.Length(); index++) {
     if (mOriginInfos[index]->mOrigin == aOrigin) {
+      uint64_t usage = mOriginInfos[index]->LockedUsage();
+
       if (!mOriginInfos[index]->LockedPersisted()) {
-        AssertNoUnderflow(mUsage, mOriginInfos[index]->mUsage);
-        mUsage -= mOriginInfos[index]->mUsage;
+        AssertNoUnderflow(mUsage, usage);
+        mUsage -= usage;
       }
 
       QuotaManager* quotaManager = QuotaManager::Get();
       MOZ_ASSERT(quotaManager);
 
-      AssertNoUnderflow(quotaManager->mTemporaryStorageUsage,
-                        mOriginInfos[index]->mUsage);
-      quotaManager->mTemporaryStorageUsage -= mOriginInfos[index]->mUsage;
+      AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, usage);
+      quotaManager->mTemporaryStorageUsage -= usage;
 
       mOriginInfos.RemoveElementAt(index);
 
@@ -6711,13 +6854,15 @@ void GroupInfo::LockedRemoveOriginInfos() {
   for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
     OriginInfo* originInfo = mOriginInfos[index - 1];
 
+    uint64_t usage = originInfo->LockedUsage();
+
     if (!originInfo->LockedPersisted()) {
-      AssertNoUnderflow(mUsage, originInfo->mUsage);
-      mUsage -= originInfo->mUsage;
+      AssertNoUnderflow(mUsage, usage);
+      mUsage -= usage;
     }
 
-    AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, originInfo->mUsage);
-    quotaManager->mTemporaryStorageUsage -= originInfo->mUsage;
+    AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, usage);
+    quotaManager->mTemporaryStorageUsage -= usage;
 
     mOriginInfos.RemoveElementAt(index - 1);
   }
@@ -8199,16 +8344,7 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       return;
     }
 
-    bool initialized;
-    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-      initialized = aQuotaManager->IsOriginInitialized(origin);
-    } else {
-      initialized = aQuotaManager->IsTemporaryStorageInitialized();
-    }
-
     bool hasOtherClient = false;
-
-    UsageInfo usageInfo;
 
     if (!mClientType.IsNull()) {
       // Checking whether there is any other client in the directory is needed.
@@ -8275,18 +8411,6 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
           continue;
         }
       }
-
-      if (initialized) {
-        Client* client = aQuotaManager->GetClient(mClientType.Value());
-        MOZ_ASSERT(client);
-
-        Atomic<bool> dummy(false);
-        rv = client->GetUsageForOrigin(aPersistenceType, group, origin, dummy,
-                                       &usageInfo);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-      }
     }
 
     for (uint32_t index = 0; index < 10; index++) {
@@ -8304,6 +8428,13 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       NS_WARNING("Failed to remove directory, giving up!");
     }
 
+    bool initialized;
+    if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      initialized = aQuotaManager->IsOriginInitialized(origin);
+    } else {
+      initialized = aQuotaManager->IsTemporaryStorageInitialized();
+    }
+
     // If it hasn't been initialized, we don't need to update the quota and
     // notify the removing client.
     if (!initialized) {
@@ -8314,8 +8445,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       if (hasOtherClient) {
         MOZ_ASSERT(!mClientType.IsNull());
 
-        aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, group, origin,
-                                              usageInfo.TotalUsage());
+        aQuotaManager->ResetUsageForClient(aPersistenceType, group, origin,
+                                           mClientType.Value());
       } else {
         aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
       }

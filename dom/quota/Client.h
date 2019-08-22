@@ -58,6 +58,33 @@ class Client {
 
   virtual Type GetType() = 0;
 
+  static void TypeToText(Type aType, nsACString& aText) {
+    switch (aType) {
+      case IDB:
+        aText.AssignLiteral(IDB_DIRECTORY_NAME);
+        return;
+
+      case DOMCACHE:
+        aText.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
+        return;
+
+      case SDB:
+        aText.AssignLiteral(SDB_DIRECTORY_NAME);
+        return;
+
+      case LS:
+        if (CachedNextGenLocalStorageEnabled()) {
+          aText.AssignLiteral(LS_DIRECTORY_NAME);
+          return;
+        }
+        MOZ_FALLTHROUGH;
+
+      case TYPE_MAX:
+      default:
+        MOZ_CRASH("Bad client type value!");
+    }
+  }
+
   static nsresult TypeToText(Type aType, nsAString& aText) {
     switch (aType) {
       case IDB:
@@ -86,6 +113,27 @@ class Client {
     }
 
     return NS_OK;
+  }
+
+  static Type TypeFromText(const nsACString& aText) {
+    if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
+      return IDB;
+    }
+
+    if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
+      return DOMCACHE;
+    }
+
+    if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
+      return SDB;
+    }
+
+    if (CachedNextGenLocalStorageEnabled() &&
+        aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
+      return LS;
+    }
+
+    MOZ_CRASH("Should never get here!");
   }
 
   static nsresult TypeFromText(const nsAString& aText, Type& aType) {
