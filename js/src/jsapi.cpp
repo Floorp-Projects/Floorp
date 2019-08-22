@@ -3525,9 +3525,9 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
     const TransitiveCompileOptions& rhs) {
   mutedErrors_ = rhs.mutedErrors_;
   forceFullParse_ = rhs.forceFullParse_;
+  forceStrictMode_ = rhs.forceStrictMode_;
   selfHostingMode = rhs.selfHostingMode;
   canLazilyParse = rhs.canLazilyParse;
-  strictOption = rhs.strictOption;
   extraWarningsOption = rhs.extraWarningsOption;
   werrorOption = rhs.werrorOption;
   asmJSOption = rhs.asmJSOption;
@@ -3622,7 +3622,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       elementAttributeNameRoot(cx),
       introductionScriptRoot(cx),
       scriptOrModuleRoot(cx) {
-  strictOption = cx->options().strictMode();
   extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
   discardSource = cx->realm()->behaviors().discardSource();
   werrorOption = cx->options().werror();
@@ -3636,6 +3635,9 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
   fieldsEnabledOption = cx->realm()->creationOptions().getFieldsEnabled();
+
+  // Certain modes of operation force strict-mode in general.
+  forceStrictMode_ = cx->options().strictMode();
 
   // Certain modes of operation disallow syntax parsing in general.
   forceFullParse_ = cx->realm()->behaviors().disableLazyParsing() ||

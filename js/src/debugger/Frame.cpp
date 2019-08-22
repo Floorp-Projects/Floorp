@@ -789,9 +789,11 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
   options.setIsRunOnce(true)
       .setNoScriptRval(false)
       .setFileAndLine(filename, lineno)
-      .setIntroductionType("debugger eval")
-      .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict()
-                                                      : false);
+      .setIntroductionType("debugger eval");
+
+  if (frame && frame.hasScript() && frame.script()->strict()) {
+    options.setForceStrictMode();
+  }
 
   SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, chars.begin().get(), chars.length(),

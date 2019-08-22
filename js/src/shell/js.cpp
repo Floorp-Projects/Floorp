@@ -944,7 +944,7 @@ static bool InitModuleLoader(JSContext* cx) {
   options.setSelfHostingMode(false);
   options.setCanLazilyParse(false);
   options.werrorOption = true;
-  options.strictOption = true;
+  options.setForceStrictMode();
 
   JS::SourceText<Utf8Unit> srcBuf;
   if (!srcBuf.init(cx, std::move(src), srcLen)) {
@@ -5219,7 +5219,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   options.setIntroductionType("js shell parse").setFileAndLine("<string>", 1);
   if (goal == frontend::ParseGoal::Module) {
     // See frontend::CompileModule.
-    options.maybeMakeStrictMode(true);
+    options.setForceStrictMode();
     options.allowHTMLComments = false;
   }
 
