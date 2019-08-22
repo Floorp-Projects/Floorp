@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #include "jsutil.h"
@@ -327,7 +326,6 @@ void js::Nursery::enable() {
 }
 
 void js::Nursery::disable() {
-  stringDeDupSet.reset();
   MOZ_ASSERT(isEmpty());
   if (!isEnabled()) {
     return;
@@ -918,10 +916,6 @@ void js::Nursery::collect(JS::GCReason reason) {
   stats().beginNurseryCollection(reason);
   gcTracer.traceMinorGCStart();
 
-  stringDeDupSet.emplace();
-  auto guardStringDedupSet =
-      mozilla::MakeScopeExit([&] { stringDeDupSet.reset(); });
-
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
 
@@ -981,7 +975,6 @@ void js::Nursery::collect(JS::GCReason reason) {
 
   stats().endNurseryCollection(reason);
   gcTracer.traceMinorGCEnd();
-
   timeInChunkAlloc_ = mozilla::TimeDuration();
 
   if (enableProfiling_ && totalTime >= profileThreshold_) {
