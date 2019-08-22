@@ -120,6 +120,18 @@ function runTests() {
   const testPath = path.join(__dirname, SUITES[suite].path);
   chdir(testPath);
 
+  console.log("[devtools-node-test-runner] Check `yarn` is available");
+  try {
+    // This will throw if yarn is unavailable
+    execFileSync("yarn", ["--version"]);
+  } catch (e) {
+    console.log(
+      "[devtools-node-test-runner] ERROR: `yarn` is not installed. " +
+        "See https://yarnpkg.com/docs/install/ "
+    );
+    return false;
+  }
+
   console.log("[devtools-node-test-runner] Run `yarn` in test folder");
   execOut("yarn");
 
