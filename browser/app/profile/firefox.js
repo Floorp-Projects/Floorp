@@ -400,6 +400,8 @@ pref("permissions.default.shortcuts", 0);
   pref("permissions.desktop-notification.postPrompt.enabled", false);
 #endif
 
+pref("permissions.desktop-notification.notNow.enabled", false);
+
 pref("permissions.fullscreen.allowed", false);
 
 pref("permissions.postPrompt.animate", true);
