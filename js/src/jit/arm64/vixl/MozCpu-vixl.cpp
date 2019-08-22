@@ -29,6 +29,10 @@
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "util/Windows.h"
 
+#if defined(XP_IOS)
+#  include <libkern/OSCacheControl.h>
+#endif
+
 namespace vixl {
 
 
@@ -82,7 +86,7 @@ uint32_t CPU::GetCacheType() {
 
 
 void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
-#ifdef JS_CACHE_SIMULATOR_ARM64
+#if defined(JS_SIMULATOR_ARM64) && defined(JS_CACHE_SIMULATOR_ARM64)
   // This code attempt to emulate what the following assembly sequence is doing,
   // which is sending the information to other cores that some cache line have
   // to be invalidated and applying them on the current core.
@@ -101,6 +105,8 @@ void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
   }
 #elif defined(_MSC_VER) && defined(_M_ARM64)
   FlushInstructionCache(GetCurrentProcess(), address, length);
+#elif defined(XP_IOS)
+  sys_icache_invalidate(code, size);
 #elif defined(__aarch64__)
   // Implement the cache synchronisation for all targets where AArch64 is the
   // host, even if we're building the simulator for an AAarch64 host. This

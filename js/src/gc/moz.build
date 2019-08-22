@@ -34,6 +34,7 @@ UNIFIED_SOURCES += [
     'Nursery.cpp',
     'PublicIterators.cpp',
     'RootMarking.cpp',
+    'Scheduling.cpp',
     'Statistics.cpp',
     'Tracer.cpp',
     'Verifier.cpp',

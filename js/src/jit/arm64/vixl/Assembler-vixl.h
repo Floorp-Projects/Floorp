@@ -27,6 +27,7 @@
 #ifndef VIXL_A64_ASSEMBLER_A64_H_
 #define VIXL_A64_ASSEMBLER_A64_H_
 
+#include "jit/arm64/vixl/Cpu-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/arm64/vixl/MozBaseAssembler-vixl.h"

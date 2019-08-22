@@ -26,7 +26,7 @@ struct BaseScalarInfo {
   mozilla::Telemetry::Common::SupportedProduct products;
   bool builtin;
 
-  BaseScalarInfo(
+  constexpr BaseScalarInfo(
       uint32_t aKind, uint32_t aDataset,
       mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
       bool aKeyed, mozilla::Telemetry::Common::SupportedProduct aProducts,
@@ -64,7 +64,7 @@ struct ScalarInfo : BaseScalarInfo {
   // aggregate initialization (curly brackets) in the generated
   // TelemetryScalarData.h. To work around this problem we define a constructor
   // that takes the exact number of parameters we need.
-  ScalarInfo(uint32_t aKind, uint32_t aNameOffset, uint32_t aExpirationOffset,
+  constexpr ScalarInfo(uint32_t aKind, uint32_t aNameOffset, uint32_t aExpirationOffset,
              uint32_t aDataset,
              mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
              bool aKeyed,

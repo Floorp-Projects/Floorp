@@ -110,6 +110,11 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
             final int count = prefs.getInt(GeckoApp.PREFS_FLASH_USAGE, 0);
             payload.put(FLASH_USAGE, count);
             prefs.edit().putInt(GeckoApp.PREFS_FLASH_USAGE, 0).apply();
+
+            final boolean searchUsed = prefs.getBoolean(GeckoApp.PREFS_ENHANCED_SEARCH_USAGE, false);
+            payload.put(GeckoApp.PREFS_ENHANCED_SEARCH_USAGE, searchUsed);
+            final boolean searchReady = prefs.getBoolean(GeckoApp.PREFS_ENHANCED_SEARCH_READY, false);
+            payload.put(GeckoApp.PREFS_ENHANCED_SEARCH_READY, searchReady);
         }
     }
 

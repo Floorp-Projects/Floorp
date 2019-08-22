@@ -2,223 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Variable declarations for light and dark devtools themes.
- * Colors are taken from:
- * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
- */
-
 /*
  * IMPORTANT NOTE
  * This file is parsed in js (see client/shared/theme.js)
  * so the formatting should be consistent (i.e. no '}' inside a rule).
  */
 
-:root.theme-light {
-  --theme-body-background: white;
-  --theme-sidebar-background: white;
-  --theme-contrast-background: #e6b064;
-
-  /* Toolbar */
-  --theme-tab-toolbar-background: var(--grey-10);
-  --theme-toolbar-background: var(--grey-10);
-  --theme-toolbar-color: var(--grey-90);
-  --theme-toolbar-selected-color: var(--blue-60);
-  --theme-toolbar-highlighted-color: var(--green-60);
-  --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
-  --theme-toolbar-background-alt: #f5f5f5;
-  --theme-toolbar-hover: var(--grey-20);
-  --theme-toolbar-hover-active: var(--grey-20);
-  --theme-toolbar-separator: var(--grey-90-a10);
-
-  /* Buttons */
-  --theme-button-background: rgba(12, 12, 13, 0.05);
-  --theme-button-active-background: rgba(12, 12, 13, 0.1);
-
-  /* Selection */
-  --theme-selection-background: var(--blue-55);
-  --theme-selection-background-hover: #F0F9FE;
-  --theme-selection-focus-background: var(--toolbarbutton-hover-background);
-  --theme-selection-focus-color: var(--grey-70);
-  --theme-selection-color: #ffffff;
-
-  /* Border color that splits the toolbars/panels/headers. */
-  --theme-splitter-color: var(--grey-25);
-  --theme-emphasized-splitter-color: var(--grey-30);
-  --theme-emphasized-splitter-color-hover: var(--grey-40);
-
-  /* Icon colors */
-  --theme-icon-color: rgba(12, 12, 13, 0.8);
-  --theme-icon-dimmed-color: rgba(135, 135, 137, 0.9);
-  --theme-icon-checked-color: var(--blue-60);
-  --theme-icon-error-color: var(--red-60);
-  --theme-icon-warning-color: var(--yellow-65);
-
-  /* Text color */
-  --theme-comment: var(--grey-50);
-  --theme-body-color: var(--grey-70);
-  --theme-text-color-alt: var(--grey-50);
-  --theme-text-color-inactive: var(--grey-40);
-  --theme-text-color-strong: var(--grey-90);
-
-  --theme-highlight-green: var(--green-70);
-  --theme-highlight-blue: var(--blue-55);
-  --theme-highlight-purple: var(--blue-70);
-  --theme-highlight-red: var(--magenta-65);
-  --theme-highlight-yellow: #FFF89E;
-
-  /* These theme-highlight color variables have not been photonized. */
-  --theme-highlight-bluegrey: #0072ab;
-  --theme-highlight-lightorange: #d97e00;
-  --theme-highlight-orange: #f13c00;
-  --theme-highlight-pink: #b82ee5;
-  --theme-highlight-gray: #dde1e4;
-
-  /* For accessibility purposes we want to enhance the focus styling. This
-   * should improve keyboard navigation usability. */
-  --theme-focus-outline-color: #000000;
-
-  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
-  --theme-graphs-green: #85d175;
-  --theme-graphs-blue: #83b7f6;
-  --theme-graphs-bluegrey: #0072ab;
-  --theme-graphs-purple: #b693eb;
-  --theme-graphs-yellow: #efc052;
-  --theme-graphs-orange: #d97e00;
-  --theme-graphs-red: #e57180;
-  --theme-graphs-grey: #cccccc;
-  --theme-graphs-full-red: #f00;
-  --theme-graphs-full-blue: #00f;
-
-  /* Common popup styles(used by HTMLTooltip and autocomplete) */
-  --theme-popup-background: -moz-field;
-  --theme-popup-color: -moz-fieldText;
-  --theme-popup-border-color: ThreeDShadow;
-  --theme-popup-dimmed: hsla(0,0%,80%,.3);
-
-  /* Styling for devtool buttons */
-  --theme-toolbarbutton-background: none;
-  --theme-toolbarbutton-color: var(--grey-70);
-  --theme-toolbarbutton-hover-background: var(--grey-90-a05);
-  --theme-toolbarbutton-checked-background: var(--grey-90-a10);
-  --theme-toolbarbutton-checked-color: var(--grey-90);
-  --theme-toolbarbutton-checked-hover-background: var(--grey-90-a15);
-  --theme-toolbarbutton-checked-hover-color: var(--grey-90);
-  --theme-toolbarbutton-active-background: var(--grey-90-a20);
-  --theme-toolbarbutton-active-color: var(--grey-90);
-
-  /* Element Flash background color */
-  --theme-bg-yellow: #FFF697;
-}
-
-/*
- * For doorhangers elsewhere in Firefox, Mac uses fixed colors rather than
- * system colors.
- */
-:root[platform="mac"].theme-light {
-  --theme-popup-color: hsl(0,0%,10%);
-  --theme-popup-border-color: var(--grey-90-a20);
-}
-
-:root.theme-dark {
-  --theme-body-background: #232327;
-  --theme-sidebar-background: #18181a;
-  --theme-contrast-background: #ffb35b;
-
-  /* Toolbar */
-  --theme-tab-toolbar-background: var(--grey-90);
-  --theme-toolbar-background: #18181a;
-  --theme-toolbar-color: var(--grey-40);
-  --theme-toolbar-selected-color: white;
-  --theme-toolbar-highlighted-color: var(--green-50);
-  --theme-toolbar-background-hover: #232327;
-  --theme-toolbar-background-alt: var(--grey-85);
-  --theme-toolbar-hover: #232327;
-  --theme-toolbar-hover-active: #252526;
-  --theme-toolbar-separator: var(--grey-10-a20);
-
-  /* Buttons */
-  --theme-button-background: rgba(249, 249, 250, 0.1);
-  --theme-button-active-background: rgba(249, 249, 250, 0.15);
-
-  /* Selection */
-  --theme-selection-background: #204E8A;
-  --theme-selection-background-hover: #303844;
-  --theme-selection-focus-background: var(--grey-60);
-  --theme-selection-focus-color: var(--grey-30);
-  --theme-selection-color: #ffffff;
-
-  /* Border color that splits the toolbars/panels/headers. */
-  --theme-splitter-color: var(--grey-70);
-  --theme-emphasized-splitter-color: var(--grey-60);
-  --theme-emphasized-splitter-color-hover: var(--grey-50);
-
-  /* Icon colors */
-  --theme-icon-color: rgba(249, 249, 250, 0.7);
-  --theme-icon-dimmed-color: rgba(147, 147, 149, 0.9);
-  --theme-icon-checked-color: var(--blue-30);
-  --theme-icon-error-color: var(--red-40);
-  --theme-icon-warning-color: var(--yellow-60);
-
-  /* Text color */
-  --theme-comment: var(--grey-45);
-  --theme-body-color: var(--grey-40);
-  --theme-text-color-alt: var(--grey-45);
-  --theme-text-color-inactive: var(--grey-50);
-  --theme-text-color-strong: var(--grey-30);
-
-  --theme-highlight-green: #86DE74;
-  --theme-highlight-blue: #75BFFF;
-  --theme-highlight-purple: #B98EFF;
-  --theme-highlight-red: #FF7DE9;
-  --theme-highlight-yellow: #FFF89E;
-
-  /* These theme-highlight color variables have not been photonized. */
-  --theme-highlight-bluegrey: #5e88b0;
-  --theme-highlight-lightorange: #d99b28;
-  --theme-highlight-orange: #d96629;
-  --theme-highlight-pink: #df80ff;
-  --theme-highlight-gray: #e9f4fe;
-
-  /* For accessibility purposes we want to enhance the focus styling. This
-   * should improve keyboard navigation usability. */
-  --theme-focus-outline-color: #ced3d9;
-
-  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
-  --theme-graphs-green: #70bf53;
-  --theme-graphs-blue: #46afe3;
-  --theme-graphs-bluegrey: #5e88b0;
-  --theme-graphs-purple: #df80ff;
-  --theme-graphs-yellow: #d99b28;
-  --theme-graphs-orange: #d96629;
-  --theme-graphs-red: #eb5368;
-  --theme-graphs-grey: #757873;
-  --theme-graphs-full-red: #f00;
-  --theme-graphs-full-blue: #00f;
-
-  /* Common popup styles(used by HTMLTooltip and autocomplete) */
-  --theme-popup-background: var(--grey-60);
-  --theme-popup-color: rgb(249,249,250);
-  --theme-popup-border-color: #27272b;
-  --theme-popup-dimmed: rgba(249,249,250,.1);
-
-  /* Styling for devtool buttons */
-  --theme-toolbarbutton-background: none;
-  --theme-toolbarbutton-color: var(--grey-40);
-  --theme-toolbarbutton-hover-background: var(--grey-10-a15);
-  --theme-toolbarbutton-checked-background: var(--grey-10-a20);
-  --theme-toolbarbutton-checked-color: var(--grey-30);
-  --theme-toolbarbutton-checked-hover-background: var(--grey-10-a25);
-  --theme-toolbarbutton-checked-hover-color: var(--grey-30);
-  --theme-toolbarbutton-active-background: var(--grey-10-a30);
-  --theme-toolbarbutton-active-color: var(--grey-30);
-
-  /* Element Flash background color */
-  --theme-bg-yellow: #605913;
-}
-
 :root {
   --theme-focus-border-color-textbox: #0675d3;
-  --theme-textbox-box-shadow: rgba(97,181,255,.75);
+  --theme-textbox-box-shadow: rgba(97, 181, 255, 0.75);
 
   /* Text sizes */
   --theme-body-font-size: 11px;
@@ -238,7 +30,7 @@
   --toolbarbutton-checked-focus-background: var(--blue-60);
 
   /* The photon animation curve */
-  --animation-curve: cubic-bezier(.07,.95,0,1);
+  --animation-curve: cubic-bezier(0.07, 0.95, 0, 1);
 
   /*
    * Photon Colors CSS Variables v3.3.2
@@ -246,7 +38,7 @@
    * - We only add Photon color variables that we are actually using; unused
    *   variables will fail browser/base/content/test/static/browser_parsable_css.js
    * - We added a few unofficial colors: a few intermediary values (e.g. Blue 45),
-  *    and lighter variants for the dark theme (e.g. Red 20, Red 40).
+   *   and lighter variants for the dark theme (e.g. Red 20, Red 40).
    */
   --magenta-50: #ff1ad9;
   --magenta-65: #dd00a9;
@@ -305,4 +97,207 @@
   --grey-90-a15: rgba(12, 12, 13, 0.15);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
+}
+
+:root.theme-light {
+  --theme-body-background: white;
+  --theme-sidebar-background: white;
+  --theme-contrast-background: #e6b064;
+
+  /* Toolbar */
+  --theme-tab-toolbar-background: var(--grey-10);
+  --theme-toolbar-background: var(--grey-10);
+  --theme-toolbar-color: var(--grey-90);
+  --theme-toolbar-selected-color: var(--blue-60);
+  --theme-toolbar-highlighted-color: var(--green-60);
+  --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
+  --theme-toolbar-background-alt: #f5f5f5;
+  --theme-toolbar-hover: var(--grey-20);
+  --theme-toolbar-hover-active: var(--grey-20);
+  --theme-toolbar-separator: var(--grey-90-a10);
+
+  /* Buttons */
+  --theme-button-background: rgba(12, 12, 13, 0.05);
+  --theme-button-active-background: rgba(12, 12, 13, 0.1);
+
+  /* Selection */
+  --theme-selection-background: var(--blue-55);
+  --theme-selection-background-hover: #f0f9fe;
+  --theme-selection-focus-background: var(--toolbarbutton-hover-background);
+  --theme-selection-focus-color: var(--grey-70);
+  --theme-selection-color: #ffffff;
+
+  /* Border color that splits the toolbars/panels/headers. */
+  --theme-splitter-color: var(--grey-25);
+  --theme-emphasized-splitter-color: var(--grey-30);
+  --theme-emphasized-splitter-color-hover: var(--grey-40);
+
+  /* Icon colors */
+  --theme-icon-color: rgba(12, 12, 13, 0.8);
+  --theme-icon-dimmed-color: rgba(135, 135, 137, 0.9);
+  --theme-icon-checked-color: var(--blue-60);
+  --theme-icon-error-color: var(--red-60);
+  --theme-icon-warning-color: var(--yellow-65);
+
+  /* Text color */
+  --theme-comment: var(--grey-50);
+  --theme-body-color: var(--grey-70);
+  --theme-text-color-alt: var(--grey-50);
+  --theme-text-color-inactive: var(--grey-40);
+  --theme-text-color-strong: var(--grey-90);
+
+  --theme-highlight-green: var(--green-70);
+  --theme-highlight-blue: var(--blue-55);
+  --theme-highlight-purple: var(--blue-70);
+  --theme-highlight-red: var(--magenta-65);
+  --theme-highlight-yellow: #fff89e;
+
+  /* These theme-highlight color variables have not been photonized. */
+  --theme-highlight-bluegrey: #0072ab;
+  --theme-highlight-lightorange: #d97e00;
+  --theme-highlight-orange: #f13c00;
+  --theme-highlight-pink: #b82ee5;
+  --theme-highlight-gray: #dde1e4;
+
+  /* For accessibility purposes we want to enhance the focus styling. This
+   * should improve keyboard navigation usability. */
+  --theme-focus-outline-color: #000000;
+
+  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
+  --theme-graphs-green: #85d175;
+  --theme-graphs-blue: #83b7f6;
+  --theme-graphs-bluegrey: #0072ab;
+  --theme-graphs-purple: #b693eb;
+  --theme-graphs-yellow: #efc052;
+  --theme-graphs-orange: #d97e00;
+  --theme-graphs-red: #e57180;
+  --theme-graphs-grey: #cccccc;
+  --theme-graphs-full-red: #f00;
+  --theme-graphs-full-blue: #00f;
+
+  /* Common popup styles(used by HTMLTooltip and autocomplete) */
+  --theme-popup-background: -moz-field;
+  --theme-popup-color: -moz-fieldText;
+  --theme-popup-border-color: ThreeDShadow;
+  --theme-popup-dimmed: hsla(0, 0%, 80%, 0.3);
+
+  /* Styling for devtool buttons */
+  --theme-toolbarbutton-background: none;
+  --theme-toolbarbutton-color: var(--grey-70);
+  --theme-toolbarbutton-hover-background: var(--grey-90-a05);
+  --theme-toolbarbutton-checked-background: var(--grey-90-a10);
+  --theme-toolbarbutton-checked-color: var(--grey-90);
+  --theme-toolbarbutton-checked-hover-background: var(--grey-90-a15);
+  --theme-toolbarbutton-checked-hover-color: var(--grey-90);
+  --theme-toolbarbutton-active-background: var(--grey-90-a20);
+  --theme-toolbarbutton-active-color: var(--grey-90);
+
+  /* Element Flash background color */
+  --theme-bg-yellow: #fff697;
+}
+
+/*
+ * For doorhangers elsewhere in Firefox, Mac uses fixed colors rather than
+ * system colors.
+ */
+:root[platform="mac"].theme-light {
+  --theme-popup-color: hsl(0, 0%, 10%);
+  --theme-popup-border-color: var(--grey-90-a20);
+}
+
+:root.theme-dark {
+  --theme-body-background: #232327;
+  --theme-sidebar-background: #18181a;
+  --theme-contrast-background: #ffb35b;
+
+  /* Toolbar */
+  --theme-tab-toolbar-background: var(--grey-90);
+  --theme-toolbar-background: #18181a;
+  --theme-toolbar-color: var(--grey-40);
+  --theme-toolbar-selected-color: white;
+  --theme-toolbar-highlighted-color: var(--green-50);
+  --theme-toolbar-background-hover: #232327;
+  --theme-toolbar-background-alt: var(--grey-85);
+  --theme-toolbar-hover: #232327;
+  --theme-toolbar-hover-active: #252526;
+  --theme-toolbar-separator: var(--grey-10-a20);
+
+  /* Buttons */
+  --theme-button-background: rgba(249, 249, 250, 0.1);
+  --theme-button-active-background: rgba(249, 249, 250, 0.15);
+
+  /* Selection */
+  --theme-selection-background: #204e8a;
+  --theme-selection-background-hover: #303844;
+  --theme-selection-focus-background: var(--grey-60);
+  --theme-selection-focus-color: var(--grey-30);
+  --theme-selection-color: #ffffff;
+
+  /* Border color that splits the toolbars/panels/headers. */
+  --theme-splitter-color: var(--grey-70);
+  --theme-emphasized-splitter-color: var(--grey-60);
+  --theme-emphasized-splitter-color-hover: var(--grey-50);
+
+  /* Icon colors */
+  --theme-icon-color: rgba(249, 249, 250, 0.7);
+  --theme-icon-dimmed-color: rgba(147, 147, 149, 0.9);
+  --theme-icon-checked-color: var(--blue-30);
+  --theme-icon-error-color: var(--red-40);
+  --theme-icon-warning-color: var(--yellow-60);
+
+  /* Text color */
+  --theme-comment: var(--grey-45);
+  --theme-body-color: var(--grey-40);
+  --theme-text-color-alt: var(--grey-45);
+  --theme-text-color-inactive: var(--grey-50);
+  --theme-text-color-strong: var(--grey-30);
+
+  --theme-highlight-green: #86de74;
+  --theme-highlight-blue: #75bfff;
+  --theme-highlight-purple: #b98eff;
+  --theme-highlight-red: #ff7de9;
+  --theme-highlight-yellow: #fff89e;
+
+  /* These theme-highlight color variables have not been photonized. */
+  --theme-highlight-bluegrey: #5e88b0;
+  --theme-highlight-lightorange: #d99b28;
+  --theme-highlight-orange: #d96629;
+  --theme-highlight-pink: #df80ff;
+  --theme-highlight-gray: #e9f4fe;
+
+  /* For accessibility purposes we want to enhance the focus styling. This
+   * should improve keyboard navigation usability. */
+  --theme-focus-outline-color: #ced3d9;
+
+  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
+  --theme-graphs-green: #70bf53;
+  --theme-graphs-blue: #46afe3;
+  --theme-graphs-bluegrey: #5e88b0;
+  --theme-graphs-purple: #df80ff;
+  --theme-graphs-yellow: #d99b28;
+  --theme-graphs-orange: #d96629;
+  --theme-graphs-red: #eb5368;
+  --theme-graphs-grey: #757873;
+  --theme-graphs-full-red: #f00;
+  --theme-graphs-full-blue: #00f;
+
+  /* Common popup styles(used by HTMLTooltip and autocomplete) */
+  --theme-popup-background: var(--grey-60);
+  --theme-popup-color: rgb(249, 249, 250);
+  --theme-popup-border-color: #27272b;
+  --theme-popup-dimmed: rgba(249, 249, 250, 0.1);
+
+  /* Styling for devtool buttons */
+  --theme-toolbarbutton-background: none;
+  --theme-toolbarbutton-color: var(--grey-40);
+  --theme-toolbarbutton-hover-background: var(--grey-10-a15);
+  --theme-toolbarbutton-checked-background: var(--grey-10-a20);
+  --theme-toolbarbutton-checked-color: var(--grey-30);
+  --theme-toolbarbutton-checked-hover-background: var(--grey-10-a25);
+  --theme-toolbarbutton-checked-hover-color: var(--grey-30);
+  --theme-toolbarbutton-active-background: var(--grey-10-a30);
+  --theme-toolbarbutton-active-color: var(--grey-30);
+
+  /* Element Flash background color */
+  --theme-bg-yellow: #605913;
 }
