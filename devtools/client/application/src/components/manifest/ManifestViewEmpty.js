@@ -31,7 +31,7 @@ class ManifestViewEmpty extends PureComponent {
         },
         h1({ className: "app-page__title" })
       ),
-      Localized({ id: "manifest-empty-intro" }, p({}))
+      Localized({ id: "manifest-non-existing" }, p({}))
     );
   }
 }
