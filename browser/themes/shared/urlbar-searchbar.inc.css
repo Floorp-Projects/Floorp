@@ -354,7 +354,7 @@
   opacity: 0.5;
 }
 
-#urlbar-go-button,
+.urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
 }
