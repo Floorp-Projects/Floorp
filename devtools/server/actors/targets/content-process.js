@@ -131,8 +131,6 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
 
     return {
       actor: this.actorID,
-      name: "Content process",
-
       consoleActor: this._consoleActor.actorID,
       threadActor: this.threadActor.actorID,
       memoryActor: this.memoryActor.actorID,

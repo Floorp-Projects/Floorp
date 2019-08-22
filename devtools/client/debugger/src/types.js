@@ -464,7 +464,7 @@ export type Scope = {|
 export type Thread = {
   +actor: ThreadId,
   +url: string,
-  +type: number,
+  +type: string,
   +name: string,
 };
 

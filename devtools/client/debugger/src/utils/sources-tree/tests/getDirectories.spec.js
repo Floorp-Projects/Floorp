@@ -35,7 +35,7 @@ describe("getDirectories", () => {
       {
         actor: "FakeThread",
         url: "http://a",
-        type: 1,
+        type: "worker",
         name: "FakeThread",
       },
     ];
@@ -78,7 +78,7 @@ describe("findSourceTreeNodes", () => {
       {
         actor: "FakeThread",
         url: "http://a",
-        type: 1,
+        type: "worker",
         name: "FakeThread",
       },
     ];
