@@ -187,7 +187,8 @@ nsMapRuleToAttributesFunc nsMathMLElement::GetAttributeMappingFunction() const {
 /* static */
 bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
                                            nsCSSValue& aCSSValue,
-                                           uint32_t aFlags) {
+                                           uint32_t aFlags,
+                                           const Document& aDocument) {
   if (StaticPrefs::mathml_mathspace_names_disabled()) {
     return false;
   }
@@ -225,6 +226,7 @@ bool nsMathMLElement::ParseNamedSpaceValue(const nsString& aString,
     }
   }
   if (0 != i) {
+    aDocument.WarnOnceAbout(dom::Document::eMathML_DeprecatedMathSpaceValue);
     aCSSValue.SetFloatValue(float(i) / float(18), eCSSUnit_EM);
     return true;
   }
@@ -285,7 +287,7 @@ bool nsMathMLElement::ParseNumericValue(const nsString& aString,
     return false;
   }
 
-  if (ParseNamedSpaceValue(str, aCSSValue, aFlags)) {
+  if (aDocument && ParseNamedSpaceValue(str, aCSSValue, aFlags, *aDocument)) {
     return true;
   }
 
@@ -546,6 +548,8 @@ void nsMathMLElement::MapMathMLAttributesInto(
       str.CompressWhitespace();
       for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
         if (str.EqualsASCII(sizes[i])) {
+          aDecls.Document()->WarnOnceAbout(
+              dom::Document::eMathML_DeprecatedMathSizeValue);
           aDecls.SetKeywordValue(eCSSProperty_font_size, values[i]);
           break;
         }
