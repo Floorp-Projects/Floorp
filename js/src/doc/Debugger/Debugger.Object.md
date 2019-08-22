@@ -535,6 +535,21 @@ of exotic object like an opaque wrapper.
 
     The <i>options</i> argument is as for [`Debugger.Frame.prototype.eval`][fr eval].
 
+<code>createSource(<i>options</i>)</code>
+:    If the referent is a global object, return a new JavaScript source in the
+    global's realm which has its properties filled in according to the `options`
+    object.  If the referent is not a global object, throw a `TypeError`
+    exception.  The `options` object can have the following properties:
+      * `text`: String contents of the JavaScript in the source.
+      * `url`: URL the resulting source should be associated with.
+      * `startLine`: Starting line of the source.
+      * `sourceMapURL`: Optional URL specifying the source's source map URL.
+        If not specified, the source map URL can be filled in if specified by
+        the source's text.
+      * `isScriptElement`: Optional boolean which will set the source's
+        `introductionType` to `"scriptElement"` if specified.  Otherwise, the
+        source's `introductionType` will be `undefined`.
+
 `asEnvironment()`
 :   If the referent is a global object, return the [`Debugger.Environment`][environment]
     instance representing the referent's global lexical scope. The global

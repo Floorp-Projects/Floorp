@@ -306,6 +306,8 @@ class DebuggerObject : public NativeObject {
   static MOZ_MUST_USE bool executeInGlobalWithBindingsMethod(JSContext* cx,
                                                              unsigned argc,
                                                              Value* vp);
+  static MOZ_MUST_USE bool createSource(JSContext* cx, unsigned argc,
+                                        Value* vp);
   static MOZ_MUST_USE bool makeDebuggeeValueMethod(JSContext* cx, unsigned argc,
                                                    Value* vp);
   static MOZ_MUST_USE bool makeDebuggeeNativeFunctionMethod(JSContext* cx,
