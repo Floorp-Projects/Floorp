@@ -160,7 +160,8 @@ def nightly_to_production_app(is_staging, version_name):
     other_tasks = {}
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(variant, is_staging, version_name)
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(
+        variant, 'nightlyLegacy', is_staging, version_name)
 
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_release_signing_task(
