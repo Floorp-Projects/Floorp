@@ -81,7 +81,8 @@ void VRDisplay::UpdateVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays,
 
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   nsTArray<RefPtr<gfx::VRDisplayClient>> updatedDisplays;
-  if (vm && vm->GetVRDisplays(updatedDisplays)) {
+  if (vm) {
+    vm->GetVRDisplays(updatedDisplays);
     for (size_t i = 0; i < updatedDisplays.Length(); i++) {
       RefPtr<gfx::VRDisplayClient> display = updatedDisplays[i];
       bool isNewDisplay = true;
