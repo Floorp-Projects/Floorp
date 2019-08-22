@@ -15,10 +15,11 @@
   <panelmultiview id="identity-popup-multiView"
                   mainViewId="identity-popup-mainView">
     <panelview id="identity-popup-mainView"
+               role="document"
                descriptionheightworkaround="true">
       <vbox id="identity-popup-mainView-panel-header">
         <label>
-          <html:span id="identity-popup-mainView-panel-header-span"/>
+          <html:span id="identity-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
         </label>
       </vbox>
 
@@ -67,6 +68,7 @@
               aria-labelledby="identity-popup-permissions-headline">
           <hbox align="center">
             <label id="identity-popup-permissions-headline"
+                   role="heading" aria-level="2"
                    value="&identity.permissions2;"/>
             <image id="identity-popup-permissions-granted-indicator"/>
           </hbox>
@@ -88,6 +90,7 @@
 
     <!-- Security SubView -->
     <panelview id="identity-popup-securityView"
+               role="document"
                title="&identity.securityView.label2;"
                descriptionheightworkaround="true">
       <vbox class="identity-popup-security-content">
