@@ -326,6 +326,8 @@ inline bool hasUnaliasedDouble() { return false; }
 // See comments in Arhitecture-mips32.h.
 inline bool hasMultiAlias() { return false; }
 
+void FlushICache(void* code, size_t size);
+
 }  // namespace jit
 }  // namespace js
 
