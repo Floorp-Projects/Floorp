@@ -22,7 +22,7 @@ const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
 async function getWebConsoleWrapper() {
   const hud = {
-    target: { client: {}, getFront: () => {} },
+    currentTarget: { client: {}, getFront: () => {} },
     getMappedExpression: () => {},
   };
   const webConsoleUi = getWebConsoleUiMock(hud);
