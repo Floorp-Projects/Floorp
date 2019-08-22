@@ -194,6 +194,15 @@ class TaskBuilder(object):
             if cmd
         )
 
+        treeherder = {
+            'jobKind': 'test',
+            'machine': {
+                'platform': 'ui-test',
+            },
+            'symbol': 'ui-test',
+            'tier': 2,
+        }
+
         return self._craft_build_ish_task(
             name='Fenix - UI test',
             description='Execute Gradle tasks for UI tests',
@@ -203,6 +212,7 @@ class TaskBuilder(object):
             ],
             artifacts=artifacts,
             env_vars=env_vars,
+            treeherder=treeherder,
         )
 
     def craft_upload_apk_nimbledroid_task(self, assemble_task_id):
