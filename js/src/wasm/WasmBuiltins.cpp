@@ -26,6 +26,7 @@
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
+#include "jit/Simulator.h"
 #include "threading/Mutex.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
@@ -1214,7 +1215,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
 
-  ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);
+  jit::FlushICache(thunks->codeBase, thunks->codeSize);
   if (!ExecutableAllocator::makeExecutable(thunks->codeBase,
                                            thunks->codeSize)) {
     return false;
