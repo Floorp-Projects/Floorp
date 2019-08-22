@@ -1026,6 +1026,14 @@ bool js::FunctionHasDefaultHasInstance(JSFunction* fun,
     const Value hasInstance = fun->as<NativeObject>().getSlot(shape->slot());
     return IsNativeFunction(hasInstance, fun_symbolHasInstance);
   }
+
+#ifdef DEBUG
+  // The proto must be Function.__proto__. It has an immutable @@hasInstance
+  // property. (Callers should check this first.)
+  Value funProto = fun->global().getPrototype(JSProto_Function);
+  MOZ_ASSERT(fun->staticPrototype() == &funProto.toObject());
+#endif
+
   return true;
 }
 
