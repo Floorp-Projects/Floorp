@@ -197,7 +197,7 @@ class WebConsole {
    *        The line number which you want to place the caret.
    */
   viewSourceInStyleEditor(sourceURL, sourceLine) {
-    const toolbox = gDevTools.getToolbox(this.target);
+    const toolbox = this.toolbox;
     if (!toolbox) {
       this.viewSource(sourceURL, sourceLine);
       return;
@@ -220,7 +220,7 @@ class WebConsole {
    *        The column number which you want to place the caret.
    */
   viewSourceInDebugger(sourceURL, sourceLine, sourceColumn) {
-    const toolbox = gDevTools.getToolbox(this.target);
+    const toolbox = this.toolbox;
     if (!toolbox) {
       this.viewSource(sourceURL, sourceLine, sourceColumn);
       return;
@@ -257,7 +257,7 @@ class WebConsole {
    *         returned.
    */
   getDebuggerFrames() {
-    const toolbox = gDevTools.getToolbox(this.target);
+    const toolbox = this.toolbox;
     if (!toolbox) {
       return null;
     }
@@ -286,7 +286,7 @@ class WebConsole {
    *                               `originalExpression`.
    */
   getMappedExpression(expression) {
-    const toolbox = gDevTools.getToolbox(this.target);
+    const toolbox = this.toolbox;
 
     // We need to check if the debugger is open, since it may perform a variable name
     // substitution for sourcemapped script (i.e. evaluated `myVar.trim()` might need to
@@ -341,7 +341,7 @@ class WebConsole {
    *         then |null| is returned.
    */
   getInspectorSelection() {
-    const toolbox = gDevTools.getToolbox(this.target);
+    const toolbox = this.toolbox;
     if (!toolbox) {
       return null;
     }

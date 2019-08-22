@@ -7,7 +7,6 @@
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   WebConsoleConnectionProxy,
 } = require("devtools/client/webconsole/webconsole-connection-proxy");
@@ -143,7 +142,7 @@ class WebConsoleUI {
       this.wrapper.destroy();
     }
 
-    const toolbox = gDevTools.getToolbox(this.hud.target);
+    const toolbox = this.hud.toolbox;
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
@@ -301,7 +300,7 @@ class WebConsoleUI {
 
     this.outputNode = this.document.getElementById("app-wrapper");
 
-    const toolbox = gDevTools.getToolbox(this.hud.target);
+    const toolbox = this.hud.toolbox;
 
     // Initialize module loader and load all the WebConsoleWrapper. The entire code-base
     // doesn't need any extra privileges and runs entirely in content scope.

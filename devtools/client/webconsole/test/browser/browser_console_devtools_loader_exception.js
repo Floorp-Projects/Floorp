@@ -17,7 +17,7 @@ add_task(async function() {
   ok(bcHud, "browser console opened");
 
   // Cause an exception in a script loaded with the DevTools loader.
-  const toolbox = gDevTools.getToolbox(wcHud.target);
+  const toolbox = wcHud.toolbox;
   const oldPanels = toolbox._toolPanels;
   // non-iterable
   toolbox._toolPanels = {};
