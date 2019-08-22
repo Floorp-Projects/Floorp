@@ -1503,8 +1503,9 @@ void Gecko_ReleasensIReferrerInfoArbitraryThread(nsIReferrerInfo* aPtr) {
 void Gecko_nsIReferrerInfo_Debug(nsIReferrerInfo* aReferrerInfo,
                                  nsCString* aOut) {
   if (aReferrerInfo) {
-    nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetComputedReferrer();
-    *aOut = referrer->GetSpecOrDefault();
+    if (nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetComputedReferrer()) {
+      *aOut = referrer->GetSpecOrDefault();
+    }
   }
 }
 
