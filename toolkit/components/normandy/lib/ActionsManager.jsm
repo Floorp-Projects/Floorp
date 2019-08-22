@@ -10,6 +10,8 @@ const { LogManager } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonRollbackAction: "resource://normandy/actions/AddonRollbackAction.jsm",
+  AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.jsm",
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   BranchedAddonStudyAction:
     "resource://normandy/actions/BranchedAddonStudyAction.jsm",
@@ -32,6 +34,8 @@ const log = LogManager.getLogger("recipe-runner");
 
 const actionConstructors = {
   "addon-study": AddonStudyAction,
+  "addon-rollback": AddonRollbackAction,
+  "addon-rollout": AddonRolloutAction,
   "branched-addon-study": BranchedAddonStudyAction,
   "console-log": ConsoleLogAction,
   "multi-preference-experiment": PreferenceExperimentAction,

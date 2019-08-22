@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutPages: "resource://normandy-content/AboutPages.jsm",
+  AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   LogManager: "resource://normandy/lib/LogManager.jsm",
@@ -98,6 +99,12 @@ var Normandy = {
       await PreferenceRollouts.init();
     } catch (err) {
       log.error("Failed to initialize preference rollouts:", err);
+    }
+
+    try {
+      await AddonRollouts.init();
+    } catch (err) {
+      log.error("Failed to initialize addon rollouts:", err);
     }
 
     try {
