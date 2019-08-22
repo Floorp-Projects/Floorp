@@ -46,7 +46,10 @@ OriginalSource.prototype = {
   getText: function() {
     if (!this._sourcePromise) {
       this._sourcePromise = this._sourceMapService
-        .getOriginalSourceText(this._sourceId)
+        .getOriginalSourceText({
+          id: this._sourceId,
+          url: this._url,
+        })
         .then(contents => {
           // Make it look like a long string actor.
           return {

@@ -17,8 +17,6 @@ import {
   isGenerated,
   isOriginal as isOriginalSource,
   getPlainUrl,
-  isPretty,
-  isJavaScript,
 } from "../utils/source";
 import {
   createInitial,
@@ -39,14 +37,7 @@ import {
 } from "../utils/resource";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
-import {
-  pending,
-  fulfilled,
-  rejected,
-  asSettled,
-  isFulfilled,
-} from "../utils/async-value";
-
+import * as asyncValue from "../utils/async-value";
 import type { AsyncValue, SettledValue } from "../utils/async-value";
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
@@ -89,6 +80,7 @@ type PlainUrlsMap = { [string]: string[] };
 export type SourceBase = {|
   +id: SourceId,
   +url: string,
+  +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
   +relativeUrl: string,
@@ -158,6 +150,8 @@ function update(
   let location = null;
 
   switch (action.type) {
+    case "CLEAR_SOURCE_MAP_URL":
+      return clearSourceMaps(state, action.sourceId);
     case "ADD_SOURCE":
       return addSources(state, [action.source]);
 
@@ -266,7 +260,7 @@ const resourceAsSourceBase = memoizeResourceShallow(
 const resourceAsSourceWithContent = memoizeResourceShallow(
   ({ content, ...source }: SourceResource): SourceWithContent => ({
     ...source,
-    content: asSettled(content),
+    content: asyncValue.asSettled(content),
   })
 );
 
@@ -423,17 +417,17 @@ function updateLoadedState(
 
   let content;
   if (action.status === "start") {
-    content = pending();
+    content = asyncValue.pending();
   } else if (action.status === "error") {
-    content = rejected(action.error);
+    content = asyncValue.rejected(action.error);
   } else if (typeof action.value.text === "string") {
-    content = fulfilled({
+    content = asyncValue.fulfilled({
       type: "text",
       value: action.value.text,
       contentType: action.value.contentType,
     });
   } else {
-    content = fulfilled({
+    content = asyncValue.fulfilled({
       type: "wasm",
       value: action.value.text,
     });
@@ -445,6 +439,25 @@ function updateLoadedState(
       {
         id: sourceId,
         content,
+      },
+    ]),
+  };
+}
+
+function clearSourceMaps(
+  state: SourcesState,
+  sourceId: SourceId
+): SourcesState {
+  if (!hasResource(state.sources, sourceId)) {
+    return state;
+  }
+
+  return {
+    ...state,
+    sources: updateResources(state.sources, [
+      {
+        id: sourceId,
+        sourceMapURL: "",
       },
     ]),
   };
@@ -776,7 +789,7 @@ export function getSourceContent(
   id: SourceId
 ): SettledValue<SourceContent> | null {
   const { content } = getResource(state.sources.sources, id);
-  return asSettled(content);
+  return asyncValue.asSettled(content);
 }
 
 export function getSelectedSourceId(state: OuterState) {
@@ -911,39 +924,6 @@ export function canLoadSource(
 
   const actors = getSourceActorsForSource(state, sourceId);
   return actors.length != 0;
-}
-
-export function isSourceWithMap(
-  state: OuterState & SourceActorOuterState,
-  id: SourceId
-): boolean {
-  return getSourceActorsForSource(state, id).some(
-    soureActor => soureActor.sourceMapURL
-  );
-}
-
-export function canPrettyPrintSource(
-  state: OuterState & SourceActorOuterState,
-  id: SourceId
-): boolean {
-  const source: SourceWithContent = getSourceWithContent(state, id);
-  if (
-    !source ||
-    isPretty(source) ||
-    isOriginalSource(source) ||
-    (prefs.clientSourceMapsEnabled && isSourceWithMap(state, id))
-  ) {
-    return false;
-  }
-
-  const sourceContent =
-    source.content && isFulfilled(source.content) ? source.content.value : null;
-
-  if (!sourceContent || !isJavaScript(source, sourceContent)) {
-    return false;
-  }
-
-  return true;
 }
 
 export function getBreakpointPositions(

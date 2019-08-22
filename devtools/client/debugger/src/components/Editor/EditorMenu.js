@@ -7,16 +7,13 @@
 import { Component } from "react";
 import { connect } from "../../utils/connect";
 import { showMenu } from "devtools-contextmenu";
-import { isOriginalId } from "devtools-source-map";
 
 import { getSourceLocationFromMouseEvent } from "../../utils/editor";
-import { isPretty } from "../../utils/source";
 import {
   getPrettySource,
   getIsPaused,
   getCurrentThread,
   getThreadContext,
-  isSourceWithMap,
 } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
@@ -31,7 +28,7 @@ type Props = {
   editorActions: EditorItemActions,
   clearContextMenu: () => void,
   editor: SourceEditor,
-  hasMappedLocation: boolean,
+  hasPrettySource: boolean,
   isPaused: boolean,
   selectedSource: SourceWithContent,
 };
@@ -52,7 +49,7 @@ class EditorMenu extends Component<Props> {
       editor,
       selectedSource,
       editorActions,
-      hasMappedLocation,
+      hasPrettySource,
       isPaused,
       contextMenu: event,
     } = props;
@@ -70,7 +67,7 @@ class EditorMenu extends Component<Props> {
         cx,
         editorActions,
         selectedSource,
-        hasMappedLocation,
+        hasPrettySource,
         location,
         isPaused,
         selectionText: editor.codeMirror.getSelection().trim(),
@@ -87,11 +84,7 @@ class EditorMenu extends Component<Props> {
 const mapStateToProps = (state, props) => ({
   cx: getThreadContext(state),
   isPaused: getIsPaused(state, getCurrentThread(state)),
-  hasMappedLocation:
-    (isOriginalId(props.selectedSource.id) ||
-      isSourceWithMap(state, props.selectedSource.id) ||
-      isPretty(props.selectedSource)) &&
-    !getPrettySource(state, props.selectedSource.id),
+  hasPrettySource: !!getPrettySource(state, props.selectedSource.id),
 });
 
 const mapDispatchToProps = dispatch => ({

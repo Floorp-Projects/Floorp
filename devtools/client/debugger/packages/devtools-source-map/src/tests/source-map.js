@@ -7,12 +7,13 @@ const networkRequest = require("devtools-utils/src/network-request");
 
 const {
   getOriginalURLs,
+  hasMappedSource,
   getOriginalLocation,
   getGeneratedRangesForOriginal,
   clearSourceMaps,
 } = require("../source-map");
 
-const { setupBundleFixture, setupBundleFixtureAndData } = require("./helpers");
+const { setupBundleFixture } = require("./helpers");
 
 describe("source maps", () => {
   beforeEach(() => {
@@ -53,9 +54,12 @@ describe("source maps", () => {
 
   describe("getGeneratedRangesForOriginal", () => {
     test("the overall generated ranges on the source", async () => {
-      const data = await setupBundleFixtureAndData("intermingled-sources");
+      const urls = await setupBundleFixture("intermingled-sources");
 
-      const ranges = await getGeneratedRangesForOriginal(data[0].id);
+      const ranges = await getGeneratedRangesForOriginal(
+        "intermingled-sources.js/originalSource-01",
+        urls[0]
+      );
 
       expect(ranges).toEqual([
         {
@@ -112,9 +116,13 @@ describe("source maps", () => {
     });
 
     test("the merged generated ranges on the source", async () => {
-      const data = await setupBundleFixtureAndData("intermingled-sources");
+      const urls = await setupBundleFixture("intermingled-sources");
 
-      const ranges = await getGeneratedRangesForOriginal(data[0].id, true);
+      const ranges = await getGeneratedRangesForOriginal(
+        "intermingled-sources.js/originalSource-01",
+        urls[0],
+        true
+      );
 
       expect(ranges).toEqual([
         {
@@ -128,6 +136,27 @@ describe("source maps", () => {
           },
         },
       ]);
+    });
+  });
+
+  describe("hasMappedSource", () => {
+    test("has original location", async () => {
+      await setupBundleFixture("bundle");
+      const location = {
+        sourceId: "bundle.js",
+        line: 49,
+      };
+      const isMapped = await hasMappedSource(location);
+      expect(isMapped).toBe(true);
+    });
+
+    test("does not have original location", async () => {
+      const location = {
+        sourceId: "bundle.js",
+        line: 94,
+      };
+      const isMapped = await hasMappedSource(location);
+      expect(isMapped).toBe(false);
     });
   });
 

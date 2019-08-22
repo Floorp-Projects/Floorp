@@ -109,29 +109,9 @@ export default function update(
     case "SET_SOURCE_ACTOR_BREAKABLE_LINES":
       state = updateBreakableLines(state, action);
       break;
-
-    case "CLEAR_SOURCE_ACTOR_MAP_URL":
-      state = clearSourceActorMapURL(state, action.id);
-      break;
   }
 
   return state;
-}
-
-function clearSourceActorMapURL(
-  state: SourceActorsState,
-  id: SourceActorId
-): SourceActorsState {
-  if (!hasResource(state, id)) {
-    return state;
-  }
-
-  return updateResources(state, [
-    {
-      id,
-      sourceMapURL: "",
-    },
-  ]);
 }
 
 function updateBreakpointColumns(
