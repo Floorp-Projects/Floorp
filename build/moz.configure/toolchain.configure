@@ -2157,7 +2157,7 @@ def gnu_as(assembler, c_compiler, toolchain_flags):
         # close the stdin pipe.
         # clang will error if it uses its integrated assembler for this target,
         # so handle failures gracefully.
-        if 'GNU' in check_cmd_output(*cmd, stdin=subprocess.PIPE, onerror=lambda: '').decode('utf-8'):
+        if 'GNU' in check_cmd_output(*cmd, stdin=subprocess.PIPE, onerror=lambda: ''):
             return True
 
 
