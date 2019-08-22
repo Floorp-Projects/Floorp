@@ -431,6 +431,12 @@ browsing-search-on-start-typing =
     .label = Search for text when you start typing
     .accesskey = x
 
+browsing-picture-in-picture-toggle-enabled =
+    .label = Enable picture-in-picture video controls
+    .accesskey = E
+
+browsing-picture-in-picture-learn-more = Learn more
+
 browsing-cfr-recommendations =
     .label = Recommend extensions as you browse
     .accesskey = R
