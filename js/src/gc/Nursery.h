@@ -18,6 +18,7 @@
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
+#include "util/Text.h"
 
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)      \
   /* Key                       Header text */ \
@@ -43,6 +44,7 @@
 
 template <typename T>
 class SharedMem;
+class JSDependentString;
 
 namespace js {
 
@@ -64,6 +66,7 @@ struct Cell;
 class GCSchedulingTunables;
 class MinorCollectionTracer;
 class RelocationOverlay;
+class StringRelocationOverlay;
 struct TenureCountCache;
 enum class AllocKind : uint8_t;
 class TenuredCell;
@@ -112,8 +115,8 @@ class TenuringTracer : public JSTracer {
   // to find things held live by intra-Nursery pointers.
   gc::RelocationOverlay* objHead;
   gc::RelocationOverlay** objTail;
-  gc::RelocationOverlay* stringHead;
-  gc::RelocationOverlay** stringTail;
+  gc::StringRelocationOverlay* stringHead;
+  gc::StringRelocationOverlay** stringTail;
 
   TenuringTracer(JSRuntime* rt, Nursery* nursery);
 
@@ -133,10 +136,12 @@ class TenuringTracer : public JSTracer {
 
  private:
   inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
-  inline void insertIntoStringFixupList(gc::RelocationOverlay* entry);
+  inline void insertIntoStringFixupList(gc::StringRelocationOverlay* entry);
 
   template <typename T>
   inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
+  JSString* allocTenuredString(JSString* src, JS::Zone* zone,
+                               gc::AllocKind dstKind);
 
   inline JSObject* movePlainObjectToTenured(PlainObject* src);
   JSObject* moveToTenuredSlow(JSObject* src);
@@ -529,6 +534,72 @@ class Nursery {
   using NativeObjectVector = Vector<NativeObject*, 0, SystemAllocPolicy>;
   NativeObjectVector dictionaryModeObjects_;
 
+  template <typename Key>
+  struct DeduplicationStringHasher {
+    using Lookup = Key;
+
+    static inline HashNumber hash(const Lookup& aLookup) {
+      JS::AutoCheckCannotGC nogc;
+
+      if (aLookup->asLinear().hasLatin1Chars()) {
+        HashNumber strHash = mozilla::HashString(
+            aLookup->asLinear().latin1Chars(nogc), aLookup->length());
+
+        // Flags should be included to create the hash.
+        // String relocation overlay stores either the nursery root base chars
+        // or the dependent/undepended string nursery base, but it does not
+        // indicate which one is stored. If strings with different string types
+        // are deduplicated, for example, a dependent string gets deduplicated
+        // into an extensible string, the base chain would be broken and the
+        // root base cannot be reached.
+
+        return mozilla::HashGeneric(strHash, aLookup->zone(), aLookup->flags());
+      } else {
+        MOZ_ASSERT(aLookup->asLinear().hasTwoByteChars());
+        HashNumber strHash = mozilla::HashString(
+            aLookup->asLinear().twoByteChars(nogc), aLookup->length());
+        return mozilla::HashGeneric(strHash, aLookup->zone(), aLookup->flags());
+      }
+    }
+
+    static MOZ_ALWAYS_INLINE bool match(const Key& aKey,
+                                        const Lookup& aLookup) {
+      if (aKey->length() != aLookup->length()) {
+        return false;
+      }
+
+      MOZ_ASSERT(aKey->zone() == aLookup->zone());
+      MOZ_ASSERT(aKey->flags() == aLookup->flags());
+      MOZ_ASSERT(aKey->asTenured().getAllocKind() == aLookup->getAllocKind());
+
+      JS::AutoCheckCannotGC nogc;
+
+      if (aKey->asLinear().hasLatin1Chars() &&
+          aLookup->asLinear().hasLatin1Chars()) {
+        return mozilla::ArrayEqual(aKey->asLinear().latin1Chars(nogc),
+                                   aLookup->asLinear().latin1Chars(nogc),
+                                   aLookup->length());
+      } else if (aKey->asLinear().hasTwoByteChars() &&
+                 aLookup->asLinear().hasTwoByteChars()) {
+        return EqualChars(aKey->asLinear().twoByteChars(nogc),
+                          aLookup->asLinear().twoByteChars(nogc),
+                          aLookup->length());
+      } else {
+        return false;
+      }
+    }
+  };
+
+  using StringDeDupSet =
+      HashSet<JSString*, DeduplicationStringHasher<JSString*>,
+              SystemAllocPolicy>;
+
+  // deDupSet is emplaced at the beginning of the nursery collection and
+  // reset at the end of the nursery collection.
+  // It can also be reset during nursery collection when out of
+  // memory to insert new entries.
+  mozilla::Maybe<StringDeDupSet> stringDeDupSet;
+
   // Lists of map and set objects allocated in the nursery or with iterators
   // allocated there. Such objects need to be swept after minor GC.
   Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
@@ -585,6 +656,15 @@ class Nursery {
   // |dst| in Tenured.
   void collectToFixedPoint(TenuringTracer& trc,
                            gc::TenureCountCache& tenureCounts);
+
+  // The dependent string chars needs to be relocated if the base which it's
+  // using chars from has been deduplicated.
+  template <typename CharT>
+  void relocateDependentStringChars(JSDependentString* tenuredDependentStr,
+                                    JSLinearString* baseOrRelocOverlay,
+                                    size_t* offset,
+                                    bool* rootBaseWasNotForwarded,
+                                    JSLinearString** rootBase);
 
   // Handle relocation of slots/elements pointers stored in Ion frames.
   inline void setForwardingPointer(void* oldData, void* newData, bool direct);

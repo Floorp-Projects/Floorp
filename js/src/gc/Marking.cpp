@@ -2872,6 +2872,58 @@ static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
 }
 
 static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
+  // Mark all strings reachable from the tenured string as non-deduplicatable.
+  // These strings are the bases of the tenured string.
+  // Non-deduplicatable marking is necessary because of the following 2 reasons:
+  // 1. Tenured string chars cannot be updated:
+  //    If any of the tenured string's bases were deduplicated during tenuring,
+  //    the tenured string's chars needs to be relocated due to the change in
+  //    the deduplicated base's chars, which cannot be done during or after
+  //    tenuring of its bases.
+  // 2. Tenured string cannot store its nursery base:
+  //    Since the string is already tenured, it does not have string relocation
+  //    overlay to store its nursery base. Once the base chain enters the
+  //    tenured heap, there is no way to recover the nursery address of a
+  //    tenured base.
+  if (str->hasBase()) {
+    MOZ_ASSERT(str->isTenured());
+    MOZ_ASSERT(!str->isForwarded());
+
+    JSLinearString* baseOrRelocOverlay = str->nurseryBaseOrRelocOverlay();
+
+    while (true) {
+      // baseOrRelocOverlay can be one of the three cases:
+      // 1. forwarded nursery string:
+      //    The forwarded string has the flag which can tell whether
+      //    this string has a base.
+      //    And its string relocation overlay can be used to recover
+      //    its nursery base to ensure the nursery base chain is followed.
+      // 2. not yet forwarded nursery string:
+      //    Make it non-deduplicatable for its future tenuring.
+      // 3. tenured string:
+      //    The nursery base chain ends here, so stop the traversing.
+      if (baseOrRelocOverlay->isForwarded()) {
+        StringRelocationOverlay* relocOverlay =
+            reinterpret_cast<StringRelocationOverlay*>(baseOrRelocOverlay);
+        JSLinearString* tenuredBase = Forwarded((JSLinearString*)relocOverlay);
+        if (!tenuredBase->hasBase()) {
+          break;
+        }
+        baseOrRelocOverlay = relocOverlay->savedNurseryBaseOrRelocOverlay();
+      } else {
+        JSLinearString* base = baseOrRelocOverlay;
+        if (base->isTenured()) {
+          break;
+        }
+        base->setNonDeduplicatable();
+        if (!base->hasBase()) {
+          break;
+        }
+        baseOrRelocOverlay = base->nurseryBaseOrRelocOverlay();
+      }
+    }
+  }
+
   str->traceChildren(&mover);
 }
 
@@ -3024,6 +3076,15 @@ inline void js::TenuringTracer::insertIntoObjectFixupList(
 template <typename T>
 inline T* js::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
   return static_cast<T*>(static_cast<Cell*>(AllocateCellInGC(zone, kind)));
+}
+
+JSString* js::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
+                                                 AllocKind dstKind) {
+  JSString* dst = allocTenured<JSString>(zone, dstKind);
+  tenuredSize += moveStringToTenured(dst, src, dstKind);
+  tenuredCells++;
+
+  return dst;
 }
 
 JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
@@ -3227,7 +3288,7 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
 }
 
 inline void js::TenuringTracer::insertIntoStringFixupList(
-    RelocationOverlay* entry) {
+    StringRelocationOverlay* entry) {
   *stringTail = entry;
   stringTail = &entry->nextRef();
   *stringTail = nullptr;
@@ -3236,21 +3297,157 @@ inline void js::TenuringTracer::insertIntoStringFixupList(
 JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   MOZ_ASSERT(IsInsideNursery(src));
   MOZ_ASSERT(!src->zone()->usedByHelperThread());
+  MOZ_ASSERT(!src->isExternal());
 
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->zone();
   zone->tenuredStrings++;
 
-  JSString* dst = allocTenured<JSString>(zone, dstKind);
-  tenuredSize += moveStringToTenured(dst, src, dstKind);
-  tenuredCells++;
+  JSString* dst;
 
-  RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+  // A live nursery string can only get deduplicated when:
+  // 1. Its length is smaller than 500:
+  //    Hashing a long string can affect performance.
+  // 2. It is linear:
+  //    A long rope could end up doing O(n^2) hashing work.
+  // 3. It is not an undepended string:
+  //    Only one word is available in string relocation overlay to save
+  //    either the root base nursery chars or
+  //    the dependent/undepended string nursery base.
+  //    For the undepended string, both its chars and base need to be saved.
+  //    This can be possible on 64-bit architectures with some bitpacking --
+  //    Use the free 16 bits for each word in string relocation overlay.
+  //    16x3 = 48 bits, which can store another pointer.
+  //    But it is not implemented for now.
+  // 4. It is deduplicatable:
+  //    This is defined by the NON_DEDUP_BIT in JSString flag.
+  // 5. It matches an entry in stringDeDupSet.
+
+  const size_t dedupStringLenLimit = 500;
+
+  if (src->length() < dedupStringLenLimit && src->isLinear() &&
+      !src->isUndepended() && src->isDeduplicatable() &&
+      nursery().stringDeDupSet.isSome()) {
+    if (auto p = nursery().stringDeDupSet->lookup(src)) {
+      dst = *p;
+
+      StringRelocationOverlay* overlay = StringRelocationOverlay::fromCell(src);
+      overlay->saveCharsOrBase(src);
+      overlay->forwardTo(dst);
+
+      gcTracer.tracePromoteToTenured(src, dst);
+      return dst;
+    }
+
+    dst = allocTenuredString(src, zone, dstKind);
+
+    // When there is oom caused by the stringDeDupSet, stop deduplicating
+    // strings.
+    if (!nursery().stringDeDupSet->putNew(dst)) {
+      nursery().stringDeDupSet.reset();
+    }
+
+  } else {
+    dst = allocTenuredString(src, zone, dstKind);
+  }
+
+  StringRelocationOverlay* overlay = StringRelocationOverlay::fromCell(src);
+  overlay->saveCharsOrBase(src);
   overlay->forwardTo(dst);
+  // Reset the NON_DEDUP_BIT to not interfere with the next minor GC.
+  // NON_DEDUP_BIT is used only during minor GC for string deduplication.
+  dst->clearNonDeduplicatable();
   insertIntoStringFixupList(overlay);
 
   gcTracer.tracePromoteToTenured(src, dst);
   return dst;
+}
+
+template <typename CharT>
+void js::Nursery::relocateDependentStringChars(
+    JSDependentString* tenuredDependentStr, JSLinearString* baseOrRelocOverlay,
+    size_t* offset, bool* rootBaseWasNotForwarded, JSLinearString** rootBase) {
+  MOZ_ASSERT(*offset == 0);
+  MOZ_ASSERT(*rootBaseWasNotForwarded == false);
+  MOZ_ASSERT(*rootBase == NULL);
+
+  JS::AutoCheckCannotGC nogc;
+
+  // The dependent string can only use chars from its next nearest undepended
+  // string. If it does not use the chars from the next nearest undepended
+  // string, it won't be using chars from any other undepended strings.
+  bool canUseUndependedStrChars = true;
+
+  const CharT* dependentStrChars =
+      tenuredDependentStr->nonInlineChars<CharT>(nogc);
+
+  // Traverse the dependent string nursery base chain to find the base that it's
+  // using chars from: either a root base or an undepended string.
+  while (true) {
+    if (baseOrRelocOverlay->isForwarded()) {
+      StringRelocationOverlay* relocOverlay =
+          reinterpret_cast<StringRelocationOverlay*>(baseOrRelocOverlay);
+      JSLinearString* tenuredBase = Forwarded((JSLinearString*)relocOverlay);
+
+      // check whether the dependent string uses chars from undepended string
+      if (canUseUndependedStrChars && tenuredBase->isUndepended()) {
+        if (tenuredDependentStr->charsFromUndependedString<CharT>(
+                tenuredBase)) {
+          tenuredDependentStr->setBase(tenuredBase);
+          return;
+        }
+        canUseUndependedStrChars = false;
+      }
+
+      if (!tenuredBase->hasBase()) {
+        // The nursery root base is relocOverlay, it is tenured to tenuredBase.
+        // Relocate tenuredDependentStr chars and reassign the tenured root base
+        // as its base.
+        JSLinearString* tenuredRootBase = tenuredBase;
+        const CharT* rootBaseChars = relocOverlay->savedNurseryChars<CharT>();
+        *offset = dependentStrChars - rootBaseChars;
+        MOZ_ASSERT(*offset < tenuredRootBase->length());
+        tenuredDependentStr->relocateNonInlineChars<const CharT*>(
+            tenuredRootBase->nonInlineChars<CharT>(nogc), *offset);
+        tenuredDependentStr->setBase(tenuredRootBase);
+        return;
+      }
+
+      baseOrRelocOverlay = relocOverlay->savedNurseryBaseOrRelocOverlay();
+
+    } else {
+      JSLinearString* base = baseOrRelocOverlay;
+
+      // check whether the tenuredDependentStr uses chars from undepended string
+      if (canUseUndependedStrChars && base->isUndepended()) {
+        if (tenuredDependentStr->charsFromUndependedString<CharT>(base)) {
+          tenuredDependentStr->setBase(base);
+          return;
+        }
+        canUseUndependedStrChars = false;
+      }
+
+      if (!base->hasBase()) {
+        // The root base is not forwarded yet, it is simply base.
+        *rootBase = base;
+
+        // The root base can be in either the nursery or the tenured heap.
+        // dependentStr chars needs to be relocated after traceString if the
+        // root base is in the nursery.
+        if (!(*rootBase)->isTenured()) {
+          *rootBaseWasNotForwarded = true;
+          const CharT* rootBaseChars = (*rootBase)->nonInlineChars<CharT>(nogc);
+          *offset = dependentStrChars - rootBaseChars;
+        }
+
+        tenuredDependentStr->setBase(*rootBase);
+
+        return;
+      }
+
+      baseOrRelocOverlay = base->nurseryBaseOrRelocOverlay();
+    }
+  }
 }
 
 void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
@@ -3268,8 +3465,48 @@ void js::Nursery::collectToFixedPoint(TenuringTracer& mover,
     }
   }
 
-  for (RelocationOverlay* p = mover.stringHead; p; p = p->next()) {
-    mover.traceString(static_cast<JSString*>(p->forwardingAddress()));
+  for (StringRelocationOverlay* p = mover.stringHead; p; p = p->next()) {
+    JSString* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
+    // To ensure the NON_DEDUP_BIT was reset properly.
+    MOZ_ASSERT(tenuredStr->isDeduplicatable());
+
+    // The nursery root base may not be forwarded before
+    // traceString(tenuredStr). traceString(tenuredStr) will forward the root
+    // base if that's the case. Dependent string chars needs to be relocated
+    // after traceString if root base was not forwarded.
+    size_t offset = 0;
+    bool rootBaseWasNotForwarded = false;
+    JSLinearString* rootBase = NULL;
+
+    if (tenuredStr->isDependent()) {
+      if (tenuredStr->hasTwoByteChars()) {
+        relocateDependentStringChars<char16_t>(
+            &tenuredStr->asDependent(), p->savedNurseryBaseOrRelocOverlay(),
+            &offset, &rootBaseWasNotForwarded, &rootBase);
+      } else {
+        relocateDependentStringChars<JS::Latin1Char>(
+            &tenuredStr->asDependent(), p->savedNurseryBaseOrRelocOverlay(),
+            &offset, &rootBaseWasNotForwarded, &rootBase);
+      }
+    }
+
+    mover.traceString(tenuredStr);
+
+    if (rootBaseWasNotForwarded) {
+      MOZ_ASSERT(rootBase->isForwarded());
+      JS::AutoCheckCannotGC nogc;
+
+      JSLinearString* tenuredRootBase = Forwarded(rootBase);
+      MOZ_ASSERT(offset < tenuredRootBase->length());
+
+      if (tenuredStr->hasTwoByteChars()) {
+        tenuredStr->asDependent().relocateNonInlineChars<const char16_t*>(
+            tenuredRootBase->twoByteChars(nogc), offset);
+      } else {
+        tenuredStr->asDependent().relocateNonInlineChars<const JS::Latin1Char*>(
+            tenuredRootBase->latin1Chars(nogc), offset);
+      }
+    }
   }
 }
 
