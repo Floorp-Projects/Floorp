@@ -93,11 +93,7 @@ add_task(async function testExtensionList() {
   ok(card, "The card is in the enabled section");
 
   // Check the properties of the card.
-  is(
-    card.querySelector(".addon-name").textContent,
-    "Test extension",
-    "The name is set"
-  );
+  is(card.addonNameEl.textContent, "Test extension", "The name is set");
   let icon = card.querySelector(".addon-icon");
   ok(icon.src.endsWith("/test-icon.png"), "The icon is set");
 
@@ -455,6 +451,39 @@ add_task(async function testKeyboardSupport() {
   space();
   await removed;
   is(card.parentNode, null, "The card is no longer on the page");
+
+  await extension.unload();
+  await closeView(win);
+});
+
+add_task(async function testOpenDetailFromNameKeyboard() {
+  let id = "details@mochi.test";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Detail extension",
+      applications: { gecko: { id } },
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+
+  let card = getCardByAddonId(win.document, id);
+
+  info("focus the add-on's name, which should be an <a>");
+  card.addonNameEl.focus();
+
+  let detailsLoaded = waitForViewLoad(win);
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await detailsLoaded;
+
+  card = getCardByAddonId(win.document, id);
+  is(
+    card.addonNameEl.textContent,
+    "Detail extension",
+    "The right detail view is laoded"
+  );
 
   await extension.unload();
   await closeView(win);

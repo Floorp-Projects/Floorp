@@ -304,7 +304,7 @@ add_task(async function testDetailOperations() {
   ok(expandButton.hidden, "The expand button is hidden");
 
   // Check toggling disabled.
-  let name = card.querySelector(".addon-name");
+  let name = card.addonNameEl;
   is(name.textContent, "Test", "The name is set when enabled");
   is(doc.l10n.getAttributes(name).id, null, "There is no l10n name");
 
