@@ -225,8 +225,10 @@ export type Target = {
   threadFront: ThreadFront,
   activeConsole: ConsoleClient,
 
+  name: string,
   isBrowsingContext: boolean,
   isContentProcess: boolean,
+  isWorkerTarget: boolean,
   traits: Object,
   chrome: Boolean,
   url: string,

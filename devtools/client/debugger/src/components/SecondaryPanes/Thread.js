@@ -10,7 +10,7 @@ import classnames from "classnames";
 
 import actions from "../../actions";
 import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
-import { getDisplayName, isWorker } from "../../utils/threads";
+import { isWorker } from "../../utils/threads";
 import AccessibleImage from "../shared/AccessibleImage";
 
 import type { Context, Thread as ThreadType } from "../../types";
@@ -33,7 +33,7 @@ export class Thread extends Component<Props> {
     const { currentThread, isPaused, thread } = this.props;
 
     const worker = isWorker(thread);
-    const label = worker ? getDisplayName(thread) : L10N.getStr("mainThread");
+    const label = thread.name;
 
     return (
       <div

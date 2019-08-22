@@ -257,7 +257,7 @@ function TargetMixin(parentClass) {
     }
 
     get name() {
-      if (this.isAddon) {
+      if (this.isAddon || this.isContentProcess) {
         return this.targetForm.name;
       }
       return this.title;
