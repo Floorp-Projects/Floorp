@@ -2,7 +2,7 @@
 
 # EMPTIED
 
-`EMPTIED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L135)
+`EMPTIED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L172)
 
 The media has become empty. For example, this event is sent if the media has already been loaded, and the
 load() method is called to reload it.
