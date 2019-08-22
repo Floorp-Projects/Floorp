@@ -388,34 +388,33 @@ add_task(async function testKeyboardSupport() {
   // Test opening and closing the menu.
   let moreOptionsMenu = card.querySelector("panel-list");
   let expandButton = moreOptionsMenu.querySelector('[action="expand"]');
+  let toggleDisableButton = card.querySelector('[action="toggle-disabled"]');
   is(moreOptionsMenu.open, false, "The menu is closed");
-  space();
-  is(moreOptionsMenu.open, true, "The menu is open");
-  space();
-  is(moreOptionsMenu.open, false, "The menu is closed");
-
-  // Test tabbing out of the menu.
-  space();
-  is(moreOptionsMenu.open, true, "The menu is open");
-  tab({ shiftKey: true });
-  is(moreOptionsMenu.open, false, "Tabbing away from the menu closes it");
-  tab();
-  isFocused(moreOptionsButton, "The button is focused again");
   let shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
   space();
   await shown;
   is(moreOptionsMenu.open, true, "The menu is open");
-  for (let it of moreOptionsMenu.querySelectorAll("panel-item:not([hidden])")) {
-    tab();
-    isFocused(it, `After tab, focus item "${it.getAttribute("action")}"`);
-  }
-  isFocused(expandButton, "The last item is focused");
-  tab();
-  is(moreOptionsMenu.open, false, "Tabbing out of the menu closes it");
+  isFocused(toggleDisableButton, "The disable button is now focused");
+  EventUtils.synthesizeKey("Escape", {});
+  is(moreOptionsMenu.open, false, "The menu is closed");
+  isFocused(moreOptionsButton, "The more options button is focused");
 
-  // Focus the button again, focus may have moved out of the browser.
-  moreOptionsButton.focus();
-  isFocused(moreOptionsButton, "The button is focused again");
+  // Test tabbing out of the menu.
+  space();
+  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
+  is(moreOptionsMenu.open, true, "The menu is open");
+  await shown;
+  tab({ shiftKey: true });
+  is(moreOptionsMenu.open, true, "The menu stays open");
+  isFocused(expandButton, "The focus has looped to the bottom");
+  tab();
+  is(moreOptionsMenu.open, true, "The menu stays open");
+  isFocused(toggleDisableButton, "The focus has looped to the top");
+
+  let hidden = BrowserTestUtils.waitForEvent(moreOptionsMenu, "hidden");
+  EventUtils.synthesizeKey("Escape", {});
+  await hidden;
+  isFocused(moreOptionsButton, "Escape closed the menu");
 
   // Open the menu to test contents.
   shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
@@ -425,8 +424,6 @@ add_task(async function testKeyboardSupport() {
   await shown;
 
   // Disable the add-on.
-  let toggleDisableButton = card.querySelector('[action="toggle-disabled"]');
-  tab();
   isFocused(toggleDisableButton, "The disable button is focused");
   is(card.parentNode, enabledSection, "The card is in the enabled section");
   let disabled = BrowserTestUtils.waitForEvent(list, "move");
@@ -446,7 +443,6 @@ add_task(async function testKeyboardSupport() {
   await shown;
 
   // Remove the add-on.
-  tab();
   tab();
   let removeButton = card.querySelector('[action="remove"]');
   isFocused(removeButton, "The remove button is focused");

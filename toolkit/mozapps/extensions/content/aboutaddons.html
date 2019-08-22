@@ -208,11 +208,11 @@
 
     <template name="panel-list">
       <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-list.css">
-      <div class="arrow top"></div>
-      <div class="list">
+      <div class="arrow top" role="presentation"></div>
+      <div class="list" role="presentation">
         <slot></slot>
       </div>
-      <div class="arrow bottom"></div>
+      <div class="arrow bottom" role="presentation"></div>
     </template>
 
     <template name="panel-item">
