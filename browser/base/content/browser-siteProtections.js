@@ -1612,12 +1612,6 @@ var gProtectionsHandler = {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
       gIdentityHandler._trackingProtectionIconContainer.removeAttribute("open");
-
-      // Hide the tracker counter when the popup get hidden.
-      this._protectionsPopupTrackersCounterBox.toggleAttribute(
-        "showing",
-        false
-      );
     }
   },
 
@@ -1908,12 +1902,6 @@ var gProtectionsHandler = {
           host,
         ])
       );
-    }
-
-    // Show the blocked tracker counter if it is not updating. We can sure the
-    // data in the tracker counter is up-to-date here, so we can show it.
-    if (!this._updatingFooter) {
-      this._protectionsPopupTrackersCounterBox.toggleAttribute("showing", true);
     }
 
     // Update the tooltip of the blocked tracker counter.
