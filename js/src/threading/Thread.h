@@ -84,9 +84,7 @@ class Thread {
       typename = typename mozilla::EnableIf<
           mozilla::IsSame<DerefO, Options>::value, void*>::Type>
   explicit Thread(O&& options = Options())
-      : idMutex_(mutexid::ThreadId),
-        id_(Id()),
-        options_(std::forward<O>(options)) {
+      : id_(Id()), options_(std::forward<O>(options)) {
     MOZ_ASSERT(js::IsInitialized());
   }
 
@@ -106,6 +104,9 @@ class Thread {
     if (!trampoline) {
       oom.crash("js::Thread::init");
     }
+
+    // We hold this lock while create() sets the thread id.
+    LockGuard<Mutex> lock(trampoline->createMutex);
     return create(Trampoline::Start, trampoline);
   }
 
@@ -144,11 +145,6 @@ class Thread {
   // Disallow copy as that's not sensible for unique resources.
   Thread(const Thread&) = delete;
   void operator=(const Thread&) = delete;
-
-  bool joinable(LockGuard<Mutex>& lock);
-
-  // Synchronize id_ initialization during thread startup.
-  Mutex idMutex_;
 
   // Provide a process global ID to each thread.
   Id id_;
@@ -203,6 +199,12 @@ class ThreadTrampoline {
   // impossible to pass references between threads.
   mozilla::Tuple<typename mozilla::Decay<Args>::Type...> args;
 
+  // Protect the thread id during creation.
+  Mutex createMutex;
+
+  // Thread can access createMutex.
+  friend class js::Thread;
+
  public:
   // Note that this template instatiation duplicates and is identical to the
   // class template instantiation. It is required for perfect forwarding of
@@ -210,7 +212,9 @@ class ThreadTrampoline {
   // even if the class template arguments are correct.
   template <typename G, typename... ArgsT>
   explicit ThreadTrampoline(G&& aG, ArgsT&&... aArgsT)
-      : f(std::forward<F>(aG)), args(std::forward<Args>(aArgsT)...) {}
+      : f(std::forward<F>(aG)),
+        args(std::forward<Args>(aArgsT)...),
+        createMutex(mutexid::ThreadId) {}
 
   static THREAD_RETURN_TYPE THREAD_CALL_API Start(void* aPack) {
     auto* pack = static_cast<ThreadTrampoline<F, Args...>*>(aPack);
@@ -221,6 +225,10 @@ class ThreadTrampoline {
 
   template <size_t... Indices>
   void callMain(std::index_sequence<Indices...>) {
+    // Pretend createMutex is a semaphore and wait for a notification that the
+    // thread that spawned us is ready.
+    createMutex.lock();
+    createMutex.unlock();
     f(mozilla::Get<Indices>(args)...);
   }
 };
