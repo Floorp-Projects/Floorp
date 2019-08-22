@@ -63,20 +63,26 @@ class NamedDeckButton extends HTMLElement {
     `;
     this.shadowRoot.appendChild(style);
 
-    let button = document.createElement("button");
-    button.appendChild(document.createElement("slot"));
-    this.shadowRoot.appendChild(button);
+    this.button = document.createElement("button");
+    this.button.setAttribute("role", "tab");
+    this.button.appendChild(document.createElement("slot"));
+    this.shadowRoot.appendChild(this.button);
 
     this.addEventListener("click", this);
   }
 
   connectedCallback() {
+    this.id = `${this.deckId}-button-${this.name}`;
     this.setSelectedFromDeck();
     document.addEventListener("view-changed", this, { capture: true });
   }
 
   disconnectedCallback() {
     document.removeEventListener("view-changed", this, { capture: true });
+  }
+
+  focus() {
+    this.button.focus();
   }
 
   get deckId() {
@@ -112,6 +118,8 @@ class NamedDeckButton extends HTMLElement {
 
   set selected(val) {
     this.toggleAttribute("selected", !!val);
+    this.button.setAttribute("aria-selected", !!val);
+    this.button.setAttribute("tabindex", val ? "0" : "-1");
   }
 
   setSelectedFromDeck() {
@@ -120,6 +128,69 @@ class NamedDeckButton extends HTMLElement {
   }
 }
 customElements.define("named-deck-button", NamedDeckButton);
+
+class NamedDeckButtonGroup extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+
+    let style = document.createElement("style");
+    style.textContent = `
+      div {
+        border-bottom: 1px solid var(--in-content-box-border-color);
+        border-top: 1px solid var(--in-content-box-border-color);
+        font-size: 0;
+        line-height: 0;
+      }
+    `;
+    this.shadowRoot.appendChild(style);
+
+    let container = document.createElement("div");
+    container.setAttribute("role", "tablist");
+    container.appendChild(document.createElement("slot"));
+    this.shadowRoot.appendChild(container);
+
+    this.addEventListener("keydown", this);
+  }
+
+  handleEvent(e) {
+    if (
+      e.type === "keydown" &&
+      e.target.localName === "named-deck-button" &&
+      ["ArrowLeft", "ArrowRight"].includes(e.key)
+    ) {
+      let previousDirectionKey =
+        document.dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+      this.walker.currentNode = e.target;
+      let nextItem =
+        e.key === previousDirectionKey
+          ? this.walker.previousNode()
+          : this.walker.nextNode();
+      if (nextItem) {
+        nextItem.focus();
+      }
+    }
+  }
+
+  get walker() {
+    if (!this._walker) {
+      this._walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: node => {
+          if (
+            node.hidden ||
+            node.disabled ||
+            node.localName !== "named-deck-button"
+          ) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+    }
+    return this._walker;
+  }
+}
+customElements.define("named-deck-button-group", NamedDeckButtonGroup);
 
 /**
  * A deck that is indexed by the "name" attribute of its children. The
@@ -210,7 +281,11 @@ class NamedDeck extends HTMLElement {
   _setSelectedViewAttributes() {
     let { selectedViewName } = this;
     for (let view of this.children) {
-      if (view.getAttribute("name") == selectedViewName) {
+      let name = view.getAttribute("name");
+      view.setAttribute("aria-labelledby", `${this.id}-button-${name}`);
+      view.setAttribute("role", "tabpanel");
+
+      if (name === selectedViewName) {
         view.slot = "selected";
       } else {
         view.slot = "";
