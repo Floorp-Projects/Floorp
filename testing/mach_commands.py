@@ -323,7 +323,7 @@ class Test(MachCommandBase):
             print(UNKNOWN_TEST)
             return 1
 
-         if log_args.get('debugger', None):
+        if log_args.get('debugger', None):
             import mozdebug
             if not mozdebug.get_debugger_info(log_args.get('debugger')):
                 sys.exit(1)
