@@ -83,18 +83,20 @@ function checkOptions(doc, options, expectedOptions) {
 
 function assertDeckHeadingHidden(group) {
   ok(group.hidden, "The tab group is hidden");
-  for (let button of group.children) {
+  let buttons = group.querySelectorAll("named-deck-button");
+  for (let button of buttons) {
     ok(button.offsetHeight == 0, `The ${button.name} is hidden`);
   }
 }
 
 function assertDeckHeadingButtons(group, visibleButtons) {
   ok(!group.hidden, "The tab group is shown");
+  let buttons = group.querySelectorAll("named-deck-button");
   ok(
-    group.children.length >= visibleButtons.length,
+    buttons.length >= visibleButtons.length,
     `There should be at least ${visibleButtons.length} buttons`
   );
-  for (let button of group.children) {
+  for (let button of buttons) {
     if (visibleButtons.includes(button.name)) {
       ok(!button.hidden, `The ${button.name} is shown`);
     } else {
