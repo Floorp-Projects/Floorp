@@ -47,11 +47,9 @@ class gfxFontFeatureValueSet final {
     nsTArray<ValueList> valuelist;
   };
 
-  // returns true if found, false otherwise
-  bool GetFontFeatureValuesFor(const nsACString& aFamily,
-                               uint32_t aVariantProperty,
-                               nsAtom* aName,
-                               nsTArray<uint32_t>& aValues);
+  mozilla::Span<const uint32_t> GetFontFeatureValuesFor(
+      const nsACString& aFamily, uint32_t aVariantProperty,
+      nsAtom* aName) const;
 
   // Appends a new hash entry with given key values and returns a pointer to
   // mValues array to fill. This should be filled first.

@@ -331,7 +331,7 @@ void gfxFontCache::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 #define MAX_SSXX_VALUE 99
 #define MAX_CVXX_VALUE 99
 
-static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
+static void LookupAlternateValues(const gfxFontFeatureValueSet& aFeatureLookup,
                                   const nsACString& aFamily,
                                   const StyleVariantAlternates& aAlternates,
                                   nsTArray<gfxFontFeature>& aFontFeatures) {
@@ -345,11 +345,9 @@ static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
   gfxFontFeature feature;
   if (aAlternates.IsCharacterVariant()) {
     for (auto& ident : aAlternates.AsCharacterVariant().AsSpan()) {
-      AutoTArray<uint32_t, 4> values;
-      // FIXME(emilio): Use atoms directly.
-      aFeatureLookup.GetFontFeatureValuesFor(
+      Span<const uint32_t> values = aFeatureLookup.GetFontFeatureValuesFor(
           aFamily, NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT,
-          ident.AsAtom(), values);
+          ident.AsAtom());
       // nothing defined, skip
       if (values.IsEmpty()) {
         continue;
@@ -362,7 +360,7 @@ static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
       if (nn == 0 || nn > MAX_CVXX_VALUE) {
         continue;
       }
-      feature.mValue = values.SafeElementAt(1, 1);
+      feature.mValue = values.Length() > 1 ? values[1] : 1;
       feature.mTag = HB_TAG('c', 'v', ('0' + nn / 10), ('0' + nn % 10));
       aFontFeatures.AppendElement(feature);
     }
@@ -371,11 +369,8 @@ static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
 
   if (aAlternates.IsStyleset()) {
     for (auto& ident : aAlternates.AsStyleset().AsSpan()) {
-      AutoTArray<uint32_t, 4> values;
-      // FIXME(emilio): Use atoms directly.
-      aFeatureLookup.GetFontFeatureValuesFor(
-          aFamily, NS_FONT_VARIANT_ALTERNATES_STYLESET,
-          ident.AsAtom(), values);
+      Span<const uint32_t> values = aFeatureLookup.GetFontFeatureValuesFor(
+          aFamily, NS_FONT_VARIANT_ALTERNATES_STYLESET, ident.AsAtom());
 
       // styleset(1 2 7) ==> 'ss01' = 1, 'ss02' = 1, 'ss07' = 1
       feature.mValue = 1;
@@ -414,8 +409,8 @@ static void LookupAlternateValues(gfxFontFeatureValueSet& aFeatureLookup,
       return;
   }
 
-  AutoTArray<uint32_t, 4> values;
-  aFeatureLookup.GetFontFeatureValuesFor(aFamily, constant, name, values);
+  Span<const uint32_t> values =
+      aFeatureLookup.GetFontFeatureValuesFor(aFamily, constant, name);
   if (values.IsEmpty()) {
     return;
   }

@@ -12,23 +12,18 @@ using namespace mozilla;
 
 gfxFontFeatureValueSet::gfxFontFeatureValueSet() : mFontFeatureValues(8) {}
 
-bool gfxFontFeatureValueSet::GetFontFeatureValuesFor(
-    const nsACString& aFamily, uint32_t aVariantProperty,
-    nsAtom* aName, nsTArray<uint32_t>& aValues) {
+Span<const uint32_t> gfxFontFeatureValueSet::GetFontFeatureValuesFor(
+    const nsACString& aFamily, uint32_t aVariantProperty, nsAtom* aName) const {
   nsAutoCString family(aFamily);
   ToLowerCase(family);
   FeatureValueHashKey key(family, aVariantProperty, aName);
-
-  aValues.Clear();
   FeatureValueHashEntry* entry = mFontFeatureValues.GetEntry(key);
-  if (entry) {
-    NS_ASSERTION(entry->mValues.Length() > 0,
-                 "null array of font feature values");
-    aValues.AppendElements(entry->mValues);
-    return true;
+  if (!entry) {
+    return {};
   }
-
-  return false;
+  NS_ASSERTION(entry->mValues.Length() > 0,
+               "null array of font feature values");
+  return MakeSpan(entry->mValues);
 }
 
 nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
