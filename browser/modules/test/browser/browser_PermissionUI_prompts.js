@@ -24,8 +24,15 @@ add_task(async function test_desktop_notification_permission_prompt() {
     "dom.webnotifications.requireuserinteraction",
     false
   );
+  Services.prefs.setBoolPref(
+    "permissions.desktop-notification.notNow.enabled",
+    true
+  );
   await testPrompt(PermissionUI.DesktopNotificationPermissionPrompt);
   Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
+  Services.prefs.clearUserPref(
+    "permissions.desktop-notification.notNow.enabled"
+  );
 });
 
 // Tests that PersistentStoragePermissionPrompt works as expected
