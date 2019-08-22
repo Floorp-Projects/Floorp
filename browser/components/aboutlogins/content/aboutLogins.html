@@ -159,29 +159,33 @@
           </label>
         </div>
         <div class="detail-row">
-          <label class="detail-cell">
-            <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
-            <input type="text" name="username" data-l10n-id="login-item-username"/>
-          </label>
-          <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
-            <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
-            <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
-          </button>
+          <div class="detail-row-contents">
+            <label class="detail-cell">
+              <span class="username-label field-label" data-l10n-id="login-item-username-label"></span>
+              <input type="text" name="username" data-l10n-id="login-item-username"/>
+            </label>
+            <button class="copy-button copy-username-button" data-copy-login-property="username" data-telemetry-object="username" type="button">
+              <span class="copied-button-text" data-l10n-id="login-item-copied-username-button-text"></span>
+              <span class="copy-button-text" data-l10n-id="login-item-copy-username-button-text"></span>
+            </button>
+          </div>
         </div>
         <div class="detail-row">
-          <label class="detail-cell">
-            <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
-            <div class="reveal-password-wrapper">
-              <input type="password" name="password" required/>
-              <input type="checkbox"
-                     class="reveal-password-checkbox"
-                     data-l10n-id="login-item-password-reveal-checkbox"/>
-            </div>
-          </label>
-          <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
-            <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
-            <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
-          </button>
+          <div class="detail-row-contents">
+            <label class="detail-cell">
+              <span class="password-label field-label" data-l10n-id="login-item-password-label"></span>
+              <div class="reveal-password-wrapper">
+                <input type="password" name="password" required/>
+                <input type="checkbox"
+                       class="reveal-password-checkbox"
+                       data-l10n-id="login-item-password-reveal-checkbox"/>
+              </div>
+            </label>
+            <button class="copy-button copy-password-button" data-copy-login-property="password" data-telemetry-object="password" type="button">
+              <span class="copied-button-text" data-l10n-id="login-item-copied-password-button-text"></span>
+              <span class="copy-button-text" data-l10n-id="login-item-copy-password-button-text"></span>
+            </button>
+          </div>
         </div>
         <div class="form-actions-row">
           <button class="save-changes-button" type="submit"></button>
