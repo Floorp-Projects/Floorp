@@ -152,9 +152,8 @@ async function testNotInstalledDisabled() {
     let addonCard = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(addonCard, "Got add-on element:" + addon.id);
 
-    let nameEl = addonCard.querySelector(".addon-name");
     is(
-      addonCard.ownerDocument.l10n.getAttributes(nameEl).id,
+      addonCard.ownerDocument.l10n.getAttributes(addonCard.addonNameEl).id,
       "addon-name-disabled",
       "The addon name should include a disabled postfix"
     );
@@ -172,10 +171,8 @@ async function testNotInstalledDisabledDetails() {
     let addonCard = get_addon_element(gManagerWindow, addon.id);
     ok(addonCard, "Got add-on element: " + addon.id);
 
-    let nameEl = addonCard.querySelector(".addon-name");
-
     is(
-      doc.l10n.getAttributes(nameEl).id,
+      doc.l10n.getAttributes(addonCard.addonNameEl).id,
       "addon-name-disabled",
       "The addon name should include a disabled postfix"
     );

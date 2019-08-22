@@ -9,7 +9,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 
 function getName(item) {
-  return item.querySelector(".addon-name").textContent;
+  return item.addonNameEl.textContent;
 }
 
 async function getUpdateButton(item) {
