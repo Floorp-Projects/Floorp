@@ -284,10 +284,9 @@ void VRManagerChild::ResetPuppet(dom::Promise* aPromise, ErrorResult& aRv) {
   mResetPuppetPromises.AppendElement(aPromise);
 }
 
-bool VRManagerChild::GetVRDisplays(
+void VRManagerChild::GetVRDisplays(
     nsTArray<RefPtr<VRDisplayClient>>& aDisplays) {
   aDisplays = mDisplays;
-  return true;
 }
 
 bool VRManagerChild::RefreshVRDisplaysWithCallback(uint64_t aWindowId) {
