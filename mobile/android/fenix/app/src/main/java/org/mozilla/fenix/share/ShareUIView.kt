@@ -32,23 +32,22 @@ class ShareUIView(
         val adapter = AppShareAdapter(view.context, actionEmitter).also {
             it.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                 override fun onChanged() {
-                    progress_bar.visibility = View.GONE
-                    intent_handler_recyclerview.visibility = View.VISIBLE
+                    progressBar.visibility = View.GONE
+                    appsList.visibility = View.VISIBLE
                 }
             })
         }
-        intent_handler_recyclerview.adapter = adapter
+        appsList.adapter = adapter
 
         if (view.context.components.backgroundServices.accountManager.accountNeedsReauth()) {
-            send_tab_group.visibility = View.GONE
-            account_header.visibility = View.GONE
+            sendTabGroup.visibility = View.GONE
+            accountHeaderText.visibility = View.GONE
         } else {
-            account_devices_recyclerview.adapter =
-                AccountDevicesShareAdapter(view.context, actionEmitter)
+            devicesList.adapter = AccountDevicesShareAdapter(view.context, actionEmitter)
         }
 
         container.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
-        close_button.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
+        closeButton.setOnClickListener { actionEmitter.onNext(ShareAction.Close) }
     }
 
     override fun updateView() = Consumer<ShareState> {

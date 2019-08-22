@@ -3,14 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/shareWrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/scrim_background"
     android:fitsSystemWindows="true"
-    tools:context="org.mozilla.fenix.share.ShareFragment">
-
-
-</FrameLayout>
+    tools:context="org.mozilla.fenix.share.ShareFragment" />

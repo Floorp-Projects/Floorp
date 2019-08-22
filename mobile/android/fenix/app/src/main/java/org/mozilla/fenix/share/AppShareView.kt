@@ -9,11 +9,9 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.drawable.Drawable
-import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.app_share_list_item.view.*
@@ -23,17 +21,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mozilla.fenix.R
-
-class AppShareRecyclerView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : RecyclerView(context, attrs, defStyleAttr) {
-
-    init {
-        layoutManager = GridLayoutManager(context, 2, GridLayoutManager.HORIZONTAL, false)
-    }
-}
 
 class AppShareAdapter(
     private val context: Context,
@@ -109,8 +96,8 @@ class AppShareItemViewHolder(
 
     internal fun bind(item: ShareItem) {
         shareItem = item
-        itemView.app_name.text = item.name
-        itemView.app_icon.setImageDrawable(item.icon)
+        itemView.appName.text = item.name
+        itemView.appIcon.setImageDrawable(item.icon)
     }
 
     companion object {

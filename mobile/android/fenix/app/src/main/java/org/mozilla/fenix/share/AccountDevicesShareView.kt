@@ -6,12 +6,10 @@ package org.mozilla.fenix.share
 
 import android.content.Context
 import android.graphics.PorterDuff.Mode.SRC_IN
-import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
@@ -20,17 +18,6 @@ import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-
-class AccountDevicesShareRecyclerView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : RecyclerView(context, attrs, defStyleAttr) {
-
-    init {
-        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-    }
-}
 
 class AccountDevicesShareAdapter(
     private val context: Context,
@@ -141,12 +128,12 @@ class AccountDeviceViewHolder(
             }
         }
 
-        itemView.device_icon.apply {
+        itemView.deviceIcon.apply {
             setImageResource(drawableRes)
             background.setColorFilter(ContextCompat.getColor(context, colorRes), SRC_IN)
             drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
         }
-        itemView.device_name.text = name
+        itemView.deviceName.text = name
     }
 
     companion object {
