@@ -636,10 +636,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-#urlbar[actionoverride] > #urlbar-input-container > #urlbar-display-box,
-#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-input-container > #urlbar-display-box,
-#urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-display-box > #switchtab,
-#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-display-box > #extension {
+#urlbar[actionoverride] > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"]):not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box,
+#urlbar:not([actiontype="switchtab"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
+#urlbar:not([actiontype="extension"]) > #urlbar-input-container > #urlbar-label-box > #urlbar-label-extension {
   display: none;
 }
 

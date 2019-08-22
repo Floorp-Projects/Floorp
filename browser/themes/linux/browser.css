@@ -186,15 +186,6 @@ menuitem.bookmark-item {
   border-color: ThreeDShadow;
 }
 
-#urlbar-display-box {
-  margin-top: -1px;
-  margin-bottom: -1px;
-}
-
-.urlbar-display {
-  margin-inline-start: 0;
-}
-
 /* identity box */
 
 %include ../shared/identity-block/identity-block.inc.css
