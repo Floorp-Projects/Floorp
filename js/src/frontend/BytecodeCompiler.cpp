@@ -387,7 +387,7 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
       cx(cx),
       options(options),
       sourceObject(cx),
-      directives(options.strictOption),
+      directives(options.forceStrictMode()),
       script(cx) {}
 
 bool BytecodeCompiler::createScriptSource(
@@ -745,7 +745,7 @@ JSScript* frontend::CompileGlobalBinASTScript(
     return nullptr;
   }
 
-  Directives directives(options.strictOption);
+  Directives directives(options.forceStrictMode());
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
 
@@ -796,8 +796,8 @@ static ModuleObject* InternalParseModule(
   AutoAssertReportedException assertException(cx);
 
   CompileOptions options(cx, optionsInput);
-  options.maybeMakeStrictMode(
-      true);  // ES6 10.2.1 Module code is always strict mode code.
+  options.setForceStrictMode();  // ES6 10.2.1 Module code is always strict mode
+                                 // code.
   options.setIsRunOnce(true);
   options.allowHTMLComments = false;
 

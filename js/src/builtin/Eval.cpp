@@ -294,8 +294,11 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     options.setIsRunOnce(true)
         .setNoScriptRval(false)
         .setMutedErrors(mutedErrors)
-        .maybeMakeStrictMode(evalType == DIRECT_EVAL && IsStrictEvalPC(pc))
         .setScriptOrModule(maybeScript);
+
+    if (evalType == DIRECT_EVAL && IsStrictEvalPC(pc)) {
+      options.setForceStrictMode();
+    }
 
     if (introducerFilename) {
       options.setFileAndLine(filename, 1);
@@ -381,10 +384,13 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
     RootedScope enclosing(cx, callerScript->innermostScope(pc));
 
     CompileOptions options(cx);
-    options.setIsRunOnce(true)
-        .setNoScriptRval(false)
-        .setMutedErrors(mutedErrors)
-        .maybeMakeStrictMode(IsStrictEvalPC(pc));
+    options.setIsRunOnce(true);
+    options.setNoScriptRval(false);
+    options.setMutedErrors(mutedErrors);
+
+    if (IsStrictEvalPC(pc)) {
+      options.setForceStrictMode();
+    }
 
     if (introducerFilename) {
       options.setFileAndLine(filename, 1);
