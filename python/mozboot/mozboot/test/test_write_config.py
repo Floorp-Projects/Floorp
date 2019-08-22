@@ -41,13 +41,13 @@ def read(path):
 
 @pytest.fixture
 def config_path(tmpdir):
-    return unicode(tmpdir.join('machrc'))
+    return str(tmpdir.join('machrc'))
 
 
 @pytest.fixture
 def write_config(config_path):
     def _config(contents):
-        with open(config_path, 'wb') as f:
+        with open(config_path, 'w') as f:
             f.write(contents)
     return _config
 

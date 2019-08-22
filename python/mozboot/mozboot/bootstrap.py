@@ -8,12 +8,17 @@ import platform
 import sys
 import os
 import subprocess
-try:
+
+# NOTE: This script is intended to be run with a vanilla Python install.  We
+# have to rely on the standard library instead of Python 2+3 helpers like
+# the six module.
+if sys.version_info < (3,):
     from ConfigParser import (
         Error as ConfigParserError,
         RawConfigParser,
     )
-except ImportError:
+    input = raw_input
+else:
     from configparser import (
         Error as ConfigParserError,
         RawConfigParser,
@@ -57,6 +62,7 @@ APPLICATIONS_LIST = [
     ('GeckoView/Firefox for Android', 'mobile_android'),
 ]
 
+# TODO Legacy Python 2.6 code, can be removed.
 # This is a workaround for the fact that we must support python2.6 (which has
 # no OrderedDict)
 APPLICATIONS = dict(
@@ -217,7 +223,7 @@ def update_or_create_build_telemetry_config(path):
     if not config.has_section('build'):
         config.add_section('build')
     config.set('build', 'telemetry', 'true')
-    with open(path, 'wb') as f:
+    with open(path, 'w') as f:
         config.write(f)
     return True
 
@@ -297,7 +303,7 @@ class Bootstrapper(object):
         print(CLONE_VCS.format(repo_name, vcs))
 
         while True:
-            dest = raw_input(CLONE_VCS_PROMPT.format(vcs))
+            dest = input(CLONE_VCS_PROMPT.format(vcs))
             dest = dest.strip()
             if not dest:
                 return ''
@@ -642,7 +648,8 @@ def current_firefox_checkout(check_output, env, hg=None):
             try:
                 node = check_output([hg, 'log', '-r', '0', '--template', '{node}'],
                                     cwd=path,
-                                    env=env)
+                                    env=env,
+                                    universal_newlines=True)
                 if node in HG_ROOT_REVISIONS:
                     return ('hg', path)
                 # Else the root revision is different. There could be nested
