@@ -8,9 +8,11 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.MockMedia
+import mozilla.components.feature.media.ext.getMedia
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -37,10 +39,12 @@ class MediaStateMachineTest {
         }
 
         MediaStateMachine.start(sessionManager)
+        MediaStateMachine.waitForStateChange()
 
         assertEquals(MediaState.Playing(initialSession, listOf(initialMedia)), MediaStateMachine.state)
 
         initialMedia.playbackState = Media.PlaybackState.PAUSE
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Paused(initialSession, listOf(initialMedia)), MediaStateMachine.state)
 
         val newMedia = MockMedia(Media.PlaybackState.UNKNOWN)
@@ -48,13 +52,16 @@ class MediaStateMachineTest {
             sessionManager.add(this)
             media = listOf(newMedia)
         }
+        MediaStateMachine.waitForStateChange()
 
         assertEquals(MediaState.Paused(initialSession, listOf(initialMedia)), MediaStateMachine.state)
 
         newMedia.playbackState = Media.PlaybackState.WAITING
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Paused(initialSession, listOf(initialMedia)), MediaStateMachine.state)
 
         newMedia.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(newSession, listOf(newMedia)), MediaStateMachine.state)
     }
 
@@ -68,13 +75,17 @@ class MediaStateMachineTest {
             sessionManager.add(it)
         }
 
+        MediaStateMachine.waitForStateChange()
+
         assertEquals(MediaState.None, MediaStateMachine.state)
 
         val media = MockMedia(Media.PlaybackState.PLAY)
         session.media = listOf(media)
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media)), MediaStateMachine.state)
 
         session.media = emptyList()
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.None, MediaStateMachine.state)
     }
 
@@ -93,9 +104,11 @@ class MediaStateMachineTest {
             it.media = listOf(media)
         }
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media)), MediaStateMachine.state)
 
         sessionManager.remove(session)
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.None, MediaStateMachine.state)
     }
 
@@ -116,18 +129,22 @@ class MediaStateMachineTest {
             it.media = listOf(media1, media2)
         }
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media1)), MediaStateMachine.state)
 
         media2.playbackState = Media.PlaybackState.PLAYING
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media1, media2)), MediaStateMachine.state)
 
         media1.playbackState = Media.PlaybackState.ENDED
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media2)), MediaStateMachine.state)
 
         media2.playbackState = Media.PlaybackState.ENDED
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.None, MediaStateMachine.state)
     }
 
@@ -144,16 +161,53 @@ class MediaStateMachineTest {
             it.media = listOf(media)
         }
 
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Playing(session, listOf(media)), MediaStateMachine.state)
 
         media.playbackState = Media.PlaybackState.PAUSE
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.Paused(session, listOf(media)), MediaStateMachine.state)
 
         MediaStateMachine.stop()
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.None, MediaStateMachine.state)
 
         // Does not change state since state machine is stopped
         media.playbackState = Media.PlaybackState.PLAYING
+        MediaStateMachine.waitForStateChange()
         assertEquals(MediaState.None, MediaStateMachine.state)
+    }
+
+    @Test
+    fun `Only media that was playing is added to paused state`() {
+        val media1 = MockMedia(Media.PlaybackState.PLAYING)
+        val media2 = MockMedia(Media.PlaybackState.PAUSE)
+
+        val sessionManager = SessionManager(mock())
+
+        Session("https://www.mozilla.org").also {
+            sessionManager.add(it)
+
+            it.media = listOf(media1)
+            it.media = listOf(media1, media2)
+        }
+
+        MediaStateMachine.start(sessionManager)
+
+        MediaStateMachine.waitForStateChange()
+        MediaStateMachine.state.also {
+            assertTrue(it is MediaState.Playing)
+            assertEquals(1, it.getMedia().size)
+            assertEquals(media1, it.getMedia()[0])
+        }
+
+        media1.playbackState = Media.PlaybackState.PAUSE
+
+        MediaStateMachine.waitForStateChange()
+        MediaStateMachine.state.also {
+            assertTrue(it is MediaState.Paused)
+            assertEquals(1, it.getMedia().size)
+            assertEquals(media1, it.getMedia()[0])
+        }
     }
 }
