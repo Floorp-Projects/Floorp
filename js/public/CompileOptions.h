@@ -131,7 +131,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 
   unsigned introductionLineno = 0;
   uint32_t introductionOffset = 0;
-  bool hasIntroductionInfo = false;
 
   // Mask of operation kinds which should be instrumented.
   uint32_t instrumentationKinds = 0;
@@ -144,6 +143,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   void copyPODTransitiveOptions(const TransitiveCompileOptions& rhs);
 
  public:
+  bool hasIntroductionInfo() const { return introducerFilename_ != nullptr; }
+
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
@@ -368,11 +369,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setIntroductionScript(JSScript* s) {
-    introductionScriptRoot = s;
-    return *this;
-  }
-
   CompileOptions& setScriptOrModule(JSScript* s) {
     scriptOrModuleRoot = s;
     return *this;
@@ -424,6 +420,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setIntroductionType(const char* t) {
+    MOZ_ASSERT(t);
     introductionType = t;
     return *this;
   }
@@ -431,12 +428,14 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   CompileOptions& setIntroductionInfo(const char* introducerFn,
                                       const char* intro, unsigned line,
                                       JSScript* script, uint32_t offset) {
+    setIntroductionType(intro);
+
+    MOZ_ASSERT(introducerFn);
     introducerFilename_ = introducerFn;
-    introductionType = intro;
     introductionLineno = line;
     introductionScriptRoot = script;
     introductionOffset = offset;
-    hasIntroductionInfo = true;
+
     return *this;
   }
 
