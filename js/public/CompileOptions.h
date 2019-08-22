@@ -220,14 +220,9 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
  public:
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
-  bool mutedErrors() const { return mutedErrors_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
-  JSObject* element() const override = 0;
-  JSString* elementAttributeName() const override = 0;
-  JSScript* introductionScript() const override = 0;
-  JSScript* scriptOrModule() const override = 0;
 
  private:
   void operator=(const ReadOnlyCompileOptions&) = delete;
