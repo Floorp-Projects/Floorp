@@ -99,7 +99,13 @@ input[type="url"][readOnly]:hover:active {
 
 .detail-row {
   display: flex;
+}
+
+.detail-row-contents {
+  display: flex;
   align-items: end;
+  flex-basis: calc(100% - 360px); /* Adds a 360px flexible spacer to the right */
+  max-width: 100%;
 }
 
 .detail-row,
@@ -119,8 +125,12 @@ input[type="url"][readOnly]:hover:active {
   margin-bottom: 5px;
 }
 
-:host([data-editing]) .detail-cell input:not([type="checkbox"]) {
+:host([data-editing]) .detail-cell input:not([readOnly]):not([type="checkbox"]) {
   width: 280px;
+}
+
+.copy-button {
+  margin-bottom: 0; /* Align button at the bottom of the row */
 }
 
 .copy-button:not([data-copied]) .copied-button-text,
