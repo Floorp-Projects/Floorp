@@ -3525,8 +3525,9 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
     const TransitiveCompileOptions& rhs) {
   mutedErrors_ = rhs.mutedErrors_;
   forceFullParse_ = rhs.forceFullParse_;
-  forceStrictMode_ = rhs.forceStrictMode_;
   selfHostingMode = rhs.selfHostingMode;
+  canLazilyParse = rhs.canLazilyParse;
+  strictOption = rhs.strictOption;
   extraWarningsOption = rhs.extraWarningsOption;
   werrorOption = rhs.werrorOption;
   asmJSOption = rhs.asmJSOption;
@@ -3537,12 +3538,14 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
+  hasIntroductionInfo = rhs.hasIntroductionInfo;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
   fieldsEnabledOption = rhs.fieldsEnabledOption;
-}
+};
 
-void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
+void JS::ReadOnlyCompileOptions::copyPODOptions(
     const ReadOnlyCompileOptions& rhs) {
+  copyPODTransitiveOptions(rhs);
   lineno = rhs.lineno;
   column = rhs.column;
   scriptSourceOffset = rhs.scriptSourceOffset;
@@ -3582,8 +3585,7 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   // Release existing string allocations.
   release();
 
-  copyPODTransitiveOptions(rhs);
-  copyPODNonTransitiveOptions(rhs);
+  copyPODOptions(rhs);
 
   elementRoot = rhs.element();
   elementAttributeNameRoot = rhs.elementAttributeName();
@@ -3621,6 +3623,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       elementAttributeNameRoot(cx),
       introductionScriptRoot(cx),
       scriptOrModuleRoot(cx) {
+  strictOption = cx->options().strictMode();
   extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
   discardSource = cx->realm()->behaviors().discardSource();
   werrorOption = cx->options().werror();
@@ -3634,9 +3637,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
   fieldsEnabledOption = cx->realm()->creationOptions().getFieldsEnabled();
-
-  // Certain modes of operation force strict-mode in general.
-  forceStrictMode_ = cx->options().strictMode();
 
   // Certain modes of operation disallow syntax parsing in general.
   forceFullParse_ = cx->realm()->behaviors().disableLazyParsing() ||
