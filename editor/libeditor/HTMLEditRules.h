@@ -177,12 +177,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded();
 
   /**
-   * CanContainParagraph() returns true if aElement can have a <p> element as
-   * its child or its descendant.
-   */
-  bool CanContainParagraph(Element& aElement) const;
-
-  /**
    * Insert normal <br> element into aNode when aNode is a block and it has
    * no children.
    */

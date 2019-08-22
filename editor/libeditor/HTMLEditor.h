@@ -1187,6 +1187,12 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
   SplitMailCiteElements(const EditorDOMPoint& aPointToSplit);
 
+  /**
+   * CanContainParagraph() returns true if aElement can have a <p> element as
+   * its child or its descendant.
+   */
+  bool CanContainParagraph(Element& aElement) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
