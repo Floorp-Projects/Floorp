@@ -72,7 +72,7 @@ class AbstractAmazonPushServiceTest {
 
     @Test
     fun `registration errors are forwarded to the processor`() {
-        val service = object: AbstractAmazonPushService() {
+        val service = object : AbstractAmazonPushService() {
             public override fun onRegistrationError(errorId: String) {
                 super.onRegistrationError(errorId)
             }
@@ -143,8 +143,7 @@ class ShadowADM {
 
     @Implementation
     @Suppress("UNUSED_PARAMETER")
-    fun __constructor__(context: Context) {
-    }
+    fun __constructor__(context: Context) {}
 
     fun isSupported() = true
 }
