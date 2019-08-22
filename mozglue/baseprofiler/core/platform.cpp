@@ -2011,6 +2011,8 @@ void SamplerThread::Run() {
             }
           }
 
+          AUTO_PROFILER_STATS(base_SamplerThread_Run_DoPeriodicSample);
+
           now = TimeStamp::NowUnfuzzed();
           mSampler.SuspendAndSampleAndResumeThread(
               lock, *registeredThread, [&](const Registers& aRegs) {
@@ -3144,6 +3146,8 @@ static void racy_profiler_add_marker(
   if (!racyRegisteredThread || !racyRegisteredThread->IsBeingProfiled()) {
     return;
   }
+
+  AUTO_PROFILER_STATS(base_racy_profiler_add_marker);
 
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                          ? aPayload->GetStartTime()

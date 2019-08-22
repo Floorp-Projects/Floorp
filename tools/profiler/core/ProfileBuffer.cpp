@@ -8,6 +8,7 @@
 
 #include "ProfilerMarker.h"
 
+#include "BaseProfiler.h"
 #include "jsfriendapi.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsJSPrincipals.h"
@@ -87,6 +88,8 @@ void ProfileBuffer::CollectCodeLocation(
 }
 
 void ProfileBuffer::DeleteExpiredStoredMarkers() {
+  AUTO_PROFILER_STATS(gecko_ProfileBuffer_DeleteExpiredStoredMarkers);
+
   // Delete markers of samples that have been overwritten due to circular
   // buffer wraparound.
   while (mStoredMarkers.peek() &&
