@@ -121,16 +121,6 @@ class HTMLEditRules : public TextEditRules {
   enum RulesEndpoint { kStart, kEnd };
 
   /**
-   * Called before inserting something into the editor.
-   * This method may removes mBougsNode if there is.  Therefore, this method
-   * might cause destroying the editor.
-   *
-   * @param aCancel             Returns true if the operation is canceled.
-   *                            This can be nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
-
-  /**
    * Called before inserting text.
    * This method may actually inserts text into the editor.  Therefore, this
    * might cause destroying the editor.
