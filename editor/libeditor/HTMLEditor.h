@@ -1106,6 +1106,16 @@ class HTMLEditor final : public TextEditor,
 
  protected:  // edit sub-action handler
   /**
+   * Called before inserting something into the editor.
+   * This method may removes mPaddingBRElementForEmptyEditor if there is.
+   * Therefore, this method might cause destroying the editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   *                            This can be nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
+
+  /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
    * aStyleCacheArray.  This might cause flushing layout at retrieving computed
    * values of CSS properties.
