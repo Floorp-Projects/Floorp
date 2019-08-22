@@ -167,6 +167,14 @@ const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
 
 const BlocklistTelemetry = {
   /**
+   * Record the current value of "Blocklist.useXML" into the
+   * "blocklist.useXML" scalar.
+   */
+  recordUseXML() {
+    Services.telemetry.scalarSet("blocklist.useXML", Blocklist.useXML);
+  },
+
+  /**
    * Record the XML Blocklist lastModified server time into the
    * "blocklist.lastModified_xml scalar.
    *
@@ -188,6 +196,43 @@ const BlocklistTelemetry = {
     } else {
       Services.telemetry.scalarSet(
         "blocklist.lastModified_xml",
+        "Missing Date"
+      );
+    }
+  },
+
+  /**
+   * Record the RemoteSettings Blocklist lastModified server time into the
+   * "blocklist.lastModified_rs keyed scalar (or "Missing Date" when unable
+   * to retrieve a valid timestamp).
+   *
+   * @param {string} blocklistType
+   *        The blocklist type that has been updated (one of "addons" or "plugins",
+   *        the "gfx" blocklist is not covered by this telemetry).
+   * @param {RemoteSettingsClient} remoteSettingsClient
+   *        The RemoteSettings client to retrieve the lastModified timestamp from.
+   */
+  async recordRSBlocklistLastModified(blocklistType, remoteSettingsClient) {
+    // In some tests overrides ensureInitialized and remoteSettingsClient
+    // can be undefined, and in that case we don't want to record any
+    // telemetry scalar.
+    if (!remoteSettingsClient) {
+      return;
+    }
+
+    let lastModified = await remoteSettingsClient.getLastModified();
+
+    if (lastModified > 0) {
+      // convert from timestamp in ms into UTC datetime string, so it is going
+      // to be record in the same format used by blocklist.lastModified_xml.
+      lastModified = new Date(lastModified).toUTCString();
+      Services.telemetry.scalarSet(
+        `blocklist.lastModified_rs_${blocklistType}`,
+        lastModified
+      );
+    } else {
+      Services.telemetry.scalarSet(
+        `blocklist.lastModified_rs_${blocklistType}`,
         "Missing Date"
       );
     }
@@ -223,6 +268,8 @@ const BlocklistTelemetry = {
     );
   },
 };
+
+this.BlocklistTelemetry = BlocklistTelemetry;
 
 const Utils = {
   /**
@@ -693,6 +740,8 @@ this.PluginBlocklistRS = {
       }
       Utils.ensureVersionRangeIsSane(entry);
     });
+
+    BlocklistTelemetry.recordRSBlocklistLastModified("plugins", this._client);
   },
 
   async _filterItem(entry) {
@@ -1128,6 +1177,8 @@ this.ExtensionBlocklistRS = {
       }
       Utils.ensureVersionRangeIsSane(entry);
     });
+
+    BlocklistTelemetry.recordRSBlocklistLastModified("addons", this._client);
   },
 
   async _filterItem(entry) {
@@ -3126,6 +3177,7 @@ let Blocklist = {
         this._impl.forceUpdate();
       }
     }
+    BlocklistTelemetry.recordUseXML();
   },
 
   shutdown() {
