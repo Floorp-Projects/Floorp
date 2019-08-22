@@ -331,15 +331,6 @@ bool nsPresContext::IsChrome() const {
   return Document()->IsInChromeDocShell();
 }
 
-bool nsPresContext::IsChromeOriginImage() const {
-  return Document()->IsBeingUsedAsImage() &&
-         Document()->IsDocumentURISchemeChrome();
-}
-
-void nsPresContext::GetDocumentColorPreferences() {
-  PreferenceSheet::EnsureInitialized();
-}
-
 void nsPresContext::GetUserPreferences() {
   if (!GetPresShell()) {
     // No presshell means nothing to do here.  We'll do this when we
@@ -350,8 +341,7 @@ void nsPresContext::GetUserPreferences() {
   mAutoQualityMinFontSizePixelsPref =
       Preferences::GetInt("browser.display.auto_quality_min_font_size");
 
-  // * document colors
-  GetDocumentColorPreferences();
+  PreferenceSheet::EnsureInitialized();
 
   mSendAfterPaintToContent = Preferences::GetBool(
       "dom.send_after_paint_to_content", mSendAfterPaintToContent);
@@ -1336,11 +1326,9 @@ void nsPresContext::SysColorChangedInternal() {
   // Invalidate cached '-moz-windows-accent-color-applies' media query:
   RefreshSystemMetrics();
 
+  // Reset default background and foreground colors for the document since they
+  // may be using system colors
   PreferenceSheet::Refresh();
-
-  // Reset default background and foreground colors for the document since
-  // they may be using system colors
-  GetDocumentColorPreferences();
 
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
