@@ -1,0 +1,57 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// This is a fake suffix list created only for the purposes of testing,
+// The real PSL is rather large thus this file is kept small by cutting out most of the suffixes
+
+// The Original list can be found at https://publicsuffix.org/list/public_suffix_list.dat,
+// Learn more about the PSL at https://publicsuffix.org.
+
+// .xpcshelltest is the fake domain created specifically for the the tests while
+// the others are ripped from the real list, serving as examples.
+
+// This fake public suffix list was used to create the binary file fake_remote_dafsa.bin
+// The binary is built at compile time and can be found at
+// obj-dir/_tests/xpcshell/netwerk/dns/tests/unit/data/
+
+// The list created with help of netwerk/dns/prepare_tlds.py and xpcom/ds/tools/make_dafsa.py
+// The build directive for the binary is at moz.build at netwerk/dns/tests/unit/data/
+
+
+
+// ===BEGIN ICANN DOMAINS===
+
+// xpcshelltest : Used in tests
+xpcshelltest
+website.xpcshelltest
+com.xpcshelltest
+edu.xpcshelltest
+gov.xpcshelltest
+net.xpcshelltest
+mil.xpcshelltest
+org.xpcshelltest
+
+// ac : https://en.wikipedia.org/wiki/.ac
+ac
+coc.ac
+com.ac
+edu.ac
+gov.ac
+net.ac
+mil.ac
+org.ac
+
+// bj : https://en.wikipedia.org/wiki/.bj
+bj
+asso.bj
+barreau.bj
+gouv.bj
+
+// bm : http://www.bermudanic.bm/dnr-text.txt
+bm
+com.bm
+edu.bm
+gov.bm
+net.bm
+org.bm
