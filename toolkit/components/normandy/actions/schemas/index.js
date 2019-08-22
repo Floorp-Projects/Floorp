@@ -102,6 +102,40 @@ const ActionSchemas = {
     },
   },
 
+  "addon-rollout": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Install add-on permanently",
+    type: "object",
+    required: ["extensionApiId", "slug"],
+    properties: {
+      extensionApiId: {
+        description:
+          "The record ID of the extension used for Normandy API calls.",
+        type: "integer",
+      },
+      slug: {
+        description:
+          "Unique identifer for the rollout, used in telemetry and rollbacks.",
+        type: "string",
+        pattern: "^[a-z0-9\\-_]+$",
+      },
+    },
+  },
+
+  "addon-rollback": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Undo an add-on rollout",
+    type: "object",
+    required: ["rolloutSlug"],
+    properties: {
+      rolloutSlug: {
+        description: "Unique identifer for the rollout to undo.",
+        type: "string",
+        pattern: "^[a-z0-9\\-_]+$",
+      },
+    },
+  },
+
   "branched-addon-study": {
     $schema: "http://json-schema.org/draft-04/schema#",
     title: "Enroll a user in an add-on experiment, with managed branches",
