@@ -11,32 +11,22 @@ namespace js {
 
 Thread::~Thread() { MOZ_RELEASE_ASSERT(!joinable()); }
 
-Thread::Thread(Thread&& aOther) : idMutex_(mutexid::ThreadId) {
-  LockGuard<Mutex> lock(aOther.idMutex_);
+Thread::Thread(Thread&& aOther) {
   id_ = aOther.id_;
   aOther.id_ = Id();
   options_ = aOther.options_;
 }
 
 Thread& Thread::operator=(Thread&& aOther) {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(!joinable(lock));
+  MOZ_RELEASE_ASSERT(!joinable());
   id_ = aOther.id_;
   aOther.id_ = Id();
   options_ = aOther.options_;
   return *this;
 }
 
-Thread::Id Thread::get_id() {
-  LockGuard<Mutex> lock(idMutex_);
-  return id_;
-}
+Thread::Id Thread::get_id() { return id_; }
 
-bool Thread::joinable(LockGuard<Mutex>& lock) { return id_ != Id(); }
-
-bool Thread::joinable() {
-  LockGuard<Mutex> lock(idMutex_);
-  return joinable(lock);
-}
+bool Thread::joinable() { return id_ != Id(); }
 
 }  // namespace js

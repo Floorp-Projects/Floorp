@@ -35,8 +35,6 @@ bool Thread::Id::operator==(const Id& aOther) const {
 }
 
 bool Thread::create(void* (*aMain)(void*), void* aArg) {
-  LockGuard<Mutex> lock(idMutex_);
-
   pthread_attr_t attrs;
   int r = pthread_attr_init(&attrs);
   MOZ_RELEASE_ASSERT(!r);
@@ -44,6 +42,7 @@ bool Thread::create(void* (*aMain)(void*), void* aArg) {
     r = pthread_attr_setstacksize(&attrs, options_.stackSize());
     MOZ_RELEASE_ASSERT(!r);
   }
+
   r = pthread_create(&id_.platformData()->ptThread, &attrs, aMain, aArg);
   if (r) {
     // On either Windows or POSIX we can't be sure if id_ was initialised. So
@@ -56,16 +55,14 @@ bool Thread::create(void* (*aMain)(void*), void* aArg) {
 }
 
 void Thread::join() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(joinable(lock));
+  MOZ_RELEASE_ASSERT(joinable());
   int r = pthread_join(id_.platformData()->ptThread, nullptr);
   MOZ_RELEASE_ASSERT(!r);
   id_ = Id();
 }
 
 void Thread::detach() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(joinable(lock));
+  MOZ_RELEASE_ASSERT(joinable());
   int r = pthread_detach(id_.platformData()->ptThread);
   MOZ_RELEASE_ASSERT(!r);
   id_ = Id();
