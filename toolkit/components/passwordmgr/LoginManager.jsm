@@ -513,9 +513,15 @@ LoginManager.prototype = {
     }
 
     let uri = Services.io.newURI(origin);
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {}
+    );
     return (
-      Services.perms.testPermission(uri, PERMISSION_SAVE_LOGINS) !=
-      Services.perms.DENY_ACTION
+      Services.perms.testPermissionFromPrincipal(
+        principal,
+        PERMISSION_SAVE_LOGINS
+      ) != Services.perms.DENY_ACTION
     );
   },
 
@@ -527,11 +533,15 @@ LoginManager.prototype = {
     LoginHelper.checkOriginValue(origin);
 
     let uri = Services.io.newURI(origin);
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
+      uri,
+      {}
+    );
     if (enabled) {
-      Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);
+      Services.perms.removeFromPrincipal(principal, PERMISSION_SAVE_LOGINS);
     } else {
-      Services.perms.add(
-        uri,
+      Services.perms.addFromPrincipal(
+        principal,
         PERMISSION_SAVE_LOGINS,
         Services.perms.DENY_ACTION
       );
