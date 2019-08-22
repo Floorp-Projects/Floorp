@@ -5,11 +5,13 @@ package org.mozilla.fenix
  */
 object FeatureFlags {
     // A convenience flag for production builds.
-    private val production by lazy { BuildConfig.BUILD_TYPE == "production" }
+    private val production by lazy { BuildConfig.BUILD_TYPE == "fenixProduction" }
     // A convenience flag for beta builds.
-    private val beta by lazy { BuildConfig.BUILD_TYPE == "beta" }
+    private val beta by lazy { BuildConfig.BUILD_TYPE == "fenixBeta" }
     // A convenience flag for the nightly build and (legacy) nightly channel in Google Play.
-    private val nightly by lazy { BuildConfig.BUILD_TYPE == "nightly" || BuildConfig.BUILD_TYPE == "nightlyLegacy" }
+    private val nightly by lazy {
+        BuildConfig.BUILD_TYPE == "fenixNightly" || BuildConfig.BUILD_TYPE == "fenixNightlyLegacy"
+    }
     // A convenience flag for debug builds.
     private val debug by lazy { BuildConfig.BUILD_TYPE == "debug" }
     // A convenience flag for enabling in all builds (a feature that can still be toggled off).
