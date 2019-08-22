@@ -1207,6 +1207,13 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
+  /**
+   * GetMostAncestorInlineElement() returns the most ancestor inline element
+   * between aNode and the editing host.  Even if the editing host is an inline
+   * element, this method never returns the editing host as the result.
+   */
+  nsIContent* GetMostAncestorInlineElement(nsINode& aNode) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
