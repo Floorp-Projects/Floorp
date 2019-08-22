@@ -46,7 +46,7 @@ class BrowserConsole extends WebConsole {
     this._bcDestroyer = null;
   }
 
-  get target() {
+  get currentTarget() {
     return this._browserConsoleTarget;
   }
 
@@ -101,7 +101,7 @@ class BrowserConsole extends WebConsole {
       this._telemetry.toolClosed("browserconsole", -1, this);
 
       await super.destroy();
-      await this.target.destroy();
+      await this.currentTarget.destroy();
       this.chromeWindow.close();
     })();
 
