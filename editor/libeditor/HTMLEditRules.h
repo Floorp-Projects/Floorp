@@ -121,27 +121,6 @@ class HTMLEditRules : public TextEditRules {
   enum RulesEndpoint { kStart, kEnd };
 
   /**
-   * Called before inserting text.
-   * This method may actually inserts text into the editor.  Therefore, this
-   * might cause destroying the editor.
-   *
-   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
-   *                            or EditSubAction::eInsertText.
-   * @param aCancel             Returns true if the operation is canceled.
-   * @param aHandled            Returns true if the edit action is handled.
-   * @param inString            String to be inserted.
-   * @param outString           String actually inserted.
-   * @param aMaxLength          The maximum string length which the editor
-   *                            allows to set.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult WillInsertText(EditSubAction aEditSubAction,
-                                       bool* aCancel, bool* aHandled,
-                                       const nsAString* inString,
-                                       nsAString* outString,
-                                       int32_t aMaxLength);
-
-  /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is
    * executed or something equivalent.  This method actually tries to insert
    * new paragraph or <br> element, etc.
