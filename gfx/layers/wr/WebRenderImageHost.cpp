@@ -8,6 +8,7 @@
 
 #include "LayersLogging.h"
 #include "mozilla/Move.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/layers/Compositor.h"                // for Compositor
 #include "mozilla/layers/CompositorVsyncScheduler.h"  // for CompositorVsyncScheduler
 #include "mozilla/layers/Effects.h"  // for TexturedEffect, Effect, etc
@@ -29,9 +30,11 @@ namespace layers {
 class ISurfaceAllocator;
 
 WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
-    : CompositableHost(aTextureInfo), ImageComposite(), mWrBridgeBindings(0) {}
+    : CompositableHost(aTextureInfo),
+      ImageComposite(),
+      mCurrentAsyncImageManager(nullptr) {}
 
-WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(!mWrBridge); }
+WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(mWrBridges.empty()); }
 
 void WebRenderImageHost::UseTextureHost(
     const nsTArray<TimedTexture>& aTextures) {
@@ -63,9 +66,13 @@ void WebRenderImageHost::UseTextureHost(
 
   SetImages(std::move(newImages));
 
-  if (mWrBridge && mWrBridge->CompositorScheduler() && GetAsyncRef()) {
-    // Will check if we will generate frame.
-    mWrBridge->CompositorScheduler()->ScheduleComposition();
+  if (GetAsyncRef()) {
+    for (const auto& it : mWrBridges) {
+      WebRenderBridgeParent* wrBridge = it.second;
+      if (wrBridge && wrBridge->CompositorScheduler()) {
+        wrBridge->CompositorScheduler()->ScheduleComposition();
+      }
+    }
   }
 
   // Video producers generally send replacement images with the same frameID but
@@ -73,14 +80,18 @@ void WebRenderImageHost::UseTextureHost(
   // means that any CompositeUntil() call we made in Composite() may no longer
   // guarantee that we'll composite until the next frame is ready. Fix that
   // here.
-  if (mWrBridge && mLastFrameID >= 0) {
-    MOZ_ASSERT(mWrBridge->AsyncImageManager());
+  if (mLastFrameID >= 0 && !mWrBridges.empty()) {
     for (const auto& img : Images()) {
       bool frameComesAfter =
           img.mFrameID > mLastFrameID || img.mProducerID != mLastProducerID;
       if (frameComesAfter && !img.mTimeStamp.IsNull()) {
-        mWrBridge->AsyncImageManager()->CompositeUntil(
-            img.mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+        for (const auto& it : mWrBridges) {
+          WebRenderBridgeParent* wrBridge = it.second;
+          if (wrBridge) {
+            wrBridge->AsyncImageManager()->CompositeUntil(
+                img.mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+          }
+        }
         break;
       }
     }
@@ -104,9 +115,10 @@ void WebRenderImageHost::RemoveTextureHost(TextureHost* aTexture) {
 
 TimeStamp WebRenderImageHost::GetCompositionTime() const {
   TimeStamp time;
-  if (mWrBridge) {
-    MOZ_ASSERT(mWrBridge->AsyncImageManager());
-    time = mWrBridge->AsyncImageManager()->GetCompositionTime();
+
+  MOZ_ASSERT(mCurrentAsyncImageManager);
+  if (mCurrentAsyncImageManager) {
+    time = mCurrentAsyncImageManager->GetCompositionTime();
   }
   return time;
 }
@@ -119,10 +131,11 @@ TextureHost* WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect) {
   return nullptr;
 }
 
-TextureHost* WebRenderImageHost::GetAsTextureHostForComposite() {
-  if (!mWrBridge) {
-    return nullptr;
-  }
+TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
+    AsyncImagePipelineManager* aAsyncImageManager) {
+  mCurrentAsyncImageManager = aAsyncImageManager;
+  const auto onExit =
+      mozilla::MakeScopeExit([&]() { mCurrentAsyncImageManager = nullptr; });
 
   int imageIndex = ChooseImageIndex();
   if (imageIndex < 0) {
@@ -131,8 +144,7 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite() {
   }
 
   if (uint32_t(imageIndex) + 1 < ImagesCount()) {
-    MOZ_ASSERT(mWrBridge->AsyncImageManager());
-    mWrBridge->AsyncImageManager()->CompositeUntil(
+    mCurrentAsyncImageManager->CompositeUntil(
         GetImage(imageIndex + 1)->mTimeStamp +
         TimeDuration::FromMilliseconds(BIAS_TIME_MS));
   }
@@ -145,9 +157,9 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite() {
       info.mImageBridgeProcessId = mAsyncRef.mProcessId;
       info.mNotification = ImageCompositeNotification(
           mAsyncRef.mHandle, img->mTimeStamp,
-          mWrBridge->AsyncImageManager()->GetCompositionTime(), img->mFrameID,
+          mCurrentAsyncImageManager->GetCompositionTime(), img->mFrameID,
           img->mProducerID);
-      mWrBridge->AsyncImageManager()->AppendImageCompositeNotification(info);
+      mCurrentAsyncImageManager->AppendImageCompositeNotification(info);
     }
     mLastFrameID = img->mFrameID;
     mLastProducerID = img->mProducerID;
@@ -236,29 +248,28 @@ IntSize WebRenderImageHost::GetImageSize() {
   return IntSize();
 }
 
-void WebRenderImageHost::SetWrBridge(WebRenderBridgeParent* aWrBridge) {
-  // For image hosts created through ImageBridgeParent, there may be multiple
-  // references to it due to the order of creation and freeing of layers by
-  // the layer tree. However this should be limited to things such as video
-  // which will not be reused across different WebRenderBridgeParent objects.
+void WebRenderImageHost::SetWrBridge(const wr::PipelineId& aPipelineId,
+                                     WebRenderBridgeParent* aWrBridge) {
   MOZ_ASSERT(aWrBridge);
-  MOZ_ASSERT(!mWrBridge || mWrBridge == aWrBridge);
-  mWrBridge = aWrBridge;
-  ++mWrBridgeBindings;
+#ifdef DEBUG
+  const auto it = mWrBridges.find(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(it == mWrBridges.end());
+#endif
+  mWrBridges.emplace(wr::AsUint64(aPipelineId), aWrBridge);
 }
 
-void WebRenderImageHost::ClearWrBridge(WebRenderBridgeParent* aWrBridge) {
+void WebRenderImageHost::ClearWrBridge(const wr::PipelineId& aPipelineId,
+                                       WebRenderBridgeParent* aWrBridge) {
   MOZ_ASSERT(aWrBridge);
-  MOZ_ASSERT(mWrBridgeBindings > 0);
-  --mWrBridgeBindings;
-  if (mWrBridgeBindings == 0) {
-    MOZ_ASSERT(aWrBridge == mWrBridge);
-    if (aWrBridge != mWrBridge) {
-      gfxCriticalNote << "WrBridge mismatch happened";
-    }
-    SetCurrentTextureHost(nullptr);
-    mWrBridge = nullptr;
+
+  const auto it = mWrBridges.find(wr::AsUint64(aPipelineId));
+  MOZ_ASSERT(it != mWrBridges.end());
+  if (it == mWrBridges.end()) {
+    gfxCriticalNote << "WrBridge mismatch happened";
+    return;
   }
+  mWrBridges.erase(it);
+  SetCurrentTextureHost(nullptr);
 }
 
 }  // namespace layers

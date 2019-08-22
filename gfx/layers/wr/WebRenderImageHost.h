@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_WEBRENDERIMAGEHOST_H
 #define MOZILLA_GFX_WEBRENDERIMAGEHOST_H
 
+#include <unordered_map>
+
 #include "CompositableHost.h"               // for CompositableHost
 #include "mozilla/layers/ImageComposite.h"  // for ImageComposite
 #include "mozilla/WeakPtr.h"
@@ -14,6 +16,7 @@
 namespace mozilla {
 namespace layers {
 
+class AsyncImagePipelineManager;
 class WebRenderBridgeParent;
 
 /**
@@ -65,11 +68,14 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   WebRenderImageHost* AsWebRenderImageHost() override { return this; }
 
-  TextureHost* GetAsTextureHostForComposite();
+  TextureHost* GetAsTextureHostForComposite(
+      AsyncImagePipelineManager* aAsyncImageManager);
 
-  void SetWrBridge(WebRenderBridgeParent* aWrBridge);
+  void SetWrBridge(const wr::PipelineId& aPipelineId,
+                   WebRenderBridgeParent* aWrBridge);
 
-  void ClearWrBridge(WebRenderBridgeParent* aWrBridge);
+  void ClearWrBridge(const wr::PipelineId& aPipelineId,
+                     WebRenderBridgeParent* aWrBridge);
 
   TextureHost* GetCurrentTextureHost() { return mCurrentTextureHost; }
 
@@ -79,9 +85,9 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   void SetCurrentTextureHost(TextureHost* aTexture);
 
-  WeakPtr<WebRenderBridgeParent> mWrBridge;
+  std::unordered_map<uint64_t, WeakPtr<WebRenderBridgeParent>> mWrBridges;
 
-  uint32_t mWrBridgeBindings;
+  AsyncImagePipelineManager* mCurrentAsyncImageManager;
 
   CompositableTextureHostRef mCurrentTextureHost;
 };
