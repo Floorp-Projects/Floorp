@@ -92,11 +92,9 @@ nsresult AsyncScriptCompiler::Start(
   mCharset = aOptions.mCharset;
 
   CompileOptions options(aCx);
-  options.setFile(mURL.get()).setNoScriptRval(!aOptions.mHasReturnValue);
-
-  if (!aOptions.mLazilyParse) {
-    options.setForceFullParse();
-  }
+  options.setFile(mURL.get())
+      .setNoScriptRval(!aOptions.mHasReturnValue)
+      .setCanLazilyParse(aOptions.mLazilyParse);
 
   if (NS_WARN_IF(!mOptions.copy(aCx, options))) {
     return NS_ERROR_OUT_OF_MEMORY;
