@@ -50,6 +50,12 @@ struct PersistResponse
 {
 };
 
+struct EstimateResponse
+{
+  uint64_t usage;
+  uint64_t limit;
+};
+
 struct ListInitializedOriginsResponse
 {
   nsCString[] origins;
@@ -68,6 +74,7 @@ union RequestResponse
   ResetAllResponse;
   PersistedResponse;
   PersistResponse;
+  EstimateResponse;
   ListInitializedOriginsResponse;
 };
 

@@ -500,7 +500,7 @@ QuotaManagerService::GetUsage(nsIQuotaUsageCallback* aCallback, bool aGetAll,
 NS_IMETHODIMP
 QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
                                           nsIQuotaUsageCallback* aCallback,
-                                          bool aGetGroupUsage,
+                                          bool aFromMemory,
                                           nsIQuotaUsageRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -516,7 +516,7 @@ QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  params.getGroupUsage() = aGetGroupUsage;
+  params.fromMemory() = aFromMemory;
 
   nsAutoPtr<PendingRequestInfo> info(new UsageRequestInfo(request, params));
 
@@ -722,6 +722,33 @@ QuotaManagerService::Persist(nsIPrincipal* aPrincipal,
   RefPtr<Request> request = new Request(aPrincipal);
 
   PersistParams params;
+
+  nsresult rv =
+      CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+QuotaManagerService::Estimate(nsIPrincipal* aPrincipal,
+                              nsIQuotaRequest** _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  RefPtr<Request> request = new Request(aPrincipal);
+
+  EstimateParams params;
 
   nsresult rv =
       CheckedPrincipalToPrincipalInfo(aPrincipal, params.principalInfo());
