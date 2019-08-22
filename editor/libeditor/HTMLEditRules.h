@@ -58,7 +58,7 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor) override;
   virtual nsresult DetachEditor() override;
-  virtual nsresult BeforeEdit() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult BeforeEdit() override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult AfterEdit() override;
   // NOTE: Don't mark WillDoAction() nor DidDoAction() as MOZ_CAN_RUN_SCRIPT
   //       because they are too generic and doing it makes a lot of public
@@ -1114,14 +1114,14 @@ class HTMLEditRules : public TextEditRules {
    * TopLevelEditSubAction.  This may cause flushing layout at retrieving
    * computed value of CSS properties.
    */
-  MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
 
   /**
    * ReapplyCachedStyles() restores some styles which are disappeared during
    * handling edit action and it should be restored.  This may cause flushing
    * layout at retrieving computed value of CSS properties.
    */
-  MOZ_MUST_USE nsresult ReapplyCachedStyles();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult ReapplyCachedStyles();
 
   void ClearCachedStyles();
 
@@ -1302,14 +1302,6 @@ class HTMLEditRules : public TextEditRules {
    * synchronously or asynchronously.
    */
   MOZ_CAN_RUN_SCRIPT void DocumentModifiedWorker();
-
-  /**
-   * GetInlineStyles() retrieves the style of aNode and modifies each item of
-   * aStyleCacheArray.  This might cause flushing layout at retrieving computed
-   * values of CSS properties.
-   */
-  MOZ_MUST_USE nsresult GetInlineStyles(nsINode* aNode,
-                                        AutoStyleCacheArray& aStyleCacheArray);
 
  protected:
   HTMLEditor* mHTMLEditor;
