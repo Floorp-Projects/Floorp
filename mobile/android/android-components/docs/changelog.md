@@ -78,6 +78,11 @@ permalink: /changelog/
 * **support-ktx**
   * Removed deprecated methods that have equivalents in Android KTX.
 
+* **concept-sync**, **service-firefox-account**
+  * ⚠️ **This is a breaking change**
+  * In `OAuthAccount` (and by extension, `FirefoxAccount`) `beginOAuthFlowAsync` no longer need to specify `wantsKeys` parameter; it's automatically inferred from the requested `scopes`.
+  * Three new device types now available: `tablet`, `tv`, `vr`.
+
 # 8.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...v8.0.0)
@@ -118,11 +123,6 @@ permalink: /changelog/
 * **feature-media**
   * `MediaFeature` is no longer showing a notification for playing media with a very short duration.
   * Lowererd priority of media notification channel to avoid the media notification makign any sounds itself.
-
-* **concept-sync**, **service-firefox-account**
-  * ⚠️ **This is a breaking change**
-  * In `OAuthAccount` (and by extension, `FirefoxAccount`) `beginOAuthFlowAsync` no longer need to specify `wantsKeys` parameter; it's automatically inferred from the requested `scopes`.
-  * Three new device types now available: `tablet`, `tv`, `vr`.
 
 # 7.0.0
 
