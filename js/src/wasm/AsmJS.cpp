@@ -6936,7 +6936,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   // The exported function inherits an implicit strict context if the module
   // also inherited it somehow.
   if (metadata.strict) {
-    options.setForceStrictMode();
+    options.strictOption = true;
   }
 
   AutoStableStringChars stableChars(cx);
