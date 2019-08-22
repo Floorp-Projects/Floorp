@@ -4416,35 +4416,22 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
     return AttachDecision::NoAction;
   }
 
-  // Look up the @@hasInstance property, and check that Function.__proto__ is
-  // the property holder, and that no object further down the prototype chain
-  // (including this function) has shadowed it; together with the fact that
-  // Function.__proto__[@@hasInstance] is immutable, this ensures that the
-  // hasInstance hook will not change without the need to guard on the actual
-  // property value.
-  PropertyResult hasInstanceProp;
-  JSObject* hasInstanceHolder = nullptr;
-  jsid hasInstanceID = SYMBOL_TO_JSID(cx_->wellKnownSymbols().hasInstance);
-  if (!LookupPropertyPure(cx_, fun, hasInstanceID, &hasInstanceHolder,
-                          &hasInstanceProp) ||
-      !hasInstanceProp.isFound() || hasInstanceProp.isNonNativeProperty()) {
+  // If the user has supplied their own @@hasInstance method we shouldn't
+  // clobber it.
+  if (!js::FunctionHasDefaultHasInstance(fun, cx_->wellKnownSymbols())) {
+    trackAttached(IRGenerator::NotAttached);
+    return AttachDecision::NoAction;
+  }
+
+  // Refuse to optimize any function whose [[Prototype]] isn't
+  // Function.prototype.
+  if (!fun->hasStaticPrototype() || fun->hasUncacheableProto()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
 
   Value funProto = cx_->global()->getPrototype(JSProto_Function);
-  if (hasInstanceHolder != &funProto.toObject()) {
-    trackAttached(IRGenerator::NotAttached);
-    return AttachDecision::NoAction;
-  }
-
-  // If the above succeeded, then these should be true about @@hasInstance,
-  // because the property on Function.__proto__ is an immutable data property:
-  MOZ_ASSERT(hasInstanceProp.shape()->isDataProperty());
-  MOZ_ASSERT(!hasInstanceProp.shape()->configurable());
-  MOZ_ASSERT(!hasInstanceProp.shape()->writable());
-
-  if (!IsCacheableProtoChain(fun, hasInstanceHolder)) {
+  if (!funProto.isObject() || fun->staticPrototype() != &funProto.toObject()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
@@ -4472,15 +4459,6 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 
   ObjOperandId rhsId = writer.guardToObject(rhs);
   writer.guardShape(rhsId, fun->lastProperty());
-
-  // Ensure that the shapes up the prototype chain for the RHS remain the same
-  // so that @@hasInstance is not shadowed by some intermediate prototype
-  // object.
-  if (hasInstanceHolder != fun) {
-    GeneratePrototypeGuards(writer, fun, hasInstanceHolder, rhsId);
-    ObjOperandId holderId = writer.loadObject(hasInstanceHolder);
-    TestMatchingHolder(writer, hasInstanceHolder, holderId);
-  }
 
   // Load prototypeObject into the cache -- consumed twice in the IC
   ObjOperandId protoId = writer.loadObject(prototypeObject);
