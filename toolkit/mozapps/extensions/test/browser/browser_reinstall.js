@@ -110,9 +110,7 @@ async function check_addon(aAddon, aVersion) {
   is(version, aVersion, "Version should be correct");
 
   if (gManagerWindow.useHtmlViews) {
-    const l10nAttrs = item.ownerDocument.l10n.getAttributes(
-      item.querySelector(".addon-name")
-    );
+    const l10nAttrs = item.ownerDocument.l10n.getAttributes(item.addonNameEl);
     if (aAddon.userDisabled) {
       Assert.deepEqual(
         l10nAttrs,

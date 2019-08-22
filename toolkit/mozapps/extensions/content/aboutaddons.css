@@ -124,7 +124,14 @@ addon-card[expanded] .addon-card-message {
   font-size: 16px;
   font-weight: 600;
   line-height: 22px;
+  margin: 0;
   margin-inline-end: 8px;
+}
+
+.addon-name-link,
+.addon-name-link:hover {
+  color: var(--in-content-text-color);
+  text-decoration: none;
 }
 
 .addon-badge {
