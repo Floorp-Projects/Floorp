@@ -95,9 +95,6 @@ manifest-item-presentation = Presentation
 # Header for the Icon section of Manifest inspection displayed in the application panel.
 manifest-item-icons = Icons
 
-# Text displayed when no manifest was found for the current page.
-manifest-empty-intro = No manifest found to inspect.
-
 # Text displayed while we are loading the manifest file
 manifest-loading = Loading manifest…
 
@@ -109,4 +106,3 @@ manifest-loaded-error = There was an error while loading the manifest:
 
 # Text displayed when the page has no manifest available
 manifest-non-existing = No manifest found to inspect.
-
