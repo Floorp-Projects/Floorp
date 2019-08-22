@@ -12,7 +12,7 @@ exports[`ManifestViewEmpty renders the expected snapshot 1`] = `
     />
   </Localized>
   <Localized
-    id="manifest-empty-intro"
+    id="manifest-non-existing"
   >
     <p />
   </Localized>
