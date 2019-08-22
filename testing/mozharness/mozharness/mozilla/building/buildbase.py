@@ -1316,8 +1316,8 @@ or run without that action (ie: --no-{action})"
         Returns a dictionary of sections and their sizes.
         """
         # Check for `rust_size`, our cross platform version of size. It should
-        # be installed by tooltool in $abs_src_dir/rust-size/rust-size
-        rust_size = os.path.join(self.query_abs_dirs()['abs_src_dir'],
+        # be fetched by run-task in $MOZ_FETCHES_DIR/rust-size/rust-size
+        rust_size = os.path.join(os.environ['MOZ_FETCHES_DIR'],
                                  'rust-size', 'rust-size')
         size_prog = self.which(rust_size)
         if not size_prog:
