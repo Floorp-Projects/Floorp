@@ -191,7 +191,8 @@ add_task(async function test_simpleQuery() {
     "This search must only increment one entry in the scalar."
   );
 
-  // Make sure SEARCH_COUNTS contains identical values.
+  // SEARCH_COUNTS should be incremented, but only the urlbar source since an
+  // internal @search keyword was not used.
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
     "other-MozSearch.urlbar",
@@ -287,7 +288,8 @@ add_task(async function test_searchAlias() {
     "This search must only increment one entry in the scalar."
   );
 
-  // Make sure SEARCH_COUNTS contains identical values.
+  // SEARCH_COUNTS should be incremented, but only the urlbar source since an
+  // internal @search keyword was not used.
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
     "other-MozSearch.urlbar",
@@ -354,10 +356,12 @@ add_task(async function test_internalSearchAlias() {
   EventUtils.synthesizeKey("KEY_Enter");
   await p;
 
+  // SEARCH_COUNTS should be incremented, but only the alias source since an
+  // internal @search keyword was used.
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
     "other-MozSearch.urlbar",
-    1
+    undefined
   );
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
@@ -374,7 +378,7 @@ add_task(async function test_internalSearchAlias() {
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
     "other-MozSearch.urlbar",
-    2
+    undefined
   );
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
@@ -435,7 +439,8 @@ add_task(async function test_oneOff_enter() {
     "This search must only increment one entry in the scalar."
   );
 
-  // Make sure SEARCH_COUNTS contains identical values.
+  // SEARCH_COUNTS should be incremented, but only the urlbar source since an
+  // internal @search keyword was not used.
   TelemetryTestUtils.assertKeyedHistogramSum(
     search_hist,
     "other-MozSearch.urlbar",
@@ -604,7 +609,7 @@ add_task(async function test_suggestion_click() {
       "This search must only increment one entry in the scalar."
     );
 
-    // Make sure SEARCH_COUNTS contains identical values.
+    // SEARCH_COUNTS should be incremented.
     let searchEngineId = "other-" + engine.name;
     TelemetryTestUtils.assertKeyedHistogramSum(
       search_hist,
