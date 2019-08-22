@@ -94,7 +94,7 @@ class BackgroundServices(
     val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
-        SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.BOOKMARKS), syncPeriodInMinutes = 240L) // four hours
+        SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 240L) // four hours
     }
 
     private val pushService by lazy { FirebasePush() }
@@ -103,8 +103,8 @@ class BackgroundServices(
 
     init {
         // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.HISTORY to historyStorage)
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.BOOKMARKS to bookmarkStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {

@@ -25,6 +25,7 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
@@ -112,7 +113,7 @@ open class HomeActivity : AppCompatActivity() {
                 accountManager.initAsync().await()
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 accountManager.authenticatedAccount()?.let {
-                    accountManager.syncNowAsync(startup = true, debounce = true)
+                    accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
                     it.deviceConstellation().pollForEventsAsync().await()
                 }
             }

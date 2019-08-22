@@ -11,6 +11,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -22,13 +23,17 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
@@ -147,6 +152,27 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             }
         }
 
+        // Make sure out sync engine checkboxes are up-to-date.
+        updateSyncEngineStates()
+
+        val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
+        findPreference<CheckBoxPreference>(historyNameKey)?.apply {
+            setOnPreferenceChangeListener { _, newValue ->
+                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue as Boolean)
+                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                true
+            }
+        }
+
+        val bookmarksNameKey = getPreferenceKey(R.string.pref_key_sync_bookmarks)
+        findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
+            setOnPreferenceChangeListener { _, newValue ->
+                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue as Boolean)
+                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                true
+            }
+        }
+
         deviceConstellation?.registerDeviceObserver(deviceConstellationObserver, owner = this, autoPause = true)
 
         // NB: ObserverRegistry will take care of cleaning up internal references to 'observer' and
@@ -156,11 +182,25 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         )
     }
 
+    private fun updateSyncEngineStates() {
+        val syncEnginesStatus = SyncEnginesStorage(context!!).getStatus()
+        val bookmarksNameKey = getPreferenceKey(R.string.pref_key_sync_bookmarks)
+        findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.Bookmarks)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Bookmarks) { true }
+        }
+        val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
+        findPreference<CheckBoxPreference>(historyNameKey)?.apply {
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.History)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.History) { true }
+        }
+    }
+
     private fun syncNow() {
         lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
-            requireComponents.backgroundServices.accountManager.syncNowAsync().await()
+            requireComponents.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
             // Poll for device events & update devices.
             accountManager.authenticatedAccount()
                 ?.deviceConstellation()?.run {
@@ -176,10 +216,12 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
         // This may fail, and we'll have a disparity in the UI until `updateDeviceName` is called.
         lifecycleScope.launch(Main) {
-            accountManager.authenticatedAccount()
-                ?.deviceConstellation()
-                ?.setDeviceNameAsync(newValue)
-                ?.await()
+            context?.let {
+                accountManager.authenticatedAccount()
+                    ?.deviceConstellation()
+                    ?.setDeviceNameAsync(newValue, it)
+                    ?.await()
+            }
         }
         return true
     }
@@ -229,6 +271,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     val time = getLastSynced(requireContext())
                     accountSettingsStore.dispatch(AccountSettingsFragmentAction.SyncEnded(time))
                 }
+                // Make sure out sync engine checkboxes are up-to-date.
+                updateSyncEngineStates()
             }
         }
 
