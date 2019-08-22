@@ -384,6 +384,29 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     const scripts = this._findDebuggeeScripts();
 
+    // We need to find all breakpoint positions, even if scripts associated with
+    // this source have been GC'ed. We detect this by looking for a script which
+    // does not have a function: a source will typically have a top level
+    // non-function script. If this top level script still exists, then it keeps
+    // all its child scripts alive and we will find all breakpoint positions by
+    // scanning the existing scripts. If the top level script has been GC'ed
+    // then we won't find its breakpoint positions, and inner functions may have
+    // been GC'ed as well. In this case we reparse the source and generate a new
+    // and complete set of scripts to look for the breakpoint positions.
+    // Note that in some cases like "new Function(stuff)" there might not be a
+    // top level non-function script, but if there is a non-function script then
+    // it must be at the top level and will keep all other scripts in the source
+    // alive.
+    const isWasm = this._source.introductionType === "wasm";
+    if (!isWasm && !scripts.some(script => !script.isFunction)) {
+      scripts.length = 0;
+      function addScripts(script) {
+        scripts.push(script);
+        script.getChildScripts().forEach(addScripts);
+      }
+      addScripts(this._source.reparse());
+    }
+
     const positions = [];
     for (const script of scripts) {
       // This purely a performance boost to avoid needing to build an array
