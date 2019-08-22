@@ -942,7 +942,7 @@ static bool InitModuleLoader(JSContext* cx) {
   options.setIntroductionType("shell module loader");
   options.setFileAndLine("shell/ModuleLoader.js", 1);
   options.setSelfHostingMode(false);
-  options.setCanLazilyParse(false);
+  options.setForceFullParse();
   options.werrorOption = true;
   options.setForceStrictMode();
 

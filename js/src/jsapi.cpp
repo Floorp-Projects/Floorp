@@ -3527,7 +3527,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
   selfHostingMode = rhs.selfHostingMode;
-  canLazilyParse = rhs.canLazilyParse;
   extraWarningsOption = rhs.extraWarningsOption;
   werrorOption = rhs.werrorOption;
   asmJSOption = rhs.asmJSOption;
