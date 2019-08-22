@@ -86,7 +86,7 @@ class WebConsole {
     EventEmitter.decorate(this);
   }
 
-  get target() {
+  get currentTarget() {
     return this.toolbox.target;
   }
 
