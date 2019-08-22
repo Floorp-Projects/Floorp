@@ -2047,8 +2047,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
 
-  RefPtr<Element> citeNode =
-      GetTopEnclosingMailCite(*pointToSplit.GetContainer());
+  RefPtr<Element> citeNode = HTMLEditorRef().GetMostAncestorMailCiteElement(
+      *pointToSplit.GetContainer());
   if (!citeNode) {
     return EditActionIgnored();
   }
@@ -2920,8 +2920,10 @@ nsresult HTMLEditRules::WillDeleteSelection(
       }
     } else {
       // Figure out mailcite ancestors
-      nsCOMPtr<Element> startCiteNode = GetTopEnclosingMailCite(*startNode);
-      nsCOMPtr<Element> endCiteNode = GetTopEnclosingMailCite(*endNode);
+      RefPtr<Element> startCiteNode =
+          HTMLEditorRef().GetMostAncestorMailCiteElement(*startNode);
+      RefPtr<Element> endCiteNode =
+          HTMLEditorRef().GetMostAncestorMailCiteElement(*endNode);
 
       // If we only have a mailcite at one of the two endpoints, set the
       // directionality of the deletion so that the selection will end up
@@ -3819,8 +3821,8 @@ nsresult HTMLEditRules::DidDeleteSelection() {
   }
 
   // find any enclosing mailcite
-  RefPtr<Element> citeNode =
-      GetTopEnclosingMailCite(*atStartOfSelection.GetContainer());
+  RefPtr<Element> citeNode = HTMLEditorRef().GetMostAncestorMailCiteElement(
+      *atStartOfSelection.GetContainer());
   if (citeNode) {
     bool isEmpty = true, seenBR = false;
     HTMLEditorRef().IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false,
@@ -9071,20 +9073,19 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   return NS_OK;
 }
 
-Element* HTMLEditRules::GetTopEnclosingMailCite(nsINode& aNode) {
-  nsCOMPtr<Element> ret;
-
-  for (nsCOMPtr<nsINode> node = &aNode; node; node = node->GetParentNode()) {
-    if ((IsPlaintextEditor() && node->IsHTMLElement(nsGkAtoms::pre)) ||
+Element* HTMLEditor::GetMostAncestorMailCiteElement(nsINode& aNode) const {
+  Element* mailCiteElement = nullptr;
+  bool isPlaintextEditor = IsPlaintextEditor();
+  for (nsINode* node = &aNode; node; node = node->GetParentNode()) {
+    if ((isPlaintextEditor && node->IsHTMLElement(nsGkAtoms::pre)) ||
         HTMLEditUtils::IsMailCite(node)) {
-      ret = node->AsElement();
+      mailCiteElement = node->AsElement();
     }
     if (node->IsHTMLElement(nsGkAtoms::body)) {
       break;
     }
   }
-
-  return ret;
+  return mailCiteElement;
 }
 
 nsresult HTMLEditor::CacheInlineStyles(nsINode& aNode) {
