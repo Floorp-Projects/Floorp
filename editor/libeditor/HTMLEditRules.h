@@ -1109,8 +1109,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
 
-  void ClearCachedStyles();
-
   /**
    * InsertBRElementToEmptyListItemsAndTableCellsInRange() inserts
    * <br> element into empty list item or table cell elements between
