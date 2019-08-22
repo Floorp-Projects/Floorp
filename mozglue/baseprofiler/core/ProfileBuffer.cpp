@@ -89,6 +89,8 @@ void ProfileBuffer::CollectCodeLocation(
 }
 
 void ProfileBuffer::DeleteExpiredStoredMarkers() {
+  AUTO_PROFILER_STATS(base_ProfileBuffer_DeleteExpiredStoredMarkers);
+
   // Delete markers of samples that have been overwritten due to circular
   // buffer wraparound.
   while (mStoredMarkers.peek() &&
