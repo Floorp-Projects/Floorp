@@ -638,6 +638,12 @@
     <string name="preferences_delete_browsing_data_site_permissions">Site permissions</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Delete browsing data</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Delete browsing data on quit</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Automatically deletes browsing data when you select "Quit" from the main menu</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Quit</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">This will delete all of your browsing data.</string>
