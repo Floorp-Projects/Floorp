@@ -43,6 +43,10 @@ class WorkerTargetFront extends TargetMixin(
     this.fetch = json.fetch;
   }
 
+  get name() {
+    return this.url.split("/").pop();
+  }
+
   async attach() {
     if (this._attach) {
       return this._attach;
