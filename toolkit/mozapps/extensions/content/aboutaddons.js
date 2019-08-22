@@ -551,6 +551,7 @@ class PanelList extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(importTemplate("panel-list"));
+    this.setAttribute("role", "menu");
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
@@ -646,14 +647,12 @@ class PanelList extends HTMLElement {
     this.setAttribute("valign", valign);
     this.parentNode.style.overflow = "";
     this.removeAttribute("showing");
-
-    // Send the shown event after the next paint.
-    requestAnimationFrame(() => this.sendEvent("shown"));
   }
 
   addHideListeners() {
     // Hide when a panel-item is clicked in the list.
     this.addEventListener("click", this);
+    document.addEventListener("keydown", this);
     // Hide when a click is initiated outside the panel.
     document.addEventListener("mousedown", this);
     // Hide if focus changes and the panel isn't in focus.
@@ -668,6 +667,7 @@ class PanelList extends HTMLElement {
 
   removeHideListeners() {
     this.removeEventListener("click", this);
+    document.removeEventListener("keydown", this);
     document.removeEventListener("mousedown", this);
     document.removeEventListener("focusin", this);
     window.removeEventListener("resize", this);
@@ -696,6 +696,53 @@ class PanelList extends HTMLElement {
           e.stopPropagation();
         }
         break;
+      case "keydown":
+        if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Tab") {
+          // Ignore tabbing with a modifer other than shift.
+          if (e.key === "Tab" && (e.altKey || e.ctrlKey || e.metaKey)) {
+            return;
+          }
+
+          // Don't scroll the page or let the regular tab order take effect.
+          e.preventDefault();
+
+          // Keep moving to the next/previous element sibling until we find a
+          // panel-item that isn't hidden.
+          let moveForward =
+            e.key === "ArrowDown" || (e.key === "Tab" && !e.shiftKey);
+
+          // If the menu is opened with the mouse, the active element might be
+          // somewhere else in the document. In that case we should ignore it
+          // to avoid walking unrelated DOM nodes.
+          this.walker.currentNode = this.contains(document.activeElement)
+            ? document.activeElement
+            : this;
+          let nextItem = moveForward
+            ? this.walker.nextNode()
+            : this.walker.previousNode();
+
+          // If the next item wasn't found, try looping to the top/bottom.
+          if (!nextItem) {
+            this.walker.currentNode = this;
+            if (moveForward) {
+              nextItem = this.walker.firstChild();
+            } else {
+              nextItem = this.walker.lastChild();
+            }
+          }
+
+          if (nextItem) {
+            nextItem.focus();
+          }
+          break;
+        } else if (e.key === "Escape") {
+          let { triggeringEvent } = this;
+          this.hide();
+          if (triggeringEvent && triggeringEvent.target) {
+            triggeringEvent.target.focus();
+          }
+        }
+        break;
       case "mousedown":
       case "focusin":
         // There will be a focusin after the mousedown that opens the panel
@@ -720,9 +767,44 @@ class PanelList extends HTMLElement {
     }
   }
 
-  onShow() {
-    this.setAlign();
+  get walker() {
+    if (!this._walker) {
+      this._walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: node => {
+          if (node.disabled || node.hidden || node.localName !== "panel-item") {
+            return NodeFilter.FILTER_REJECT;
+          }
+
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+    }
+    return this._walker;
+  }
+
+  async onShow() {
+    let { triggeringEvent } = this;
+
     this.addHideListeners();
+    await this.setAlign();
+
+    // Wait until the next paint for the alignment to be set and panel to be
+    // visible.
+    requestAnimationFrame(() => {
+      // Focus the first visible panel-item if we were opened with the keyboard.
+      if (
+        triggeringEvent &&
+        triggeringEvent.mozInputSource === MouseEvent.MOZ_SOURCE_KEYBOARD
+      ) {
+        this.walker.currentNode = this;
+        let firstItem = this.walker.nextNode();
+        if (firstItem) {
+          firstItem.focus();
+        }
+      }
+
+      this.sendEvent("shown");
+    });
   }
 
   onHide() {
@@ -742,6 +824,7 @@ class PanelItem extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(importTemplate("panel-item"));
     this.button = this.shadowRoot.querySelector("button");
+    this.button.setAttribute("role", "menuitem");
   }
 
   get disabled() {
@@ -758,6 +841,10 @@ class PanelItem extends HTMLElement {
 
   set checked(val) {
     this.toggleAttribute("checked", val);
+  }
+
+  focus() {
+    this.button.focus();
   }
 }
 customElements.define("panel-item", PanelItem);
