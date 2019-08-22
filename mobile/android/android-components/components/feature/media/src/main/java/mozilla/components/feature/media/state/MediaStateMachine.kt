@@ -149,7 +149,12 @@ private class MediaSessionObserver(
         if (currentState is MediaState.Playing) {
             val media = mediaMap.getPausedMedia(currentState.session)
             if (media.isNotEmpty()) {
-                return MediaState.Paused(currentState.session, media)
+                return MediaState.Paused(currentState.session, media.filter {
+                    // We only add paused media to the state that was playing before. If the user
+                    // chooses to "resume" playback then we only want to resume this list of media
+                    // and not all paused media in the session.
+                    currentState.media.contains(it)
+                })
             }
         }
 
