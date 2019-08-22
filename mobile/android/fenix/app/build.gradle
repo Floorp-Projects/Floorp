@@ -67,6 +67,9 @@ android {
         fenixProduction releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
+        fennecProduction releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+        }
     }
 
     variantFilter { // There's a "release" build type that exists by default that we don't use (it's replaced by "nightly" and "beta")
