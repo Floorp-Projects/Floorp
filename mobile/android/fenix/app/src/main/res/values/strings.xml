@@ -218,6 +218,10 @@
     <string name="preference_usage_data">Usage and technical data</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make %1$s better</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Experiments</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Allows Mozilla to install and collect data for experimental features</string>
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
