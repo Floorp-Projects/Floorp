@@ -376,7 +376,6 @@ public:
       return *this;
     }
     mStatus = mMutator->SetUserPass(aUserPass, nullptr);
-    NS_ENSURE_SUCCESS(mStatus, *this);
     return *this;
   }
   NS_MutateURI& SetUsername(const nsACString& aUsername)
