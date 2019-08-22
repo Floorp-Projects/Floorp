@@ -876,6 +876,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static bool findSources(JSContext* cx, unsigned argc, Value* vp);
   static bool findObjects(JSContext* cx, unsigned argc, Value* vp);
   static bool findAllGlobals(JSContext* cx, unsigned argc, Value* vp);
+  static bool findSourceURLs(JSContext* cx, unsigned argc, Value* vp);
   static bool makeGlobalObjectReference(JSContext* cx, unsigned argc,
                                         Value* vp);
   static bool setupTraceLoggerScriptCalls(JSContext* cx, unsigned argc,

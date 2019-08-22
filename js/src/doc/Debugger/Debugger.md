@@ -408,6 +408,12 @@ other kinds of objects.
     such scripts appear can be affected by the garbage collector's
     behavior, so this function's behavior is not entirely deterministic.
 
+<code>findSourceURLs()</code>
+:   Return an array of strings containing the URLs of all known sources that
+    have been created in any debuggee realm.  The array will have one entry for
+    each source, so may have duplicates.  The URLs for the realms are
+    occasionally purged and the returned array might not be complete.
+
 <code>findObjects([<i>query</i>])</code>
 :   Return an array of [`Debugger.Object`][object] instances referring to each
     live object allocated in the scope of the debuggee globals that matches
