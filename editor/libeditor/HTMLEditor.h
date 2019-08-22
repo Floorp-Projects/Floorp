@@ -49,6 +49,7 @@ struct PropItem;
 template <class T>
 class OwningNonNull;
 namespace dom {
+class AbstractRange;
 class Blob;
 class DocumentFragment;
 class Event;
@@ -1136,6 +1137,17 @@ class HTMLEditor final : public TextEditor,
    * layout at retrieving computed value of CSS properties.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult ReapplyCachedStyles();
+
+  /**
+   * CreateStyleForInsertText() sets CSS properties which are stored in
+   * TypeInState to proper element node.
+   * XXX This modifies Selection, but should return insertion point instead.
+   *
+   * @param aAbstractRange      Set current selection range where new text
+   *                            should be inserted.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  CreateStyleForInsertText(dom::AbstractRange& aAbstractRange);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
