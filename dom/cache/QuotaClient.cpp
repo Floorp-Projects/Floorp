@@ -23,6 +23,7 @@ namespace {
 
 using mozilla::Atomic;
 using mozilla::MutexAutoLock;
+using mozilla::Some;
 using mozilla::Unused;
 using mozilla::dom::ContentParentId;
 using mozilla::dom::cache::DirPaddingFile;
@@ -69,7 +70,7 @@ static nsresult GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
     }
     MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
-    aUsageInfo->AppendToFileUsage(fileSize);
+    aUsageInfo->AppendToFileUsage(Some(fileSize));
   }
 
   return NS_OK;
@@ -414,7 +415,7 @@ class CacheQuotaClient final : public Client {
       }
     }
 
-    aUsageInfo->AppendToFileUsage(paddingSize);
+    aUsageInfo->AppendToFileUsage(Some(paddingSize));
 
     nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
@@ -478,7 +479,7 @@ class CacheQuotaClient final : public Client {
         }
         MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
-        aUsageInfo->AppendToDatabaseUsage(fileSize);
+        aUsageInfo->AppendToDatabaseUsage(Some(fileSize));
         continue;
       }
 
