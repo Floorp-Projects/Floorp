@@ -214,8 +214,9 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   ReadOnlyCompileOptions() = default;
 
   // Set all POD options (those not requiring reference counts, copies,
-  // rooting, or other hand-holding) to their values in |rhs|.
-  void copyPODOptions(const ReadOnlyCompileOptions& rhs);
+  // rooting, or other hand-holding) not set by copyPODTransitiveOptions to
+  // their values in |rhs|.
+  void copyPODNonTransitiveOptions(const ReadOnlyCompileOptions& rhs);
 
  public:
   // Read-only accessors for non-POD options. The proper way to set these
@@ -288,25 +289,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   Rooted<JSScript*> scriptOrModuleRoot;
 
  public:
+  // Default options determined using the JSContext.
   explicit CompileOptions(JSContext* cx);
 
-  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
-      : ReadOnlyCompileOptions(),
-        elementRoot(cx),
-        elementAttributeNameRoot(cx),
-        introductionScriptRoot(cx),
-        scriptOrModuleRoot(cx) {
-    copyPODOptions(rhs);
-
-    filename_ = rhs.filename();
-    introducerFilename_ = rhs.introducerFilename();
-    sourceMapURL_ = rhs.sourceMapURL();
-    elementRoot = rhs.element();
-    elementAttributeNameRoot = rhs.elementAttributeName();
-    introductionScriptRoot = rhs.introductionScript();
-    scriptOrModuleRoot = rhs.scriptOrModule();
-  }
-
+  // Copy the transitive options from another options object.
   CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
       : ReadOnlyCompileOptions(),
         elementRoot(cx),
@@ -322,6 +308,13 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
     scriptOrModuleRoot = rhs.scriptOrModule();
+  }
+
+  // Copy both the transitive and the non-transitive options from another
+  // options object.
+  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
+      : CompileOptions(cx, static_cast<const TransitiveCompileOptions&>(rhs)) {
+    copyPODNonTransitiveOptions(rhs);
   }
 
   JSObject* element() const override { return elementRoot; }
