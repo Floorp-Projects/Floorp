@@ -971,10 +971,6 @@ class EditorBase : public nsIEditor,
     return mEditActionData && mEditActionData->CanHandle();
   }
 
-  bool IsTopLevelEditSubActionDataAvailable() const {
-    return mEditActionData && !!GetTopLevelEditSubAction();
-  }
-
   /**
    * SelectionRefPtr() returns cached Selection.  This is pretty faster than
    * EditorBase::GetSelection() if available.
