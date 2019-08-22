@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.content.Context
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -31,14 +32,16 @@ class TabCounterToolbarButton(
             setOnClickListener {
                 showTabs.invoke()
             }
-            contentDescription =
-                parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
+
+            val count = sessionManager.sessions.count {
+                it.private == isPrivate
+            }
+
+            contentDescription = getDescriptionForTabCount(context, count)
 
             addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View?) {
-                    setCount(sessionManager.sessions.count {
-                        it.private == isPrivate
-                    })
+                    setCount(count)
                 }
 
                 override fun onViewDetachedFromWindow(v: View?) { /* no-op */ }
@@ -59,9 +62,21 @@ class TabCounterToolbarButton(
     override fun bind(view: View) = Unit
 
     private fun updateCount() {
-        reference.get()?.setCountWithAnimation(sessionManager.sessions.count {
+        val count = sessionManager.sessions.count {
             it.private == isPrivate
-        })
+        }
+
+        reference.get()?.let {
+            it.contentDescription = getDescriptionForTabCount(it.context, count)
+            it.setCountWithAnimation(count)
+        }
+    }
+
+    private fun getDescriptionForTabCount(context: Context?, count: Int): String? {
+        return if (count > 1) context?.getString(
+            R.string.tab_counter_content_description_multi_tab,
+            count
+        ) else context?.getString(R.string.tab_counter_content_description_one_tab)
     }
 
     private val sessionManagerObserver = object : SessionManager.Observer {
