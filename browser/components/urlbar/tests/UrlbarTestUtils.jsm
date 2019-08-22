@@ -246,7 +246,7 @@ var UrlbarTestUtils = {
   },
 
   /**
-   * Waits for the popup to be hidden.
+   * Waits for the popup to be shown.
    * @param {object} win The window containing the urlbar
    * @param {function} openFn Function to be used to open the popup.
    * @returns {Promise} resolved once the popup is closed

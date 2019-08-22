@@ -1808,7 +1808,7 @@ var BrowserTestUtils = {
     return new Promise(resolve => {
       let mut = new MutationObserver(mutations => {
         if (
-          (!value && element.getAttribute(attr)) ||
+          (!value && element.hasAttribute(attr)) ||
           (value && element.getAttribute(attr) === value)
         ) {
           resolve();

@@ -144,6 +144,7 @@ package org.mozilla.geckoview {
     field public static final int FINGERPRINTING = 128;
     field public static final int NONE = 0;
     field public static final int SOCIAL = 8;
+    field public static final int STP = 256;
     field public static final int STRICT = 254;
     field public static final int TEST = 32;
   }
@@ -197,6 +198,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieLifetime(int);
     method @NonNull public ContentBlocking.Settings setSafeBrowsing(int);
+    method @NonNull public ContentBlocking.Settings setStrictSocialTrackingProtection(boolean);
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
   }
 

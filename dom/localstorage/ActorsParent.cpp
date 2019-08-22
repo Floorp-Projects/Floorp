@@ -7455,7 +7455,8 @@ already_AddRefed<QuotaObject> PrepareDatastoreOp::GetQuotaObject() {
   MOZ_ASSERT(quotaManager);
 
   RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
-      PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin, mDatabaseFilePath, mUsage);
+      PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
+      mozilla::dom::quota::Client::LS, mDatabaseFilePath, mUsage);
   MOZ_ASSERT(quotaObject);
 
   return quotaObject.forget();

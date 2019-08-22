@@ -100,6 +100,10 @@ add_task(async function setup() {
   Services.telemetry.canRecordExtended = true;
 
   Services.prefs.setBoolPref("permissions.eventTelemetry.enabled", true);
+  Services.prefs.setBoolPref(
+    "permissions.desktop-notification.notNow.enabled",
+    true
+  );
 
   // Add some example permissions.
   let uri = Services.io.newURI(PERMISSIONS_PAGE);
@@ -118,6 +122,9 @@ add_task(async function setup() {
   registerCleanupFunction(() => {
     Services.perms.removeAll();
     Services.prefs.clearUserPref("permissions.eventTelemetry.enabled");
+    Services.prefs.clearUserPref(
+      "permissions.desktop-notification.notNow.enabled"
+    );
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 

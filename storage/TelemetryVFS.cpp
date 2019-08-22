@@ -319,6 +319,15 @@ already_AddRefed<QuotaObject> GetQuotaObjectFromNameAndParameters(
     return nullptr;
   }
 
+  const char* clientType =
+      sqlite3_uri_parameter(zURIParameterKey, "clientType");
+  if (!clientType) {
+    NS_WARNING(
+        "SQLite URI had 'persistenceType', 'group' and 'origin' but not "
+        "'clientType'?!");
+    return nullptr;
+  }
+
   // Re-escape group and origin to make sure we get the right quota group and
   // origin.
   nsAutoCString escGroup;
@@ -339,7 +348,8 @@ already_AddRefed<QuotaObject> GetQuotaObjectFromNameAndParameters(
 
   return quotaManager->GetQuotaObject(
       PersistenceTypeFromText(nsDependentCString(persistenceType)), escGroup,
-      escOrigin, NS_ConvertUTF8toUTF16(zName));
+      escOrigin, Client::TypeFromText(nsDependentCString(clientType)),
+      NS_ConvertUTF8toUTF16(zName));
 }
 
 void MaybeEstablishQuotaControl(const char* zName, telemetry_file* pFile,

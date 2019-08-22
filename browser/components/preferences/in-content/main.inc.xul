@@ -647,6 +647,13 @@
   <checkbox id="searchStartTyping"
             data-l10n-id="browsing-search-on-start-typing"
             preference="accessibility.typeaheadfind"/>
+  <hbox id="pictureInPictureBox" align="center" hidden="true">
+    <checkbox id="pictureInPictureToggleEnabled"
+            class="tail-with-learn-more"
+            data-l10n-id="browsing-picture-in-picture-toggle-enabled"
+            preference="media.videocontrols.picture-in-picture.video-toggle.enabled"/>
+    <label id="pictureInPictureLearnMore" class="learnMore" data-l10n-id="browsing-picture-in-picture-learn-more" is="text-link"/>
+  </hbox>
   <hbox align="center" data-subcategory="cfraddons">
     <checkbox id="cfrRecommendations"
             class="tail-with-learn-more"

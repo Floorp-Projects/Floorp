@@ -414,6 +414,127 @@ const tests = [
     };
   },
 
+  async function() {
+    info(
+      "With pageproxystate=valid, open the panel with openViewOnFocus, select with DOWN, Enter."
+    );
+    gURLBar.value = "";
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+        selType: "history",
+        selIndex: val => parseInt(val) >= 0,
+      },
+    };
+  },
+
+  async function() {
+    info(
+      "With pageproxystate=valid, open the panel with openViewOnFocus, click on entry."
+    );
+    gURLBar.value = "";
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    while (gURLBar.untrimmedValue != "http://mochi.test:8888/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    let element = UrlbarTestUtils.getSelectedElement(window);
+    EventUtils.synthesizeMouseAtCenter(element, {});
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "click",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+        selType: "history",
+        selIndex: "0",
+      },
+    };
+  },
+
+  async function() {
+    info(
+      "With pageproxystate=invalid, open the panel with openViewOnFocus, Enter."
+    );
+    gURLBar.value = "mochi.test";
+    gURLBar.setAttribute("pageproxystate", "invalid");
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "10",
+        selType: "autofill",
+        selIndex: "0",
+      },
+    };
+  },
+
+  async function() {
+    info(
+      "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
+    );
+    gURLBar.value = "mochi.test";
+    gURLBar.setAttribute("pageproxystate", "invalid");
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    let element = UrlbarTestUtils.getSelectedElement(window);
+    EventUtils.synthesizeMouseAtCenter(element, {});
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "click",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "10",
+        selType: "autofill",
+        selIndex: "0",
+      },
+    };
+  },
+
   /*
    * Abandonment tests.
    */
@@ -476,6 +597,53 @@ const tests = [
       extra: {
         elapsed: val => parseInt(val) > 0,
         numChars: "1",
+      },
+    };
+  },
+
+  async function() {
+    info(
+      "With pageproxystate=valid, open the panel with openViewOnFocus, don't type, blur it."
+    );
+    gURLBar.value = "";
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    gURLBar.blur();
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+      },
+    };
+  },
+
+  async function() {
+    info(
+      "With pageproxystate=invalid, open the panel with openViewOnFocus, don't type, blur it."
+    );
+    gURLBar.value = "mochi.test";
+    gURLBar.setAttribute("pageproxystate", "invalid");
+    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      window.document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    gURLBar.blur();
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "10",
       },
     };
   },
@@ -570,7 +738,9 @@ add_task(async function test() {
   // This is not necessary after each loop, because assertEvents does it.
   Services.telemetry.clearEvents();
 
-  for (let testFn of tests) {
+  for (let i = 0; i < tests.length; i++) {
+    info(`Running test at index ${i}`);
+    let testFn = tests[i];
     let expectedEvents = [await testFn()].filter(e => !!e);
     // Always blur to ensure it's not accounted as an additional abandonment.
     gURLBar.blur();

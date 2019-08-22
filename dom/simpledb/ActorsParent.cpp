@@ -1119,7 +1119,8 @@ nsresult OpenOp::SendToIOThread() {
     return NS_ERROR_FAILURE;
   }
 
-  mFileStream = new FileStream(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin);
+  mFileStream = new FileStream(PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
+                               mozilla::dom::quota::Client::SDB);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);

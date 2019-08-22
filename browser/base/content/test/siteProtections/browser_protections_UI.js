@@ -23,6 +23,36 @@ function checkClickTelemetry(objectName, value) {
   is(buttonEvents.length, 1, `recorded ${objectName} telemetry event`);
 }
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "TrackingDBService",
+  "@mozilla.org/tracking-db-service;1",
+  "nsITrackingDBService"
+);
+
+XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function() {
+  return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
+});
+
+const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+
+async function addTrackerDataIntoDB(count) {
+  const insertSQL =
+    "INSERT INTO events (type, count, timestamp)" +
+    "VALUES (:type, :count, date(:timestamp));";
+
+  let db = await Sqlite.openConnection({ path: TRACK_DB_PATH });
+  let date = new Date().toISOString();
+
+  await db.execute(insertSQL, {
+    type: TrackingDBService.TRACKERS_ID,
+    count,
+    timestamp: date,
+  });
+
+  await db.close();
+}
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -402,6 +432,102 @@ add_task(async function testTrackingProtectionIcon() {
 
   // Clean up the TP state.
   ContentBlockingAllowList.remove(tab.linkedBrowser);
+  BrowserTestUtils.removeTab(tab);
+});
+
+/**
+ * A test for ensuring the number of blocked trackers is displayed properly.
+ */
+add_task(async function testNumberOfBlockedTrackers() {
+  // First, clear the tracking database.
+  await TrackingDBService.clearAll();
+
+  // Open a tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+  await openProtectionsPanel();
+
+  let trackerCounterBox = document.getElementById(
+    "protections-popup-trackers-blocked-counter-box"
+  );
+  let trackerCounterDesc = document.getElementById(
+    "protections-popup-trackers-blocked-counter-description"
+  );
+
+  // Check that whether the counter is not shown if the number of blocked
+  // trackers is zero.
+  ok(
+    BrowserTestUtils.is_hidden(trackerCounterBox),
+    "The blocked tracker counter is hidden if there is no blocked tracker."
+  );
+
+  await closeProtectionsPanel();
+
+  // Add one tracker into the database and check that the tracker counter is
+  // properly shown.
+  await addTrackerDataIntoDB(1);
+
+  // A promise for waiting the `showing` attributes has been set to the counter
+  // box. This means the database access is finished.
+  let counterShownPromise = BrowserTestUtils.waitForAttribute(
+    "showing",
+    trackerCounterBox
+  );
+
+  await openProtectionsPanel();
+  await counterShownPromise;
+
+  // Check that the number of blocked trackers is shown.
+  ok(
+    BrowserTestUtils.is_visible(trackerCounterBox),
+    "The blocked tracker counter is shown if there is one blocked tracker."
+  );
+  is(
+    trackerCounterDesc.textContent,
+    "1 Blocked",
+    "The blocked tracker counter is correct."
+  );
+
+  await closeProtectionsPanel();
+  await TrackingDBService.clearAll();
+
+  // Add trackers into the database and check that the tracker counter is
+  // properly shown as well as whether the pre-fetch is triggered by the
+  // keyboard navigation.
+  await addTrackerDataIntoDB(10);
+
+  // We cannot wait for the change of "showing" attribute here since this
+  // attribute will only be set if the previous counter is zero. Instead, we
+  // wait for the change of the text content of the counter.
+  let updateCounterPromise = new Promise(resolve => {
+    let mut = new MutationObserver(mutations => {
+      resolve();
+      mut.disconnect();
+    });
+
+    mut.observe(trackerCounterDesc, {
+      childList: true,
+    });
+  });
+
+  await openProtectionsPanelWithKeyNav();
+  await updateCounterPromise;
+
+  // Check that the number of blocked trackers is shown.
+  ok(
+    BrowserTestUtils.is_visible(trackerCounterBox),
+    "The blocked tracker counter is shown if there are more than one blocked tracker."
+  );
+  is(
+    trackerCounterDesc.textContent,
+    "10 Blocked",
+    "The blocked tracker counter is correct."
+  );
+
+  await closeProtectionsPanel();
+  await TrackingDBService.clearAll();
   BrowserTestUtils.removeTab(tab);
 });
 

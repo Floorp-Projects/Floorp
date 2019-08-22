@@ -195,6 +195,12 @@ Preferences.addAll([
   { id: "browser.search.update", type: "bool" },
 
   { id: "privacy.userContext.enabled", type: "bool" },
+
+  // Picture-in-Picture
+  {
+    id: "media.videocontrols.picture-in-picture.video-toggle.enabled",
+    type: "bool",
+  },
 ]);
 
 if (AppConstants.HAVE_SHELL_SERVICE) {
@@ -381,6 +387,20 @@ var gMainPane = {
     for (const id of ["cfrLearnMore", "cfrFeaturesLearnMore"]) {
       let link = document.getElementById(id);
       link.setAttribute("href", cfrLearnMoreUrl);
+    }
+
+    if (
+      Services.prefs.getBoolPref(
+        "media.videocontrols.picture-in-picture.enabled"
+      )
+    ) {
+      document.getElementById("pictureInPictureBox").hidden = false;
+
+      let pipLearnMoreUrl =
+        Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "picture-in-picture";
+      let link = document.getElementById("pictureInPictureLearnMore");
+      link.setAttribute("href", pipLearnMoreUrl);
     }
 
     if (AppConstants.platform == "win") {

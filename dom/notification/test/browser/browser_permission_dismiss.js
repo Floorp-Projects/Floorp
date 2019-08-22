@@ -96,8 +96,15 @@ add_task(async function setup() {
     "dom.webnotifications.requireuserinteraction",
     false
   );
+  Services.prefs.setBoolPref(
+    "permissions.desktop-notification.notNow.enabled",
+    true
+  );
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref("dom.webnotifications.requireuserinteraction");
+    Services.prefs.clearUserPref(
+      "permissions.desktop-notification.notNow.enabled"
+    );
     PermissionTestUtils.remove(ORIGIN_URI, PERMISSION_NAME);
   });
 });
