@@ -48,33 +48,32 @@ class DOMMutationBreakpointsContents extends Component<Props> {
       toggleBreakpoint,
       deleteBreakpoint,
     } = this.props;
+    const { enabled, id: breakpointId, nodeFront, mutationType } = breakpoint;
+
     return (
       <li key={breakpoint.id}>
         <input
           type="checkbox"
-          checked={breakpoint.enabled}
-          onChange={() => toggleBreakpoint(breakpoint.id, !breakpoint.enabled)}
+          checked={enabled}
+          onChange={() => toggleBreakpoint(breakpointId, !enabled)}
         />
         <div className="dom-mutation-info">
           <div className="dom-mutation-label">
             {Rep({
-              object: translateNodeFrontToGrip(breakpoint.nodeFront),
+              object: translateNodeFrontToGrip(nodeFront),
               mode: MODE.TINY,
-              onDOMNodeClick: grip => openElementInInspector(grip),
-              onInspectIconClick: grip => openElementInInspector(grip),
-              onDOMNodeMouseOver: grip => highlightDomElement(grip),
-              onDOMNodeMouseOut: grip => unHighlightDomElement(grip),
+              onDOMNodeClick: () => openElementInInspector(nodeFront),
+              onInspectIconClick: () => openElementInInspector(nodeFront),
+              onDOMNodeMouseOver: () => highlightDomElement(nodeFront),
+              onDOMNodeMouseOut: () => unHighlightDomElement(),
             })}
           </div>
           <div className="dom-mutation-type">
-            {localizationTerms[breakpoint.mutationType] ||
-              breakpoint.mutationType}
+            {localizationTerms[mutationType] || mutationType}
           </div>
         </div>
         <CloseButton
-          handleClick={() =>
-            deleteBreakpoint(breakpoint.nodeFront, breakpoint.mutationType)
-          }
+          handleClick={() => deleteBreakpoint(nodeFront, mutationType)}
         />
       </li>
     );
