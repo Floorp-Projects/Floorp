@@ -1167,6 +1167,15 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   CreateStyleForInsertText(dom::AbstractRange& aAbstractRange);
 
+  /**
+   * GetMostAncestorMailCiteElement() returns most-ancestor mail cite element.
+   * "mail cite element" is <pre> element when it's in plaintext editor mode
+   * or an element with which calling HTMLEditUtils::IsMailCite() returns true.
+   *
+   * @param aNode       The start node to look for parent mail cite elements.
+   */
+  Element* GetMostAncestorMailCiteElement(nsINode& aNode) const;
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;

@@ -1033,8 +1033,6 @@ class HTMLEditRules : public TextEditRules {
       nsIContent& aLeftNode, nsIContent& aRightNode,
       EditorDOMPoint* aNewFirstChildOfRightNode);
 
-  Element* GetTopEnclosingMailCite(nsINode& aNode);
-
   /**
    * PopListItem() tries to move aListItem outside its parent.  If it's
    * in a middle of a list element, the parent list element is split before
