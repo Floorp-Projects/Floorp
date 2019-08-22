@@ -26,12 +26,12 @@ import org.mozilla.gecko.annotation.WrapForJNI;
  * <pre>
  *     final GeckoWebExecutor executor = new GeckoWebExecutor();
  *
- *     final GeckoResult&lt;WebResponse&gt; response = executor.fetch(
+ *     final GeckoResult&lt;WebResponse&gt; result = executor.fetch(
  *             new WebRequest.Builder("https://example.org/json")
  *             .header("Accept", "application/json")
  *             .build());
  *
- *     response.then(response -&gt; {
+ *     result.then(response -&gt; {
  *         // Do something with response
  *     });
  * </pre>
