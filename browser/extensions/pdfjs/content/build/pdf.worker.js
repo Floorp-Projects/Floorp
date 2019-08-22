@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.86';
-const pdfjsBuild = '02dcd202';
+const pdfjsVersion = '2.3.101';
+const pdfjsBuild = '31f31930';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.86';
+    let workerVersion = '2.3.101';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -4679,7 +4679,7 @@ var XRef = function XRefClosure() {
     this.pdfManager = pdfManager;
     this.entries = [];
     this.xrefstms = Object.create(null);
-    this.cache = [];
+    this._cacheMap = new Map();
     this.stats = {
       streamTypes: Object.create(null),
       fontTypes: Object.create(null)
@@ -5242,21 +5242,21 @@ var XRef = function XRefClosure() {
       return null;
     },
     fetchIfRef: function XRef_fetchIfRef(obj, suppressEncryption) {
-      if (!(0, _primitives.isRef)(obj)) {
-        return obj;
+      if (obj instanceof _primitives.Ref) {
+        return this.fetch(obj, suppressEncryption);
       }
 
-      return this.fetch(obj, suppressEncryption);
+      return obj;
     },
     fetch: function XRef_fetch(ref, suppressEncryption) {
-      if (!(0, _primitives.isRef)(ref)) {
+      if (!(ref instanceof _primitives.Ref)) {
         throw new Error('ref object is not a reference');
       }
 
-      var num = ref.num;
+      const num = ref.num;
 
-      if (num in this.cache) {
-        var cacheEntry = this.cache[num];
+      if (this._cacheMap.has(num)) {
+        const cacheEntry = this._cacheMap.get(num);
 
         if (cacheEntry instanceof _primitives.Dict && !cacheEntry.objId) {
           cacheEntry.objId = ref.toString();
@@ -5265,10 +5265,12 @@ var XRef = function XRefClosure() {
         return cacheEntry;
       }
 
-      var xrefEntry = this.getEntry(num);
+      let xrefEntry = this.getEntry(num);
 
       if (xrefEntry === null) {
-        return this.cache[num] = null;
+        this._cacheMap.set(num, xrefEntry);
+
+        return xrefEntry;
       }
 
       if (xrefEntry.uncompressed) {
@@ -5335,7 +5337,7 @@ var XRef = function XRefClosure() {
       }
 
       if (!(0, _primitives.isStream)(xrefEntry)) {
-        this.cache[num] = xrefEntry;
+        this._cacheMap.set(num, xrefEntry);
       }
 
       return xrefEntry;
@@ -5392,7 +5394,7 @@ var XRef = function XRefClosure() {
         var entry = this.entries[num];
 
         if (entry && entry.offset === tableOffset && entry.gen === i) {
-          this.cache[num] = entries[i];
+          this._cacheMap.set(num, entries[i]);
         }
       }
 
@@ -5406,11 +5408,11 @@ var XRef = function XRefClosure() {
     },
 
     async fetchIfRefAsync(obj, suppressEncryption) {
-      if (!(0, _primitives.isRef)(obj)) {
-        return obj;
+      if (obj instanceof _primitives.Ref) {
+        return this.fetchAsync(obj, suppressEncryption);
       }
 
-      return this.fetchAsync(obj, suppressEncryption);
+      return obj;
     },
 
     async fetchAsync(ref, suppressEncryption) {
@@ -5912,7 +5914,7 @@ class Parser {
     }
   }
 
-  getObj(cipherTransform) {
+  getObj(cipherTransform = null) {
     const buf1 = this.buf1;
     this.shift();
 
@@ -5980,27 +5982,23 @@ class Parser {
     }
 
     if (Number.isInteger(buf1)) {
-      const num = buf1;
-
       if (Number.isInteger(this.buf1) && (0, _primitives.isCmd)(this.buf2, 'R')) {
-        const ref = _primitives.Ref.get(num, this.buf1);
+        const ref = _primitives.Ref.get(buf1, this.buf1);
 
         this.shift();
         this.shift();
         return ref;
       }
 
-      return num;
+      return buf1;
     }
 
-    if ((0, _util.isString)(buf1)) {
-      let str = buf1;
-
+    if (typeof buf1 === 'string') {
       if (cipherTransform) {
-        str = cipherTransform.decryptString(str);
+        return cipherTransform.decryptString(buf1);
       }
 
-      return str;
+      return buf1;
     }
 
     return buf1;

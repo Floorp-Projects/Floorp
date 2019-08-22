@@ -162,6 +162,8 @@ struct FloatRegister {
 inline bool hasUnaliasedDouble() { MOZ_CRASH(); }
 inline bool hasMultiAlias() { MOZ_CRASH(); }
 
+inline void FlushICache(void* code, size_t size) { MOZ_CRASH(); }
+
 static const uint32_t ShadowStackSpace = 0;
 static const uint32_t JumpImmediateRange = INT32_MAX;
 

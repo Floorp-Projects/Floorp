@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Test for working WS connection made and sent/received messages are correct.
+ * Test that WS connection is established successfully and sent/received messages are correct.
  */
 
 add_task(async function() {

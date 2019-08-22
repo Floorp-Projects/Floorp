@@ -189,11 +189,26 @@ bool MoveResolver::resolve() {
   // all of which alias s0-s31. Double registers d16-d31 are unused.
   // Therefore there is never a double move that cannot be split.
   // If this changes in the future, the algorithm will have to be fixed.
+
+  bool splitDoubles = false;
   for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
     PendingMove* pm = *iter;
 
     if (isDoubleAliasedAsSingle(pm->from()) ||
         isDoubleAliasedAsSingle(pm->to())) {
+      splitDoubles = true;
+      break;
+    }
+  }
+
+  if (splitDoubles) {
+    for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
+      PendingMove *pm = *iter;
+
+      if (!MoveIsDouble(pm->from()) && !MoveIsDouble(pm->to())) {
+        continue;
+      }
+
       MoveOperand fromLower = SplitIntoLowerHalf(pm->from());
       MoveOperand toLower = SplitIntoLowerHalf(pm->to());
 

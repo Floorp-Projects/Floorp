@@ -27,7 +27,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key: "responseHeaders.headers",
-        label: "Response Headers",
         type: "responseHeaders",
         panel: "headers",
       })
@@ -38,8 +37,17 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key: "requestHeaders.headers",
-        label: "Request Headers",
         type: "requestHeaders",
+        panel: "headers",
+      })
+    );
+  }
+
+  if (resource.requestHeadersFromUploadStream) {
+    results.push(
+      findMatches(resource, query, {
+        key: "requestHeadersFromUploadStream.headers",
+        type: "requestHeadersFromUploadStream",
         panel: "headers",
       })
     );
@@ -55,7 +63,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key,
-        label: "Response Cookies",
         type: "responseCookies",
         panel: "cookies",
       })
@@ -72,7 +79,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key,
-        label: "Request Cookies",
         type: "requestCookies",
         panel: "cookies",
       })
@@ -83,7 +89,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key: "securityInfo",
-        label: "Security Information",
         type: "securityInfo",
         panel: "security",
       })
@@ -94,7 +99,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key: "responseContent.content.text",
-        label: "Response Content",
         type: "responseContent",
         panel: "response",
       })
@@ -105,7 +109,6 @@ function searchInResource(resource, query) {
     results.push(
       findMatches(resource, query, {
         key: "requestPostData.postData.text",
-        label: "Request Post Data",
         type: "requestPostData",
         panel: "headers",
       })

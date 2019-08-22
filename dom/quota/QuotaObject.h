@@ -11,6 +11,7 @@
 
 #include "nsDataHashtable.h"
 
+#include "Client.h"
 #include "PersistenceType.h"
 
 BEGIN_QUOTA_NAMESPACE
@@ -40,10 +41,12 @@ class QuotaObject {
   void EnableQuotaCheck();
 
  private:
-  QuotaObject(OriginInfo* aOriginInfo, const nsAString& aPath, int64_t aSize)
+  QuotaObject(OriginInfo* aOriginInfo, Client::Type aClientType,
+              const nsAString& aPath, int64_t aSize)
       : mOriginInfo(aOriginInfo),
         mPath(aPath),
         mSize(aSize),
+        mClientType(aClientType),
         mQuotaCheckDisabled(false),
         mWritingDone(false) {
     MOZ_COUNT_CTOR(QuotaObject);
@@ -67,7 +70,7 @@ class QuotaObject {
   OriginInfo* mOriginInfo;
   nsString mPath;
   int64_t mSize;
-
+  Client::Type mClientType;
   bool mQuotaCheckDisabled;
   bool mWritingDone;
 };

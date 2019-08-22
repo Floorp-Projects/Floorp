@@ -695,7 +695,7 @@ var gSync = {
     }
 
     const url = new URL(serviceUrl);
-    url.searchParams.set("utm_source", Services.appinfo.name.toLowerCase());
+    url.searchParams.set("utm_source", "fxa-toolbar");
     url.searchParams.set("entrypoint", entryPoint);
 
     const state = UIState.get();

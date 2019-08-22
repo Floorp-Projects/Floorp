@@ -35,45 +35,11 @@
 #include <limits>
 #include <stddef.h>  // for ptrdiff_t
 
-#ifdef JS_CODEGEN_ARM
-#  include "jit/arm/Architecture-arm.h"
-#endif
-#include "jit/arm/Simulator-arm.h"
-#if defined(JS_CODEGEN_ARM64)
-#  include "jit/arm64/vixl/Cpu-vixl.h"
-#endif
-#include "jit/mips32/Simulator-mips32.h"
-#include "jit/mips64/Simulator-mips64.h"
 #include "jit/ProcessExecutableMemory.h"
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
-
-#if defined(__sparc__)
-#  ifdef __linux__  // bugzilla 502369
-static void sync_instruction_memory(caddr_t v, u_int len) {
-  caddr_t end = v + len;
-  caddr_t p = v;
-  while (p < end) {
-    asm("flush %0" : : "r"(p));
-    p += 32;
-  }
-}
-#  else
-extern "C" void sync_instruction_memory(caddr_t v, u_int len);
-#  endif
-#endif
-
-#if defined(__linux__) &&                                         \
-    (defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)) && \
-    (!defined(JS_SIMULATOR_MIPS32) && !defined(JS_SIMULATOR_MIPS64))
-#  include <sys/cachectl.h>
-#endif
-
-#if defined(JS_CODEGEN_ARM) && defined(XP_IOS)
-#  include <libkern/OSCacheControl.h>
-#endif
 
 namespace JS {
 struct CodeSizes;
@@ -214,90 +180,6 @@ class ExecutableAllocator {
   }
 
   static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_NONE)
-  static void cacheFlush(void*, size_t) {}
-#elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || \
-    defined(JS_SIMULATOR_MIPS64)
-  static void cacheFlush(void* code, size_t size) {
-    js::jit::SimulatorProcess::FlushICache(code, size);
-  }
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-  static void cacheFlush(void* code, size_t size) {
-#  if defined(_MIPS_ARCH_LOONGSON3A)
-    // On Loongson3-CPUs, The cache flushed automatically
-    // by hardware. Just need to execute an instruction hazard.
-    uintptr_t tmp;
-    asm volatile(
-        ".set   push \n"
-        ".set   noreorder \n"
-        "move   %[tmp], $ra \n"
-        "bal    1f \n"
-        "daddiu $ra, 8 \n"
-        "1: \n"
-        "jr.hb  $ra \n"
-        "move   $ra, %[tmp] \n"
-        ".set   pop\n"
-        : [ tmp ] "=&r"(tmp));
-#  elif defined(__GNUC__)
-    intptr_t end = reinterpret_cast<intptr_t>(code) + size;
-    __builtin___clear_cache(reinterpret_cast<char*>(code),
-                            reinterpret_cast<char*>(end));
-#  else
-    _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
-#  endif
-  }
-#elif defined(JS_CODEGEN_ARM) && (defined(__FreeBSD__) || defined(__NetBSD__))
-  static void cacheFlush(void* code, size_t size) {
-    __clear_cache(code, reinterpret_cast<char*>(code) + size);
-  }
-#elif (defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)) && defined(XP_IOS)
-  static void cacheFlush(void* code, size_t size) {
-    sys_icache_invalidate(code, size);
-  }
-#elif defined(JS_CODEGEN_ARM) && (defined(__linux__) || defined(ANDROID)) && \
-    defined(__GNUC__)
-  static void cacheFlush(void* code, size_t size) {
-    void* end = (void*)(reinterpret_cast<char*>(code) + size);
-    asm volatile(
-        "push    {r7}\n"
-        "mov     r0, %0\n"
-        "mov     r1, %1\n"
-        "mov     r7, #0xf0000\n"
-        "add     r7, r7, #0x2\n"
-        "mov     r2, #0x0\n"
-        "svc     0x0\n"
-        "pop     {r7}\n"
-        :
-        : "r"(code), "r"(end)
-        : "r0", "r1", "r2");
-
-    if (ForceDoubleCacheFlush()) {
-      void* start = (void*)((uintptr_t)code + 1);
-      asm volatile(
-          "push    {r7}\n"
-          "mov     r0, %0\n"
-          "mov     r1, %1\n"
-          "mov     r7, #0xf0000\n"
-          "add     r7, r7, #0x2\n"
-          "mov     r2, #0x0\n"
-          "svc     0x0\n"
-          "pop     {r7}\n"
-          :
-          : "r"(start), "r"(end)
-          : "r0", "r1", "r2");
-    }
-  }
-#elif defined(JS_SIMULATOR_ARM64) || defined(JS_CODEGEN_ARM64)
-  static void cacheFlush(void* code, size_t size) {
-    vixl::CPU::EnsureIAndDCacheCoherency(code, size);
-  }
-#elif defined(__sparc__)
-  static void cacheFlush(void* code, size_t size) {
-    sync_instruction_memory((caddr_t)code, size);
-  }
-#endif
 
  private:
   ExecutableAllocator(const ExecutableAllocator&) = delete;
