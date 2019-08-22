@@ -1104,6 +1104,15 @@ class HTMLEditor final : public TextEditor,
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnModifyDocument();
 
+ protected:  // edit sub-action handler
+  /**
+   * GetInlineStyles() retrieves the style of aNode and modifies each item of
+   * aStyleCacheArray.  This might cause flushing layout at retrieving computed
+   * values of CSS properties.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  GetInlineStyles(nsINode& aNode, AutoStyleCacheArray& aStyleCacheArray);
+
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aEditSubAction, nsIEditor::EDirection aDirection) override;
