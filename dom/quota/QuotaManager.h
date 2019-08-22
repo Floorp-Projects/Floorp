@@ -46,6 +46,7 @@ class PrincipalInfo;
 
 BEGIN_QUOTA_NAMESPACE
 
+class ClientUsageArray;
 class DirectoryLockImpl;
 class GroupInfo;
 class GroupInfoPair;
@@ -153,6 +154,7 @@ class QuotaManager final : public BackgroundThreadObject {
    */
   void InitQuotaForOrigin(PersistenceType aPersistenceType,
                           const nsACString& aGroup, const nsACString& aOrigin,
+                          const ClientUsageArray& aClientUsages,
                           uint64_t aUsageBytes, int64_t aAccessTime,
                           bool aPersisted);
 
@@ -181,9 +183,15 @@ class QuotaManager final : public BackgroundThreadObject {
                                   const nsACString& aOrigin, bool aPersisted,
                                   int64_t& aTimestamp);
 
+  // XXX clients can use QuotaObject instead of calling this method directly.
   void DecreaseUsageForOrigin(PersistenceType aPersistenceType,
                               const nsACString& aGroup,
-                              const nsACString& aOrigin, int64_t aSize);
+                              const nsACString& aOrigin,
+                              Client::Type aClientType, int64_t aSize);
+
+  void ResetUsageForClient(PersistenceType aPersistenceType,
+                           const nsACString& aGroup, const nsACString& aOrigin,
+                           Client::Type aClientType);
 
   void UpdateOriginAccessTime(PersistenceType aPersistenceType,
                               const nsACString& aGroup,
@@ -198,16 +206,15 @@ class QuotaManager final : public BackgroundThreadObject {
     LockedRemoveQuotaForOrigin(aPersistenceType, aGroup, aOrigin);
   }
 
-  already_AddRefed<QuotaObject> GetQuotaObject(PersistenceType aPersistenceType,
-                                               const nsACString& aGroup,
-                                               const nsACString& aOrigin,
-                                               nsIFile* aFile,
-                                               int64_t aFileSize = -1,
-                                               int64_t* aFileSizeOut = nullptr);
+  already_AddRefed<QuotaObject> GetQuotaObject(
+      PersistenceType aPersistenceType, const nsACString& aGroup,
+      const nsACString& aOrigin, Client::Type aClientType, nsIFile* aFile,
+      int64_t aFileSize = -1, int64_t* aFileSizeOut = nullptr);
 
   already_AddRefed<QuotaObject> GetQuotaObject(PersistenceType aPersistenceType,
                                                const nsACString& aGroup,
                                                const nsACString& aOrigin,
+                                               Client::Type aClientType,
                                                const nsAString& aPath,
                                                int64_t aFileSize = -1,
                                                int64_t* aFileSizeOut = nullptr);

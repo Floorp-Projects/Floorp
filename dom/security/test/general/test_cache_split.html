@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Bug 1454721 - Add same-site cookie test for about:blank and about:srcdoc</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/ChromeTask.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+    <img id="cookieImage">
+    <script class="testbody" type="text/javascript">
+
+        const SAME_ORIGIN = "http://mochi.test:8888/"
+        const CROSS_ORIGIN = "http://example.com/";
+        const PATH = "file_cache_splitting_server.sjs";
+
+        const Ci = SpecialPowers.Ci;
+
+        async function getCount() {
+            return fetch(`${PATH}?state`).then(r => r.text());
+        }
+        async function resetCount() {
+            return fetch(`${PATH}?flush`).then(r => r.text());
+        }
+        function ensureLoaded(win) {
+            return new Promise((res, err) => {
+                var superSadCheck = setInterval(() => {
+                    try {
+                        if (win.document.readyState === "complete") {
+                            clearInterval(superSadCheck);
+                            res(win);
+                        }
+                    } catch (error) { err(error) }
+                }, 200);
+            });
+        }
+
+
+        async function openAndLoadWindow(origin) {
+            let url = `${origin}tests/dom/security/test/general/file_cache_splitting_window.html`;
+            let w = window.open(url);
+            let ew = SpecialPowers.wrap(w);
+            await ensureLoaded(ew);
+            return w;
+        }
+
+        async function checkStep(step = [SAME_ORIGIN, 1], name) {
+            info(`Doing Step ${JSON.stringify(step)}`);
+            let url = step[0];
+            let should_count = step[1];
+            let w = await openAndLoadWindow(url);
+            let count = await getCount();
+            ok(
+                count == should_count,
+                `${name} req to: ${
+                url == SAME_ORIGIN ? "Same Origin" : "Cross Origin"
+                } expected ${should_count} request to Server, got ${count}`
+            );
+            w.close()
+        }
+        async function clearCache(){
+            info("Clearing Cache");
+            await ChromeTask.spawn(null,(()=>{
+                Services.cache2.clear();
+            }));
+        }
+        async function runTest(test) {
+            info(`Starting Job with - ${test.steps.length} - Requests`);
+            await resetCount();
+            let { prefs, steps, name } = test;
+            await SpecialPowers.pushPrefEnv(prefs);
+            for (let step of steps) {
+                await checkStep(step, name);
+            }
+            await clearCache();
+        };
+
+
+        add_task(
+            async () =>
+                await runTest({
+                    name: `Isolated Cache`,
+                    steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
+                    prefs: {
+                        set: [["browser.cache.cache_isolation", true]],
+                    },
+                })
+        );
+        // Negative Test: The CROSS_ORIGIN should be able to
+        // acess the cache of SAME_ORIGIN
+        add_task(
+            async () =>
+                await runTest({
+                    name: `Non Isolated Cache`,
+                    steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 1]],
+                    prefs: {
+                        set: [["browser.cache.cache_isolation", false]],
+                    },
+                })
+        );
+        // Test that FPI does not affect Cache Isolation
+        add_task(
+            async () =>
+                await runTest({
+                    name: `FPI interaction`,
+                    steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
+                    prefs: {
+                        set: [
+                            ["privacy.firstparty.isolate", true],
+                            ["browser.cache.cache_isolation", true],
+                        ],
+                    },
+                })
+        );
+        // Test that cookieBehavior does not affect Cache Isolation
+        for (let i = 0; i < Ci.nsICookieService.BEHAVIOR_LAST ; i++) {
+            add_task(
+                async () =>
+                    await runTest({
+                        name: `cookieBehavior interaction ${i}`,
+                        steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
+                        prefs: {
+                            set: [
+                                ["privacy.firstparty.isolate", false],
+                                ["browser.cache.cache_isolation", true],
+                                ["network.cookie.cookieBehavior", i],
+                            ],
+                        },
+                    })
+            );
+        }
+        add_task(
+            async () =>
+                await runTest({
+                    name: `FPI interaction - 2`,
+                    steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
+                    prefs: {
+                        set: [
+                        ["privacy.firstparty.isolate", true],
+                        ["browser.cache.cache_isolation", false],
+                        ],
+                    },
+                })
+        );
+
+    </script>
+</body>
+
+</html>

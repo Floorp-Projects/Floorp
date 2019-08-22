@@ -15,6 +15,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/ICState.h"
 #include "jit/MacroAssembler.h"
+#include "jit/Simulator.h"
 #include "vm/Iteration.h"
 #include "vm/Shape.h"
 

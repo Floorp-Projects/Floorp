@@ -872,6 +872,11 @@ function DesktopNotificationPermissionPrompt(request) {
     "postPromptEnabled",
     "permissions.desktop-notification.postPrompt.enabled"
   );
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "notNowEnabled",
+    "permissions.desktop-notification.notNow.enabled"
+  );
 }
 
 DesktopNotificationPermissionPrompt.prototype = {
@@ -921,24 +926,26 @@ DesktopNotificationPermissionPrompt.prototype = {
         action: SitePermissions.ALLOW,
         scope: SitePermissions.SCOPE_PERSISTENT,
       },
-      {
+    ];
+    if (this.notNowEnabled) {
+      actions.push({
         label: gBrowserBundle.GetStringFromName("webNotifications.notNow"),
         accessKey: gBrowserBundle.GetStringFromName(
           "webNotifications.notNow.accesskey"
         ),
         action: SitePermissions.BLOCK,
-      },
-    ];
-    if (!PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
-      actions.push({
-        label: gBrowserBundle.GetStringFromName("webNotifications.never"),
-        accessKey: gBrowserBundle.GetStringFromName(
-          "webNotifications.never.accesskey"
-        ),
-        action: SitePermissions.BLOCK,
-        scope: SitePermissions.SCOPE_PERSISTENT,
       });
     }
+    actions.push({
+      label: gBrowserBundle.GetStringFromName("webNotifications.never"),
+      accessKey: gBrowserBundle.GetStringFromName(
+        "webNotifications.never.accesskey"
+      ),
+      action: SitePermissions.BLOCK,
+      scope: PrivateBrowsingUtils.isBrowserPrivate(this.browser)
+        ? SitePermissions.SCOPE_SESSION
+        : SitePermissions.SCOPE_PERSISTENT,
+    });
     return actions;
   },
 

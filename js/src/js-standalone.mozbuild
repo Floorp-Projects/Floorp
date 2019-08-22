@@ -7,9 +7,8 @@
 # These configure options are needed by standalone SpiderMonkey tools. The full
 # Gecko build performs equivalents elsewhere in its configuration.
 
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    USE_LIBS += [
-        'jsrust'
-    ]
+USE_LIBS += [
+    'jsrust'
+]
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
