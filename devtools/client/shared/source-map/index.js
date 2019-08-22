@@ -487,9 +487,7 @@ WorkerDispatcher.prototype = {
           const [, resolve, reject] = items[i];
 
           if (resultData.error) {
-            const err = new Error(resultData.message);
-            err.metadata = resultData.metadata;
-            reject(err);
+            reject(resultData.error);
           } else {
             resolve(resultData.response);
           }
@@ -522,14 +520,22 @@ function workerHandler(publicInterface) {
         if (response instanceof Promise) {
           return response.then(val => ({
             response: val
-          }), err => asErrorMessage(err));
+          }), // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({
+            error: err.toString()
+          }));
         }
 
         return {
           response
         };
       } catch (error) {
-        return asErrorMessage(error);
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return {
+          error: error.toString()
+        };
       }
     })).then(results => {
       self.postMessage({
@@ -537,24 +543,6 @@ function workerHandler(publicInterface) {
         results
       });
     });
-  };
-}
-
-function asErrorMessage(error) {
-  if (typeof error === "object" && error && "message" in error) {
-    // Error can't be sent via postMessage, so be sure to convert to
-    // string.
-    return {
-      error: true,
-      message: error.message,
-      metadata: error.metadata
-    };
-  }
-
-  return {
-    error: true,
-    message: error == null ? error : error.toString(),
-    metadata: undefined
   };
 }
 
@@ -598,7 +586,7 @@ Object.defineProperty(exports, "isOriginalId", {
     return _utils.isOriginalId;
   }
 });
-exports.default = exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.getOriginalStackFrames = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getFileGeneratedRange = exports.getGeneratedRangesForOriginal = exports.getOriginalLocations = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = void 0;
+exports.default = exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.getOriginalStackFrames = exports.hasMappedSource = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getLocationScopes = exports.getFileGeneratedRange = exports.getGeneratedRangesForOriginal = exports.getOriginalLocations = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = void 0;
 
 var _utils = __webpack_require__(64);
 
@@ -646,19 +634,19 @@ const hasOriginalURL = async url => dispatcher.invoke("hasOriginalURL", url);
 
 exports.hasOriginalURL = hasOriginalURL;
 
-const getOriginalRanges = async sourceId => dispatcher.invoke("getOriginalRanges", sourceId);
+const getOriginalRanges = async (sourceId, url) => dispatcher.invoke("getOriginalRanges", sourceId, url);
 
 exports.getOriginalRanges = getOriginalRanges;
 
-const getGeneratedRanges = async location => _getGeneratedRanges(location);
+const getGeneratedRanges = async (location, originalSource) => _getGeneratedRanges(location, originalSource);
 
 exports.getGeneratedRanges = getGeneratedRanges;
 
-const getGeneratedLocation = async location => _getGeneratedLocation(location);
+const getGeneratedLocation = async (location, originalSource) => _getGeneratedLocation(location, originalSource);
 
 exports.getGeneratedLocation = getGeneratedLocation;
 
-const getAllGeneratedLocations = async location => _getAllGeneratedLocations(location);
+const getAllGeneratedLocations = async (location, originalSource) => _getAllGeneratedLocations(location, originalSource);
 
 exports.getAllGeneratedLocations = getAllGeneratedLocations;
 
@@ -666,19 +654,21 @@ const getOriginalLocation = async (location, options = {}) => _getOriginalLocati
 
 exports.getOriginalLocation = getOriginalLocation;
 
-const getOriginalLocations = async (locations, options = {}) => dispatcher.invoke("getOriginalLocations", locations, options);
+const getOriginalLocations = async (sourceId, locations, options = {}) => dispatcher.invoke("getOriginalLocations", sourceId, locations, options);
 
 exports.getOriginalLocations = getOriginalLocations;
 
-const getGeneratedRangesForOriginal = async (sourceId, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, mergeUnmappedRegions);
+const getGeneratedRangesForOriginal = async (sourceId, url, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, url, mergeUnmappedRegions);
 
 exports.getGeneratedRangesForOriginal = getGeneratedRangesForOriginal;
 
-const getFileGeneratedRange = async originalSourceId => dispatcher.invoke("getFileGeneratedRange", originalSourceId);
+const getFileGeneratedRange = async originalSource => dispatcher.invoke("getFileGeneratedRange", originalSource);
 
 exports.getFileGeneratedRange = getFileGeneratedRange;
+const getLocationScopes = dispatcher.task("getLocationScopes");
+exports.getLocationScopes = getLocationScopes;
 
-const getOriginalSourceText = async originalSourceId => dispatcher.invoke("getOriginalSourceText", originalSourceId);
+const getOriginalSourceText = async originalSource => dispatcher.invoke("getOriginalSourceText", originalSource);
 
 exports.getOriginalSourceText = getOriginalSourceText;
 
@@ -689,6 +679,10 @@ exports.applySourceMap = applySourceMap;
 const clearSourceMaps = async () => dispatcher.invoke("clearSourceMaps");
 
 exports.clearSourceMaps = clearSourceMaps;
+
+const hasMappedSource = async location => dispatcher.invoke("hasMappedSource", location);
+
+exports.hasMappedSource = hasMappedSource;
 
 const getOriginalStackFrames = async generatedLocation => dispatcher.invoke("getOriginalStackFrames", generatedLocation);
 

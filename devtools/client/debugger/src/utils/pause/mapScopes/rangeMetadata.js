@@ -11,7 +11,7 @@ import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
 
 import type { SourceScope } from "../../../workers/parser";
-import type { PartialPosition, Frame } from "../../../types";
+import type { PartialPosition, Frame, Source } from "../../../types";
 
 type SourceOriginalRange = {
   line: number,
@@ -33,12 +33,14 @@ export type MappedOriginalRange = {
 };
 
 export async function loadRangeMetadata(
+  source: Source,
   frame: Frame,
   originalAstScopes: Array<SourceScope>,
   sourceMaps: SourceMaps
 ): Promise<Array<MappedOriginalRange>> {
   const originalRanges: Array<SourceOriginalRange> = await sourceMaps.getOriginalRanges(
-    frame.location.sourceId
+    frame.location.sourceId,
+    source.url
   );
 
   const sortedOriginalAstBindings = [];

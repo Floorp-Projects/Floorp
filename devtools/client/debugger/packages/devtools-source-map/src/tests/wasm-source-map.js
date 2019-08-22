@@ -110,12 +110,7 @@ describe("wasm source maps", () => {
     const { getOriginalURLs, getOriginalLocation } = require("../source-map");
 
     const urls = await getOriginalURLs(source);
-    expect(urls).toEqual([
-      {
-        id: "min.js/originalSource-2133f6ef6d6c464acad221082f398cf0",
-        url: "http://example.com/whatever/one.js",
-      },
-    ]);
+    expect(urls).toEqual(["http://example.com/whatever/one.js"]);
 
     const { line, column } = await getOriginalLocation({
       sourceId: source.id,

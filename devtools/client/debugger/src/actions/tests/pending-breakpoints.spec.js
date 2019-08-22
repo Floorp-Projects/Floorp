@@ -11,6 +11,7 @@ import {
 } from "./helpers/breakpoints.js";
 
 import { mockCommandClient } from "./helpers/mockCommandClient";
+
 import { asyncStore } from "../../utils/prefs";
 
 function loadInitialState(opts = {}) {
@@ -56,15 +57,15 @@ function mockClient(bpPos = {}) {
 function mockSourceMaps() {
   return {
     ...sourceMaps,
-    getOriginalSourceText: async id => ({
-      id,
+    getOriginalSourceText: async source => ({
+      id: source.id,
       text: "",
       contentType: "text/javascript",
     }),
     getGeneratedRangesForOriginal: async () => [
       { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
     ],
-    getOriginalLocations: async items => items,
+    getOriginalLocations: async (sourceId, items) => items,
   };
 }
 
@@ -375,27 +376,18 @@ describe("adding sources", () => {
   it("corresponding breakpoints are added to the original source", async () => {
     const sourceURL = makeSourceURL("bar.js");
     const store = createStore(mockClient({ "5": [2] }), loadInitialState(), {
-      getOriginalURLs: async source => [
-        {
-          id: sourceMaps.generatedToOriginalId(source.id, sourceURL),
-          url: sourceURL,
-        },
-      ],
-      getOriginalSourceText: async () => ({ text: "" }),
-      getGeneratedLocation: async location => ({
+      getOriginalURLs: async () => [sourceURL],
+      getOriginalSourceText: async () => ({ source: "" }),
+      getGeneratedLocation: async (location, _source) => ({
         line: location.line,
         column: location.column,
-        sourceId: location.sourceId,
+        sourceId: _source.id,
       }),
       getOriginalLocation: async location => location,
       getGeneratedRangesForOriginal: async () => [
         { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
       ],
-      getOriginalLocations: async items =>
-        items.map(item => ({
-          ...item,
-          sourceId: sourceMaps.generatedToOriginalId(item.sourceId, sourceURL),
-        })),
+      getOriginalLocations: async (sourceId, items) => items,
     });
 
     const { getState, dispatch } = store;

@@ -19,4 +19,3 @@
 [options]
 suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore
 suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
-module.name_mapper='^debugger-html$' -> '<PROJECT_ROOT>/src/types.js'

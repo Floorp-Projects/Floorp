@@ -89,6 +89,7 @@ function makeFrame({ id, sourceId }: Object, opts: Object = {}) {
 function createSourceObject(
   filename: string,
   props: {
+    sourceMapURL?: string,
     introductionType?: string,
     introductionUrl?: string,
     isBlackBoxed?: boolean,

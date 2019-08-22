@@ -70,6 +70,7 @@ export async function buildMappedScopes(
   }
 
   const originalRanges = await loadRangeMetadata(
+    source,
     frame,
     originalAstScopes,
     sourceMaps
@@ -224,15 +225,15 @@ function batchScopeMappings(
         for (const loc of locs) {
           precalculatedRanges.set(
             buildLocationKey(loc.start),
-            sourceMaps.getGeneratedRanges(loc.start)
+            sourceMaps.getGeneratedRanges(loc.start, source)
           );
           precalculatedLocations.set(
             buildLocationKey(loc.start),
-            sourceMaps.getGeneratedLocation(loc.start)
+            sourceMaps.getGeneratedLocation(loc.start, source)
           );
           precalculatedLocations.set(
             buildLocationKey(loc.end),
-            sourceMaps.getGeneratedLocation(loc.end)
+            sourceMaps.getGeneratedLocation(loc.end, source)
           );
         }
       }
@@ -240,21 +241,21 @@ function batchScopeMappings(
   }
 
   return {
-    async getGeneratedRanges(pos) {
+    async getGeneratedRanges(pos, s) {
       const key = buildLocationKey(pos);
 
-      if (!precalculatedRanges.has(key)) {
+      if (s !== source || !precalculatedRanges.has(key)) {
         log("Bad precalculated mapping");
-        return sourceMaps.getGeneratedRanges(pos);
+        return sourceMaps.getGeneratedRanges(pos, s);
       }
       return precalculatedRanges.get(key);
     },
-    async getGeneratedLocation(pos) {
+    async getGeneratedLocation(pos, s) {
       const key = buildLocationKey(pos);
 
-      if (!precalculatedLocations.has(key)) {
+      if (s !== source || !precalculatedLocations.has(key)) {
         log("Bad precalculated mapping");
-        return sourceMaps.getGeneratedLocation(pos);
+        return sourceMaps.getGeneratedLocation(pos, s);
       }
       return precalculatedLocations.get(key);
     },

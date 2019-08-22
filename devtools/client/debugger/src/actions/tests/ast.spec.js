@@ -31,7 +31,7 @@ const mockCommandClient = {
 };
 
 const sourceMaps = {
-  getOriginalSourceText: async id => ({
+  getOriginalSourceText: async ({ id }) => ({
     id,
     text: sourceTexts[id],
     contentType: "text/javascript",
