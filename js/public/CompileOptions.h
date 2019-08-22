@@ -103,6 +103,10 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // conditions are checked in the CompileOptions constructor.
   bool forceFullParse_ = false;
 
+  // Either the Realm configuration or the compile request may force
+  // strict-mode.
+  bool forceStrictMode_ = false;
+
   const char* filename_ = nullptr;
   const char* introducerFilename_ = nullptr;
   const char16_t* sourceMapURL_ = nullptr;
@@ -111,7 +115,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // POD options.
   bool selfHostingMode = false;
   bool canLazilyParse = true;
-  bool strictOption = false;
   bool extraWarningsOption = false;
   bool werrorOption = false;
   AsmJSOption asmJSOption = AsmJSOption::Disabled;
@@ -149,6 +152,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
   bool forceFullParse() const { return forceFullParse_; }
+  bool forceStrictMode() const { return forceStrictMode_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
@@ -443,8 +447,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   CompileOptions& setIntroductionInfoToCaller(JSContext* cx,
                                               const char* introductionType);
 
-  CompileOptions& maybeMakeStrictMode(bool strict) {
-    strictOption = strictOption || strict;
+  CompileOptions& setForceStrictMode() {
+    forceStrictMode_ = true;
     return *this;
   }
 
