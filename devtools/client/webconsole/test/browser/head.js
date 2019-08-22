@@ -350,7 +350,7 @@ function hideContextMenu(hud) {
 }
 
 function _getContextMenu(hud) {
-  const toolbox = gDevTools.getToolbox(hud.target);
+  const toolbox = hud.toolbox;
   const doc = toolbox ? toolbox.topWindow.document : hud.chromeWindow.document;
   return doc.getElementById("webconsole-menu");
 }

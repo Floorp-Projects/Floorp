@@ -28,10 +28,8 @@ add_task(async function test_launch_login_item() {
         content.document.querySelector("login-item")
       );
       loginItem.setLogin(login);
-      let openSiteButton = loginItem.shadowRoot.querySelector(
-        ".open-site-button"
-      );
-      openSiteButton.click();
+      let originInput = loginItem.shadowRoot.querySelector(".origin-input");
+      originInput.click();
     }
   );
 

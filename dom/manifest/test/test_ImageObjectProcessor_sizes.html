@@ -63,7 +63,7 @@ validSizes.forEach(({test, expect}) => {
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
   var expected = `Expect sizes to equal ${expect.join(" ")}`;
-  is(sizes, expect.join(" "), expected);
+  is(sizes.join(" "), expect.join(" "), expected);
 });
 
 var invalidSizes = ["invalid", "", " ", "16 x 16", "32", "21", "16xx16", "16 x x 6"];

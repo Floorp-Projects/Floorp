@@ -29,7 +29,7 @@ Services.scriptloader.loadSubScript(
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = gDevTools.getToolbox(hud.target);
+  const toolbox = hud.toolbox;
 
   await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);

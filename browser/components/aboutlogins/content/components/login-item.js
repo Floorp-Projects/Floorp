@@ -42,7 +42,6 @@ export default class LoginItem extends HTMLElement {
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._form = this.shadowRoot.querySelector("form");
-    this._openSiteButton = this.shadowRoot.querySelector(".open-site-button");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector(
       "input[name='username']"
@@ -79,7 +78,6 @@ export default class LoginItem extends HTMLElement {
     this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
     this._form.addEventListener("submit", this);
-    this._openSiteButton.addEventListener("click", this);
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
@@ -278,10 +276,7 @@ export default class LoginItem extends HTMLElement {
           recordTelemetryEvent({ object: "existing_login", method: "edit" });
           return;
         }
-        if (
-          classList.contains("open-site-button") ||
-          (classList.contains("origin-input") && !this.readOnly)
-        ) {
+        if (classList.contains("origin-input") && !this.readOnly) {
           document.dispatchEvent(
             new CustomEvent("AboutLoginsOpenSite", {
               bubbles: true,
