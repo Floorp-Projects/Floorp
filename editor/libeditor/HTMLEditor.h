@@ -42,6 +42,7 @@ class nsRange;
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
+class EditActionResult;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
 enum class EditSubAction : int32_t;
@@ -1175,6 +1176,16 @@ class HTMLEditor final : public TextEditor,
    * @param aNode       The start node to look for parent mail cite elements.
    */
   Element* GetMostAncestorMailCiteElement(nsINode& aNode) const;
+
+  /**
+   * SplitMailCiteElements() splits mail-cite elements at start of Selection if
+   * Selection starts from inside a mail-cite element.  Of course, if it's
+   * necessary, this inserts <br> node to new left nodes or existing right
+   * nodes.
+   * XXX This modifies Selection, but should return SplitNodeResult() instead.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  SplitMailCiteElements(const EditorDOMPoint& aPointToSplit);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
