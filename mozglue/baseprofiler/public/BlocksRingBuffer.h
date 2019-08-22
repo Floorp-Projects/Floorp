@@ -290,6 +290,15 @@ class BlocksRingBuffer {
         std::forward<EntryDestructor>(aEntryDestructor));
   }
 
+  // Lock the buffer mutex and run the provided callback.
+  // This can be useful when the caller needs to explicitly lock down this
+  // buffer, but not do anything else with it.
+  template <typename Callback>
+  auto LockAndRun(Callback&& aCallback) const {
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    return std::forward<Callback>(aCallback)();
+  }
+
   // Buffer length in bytes.
   Maybe<PowerOfTwo<Length>> BufferLength() const {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
