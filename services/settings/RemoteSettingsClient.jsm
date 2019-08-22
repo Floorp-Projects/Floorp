@@ -253,6 +253,31 @@ class RemoteSettingsClient extends EventEmitter {
   }
 
   /**
+   * Retrieve the collection timestamp for the last synchronization.
+   *
+   * @returns {number}
+   *          The timestamp in milliseconds, returns -1 if retrieving
+   *          the timestamp from the kinto collection fails.
+   */
+  async getLastModified() {
+    let timestamp = -1;
+
+    try {
+      const collection = await this.openCollection();
+      timestamp = await collection.db.getLastModified();
+    } catch (err) {
+      console.warn(
+        `Error retrieving the getLastModified timestamp from ${
+          this.identifier
+        } RemoteSettingClient`,
+        err
+      );
+    }
+
+    return timestamp;
+  }
+
+  /**
    * Open the underlying Kinto collection, using the appropriate adapter and options.
    */
   async openCollection() {

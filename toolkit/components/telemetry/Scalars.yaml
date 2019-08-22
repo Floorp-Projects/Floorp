@@ -4487,6 +4487,64 @@ blocklist:
     record_in_processes:
       - main
 
+  lastModified_rs_addons:
+    bug_numbers:
+      - 1572711
+    description: >
+      Keep track of the last time the "addons" remotesetting blocklist has been successfully
+      updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
+      couldn't be retrieved.
+    expires: "75"
+    kind: string
+    release_channel_collection: opt-out
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+      - awagner@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - main
+
+  lastModified_rs_plugins:
+    bug_numbers:
+      - 1572711
+    description: >
+      Keep track of the last time the "plugins" remotesetting blocklist has been successfully
+      updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
+      couldn't be retrieved.
+    expires: "75"
+    kind: string
+    release_channel_collection: opt-out
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+      - awagner@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  useXML:
+    bug_numbers:
+      - 1572711
+    description: >
+      Keep track of the currently enabled blocklist engine (set to false if the
+      remote settings blocklist is the one enabled).
+    expires: "75"
+    kind: boolean
+    release_channel_collection: opt-out
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+      - awagner@mozilla.com
+    products:
+      - 'firefox'
+      - 'fennec'
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
