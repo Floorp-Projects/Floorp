@@ -190,7 +190,9 @@ class HomeFragment : Fragment(), AccountObserver {
         super.onViewCreated(view, savedInstanceState)
 
         FragmentPreDrawManager(this).execute {
-            val homeViewModel: HomeScreenViewModel by activityViewModels()
+            val homeViewModel: HomeScreenViewModel by activityViewModels {
+                ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+            }
             homeViewModel.layoutManagerState?.also { parcelable ->
                 sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
             }
@@ -514,7 +516,9 @@ class HomeFragment : Fragment(), AccountObserver {
     override fun onPause() {
         invokePendingDeleteJobs()
         super.onPause()
-        val homeViewModel: HomeScreenViewModel by activityViewModels()
+        val homeViewModel: HomeScreenViewModel by activityViewModels {
+            ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
+        }
         homeViewModel.layoutManagerState =
             sessionControlComponent.view.layoutManager?.onSaveInstanceState()
         homeViewModel.motionLayoutProgress = homeLayout?.progress ?: 0F
