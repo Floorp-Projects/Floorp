@@ -39,6 +39,7 @@ class SearchBox extends PureComponent {
       learnMoreUrl: PropTypes.string,
       onBlur: PropTypes.func,
       onChange: PropTypes.func.isRequired,
+      onClearButtonClick: PropTypes.func,
       onFocus: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string.isRequired,
@@ -125,6 +126,10 @@ class SearchBox extends PureComponent {
 
   onClearButtonClick() {
     this.onChange("");
+
+    if (this.props.onClearButtonClick) {
+      this.props.onClearButtonClick();
+    }
   }
 
   onFocus() {
