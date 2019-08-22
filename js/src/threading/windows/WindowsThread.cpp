@@ -32,8 +32,6 @@ bool Thread::Id::operator==(const Id& aOther) const {
 }
 
 bool Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
-  LockGuard<Mutex> lock(idMutex_);
-
   // Use _beginthreadex and not CreateThread, because threads that are
   // created with the latter leak a small amount of memory when they use
   // certain msvcrt functions and then exit.
@@ -51,8 +49,7 @@ bool Thread::create(unsigned int(__stdcall* aMain)(void*), void* aArg) {
 }
 
 void Thread::join() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(joinable(lock));
+  MOZ_RELEASE_ASSERT(joinable());
   DWORD r = WaitForSingleObject(id_.platformData()->handle, INFINITE);
   MOZ_RELEASE_ASSERT(r == WAIT_OBJECT_0);
   BOOL success = CloseHandle(id_.platformData()->handle);
@@ -61,8 +58,7 @@ void Thread::join() {
 }
 
 void Thread::detach() {
-  LockGuard<Mutex> lock(idMutex_);
-  MOZ_RELEASE_ASSERT(joinable(lock));
+  MOZ_RELEASE_ASSERT(joinable());
   BOOL success = CloseHandle(id_.platformData()->handle);
   MOZ_RELEASE_ASSERT(success);
   id_ = Id();
