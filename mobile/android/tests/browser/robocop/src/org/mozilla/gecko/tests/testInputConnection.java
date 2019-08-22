@@ -106,6 +106,14 @@ public class testInputConnection extends JavascriptBridgeTest {
             mType = type;
         }
 
+        private void pressKey(final InputConnection ic, int keycode) {
+            final long time = SystemClock.uptimeMillis();
+            final KeyEvent key = new KeyEvent(time, time, KeyEvent.ACTION_DOWN, keycode, 0);
+
+            ic.sendKeyEvent(key);
+            ic.sendKeyEvent(KeyEvent.changeAction(key, KeyEvent.ACTION_UP));
+        }
+
         @Override
         public void test(final InputConnection ic, EditorInfo info) {
             waitFor("focus change", new Condition() {
@@ -178,14 +186,23 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.finishComposingText();
             assertTextAndSelectionAt("Can finish composition", ic, "frabar", 6);
 
+            ic.deleteSurroundingText(6, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Test sendKeyEvent
+            pressKey(ic, KeyEvent.KEYCODE_F);
+            pressKey(ic, KeyEvent.KEYCODE_R);
+            pressKey(ic, KeyEvent.KEYCODE_A);
+            pressKey(ic, KeyEvent.KEYCODE_B);
+            pressKey(ic, KeyEvent.KEYCODE_A);
+            pressKey(ic, KeyEvent.KEYCODE_R);
+            assertTextAndSelectionAt("Can input text by keyboard", ic, "frabar", 6);
+
             final long time = SystemClock.uptimeMillis();
             final KeyEvent shiftKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
                                                    KeyEvent.KEYCODE_SHIFT_LEFT, 0);
             final KeyEvent leftKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
                                                   KeyEvent.KEYCODE_DPAD_LEFT, 0);
-            final KeyEvent tKey = new KeyEvent(time, time, KeyEvent.ACTION_DOWN,
-                                               KeyEvent.KEYCODE_T, 0);
 
             ic.sendKeyEvent(shiftKey);
             ic.sendKeyEvent(leftKey);
@@ -193,8 +210,7 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.sendKeyEvent(KeyEvent.changeAction(shiftKey, KeyEvent.ACTION_UP));
             assertTextAndSelection("Can select using key event", ic, "frabar", 6, 5);
 
-            ic.sendKeyEvent(tKey);
-            ic.sendKeyEvent(KeyEvent.changeAction(tKey, KeyEvent.ACTION_UP));
+            pressKey(ic, KeyEvent.KEYCODE_T);
             assertTextAndSelectionAt("Can type using event", ic, "frabat", 6);
 
             ic.deleteSurroundingText(6, 0);
