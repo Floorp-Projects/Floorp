@@ -48,7 +48,7 @@ class QuantityMetricTypeTest {
     }
 
     @Test
-    fun `quantitys with no lifetime must not record data`() {
+    fun `quantities with no lifetime must not record data`() {
         // Define a 'quantityMetric' quantity metric, which will be stored in "store1".
         // It's disabled so it should not record anything.
         val quantityMetric = QuantityMetricType(
@@ -61,12 +61,12 @@ class QuantityMetricTypeTest {
 
         quantityMetric.set(1L)
         // Check that nothing was recorded.
-        assertFalse("Quantitys must not be recorded if they are disabled",
+        assertFalse("Quantities must not be recorded if they are disabled",
             quantityMetric.testHasValue())
     }
 
     @Test
-    fun `disabled quantitys must not record data`() {
+    fun `disabled quantities must not record data`() {
         // Define a 'quantityMetric' quantity metric, which will be stored in "store1".  It's disabled
         // so it should not record anything.
         val quantityMetric = QuantityMetricType(
@@ -80,7 +80,7 @@ class QuantityMetricTypeTest {
         // Attempt to store the quantity.
         quantityMetric.set(1L)
         // Check that nothing was recorded.
-        assertFalse("Quantitys must not be recorded if they are disabled",
+        assertFalse("Quantities must not be recorded if they are disabled",
             quantityMetric.testHasValue())
     }
 
