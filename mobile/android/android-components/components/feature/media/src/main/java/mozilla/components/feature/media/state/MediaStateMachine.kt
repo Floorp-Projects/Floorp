@@ -6,6 +6,12 @@ package mozilla.components.feature.media.state
 
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.utils.AllSessionsObserver
@@ -13,6 +19,9 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import kotlin.coroutines.EmptyCoroutineContext
+
+private const val DELAY_STATE_UPDATE_MS = 250L
 
 /**
  * A state machine that subscribes to all [Session] instances and watches changes to their [Media] to create an
@@ -23,6 +32,8 @@ import mozilla.components.support.base.observer.ObserverRegistry
 object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverRegistry() {
     private val logger = Logger("MediaStateMachine")
     private var observer: AllSessionsObserver? = null
+    private var mediaObserver: MediaSessionObserver = MediaSessionObserver(this)
+    internal var scope: CoroutineScope? = null
 
     /**
      * The current [MediaState].
@@ -34,10 +45,13 @@ object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverReg
     /**
      * Start observing [Session] and their [Media] and create an aggregated [MediaState] that can be observed.
      */
+    @Synchronized
     fun start(sessionManager: SessionManager) {
+        scope = CoroutineScope(EmptyCoroutineContext)
+
         observer = AllSessionsObserver(
             sessionManager,
-            MediaSessionObserver(this)
+            mediaObserver
         ).also { it.start() }
     }
 
@@ -46,7 +60,9 @@ object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverReg
      *
      * The [MediaState] will be reset to [MediaState.None]
      */
+    @Synchronized
     fun stop() {
+        scope?.cancel()
         observer?.stop()
         state = MediaState.None
     }
@@ -74,12 +90,18 @@ object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverReg
          */
         fun onStateChanged(state: MediaState)
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun waitForStateChange() = runBlocking {
+        mediaObserver.updateStateJob?.join()
+    }
 }
 
 private class MediaSessionObserver(
     private val stateMachine: MediaStateMachine
 ) : AllSessionsObserver.Observer, Media.Observer {
     private val mediaMap = MediaMap()
+    internal var updateStateJob: Job? = null
 
     override fun onMediaAdded(session: Session, media: List<Media>, added: Media) {
         added.register(this)
@@ -118,9 +140,19 @@ private class MediaSessionObserver(
         updateState()
     }
 
+    @Synchronized
     private fun updateState() {
-        val state = determineNewState()
-        stateMachine.transitionTo(state)
+        // We delay updating the state here and cancel previous jobs in order to batch multiple
+        // state changes together before updating the state. In addition to reducing the work load
+        // this also allows us to treat multiple pause events as a single pause event that we can
+        // resume from.
+        updateStateJob?.cancel()
+        updateStateJob = checkNotNull(MediaStateMachine.scope).launch {
+            delay(DELAY_STATE_UPDATE_MS)
+
+            val state = determineNewState()
+            stateMachine.transitionTo(state)
+        }
     }
 
     @Suppress("ReturnCount")
