@@ -1116,13 +1116,6 @@ class HTMLEditRules : public TextEditRules {
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
 
-  /**
-   * ReapplyCachedStyles() restores some styles which are disappeared during
-   * handling edit action and it should be restored.  This may cause flushing
-   * layout at retrieving computed value of CSS properties.
-   */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult ReapplyCachedStyles();
-
   void ClearCachedStyles();
 
   /**
