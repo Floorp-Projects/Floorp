@@ -6,8 +6,6 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -28,7 +26,6 @@ import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
@@ -44,6 +41,11 @@ import org.mozilla.fenix.components.metrics.SentryBreadcrumbsRecorder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
+import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor
+import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
+import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
+import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
@@ -59,6 +61,15 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
+    }
+
+    private val externalSourceIntentProcessors by lazy {
+        listOf(
+            SpeechProcessingIntentProcessor(this),
+            StartSearchIntentProcessor(components.analytics.metrics),
+            DeepLinkIntentProcessor(this),
+            OpenBrowserIntentProcessor(this, ::getIntentSessionId)
+        )
     }
 
     final override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,8 +116,10 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
      */
     final override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        handleCrashIfNecessary(intent)
-        handleOpenedFromExternalSourceIfNecessary(intent)
+        intent ?: return
+
+        val intentProcessors = listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
+        intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
     }
 
     /**
@@ -162,86 +175,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             onBackPressed()
         }
 
-        handleOpenedFromExternalSourceIfNecessary(intent)
-    }
-
-    private fun handleCrashIfNecessary(intent: Intent?) {
-        if (intent != null && Crash.isCrashIntent(intent)) {
-            openToCrashReporter(intent)
-        }
-    }
-
-    private fun openToCrashReporter(intent: Intent) {
-        val directions = NavGraphDirections.actionGlobalCrashReporter(intent)
-        navHost.navController.navigate(directions)
-    }
-
-    private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER_AND_LOAD) == true) {
-            this.intent.putExtra(OPEN_TO_BROWSER_AND_LOAD, false)
-            openToBrowserAndLoad(
-                intent.getStringExtra(
-                    IntentReceiverActivity.SPEECH_PROCESSING
-                ), true, BrowserDirection.FromGlobal, forceSearch = true
-            )
-            return
-        } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
-            this.intent.putExtra(OPEN_TO_SEARCH, false)
-            components.analytics.metrics.track(Event.SearchWidgetNewTabPressed)
-            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
-            return
-        } else if (intent?.scheme == "fenix") {
-            intent.data?.let { handleDeepLink(it) }
-        }
-
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
-
-        this.intent.putExtra(OPEN_TO_BROWSER, false)
-
-        openToBrowser(BrowserDirection.FromGlobal, getIntentSessionId(intent.toSafeIntent()))
-    }
-
-    @SuppressWarnings("ComplexMethod")
-    private fun handleDeepLink(uri: Uri) {
-        val link = uri.host
-
-        // Handle links that require more than just simple navigation
-        when (link) {
-            "enable_private_browsing" -> {
-                navHost.navController.navigate(NavGraphDirections.actionGlobalHomeFragment())
-                browsingModeManager.mode = BrowsingMode.Private
-            }
-            "make_default_browser" -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) { return }
-                val settingsIntent = Intent(
-                    android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
-                )
-                startActivity(settingsIntent)
-            }
-            "open" -> {
-                uri.getQueryParameter("url")?.let {
-                    load(
-                        searchTermOrURL = it,
-                        newTab = true,
-                        engine = null,
-                        forceSearch = false
-                    )
-                    navHost.navController.navigate(NavGraphDirections.actionGlobalBrowser(null))
-                }
-            }
-        }
-
-        val directions = when (link) {
-            "home" -> NavGraphDirections.actionGlobalHomeFragment()
-            "settings" -> NavGraphDirections.actionGlobalSettingsFragment()
-            "turn_on_sync" -> NavGraphDirections.actionGlobalTurnOnSync()
-            "settings_search_engine" -> NavGraphDirections.actionGlobalSearchEngineFragment()
-            "settings_accessibility" -> NavGraphDirections.actionGlobalAccessibilityFragment()
-            "settings_delete_browsing_data" -> NavGraphDirections.actionGlobalDeleteBrowsingDataFragment()
-            else -> return
-        }
-
-        navHost.navController.navigate(directions)
+        externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
     }
 
     protected open fun getIntentSessionId(intent: SafeIntent): String? = null
@@ -264,11 +198,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             sessionObserver = subscribeToSessions()
 
         with(navHost.navController) {
-            if (currentDestination?.id == R.id.browserFragment || popBackStack(
-                    R.id.browserFragment,
-                    false
-                )
-            ) return
+            if (currentDestination?.id == R.id.browserFragment || popBackStack(R.id.browserFragment, false)) return
         }
 
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
