@@ -510,11 +510,11 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                           self.dump_syms,
                                           self.test_dir,
                                           self.target_bin],
-                                         stderr=open(os.devnull, 'w'),
+                                         stderr=None,
                                          cwd=browser_app)
         lines = filter(lambda x: x.strip(), output.splitlines())
         self.assertEqual(1, len(lines),
-                         'should have one filename in the output')
+                         'should have one filename in the output; got %s' % repr(output))
         symbol_file = os.path.join(self.test_dir, lines[0])
         self.assertTrue(os.path.isfile(symbol_file))
         symlines = open(symbol_file, 'r').readlines()
