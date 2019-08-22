@@ -90,6 +90,13 @@ const LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS = LoginTestUtils.testData.formLo
     timePasswordChanged: new Date("2018-12-15").getTime(),
   }
 );
+const LOGIN_WITH_NON_STANDARD_URI = LoginTestUtils.testData.formLogin({
+  origin: "someApp://random/path/to/login",
+  formActionOrigin: "someApp://random/path/to/login",
+  username: "username",
+  password: "password",
+  timePasswordChanged: new Date("2018-12-15").getTime(),
+});
 
 add_task(async function test_getBreachesForLogins_notBreachedLogin() {
   Services.logins.addLogin(NOT_BREACHED_LOGIN);
@@ -201,3 +208,20 @@ add_task(async function test_getBreachesForLogins_newBreachAfterDismissal() {
       BREACHED_LOGIN.origin
   );
 });
+
+add_task(
+  async function test_getBreachesForLogins_ExceptionsThrownByNonStandardURIsAreCaught() {
+    Services.logins.addLogin(LOGIN_WITH_NON_STANDARD_URI);
+
+    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+      [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],
+      TEST_BREACHES
+    );
+
+    Assert.strictEqual(
+      breachesByLoginGUID.size,
+      1,
+      "Exceptions thrown by logins with non-standard URIs should be caught."
+    );
+  }
+);
