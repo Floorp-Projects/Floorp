@@ -70,7 +70,7 @@ function testSetTheme() {
 }
 
 function testGetColor() {
-  const BLUE_DARK = "#75BFFF";
+  const BLUE_DARK = "#75bfff";
   const BLUE_LIGHT = "#0074e8";
   const originalTheme = getTheme();
 
