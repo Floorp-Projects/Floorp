@@ -1114,6 +1114,13 @@ class HTMLEditor final : public TextEditor,
   GetInlineStyles(nsINode& aNode, AutoStyleCacheArray& aStyleCacheArray);
 
   /**
+   * CacheInlineStyles() caches style of aNode into mCachedInlineStyles of
+   * TopLevelEditSubAction.  This may cause flushing layout at retrieving
+   * computed value of CSS properties.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CacheInlineStyles(nsINode& aNode);
+
+  /**
    * ReapplyCachedStyles() restores some styles which are disappeared during
    * handling edit action and it should be restored.  This may cause flushing
    * layout at retrieving computed value of CSS properties.
