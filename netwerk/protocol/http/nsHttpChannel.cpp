@@ -3912,9 +3912,10 @@ bool nsHttpChannel::IsIsolated() {
   if (mHasBeenIsolatedChecked) {
     return mIsIsolated;
   }
-  mIsIsolated = IsThirdPartyTrackingResource() &&
-                !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                    this, mURI, nullptr);
+  mIsIsolated = StaticPrefs::browser_cache_cache_isolation() ||
+                (IsThirdPartyTrackingResource() &&
+                 !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+                     this, mURI, nullptr));
   mHasBeenIsolatedChecked = true;
   return mIsIsolated;
 }

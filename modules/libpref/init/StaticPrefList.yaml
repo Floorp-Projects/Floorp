@@ -645,6 +645,12 @@
   value: true
   mirror: always
 
+# Enable/Disable Origin based cache isolation
+- name: browser.cache.cache_isolation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes.
 - name: browser.cache.memory.capacity
   type: RelaxedAtomicInt32
