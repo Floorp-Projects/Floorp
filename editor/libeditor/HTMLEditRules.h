@@ -904,13 +904,6 @@ class HTMLEditRules : public TextEditRules {
                      nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes) const;
 
   /**
-   * GetHiestInlineParent() returns the highest inline node parent between
-   * aNode and the editing host.  Even if the editing host is an inline
-   * element, this method never returns the editing host as the result.
-   */
-  nsIContent* GetHighestInlineParent(nsINode& aNode) const;
-
-  /**
    * MakeTransitionList() detects all the transitions in the array, where a
    * transition means that adjacent nodes in the array don't have the same
    * parent.
