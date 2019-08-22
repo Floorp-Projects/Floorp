@@ -97,6 +97,7 @@ PhaseKindGraphRoots = [
         PhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
         PhaseKind("PURGE", "Purge", 5),
         PhaseKind("PURGE_SHAPE_CACHES", "Purge ShapeCaches", 60),
+        PhaseKind("PURGE_SOURCE_URLS", "Purge Source URLs", 73),
         JoinParallelTasksPhaseKind
     ]),
     PhaseKind("MARK", "Mark", 6, [
