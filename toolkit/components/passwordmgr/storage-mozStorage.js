@@ -1273,8 +1273,12 @@ LoginManagerStorage_mozStorage.prototype = {
       for (let host of disabledHosts) {
         try {
           let uri = Services.io.newURI(host);
-          Services.perms.add(
+          let principal = Services.scriptSecurityManager.createContentPrincipal(
             uri,
+            {}
+          );
+          Services.perms.addFromPrincipal(
+            principal,
             PERMISSION_SAVE_LOGINS,
             Services.perms.DENY_ACTION
           );
