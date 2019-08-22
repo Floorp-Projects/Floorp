@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxFontFeatures.h"
+#include "nsAtom.h"
 #include "nsUnicharUtils.h"
 #include "nsHashKeys.h"
 
@@ -13,7 +14,7 @@ gfxFontFeatureValueSet::gfxFontFeatureValueSet() : mFontFeatureValues(8) {}
 
 bool gfxFontFeatureValueSet::GetFontFeatureValuesFor(
     const nsACString& aFamily, uint32_t aVariantProperty,
-    const nsAString& aName, nsTArray<uint32_t>& aValues) {
+    nsAtom* aName, nsTArray<uint32_t>& aValues) {
   nsAutoCString family(aFamily);
   ToLowerCase(family);
   FeatureValueHashKey key(family, aVariantProperty, aName);
@@ -31,7 +32,7 @@ bool gfxFontFeatureValueSet::GetFontFeatureValuesFor(
 }
 
 nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
-    const nsACString& aFamily, const nsAString& aName, uint32_t aAlternate) {
+    const nsACString& aFamily, nsAtom* aName, uint32_t aAlternate) {
   FeatureValueHashKey key(aFamily, aAlternate, aName);
   FeatureValueHashEntry* entry = mFontFeatureValues.PutEntry(key);
   entry->mKey = key;
@@ -41,11 +42,12 @@ nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
 bool gfxFontFeatureValueSet::FeatureValueHashEntry::KeyEquals(
     const KeyTypePointer aKey) const {
   return aKey->mPropVal == mKey.mPropVal &&
-         aKey->mFamily.Equals(mKey.mFamily) && aKey->mName.Equals(mKey.mName);
+         aKey->mName == mKey.mName &&
+         aKey->mFamily.Equals(mKey.mFamily);
 }
 
 PLDHashNumber gfxFontFeatureValueSet::FeatureValueHashEntry::HashKey(
     const KeyTypePointer aKey) {
-  return HashString(aKey->mFamily) + HashString(aKey->mName) +
+  return HashString(aKey->mFamily) + aKey->mName->hash() +
          aKey->mPropVal * uint32_t(0xdeadbeef);
 }
