@@ -3541,9 +3541,8 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   fieldsEnabledOption = rhs.fieldsEnabledOption;
 }
 
-void JS::ReadOnlyCompileOptions::copyPODOptions(
+void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
     const ReadOnlyCompileOptions& rhs) {
-  copyPODTransitiveOptions(rhs);
   lineno = rhs.lineno;
   column = rhs.column;
   scriptSourceOffset = rhs.scriptSourceOffset;
@@ -3583,7 +3582,8 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   // Release existing string allocations.
   release();
 
-  copyPODOptions(rhs);
+  copyPODTransitiveOptions(rhs);
+  copyPODNonTransitiveOptions(rhs);
 
   elementRoot = rhs.element();
   elementAttributeNameRoot = rhs.elementAttributeName();
