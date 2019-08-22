@@ -64,6 +64,7 @@ class DebuggerSource : public NativeObject {
   static bool getIntroductionType(JSContext* cx, unsigned argc, Value* vp);
   static bool setSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
   static bool getSourceMapURL(JSContext* cx, unsigned argc, Value* vp);
+  static bool reparse(JSContext* cx, unsigned argc, Value* vp);
 
  private:
   static const JSClassOps classOps_;
