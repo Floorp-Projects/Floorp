@@ -875,6 +875,8 @@ class RecursiveMakeBackend(CommonBackend):
             set(self._compile_graph.keys()) | all_compile_deps)))
         root_mk.add_statement('syms_targets := %s' % ' '.join(sorted(
             set('%s/syms' % d for d in self._no_skip['syms']))))
+        root_mk.add_statement('rust_targets := %s' % ' '.join(sorted(
+            self._rust_targets)))
 
         root_mk.add_statement('non_default_tiers := %s' % ' '.join(sorted(
             non_default_roots.keys())))
