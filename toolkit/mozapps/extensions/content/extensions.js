@@ -746,7 +746,7 @@ var gViewController = {
     );
   },
 
-  loadView(aViewId) {
+  loadView(aViewId, sourceEvent) {
     var isRefresh = false;
     if (aViewId == this.currentViewId) {
       if (this.isLoading) {
@@ -761,9 +761,13 @@ var gViewController = {
       isRefresh = true;
     }
 
+    let isKeyboardNavigation =
+      sourceEvent &&
+      sourceEvent.mozInputSource === MouseEvent.MOZ_SOURCE_KEYBOARD;
     var state = {
       view: aViewId,
       previousView: this.currentViewId,
+      isKeyboardNavigation,
     };
     if (!isRefresh) {
       gHistory.pushState(state);
@@ -815,7 +819,7 @@ var gViewController = {
     }
   },
 
-  loadViewInternal(aViewId, aPreviousView, aState) {
+  loadViewInternal(aViewId, aPreviousView, aState, aEvent) {
     var view = this.parseViewId(aViewId);
 
     if (!view.type || !(view.type in this.viewObjects)) {
@@ -2186,17 +2190,9 @@ const addonTypes = new Set([
   "locale",
 ]);
 const htmlViewOpts = {
-  loadViewFn(type, ...params) {
-    let viewId = `addons://${type}`;
-    if (params.length > 0) {
-      for (let param of params) {
-        viewId += "/" + encodeURIComponent(param);
-      }
-    } else {
-      viewId += "/";
-    }
-
-    gViewController.loadView(viewId);
+  loadViewFn(view, sourceEvent) {
+    let viewId = `addons://${view}`;
+    gViewController.loadView(viewId, sourceEvent);
   },
   replaceWithDefaultViewFn() {
     gViewController.replaceView(gViewDefault);
@@ -2239,11 +2235,11 @@ function htmlView(type) {
       this.node = this._browser.closest("#html-view");
     },
 
-    async show(param, request, state, refresh) {
+    async show(param, request, state) {
       await htmlBrowserLoaded;
       this.node.setAttribute("type", type);
       this.node.setAttribute("param", param);
-      await this._browser.contentWindow.show(type, param);
+      await this._browser.contentWindow.show(type, param, state);
       gViewController.updateCommands();
       gViewController.notifyViewChanged();
     },
