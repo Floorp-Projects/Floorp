@@ -275,9 +275,7 @@ WorkerDispatcher.prototype = {
           const [, resolve, reject] = items[i];
 
           if (resultData.error) {
-            const err = new Error(resultData.message);
-            err.metadata = resultData.metadata;
-            reject(err);
+            reject(resultData.error);
           } else {
             resolve(resultData.response);
           }
@@ -310,14 +308,22 @@ function workerHandler(publicInterface) {
         if (response instanceof Promise) {
           return response.then(val => ({
             response: val
-          }), err => asErrorMessage(err));
+          }), // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({
+            error: err.toString()
+          }));
         }
 
         return {
           response
         };
       } catch (error) {
-        return asErrorMessage(error);
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return {
+          error: error.toString()
+        };
       }
     })).then(results => {
       self.postMessage({
@@ -325,24 +331,6 @@ function workerHandler(publicInterface) {
         results
       });
     });
-  };
-}
-
-function asErrorMessage(error) {
-  if (typeof error === "object" && error && "message" in error) {
-    // Error can't be sent via postMessage, so be sure to convert to
-    // string.
-    return {
-      error: true,
-      message: error.message,
-      metadata: error.metadata
-    };
-  }
-
-  return {
-    error: true,
-    message: error == null ? error : error.toString(),
-    metadata: undefined
   };
 }
 

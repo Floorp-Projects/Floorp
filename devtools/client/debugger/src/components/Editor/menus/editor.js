@@ -9,6 +9,7 @@ import { isOriginalId } from "devtools-source-map";
 
 import { copyToTheClipboard } from "../../../utils/clipboard";
 import {
+  isPretty,
   getRawSourceURL,
   getFilename,
   shouldBlackbox,
@@ -27,6 +28,10 @@ import type {
   Context,
   ThreadContext,
 } from "../../../types";
+
+function isMapped(selectedSource) {
+  return isOriginalId(selectedSource.id) || !!selectedSource.sourceMapURL;
+}
 
 export const continueToHereItem = (
   cx: ThreadContext,
@@ -83,7 +88,7 @@ const jumpToMappedLocationItem = (
   cx: Context,
   selectedSource: Source,
   location: SourceLocation,
-  hasMappedLocation: boolean,
+  hasPrettySource: boolean,
   editorActions: EditorItemActions
 ) => ({
   id: "node-menu-jump",
@@ -94,7 +99,8 @@ const jumpToMappedLocationItem = (
       : L10N.getStr("original")
   ),
   accesskey: L10N.getStr("editor.jumpToMappedLocation1.accesskey"),
-  disabled: !hasMappedLocation,
+  disabled:
+    (!isMapped(selectedSource) && !isPretty(selectedSource)) || hasPrettySource,
   click: () => editorActions.jumpToMappedLocation(cx, location),
 });
 
@@ -165,7 +171,7 @@ export function editorMenuItems({
   selectedSource,
   location,
   selectionText,
-  hasMappedLocation,
+  hasPrettySource,
   isTextSelected,
   isPaused,
 }: {
@@ -174,7 +180,7 @@ export function editorMenuItems({
   selectedSource: SourceWithContent,
   location: SourceLocation,
   selectionText: string,
-  hasMappedLocation: boolean,
+  hasPrettySource: boolean,
   isTextSelected: boolean,
   isPaused: boolean,
 }) {
@@ -190,7 +196,7 @@ export function editorMenuItems({
       cx,
       selectedSource,
       location,
-      hasMappedLocation,
+      hasPrettySource,
       editorActions
     ),
     continueToHereItem(cx, location, isPaused, editorActions),

@@ -15,6 +15,7 @@ const {
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
+  hasMappedSource,
   clearSourceMaps,
   applySourceMap,
 } = require("./source-map");
@@ -42,6 +43,7 @@ self.onmessage = workerHandler({
   getOriginalStackFrames,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
+  hasMappedSource,
   applySourceMap,
   clearSourceMaps,
 });
