@@ -41,9 +41,7 @@ void DebugAPI::onNewScript(JSContext* cx, HandleScript script) {
     return;
   }
 
-  if (script->realm()->isDebuggee()) {
-    slowPathOnNewScript(cx, script);
-  }
+  slowPathOnNewScript(cx, script);
 }
 
 /* static */
