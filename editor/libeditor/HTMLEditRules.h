@@ -140,15 +140,6 @@ class HTMLEditRules : public TextEditRules {
   MOZ_MUST_USE nsresult DeleteNodeIfCollapsedText(nsINode& aNode);
 
   /**
-   * InsertBRElement() inserts a <br> element into aInsertToBreak.
-   *
-   * @param aInsertToBreak      The point where new <br> element will be
-   *                            inserted before.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
-
-  /**
    * Called before deleting selected contents.  This method actually removes
    * selected contents.
    *

@@ -1753,7 +1753,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
   // If we cannot insert a <p>/<div> element at the selection, we should insert
   // a <br> element instead.
   if (insertBRElement) {
-    nsresult rv = InsertBRElement(atStartOfSelection);
+    nsresult rv =
+        MOZ_KnownLive(HTMLEditorRef()).InsertBRElement(atStartOfSelection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -1796,7 +1797,7 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     }
     if (NS_WARN_IF(blockParent == host)) {
       // Didn't create a new block for some reason, fall back to <br>
-      rv = InsertBRElement(atStartOfSelection);
+      rv = MOZ_KnownLive(HTMLEditorRef()).InsertBRElement(atStartOfSelection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
@@ -1890,15 +1891,15 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
   }
 
   // If nobody handles this edit action, let's insert new <br> at the selection.
-  rv = InsertBRElement(atStartOfSelection);
+  rv = MOZ_KnownLive(HTMLEditorRef()).InsertBRElement(atStartOfSelection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
   return EditActionHandled();
 }
 
-nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
-  MOZ_ASSERT(IsEditorDataAvailable());
+nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPointToBreak.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -1910,9 +1911,8 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   // First, insert a <br> element.
   RefPtr<Element> brElement;
   if (IsPlaintextEditor()) {
-    brElement = MOZ_KnownLive(HTMLEditorRef())
-                    .InsertBRElementWithTransaction(aPointToBreak);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    brElement = InsertBRElementWithTransaction(aPointToBreak);
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(!brElement)) {
@@ -1920,7 +1920,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     }
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
-    WSRunObject wsObj(&HTMLEditorRef(), pointToBreak);
+    WSRunObject wsObj(this, pointToBreak);
     WSType wsType;
     wsObj.PriorVisibleNode(pointToBreak, &wsType);
     if (wsType & WSType::block) {
@@ -1935,12 +1935,9 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     RefPtr<Element> linkNode =
         HTMLEditor::GetLinkElement(pointToBreak.GetContainer());
     if (linkNode) {
-      SplitNodeResult splitLinkNodeResult =
-          MOZ_KnownLive(HTMLEditorRef())
-              .SplitNodeDeepWithTransaction(
-                  *linkNode, pointToBreak,
-                  SplitAtEdges::eDoNotCreateEmptyContainer);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      SplitNodeResult splitLinkNodeResult = SplitNodeDeepWithTransaction(
+          *linkNode, pointToBreak, SplitAtEdges::eDoNotCreateEmptyContainer);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(splitLinkNodeResult.Failed())) {
@@ -1950,7 +1947,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     }
     brElement = wsObj.InsertBreak(MOZ_KnownLive(*SelectionRefPtr()),
                                   pointToBreak, nsIEditor::eNone);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(!brElement)) {
@@ -1977,7 +1974,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     EditorRawDOMPoint point(brElement);
     error = NS_OK;
     SelectionRefPtr()->Collapse(point, error);
-    if (NS_WARN_IF(!CanHandleEditAction())) {
+    if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1991,7 +1988,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   DebugOnly<bool> advanced = afterBRElement.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced,
                        "Failed to advance offset after the new <br> element");
-  WSRunObject wsObj(&HTMLEditorRef(), afterBRElement);
+  WSRunObject wsObj(this, afterBRElement);
   nsCOMPtr<nsINode> maybeSecondBRNode;
   WSType wsType;
   wsObj.NextVisibleNode(afterBRElement, address_of(maybeSecondBRNode), nullptr,
@@ -2005,11 +2002,9 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     // the style from the line above.
     EditorDOMPoint atSecondBRElement(maybeSecondBRNode);
     if (brElement->GetNextSibling() != maybeSecondBRNode) {
-      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
-                        .MoveNodeWithTransaction(
-                            MOZ_KnownLive(*maybeSecondBRNode->AsContent()),
-                            afterBRElement);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      nsresult rv = MoveNodeWithTransaction(
+          MOZ_KnownLive(*maybeSecondBRNode->AsContent()), afterBRElement);
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2035,7 +2030,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
                        "Failed to set or unset interline position");
   error = NS_OK;
   SelectionRefPtr()->Collapse(afterBRElement, error);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
+  if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
   }
