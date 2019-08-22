@@ -34,5 +34,5 @@ def main(output, input_file):
     output.write(
         'extern const char gToolkitBuildID[] = "%s";' % buildid
     )
-    return set(o for o in objs
+    return set(os.path.join('build', o) for o in objs
                if os.path.splitext(os.path.basename(o))[0] != 'buildid')
