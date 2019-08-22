@@ -373,5 +373,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     libxul_list = 'XUL'
 else:
     libxul_list = '%sxul_%s' % (
-        CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.'))
+        CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
 GENERATED_FILES['buildid.cpp'].inputs = ['!build/%s.list' % libxul_list]
