@@ -2,7 +2,7 @@
 
 # PLAY
 
-`PLAY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L80)
+`PLAY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L117)
 
 The media is no longer paused, as a result of the play method, or the autoplay attribute.
 

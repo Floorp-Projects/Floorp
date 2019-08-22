@@ -2,7 +2,7 @@
 
 # Controller
 
-`interface Controller` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L45)
+`interface Controller` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/media/Media.kt#L57)
 
 Controller for controlling playback of a media element.
 

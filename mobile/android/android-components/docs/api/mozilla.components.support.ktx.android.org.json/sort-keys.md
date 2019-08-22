@@ -2,7 +2,7 @@
 
 # sortKeys
 
-`fun <ERROR CLASS>.sortKeys(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/org/json/JSONObject.kt#L40)
+`fun <ERROR CLASS>.sortKeys(): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/android/org/json/JSONObject.kt#L46)
 
 Sorts the keys of a JSONObject (and all of its child JSONObjects) alphabetically
 
