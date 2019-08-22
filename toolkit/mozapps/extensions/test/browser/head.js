@@ -252,7 +252,7 @@ var get_tooltip_info = async function(addonEl, managerWindow) {
     // Extract from title attribute.
     const { addon } = addonEl;
     const name = addon.name;
-    const nameEl = addonEl.querySelector(".addon-name");
+    const nameEl = addonEl.addonNameEl;
 
     let nameWithVersion = nameEl.title;
     if (addonEl.addon.userDisabled) {

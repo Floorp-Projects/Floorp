@@ -10,7 +10,7 @@ var gCategoryUtilities;
 
 function getName(item) {
   if (gManagerWindow.useHtmlViews) {
-    return item.querySelector(".addon-name").textContent;
+    return item.addonNameEl.textContent;
   }
   return gManagerWindow.document.getAnonymousElementByAttribute(
     item,
