@@ -9121,27 +9121,27 @@ nsresult HTMLEditRules::CacheInlineStyles(nsINode* aNode) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv = GetInlineStyles(
-      aNode,
-      HTMLEditorRef().TopLevelEditSubActionDataRef().mCachedInlineStyles);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .GetInlineStyles(*aNode, HTMLEditorRef()
+                                                 .TopLevelEditSubActionDataRef()
+                                                 .mCachedInlineStyles);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   return NS_OK;
 }
 
-nsresult HTMLEditRules::GetInlineStyles(nsINode* aNode,
-                                        AutoStyleCacheArray& aStyleCacheArray) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aNode);
+nsresult HTMLEditor::GetInlineStyles(nsINode& aNode,
+                                     AutoStyleCacheArray& aStyleCacheArray) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  bool useCSS = HTMLEditorRef().IsCSSEnabled();
+  bool useCSS = IsCSSEnabled();
 
   for (StyleCache& styleCache : aStyleCacheArray) {
     // If type-in state is set, don't intervene
     bool typeInSet, unused;
-    HTMLEditorRef().mTypeInState->GetTypingState(
-        typeInSet, unused, styleCache.mTag, styleCache.mAttr, nullptr);
+    mTypeInState->GetTypingState(typeInSet, unused, styleCache.mTag,
+                                 styleCache.mAttr, nullptr);
     if (typeInSet) {
       continue;
     }
@@ -9151,13 +9151,13 @@ nsresult HTMLEditRules::GetInlineStyles(nsINode* aNode,
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
     if (!useCSS || (styleCache.mTag == nsGkAtoms::font &&
                     styleCache.mAttr == nsGkAtoms::size)) {
-      isSet = HTMLEditorRef().IsTextPropertySetByContent(
-          aNode, styleCache.mTag, styleCache.mAttr, nullptr, &outValue);
+      isSet = IsTextPropertySetByContent(&aNode, styleCache.mTag,
+                                         styleCache.mAttr, nullptr, &outValue);
     } else {
       isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-          aNode, styleCache.mTag, styleCache.mAttr, outValue,
+          &aNode, styleCache.mTag, styleCache.mAttr, outValue,
           CSSEditUtils::eComputed);
-      if (NS_WARN_IF(!CanHandleEditAction())) {
+      if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
     }
@@ -9196,7 +9196,8 @@ nsresult HTMLEditRules::ReapplyCachedStyles() {
   }
 
   AutoStyleCacheArray styleCacheArrayAtInsertionPoint;
-  nsresult rv = GetInlineStyles(selNode, styleCacheArrayAtInsertionPoint);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .GetInlineStyles(*selNode, styleCacheArrayAtInsertionPoint);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv == NS_ERROR_EDITOR_DESTROYED ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
   }
