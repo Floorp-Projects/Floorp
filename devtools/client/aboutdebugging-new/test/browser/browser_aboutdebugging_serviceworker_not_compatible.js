@@ -51,7 +51,14 @@ add_task(async function testLocalRuntime() {
     await pushPref("browser.privatebrowsing.autostart", privateBrowsingEnabled);
 
     const { document, tab, window } = await openAboutDebugging({
-      enableWorkerUpdates: true,
+      // Even though this is a service worker test, we are not adding/removing
+      // workers here. Since the test is really fast it can create intermittent
+      // failures due to pending requests to update the worker list
+      // We are updating the worker list whenever the list of processes changes
+      // and this can happen very frequently, and it's hard to control from
+      // DevTools.
+      // Set enableWorkerUpdates to false to avoid intermittent failures.
+      enableWorkerUpdates: false,
     });
     await selectThisFirefoxPage(document, window.AboutDebugging.store);
     assertWarningMessage(document, expectedMessage);
@@ -91,7 +98,7 @@ add_task(async function testRemoteRuntime() {
     );
 
     const { document, tab, window } = await openAboutDebugging({
-      enableWorkerUpdates: true,
+      enableWorkerUpdates: false,
     });
     await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
