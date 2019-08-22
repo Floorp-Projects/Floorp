@@ -1028,14 +1028,12 @@ gfxFontFeatureValueSet* Gecko_ConstructFontFeatureValueSet() {
   return new gfxFontFeatureValueSet();
 }
 
-nsTArray<unsigned int>* Gecko_AppendFeatureValueHashEntry(
+nsTArray<uint32_t>* Gecko_AppendFeatureValueHashEntry(
     gfxFontFeatureValueSet* aFontFeatureValues, nsAtom* aFamily,
     uint32_t aAlternate, nsAtom* aName) {
   MOZ_ASSERT(NS_IsMainThread());
-  static_assert(sizeof(unsigned int) == sizeof(uint32_t),
-                "sizeof unsigned int and uint32_t must be the same");
   return aFontFeatureValues->AppendFeatureValueHashEntry(
-      nsAtomCString(aFamily), nsDependentAtomString(aName), aAlternate);
+      nsAtomCString(aFamily), aName, aAlternate);
 }
 
 float Gecko_FontStretch_ToFloat(FontStretch aStretch) {
