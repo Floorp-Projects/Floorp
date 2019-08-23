@@ -14,6 +14,7 @@
 
 #include "base/basictypes.h"
 #include "GeckoProfiler.h"
+#include "ProfilerMarkerPayload.h"
 #include "MainThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/ArenaAllocator.h"
@@ -4324,6 +4325,22 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
   return NS_OK;
 }
 
+static void PrefValueToString(const bool* b, nsCString& value) {
+  value = nsCString(*b ? "true" : "false");
+}
+static void PrefValueToString(const int* i, nsCString& value) {
+  value = nsPrintfCString("%d", *i);
+}
+static void PrefValueToString(const uint32_t* u, nsCString& value) {
+  value = nsPrintfCString("%d", *u);
+}
+static void PrefValueToString(const float* f, nsCString& value) {
+  value = nsPrintfCString("%f", *f);
+}
+static void PrefValueToString(const nsACString& s, nsCString& value) {
+  value = s;
+}
+
 // These preference getter wrappers allow us to look up the value for static
 // preferences based on their native types, rather than manually mapping them to
 // the appropriate Preferences::Get* functions.
@@ -4333,20 +4350,54 @@ struct Internals {
   template <typename T>
   static nsresult GetPrefValue(const char* aPrefName, T&& aResult,
                                PrefValueKind aKind) {
+    nsresult rv = NS_ERROR_UNEXPECTED;
     NS_ENSURE_TRUE(Preferences::InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
 
+    TimeStamp prefAccessTime = TimeStamp::Now();
+    Maybe<PrefType> prefType = Nothing();
+    nsCString prefValue{""};
+
     if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
-      return pref->GetValue(aKind, std::forward<T>(aResult));
+      rv = pref->GetValue(aKind, std::forward<T>(aResult));
+
+      if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+        prefType = Some(pref->Type());
+        PrefValueToString(aResult, prefValue);
+      }
     }
-    return NS_ERROR_UNEXPECTED;
+    if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+      profiler_add_marker(
+          "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
+          MakeUnique<PrefMarkerPayload>(aPrefName, Some(aKind), prefType,
+                                        prefValue, prefAccessTime));
+    }
+    return rv;
   }
 
   template <typename T>
   static nsresult GetSharedPrefValue(const char* aName, T* aResult) {
+    nsresult rv = NS_ERROR_UNEXPECTED;
+
+    TimeStamp prefAccessTime = TimeStamp::Now();
+    Maybe<PrefType> prefType = Nothing();
+    nsCString prefValue{""};
+
     if (Maybe<PrefWrapper> pref = pref_SharedLookup(aName)) {
-      return pref->GetValue(PrefValueKind::User, aResult);
+      rv = pref->GetValue(PrefValueKind::User, aResult);
+
+      if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+        prefType = Some(pref->Type());
+        PrefValueToString(aResult, prefValue);
+      }
     }
-    return NS_ERROR_UNEXPECTED;
+
+    if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
+      profiler_add_marker(
+          "PreferenceRead", JS::ProfilingCategoryPair::OTHER_PreferenceRead,
+          MakeUnique<PrefMarkerPayload>(aName, Nothing() /* indicates Shared */,
+                                        prefType, prefValue, prefAccessTime));
+    }
+    return rv;
   }
 
   template <typename T>
